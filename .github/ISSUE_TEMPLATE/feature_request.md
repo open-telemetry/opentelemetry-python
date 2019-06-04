@@ -4,7 +4,7 @@ about: Suggest an idea for this project
 labels: feature-request
 ---
 
-Before opening a feature request against this repo, consider whether the feature should/could be implemented in the [other OpenCensus client libraries](https://github.com/census-instrumentation). If so, please [open an issue on opencensus-specs](https://github.com/census-instrumentation/opencensus-specs/issues/new) first.
+Before opening a feature request against this repo, consider whether the feature should/could be implemented in the [other OpenTelemetry client libraries](https://github.com/open-telemetry/). If so, please [open an issue on opentelemetry-specification](https://github.com/open-telemetry/opentelemetry-specification/issues/new) first.
 
 **Is your feature request related to a problem?**
 If so, provide a concise description of the problem.
