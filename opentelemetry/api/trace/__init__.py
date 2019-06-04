@@ -78,7 +78,7 @@ class Tracer(object):
         raise NotImplementedError
 
     @contextmanager
-    def span(self, name: str, parent: Span=None) -> Iterator[None]:
+    def span(self, name: str, parent: Span=None) -> Iterator[Span]:
         """Context manager for span creation.
 
         Create a new child of the current span, or create a root span if no
