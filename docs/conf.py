@@ -28,10 +28,15 @@ author = 'OpenTelemetry Authors'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    # API doc generation
     'sphinx.ext.autodoc',
+    # Support for google-style docstrings
     'sphinx.ext.napoleon',
+    # Infer types from hints instead of docstrings
     'sphinx_autodoc_typehints',
+    # Add links to source from generated docs
     'sphinx.ext.viewcode',
+    # Link to other sphinx docs
     'sphinx.ext.intersphinx',
 ]
 
