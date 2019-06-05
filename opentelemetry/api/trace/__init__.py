@@ -58,8 +58,8 @@ implicit or explicit context propagation consistently throughout.
 
 from __future__ import annotations
 
-from typing import Iterator
 from contextlib import contextmanager
+from typing import Iterator
 
 
 class Tracer(object):
