@@ -25,30 +25,35 @@ This module provides abstract (i.e. unimplemented) classes required for
 tracing, and a concrete no-op ``BlankSpan`` that allows applications to use the
 API package alone without a supporting implementation.
 
-The tracer supports implicit and explicit context propagation. By default spans
-are created as children of the currently active span, and the newly-created
-span becomes the new active span::
+The tracer supports creating spans that are "attached" or "detached" from the
+context. By default, new spans are "attached" to the context in that they are
+created as children of the currently active span, and the newly-created span
+becomes the new active span::
 
     from opentelemetry.sdk.trace import tracer
 
     # Create a new root span, set it as the current span in context
-    with tracer.span("parent"):
+    with tracer.start_span("parent"):
         # Attach a new child and update the current span
-        with tracer.span("child"):
+        with tracer.start_span("child"):
             do_work():
         # Close child span, set parent as current
     # Close parent span, set default span as current
 
-Under explicit context propagation there is no concept of an active span, and
-the caller is responsible for managing the span's lifetime::
+When creating a span that's "detached" from the context the active span doesn't
+change, and the caller is responsible for managing the span's lifetime::
 
     from opentelemetry.sdk.trace import tracer
-    from your.integration import deserialize_span
 
-    parent = deserialize_span(serialized_span)
     # Explicit parent span assignment
-    with tracer.span("child", parent=parent) as child:
+    span = tracer.create_span("child", parent=parent) as child:
+
+    # The caller is responsible for starting and ending the span
+    span.start()
+    try:
         do_work(span=child)
+    finally:
+        span.end()
 
 Applications should generally use a single global tracer, and use either
 implicit or explicit context propagation consistently throughout.
@@ -72,13 +77,18 @@ class Tracer(object):
     def get_current_span(self) -> Span:
         """Get the currently active span from the context.
 
+        If there is no current span, return a placeholder span with an invalid
+        context.
+
         Returns:
-            The currently active :class:`.Span`.
+            The currently active :class:`.Span`, or a placeholder span with an
+            invalid :class:`.SpanContext`.
         """
         raise NotImplementedError
 
+
     @contextmanager
-    def span(self, name: str, parent: Span=None) -> Iterator[Span]:
+    def start_span(self, name: str, parent: Span) -> Iterator[Span]:
         """Context manager for span creation.
 
         Create a new child of the current span, or create a root span if no
@@ -98,36 +108,74 @@ class Tracer(object):
                 tracer.get_current_span()      # returns parent
             tracer.get_current_span()          # returns the previously active span
 
+        This is a convenience method for creating spans attached to the
+        tracer's context. Applications that need more control over the span
+        lifetime should use :meth:`create_span` instead. For example::
+
+            with tracer.start_span(name) as span:
+                do_work()
+
+        is equivalent to::
+
+            span = tracer.create_span(name, parent=tracer.get_current_span())
+            with tracer.use_span(span):
+                do_work()
+
         Args:
             name: The name of the span to be created.
-            parent: This span's parent.
+            parent: The span's parent.
 
         Yields:
             The newly-created span.
         """
         raise NotImplementedError
 
-    def create_span(self, name: str, parent: Span=None) -> Span:
-        """Create a new span as a child of the currently active span.
+    def create_span(self, name: str, parent: Span) -> Span:
+        """Creates a new child span of the given parent.
 
-        If called with ``parent`` this method won't affect the tracer's
-        context.
+        Creating the span does not start it, and should not affect the tracer's
+        context. To start the span and update the tracer's context to make it
+        the currently active span, see :meth:`use_span`.
 
-        See ``span`` for a context manager that controls the span's lifetime.
+        Applications that need to explicitly set spans' parents or create spans
+        detached from the tracer's context should use this method.
+
+            with tracer.start_span(name) as span:
+                do_work()
+
+        This is equivalent to::
+
+            span = tracer.create_span(name, parent=tracer.get_current_span())
+            with tracer.use_span(span):
+                do_work()
 
         Args:
             name: The name of the span to be created.
-            parent: This span's parent.
+            parent: The span's parent.
 
-        Raises:
-            ValueError: if ``name`` is null.
+        Returns:
+            The newly-created span.
+        """
+        raise NotImplementedError
+
+    @contextmanager
+    def use_span(self, span: Span) -> Iterator[None]:
+        """Context manager for controlling a span's lifetime.
+
+        Start the given span and set it as the current span in this tracer's
+        context.
+
+        On exiting the context manager stop the span and set its parent as the
+        current span.
+
+        Args:
+            span: The span to start and make current.
         """
         raise NotImplementedError
 
 
 class Span(object):
-    """A span represents a single operation within a trace.
-    """
+    """A span represents a single operation within a trace."""
 
     def start(self) -> None:
         """Set the current time as the span's start time.
@@ -179,7 +227,7 @@ class SpanContext(object):
                  trace_id: str,
                  span_id: str,
                  options: TraceOptions,
-                 state: TraceState) -> SpanContext:
+                 state: TraceState) -> None:
         pass
 
 
