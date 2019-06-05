@@ -100,7 +100,7 @@ class Tracer(object):
 
         Args:
             name: The name of the span to be created.
-            parent: This span's parent.
+            parent: The new span's parent.
 
         Raises:
             ValueError: if ``name`` is null.
