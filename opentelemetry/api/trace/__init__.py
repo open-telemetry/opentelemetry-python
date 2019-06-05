@@ -151,7 +151,10 @@ class Span(object):
         raise NotImplementedError
 
     def get_context(self) -> SpanContext:
-        """Get an immutable snapshot of this span.
+        """Get the span's SpanContext.
+
+        Get an immutable, serializable identifier for this span that can be
+        used to create new child spans.
 
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
