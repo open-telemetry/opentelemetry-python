@@ -171,8 +171,8 @@ class SpanContext(object):
     Args:
         trace_id: The ID of the trace that this span belongs to.
         span_id: This span's ID.
-        options: Global trace options to propagate.
-        state: Global tracing-system-specific info to propagate.
+        options: Trace options to propagate.
+        state: Tracing-system-specific info to propagate.
     """
 
     def __init__(self,
