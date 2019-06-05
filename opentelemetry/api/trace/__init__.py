@@ -100,10 +100,10 @@ class Tracer(object):
 
         Args:
             name: The name of the span to be created.
-            parent: The new span's parent.
+            parent: This span's parent.
 
-        Raises:
-            ValueError: if ``name`` is null.
+        Yields:
+            The newly-created span.
         """
         raise NotImplementedError
 
