@@ -75,7 +75,7 @@ class Tracer(object):
     """
 
     def get_current_span(self) -> Span:
-        """Get the currently active span from the context.
+        """Gets the currently active span from the context.
 
         If there is no current span, return a placeholder span with an invalid
         context.
@@ -178,7 +178,7 @@ class Span(object):
     """A span represents a single operation within a trace."""
 
     def start(self) -> None:
-        """Set the current time as the span's start time.
+        """Sets the current time as the span's start time.
 
         Each span represents a single operation. The span's start time is the
         wall time at which the operation started.
@@ -189,7 +189,7 @@ class Span(object):
         raise NotImplementedError
 
     def end(self) -> None:
-        """Set the current time as the span's end time.
+        """Sets the current time as the span's end time.
 
         The span's end time is the wall time at which the operation finished.
 
@@ -199,7 +199,7 @@ class Span(object):
         raise NotImplementedError
 
     def get_context(self) -> SpanContext:
-        """Get the span's SpanContext.
+        """Gets the span's SpanContext.
 
         Get an immutable, serializable identifier for this span that can be
         used to create new child spans.
