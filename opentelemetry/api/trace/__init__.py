@@ -100,9 +100,9 @@ class Tracer(object):
 
         Example::
 
-            with tracer.span("one") as parent:
+            with tracer.start_span("one") as parent:
                 parent.add_event("parent's event")
-                with tracer.span("two") as child:
+                with tracer.start_span("two") as child:
                     child.add_event("child's event")
                     tracer.get_current_span()  # returns child
                 tracer.get_current_span()      # returns parent
