@@ -14,7 +14,7 @@
 
 from setuptools import find_packages
 from setuptools import setup
-from opencensus.ext.azure.common.version import __version__
+from opentelemetry.internal import __version__
 
 setup(
     name='opentelemetry-api',
@@ -41,6 +41,6 @@ setup(
     license='Apache-2.0',
     packages=find_packages(exclude=('examples', 'tests',)),
     namespace_packages=[],
-    url='https://github.com/open-telemetry/opentelemetry-python',
+    url='https://github.com/open-telemetry/opentelemetry-python/opentelemetry-api',
     zip_safe=False,
 )
