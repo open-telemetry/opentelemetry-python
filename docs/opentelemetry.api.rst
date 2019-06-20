@@ -12,6 +12,3 @@ Module contents
 ---------------
 
 .. automodule:: opentelemetry.api
-    :members:
-    :undoc-members:
-    :show-inheritance:
