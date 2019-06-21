@@ -4,4 +4,4 @@ opentelemetry
 .. toctree::
    :maxdepth: 4
 
-   opentelemetry
+   opentelemetry.trace
