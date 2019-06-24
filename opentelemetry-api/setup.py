@@ -53,7 +53,6 @@ setuptools.setup(
         "opentelemetry.resources",
         "opentelemetry.trace",
     ],
-    namespace_packages=[],
     url="https://github.com/open-telemetry/opentelemetry-python/tree/master/opentelemetry-api",
     zip_safe=False,
 )
