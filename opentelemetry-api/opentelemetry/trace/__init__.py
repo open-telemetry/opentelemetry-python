@@ -85,7 +85,6 @@ class Tracer:
             The currently active :class:`.Span`, or a placeholder span with an
             invalid :class:`.SpanContext`.
         """
-        pass
 
 
     @contextmanager
@@ -129,7 +128,6 @@ class Tracer:
         Yields:
             The newly-created span.
         """
-        pass
 
     def create_span(self, name: str, parent: Span) -> Span:
         """Creates a new child span of the given parent.
@@ -157,7 +155,6 @@ class Tracer:
         Returns:
             The newly-created span.
         """
-        pass
 
     @contextmanager
     def use_span(self, span: Span) -> Iterator[None]:
@@ -172,7 +169,6 @@ class Tracer:
         Args:
             span: The span to start and make current.
         """
-        pass
 
 
 class Span:
@@ -187,7 +183,6 @@ class Span:
         Only the first call to ``start`` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
-        pass
 
     def end(self) -> None:
         """Sets the current time as the span's end time.
@@ -197,7 +192,6 @@ class Span:
         Only the first call to ``end`` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
-        pass
 
     def get_context(self) -> SpanContext:
         """Gets the span's SpanContext.
@@ -208,7 +202,6 @@ class Span:
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
-        pass
 
 
 class SpanContext:
