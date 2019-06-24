@@ -68,7 +68,7 @@ from contextlib import contextmanager
 from typing import Iterator
 
 
-class Tracer(object):
+class Tracer:
     """Handles span creation and in-process context propagation.
 
     This class provides methods for manipulating the context, creating spans,
@@ -175,7 +175,7 @@ class Tracer(object):
         pass
 
 
-class Span(object):
+class Span:
     """A span represents a single operation within a trace."""
 
     def start(self) -> None:
@@ -211,7 +211,7 @@ class Span(object):
         pass
 
 
-class SpanContext(object):
+class SpanContext:
     """The state of a Span to propagate between processes.
 
     This class includes the immutable attributes of a :class:`.Span` that must

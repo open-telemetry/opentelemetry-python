@@ -61,7 +61,8 @@ confidence=
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 disable=missing-docstring,
-      fixme # Warns about FIXME, TODO, etc. comments.
+      fixme, # Warns about FIXME, TODO, etc. comments.
+      too-few-public-methods, # Might be good to re-enable this later.
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
