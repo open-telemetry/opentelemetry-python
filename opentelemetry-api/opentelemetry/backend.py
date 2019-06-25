@@ -16,6 +16,25 @@
 """
 The OpenTelemetry backend module defines and implements the API to access an
 implementation (backend) of the OpenTelemetry API.
+
+By default, if you call a getter function (e.g., :func:`tracer`) and the corresponding setter (e.g.,
+:func:`set_tracer`) wasn't called, you will get a default implementation, which is selected as follows:
+
+    1. If the environment variable OPENTELEMETRY_PYTHON_BACKEND_<getter-name>` (e.g.,
+       OPENTELEMETRY_PYTHON_BACKEND_TRACER) is set to an nonempty value, an attempt is made to
+       import a module with that name and call a function `get_opentelemetry_backend_impl` in it.
+       The function receives the API type that is expected as an argument and should return an
+       instance of it (e.g., the argument is :cls:`opentelemetry.trace.Tracer` and the function should
+       return an instance of a :cls:`~Tracer` (probably of a derived type).
+    2. If the variable is not set, `$OPENTELEMETRY_PYTHON_BACKEND_DEFAULT` is tried instead.
+    3. If that variable was also not set, an attempt is made to import and use the OpenTelemetry
+       SDK.
+    4. Otherwise (if no variable was set and the SDK was not importable, or an error occured when
+       trying to instantiate the implementation object) the default implementation that ships with the
+        API distribution (a fast no-op implementation) is used.
+
+If you called the setter or if you call the setter later (not recommended), the object you set is
+used instead.
 """
 
 import sys
@@ -36,9 +55,10 @@ _UNIT_TEST_IGNORE_ENV = False
 _tracer = None
 
 def _get_fallback_impl(api_type: Type[_T]) -> _T:
-    """Gets the fallback implementation for `api_type`.
+    # TODO: Move (most of) this to module docstring.
+    """Gets the fallback implementation for ``api_type``.
 
-    `api_type` must be a OpenTelemetry API type like `Tracer`.
+    ``api_type`` must be a OpenTelemetry API type like :cls:`Tracer`.
 
     First, the function tries to find a module that provides a `get_opentelemetry_backend_impl`
     function (with the same signature as this function). The following modules are tried:
@@ -54,7 +74,6 @@ def _get_fallback_impl(api_type: Type[_T]) -> _T:
     backend_modname = None
     if not _UNIT_TEST_IGNORE_ENV and not sys.flags.ignore_environment:
         backend_modname = os.getenv('OPENTELEMETRY_PYTHON_BACKEND_' + api_type.__name__.upper())
-        breakpoint()
         if not backend_modname:
             backend_modname = os.getenv('OPENTELEMETRY_PYTHON_BACKEND_DEFAULT')
     if not backend_modname:
@@ -65,7 +84,8 @@ def _get_fallback_impl(api_type: Type[_T]) -> _T:
         # TODO Log/warn
         return api_type()
     try:
-        # Note: We use such a long name to avoid called 
+        # Note: We use such a long name to avoid calling a function that is not intended for this
+        # API.
         backend_fn: Callable[[Type[_T]], object] = getattr(backend_mod, 'get_opentelemetry_backend_impl')
     except AttributeError:
         # TODO Log/warn
@@ -77,50 +97,35 @@ def _get_fallback_impl(api_type: Type[_T]) -> _T:
         return result
     return api_type()
 
-_GETTER_TPL = '''
-def make_getter(obj=obj):
-    @wraps(original_func)
-    def dyn_{getter_name}() -> api_type: return obj
-
-    return dyn_{getter_name}
-'''
-
-def _set_backend_object(api_type: Type[_T], obj: _T) -> None:
-    """Set the backend object by compiling a function that returns it without accessing a global for
-    maximum performance."""
-
-    if not isinstance(obj, api_type):
-        raise ValueError('obj is not an instance of api_type. obj\'s type: ' + str(api_type))
-
-    # Note: At some time, instead of lower(), we might need to convert to snake_case here.
-    getter_name = api_type.__name__.lower()
-
-    getter_src = _GETTER_TPL.format(getter_name=getter_name)
-    getter_code = compile(getter_src, '<generated getter for {}>'.format(api_type.__name__), 'exec')
-    original_func = globals()[getter_name]
-    if hasattr(original_func, '__wraps__'):
-        original_func = original_func.__wraps__
-    assert not hasattr(original_func, '__wraps__')
-    scope = dict(
-        api_type=api_type,
-        wraps=wraps,
-        original_func=original_func,
-        obj=obj)
-    exec(getter_code, scope) #pylint:disable=exec-used
-    globals()[getter_name] = scope['make_getter']()
-
-
 def _selectimpl(api_type: Type[_T]) -> _T:
     impl = _get_fallback_impl(api_type)
     assert impl
-    _set_backend_object(api_type, impl)
+    globals()[api_type.__name__.lower()] = impl
     return impl
 
+def _set_backend_object(api_type: Type[_T], impl_object: _T) -> None:
+    if impl_object is None:
+        raise ValueError('None is not allowed as a backend implementation.')
+    if not isinstance(impl_object, api_type):
+        raise ValueError('The object does not implement the required base class.')
+    globals()['_' + api_type.__name__.lower()] = impl_object
 
 ### Public code (basically copy & paste for each type) {{{1
 
 def tracer() -> Tracer:
+    """Gets the current global :cls:`Tracer` object.
+
+    If there isn't one set yet, a default will be used (see module documentation).
+    """
+
+    if _tracer:
+        return _tracer
     return _selectimpl(Tracer)
 
 def set_tracer(tracer_implementation: Tracer) -> None:
+    """Sets the global :cls:`Tracer` object.
+
+    Further calls to ``tracer`` will return ``tracer_implementation``.
+    """
+
     _set_backend_object(Tracer, tracer_implementation)

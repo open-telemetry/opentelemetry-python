@@ -1,6 +1,7 @@
 from importlib import reload
 import sys
-import os
+
+import pytest
 
 from opentelemetry import backend
 from opentelemetry.trace import Tracer
@@ -8,15 +9,15 @@ from opentelemetry.trace import Tracer
 class DummyTracer(Tracer):
     pass
 
-dummy_tracer = None
+DUMMY_TRACER = None
 
 def get_opentelemetry_backend_impl(type_):
-    global dummy_tracer
+    global DUMMY_TRACER #pylint:disable=global-statement
     assert type_ is Tracer
-    dummy_tracer = DummyTracer()
-    return dummy_tracer
+    DUMMY_TRACER = DummyTracer()
+    return DUMMY_TRACER
 
-#pylint:disable=redefined-outer-name
+#pylint:disable=redefined-outer-name,protected-access,unidiomatic-typecheck
 
 def test_get_default(backend=backend):
     backend = reload(backend)
@@ -51,15 +52,16 @@ def test_get_set_import_from(backend=backend):
     tracer = get_tracer()
     assert tracer is set_tracer
 
-def test_get_envvar(monkeypatch, backend=backend):
-    global dummy_tracer
+@pytest.mark.parametrize('envvar_suffix', ['TRACER', 'DEFAULT'])
+def test_get_envvar(envvar_suffix, monkeypatch, backend=backend):
+    global DUMMY_TRACER #pylint:disable=global-statement
 
     backend = reload(backend)
     assert not sys.flags.ignore_environment # Test is not runnable with this!
-    monkeypatch.setenv('OPENTELEMETRY_PYTHON_BACKEND_TRACER', __name__)
+    monkeypatch.setenv('OPENTELEMETRY_PYTHON_BACKEND_' + envvar_suffix, __name__)
     try:
         tracer = backend.tracer()
-        assert tracer is dummy_tracer
+        assert tracer is DUMMY_TRACER
     finally:
-        dummy_tracer = None
+        DUMMY_TRACER = None
     assert type(tracer) is DummyTracer
