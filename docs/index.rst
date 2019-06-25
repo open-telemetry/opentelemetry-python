@@ -16,6 +16,7 @@ abstract types for OpenTelemetry implementations.
    :caption: Contents:
 
    opentelemetry.trace
+   opentelemetry.backend
 
 
 Indices and tables
