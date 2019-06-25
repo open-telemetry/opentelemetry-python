@@ -68,7 +68,7 @@ from contextlib import contextmanager
 from typing import Iterator
 
 
-class Tracer(object):
+class Tracer:
     """Handles span creation and in-process context propagation.
 
     This class provides methods for manipulating the context, creating spans,
@@ -85,7 +85,6 @@ class Tracer(object):
             The currently active :class:`.Span`, or a placeholder span with an
             invalid :class:`.SpanContext`.
         """
-        pass
 
 
     @contextmanager
@@ -129,7 +128,6 @@ class Tracer(object):
         Yields:
             The newly-created span.
         """
-        pass
 
     def create_span(self, name: str, parent: Span) -> Span:
         """Creates a new child span of the given parent.
@@ -157,7 +155,6 @@ class Tracer(object):
         Returns:
             The newly-created span.
         """
-        pass
 
     @contextmanager
     def use_span(self, span: Span) -> Iterator[None]:
@@ -172,10 +169,9 @@ class Tracer(object):
         Args:
             span: The span to start and make current.
         """
-        pass
 
 
-class Span(object):
+class Span:
     """A span represents a single operation within a trace."""
 
     def start(self) -> None:
@@ -187,7 +183,6 @@ class Span(object):
         Only the first call to ``start`` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
-        pass
 
     def end(self) -> None:
         """Sets the current time as the span's end time.
@@ -197,7 +192,6 @@ class Span(object):
         Only the first call to ``end`` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
-        pass
 
     def get_context(self) -> SpanContext:
         """Gets the span's SpanContext.
@@ -208,10 +202,9 @@ class Span(object):
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
-        pass
 
 
-class SpanContext(object):
+class SpanContext:
     """The state of a Span to propagate between processes.
 
     This class includes the immutable attributes of a :class:`.Span` that must
