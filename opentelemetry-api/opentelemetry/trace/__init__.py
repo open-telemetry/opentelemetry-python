@@ -62,8 +62,6 @@ implicit or explicit context propagation consistently throughout.
 .. versionadded:: 0.1.0
 """
 
-from __future__ import annotations
-
 from contextlib import contextmanager
 from typing import Iterator
 
@@ -75,7 +73,7 @@ class Tracer:
     and controlling spans' lifecycles.
     """
 
-    def get_current_span(self) -> Span:
+    def get_current_span(self) -> 'Span':
         """Gets the currently active span from the context.
 
         If there is no current span, return a placeholder span with an invalid
@@ -88,7 +86,7 @@ class Tracer:
 
 
     @contextmanager
-    def start_span(self, name: str, parent: Span) -> Iterator[Span]:
+    def start_span(self, name: str, parent: 'Span') -> Iterator['Span']:
         """Context manager for span creation.
 
         Create a new child of the current span, or create a root span if no
@@ -129,7 +127,7 @@ class Tracer:
             The newly-created span.
         """
 
-    def create_span(self, name: str, parent: Span) -> Span:
+    def create_span(self, name: str, parent: 'Span') -> 'Span':
         """Creates a new child span of the given parent.
 
         Creating the span does not start it, and should not affect the tracer's
@@ -157,7 +155,7 @@ class Tracer:
         """
 
     @contextmanager
-    def use_span(self, span: Span) -> Iterator[None]:
+    def use_span(self, span: 'Span') -> Iterator[None]:
         """Context manager for controlling a span's lifetime.
 
         Start the given span and set it as the current span in this tracer's
@@ -193,7 +191,7 @@ class Span:
         implementations are free to ignore or raise on further calls.
         """
 
-    def get_context(self) -> SpanContext:
+    def get_context(self) -> 'SpanContext':
         """Gets the span's SpanContext.
 
         Get an immutable, serializable identifier for this span that can be
@@ -220,8 +218,8 @@ class SpanContext:
     def __init__(self,
                  trace_id: str,
                  span_id: str,
-                 options: TraceOptions,
-                 state: TraceState) -> None:
+                 options: 'TraceOptions',
+                 state: 'TraceState') -> None:
         pass
 
 
