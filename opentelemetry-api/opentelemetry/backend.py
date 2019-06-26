@@ -14,27 +14,30 @@
 
 
 """
-The OpenTelemetry backend module defines and implements the API to access an
-implementation (backend) of the OpenTelemetry API.
+The OpenTelemetry backend module provides access to a selected implementation (backend) of the
+OpenTelemetry API.
 
 By default, if you call a getter function (e.g., :func:`tracer`) and the corresponding setter (e.g.,
-:func:`set_tracer`) wasn't called, you will get a default implementation, which is selected as follows:
+:func:`set_tracer`) wasn't called, you will get a default implementation, which is selected as
+follows:
 
-    1. If the environment variable OPENTELEMETRY_PYTHON_BACKEND_<getter-name>` (e.g.,
-       OPENTELEMETRY_PYTHON_BACKEND_TRACER) is set to an nonempty value, an attempt is made to
-       import a module with that name and call a function `get_opentelemetry_backend_impl` in it.
+    1. If the environment variable :samp:`OPENTELEMETRY_PYTHON_BACKEND_{getter-name}` (e.g.,
+       ``OPENTELEMETRY_PYTHON_BACKEND_TRACER``) is set to an nonempty value, an attempt is made to
+       import a module with that name and call a function ``get_opentelemetry_backend_impl`` in it.
        The function receives the API type that is expected as an argument and should return an
-       instance of it (e.g., the argument is :cls:`opentelemetry.trace.Tracer` and the function should
-       return an instance of a :cls:`~Tracer` (probably of a derived type).
-    2. If the variable is not set, `$OPENTELEMETRY_PYTHON_BACKEND_DEFAULT` is tried instead.
+       instance of it (e.g., the argument is :class:`opentelemetry.trace.Tracer` and the function
+       should return an instance of a :class:`~opentelemetry.trace.Tracer` (probably of a derived
+       type).
+    2. If that variable is not set, ``OPENTELEMETRY_PYTHON_BACKEND_DEFAULT`` is tried instead.
     3. If that variable was also not set, an attempt is made to import and use the OpenTelemetry
        SDK.
     4. Otherwise (if no variable was set and the SDK was not importable, or an error occured when
-       trying to instantiate the implementation object) the default implementation that ships with the
-        API distribution (a fast no-op implementation) is used.
+       trying to instantiate the implementation object) the default implementation that ships with
+       the API distribution (a fast no-op implementation) is used.
 
-If you called the setter or if you call the setter later (not recommended), the object you set is
-used instead.
+If you called the setter for an object before initializing it that search is not performed and
+instead the object you set is used instead. It is also possible to call the setter later to override
+the set tracer but this is not recommended.
 """
 
 import sys
@@ -58,13 +61,13 @@ def _get_fallback_impl(api_type: Type[_T]) -> _T:
     # TODO: Move (most of) this to module docstring.
     """Gets the fallback implementation for ``api_type``.
 
-    ``api_type`` must be a OpenTelemetry API type like :cls:`Tracer`.
+    ``api_type`` must be a OpenTelemetry API type like :class:`Tracer`.
 
     First, the function tries to find a module that provides a `get_opentelemetry_backend_impl`
     function (with the same signature as this function). The following modules are tried:
 
-    1. `$OPENTELEMETRY_PYTHON_BACKEND_<typename>` (e.g. `OPENTELEMETRY_PYTHON_BACKEND_TRACER`)
-    2. `$OPENTELEMETRY_PYTHON_BACKEND_DEFAULT` (e.g. `OPENTELEMETRY_PYTHON_BACKEND_TRACER`)
+    1. ``$OPENTELEMETRY_PYTHON_BACKEND_<typename>`` (e.g. ``OPENTELEMETRY_PYTHON_BACKEND_TRACER`)
+    2. ``$OPENTELEMETRY_PYTHON_BACKEND_DEFAULT`` (e.g. ``OPENTELEMETRY_PYTHON_BACKEND_TRACER`)
     3. The OpenTelemetry SDK's tracer module.
 
     Note that if any of the environment variables is set to an nonempty value, further steps
@@ -113,7 +116,7 @@ def _set_backend_object(api_type: Type[_T], impl_object: _T) -> None:
 ### Public code (basically copy & paste for each type) {{{1
 
 def tracer() -> Tracer:
-    """Gets the current global :cls:`Tracer` object.
+    """Gets the current global :class:`~opentelemetry.trace.Tracer` object.
 
     If there isn't one set yet, a default will be used (see module documentation).
     """
@@ -123,9 +126,11 @@ def tracer() -> Tracer:
     return _selectimpl(Tracer)
 
 def set_tracer(tracer_implementation: Tracer) -> None:
-    """Sets the global :cls:`Tracer` object.
+    """Sets the global :class:`~opentelemetry.trace.Tracer` object.
 
-    Further calls to ``tracer`` will return ``tracer_implementation``.
+    Args:
+        tracer_implementation: The tracer object that should be returned by further calls to
+            :func:`tracer`.
     """
 
     _set_backend_object(Tracer, tracer_implementation)
