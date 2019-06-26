@@ -9,7 +9,7 @@ install:
   - pip install tox-travis
 
 script:
-  - tox
+  - (cd opentelemetry-api; tox)
 
 branches:
   only:
