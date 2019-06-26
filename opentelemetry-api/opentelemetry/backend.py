@@ -47,13 +47,13 @@ import sys
 
 from .trace import Tracer
 
-### Generic private code {{{1
+### Generic private code ###
 
 _T = TypeVar('_T')
 
 _DEFAULT_BACKEND_MODNAME = 'opentelemetry.sdk.internal.backend_impl'
 
-_tracer = None
+_tracer = None #pylint:disable=invalid-name
 
 def _get_fallback_impl(api_type: Type[_T]) -> _T:
     # TODO: Move (most of) this to module docstring.
@@ -87,7 +87,7 @@ def _get_fallback_impl(api_type: Type[_T]) -> _T:
     try:
         # Note: We use such a long name to avoid calling a function that is not intended for this
         # API.
-        backend_fn: Callable[[Type[_T]], object] = getattr(backend_mod, 'get_opentelemetry_backend_impl')
+        backend_fn = getattr(backend_mod, 'get_opentelemetry_backend_impl')
     except AttributeError:
         # TODO Log/warn
         return api_type()
@@ -111,7 +111,7 @@ def _set_backend_object(api_type: Type[_T], impl_object: _T) -> None:
         raise ValueError('The object does not implement the required base class.')
     globals()['_' + api_type.__name__.lower()] = impl_object
 
-### Public code (basically copy & paste for each type) {{{1
+### Public code (basically copy & paste for each type) ###
 
 def tracer() -> Tracer:
     """Gets the current global :class:`~opentelemetry.trace.Tracer` object.
