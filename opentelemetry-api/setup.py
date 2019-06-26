@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import find_packages
-from setuptools import setup
-from opentelemetry.internal import __version__
+import os
+import setuptools
 
-setup(
+base_dir = os.path.dirname(__file__)
+
+package_info = {}
+with open(os.path.join(base_dir, "opentelemetry", "internal", "version.py")) as f:
+    exec(f.read(), package_info)
+
+setuptools.setup(
     name="opentelemetry-api",
-    version=__version__,  # noqa
+    version=package_info["__version__"],  # noqa
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
     classifiers=[
@@ -39,8 +44,7 @@ setup(
     ],
     extras_require={},
     license="Apache-2.0",
-    packages=find_packages(exclude=("examples", "tests",)),
-    namespace_packages=[],
-    url="https://github.com/open-telemetry/opentelemetry-python/opentelemetry-api",
+    packages=setuptools.find_namespace_packages(include=["opentelemetry.*"]),
+    url="https://github.com/open-telemetry/opentelemetry-python/tree/master/opentelemetry-api",
     zip_safe=False,
 )
