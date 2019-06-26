@@ -73,6 +73,11 @@ class Tracer:
     and controlling spans' lifecycles.
     """
 
+    """Constant used to represent the current span being used as a parent.
+    This is the default behavior when creating spans.
+    """
+    CURRENT_SPAN = object()
+
     def get_current_span(self) -> 'Span':
         """Gets the currently active span from the context.
 
@@ -84,14 +89,18 @@ class Tracer:
             invalid :class:`.SpanContext`.
         """
 
-
     @contextmanager
-    def start_span(self, name: str, parent: 'Span') -> Iterator['Span']:
+    def start_span(self,
+                   name: str,
+                   parent: 'Span' = CURRENT_SPAN) -> Iterator['Span']:
         """Context manager for span creation.
 
-        Create a new child of the current span, or create a root span if no
-        current span exists. Start the span and set it as the current span in
+        Create a new span. Start the span and set it as the current span in
         this tracer's context.
+
+        By default the current span will be used as parent, but an explicit
+        parent can also be specified. If the specified value is `None`, the
+        created span will be a root span.
 
         On exiting the context manager stop the span and set its parent as the
         current span.
@@ -115,40 +124,46 @@ class Tracer:
 
         is equivalent to::
 
-            span = tracer.create_span(name, parent=tracer.get_current_span())
+            span = tracer.create_span(name)
             with tracer.use_span(span):
                 do_work()
 
         Args:
             name: The name of the span to be created.
-            parent: The span's parent.
+            parent: The span's parent. Defaults to the current span.
 
         Yields:
             The newly-created span.
         """
 
-    def create_span(self, name: str, parent: 'Span') -> 'Span':
-        """Creates a new child span of the given parent.
+    def create_span(self,
+                    name: str,
+                    parent: 'Span' = CURRENT_SPAN) -> 'Span':
+        """Creates a span.
 
         Creating the span does not start it, and should not affect the tracer's
         context. To start the span and update the tracer's context to make it
         the currently active span, see :meth:`use_span`.
 
-        Applications that need to explicitly set spans' parents or create spans
-        detached from the tracer's context should use this method.
+        By default the current span will be used as parent, but an explicit
+        parent can also be specified. If the specified value is `None`, the
+        created span will be a root span.
+
+        Applications that need to create spans detached from the tracer's
+        context should use this method.
 
             with tracer.start_span(name) as span:
                 do_work()
 
         This is equivalent to::
 
-            span = tracer.create_span(name, parent=tracer.get_current_span())
+            span = tracer.create_span(name)
             with tracer.use_span(span):
                 do_work()
 
         Args:
             name: The name of the span to be created.
-            parent: The span's parent.
+            parent: The span's parent. Defaults to the current span.
 
         Returns:
             The newly-created span.
