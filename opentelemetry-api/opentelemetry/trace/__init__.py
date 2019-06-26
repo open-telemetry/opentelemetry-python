@@ -85,7 +85,7 @@ class Tracer:
         """
 
 
-    @contextmanager
+    @contextmanager  # type: ignore
     def start_span(self, name: str, parent: 'Span') -> typing.Iterator['Span']:
         """Context manager for span creation.
 
@@ -154,7 +154,7 @@ class Tracer:
             The newly-created span.
         """
 
-    @contextmanager
+    @contextmanager  # type: ignore
     def use_span(self, span: 'Span') -> typing.Iterator[None]:
         """Context manager for controlling a span's lifetime.
 
