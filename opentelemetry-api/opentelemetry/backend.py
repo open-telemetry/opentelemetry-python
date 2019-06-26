@@ -40,11 +40,10 @@ instead the object you set is used instead. It is also possible to call the sett
 the set tracer but this is not recommended.
 """
 
-import sys
-import os
+from typing import Type, TypeVar
 import importlib
-from typing import TypeVar, Type, Callable
-from functools import wraps
+import os
+import sys
 
 from .trace import Tracer
 
