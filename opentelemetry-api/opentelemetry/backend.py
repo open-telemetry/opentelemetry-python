@@ -52,7 +52,6 @@ from .trace import Tracer
 _T = TypeVar('_T')
 
 _DEFAULT_BACKEND_MODNAME = 'opentelemetry.sdk.internal.backend_impl'
-_UNIT_TEST_IGNORE_ENV = False
 
 _tracer = None
 
@@ -74,7 +73,7 @@ def _get_fallback_impl(api_type: Type[_T]) -> _T:
     implementation is returned instead.
     """
     backend_modname = None
-    if not _UNIT_TEST_IGNORE_ENV and not sys.flags.ignore_environment:
+    if not sys.flags.ignore_environment:
         backend_modname = os.getenv('OPENTELEMETRY_PYTHON_BACKEND_' + api_type.__name__.upper())
         if not backend_modname:
             backend_modname = os.getenv('OPENTELEMETRY_PYTHON_BACKEND_DEFAULT')

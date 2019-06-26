@@ -21,7 +21,6 @@ def get_opentelemetry_backend_impl(type_):
 
 def test_get_default(backend=backend):
     backend = reload(backend)
-    backend._UNIT_TEST_IGNORE_ENV = True
     tracer = backend.tracer()
     assert type(tracer) is Tracer
 
