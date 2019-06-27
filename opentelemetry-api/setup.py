@@ -41,6 +41,7 @@ setuptools.setup(
     include_package_data=True,
     long_description=open("README.rst").read(),
     install_requires=[
+        "typing; python_version<'3.5'",
     ],
     extras_require={},
     license="Apache-2.0",
