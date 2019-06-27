@@ -104,7 +104,7 @@ class Tracer:
                     child.add_event("child's event")
                     tracer.get_current_span()  # returns child
                 tracer.get_current_span()      # returns parent
-            tracer.get_current_span()          # returns the previously active span
+            tracer.get_current_span()          # returns previously active span
 
         This is a convenience method for creating spans attached to the
         tracer's context. Applications that need more control over the span
