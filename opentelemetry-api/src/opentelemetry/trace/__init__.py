@@ -119,6 +119,7 @@ class SpanContext:
                  state: 'TraceState') -> None:
         pass
 
+from opentelemetry import _implementation_loader
 
 class Tracer:
     """Handles span creation and in-process context propagation.
@@ -249,3 +250,31 @@ class TraceOptions(int):
 # TODO
 class TraceState(typing.Dict[str, str]):
     pass
+
+
+_TRACER = None
+
+def tracer() -> Tracer:
+    """Gets the current global :class:`~.Tracer` object.
+    If there isn't one set yet, a default will be loaded."""
+
+    global _TRACER #pylint:disable=global-statement
+
+    if _TRACER is None:
+        _TRACER = _implementation_loader.load_default_impl(Tracer)
+
+def set_preferred_tracer_implementation(impl_mod: object) -> None:
+    """Sets a module from which to load the tracer implementation.
+
+    See :mod:`opentelemetry.loader` for details.
+
+    Args:
+            impl_mod: A module that implements a callback to create the
+            tracer.
+    """
+    if _TRACER:
+        raise RuntimeError("Tracer already loaded.")
+
+    #pylint:disable=protected-access
+    _implementation_loader._preferred_module[Tracer] = impl_mod
+    #pylint:enable=protected-access
