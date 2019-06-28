@@ -274,7 +274,7 @@ def set_preferred_tracer_implementation(
 
     Args:
             factory: A function that, when called with the :class:`Tracer` type
-            as an argument, returns an instance of :class:`Tracer`.
+                as an argument, returns an instance of :class:`Tracer`.
     """
     if _TRACER:
         raise RuntimeError("Tracer already loaded.")

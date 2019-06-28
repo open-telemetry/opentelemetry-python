@@ -17,9 +17,7 @@
 The OpenTelemetry loader module is mainly used internally to load the
 implementation for global objects like :func:`opentelemetry.trace.tracer`.
 
-By default, if you call a getter function (e.g., :func:`tracer`) and the
-corresponding setter (e.g., :func:`set_tracer`) wasn't called, you will get a
-default implementation, which is selected as follows:
+When loading an implementation, the following algorithm is used:
 
     1. If the environment variable
        :samp:`OPENTELEMETRY_PYTHON_IMPLEMENTATION_{getter-name}` (e.g.,
@@ -27,16 +25,16 @@ default implementation, which is selected as follows:
        value, an attempt is made to import a module with that name and call a
        function ``get_opentelemetry_implementation`` in it.  The function
        receives the API type that is expected as an argument and should return
-       an instance of it (e.g., the argument is
+       an instance of it or ``None`` (e.g., the argument is
        :class:`opentelemetry.trace.Tracer` and the function should return an
        instance of a :class:`~opentelemetry.trace.Tracer` (probably of a
        derived type).
     2. Otherwise, ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT`` is tried
        instead.
     3. Otherwise, if a :samp:`set_preferred_{<type>}_implementation` was
-       called, the module set there is used.
+       called, the callback set there is used.
     4. Otherwise, if :func:`set_preferred_default_implementation` was called,
-       the module set there is used.
+       the callback set there is used.
     5. Otherwise, an attempt is made to import and use the OpenTelemetry SDK.
     6. Otherwise the default implementation that ships with the API
        distribution (a fast no-op implementation) is used.
@@ -142,6 +140,6 @@ def _load_impl(api_type: Type[_T]) -> _T:
 
 def set_preferred_default_implementation(
         implementation_module: _UntrustedImplFactory) -> None:
-    """Sets a module that may be queried for a default implementation. See the
-    module docs for more details."""
+    """Sets a callback that may be queried for any implementation object. See
+    the module docs for more details."""
     _CALLBACKS_BY_TYPE[None] = implementation_module
