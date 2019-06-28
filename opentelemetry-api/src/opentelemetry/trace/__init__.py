@@ -64,7 +64,7 @@ implicit or explicit context propagation consistently throughout.
 
 from contextlib import contextmanager
 import typing
-
+from opentelemetry import loader
 
 class Span:
     """A span represents a single operation within a trace."""
@@ -118,8 +118,6 @@ class SpanContext:
                  options: 'TraceOptions',
                  state: 'TraceState') -> None:
         pass
-
-from opentelemetry import _implementation_loader
 
 class Tracer:
     """Handles span creation and in-process context propagation.
@@ -261,20 +259,26 @@ def tracer() -> Tracer:
     global _TRACER #pylint:disable=global-statement
 
     if _TRACER is None:
-        _TRACER = _implementation_loader.load_default_impl(Tracer)
+        #pylint:disable=protected-access
+        _TRACER = loader._load_default_impl(Tracer)
 
-def set_preferred_tracer_implementation(impl_mod: object) -> None:
-    """Sets a module from which to load the tracer implementation.
+    return _TRACER
+
+def set_preferred_tracer_implementation(
+        factory: typing.Callable[[typing.Type[Tracer]], Tracer]) -> None:
+    """Sets a callback which to query for the tracer implementation.
 
     See :mod:`opentelemetry.loader` for details.
 
+    This function may not be called after a tracer is already loaded.
+
     Args:
-            impl_mod: A module that implements a callback to create the
-            tracer.
+            factory: A function that, when called with the :class:`Tracer` type
+            as an argument, returns an instance of :class:`Tracer`.
     """
     if _TRACER:
         raise RuntimeError("Tracer already loaded.")
 
     #pylint:disable=protected-access
-    _implementation_loader._preferred_module[Tracer] = impl_mod
+    loader._CALLBACKS_BY_TYPE[Tracer] = factory
     #pylint:enable=protected-access
