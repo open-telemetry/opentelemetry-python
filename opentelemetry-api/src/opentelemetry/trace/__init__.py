@@ -260,7 +260,7 @@ def tracer() -> Tracer:
 
     if _TRACER is None:
         #pylint:disable=protected-access
-        _TRACER = loader._load_default_impl(Tracer)
+        _TRACER = loader._load_impl(Tracer)
 
     return _TRACER
 

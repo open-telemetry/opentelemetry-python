@@ -130,7 +130,7 @@ def _try_load_configured_impl(api_type: Type[_T]) -> Optional[_T]:
     return None
 
  # Public to other opentelemetry-api modules
-def _load_default_impl(api_type: Type[_T]) -> _T:
+def _load_impl(api_type: Type[_T]) -> _T:
     """Tries to load a configured implementation, if unsuccessful, returns a
     fast no-op implemenation that is always available.
     """
