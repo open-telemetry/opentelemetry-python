@@ -18,11 +18,11 @@ import setuptools
 base_dir = os.path.dirname(__file__)
 
 package_info = {}
-with open(os.path.join(base_dir, "src", "opentelemetry", "internal", "version.py")) as f:
+with open(os.path.join(base_dir, "src", "opentelemetry", "sdk", "version.py")) as f:
     exec(f.read(), package_info)
 
 setuptools.setup(
-    name="opentelemetry-api",
+    name="opentelemetry-sdk",
     version=package_info["__version__"],  # noqa
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
@@ -37,16 +37,15 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
-    description="OpenTelemetry Python API",
+    description="OpenTelemetry Python SDK",
     include_package_data=True,
     long_description=open("README.rst").read(),
     install_requires=[
-        "typing; python_version<'3.5'",
     ],
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
     packages=setuptools.find_namespace_packages(where="src"),
-    url="https://github.com/open-telemetry/opentelemetry-python/tree/master/opentelemetry-api",
+    url="https://github.com/open-telemetry/opentelemetry-python/tree/master/opentelemetry-sdk",
     zip_safe=False,
 )
