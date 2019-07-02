@@ -63,7 +63,7 @@ implicit or explicit context propagation consistently throughout.
 """
 
 from contextlib import contextmanager
-from typing import Iterator
+import typing
 
 
 class Tracer:
@@ -89,10 +89,10 @@ class Tracer:
             invalid :class:`.SpanContext`.
         """
 
-    @contextmanager
+    @contextmanager  # type: ignore
     def start_span(self,
                    name: str,
-                   parent: 'Span' = CURRENT_SPAN) -> Iterator['Span']:
+                   parent: 'Span' = CURRENT_SPAN) -> typing.Iterator['Span']:
         """Context manager for span creation.
 
         Create a new span. Start the span and set it as the current span in
@@ -113,7 +113,7 @@ class Tracer:
                     child.add_event("child's event")
                     tracer.get_current_span()  # returns child
                 tracer.get_current_span()      # returns parent
-            tracer.get_current_span()          # returns the previously active span
+            tracer.get_current_span()          # returns previously active span
 
         This is a convenience method for creating spans attached to the
         tracer's context. Applications that need more control over the span
@@ -169,8 +169,8 @@ class Tracer:
             The newly-created span.
         """
 
-    @contextmanager
-    def use_span(self, span: 'Span') -> Iterator[None]:
+    @contextmanager  # type: ignore
+    def use_span(self, span: 'Span') -> typing.Iterator[None]:
         """Context manager for controlling a span's lifetime.
 
         Start the given span and set it as the current span in this tracer's
@@ -244,5 +244,5 @@ class TraceOptions(int):
 
 
 # TODO
-class TraceState(dict):
+class TraceState(typing.Dict[str, str]):
     pass

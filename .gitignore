@@ -47,3 +47,6 @@ htmlcov
 
 # VSCode
 .vscode
+
+# Sphinx
+_build/
