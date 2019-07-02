@@ -73,9 +73,8 @@ class Tracer:
     and controlling spans' lifecycles.
     """
 
-    """Constant used to represent the current span being used as a parent.
-    This is the default behavior when creating spans.
-    """
+    # Constant used to represent the current span being used as a parent.
+    # This is the default behavior when creating spans.
     CURRENT_SPAN = object()
 
     def get_current_span(self) -> 'Span':
@@ -92,15 +91,16 @@ class Tracer:
     @contextmanager  # type: ignore
     def start_span(self,
                    name: str,
-                   parent: 'Span' = CURRENT_SPAN) -> typing.Iterator['Span']:
+                   parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                   ) -> typing.Iterator['Span']:
         """Context manager for span creation.
 
         Create a new span. Start the span and set it as the current span in
         this tracer's context.
 
         By default the current span will be used as parent, but an explicit
-        parent can also be specified. If the specified value is `None`, the
-        created span will be a root span.
+        parent can also be specified, either a Span or a SpanContext.
+        If the specified value is `None`, the created span will be a root span.
 
         On exiting the context manager stop the span and set its parent as the
         current span.
@@ -138,7 +138,8 @@ class Tracer:
 
     def create_span(self,
                     name: str,
-                    parent: 'Span' = CURRENT_SPAN) -> 'Span':
+                    parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                    ) -> 'Span':
         """Creates a span.
 
         Creating the span does not start it, and should not affect the tracer's
@@ -146,8 +147,8 @@ class Tracer:
         the currently active span, see :meth:`use_span`.
 
         By default the current span will be used as parent, but an explicit
-        parent can also be specified. If the specified value is `None`, the
-        created span will be a root span.
+        parent can also be specified, either a Span or a SpanContext.
+        If the specified value is `None`, the created span will be a root span.
 
         Applications that need to create spans detached from the tracer's
         context should use this method.
