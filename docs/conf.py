@@ -12,7 +12,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../opentelemetry-api/'))
+sys.path.insert(0, os.path.abspath('../opentelemetry-api/src/'))
 
 
 # -- Project information -----------------------------------------------------
