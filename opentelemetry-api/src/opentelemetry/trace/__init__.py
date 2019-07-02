@@ -178,7 +178,7 @@ class Span:
         Each span represents a single operation. The span's start time is the
         wall time at which the operation started.
 
-        Only the first call to ``start`` should modify the span, and
+        Only the first call to `start` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
 
@@ -187,7 +187,7 @@ class Span:
 
         The span's end time is the wall time at which the operation finished.
 
-        Only the first call to ``end`` should modify the span, and
+        Only the first call to `end` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
 
