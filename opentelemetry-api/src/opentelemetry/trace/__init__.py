@@ -66,6 +66,60 @@ from contextlib import contextmanager
 import typing
 
 
+class Span:
+    """A span represents a single operation within a trace."""
+
+    def start(self) -> None:
+        """Sets the current time as the span's start time.
+
+        Each span represents a single operation. The span's start time is the
+        wall time at which the operation started.
+
+        Only the first call to ``start`` should modify the span, and
+        implementations are free to ignore or raise on further calls.
+        """
+
+    def end(self) -> None:
+        """Sets the current time as the span's end time.
+
+        The span's end time is the wall time at which the operation finished.
+
+        Only the first call to ``end`` should modify the span, and
+        implementations are free to ignore or raise on further calls.
+        """
+
+    def get_context(self) -> 'SpanContext':
+        """Gets the span's SpanContext.
+
+        Get an immutable, serializable identifier for this span that can be
+        used to create new child spans.
+
+        Returns:
+            A :class:`.SpanContext` with a copy of this span's immutable state.
+        """
+
+
+class SpanContext:
+    """The state of a Span to propagate between processes.
+
+    This class includes the immutable attributes of a :class:`.Span` that must
+    be propagated to a span's children and across process boundaries.
+
+    Args:
+        trace_id: The ID of the trace that this span belongs to.
+        span_id: This span's ID.
+        options: Trace options to propagate.
+        state: Tracing-system-specific info to propagate.
+    """
+
+    def __init__(self,
+                 trace_id: str,
+                 span_id: str,
+                 options: 'TraceOptions',
+                 state: 'TraceState') -> None:
+        pass
+
+
 class Tracer:
     """Handles span creation and in-process context propagation.
 
@@ -75,7 +129,7 @@ class Tracer:
 
     # Constant used to represent the current span being used as a parent.
     # This is the default behavior when creating spans.
-    CURRENT_SPAN = object()
+    CURRENT_SPAN = Span()
 
     def get_current_span(self) -> 'Span':
         """Gets the currently active span from the context.
@@ -183,60 +237,6 @@ class Tracer:
         Args:
             span: The span to start and make current.
         """
-
-
-class Span:
-    """A span represents a single operation within a trace."""
-
-    def start(self) -> None:
-        """Sets the current time as the span's start time.
-
-        Each span represents a single operation. The span's start time is the
-        wall time at which the operation started.
-
-        Only the first call to ``start`` should modify the span, and
-        implementations are free to ignore or raise on further calls.
-        """
-
-    def end(self) -> None:
-        """Sets the current time as the span's end time.
-
-        The span's end time is the wall time at which the operation finished.
-
-        Only the first call to ``end`` should modify the span, and
-        implementations are free to ignore or raise on further calls.
-        """
-
-    def get_context(self) -> 'SpanContext':
-        """Gets the span's SpanContext.
-
-        Get an immutable, serializable identifier for this span that can be
-        used to create new child spans.
-
-        Returns:
-            A :class:`.SpanContext` with a copy of this span's immutable state.
-        """
-
-
-class SpanContext:
-    """The state of a Span to propagate between processes.
-
-    This class includes the immutable attributes of a :class:`.Span` that must
-    be propagated to a span's children and across process boundaries.
-
-    Args:
-        trace_id: The ID of the trace that this span belongs to.
-        span_id: This span's ID.
-        options: Trace options to propagate.
-        state: Tracing-system-specific info to propagate.
-    """
-
-    def __init__(self,
-                 trace_id: str,
-                 span_id: str,
-                 options: 'TraceOptions',
-                 state: 'TraceState') -> None:
-        pass
 
 
 # TODO
