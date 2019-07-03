@@ -154,7 +154,8 @@ class Tracer:
 
         By default the current span will be used as parent, but an explicit
         parent can also be specified, either a ``Span`` or a ``SpanContext``.
-        If the specified value is ``None``, the created span will be a root span.
+        If the specified value is ``None``, the created span will be a root
+        span.
 
         On exiting the context manager stop the span and set its parent as the
         current span.
@@ -202,7 +203,8 @@ class Tracer:
 
         By default the current span will be used as parent, but an explicit
         parent can also be specified, either a Span or a SpanContext.
-        If the specified value is `None`, the created span will be a root span.
+        If the specified value is `None`, the created span will be a root
+        span.
 
         Applications that need to create spans detached from the tracer's
         context should use this method.
