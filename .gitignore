@@ -50,3 +50,6 @@ htmlcov
 
 # Sphinx
 _build/
+
+# mypy
+.mypy_cache/
