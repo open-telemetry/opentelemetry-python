@@ -75,7 +75,7 @@ class Span:
         Each span represents a single operation. The span's start time is the
         wall time at which the operation started.
 
-        Only the first call to ``start`` should modify the span, and
+        Only the first call to `start` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
 
@@ -84,7 +84,7 @@ class Span:
 
         The span's end time is the wall time at which the operation finished.
 
-        Only the first call to ``end`` should modify the span, and
+        Only the first call to `end` should modify the span, and
         implementations are free to ignore or raise on further calls.
         """
 
@@ -153,9 +153,8 @@ class Tracer:
         this tracer's context.
 
         By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a ``Span`` or a ``SpanContext``.
-        If the specified value is ``None``, the created span will be a root
-        span.
+        parent can also be specified, either a `Span` or a `SpanContext`. If
+        the specified value is `None`, the created span will be a root span.
 
         On exiting the context manager stop the span and set its parent as the
         current span.
