@@ -18,7 +18,7 @@ import setuptools
 base_dir = os.path.dirname(__file__)
 
 package_info = {}
-with open(os.path.join(base_dir, "opentelemetry", "internal", "version.py")) as f:
+with open(os.path.join(base_dir, "src", "opentelemetry", "internal", "version.py")) as f:
     exec(f.read(), package_info)
 
 setuptools.setup(
@@ -41,10 +41,12 @@ setuptools.setup(
     include_package_data=True,
     long_description=open("README.rst").read(),
     install_requires=[
+        "typing; python_version<'3.5'",
     ],
     extras_require={},
     license="Apache-2.0",
-    packages=setuptools.find_namespace_packages(include=["opentelemetry", "opentelemetry.*"]),
+    package_dir={"": "src"},
+    packages=setuptools.find_namespace_packages(where="src"),
     url="https://github.com/open-telemetry/opentelemetry-python/tree/master/opentelemetry-api",
     zip_safe=False,
 )
