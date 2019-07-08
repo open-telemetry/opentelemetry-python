@@ -251,8 +251,8 @@ class TraceState(typing.Dict[str, str]):
 
 
 _TRACER: typing.Optional[Tracer] = None
-_TRACER_FACTORY: \
-    typing.Optional[typing.Callable[[typing.Type[Tracer]], Tracer]] = None
+_TRACER_FACTORY: typing.Optional[
+    typing.Callable[[typing.Type[Tracer]], typing.Optional[Tracer]]] = None
 
 def tracer() -> Tracer:
     """Gets the current global :class:`~.Tracer` object.
@@ -268,16 +268,18 @@ def tracer() -> Tracer:
     return _TRACER
 
 def set_preferred_tracer_implementation(
-        factory: typing.Callable[[typing.Type[Tracer]], Tracer]) -> None:
-    """Sets a callback which to query for the tracer implementation.
+        factory: typing.Callable[
+            [typing.Type[Tracer]], typing.Optional[Tracer]]
+        ) -> None:
+    """Sets a factory function which may be used to create the tracer
+    implementation.
 
     See :mod:`opentelemetry.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 
     Args:
-            factory: A function that, when called with the :class:`Tracer` type
-                as an argument, returns an instance of :class:`Tracer`.
+        factory: Callback that should create a new :class:`Tracer` instance.
     """
 
     global _TRACER_FACTORY #pylint:disable=global-statement

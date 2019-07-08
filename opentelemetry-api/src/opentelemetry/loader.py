@@ -17,22 +17,35 @@
 The OpenTelemetry loader module is mainly used internally to load the
 implementation for global objects like :func:`opentelemetry.trace.tracer`.
 
-When loading an implementation, the following algorithm is used:
+.. _loader-factory:
+
+An instance of a global object of type ``T`` is always created with a factory
+function with the following signature::
+
+    def my_factory_for_t(api_type: typing.Type[T]) -> typing.Optional[T]:
+        # ...
+
+That function is called with e.g., the type of the global object it should
+create as an argument (e.g. the type object
+:class:`opentelemetry.trace.Tracer`) and should return an instance of that type
+(such that ``instanceof(my_factory_for_t(T), T)`` is true). Alternatively, it
+may return ``None`` to indicate that the no-op default should be used.
+
+When loading an implementation, the following algorithm is used to find a
+factory function or other means to create the global object:
 
     1. If the environment variable
        :samp:`OPENTELEMETRY_PYTHON_IMPLEMENTATION_{getter-name}` (e.g.,
        ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_TRACER``) is set to an nonempty
-       value, an attempt is made to import a module with that name and call a
-       function ``get_opentelemetry_implementation`` in it.  The function
-       receives the API type that is expected as an argument and should return
-       an instance of it or ``None`` (e.g., the argument is
-       :class:`opentelemetry.trace.Tracer` and the function should return an
-       instance of a :class:`~opentelemetry.trace.Tracer` (probably of a
-       derived type).
-    2. Otherwise, ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT`` is tried
-       instead.
+       value, an attempt is made to import a module with that name and use a
+       factory function named ``get_opentelemetry_implementation`` in it.
+    2. Otherwise, the same is tried with the environment
+       variable ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT``.
     3. Otherwise, if a :samp:`set_preferred_{<type>}_implementation` was
-       called, the callback set there is used.
+       called (e.g.
+       :func:`opentelemetry.trace.set_preferred_tracer_implementation`), the
+       callback set there is used (that is, the environment variables override
+       the callback set in code).
     4. Otherwise, if :func:`set_preferred_default_implementation` was called,
        the callback set there is used.
     5. Otherwise, an attempt is made to import and use the OpenTelemetry SDK.
@@ -42,6 +55,10 @@ When loading an implementation, the following algorithm is used:
 If any of the above steps fails (e.g., a module is loaded but does not define
 the required function or a module name is set but the module fails to load),
 the search immediatelly skips to the last step.
+
+Note that the first two steps (those that query environment variables) are
+skipped if :data:`sys.flags` has ``ignore_environment`` set (which usually
+means that the Python interpreter was invoked with the ``-E`` or ``-I`` flag).
 """
 
 from typing import Type, TypeVar, Optional, Callable
@@ -54,14 +71,14 @@ _T = TypeVar('_T')
 # "Untrusted" because this is usually user-provided and we don't trust the user
 # to really return a _T: by using object, mypy forces us to check/cast
 # explicitly.
-_UntrustedImplFactory = Callable[[Type[_T]], object]
+_UntrustedImplFactory = Callable[[Type[_T]], Optional[object]]
 
 
 # This would be the normal ImplementationFactory which would be used to
 # annotate setters, were it not for https://github.com/python/mypy/issues/7092
 # Once that bug is resolved, setters should use this instead of duplicating the
 # code.
-#ImplementationFactory = Callable[[Type[_T]], _T]
+#ImplementationFactory = Callable[[Type[_T]], Optional[_T]]
 
 _DEFAULT_IMPLEMENTATION_MODNAME = (
     'opentelemetry.sdk.internal.implementation_impl')
@@ -136,7 +153,9 @@ def _try_load_configured_impl(
 
 # Public to other opentelemetry-api modules
 def _load_impl(
-        api_type: Type[_T], factory: Optional[Callable[[Type[_T]], _T]]) -> _T:
+        api_type: Type[_T],
+        factory: Optional[Callable[[Type[_T]], Optional[_T]]]
+    ) -> _T:
     """Tries to load a configured implementation, if unsuccessful, returns a
     fast no-op implemenation that is always available.
     """
@@ -147,8 +166,8 @@ def _load_impl(
     return result
 
 def set_preferred_default_implementation(
-        implementation_module: _UntrustedImplFactory) -> None:
-    """Sets a callback that may be queried for any implementation object. See
-    the module docs for more details."""
+        implementation_factory: _UntrustedImplFactory) -> None:
+    """Sets a factory function that may be called for any implementation
+    object. See the :ref:`module docs <loader-factory>` for more details."""
     global _DEFAULT_FACTORY #pylint:disable=global-statement
-    _DEFAULT_FACTORY = implementation_module
+    _DEFAULT_FACTORY = implementation_factory
