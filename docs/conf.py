@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../opentelemetry-api/src/'))
 # -- Project information -----------------------------------------------------
 
 project = 'OpenTelemetry'
-copyright = '2019, OpenTelemetry Authors'
+copyright = '2019, OpenTelemetry Authors' #pylint:disable=redefined-builtin
 author = 'OpenTelemetry Authors'
 
 
