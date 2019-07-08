@@ -44,7 +44,7 @@ the required function or a module name is set but the module fails to load),
 the search immediatelly skips to the last step.
 """
 
-from typing import Type, TypeVar, Optional, Callable, Dict
+from typing import Type, TypeVar, Optional, Callable
 import importlib
 import os
 import sys
@@ -66,7 +66,7 @@ _UntrustedImplFactory = Callable[[Type[_T]], object]
 _DEFAULT_IMPLEMENTATION_MODNAME = (
     'opentelemetry.sdk.internal.implementation_impl')
 
-_CALLBACKS_BY_TYPE: Dict[Optional[type], _UntrustedImplFactory] = dict()
+_DEFAULT_FACTORY: Optional[_UntrustedImplFactory] = None
 
 def _try_load_impl_from_modname(
         implementation_modname: str, api_type: Type[_T]) -> Optional[_T]:
@@ -111,11 +111,12 @@ def _try_load_impl_from_callback(
     return result
 
 
-def _try_load_configured_impl(api_type: Type[_T]) -> Optional[_T]:
+def _try_load_configured_impl(
+        api_type: Type[_T], factory: Optional[_UntrustedImplFactory[_T]]
+        ) -> Optional[_T]:
     """Attempts to find any specially configured implementation. If none is
     configured, or a load error occurs, returns `None`
     """
-
     implementation_modname = None
     if sys.flags.ignore_environment:
         return None
@@ -127,21 +128,20 @@ def _try_load_configured_impl(api_type: Type[_T]) -> Optional[_T]:
         'OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT')
     if implementation_modname:
         return _try_load_impl_from_modname(implementation_modname, api_type)
-    callback = _CALLBACKS_BY_TYPE.get(api_type)
-    if callback is not None:
-        return _try_load_impl_from_callback(callback, api_type)
-    callback = _CALLBACKS_BY_TYPE.get(None)
-    if callback is not None:
-        return _try_load_impl_from_callback(callback, api_type)
+    if factory is not None:
+        return _try_load_impl_from_callback(factory, api_type)
+    if _DEFAULT_FACTORY is not None:
+        return _try_load_impl_from_callback(_DEFAULT_FACTORY, api_type)
     return None
 
- # Public to other opentelemetry-api modules
-def _load_impl(api_type: Type[_T]) -> _T:
+# Public to other opentelemetry-api modules
+def _load_impl(
+        api_type: Type[_T], factory: Optional[Callable[[Type[_T]], _T]]) -> _T:
     """Tries to load a configured implementation, if unsuccessful, returns a
     fast no-op implemenation that is always available.
     """
 
-    result = _try_load_configured_impl(api_type)
+    result = _try_load_configured_impl(api_type, factory)
     if result is None:
         return api_type()
     return result
@@ -150,4 +150,5 @@ def set_preferred_default_implementation(
         implementation_module: _UntrustedImplFactory) -> None:
     """Sets a callback that may be queried for any implementation object. See
     the module docs for more details."""
-    _CALLBACKS_BY_TYPE[None] = implementation_module
+    global _DEFAULT_FACTORY #pylint:disable=global-statement
+    _DEFAULT_FACTORY = implementation_module

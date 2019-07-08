@@ -250,17 +250,20 @@ class TraceState(typing.Dict[str, str]):
     pass
 
 
-_TRACER = None
+_TRACER: typing.Optional[Tracer] = None
+_TRACER_FACTORY: \
+    typing.Optional[typing.Callable[[typing.Type[Tracer]], Tracer]] = None
 
 def tracer() -> Tracer:
     """Gets the current global :class:`~.Tracer` object.
     If there isn't one set yet, a default will be loaded."""
 
-    global _TRACER #pylint:disable=global-statement
+    global _TRACER, _TRACER_FACTORY #pylint:disable=global-statement
 
     if _TRACER is None:
         #pylint:disable=protected-access
-        _TRACER = loader._load_impl(Tracer)
+        _TRACER = loader._load_impl(Tracer, _TRACER_FACTORY)
+        del _TRACER_FACTORY
 
     return _TRACER
 
@@ -276,9 +279,10 @@ def set_preferred_tracer_implementation(
             factory: A function that, when called with the :class:`Tracer` type
                 as an argument, returns an instance of :class:`Tracer`.
     """
+
+    global _TRACER_FACTORY #pylint:disable=global-statement
+
     if _TRACER:
         raise RuntimeError("Tracer already loaded.")
 
-    #pylint:disable=protected-access
-    loader._CALLBACKS_BY_TYPE[Tracer] = factory
-    #pylint:enable=protected-access
+    _TRACER_FACTORY = factory
