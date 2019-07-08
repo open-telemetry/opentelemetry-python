@@ -51,8 +51,16 @@ import sys
 
 _T = TypeVar('_T')
 
+# "Untrusted" because this is usually user-provided and we don't trust the user
+# to really return a _T: by using object, mypy forces us to check/cast
+# explicitly.
 _UntrustedImplFactory = Callable[[Type[_T]], object]
 
+
+# This would be the normal ImplementationFactory which would be used to
+# annotate setters, were it not for https://github.com/python/mypy/issues/7092
+# Once that bug is resolved, setters should use this instead of duplicating the
+# code.
 #ImplementationFactory = Callable[[Type[_T]], _T]
 
 _DEFAULT_IMPLEMENTATION_MODNAME = (
