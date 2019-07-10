@@ -64,7 +64,7 @@ implicit or explicit context propagation consistently throughout.
 
 from contextlib import contextmanager
 import typing
-
+from opentelemetry import loader
 
 class Span:
     """A span represents a single operation within a trace."""
@@ -118,7 +118,6 @@ class SpanContext:
                  options: 'TraceOptions',
                  state: 'TraceState') -> None:
         pass
-
 
 class Tracer:
     """Handles span creation and in-process context propagation.
@@ -248,3 +247,43 @@ class TraceOptions(int):
 # TODO
 class TraceState(typing.Dict[str, str]):
     pass
+
+
+_TRACER: typing.Optional[Tracer] = None
+_TRACER_FACTORY: typing.Optional[
+    typing.Callable[[typing.Type[Tracer]], typing.Optional[Tracer]]] = None
+
+def tracer() -> Tracer:
+    """Gets the current global :class:`~.Tracer` object.
+    If there isn't one set yet, a default will be loaded."""
+
+    global _TRACER, _TRACER_FACTORY #pylint:disable=global-statement
+
+    if _TRACER is None:
+        #pylint:disable=protected-access
+        _TRACER = loader._load_impl(Tracer, _TRACER_FACTORY)
+        del _TRACER_FACTORY
+
+    return _TRACER
+
+def set_preferred_tracer_implementation(
+        factory: typing.Callable[
+            [typing.Type[Tracer]], typing.Optional[Tracer]]
+        ) -> None:
+    """Sets a factory function which may be used to create the tracer
+    implementation.
+
+    See :mod:`opentelemetry.loader` for details.
+
+    This function may not be called after a tracer is already loaded.
+
+    Args:
+        factory: Callback that should create a new :class:`Tracer` instance.
+    """
+
+    global _TRACER_FACTORY #pylint:disable=global-statement
+
+    if _TRACER:
+        raise RuntimeError("Tracer already loaded.")
+
+    _TRACER_FACTORY = factory
