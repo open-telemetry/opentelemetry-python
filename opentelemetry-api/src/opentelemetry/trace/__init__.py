@@ -241,9 +241,18 @@ class Tracer:
         """
 
 
-# TODO
 class TraceOptions(int):
-    pass
+    """A bitmask that represents options specific to the trace.
+
+    The only supported option is the "recorded" flag (``0x01``). If set, this
+    flag indicates that the trace may have been recorded upstream.
+
+    See the `W3C Trace Context`_ spec for details.
+
+    .. _W3C Trace Context: https://www.w3.org/TR/trace-context/#trace-flags
+    """
+    DEFAULT = 0x00
+    RECORDED = 0x01
 
 
 # TODO
