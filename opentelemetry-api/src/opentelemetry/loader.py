@@ -80,9 +80,6 @@ _UntrustedImplFactory = Callable[[Type[_T]], Optional[object]]
 # code.
 #ImplementationFactory = Callable[[Type[_T]], Optional[_T]]
 
-_DEFAULT_IMPLEMENTATION_MODNAME = (
-    'opentelemetry.sdk.internal.implementation_impl')
-
 _DEFAULT_FACTORY: Optional[_UntrustedImplFactory] = None
 
 def _try_load_impl_from_modname(
