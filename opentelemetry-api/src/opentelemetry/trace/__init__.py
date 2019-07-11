@@ -106,9 +106,10 @@ class TraceOptions(int):
     The only supported option is the "recorded" flag (``0x01``). If set, this
     flag indicates that the trace may have been recorded upstream.
 
-    See the `W3C Trace Context`_ spec for details.
+    See the `W3C Trace Context - Traceparent`_ spec for details.
 
-    .. _W3C Trace Context: https://www.w3.org/TR/trace-context/#trace-flags
+    .. _W3C Trace Context - Traceparent:
+        https://www.w3.org/TR/trace-context/#trace-flags
     """
     DEFAULT = 0x00
     RECORDED = 0x01
@@ -130,6 +131,11 @@ class TraceState(typing.Dict[str, str]):
 
     Values are strings of up to 256 printable ASCII RFC0020 characters (i.e.,
     the range ``0x20`` to ``0x7E``) except comma ``,`` and equals sign ``=``.
+
+    See the `W3C Trace Context - Tracestate`_ spec for details.
+
+    .. _W3C Trace Context - Tracestate:
+        https://www.w3.org/TR/trace-context/#tracestate-field
     """
 
     @classmethod
