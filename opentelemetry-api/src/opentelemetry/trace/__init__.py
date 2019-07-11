@@ -100,6 +100,46 @@ class Span:
         """
 
 
+class TraceOptions(int):
+    """A bitmask that represents options specific to the trace.
+
+    The only supported option is the "recorded" flag (``0x01``). If set, this
+    flag indicates that the trace may have been recorded upstream.
+
+    See the `W3C Trace Context`_ spec for details.
+
+    .. _W3C Trace Context: https://www.w3.org/TR/trace-context/#trace-flags
+    """
+    DEFAULT = 0x00
+    RECORDED = 0x01
+
+    @classmethod
+    def get_default(cls) -> 'TraceOptions':
+        return cls(cls.DEFAULT)
+
+
+DEFAULT_TRACEOPTIONS = TraceOptions.get_default()
+
+
+class TraceState(typing.Dict[str, str]):
+    """A list of key-value pairs that carries system-specific config.
+
+    Keys are strings of up to 256 characters containing only lowercase letters
+    ``a-z``, digits ``0-9``, underscores ``_``, dashes ``-``, asterisks ``*``,
+    and forward slashes ``/``.
+
+    Values are strings of up to 256 printable ASCII RFC0020 characters (i.e.,
+    the range ``0x20`` to ``0x7E``) except comma ``,`` and equals sign ``=``.
+    """
+
+    @classmethod
+    def get_default(cls) -> 'TraceState':
+        return cls()
+
+
+DEFAULT_TRACESTATE = TraceState.get_default()
+
+
 class SpanContext:
     """The state of a Span to propagate between processes.
 
@@ -114,11 +154,30 @@ class SpanContext:
     """
 
     def __init__(self,
-                 trace_id: str,
-                 span_id: str,
+                 trace_id: int,
+                 span_id: int,
                  options: 'TraceOptions',
                  state: 'TraceState') -> None:
-        pass
+        self.trace_id = trace_id
+        self.span_id = span_id
+        self.options = options
+        self.state = state
+
+    def is_valid(self) -> bool:
+        """Get whether this `SpanContext` is valid.
+
+        A `SpanContext` is said to be invalid if its trace ID and span ID are
+        both invalid (i.e. ``0``).
+
+        Returns:
+            True if the `SpanContext` is valid, false otherwise.
+        """
+
+
+INVALID_SPAN_ID = 0
+INVALID_TRACE_ID = 0
+INVALID_SPAN_CONTEXT = SpanContext(INVALID_TRACE_ID, INVALID_SPAN_ID,
+                                   DEFAULT_TRACEOPTIONS, DEFAULT_TRACESTATE)
 
 
 class Tracer:
@@ -239,46 +298,6 @@ class Tracer:
         Args:
             span: The span to start and make current.
         """
-
-
-class TraceOptions(int):
-    """A bitmask that represents options specific to the trace.
-
-    The only supported option is the "recorded" flag (``0x01``). If set, this
-    flag indicates that the trace may have been recorded upstream.
-
-    See the `W3C Trace Context`_ spec for details.
-
-    .. _W3C Trace Context: https://www.w3.org/TR/trace-context/#trace-flags
-    """
-    DEFAULT = 0x00
-    RECORDED = 0x01
-
-    @classmethod
-    def get_default(cls) -> 'TraceOptions':
-        return cls(cls.DEFAULT)
-
-
-DEFAULT_TRACEOPTIONS = TraceOptions.get_default()
-
-
-class TraceState(typing.Dict[str, str]):
-    """A list of key-value pairs that carries system-specific config.
-
-    Keys are strings of up to 256 characters containing only lowercase letters
-    ``a-z``, digits ``0-9``, underscores ``_``, dashes ``-``, asterisks ``*``,
-    and forward slashes ``/``.
-
-    Values are strings of up to 256 printable ASCII RFC0020 characters (i.e.,
-    the range ``0x20`` to ``0x7E``) except comma ``,`` and equals sign ``=``.
-    """
-
-    @classmethod
-    def get_default(cls) -> 'TraceState':
-        return cls()
-
-
-DEFAULT_TRACESTATE = TraceState.get_default()
 
 
 _TRACER: typing.Optional[Tracer] = None
