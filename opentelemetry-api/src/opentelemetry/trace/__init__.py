@@ -254,10 +254,31 @@ class TraceOptions(int):
     DEFAULT = 0x00
     RECORDED = 0x01
 
+    @classmethod
+    def get_default(cls) -> 'TraceOptions':
+        return cls(cls.DEFAULT)
 
-# TODO
+
+DEFAULT_TRACEOPTIONS = TraceOptions.get_default()
+
+
 class TraceState(typing.Dict[str, str]):
-    pass
+    """A list of key-value pairs that carries system-specific config.
+
+    Keys are strings of up to 256 characters containing only lowercase letters
+    ``a-z``, digits ``0-9``, underscores ``_``, dashes ``-``, asterisks ``*``,
+    and forward slashes ``/``.
+
+    Values are strings of up to 256 printable ASCII RFC0020 characters (i.e.,
+    the range ``0x20`` to ``0x7E``) except comma ``,`` and equals sign ``=``.
+    """
+
+    @classmethod
+    def get_default(cls) -> 'TraceState':
+        return cls()
+
+
+DEFAULT_TRACESTATE = TraceState.get_default()
 
 
 _TRACER: typing.Optional[Tracer] = None
