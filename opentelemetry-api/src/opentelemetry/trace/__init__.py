@@ -166,8 +166,8 @@ class SpanContext:
     def is_valid(self) -> bool:
         """Get whether this `SpanContext` is valid.
 
-        A `SpanContext` is said to be invalid if its trace ID and span ID are
-        both invalid (i.e. ``0``).
+        A `SpanContext` is said to be invalid if its trace ID or span ID is
+        invalid (i.e. ``0``).
 
         Returns:
             True if the `SpanContext` is valid, false otherwise.
