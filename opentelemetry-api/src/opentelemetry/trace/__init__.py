@@ -123,16 +123,11 @@ DEFAULT_TRACEOPTIONS = TraceOptions.get_default()
 
 
 class TraceState(typing.Dict[str, str]):
-    """A list of key-value pairs that carries system-specific config.
+    """A list of key-value pairs representing vendor-specific trace info.
 
-    Keys are strings of up to 256 characters containing only lowercase letters
-    ``a-z``, digits ``0-9``, underscores ``_``, dashes ``-``, asterisks ``*``,
-    and forward slashes ``/``.
-
-    Values are strings of up to 256 printable ASCII RFC0020 characters (i.e.,
-    the range ``0x20`` to ``0x7E``) except comma ``,`` and equals sign ``=``.
-
-    See the `W3C Trace Context - Tracestate`_ spec for details.
+    Keys and values are strings of up to 256 printable US-ASCII characters.
+    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+    spec, which describes additional restrictions on valid field values.
 
     .. _W3C Trace Context - Tracestate:
         https://www.w3.org/TR/trace-context/#tracestate-field
