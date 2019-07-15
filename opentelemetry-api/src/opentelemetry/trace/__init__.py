@@ -66,6 +66,7 @@ from contextlib import contextmanager
 import typing
 from opentelemetry import loader
 
+
 class Span:
     """A span represents a single operation within a trace."""
 
@@ -99,6 +100,47 @@ class Span:
         """
 
 
+class TraceOptions(int):
+    """A bitmask that represents options specific to the trace.
+
+    The only supported option is the "recorded" flag (``0x01``). If set, this
+    flag indicates that the trace may have been recorded upstream.
+
+    See the `W3C Trace Context - Traceparent`_ spec for details.
+
+    .. _W3C Trace Context - Traceparent:
+        https://www.w3.org/TR/trace-context/#trace-flags
+    """
+    DEFAULT = 0x00
+    RECORDED = 0x01
+
+    @classmethod
+    def get_default(cls) -> 'TraceOptions':
+        return cls(cls.DEFAULT)
+
+
+DEFAULT_TRACEOPTIONS = TraceOptions.get_default()
+
+
+class TraceState(typing.Dict[str, str]):
+    """A list of key-value pairs representing vendor-specific trace info.
+
+    Keys and values are strings of up to 256 printable US-ASCII characters.
+    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+    spec, which describes additional restrictions on valid field values.
+
+    .. _W3C Trace Context - Tracestate:
+        https://www.w3.org/TR/trace-context/#tracestate-field
+    """
+
+    @classmethod
+    def get_default(cls) -> 'TraceState':
+        return cls()
+
+
+DEFAULT_TRACESTATE = TraceState.get_default()
+
+
 class SpanContext:
     """The state of a Span to propagate between processes.
 
@@ -113,11 +155,31 @@ class SpanContext:
     """
 
     def __init__(self,
-                 trace_id: str,
-                 span_id: str,
+                 trace_id: int,
+                 span_id: int,
                  options: 'TraceOptions',
                  state: 'TraceState') -> None:
-        pass
+        self.trace_id = trace_id
+        self.span_id = span_id
+        self.options = options
+        self.state = state
+
+    def is_valid(self) -> bool:
+        """Get whether this `SpanContext` is valid.
+
+        A `SpanContext` is said to be invalid if its trace ID or span ID is
+        invalid (i.e. ``0``).
+
+        Returns:
+            True if the `SpanContext` is valid, false otherwise.
+        """
+
+
+INVALID_SPAN_ID = 0
+INVALID_TRACE_ID = 0
+INVALID_SPAN_CONTEXT = SpanContext(INVALID_TRACE_ID, INVALID_SPAN_ID,
+                                   DEFAULT_TRACEOPTIONS, DEFAULT_TRACESTATE)
+
 
 class Tracer:
     """Handles span creation and in-process context propagation.
@@ -239,39 +301,31 @@ class Tracer:
         """
 
 
-# TODO
-class TraceOptions(int):
-    pass
-
-
-# TODO
-class TraceState(typing.Dict[str, str]):
-    pass
-
-
 _TRACER: typing.Optional[Tracer] = None
 _TRACER_FACTORY: typing.Optional[
     typing.Callable[[typing.Type[Tracer]], typing.Optional[Tracer]]] = None
 
+
 def tracer() -> Tracer:
     """Gets the current global :class:`~.Tracer` object.
-    If there isn't one set yet, a default will be loaded."""
 
-    global _TRACER, _TRACER_FACTORY #pylint:disable=global-statement
+    If there isn't one set yet, a default will be loaded.
+    """
+    global _TRACER, _TRACER_FACTORY  # pylint:disable=global-statement
 
     if _TRACER is None:
-        #pylint:disable=protected-access
+        # pylint:disable=protected-access
         _TRACER = loader._load_impl(Tracer, _TRACER_FACTORY)
         del _TRACER_FACTORY
 
     return _TRACER
 
+
 def set_preferred_tracer_implementation(
         factory: typing.Callable[
             [typing.Type[Tracer]], typing.Optional[Tracer]]
         ) -> None:
-    """Sets a factory function which may be used to create the tracer
-    implementation.
+    """Set the factory to be used to create the tracer.
 
     See :mod:`opentelemetry.loader` for details.
 
@@ -280,8 +334,7 @@ def set_preferred_tracer_implementation(
     Args:
         factory: Callback that should create a new :class:`Tracer` instance.
     """
-
-    global _TRACER_FACTORY #pylint:disable=global-statement
+    global _TRACER_FACTORY  # pylint:disable=global-statement
 
     if _TRACER:
         raise RuntimeError("Tracer already loaded.")
