@@ -48,6 +48,7 @@ setuptools.setup(
     license="Apache-2.0",
     package_dir={"": "src"},
     packages=setuptools.find_namespace_packages(where="src"),
-    url="https://github.com/open-telemetry/opentelemetry-python/tree/master/opentelemetry-api", #pylint:disable=line-too-long
+    url=("https://github.com/open-telemetry/opentelemetry-python"
+         "/tree/master/opentelemetry-api"),
     zip_safe=False,
 )
