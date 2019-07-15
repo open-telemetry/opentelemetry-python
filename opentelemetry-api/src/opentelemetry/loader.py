@@ -80,7 +80,7 @@ _UntrustedImplFactory = Callable[[Type[_T]], Optional[object]]
 # code.
 #ImplementationFactory = Callable[[Type[_T]], Optional[_T]]
 
-_DEFAULT_FACTORY: Optional[_UntrustedImplFactory] = None
+_DEFAULT_FACTORY: Optional[_UntrustedImplFactory[object]] = None
 
 def _try_load_impl_from_modname(
         implementation_modname: str, api_type: Type[_T]) -> Optional[_T]:
@@ -101,7 +101,8 @@ def _try_load_impl_from_mod(
 
         implementation_fn = getattr(
             implementation_mod,
-            'get_opentelemetry_implementation') # type: _UntrustedImplFactory
+            'get_opentelemetry_implementation'
+        )  # type: _UntrustedImplFactory[_T]
     except AttributeError:
         # TODO Log/warn
         return None
@@ -109,7 +110,7 @@ def _try_load_impl_from_mod(
     return _try_load_impl_from_callback(implementation_fn, api_type)
 
 def _try_load_impl_from_callback(
-        implementation_fn: _UntrustedImplFactory,
+        implementation_fn: _UntrustedImplFactory[_T],
         api_type: Type[_T]
         ) -> Optional[_T]:
     result = implementation_fn(api_type)
@@ -163,7 +164,7 @@ def _load_impl(
     return result
 
 def set_preferred_default_implementation(
-        implementation_factory: _UntrustedImplFactory) -> None:
+        implementation_factory: _UntrustedImplFactory[_T]) -> None:
     """Sets a factory function that may be called for any implementation
     object. See the :ref:`module docs <loader-factory>` for more details."""
     global _DEFAULT_FACTORY #pylint:disable=global-statement
