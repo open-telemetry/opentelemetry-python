@@ -61,7 +61,7 @@ skipped if :data:`sys.flags` has ``ignore_environment`` set (which usually
 means that the Python interpreter was invoked with the ``-E`` or ``-I`` flag).
 """
 
-from typing import Type, TypeVar, Optional, Callable
+from typing import Callable, Optional, Type, TypeVar
 import importlib
 import os
 import sys
@@ -78,9 +78,10 @@ _UntrustedImplFactory = Callable[[Type[_T]], Optional[object]]
 # annotate setters, were it not for https://github.com/python/mypy/issues/7092
 # Once that bug is resolved, setters should use this instead of duplicating the
 # code.
-#ImplementationFactory = Callable[[Type[_T]], Optional[_T]]
+# ImplementationFactory = Callable[[Type[_T]], Optional[_T]]
 
 _DEFAULT_FACTORY: Optional[_UntrustedImplFactory[object]] = None
+
 
 def _try_load_impl_from_modname(
         implementation_modname: str, api_type: Type[_T]) -> Optional[_T]:
@@ -91,6 +92,7 @@ def _try_load_impl_from_modname(
         return None
 
     return _try_load_impl_from_mod(implementation_mod, api_type)
+
 
 def _try_load_impl_from_mod(
         implementation_mod: object, api_type: Type[_T]) -> Optional[_T]:
@@ -108,6 +110,7 @@ def _try_load_impl_from_mod(
         return None
 
     return _try_load_impl_from_callback(implementation_fn, api_type)
+
 
 def _try_load_impl_from_callback(
         implementation_fn: _UntrustedImplFactory[_T],
@@ -149,11 +152,10 @@ def _try_load_configured_impl(
         return _try_load_impl_from_callback(_DEFAULT_FACTORY, api_type)
     return None
 
+
 # Public to other opentelemetry-api modules
-def _load_impl(
-        api_type: Type[_T],
-        factory: Optional[Callable[[Type[_T]], Optional[_T]]]
-    ) -> _T:
+def _load_impl(api_type: Type[_T],
+               factory: Optional[Callable[[Type[_T]], Optional[_T]]]) -> _T:
     """Tries to load a configured implementation, if unsuccessful, returns a
     fast no-op implemenation that is always available.
     """
@@ -163,9 +165,10 @@ def _load_impl(
         return api_type()
     return result
 
+
 def set_preferred_default_implementation(
         implementation_factory: _UntrustedImplFactory[_T]) -> None:
     """Sets a factory function that may be called for any implementation
     object. See the :ref:`module docs <loader-factory>` for more details."""
-    global _DEFAULT_FACTORY #pylint:disable=global-statement
+    global _DEFAULT_FACTORY  # pylint:disable=global-statement
     _DEFAULT_FACTORY = implementation_factory
