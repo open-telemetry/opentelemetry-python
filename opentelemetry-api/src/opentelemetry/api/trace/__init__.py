@@ -328,7 +328,7 @@ def set_preferred_tracer_implementation(
         ) -> None:
     """Set the factory to be used to create the tracer.
 
-    See :mod:`opentelemetry.loader` for details.
+    See :mod:`opentelemetry.api.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 
