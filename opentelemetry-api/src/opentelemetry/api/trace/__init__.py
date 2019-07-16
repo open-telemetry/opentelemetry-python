@@ -65,7 +65,7 @@ implicit or explicit context propagation consistently throughout.
 from contextlib import contextmanager
 import typing
 
-from opentelemetry import loader
+from opentelemetry.api import loader
 
 
 class Span:
