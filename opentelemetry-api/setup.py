@@ -16,15 +16,15 @@ import os
 import setuptools
 
 BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "api", "version.py")
+VERSION_FILENAME = os.path.join(BASE_DIR, "src", "opentelemetry", "api",
+                                "version.py")
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
-    exec(f.read(), PACKAGE_INFO) #pylint:disable=exec-used
+    exec(f.read(), PACKAGE_INFO)
 
 setuptools.setup(
     name="opentelemetry-api",
-    version=PACKAGE_INFO["__version__"],  # noqa
+    version=PACKAGE_INFO["__version__"],
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
     classifiers=[
@@ -47,7 +47,8 @@ setuptools.setup(
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
-    packages=setuptools.find_namespace_packages(where="src", include="opentelemetry.api.*"),
+    packages=setuptools.find_namespace_packages(where="src",
+                                                include="opentelemetry.api.*"),
     url=("https://github.com/open-telemetry/opentelemetry-python"
          "/tree/master/opentelemetry-api"),
     zip_safe=False,

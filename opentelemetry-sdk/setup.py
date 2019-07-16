@@ -15,15 +15,16 @@
 import os
 import setuptools
 
-base_dir = os.path.dirname(__file__)
-
-package_info = {}
-with open(os.path.join(base_dir, "src", "opentelemetry", "sdk", "version.py")) as f:
-    exec(f.read(), package_info)
+BASE_DIR = os.path.dirname(__file__)
+VERSION_FILENAME = os.path.join(BASE_DIR, "src", "opentelemetry", "sdk",
+                                "version.py")
+PACKAGE_INFO = {}
+with open(VERSION_FILENAME) as f:
+    exec(f.read(), PACKAGE_INFO)
 
 setuptools.setup(
     name="opentelemetry-sdk",
-    version=package_info["__version__"],  # noqa
+    version=PACKAGE_INFO["__version__"],
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
     classifiers=[
@@ -41,11 +42,14 @@ setuptools.setup(
     include_package_data=True,
     long_description=open("README.rst").read(),
     install_requires=[
+        "opentelemetry-api==0.1.dev0"
     ],
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
-    packages=setuptools.find_namespace_packages(where="src", include="opentelemetry.sdk.*"),
-    url="https://github.com/open-telemetry/opentelemetry-python/tree/master/opentelemetry-sdk",
+    packages=setuptools.find_namespace_packages(where="src",
+                                                include="opentelemetry.sdk.*"),
+    url=("https://github.com/open-telemetry/opentelemetry-python"
+         "/tree/master/opentelemetry-sdk"),
     zip_safe=False,
 )
