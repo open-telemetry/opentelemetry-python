@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry import api
+from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
 
 
@@ -22,4 +22,4 @@ class TestTracer(unittest.TestCase):
 
     def test_extends_api(self):
         tracer = trace.Tracer()
-        self.assertIsInstance(tracer, api.trace.Tracer)
+        self.assertIsInstance(tracer, trace_api.Tracer)

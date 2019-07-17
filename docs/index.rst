@@ -15,8 +15,8 @@ abstract types for OpenTelemetry implementations.
    :maxdepth: 1
    :caption: Contents:
 
-   opentelemetry.api.trace
-   opentelemetry.api.loader
+   opentelemetry.trace
+   opentelemetry.loader
 
 
 Indices and tables

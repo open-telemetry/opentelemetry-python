@@ -17,8 +17,8 @@ import os
 import sys
 import unittest
 
-from opentelemetry.api import loader
-from opentelemetry.api import trace
+from opentelemetry import loader
+from opentelemetry import trace
 
 DUMMY_TRACER = None
 

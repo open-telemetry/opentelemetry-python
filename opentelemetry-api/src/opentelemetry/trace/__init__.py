@@ -65,7 +65,7 @@ implicit or explicit context propagation consistently throughout.
 from contextlib import contextmanager
 import typing
 
-from opentelemetry.api import loader
+from opentelemetry import loader
 
 
 class Span:
@@ -328,7 +328,7 @@ def set_preferred_tracer_implementation(
         ) -> None:
     """Set the factory to be used to create the tracer.
 
-    See :mod:`opentelemetry.api.loader` for details.
+    See :mod:`opentelemetry.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 
