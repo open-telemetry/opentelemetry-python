@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import trace
+from opentelemetry import trace as trace_api
 
-__all__ = [
-    "trace",
-]
+
+class Tracer(trace_api.Tracer):
+    pass
