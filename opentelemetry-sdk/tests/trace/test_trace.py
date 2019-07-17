@@ -12,8 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .version import __version__
+import unittest
 
-__all__ = [
-    "__version__",
-]
+from opentelemetry import trace as trace_api
+from opentelemetry.sdk import trace
+
+
+class TestTracer(unittest.TestCase):
+
+    def test_extends_api(self):
+        tracer = trace.Tracer()
+        self.assertIsInstance(tracer, trace_api.Tracer)
