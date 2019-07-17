@@ -23,7 +23,7 @@ import threading
 __all__ = ['RuntimeContext']
 
 
-class _RuntimeContext(object):
+class _RuntimeContext:
     _lock = threading.Lock()
     _slots = {}
 
@@ -65,7 +65,7 @@ class _RuntimeContext(object):
         return dict((n, self._slots[n].get()) for n in self._slots.keys())
 
     def __repr__(self):
-        return ('{}({})'.format(type(self).__name__, self.snapshot()))
+        return '{}({})'.format(type(self).__name__, self.snapshot())
 
     def __getattr__(self, name):
         if name not in self._slots:
@@ -96,7 +96,7 @@ class _RuntimeContext(object):
 
 
 class _ThreadLocalRuntimeContext(_RuntimeContext):
-    class Slot(object):
+    class Slot:
         _thread_local = threading.local()
 
         def __init__(self, name, default):
@@ -140,6 +140,6 @@ class _AsyncRuntimeContext(_RuntimeContext):
             self.contextvar.set(value)
 
 
-RuntimeContext = _ThreadLocalRuntimeContext()
+RuntimeContext = _ThreadLocalRuntimeContext()  # pylint:disable=C0201
 if contextvars:
-    RuntimeContext = _AsyncRuntimeContext()
+    RuntimeContext = _AsyncRuntimeContext()  # pylint:disable=C0201
