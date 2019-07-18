@@ -30,7 +30,7 @@ class _RuntimeContext:
     @classmethod
     def clear(cls):
         """Clear all slots to their default value."""
-        for name in cls._slots.keys():
+        for name in cls._slots.keys():  # pylint:disable=consider-iterating-dictionary
             slot = cls._slots[name]
             slot.clear()
 
@@ -62,7 +62,7 @@ class _RuntimeContext:
     def snapshot(self):
         """Return a dictionary of current slots by reference."""
 
-        return dict((n, self._slots[n].get()) for n in self._slots.keys())
+        return dict((n, self._slots[n].get()) for n in self._slots.keys())  # pylint:disable=consider-iterating-dictionary
 
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, self.snapshot())
@@ -119,7 +119,7 @@ class _ThreadLocalRuntimeContext(_RuntimeContext):
 
 
 class _AsyncRuntimeContext(_RuntimeContext):
-    class Slot(object):
+    class Slot:
         def __init__(self, name, default):
             self.name = name
             self.contextvar = contextvars.ContextVar(name)
@@ -140,6 +140,6 @@ class _AsyncRuntimeContext(_RuntimeContext):
             self.contextvar.set(value)
 
 
-RuntimeContext = _ThreadLocalRuntimeContext()  # pylint:disable=C0201
+RuntimeContext = _ThreadLocalRuntimeContext()  # pylint:disable=invalid-name
 if contextvars:
-    RuntimeContext = _AsyncRuntimeContext()  # pylint:disable=C0201
+    RuntimeContext = _AsyncRuntimeContext()  # pylint:disable=invalid-name
