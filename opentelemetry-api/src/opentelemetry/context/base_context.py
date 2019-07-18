@@ -42,7 +42,7 @@ class BaseRuntimeContext:
             slot.clear()
 
     @classmethod
-    def register_slot(cls, name: str, default: typing.Any = None) -> None:
+    def register_slot(cls, name: str, default: typing.Any = None) -> 'Slot':
         """Register a context slot with an optional default value.
 
         :type name: str
@@ -87,7 +87,7 @@ class BaseRuntimeContext:
         slot = self._slots[name]
         slot.set(value)
 
-    def with_current_context(self, func) -> typing.Callable:
+    def with_current_context(self, func: typing.Callable) -> typing.Callable:
         """Capture the current context and apply it to the provided func"""
 
         caller_context = self.snapshot()
