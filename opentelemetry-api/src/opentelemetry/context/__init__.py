@@ -30,7 +30,8 @@ class _RuntimeContext:
     @classmethod
     def clear(cls):
         """Clear all slots to their default value."""
-        for name in cls._slots.keys():  # pylint:disable=consider-iterating-dictionary
+        keys = cls._slots.keys()
+        for name in keys:
             slot = cls._slots[name]
             slot.clear()
 
@@ -62,7 +63,8 @@ class _RuntimeContext:
     def snapshot(self):
         """Return a dictionary of current slots by reference."""
 
-        return dict((n, self._slots[n].get()) for n in self._slots.keys())  # pylint:disable=consider-iterating-dictionary
+        keys = self._slots.keys()
+        return dict((n, self._slots[n].get()) for n in keys)
 
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, self.snapshot())
