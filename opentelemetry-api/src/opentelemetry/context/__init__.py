@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
+
 from .base_context import BaseRuntimeContext
 
 __all__ = ['Context']
 
-Context: BaseRuntimeContext = None
+Context: typing.Union[BaseRuntimeContext, None] = None
 
 try:
     from .async_context import AsyncRuntimeContext

@@ -60,7 +60,7 @@ class BaseRuntimeContext:
             cls._slots[name] = slot
             return slot
 
-    def apply(self, snapshot) -> None:
+    def apply(self, snapshot: typing.Dict[str, typing.Any]) -> None:
         """Set the current context from a given snapshot dictionary"""
 
         for name in snapshot:
@@ -75,24 +75,31 @@ class BaseRuntimeContext:
     def __repr__(self) -> str:
         return '{}({})'.format(type(self).__name__, self.snapshot())
 
-    def __getattr__(self, name) -> typing.Any:
+    def __getattr__(self, name: str) -> typing.Any:
         if name not in self._slots:
             self.register_slot(name, None)
         slot = self._slots[name]
         return slot.get()
 
-    def __setattr__(self, name, value) -> None:
+    def __setattr__(self, name: str, value: typing.Any) -> None:
         if name not in self._slots:
             self.register_slot(name, None)
         slot = self._slots[name]
         slot.set(value)
 
-    def with_current_context(self, func: typing.Callable) -> typing.Callable:
-        """Capture the current context and apply it to the provided func"""
+    def with_current_context(
+            self,
+            func: typing.Callable[..., typing.Any],
+        ) -> typing.Callable[..., typing.Any]:
+        """Capture the current context and apply it to the provided func.
+        """
 
         caller_context = self.snapshot()
 
-        def call_with_current_context(*args, **kwargs) -> typing.Any:
+        def call_with_current_context(
+                *args: typing.Any,
+                **kwargs: typing.Any,
+            ) -> typing.Any:
             try:
                 backup_context = self.snapshot()
                 self.apply(caller_context)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import threading
+import typing
 
 from .base_context import BaseRuntimeContext
 
@@ -21,15 +22,15 @@ class ThreadLocalRuntimeContext(BaseRuntimeContext):
     class Slot(BaseRuntimeContext.Slot):
         _thread_local = threading.local()
 
-        def __init__(self, name, default):
+        def __init__(self, name: str, default: typing.Any):
             # pylint: disable=super-init-not-called
             self.name = name
             self.default = default if callable(default) else (lambda: default)
 
-        def clear(self):
+        def clear(self) -> None:
             setattr(self._thread_local, self.name, self.default())
 
-        def get(self):
+        def get(self) -> typing.Any:
             try:
                 return getattr(self._thread_local, self.name)
             except AttributeError:
@@ -37,5 +38,5 @@ class ThreadLocalRuntimeContext(BaseRuntimeContext):
                 self.set(value)
                 return value
 
-        def set(self, value):
+        def set(self, value: typing.Any) -> None:
             setattr(self._thread_local, self.name, value)
