@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import threading
+import types
+import typing
 
 try:
     import contextvars
 except ImportError:
-    contextvars = None
-
-import threading
-import typing
+    contextvars: types.ModuleType = None
 
 __all__ = ['RuntimeContext']
 
