@@ -16,18 +16,24 @@ import threading
 import typing
 
 
+def wrap_callable(target: 'object') -> typing.Callable[[], object]:
+    if callable(target):
+        return target
+    return lambda: target
+
+
 class BaseRuntimeContext:
     class Slot:
-        def __init__(self, name: str, default: typing.Any):
+        def __init__(self, name: str, default: 'object'):
             raise NotImplementedError
 
         def clear(self) -> None:
             raise NotImplementedError
 
-        def get(self) -> typing.Any:
+        def get(self) -> 'object':
             raise NotImplementedError
 
-        def set(self, value: typing.Any) -> None:
+        def set(self, value: 'object') -> None:
             raise NotImplementedError
 
     _lock = threading.Lock()
@@ -42,7 +48,7 @@ class BaseRuntimeContext:
             slot.clear()
 
     @classmethod
-    def register_slot(cls, name: str, default: typing.Any = None) -> 'Slot':
+    def register_slot(cls, name: str, default: 'object' = None) -> 'Slot':
         """Register a context slot with an optional default value.
 
         :type name: str
@@ -60,13 +66,13 @@ class BaseRuntimeContext:
             cls._slots[name] = slot
             return slot
 
-    def apply(self, snapshot: typing.Dict[str, typing.Any]) -> None:
+    def apply(self, snapshot: typing.Dict[str, 'object']) -> None:
         """Set the current context from a given snapshot dictionary"""
 
         for name in snapshot:
             setattr(self, name, snapshot[name])
 
-    def snapshot(self) -> typing.Dict[str, typing.Any]:
+    def snapshot(self) -> typing.Dict[str, 'object']:
         """Return a dictionary of current slots by reference."""
 
         keys = self._slots.keys()
@@ -75,13 +81,13 @@ class BaseRuntimeContext:
     def __repr__(self) -> str:
         return '{}({})'.format(type(self).__name__, self.snapshot())
 
-    def __getattr__(self, name: str) -> typing.Any:
+    def __getattr__(self, name: str) -> 'object':
         if name not in self._slots:
             self.register_slot(name, None)
         slot = self._slots[name]
         return slot.get()
 
-    def __setattr__(self, name: str, value: typing.Any) -> None:
+    def __setattr__(self, name: str, value: 'object') -> None:
         if name not in self._slots:
             self.register_slot(name, None)
         slot = self._slots[name]
@@ -89,17 +95,17 @@ class BaseRuntimeContext:
 
     def with_current_context(
             self,
-            func: typing.Callable[..., typing.Any],
-        ) -> typing.Callable[..., typing.Any]:
+            func: typing.Callable[..., 'object'],
+    ) -> typing.Callable[..., 'object']:
         """Capture the current context and apply it to the provided func.
         """
 
         caller_context = self.snapshot()
 
         def call_with_current_context(
-                *args: typing.Any,
-                **kwargs: typing.Any,
-            ) -> typing.Any:
+                *args: 'object',
+                **kwargs: 'object',
+        ) -> 'object':
             try:
                 backup_context = self.snapshot()
                 self.apply(caller_context)

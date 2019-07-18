@@ -16,9 +16,11 @@ import typing
 
 from .base_context import BaseRuntimeContext
 
+
 __all__ = ['Context']
 
-Context: typing.Union[BaseRuntimeContext, None] = None
+
+Context: typing.Optional[BaseRuntimeContext]
 
 try:
     from .async_context import AsyncRuntimeContext
