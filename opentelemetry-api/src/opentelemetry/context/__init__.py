@@ -14,13 +14,13 @@
 
 from .base_context import BaseRuntimeContext
 
-__all__ = ['RuntimeContext']
+__all__ = ['Context']
 
-RuntimeContext: BaseRuntimeContext = None
+Context: BaseRuntimeContext = None
 
 try:
     from .async_context import AsyncRuntimeContext
-    RuntimeContext = AsyncRuntimeContext() # pylint:disable=invalid-name
+    Context = AsyncRuntimeContext()  # pylint:disable=invalid-name
 except ImportError:
     from .thread_local_context import ThreadLocalRuntimeContext
-    RuntimeContext = ThreadLocalRuntimeContext() # pylint:disable=invalid-name
+    Context = ThreadLocalRuntimeContext()  # pylint:disable=invalid-name
