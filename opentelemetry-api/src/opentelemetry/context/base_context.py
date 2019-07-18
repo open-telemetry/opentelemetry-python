@@ -18,13 +18,16 @@ import typing
 
 class BaseRuntimeContext:
     class Slot:
+        def __init__(self, name: str, default: typing.Any):
+            raise NotImplementedError
+
         def clear(self) -> None:
             raise NotImplementedError
 
         def get(self) -> typing.Any:
             raise NotImplementedError
 
-        def set(self, value) -> None:
+        def set(self, value: typing.Any) -> None:
             raise NotImplementedError
 
     _lock = threading.Lock()
