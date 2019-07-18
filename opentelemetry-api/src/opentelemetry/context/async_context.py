@@ -12,23 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import contextvars
+from contextvars import ContextVar
+import typing
 
 from .base_context import BaseRuntimeContext
 
 
 class AsyncRuntimeContext(BaseRuntimeContext):
     class Slot(BaseRuntimeContext.Slot):
-        def __init__(self, name, default):
+        def __init__(self, name: str, default: typing.Any):
             # pylint: disable=super-init-not-called
             self.name = name
-            self.contextvar = contextvars.ContextVar(name)
+            self.contextvar: typing.Any = ContextVar(name)
             self.default = default if callable(default) else (lambda: default)
 
-        def clear(self):
+        def clear(self) -> None:
             self.contextvar.set(self.default())
 
-        def get(self):
+        def get(self) -> typing.Any:
             try:
                 return self.contextvar.get()
             except LookupError:
@@ -36,5 +37,5 @@ class AsyncRuntimeContext(BaseRuntimeContext):
                 self.set(value)
                 return value
 
-        def set(self, value):
+        def set(self, value: typing.Any) -> None:
             self.contextvar.set(value)
