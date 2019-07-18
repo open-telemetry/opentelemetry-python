@@ -16,6 +16,7 @@ import threading
 
 from .base_context import BaseRuntimeContext
 
+
 class ThreadLocalRuntimeContext(BaseRuntimeContext):
     class Slot(BaseRuntimeContext.Slot):
         _thread_local = threading.local()

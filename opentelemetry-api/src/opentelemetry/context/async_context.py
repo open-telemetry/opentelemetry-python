@@ -16,6 +16,7 @@ import contextvars
 
 from .base_context import BaseRuntimeContext
 
+
 class AsyncRuntimeContext(BaseRuntimeContext):
     class Slot(BaseRuntimeContext.Slot):
         def __init__(self, name, default):
