@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import trace
-from . import util
+import time
 
-__all__ = [
-    "trace",
-    "util",
-]
+try:
+    time_ns = time.time_ns  # noqa
+# Python versions < 3.7
+except AttributeError:
+    def time_ns():
+        return int(time.time() * 1e9)

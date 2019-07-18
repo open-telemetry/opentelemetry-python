@@ -23,3 +23,10 @@ class TestTracer(unittest.TestCase):
     def test_extends_api(self):
         tracer = trace.Tracer()
         self.assertIsInstance(tracer, trace_api.Tracer)
+
+
+class TestSpan(unittest.TestCase):
+
+    def test_basic_span(self):
+        span = trace.Span('name')
+        self.assertEqual(span.name, 'name')
