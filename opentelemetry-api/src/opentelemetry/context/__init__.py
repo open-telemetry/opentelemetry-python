@@ -26,7 +26,7 @@ __all__ = ['RuntimeContext']
 
 class _RuntimeContext:
     _lock = threading.Lock()
-    _slots : typing.Dict[str, typing.Any] = {}
+    _slots : typing.Dict[str, Slot] = {}
 
     @classmethod
     def clear(cls):
@@ -54,6 +54,18 @@ class _RuntimeContext:
             slot = cls.Slot(name, default)
             cls._slots[name] = slot
             return slot
+
+
+    class Slot:
+        def clear(self):
+            raise NotImplementedError
+
+        def get(self):
+            raise NotImplementedError
+
+        def set(self, value):
+            raise NotImplementedError
+
 
     def apply(self, snapshot):
         """Set the current context from a given snapshot dictionary"""
@@ -99,7 +111,7 @@ class _RuntimeContext:
 
 
 class _ThreadLocalRuntimeContext(_RuntimeContext):
-    class Slot:
+    class Slot(_RuntimeContext.Slot):
         _thread_local = threading.local()
 
         def __init__(self, name, default):
@@ -122,7 +134,7 @@ class _ThreadLocalRuntimeContext(_RuntimeContext):
 
 
 class _AsyncRuntimeContext(_RuntimeContext):
-    class Slot:
+    class Slot(_RuntimeContext.Slot):
         def __init__(self, name, default):
             self.name = name
             self.contextvar = contextvars.ContextVar(name)
