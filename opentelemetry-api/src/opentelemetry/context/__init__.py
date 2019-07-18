@@ -20,7 +20,7 @@ RuntimeContext: BaseRuntimeContext = None
 
 try:
     from .async_context import AsyncRuntimeContext
-    RuntimeContext = AsyncRuntimeContext()
+    RuntimeContext = AsyncRuntimeContext() # pylint:disable=invalid-name
 except ImportError:
     from .thread_local_context import ThreadLocalRuntimeContext
-    RuntimeContext = ThreadLocalRuntimeContext()
+    RuntimeContext = ThreadLocalRuntimeContext() # pylint:disable=invalid-name
