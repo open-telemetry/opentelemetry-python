@@ -133,7 +133,11 @@ class BoundedDict(MutableMapping):
 
 
 class SpanContext(trace_api.SpanContext):
-    pass  # TODO
+    """See `opentelemetry.trace.SpanContext`."""
+
+    def is_valid(self) -> bool:
+        return (self.span_id == trace_api.INVALID_SPAN_ID or
+                self.trace_id == trace_api.INVALID_SPAN_ID)
 
 
 Event = namedtuple('Event', ('name', 'attributes'))
@@ -144,6 +148,7 @@ Link = namedtuple('Link', ('context', 'attributes'))
 class Span(trace_api.Span):
     def __init__(self: 'Span',
                  name: str,
+                 context: 'SpanContext',
                  # TODO: span processor
                  parent: typing.Union['Span', 'SpanContext'] = None,
                  root: bool = False,
@@ -161,6 +166,7 @@ class Span(trace_api.Span):
                 raise ValueError("Root span can't have a parent")
 
         self.name = name
+        self.context = context
         self.parent = parent
         self.root = root
         self.sampler = sampler
@@ -214,9 +220,6 @@ class Span(trace_api.Span):
     def end(self):
         if self.end_time is None:
             self.end_time = util.time_ns()
-
-    def get_context(self):
-        """See `opentelemetry.trace.Span.get_context`."""
 
 
 class Tracer(trace_api.Tracer):

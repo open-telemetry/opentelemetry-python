@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import mock
 import unittest
 
 from opentelemetry import trace as trace_api
@@ -28,5 +29,5 @@ class TestTracer(unittest.TestCase):
 class TestSpan(unittest.TestCase):
 
     def test_basic_span(self):
-        span = trace.Span('name')
+        span = trace.Span('name', mock.Mock(spec=trace.SpanContext))
         self.assertEqual(span.name, 'name')
