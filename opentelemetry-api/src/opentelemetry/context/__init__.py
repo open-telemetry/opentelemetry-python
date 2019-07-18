@@ -19,13 +19,14 @@ except ImportError:
     contextvars = None
 
 import threading
+import typing
 
 __all__ = ['RuntimeContext']
 
 
 class _RuntimeContext:
     _lock = threading.Lock()
-    _slots = {}
+    _slots : typing.Dict[str, typing.Any] = {}
 
     @classmethod
     def clear(cls):
