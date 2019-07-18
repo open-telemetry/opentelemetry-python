@@ -22,6 +22,7 @@ class ThreadLocalRuntimeContext(BaseRuntimeContext):
         _thread_local = threading.local()
 
         def __init__(self, name, default):
+            # pylint: disable=super-init-not-called
             self.name = name
             self.default = default if callable(default) else (lambda: default)
 

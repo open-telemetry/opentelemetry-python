@@ -20,6 +20,7 @@ from .base_context import BaseRuntimeContext
 class AsyncRuntimeContext(BaseRuntimeContext):
     class Slot(BaseRuntimeContext.Slot):
         def __init__(self, name, default):
+            # pylint: disable=super-init-not-called
             self.name = name
             self.contextvar = contextvars.ContextVar(name)
             self.default = default if callable(default) else (lambda: default)
