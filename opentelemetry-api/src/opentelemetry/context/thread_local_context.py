@@ -15,28 +15,30 @@
 import threading
 import typing
 
-from .base_context import BaseRuntimeContext
+from . import base_context
 
 
-class ThreadLocalRuntimeContext(BaseRuntimeContext):
-    class Slot(BaseRuntimeContext.Slot):
+class ThreadLocalRuntimeContext(base_context.BaseRuntimeContext):
+    class Slot(base_context.BaseRuntimeContext.Slot):
         _thread_local = threading.local()
 
-        def __init__(self, name: str, default: typing.Any):
+        def __init__(self, name: str, default: 'object'):
             # pylint: disable=super-init-not-called
             self.name = name
-            self.default = default if callable(default) else (lambda: default)
+            self.default: typing.Callable[..., object]
+            self.default = base_context.wrap_callable(default)
 
         def clear(self) -> None:
             setattr(self._thread_local, self.name, self.default())
 
-        def get(self) -> typing.Any:
+        def get(self) -> 'object':
             try:
-                return getattr(self._thread_local, self.name)
+                got: object = getattr(self._thread_local, self.name)
+                return got
             except AttributeError:
                 value = self.default()
                 self.set(value)
                 return value
 
-        def set(self, value: typing.Any) -> None:
+        def set(self, value: 'object') -> None:
             setattr(self._thread_local, self.name, value)
