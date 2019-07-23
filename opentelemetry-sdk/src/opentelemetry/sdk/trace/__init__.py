@@ -105,6 +105,10 @@ class BoundedDict(MutableMapping):
 
     def __setitem__(self, key, value):
         with self._lock:
+            if self.maxlen == 0:
+                self.dropped += 1
+                return
+
             if key in self._dict:
                 del self._dict[key]
             elif len(self._dict) == self.maxlen:
