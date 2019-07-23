@@ -88,6 +88,10 @@ class BoundedList(Sequence):
 class BoundedDict(MutableMapping):
     """A dict with a fixed max capacity."""
     def __init__(self, maxlen):
+        if not isinstance(maxlen, int):
+            raise ValueError
+        if maxlen < 0:
+            raise ValueError
         self.maxlen = maxlen
         self.dropped = 0
         self._dict = OrderedDict()
