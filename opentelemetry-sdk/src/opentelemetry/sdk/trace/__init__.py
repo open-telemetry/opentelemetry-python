@@ -136,8 +136,8 @@ class SpanContext(trace_api.SpanContext):
     """See `opentelemetry.trace.SpanContext`."""
 
     def is_valid(self) -> bool:
-        return (self.span_id == trace_api.INVALID_SPAN_ID or
-                self.trace_id == trace_api.INVALID_SPAN_ID)
+        return (self.trace_id == trace_api.INVALID_TRACE_ID or
+                self.span_id == trace_api.INVALID_SPAN_ID)
 
 
 Event = namedtuple('Event', ('name', 'attributes'))
