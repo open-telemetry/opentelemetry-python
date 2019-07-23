@@ -125,7 +125,8 @@ class BoundedDict(MutableMapping):
         del self._dict[key]
 
     def __iter__(self):
-        return iter(self._dict)
+        with self._lock:
+            return iter(self._dict.copy())
 
     def __len__(self):
         return len(self._dict)
