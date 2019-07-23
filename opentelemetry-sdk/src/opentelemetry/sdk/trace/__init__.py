@@ -145,6 +145,12 @@ Link = namedtuple('Link', ('context', 'attributes'))
 
 
 class Span(trace_api.Span):
+
+    # Initialize these lazily assuming most spans won't have them.
+    empty_attributes = BoundedList(MAX_NUM_ATTRIBUTES)
+    empty_events = BoundedDict(MAX_NUM_EVENTS)
+    empty_links = BoundedDict(MAX_NUM_LINKS)
+
     def __init__(self: 'Span',
                  name: str,
                  context: 'SpanContext',
@@ -176,18 +182,18 @@ class Span(trace_api.Span):
         self.links = links
 
         if attributes is None:
-            self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+            self.attributes = Span.empty_attributes
         else:
             self.attributes = BoundedDict.from_map(
                 MAX_NUM_ATTRIBUTES, attributes)
 
         if events is None:
-            self.events = BoundedList(MAX_NUM_EVENTS)
+            self.events = Span.empty_events
         else:
             self.events = BoundedList.from_seq(MAX_NUM_EVENTS, events)
 
         if links is None:
-            self.links = BoundedList(MAX_NUM_LINKS)
+            self.links = Span.empty_links
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
@@ -198,18 +204,24 @@ class Span(trace_api.Span):
                       key: str,
                       value: 'AttributeValue'
                       ) -> None:
+        if self.attributes is Span.empty_attributes:
+            self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         self.attributes[key] = value
 
     def add_event(self: 'Span',
                   name: str,
                   attributes: typing.Dict[str, 'AttributeValue']
                   ) -> None:
+        if self.events is Span.empty_events:
+            self.events = BoundedList(MAX_NUM_EVENTS)
         self.events.append(Event(name, attributes))
 
     def add_link(self: 'Span',
                  context: 'SpanContext',
                  attributes: typing.Dict[str, 'AttributeValue'],
                  ) -> None:
+        if self.links is Span.empty_links:
+            self.links = BoundedList(MAX_NUM_LINKS)
         self.links.append(Link(context, attributes))
 
     def start(self):
