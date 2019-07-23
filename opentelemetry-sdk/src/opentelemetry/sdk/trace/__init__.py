@@ -157,9 +157,9 @@ Link = namedtuple('Link', ('context', 'attributes'))
 class Span(trace_api.Span):
 
     # Initialize these lazily assuming most spans won't have them.
-    empty_attributes = BoundedList(MAX_NUM_ATTRIBUTES)
-    empty_events = BoundedDict(MAX_NUM_EVENTS)
-    empty_links = BoundedDict(MAX_NUM_LINKS)
+    empty_attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+    empty_events = BoundedList(MAX_NUM_EVENTS)
+    empty_links = BoundedList(MAX_NUM_LINKS)
 
     def __init__(self: 'Span',
                  name: str,
