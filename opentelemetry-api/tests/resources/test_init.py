@@ -10,3 +10,15 @@ class TestResources(unittest.TestCase):
         assert left.merge(right) == Resource(
             {"service": "ui", "host": "service-host"}
         )
+
+    @staticmethod
+    def test_resource_merge_empty_string():
+        """
+        labels from the source Resource take
+        precedence, with the exception of the empty string.
+        """
+        left = Resource({"service": "ui", "host": ""})
+        right = Resource({"host": "service-host", "service": "not-ui"})
+        assert left.merge(right) == Resource(
+            {"service": "ui", "host": "service-host"}
+        )
