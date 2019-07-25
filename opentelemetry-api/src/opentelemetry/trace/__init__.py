@@ -175,10 +175,23 @@ class SpanContext:
         """
 
 
+class DefaultSpan(Span):
+    """The default Span that is used when no Span implementation is available.
+
+    All operations are no-op except context propagation.
+    """
+    def __init__(self, context):
+        self._context = context
+
+    def get_context(self):
+        return self._context
+
+
 INVALID_SPAN_ID = 0
 INVALID_TRACE_ID = 0
 INVALID_SPAN_CONTEXT = SpanContext(INVALID_TRACE_ID, INVALID_SPAN_ID,
                                    DEFAULT_TRACEOPTIONS, DEFAULT_TRACESTATE)
+INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
 class Tracer:
