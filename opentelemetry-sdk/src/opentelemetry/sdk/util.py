@@ -12,22 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import mock
-import unittest
+import time
 
-from opentelemetry import trace as trace_api
-from opentelemetry.sdk import trace
-
-
-class TestTracer(unittest.TestCase):
-
-    def test_extends_api(self):
-        tracer = trace.Tracer()
-        self.assertIsInstance(tracer, trace_api.Tracer)
-
-
-class TestSpan(unittest.TestCase):
-
-    def test_basic_span(self):
-        span = trace.Span('name', mock.Mock(spec=trace.SpanContext))
-        self.assertEqual(span.name, 'name')
+try:
+    time_ns = time.time_ns  # noqa
+# Python versions < 3.7
+except AttributeError:
+    def time_ns():
+        return int(time.time() * 1e9)

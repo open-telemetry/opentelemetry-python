@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from . import trace
+from . import util
 
 __all__ = [
     "trace",
+    "util",
 ]
