@@ -61,7 +61,10 @@ skipped if :data:`sys.flags` has ``ignore_environment`` set (which usually
 means that the Python interpreter was invoked with the ``-E`` or ``-I`` flag).
 """
 
-from typing import Callable, Optional, Type, TypeVar
+from typing import Callable
+from typing import Optional
+from typing import Type
+from typing import TypeVar
 import importlib
 import os
 import sys
