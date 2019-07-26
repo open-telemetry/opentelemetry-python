@@ -180,10 +180,10 @@ class DefaultSpan(Span):
 
     All operations are no-op except context propagation.
     """
-    def __init__(self, context):
+    def __init__(self, context: 'SpanContext') -> None:
         self._context = context
 
-    def get_context(self):
+    def get_context(self) -> 'SpanContext':
         return self._context
 
 
