@@ -15,7 +15,7 @@
 import time
 
 try:
-    time_ns = time.time_ns  # noqa
+    time_ns = time.time_ns  # pylint: disable=invalid-name
 # Python versions < 3.7
 except AttributeError:
     def time_ns():
