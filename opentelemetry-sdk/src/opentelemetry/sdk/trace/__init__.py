@@ -23,12 +23,13 @@ from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 
 try:
+    # pylint: disable=ungrouped-imports
     from collections.abc import MutableMapping
     from collections.abc import Sequence
 except ImportError:
+    # pylint: disable=no-name-in-module,ungrouped-imports
     from collections import MutableMapping
     from collections import Sequence
-
 
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
@@ -81,6 +82,7 @@ class BoundedList(Sequence):
         if len(seq) > maxlen:
             raise ValueError
         bounded_list = cls(maxlen)
+        # pylint: disable=protected-access
         bounded_list._dq = deque(seq, maxlen=maxlen)
         return bounded_list
 
@@ -137,6 +139,7 @@ class BoundedDict(MutableMapping):
         if len(mapping) > maxlen:
             raise ValueError
         bounded_dict = cls(maxlen)
+        # pylint: disable=protected-access
         bounded_dict._dict = mapping
         return bounded_dict
 
