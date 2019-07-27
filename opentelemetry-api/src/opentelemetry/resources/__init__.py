@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
-from typing import Dict, Optional
+import abc
+import typing
 
 
-class Resource(ABC):
+class Resource(abc.ABC):
     """The interface that resources must implement."""
     @staticmethod
-    @abstractmethod
-    def create(labels: Dict[str, str]) -> "Resource":
+    @abc.abstractmethod
+    def create(labels: typing.Dict[str, str]) -> "Resource":
         """Create a new resource.
 
         Args:
@@ -31,16 +31,16 @@ class Resource(ABC):
 
         """
     @property
-    @abstractmethod
-    def labels(self) -> Dict[str, str]:
+    @abc.abstractmethod
+    def labels(self) -> typing.Dict[str, str]:
         """Return the label dictionary associated with this resource.
 
         Returns:
             A dictionary with the labels of the resource
 
         """
-    @abstractmethod
-    def merge(self, other: Optional["Resource"]) -> "Resource":
+    @abc.abstractmethod
+    def merge(self, other: typing.Optional["Resource"]) -> "Resource":
         """Return a resource with the union of labels for both resources.
 
         Labels that exist in the main Resource take precedence unless the
