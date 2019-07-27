@@ -11,30 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from abc import ABC, abstractmethod
-from typing import Dict, Union
+from typing import Dict, Optional
 
 
 class Resource(ABC):
-    """This the interface that resources must implement"""
-    def __init__(self, labels: Dict[str, str]):
-        """Construct a resource.
-
-        Direct calling of the constructor is discouraged, as it cannot
-        take advantage of caching and restricts to the type of object
-        that can be returned.
-        """
-        self._labels = labels
-
+    """The interface that resources must implement."""
     @staticmethod
+    @abstractmethod
     def create(labels: Dict[str, str]) -> "Resource":
-        """create a new resource.
+        """Create a new resource.
 
         Args:
             labels: the labels that define the resource
 
         Returns:
             The resource with the labels in question
+
         """
     @property
     @abstractmethod
@@ -43,13 +37,16 @@ class Resource(ABC):
 
         Returns:
             A dictionary with the labels of the resource
+
         """
-    def merge(self, other: Union["Resource", None]) -> "Resource":
+    @abstractmethod
+    def merge(self, other: Optional["Resource"]) -> "Resource":
         """Return a resource with the union of labels for both resources.
 
-        Labels that exist in the main Resource take
-        precedence unless the label value is the empty string.
+        Labels that exist in the main Resource take precedence unless the
+        label value is the empty string.
 
         Args:
-            other: the resource to merge in
+            other: The resource to merge in
+
         """

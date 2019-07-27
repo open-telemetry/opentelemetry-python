@@ -11,21 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Any, Dict, Union
-from opentelemetry.resources import Resource
+
+import opentelemetry.resources as resources
 
 
-class DefaultResource(Resource):
+class Resource(resources.Resource):
     def __init__(self, labels):
         self._labels = labels
+
+    @staticmethod
+    def create(labels):
+        return Resource(labels)
 
     @property
     def labels(self):
         return self._labels
-
-    @staticmethod
-    def create(labels):
-        return DefaultResource(labels)
 
     def merge(self, other):
         if other is None:
@@ -36,9 +36,9 @@ class DefaultResource(Resource):
         for key, value in other.labels.items():
             if key not in merged_labels or merged_labels[key] == "":
                 merged_labels[key] = value
-        return DefaultResource(merged_labels)
+        return Resource(merged_labels)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, DefaultResource):
+        if not isinstance(other, Resource):
             return False
         return self.labels == other.labels
