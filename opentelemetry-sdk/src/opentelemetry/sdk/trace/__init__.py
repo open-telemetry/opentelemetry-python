@@ -16,6 +16,9 @@
 from collections import OrderedDict
 from collections import deque
 from collections import namedtuple
+from contextlib import contextmanager
+import contextvars
+import random
 import threading
 import typing
 
@@ -145,11 +148,31 @@ class BoundedDict(MutableMapping):
 
 
 class SpanContext(trace_api.SpanContext):
-    """See `opentelemetry.trace.SpanContext`."""
+    """See `opentelemetry.trace.SpanContext`.
+
+        Args:
+            trace_id: (description)
+            span_id: (description)
+            options: (description)
+        """
+
+    def __init__(self, trace_id: int,
+                 span_id: int,
+                 traceoptions: trace_api.TraceOptions = None,
+                 tracestate: trace_api.TraceState = None
+                 ) -> None:
+        if traceoptions is None:
+            traceoptions = trace_api.DEFAULT_TRACEOPTIONS
+        if tracestate is None:
+            tracestate = trace_api.DEFAULT_TRACESTATE
+        self.trace_id = trace_id
+        self.span_id = span_id
+        self.traceoptions = traceoptions
+        self.tracestate = tracestate
 
     def is_valid(self) -> bool:
-        return (self.trace_id == trace_api.INVALID_TRACE_ID or
-                self.span_id == trace_api.INVALID_SPAN_ID)
+        return (self.trace_id != trace_api.INVALID_TRACE_ID and
+                self.span_id != trace_api.INVALID_SPAN_ID)
 
 
 Event = namedtuple('Event', ('name', 'attributes'))
@@ -246,5 +269,88 @@ class Span(trace_api.Span):
             self.end_time = util.time_ns()
 
 
+_CURRENT_SPAN_CV = contextvars.ContextVar('current_span', default=None)
+
+
+def generate_span_id():
+    """Get a new random span ID.
+
+    Returns:
+        A random 64-bit int for use as a span ID
+    """
+    return '{:016x}'.format(random.getrandbits(64))
+
+
+def generate_trace_id():
+    """Get a new random trace ID.
+
+    Returns:
+        A random 128-bit int for use as a trace ID
+    """
+    return '{:032x}'.format(random.getrandbits(128))
+
+
 class Tracer(trace_api.Tracer):
-    pass
+    """See `opentelemetry.trace.Tracer`.
+
+    Args:
+        cv: The context variable that holds the current span.
+    """
+
+    CURRENT_SPAN = trace_api.Tracer.CURRENT_SPAN
+
+    def __init__(self,
+                 cv: 'contextvars.ContextVar' = _CURRENT_SPAN_CV
+                 ) -> None:
+        self._cv = cv
+
+    def get_current_span(self):
+        """See `opentelemetry.trace.Tracer.get_current_span`."""
+        return self._cv.get()
+
+    @contextmanager
+    def start_span(self,
+                   name: str,
+                   parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                   ) -> typing.Iterator['Span']:
+        """See `opentelemetry.trace.Tracer.start_span`."""
+        with self.use_span(self.create_span(name, parent)) as span:
+            yield span
+
+    def create_span(self,
+                    name: str,
+                    parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                    ) -> 'Span':
+        """See `opentelemetry.trace.Tracer.create_span`."""
+        span_id = generate_span_id()
+        if parent is Tracer.CURRENT_SPAN:
+            parent = self.get_current_span()
+        if parent is None:
+            context = SpanContext(generate_trace_id(), span_id)
+        else:
+            if isinstance(parent, trace_api.Span):
+                parent_context = parent.get_context()
+            elif isinstance(parent, trace_api.SpanContext):
+                parent_context = parent
+            else:
+                raise TypeError
+            context = SpanContext(
+                parent_context.trace_id,
+                span_id,
+                parent_context.traceoptions,
+                parent_context.tracestate)
+        return Span(name=name, context=context, parent=parent)
+
+    @contextmanager
+    def use_span(self, span: 'Span') -> typing.Iterator['Span']:
+        """See `opentelemetry.trace.Tracer.use_span`."""
+        span.start()
+        token = self._cv.set(span)
+        try:
+            yield span
+        finally:
+            self._cv.reset(token)
+            span.end()
+
+
+tracer = Tracer()  # pylint: disable=invalid-name
