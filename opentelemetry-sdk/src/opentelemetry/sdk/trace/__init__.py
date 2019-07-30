@@ -163,7 +163,7 @@ class Span(trace_api.Span):
                  name: str,
                  context: 'trace_api.SpanContext',
                  # TODO: span processor
-                 parent: typing.Union['Span', 'trace_api.SpanContext'] = None,
+                 parent: trace_api.ParentSpan = None,
                  root: bool = False,
                  sampler=None,  # TODO
                  trace_config=None,  # TraceConfig TODO
@@ -283,8 +283,7 @@ class Tracer(trace_api.Tracer):
     @contextmanager
     def start_span(self,
                    name: str,
-                   parent: typing.Union['Span', 'trace_api.SpanContext'] =
-                   CURRENT_SPAN
+                   parent: trace_api.ParentSpan = CURRENT_SPAN
                    ) -> typing.Iterator['Span']:
         """See `opentelemetry.trace.Tracer.start_span`."""
         with self.use_span(self.create_span(name, parent)) as span:
@@ -292,8 +291,7 @@ class Tracer(trace_api.Tracer):
 
     def create_span(self,
                     name: str,
-                    parent: typing.Union['Span', 'trace_api.SpanContext'] =
-                    CURRENT_SPAN
+                    parent: trace_api.ParentSpan = CURRENT_SPAN
                     ) -> 'Span':
         """See `opentelemetry.trace.Tracer.create_span`."""
         span_id = generate_span_id()

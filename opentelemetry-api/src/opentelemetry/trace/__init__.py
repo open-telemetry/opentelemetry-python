@@ -200,6 +200,8 @@ INVALID_SPAN_CONTEXT = SpanContext(INVALID_TRACE_ID, INVALID_SPAN_ID,
                                    DEFAULT_TRACEOPTIONS, DEFAULT_TRACESTATE)
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
+ParentSpan = typing.Optional[typing.Union['Span', 'SpanContext']]
+
 
 class Tracer:
     """Handles span creation and in-process context propagation.
@@ -226,7 +228,7 @@ class Tracer:
     @contextmanager  # type: ignore
     def start_span(self,
                    name: str,
-                   parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                   parent: ParentSpan = CURRENT_SPAN
                    ) -> typing.Iterator['Span']:
         """Context manager for span creation.
 
@@ -273,7 +275,7 @@ class Tracer:
 
     def create_span(self,
                     name: str,
-                    parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                    parent: ParentSpan = CURRENT_SPAN
                     ) -> 'Span':
         """Creates a span.
 
