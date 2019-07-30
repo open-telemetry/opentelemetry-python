@@ -66,6 +66,7 @@ import typing
 
 from opentelemetry import loader
 
+# TODO: quarantine
 ParentSpan = typing.Optional[typing.Union['Span', 'SpanContext']]
 
 

@@ -23,6 +23,7 @@ import threading
 import typing
 
 from opentelemetry import trace as trace_api
+from opentelemetry import types
 from opentelemetry.sdk import util
 
 try:
@@ -40,9 +41,6 @@ _CURRENT_SPAN_CV = contextvars.ContextVar('current_span', default=None)
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
 MAX_NUM_LINKS = 32
-
-AttributeValue = typing.Union[str, bool, float]
-Attributes = typing.Dict[str, AttributeValue]
 
 
 class BoundedList(Sequence):
@@ -187,7 +185,7 @@ class Span(trace_api.Span):
                  sampler=None,  # TODO
                  trace_config=None,  # TODO
                  resource=None,  # TODO
-                 attributes: Attributes = None,  # TODO
+                 attributes: types.Attributes = None,  # TODO
                  events: typing.Sequence[Event] = None,  # TODO
                  links: typing.Sequence[Link] = None,  # TODO
                  ) -> None:
@@ -233,7 +231,7 @@ class Span(trace_api.Span):
 
     def set_attribute(self: 'Span',
                       key: str,
-                      value: 'AttributeValue'
+                      value: 'types.AttributeValue'
                       ) -> None:
         if self.attributes is Span.empty_attributes:
             self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
@@ -241,7 +239,7 @@ class Span(trace_api.Span):
 
     def add_event(self: 'Span',
                   name: str,
-                  attributes: typing.Dict[str, 'AttributeValue']
+                  attributes: 'types.Attributes',
                   ) -> None:
         if self.events is Span.empty_events:
             self.events = BoundedList(MAX_NUM_EVENTS)
@@ -249,7 +247,7 @@ class Span(trace_api.Span):
 
     def add_link(self: 'Span',
                  context: 'trace_api.SpanContext',
-                 attributes: typing.Dict[str, 'AttributeValue'],
+                 attributes: 'types.Attributes',
                  ) -> None:
         if self.links is Span.empty_links:
             self.links = BoundedList(MAX_NUM_LINKS)
@@ -289,8 +287,6 @@ class Tracer(trace_api.Tracer):
         cv: The context variable that holds the current span.
     """
 
-    CURRENT_SPAN = trace_api.Tracer.CURRENT_SPAN
-
     def __init__(self,
                  cv: 'contextvars.ContextVar' = _CURRENT_SPAN_CV
                  ) -> None:
@@ -307,7 +303,7 @@ class Tracer(trace_api.Tracer):
     @contextmanager
     def start_span(self,
                    name: str,
-                   parent: trace_api.ParentSpan = CURRENT_SPAN
+                   parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN
                    ) -> typing.Iterator['Span']:
         """See `opentelemetry.trace.Tracer.start_span`."""
         with self.use_span(self.create_span(name, parent)) as span:
@@ -315,7 +311,8 @@ class Tracer(trace_api.Tracer):
 
     def create_span(self,
                     name: str,
-                    parent: trace_api.ParentSpan = CURRENT_SPAN
+                    parent: trace_api.ParentSpan =
+                    trace_api.Tracer.CURRENT_SPAN
                     ) -> 'Span':
         """See `opentelemetry.trace.Tracer.create_span`."""
         span_id = generate_span_id()
