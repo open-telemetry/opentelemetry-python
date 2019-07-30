@@ -29,5 +29,5 @@ class TestTracer(unittest.TestCase):
 class TestSpan(unittest.TestCase):
 
     def test_basic_span(self):
-        span = trace.Span('name', mock.Mock(spec=trace.SpanContext))
+        span = trace.Span('name', mock.Mock(spec=trace_api.SpanContext))
         self.assertEqual(span.name, 'name')

@@ -157,8 +157,13 @@ class SpanContext:
     def __init__(self,
                  trace_id: int,
                  span_id: int,
-                 options: 'TraceOptions',
-                 state: 'TraceState') -> None:
+                 options: 'TraceOptions' = None,
+                 state: 'TraceState' = None
+                 ) -> None:
+        if options is None:
+            options = DEFAULT_TRACEOPTIONS
+        if state is None:
+            state = DEFAULT_TRACESTATE
         self.trace_id = trace_id
         self.span_id = span_id
         self.options = options
@@ -173,6 +178,8 @@ class SpanContext:
         Returns:
             True if the `SpanContext` is valid, false otherwise.
         """
+        return (self.trace_id != INVALID_TRACE_ID and
+                self.span_id != INVALID_SPAN_ID)
 
 
 class DefaultSpan(Span):
@@ -187,8 +194,8 @@ class DefaultSpan(Span):
         return self._context
 
 
-INVALID_SPAN_ID = 0
-INVALID_TRACE_ID = 0
+INVALID_SPAN_ID = 0x0000000000000000
+INVALID_TRACE_ID = 0x00000000000000000000000000000000
 INVALID_SPAN_CONTEXT = SpanContext(INVALID_TRACE_ID, INVALID_SPAN_ID,
                                    DEFAULT_TRACEOPTIONS, DEFAULT_TRACESTATE)
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)

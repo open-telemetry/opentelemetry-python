@@ -147,34 +147,6 @@ class BoundedDict(MutableMapping):
         return bounded_dict
 
 
-class SpanContext(trace_api.SpanContext):
-    """See `opentelemetry.trace.SpanContext`.
-
-        Args:
-            trace_id: (description)
-            span_id: (description)
-            options: (description)
-        """
-
-    def __init__(self, trace_id: int,
-                 span_id: int,
-                 traceoptions: trace_api.TraceOptions = None,
-                 tracestate: trace_api.TraceState = None
-                 ) -> None:
-        if traceoptions is None:
-            traceoptions = trace_api.DEFAULT_TRACEOPTIONS
-        if tracestate is None:
-            tracestate = trace_api.DEFAULT_TRACESTATE
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.traceoptions = traceoptions
-        self.tracestate = tracestate
-
-    def is_valid(self) -> bool:
-        return (self.trace_id != trace_api.INVALID_TRACE_ID and
-                self.span_id != trace_api.INVALID_SPAN_ID)
-
-
 Event = namedtuple('Event', ('name', 'attributes'))
 
 Link = namedtuple('Link', ('context', 'attributes'))
@@ -189,9 +161,9 @@ class Span(trace_api.Span):
 
     def __init__(self: 'Span',
                  name: str,
-                 context: 'SpanContext',
+                 context: 'trace_api.SpanContext',
                  # TODO: span processor
-                 parent: typing.Union['Span', 'SpanContext'] = None,
+                 parent: typing.Union['Span', 'trace_api.SpanContext'] = None,
                  root: bool = False,
                  sampler=None,  # TODO
                  trace_config=None,  # TraceConfig TODO
@@ -253,7 +225,7 @@ class Span(trace_api.Span):
         self.events.append(Event(name, attributes))
 
     def add_link(self: 'Span',
-                 context: 'SpanContext',
+                 context: 'trace_api.SpanContext',
                  attributes: typing.Dict[str, 'AttributeValue'],
                  ) -> None:
         if self.links is Span.empty_links:
@@ -311,7 +283,8 @@ class Tracer(trace_api.Tracer):
     @contextmanager
     def start_span(self,
                    name: str,
-                   parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                   parent: typing.Union['Span', 'trace_api.SpanContext'] =
+                   CURRENT_SPAN
                    ) -> typing.Iterator['Span']:
         """See `opentelemetry.trace.Tracer.start_span`."""
         with self.use_span(self.create_span(name, parent)) as span:
@@ -319,14 +292,15 @@ class Tracer(trace_api.Tracer):
 
     def create_span(self,
                     name: str,
-                    parent: typing.Union['Span', 'SpanContext'] = CURRENT_SPAN
+                    parent: typing.Union['Span', 'trace_api.SpanContext'] =
+                    CURRENT_SPAN
                     ) -> 'Span':
         """See `opentelemetry.trace.Tracer.create_span`."""
         span_id = generate_span_id()
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
         if parent is None:
-            context = SpanContext(generate_trace_id(), span_id)
+            context = trace_api.SpanContext(generate_trace_id(), span_id)
         else:
             if isinstance(parent, trace_api.Span):
                 parent_context = parent.get_context()
@@ -334,7 +308,7 @@ class Tracer(trace_api.Tracer):
                 parent_context = parent
             else:
                 raise TypeError
-            context = SpanContext(
+            context = trace_api.SpanContext(
                 parent_context.trace_id,
                 span_id,
                 parent_context.traceoptions,
