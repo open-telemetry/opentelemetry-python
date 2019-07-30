@@ -34,11 +34,15 @@ except ImportError:
     from collections import MutableMapping
     from collections import Sequence
 
+
+_CURRENT_SPAN_CV = contextvars.ContextVar('current_span', default=None)
+
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
 MAX_NUM_LINKS = 32
 
 AttributeValue = typing.Union[str, bool, float]
+Attributes = typing.Dict[str, AttributeValue]
 
 
 class BoundedList(Sequence):
@@ -183,9 +187,9 @@ class Span(trace_api.Span):
                  sampler=None,  # TODO
                  trace_config=None,  # TODO
                  resource=None,  # TODO
-                 attributes=None,  # TODO
-                 events=None,  # TODO
-                 links=None,  # TODO
+                 attributes: Attributes = None,  # TODO
+                 events: typing.Sequence[Event] = None,  # TODO
+                 links: typing.Sequence[Link] = None,  # TODO
                  ) -> None:
 
         self.name = name
@@ -258,9 +262,6 @@ class Span(trace_api.Span):
     def end(self):
         if self.end_time is None:
             self.end_time = util.time_ns()
-
-
-_CURRENT_SPAN_CV = contextvars.ContextVar('current_span', default=None)
 
 
 def generate_span_id():
