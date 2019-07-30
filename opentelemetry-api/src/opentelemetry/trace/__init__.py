@@ -177,7 +177,7 @@ class SpanContext:
         self.traceoptions = traceoptions
         self.tracestate = tracestate
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("{}(trace_id={}, span_id={})"
                 .format(
                     type(self).__name__,
