@@ -250,7 +250,7 @@ def generate_span_id():
     Returns:
         A random 64-bit int for use as a span ID
     """
-    return '{:016x}'.format(random.getrandbits(64))
+    return random.getrandbits(64)
 
 
 def generate_trace_id():
@@ -259,7 +259,7 @@ def generate_trace_id():
     Returns:
         A random 128-bit int for use as a trace ID
     """
-    return '{:032x}'.format(random.getrandbits(128))
+    return random.getrandbits(128)
 
 
 class Tracer(trace_api.Tracer):
