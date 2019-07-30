@@ -141,6 +141,14 @@ class TraceState(typing.Dict[str, str]):
 DEFAULT_TRACESTATE = TraceState.get_default()
 
 
+def format_trace_id(trace_id: int) -> str:
+    return '0x{:032x}'.format(trace_id)
+
+
+def format_span_id(span_id: int) -> str:
+    return '0x{:016x}'.format(span_id)
+
+
 class SpanContext:
     """The state of a Span to propagate between processes.
 
@@ -157,17 +165,25 @@ class SpanContext:
     def __init__(self,
                  trace_id: int,
                  span_id: int,
-                 options: 'TraceOptions' = None,
-                 state: 'TraceState' = None
+                 traceoptions: 'TraceOptions' = None,
+                 tracestate: 'TraceState' = None
                  ) -> None:
-        if options is None:
-            options = DEFAULT_TRACEOPTIONS
-        if state is None:
-            state = DEFAULT_TRACESTATE
+        if traceoptions is None:
+            traceoptions = DEFAULT_TRACEOPTIONS
+        if tracestate is None:
+            tracestate = DEFAULT_TRACESTATE
         self.trace_id = trace_id
         self.span_id = span_id
-        self.options = options
-        self.state = state
+        self.traceoptions = traceoptions
+        self.tracestate = tracestate
+
+    def __repr__(self):
+        return ("{}(trace_id={}, span_id={})"
+                .format(
+                    type(self).__name__,
+                    format_trace_id(self.trace_id),
+                    format_span_id(self.span_id)
+                ))
 
     def is_valid(self) -> bool:
         """Get whether this `SpanContext` is valid.

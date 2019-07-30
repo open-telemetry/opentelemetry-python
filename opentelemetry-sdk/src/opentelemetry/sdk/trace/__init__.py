@@ -153,6 +153,23 @@ Link = namedtuple('Link', ('context', 'attributes'))
 
 
 class Span(trace_api.Span):
+    """See `opentelemetry.trace.Span`.
+
+    Users should generally create `Span`s via the `Tracer` instead of this
+    constructor.
+
+    Args:
+        name: The name of the operation this span represents
+        context: The immutable span context
+        parent: This span's parent, may be a `SpanContext` if the parent is
+            remote, null if this is a root span
+        sampler: TODO
+        trace_config: TODO
+        resource: TODO
+        attributes: The span's attributes to be exported
+        events: Timestamped events to be exported
+        links: Links to other spans to be exported
+    """
 
     # Initialize these lazily assuming most spans won't have them.
     empty_attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
@@ -162,26 +179,18 @@ class Span(trace_api.Span):
     def __init__(self: 'Span',
                  name: str,
                  context: 'trace_api.SpanContext',
-                 # TODO: span processor
                  parent: trace_api.ParentSpan = None,
-                 root: bool = False,
                  sampler=None,  # TODO
-                 trace_config=None,  # TraceConfig TODO
-                 resource=None,  # Resource TODO
-                 # TODO: is_recording
-                 attributes=None,  # type TODO
-                 events=None,  # type TODO
-                 links=None,  # type TODO
+                 trace_config=None,  # TODO
+                 resource=None,  # TODO
+                 attributes=None,  # TODO
+                 events=None,  # TODO
+                 links=None,  # TODO
                  ) -> None:
-        """See `opentelemetry.trace.Span`."""
-        if root:
-            if parent is not None:
-                raise ValueError("Root span can't have a parent")
 
         self.name = name
         self.context = context
         self.parent = parent
-        self.root = root
         self.sampler = sampler
         self.trace_config = trace_config
         self.resource = resource
@@ -207,6 +216,16 @@ class Span(trace_api.Span):
 
         self.end_time = None
         self.start_time = None
+
+    def __repr__(self):
+        return ('{}(name="{}")'
+                .format(
+                    type(self).__name__,
+                    self.name
+                ))
+
+    def get_context(self):
+        return self.context
 
     def set_attribute(self: 'Span',
                       key: str,
@@ -275,6 +294,10 @@ class Tracer(trace_api.Tracer):
                  cv: 'contextvars.ContextVar' = _CURRENT_SPAN_CV
                  ) -> None:
         self._cv = cv
+        try:
+            self._cv.get()
+        except LookupError:
+            self._cv.set(None)
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
