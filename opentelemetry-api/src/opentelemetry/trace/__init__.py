@@ -66,6 +66,8 @@ import typing
 
 from opentelemetry import loader
 
+ParentSpan = typing.Optional[typing.Union['Span', 'SpanContext']]
+
 
 class Span:
     """A span represents a single operation within a trace."""
@@ -215,8 +217,6 @@ INVALID_TRACE_ID = 0x00000000000000000000000000000000
 INVALID_SPAN_CONTEXT = SpanContext(INVALID_TRACE_ID, INVALID_SPAN_ID,
                                    DEFAULT_TRACEOPTIONS, DEFAULT_TRACESTATE)
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
-
-ParentSpan = typing.Optional[typing.Union['Span', 'SpanContext']]
 
 
 class Tracer:
