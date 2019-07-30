@@ -20,6 +20,14 @@ Execute tests as well as the linting process with tox:
 
 The standard Python unittest module is used to author unit tests.
 
+## Design Choices
+
+As with other OpenTelemetry clients, opentelemetry-python follows the 
+(opentelemetry-specification)[https://github.com/open-telemetry/opentelemetry-specification].
+
+It's especially valuable to read through the (library guidelines)[https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/library-guidelines.md].
+
+
 ## Styleguide
 
 * docstrings should adhere to the Google styleguide as specified
