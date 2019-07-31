@@ -15,7 +15,7 @@
 import typing
 
 from opentelemetry import loader
-from opentelemetry.context import SpanContext
+from opentelemetry.trace import SpanContext
 from opentelemetry.distributedcontext import DistributedContext
 from opentelemetry.resources import Resource
 
@@ -175,7 +175,7 @@ class LabelKey:
 
     def __init__(self,
                  key: str,
-                 description: str) -> 'LabelKey':
+                 description: str) -> None:
         self.key = key
         self.description = description
 
@@ -183,7 +183,7 @@ class LabelKey:
 class LabelValue:
 
     def __init__(self,
-                 value: str) -> 'LabelValue':
+                 value: str) -> None:
         self.value = value
 
 
@@ -194,7 +194,7 @@ class MetricOptions:
                  label_keys: typing.List['LabelKey'],
                  constant_labels: typing.Dict['LabelKey', 'LabelValue'],
                  component: str,
-                 resource: 'Resource') -> 'MetricOptions':
+                 resource: 'Resource') -> None:
         """Optional info used when creating a :class:`.Metric`.
 
         Args:
@@ -217,7 +217,7 @@ class MetricOptions:
         self.resource = resource
 
 
-class MeasureType(int):
+class MeasureType:
     DOUBLE = 0
     LONG = 1
 
@@ -227,7 +227,7 @@ class MeasureOptions:
                  description: str,
                  unit: str,
                  measure_type: 'MeasureType' = MeasureType.DOUBLE
-                 ) -> 'MeasureOptions':
+                 ) -> None:
         """Optional info used when creating a :class:`.Measure`.
 
         Args:
@@ -245,7 +245,7 @@ class RecordOptions:
 
     def __init__(self,
                  distributed_context: 'DistributedContext',
-                 span_context: 'SpanContext') -> 'RecordOptions':
+                 span_context: 'SpanContext') -> None:
         """Optional info used when recording :class:`.Measurement`s.
 
         Args:
@@ -268,9 +268,9 @@ class Measurement:
 
 class Measure:
 
-    def __init(self,
-               name: str,
-               options: typing.Optional[RecordOptions] = None) -> 'Measure':
+    def __init__(self,
+                 name: str,
+                 options: typing.Optional['MeasureOptions'] = None) -> None:
         """Used to create raw :class:`.Measurement`s.
 
         A contract between the API exposing the raw measurement and SDK
@@ -317,7 +317,7 @@ class Metric:
 
     def get_or_create_time_series(self,
                                   label_values: typing.List['LabelValue']
-                                  ) -> None:
+                                  ) -> 'object':
         """Gets and returns a `TimeSeries`, a container for a cumulative value.
 
         If the provided label values are not already associated with this
@@ -332,7 +332,7 @@ class Metric:
         """
         raise NotImplementedError
 
-    def get_default_time_series(self) -> None:
+    def get_default_time_series(self) -> 'object':
         """Returns a `TimeSeries`, a container for a cumulative value.
 
         The timeseries will have all its labels not set (default).
@@ -351,7 +351,7 @@ class Metric:
 
     def remove_time_series(self,
                            label_values: typing.List['LabelValue']) -> None:
-        """Removes the `TimeSeries` from the :class:`.Metric`, if it is present.
+        """Removes the `TimeSeries` from the :class:`.Metric`, if present.
 
         The timeseries with matching :class:`.LabelValue`s will be removed.
 
@@ -368,13 +368,13 @@ class CounterDouble(Metric):
     def __init__(self,
                  name: str,
                  options: typing.Optional['MetricOptions'] = None
-                 ) -> 'CounterDouble':
+                 ) -> None:
         self.name = name
         if options:
             self.description = options.description
             self.unit = options.unit
             self.label_keys = options.label_keys
-            self.label_values = options.label_values
+            self.constant_labels = options.constant_labels
             self.component = options.component
             self.resource = options.resource
 
@@ -408,13 +408,13 @@ class CounterLong(Metric):
     def __init__(self,
                  name: str,
                  options: typing.Optional['MetricOptions'] = None
-                 ) -> 'CounterLong':
+                 ) -> None:
         self.name = name
         if options:
             self.description = options.description
             self.unit = options.unit
             self.label_keys = options.label_keys
-            self.label_values = options.label_values
+            self.constant_labels = options.constant_labels
             self.component = options.component
             self.resource = options.resource
 
@@ -448,13 +448,13 @@ class GaugeDouble(Metric):
     def __init__(self,
                  name: str,
                  options: typing.Optional['MetricOptions'] = None
-                 ) -> 'GaugeDouble':
+                 ) -> None:
         self.name = name
         if options:
             self.description = options.description
             self.unit = options.unit
             self.label_keys = options.label_keys
-            self.label_values = options.label_values
+            self.constant_labels = options.constant_labels
             self.component = options.component
             self.resource = options.resource
 
@@ -488,13 +488,13 @@ class GaugeLong(Metric):
     def __init__(self,
                  name: str,
                  options: typing.Optional['MetricOptions'] = None
-                 ) -> 'GaugeLong':
+                 ) -> None:
         self.name = name
         if options:
             self.description = options.description
             self.unit = options.unit
             self.label_keys = options.label_keys
-            self.label_values = options.label_values
+            self.constant_labels = options.constant_labels
             self.component = options.component
             self.resource = options.resource
 
