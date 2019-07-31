@@ -339,7 +339,7 @@ class Metric:
         """
         raise NotImplementedError
 
-    def set_call_back(self, updater_function: typing.Callable) -> None:
+    def set_call_back(self, updater_function: typing.Callable[..., None]) -> None:
         """Sets a callback that gets executed every time prior to exporting.
 
         This function MUST set the value of the :class:`.Metric` to the
