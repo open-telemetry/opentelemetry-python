@@ -330,8 +330,8 @@ class Tracer(trace_api.Tracer):
             context = trace_api.SpanContext(
                 parent_context.trace_id,
                 span_id,
-                parent_context.traceoptions,
-                parent_context.tracestate)
+                parent_context.trace_options,
+                parent_context.trace_state)
         return Span(name=name, context=context, parent=parent)
 
     @contextmanager

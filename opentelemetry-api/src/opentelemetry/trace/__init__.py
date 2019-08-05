@@ -122,7 +122,7 @@ class TraceOptions(int):
         return cls(cls.DEFAULT)
 
 
-DEFAULT_TRACEOPTIONS = TraceOptions.get_default()
+DEFAULT_TRACE_OPTIONS = TraceOptions.get_default()
 
 
 class TraceState(typing.Dict[str, str]):
@@ -141,7 +141,7 @@ class TraceState(typing.Dict[str, str]):
         return cls()
 
 
-DEFAULT_TRACESTATE = TraceState.get_default()
+DEFAULT_TRACE_STATE = TraceState.get_default()
 
 
 def format_trace_id(trace_id: int) -> str:
@@ -168,17 +168,17 @@ class SpanContext:
     def __init__(self,
                  trace_id: int,
                  span_id: int,
-                 traceoptions: 'TraceOptions' = None,
-                 tracestate: 'TraceState' = None
+                 trace_options: 'TraceOptions' = None,
+                 trace_state: 'TraceState' = None
                  ) -> None:
-        if traceoptions is None:
-            traceoptions = DEFAULT_TRACEOPTIONS
-        if tracestate is None:
-            tracestate = DEFAULT_TRACESTATE
+        if trace_options is None:
+            trace_options = DEFAULT_TRACE_OPTIONS
+        if trace_state is None:
+            trace_state = DEFAULT_TRACE_STATE
         self.trace_id = trace_id
         self.span_id = span_id
-        self.traceoptions = traceoptions
-        self.tracestate = tracestate
+        self.trace_options = trace_options
+        self.trace_state = trace_state
 
     def __repr__(self) -> str:
         return ("{}(trace_id={}, span_id={})"
@@ -216,7 +216,7 @@ class DefaultSpan(Span):
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
 INVALID_SPAN_CONTEXT = SpanContext(INVALID_TRACE_ID, INVALID_SPAN_ID,
-                                   DEFAULT_TRACEOPTIONS, DEFAULT_TRACESTATE)
+                                   DEFAULT_TRACE_OPTIONS, DEFAULT_TRACE_STATE)
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 

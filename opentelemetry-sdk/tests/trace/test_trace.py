@@ -55,10 +55,10 @@ class TestSpanCreation(unittest.TestCase):
                 self.assertEqual(root_context.trace_id, child_context.trace_id)
                 self.assertNotEqual(root_context.span_id,
                                     child_context.span_id)
-                self.assertEqual(root_context.tracestate,
-                                 child_context.tracestate)
-                self.assertEqual(root_context.traceoptions,
-                                 child_context.traceoptions)
+                self.assertEqual(root_context.trace_state,
+                                 child_context.trace_state)
+                self.assertEqual(root_context.trace_options,
+                                 child_context.trace_options)
 
             # After exiting the child's scope the parent should become the
             # current span again.
@@ -103,10 +103,10 @@ class TestSpanCreation(unittest.TestCase):
                 self.assertEqual(other_parent.trace_id, child_context.trace_id)
                 self.assertNotEqual(other_parent.span_id,
                                     child_context.span_id)
-                self.assertEqual(other_parent.tracestate,
-                                 child_context.tracestate)
-                self.assertEqual(other_parent.traceoptions,
-                                 child_context.traceoptions)
+                self.assertEqual(other_parent.trace_state,
+                                 child_context.trace_state)
+                self.assertEqual(other_parent.trace_options,
+                                 child_context.trace_options)
 
             # After exiting the child's scope the last span on the stack should
             # become current, not the child's parent.
