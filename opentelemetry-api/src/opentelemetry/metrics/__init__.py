@@ -183,7 +183,7 @@ class Meter:
 
     def record(self,
                measurements: typing.List['Measurement'],
-               distributed_context = 'DistributedContext' = None
+               distributed_context: 'DistributedContext' = None,
                span_context: 'SpanContext' = None
                ) -> None:
         """Records a set of `Measurement`s.
