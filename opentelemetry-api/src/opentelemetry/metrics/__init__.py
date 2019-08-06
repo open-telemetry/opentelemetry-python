@@ -23,9 +23,9 @@ predefined aggregation.
 See https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
 for the specifications.
 
-
 """
 
+import abc
 import typing
 
 from opentelemetry import loader
@@ -52,15 +52,15 @@ class Meter:
     """
 
     def create_float_counter(self,
-                              name: str,
-                              description: str,
-                              unit: str,
-                              label_keys: typing.List['LabelKey'],
-                              constant_labels: \
-                              typing.Dict['LabelKey', 'LabelValue'] = None,
-                              component: str = None,
-                              resource: 'Resource' = None
-                              ) -> 'CounterFloat':
+                             name: str,
+                             description: str,
+                             unit: str,
+                             label_keys: typing.List['LabelKey'],
+                             constant_labels: \
+                             typing.Dict['LabelKey', 'LabelValue'] = None,
+                             component: str = None,
+                             resource: 'Resource' = None
+                             ) -> 'CounterFloat':
         """Creates a counter type metric that contains float values.
 
         Args:
@@ -79,15 +79,15 @@ class Meter:
         """
 
     def create_int_counter(self,
-                            name: str,
-                            description: str,
-                            unit: str,
-                            label_keys: typing.List['LabelKey'],
-                            constant_labels: \
-                            typing.Dict['LabelKey', 'LabelValue'] = None,
-                            component: str = None,
-                            resource: 'Resource' = None
-                            ) -> 'CounterInt':
+                           name: str,
+                           description: str,
+                           unit: str,
+                           label_keys: typing.List['LabelKey'],
+                           constant_labels: \
+                           typing.Dict['LabelKey', 'LabelValue'] = None,
+                           component: str = None,
+                           resource: 'Resource' = None
+                           ) -> 'CounterInt':
         """Creates a counter type metric that contains int values.
 
         Args:
@@ -107,15 +107,15 @@ class Meter:
         """
 
     def create_float_gauge(self,
-                            name: str,
-                            description: str,
-                            unit: str,
-                            label_keys: typing.List['LabelKey'],
-                            constant_labels: \
-                            typing.Dict['LabelKey', 'LabelValue'] = None,
-                            component: str = None,
-                            resource: 'Resource' = None
-                            ) -> 'GaugeFloat':
+                           name: str,
+                           description: str,
+                           unit: str,
+                           label_keys: typing.List['LabelKey'],
+                           constant_labels: \
+                           typing.Dict['LabelKey', 'LabelValue'] = None,
+                           comonent: str = None,
+                           resource: 'Resource' = None
+                           ) -> 'GaugeFloat':
         """Creates a gauge type metric that contains float values.
 
         Args:
@@ -135,15 +135,15 @@ class Meter:
         """
 
     def create_int_gauge(self,
-                          name: str,
-                          description: str,
-                          unit: str,
-                          label_keys: typing.List['LabelKey'],
-                          constant_labels: \
-                          typing.Dict['LabelKey', 'LabelValue'] = None,
-                          component: str = None,
-                          resource: 'Resource' = None
-                          ) -> 'GaugeInt':
+                         name: str,
+                         description: str,
+                         unit: str,
+                         label_keys: typing.List['LabelKey'],
+                         constant_labels: \
+                         typing.Dict['LabelKey', 'LabelValue'] = None,
+                         component: str = None,
+                         resource: 'Resource' = None
+                         ) -> 'GaugeInt':
         """Creates a gauge type metric that contains int values.
 
         Args:
@@ -166,7 +166,7 @@ class Meter:
                        name: str,
                        description: str,
                        unit: str,
-                       measure_type: 'MeasureType' = MeasureType.DOUBLE
+                       measure_type: 'MeasureType',
                        ) -> 'Measure':
         """Creates a Measure used to record raw :class:`.Measurement`s.
 
@@ -175,7 +175,7 @@ class Meter:
             description: Human readable description of this measure.
             unit: Unit of the measure values.
             measure_type: Type of the measure. Can be one of two values -
-            `LONG` and `DOUBLE`. Default type is `DOUBLE`.
+            `FLOAT` and `INT`. Default type is `FLOAT`.
 
         Returns:
             A :class:`.Measure`
@@ -183,6 +183,7 @@ class Meter:
 
     def record(self,
                measurements: typing.List['Measurement'],
+               distributed_context = 'DistributedContext' = None
                span_context: 'SpanContext' = None
                ) -> None:
         """Records a set of `Measurement`s.
@@ -224,7 +225,7 @@ class Measure:
 
     def create_measurement(self,
                            value: typing.Union[float, int]) -> 'Measurement':
-        """Creates a measurement that contains float values.
+        """Creates a measurement with type corresponding to the `measure`'s type.
 
         Args:
             value: The value of the measurement.
@@ -234,7 +235,7 @@ class Measure:
         """
 
 
-class Metric:
+class Metric(abc.ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
@@ -242,6 +243,7 @@ class Metric:
     :class:`.Meter` class, by providing a set of :class:`.MetricOptions`.
     """
 
+    @abc.abstractmethod
     def get_or_create_time_series(self,
                                   label_values: typing.List['LabelValue']
                                   ) -> 'object':
@@ -257,14 +259,13 @@ class Metric:
             label_values: A map of :class:`.LabelValue`s that will be
             associated with the return timeseries.
         """
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_default_time_series(self) -> 'object':
         """Returns a `TimeSeries`, a container for a cumulative value.
 
         The timeseries will have all its labels not set (default).
         """
-        raise NotImplementedError
 
     def set_call_back(self, updater_function: typing.Callable[..., None]) -> None:
         """Sets a callback that gets executed every time prior to exporting.
