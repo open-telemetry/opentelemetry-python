@@ -12,12 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The OpenTelemetry metrics API describes the classes used to report raw
+measurements, as well as metrics with known aggregation and labels.
+
+The :class:`.Meter` class is used to construct ::class`.Measure`s to
+record raw measurements and :class`.Metric`s to record metrics with
+predefined aggregation.
+
+See https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
+for the specifications.
+
+
+"""
+
 import typing
 
 from opentelemetry import loader
 from opentelemetry.distributedcontext import DistributedContext
 from opentelemetry.metrics.label_key import LabelKey
 from opentelemetry.metrics.label_key import LabelValue
+from opentelemetry.metrics.time_series import CounterTimeSeries
 from opentelemetry.resources import Resource
 from opentelemetry.trace import SpanContext
 
@@ -207,20 +222,9 @@ class Measure:
     constructed from the :class:`.Meter` class.
     """
 
-    def create_float_measurement(self,
-                                 value: float) -> 'Measurement':
+    def create_measurement(self,
+                           value: typing.Union[float, int]) -> 'Measurement':
         """Creates a measurement that contains float values.
-
-        Args:
-            value: The value of the measurement.
-
-        Returns:
-            A new :class:`.Measurement`
-        """
-
-    def create_int_measurement(self,
-                                value: int) -> 'Measurement':
-        """Creates a measurement that contains int values.
 
         Args:
             value: The value of the measurement.
@@ -295,27 +299,11 @@ class CounterFloat(Metric):
 
     def get_or_create_time_series(self,
                                   label_values: typing.List['LabelValue']
-                                  ) -> 'CounterFloat.TimeSeries':
-        """Gets and returns a `TimeSeries`, for a `CounterFloat` metric."""
+                                  ) -> 'CounterTimeSeries':
+        """Gets a `CounterTimeSeries' with a cumulated float value."""
 
-    def get_default_time_series(self) -> 'CounterFloat.TimeSeries':
-        """Returns a `TimeSeries`, for a `CounterFloat` metric."""
-
-    class TimeSeries:
-
-        def add(self, value: float) -> None:
-            """Adds the given value to the current value.
-
-            The values cannot be negative.
-            """
-
-        def set(self, value: float) -> None:
-            """Sets the current value to the given value.
-
-            The given value must be larger than the current recorded value. In
-            general should be used in combination with `SetCallback` where the
-            recorded value is guaranteed to be monotonically increasing.
-            """
+    def get_default_time_series(self) -> 'CounterTimeSeries':
+        """Returns a `CounterTimeSeries' with a cumulated float value."""
 
 
 class CounterInt(Metric):
@@ -327,28 +315,11 @@ class CounterInt(Metric):
 
     def get_or_create_time_series(self,
                                   label_values: typing.List['LabelValue']
-                                  ) -> 'CounterInt.TimeSeries':
-        """Gets and returns a `TimeSeries`, for a `CounterInt` metric."""
+                                  ) -> 'CounterTimeSeries':
+        """Gets a `CounterTimeSeries' with a cumulated int value."""
 
-    def get_default_time_series(self) -> 'CounterInt.TimeSeries':
-        """Returns a `TimeSeries`, for a `CounterInt` metric."""
-
-    class TimeSeries:
-
-        def add(self, value: int) -> None:
-            """Adds the given value to the current value.
-
-            The values cannot be negative.
-            """
-
-        def set(self, value: int) -> None:
-            """Sets the current value to the given value.
-
-            The given value must be larger than the current recorded value. In
-            general should be used in combination with `SetCallback` where the
-            recorded value is guaranteed to be monotonically increasing.
-            """
-
+    def get_default_time_series(self) -> 'CounterTimeSeries':
+        """Returns a `CounterTimeSeries' with a cumulated int value."""
 
 class GaugeFloat(Metric):
     """A gauge type metric that holds float values.
@@ -358,22 +329,11 @@ class GaugeFloat(Metric):
 
     def get_or_create_time_series(self,
                                   label_values: typing.List['LabelValue']
-                                  ) -> 'GaugeFloat.TimeSeries':
-        """Gets and returns a `TimeSeries`, for a `GaugeFloat` metric."""
+                                  ) -> 'GaugeTimeSeries':
+        """Gets a `GaugeTimeSeries` with a cumulated float value."""
 
-    def get_default_time_series(self) -> 'GaugeFloat.TimeSeries':
-        """Returns a `TimeSeries`, for a `GaugeFloat` metric."""
-
-    class TimeSeries:
-
-        def add(self, value: float) -> None:
-            """Adds the given value to the current value.
-
-            The values can be negative.
-            """
-
-        def set(self, value: float) -> None:
-            """Sets the current value to the given value."""
+    def get_default_time_series(self) -> 'GaugeTimeSeries':
+        """Returns a `GaugeTimeSeries` with a cumulated float value."""
 
 
 class GaugeInt(Metric):
@@ -384,19 +344,9 @@ class GaugeInt(Metric):
 
     def get_or_create_time_series(self,
                                   label_values: typing.List['LabelValue']
-                                  ) -> 'GaugeInt.TimeSeries':
-        """Gets and returns a `TimeSeries`, for a `GaugeInt` metric."""
+                                  ) -> 'GaugeTimeSeries':
+        """Gets a `GaugeTimeSeries` with a cumulated int value."""
 
-    def get_default_time_series(self) -> 'GaugeInt.TimeSeries':
-        """Returns a `TimeSeries`, for a `GaugeInt` metric."""
+    def get_default_time_series(self) -> 'GaugeTimeSeries':
+        """Returns a `GaugeTimeSeries with a cumulated int value."""
 
-    class TimeSeries:
-
-        def add(self, value: int) -> None:
-            """Adds the given value to the current value.
-
-            The values can be negative.
-            """
-
-        def set(self, value: int) -> None:
-            """Sets the current value to the given value."""
