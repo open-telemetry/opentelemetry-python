@@ -36,7 +36,7 @@ class Meter:
     metrics like "queue_length".
     """
 
-    def create_double_counter(self,
+    def create_float_counter(self,
                               name: str,
                               description: str,
                               unit: str,
@@ -45,8 +45,8 @@ class Meter:
                               typing.Dict['LabelKey', 'LabelValue'] = None,
                               component: str = None,
                               resource: 'Resource' = None
-                              ) -> 'CounterDouble':
-        """Creates a counter type metric that contains double values.
+                              ) -> 'CounterFloat':
+        """Creates a counter type metric that contains float values.
 
         Args:
             name: The name of the counter.
@@ -60,10 +60,10 @@ class Meter:
             component: The name of the component that reports this metric.
             Resource: Sets the :class:`.Resource` associated with this metric.
 
-        Returns: A new :class:`.CounterDouble`
+        Returns: A new :class:`.CounterFloat`
         """
 
-    def create_long_counter(self,
+    def create_int_counter(self,
                             name: str,
                             description: str,
                             unit: str,
@@ -72,8 +72,8 @@ class Meter:
                             typing.Dict['LabelKey', 'LabelValue'] = None,
                             component: str = None,
                             resource: 'Resource' = None
-                            ) -> 'CounterLong':
-        """Creates a counter type metric that contains long values.
+                            ) -> 'CounterInt':
+        """Creates a counter type metric that contains int values.
 
         Args:
             name: The name of the counter.
@@ -88,10 +88,10 @@ class Meter:
             Resource: Sets the :class:`.Resource` associated with this metric.
 
         Returns:
-            A new :class:`.CounterLong`
+            A new :class:`.CounterInt`
         """
 
-    def create_double_gauge(self,
+    def create_float_gauge(self,
                             name: str,
                             description: str,
                             unit: str,
@@ -100,8 +100,8 @@ class Meter:
                             typing.Dict['LabelKey', 'LabelValue'] = None,
                             component: str = None,
                             resource: 'Resource' = None
-                            ) -> 'GaugeDouble':
-        """Creates a gauge type metric that contains double values.
+                            ) -> 'GaugeFloat':
+        """Creates a gauge type metric that contains float values.
 
         Args:
             name: The name of the gauge.
@@ -116,10 +116,10 @@ class Meter:
             Resource: Sets the :class:`.Resource` associated with this metric.
 
         Returns:
-            A new :class:`.GaugeDouble`
+            A new :class:`.GaugeFloat`
         """
 
-    def create_long_gauge(self,
+    def create_int_gauge(self,
                           name: str,
                           description: str,
                           unit: str,
@@ -128,8 +128,8 @@ class Meter:
                           typing.Dict['LabelKey', 'LabelValue'] = None,
                           component: str = None,
                           resource: 'Resource' = None
-                          ) -> 'GaugeLong':
-        """Creates a gauge type metric that contains long values.
+                          ) -> 'GaugeInt':
+        """Creates a gauge type metric that contains int values.
 
         Args:
             name: The name of the gauge.
@@ -144,7 +144,7 @@ class Meter:
             Resource: Sets the :class:`.Resource` associated with this metric.
 
         Returns:
-            A new :class:`.GaugeLong`
+            A new :class:`.GaugeInt`
         """
 
     def create_measure(self,
