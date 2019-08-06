@@ -157,8 +157,7 @@ Link = namedtuple('Link', ('context', 'attributes'))
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
-    Users should generally create `Span`s via the `Tracer` instead of this
-    constructor.
+    Users should create `Span`s via the `Tracer` instead of this constructor.
 
     Args:
         name: The name of the operation this span represents
