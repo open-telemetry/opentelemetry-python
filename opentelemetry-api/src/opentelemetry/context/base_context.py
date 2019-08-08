@@ -40,7 +40,7 @@ class BaseRuntimeContext:
     _slots: typing.Dict[str, 'BaseRuntimeContext.Slot'] = {}
 
     @classmethod
-    def clear(cls: 'type[BaseRuntimeContext]') -> None:
+    def clear(cls) -> None:
         """Clear all slots to their default value."""
         keys = cls._slots.keys()
         for name in keys:
@@ -49,7 +49,7 @@ class BaseRuntimeContext:
 
     @classmethod
     def register_slot(
-            cls: 'type[BaseRuntimeContext]',
+            cls,
             name: str,
             default: 'object' = None,
     ) -> 'BaseRuntimeContext.Slot':
