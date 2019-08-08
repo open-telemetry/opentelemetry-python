@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-class LabelValue(object):
+class LabelValue:
     """The label values associated with a TimeSeries.
 
     :type value: str
@@ -22,4 +22,3 @@ class LabelValue(object):
     def __init__(self,
                  value: str) -> None:
         self.value = value
-

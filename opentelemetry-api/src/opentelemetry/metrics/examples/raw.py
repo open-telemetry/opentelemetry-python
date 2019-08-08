@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import psutil
 import time
+import psutil
 
-from opentelemetry.distributedcontext import DistributedContext
 from opentelemetry.metrics import Meter
 
-meter = Meter()
-measure = meter.create_float_measure("cpu_usage", "cpu usage over time", "percentage")
+METER = Meter()
+MEASURE = METER.create_float_measure("cpu_usage",
+                                     "cpu usage over time",
+                                     "percentage")
 
-measurements = []
+MEASUREMENTS = []
 for i in range(100):
-    measurements.append(measure.createMeasurement(psutil.cpu_percent()))
+    MEASUREMENTS.append(MEASURE.createMeasurement(psutil.cpu_percent()))
     time.sleep(1)
 
-    meter.record(measurements, distributed_context=DistributedContext.get_current())
+    METER.record(MEASUREMENTS)

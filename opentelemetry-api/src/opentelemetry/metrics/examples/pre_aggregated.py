@@ -13,15 +13,18 @@
 # limitations under the License.
 
 
-from opentelemetry.distributedcontext import DistributedContext
 from opentelemetry.metrics import Meter
 from opentelemetry.metrics.label_key import LabelKey
 
-meter = Meter()
-label_keys = [LabelKey("environment", "the environment the application is running in")]
-sum_metric = meter.create_int_counter("sum numbers", "sum numbers over time", "number", label_keys)
-label_values = ["Testing"]
-sum_time_series = sum_metric.getOrCreateTimeSeries(label_values)
+METER = Meter()
+LABEL_KEYS = [LabelKey("environment", 
+                       "the environment the application is running in")]
+SUM_METRIC = METER.create_int_counter("sum numbers", 
+                                      "sum numbers over time",
+                                      "number",
+                                      LABEL_KEYS)
+LABEL_VALUES = ["Testing"]
+SUM_TIME_SERIES = SUM_METRIC.getOrCreateTimeSeries(LABEL_VALUES)
 
 for i in range(100):
-    sum_time_series.add(i)
+    SUM_TIME_SERIES.add(i)

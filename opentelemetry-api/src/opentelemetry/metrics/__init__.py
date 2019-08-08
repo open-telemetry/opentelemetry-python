@@ -31,7 +31,6 @@ See the `metrics api`_ spec for terminology and context clarification.
 import abc
 import typing
 
-from opentelemetry.distributedcontext import DistributedContext
 from opentelemetry.metrics.label_key import LabelKey
 from opentelemetry.metrics.label_value import LabelValue
 from opentelemetry.metrics.time_series import CounterTimeSeries
@@ -48,10 +47,10 @@ class Meter:
     used to record measurements like "server_latency" or "received_bytes",
     where the value of interest is the recorded value itself.
 
-    :class:`.Metric` s are used for recording pre-defined aggregation, or already
-    aggregated data. This should be used to report metrics like cpu/memory
-    usage, in which the type of aggregation is already defined, or simple
-    metrics like "queue_length".
+    :class:`.Metric` s are used for recording pre-defined aggregation, or
+    already aggregated data. This should be used to report metrics like
+    cpu/memory usage, in which the type of aggregation is already defined, or
+    simple metrics like "queue_length".
     """
 
     def create_float_counter(self,
@@ -201,7 +200,6 @@ class Meter:
 
     def record(self,
                measurements: typing.List['Measurement'],
-               distributed_context: 'DistributedContext' = None,
                span_context: 'SpanContext' = None
                ) -> None:
         """Records a set of :class:`.Measurement` s.
@@ -214,6 +212,7 @@ class Meter:
         Args:
             measurements: The collection of measurements to record.
             span_context: the :class:`.SpanContext` that identified the
+            # TODO: DistributedContext
             :class:`.Span` for which the measurements are associated with.
 
         Returns: None
@@ -245,7 +244,7 @@ class Measure(abc.ABC):
     """
     @abc.abstractmethod
     def create_measurement(self,
-                           value: typing.Union[float, int]
+                           value: typing.Any
                            ) -> 'Measurement':
         """Creates a measurement.
 
@@ -263,8 +262,8 @@ class FloatMeasure(Measure):
     """Used to create raw :class:`.FloatMeasurement` s."""
 
     def create_measurement(self,
-                            value: int,
-                            ) -> 'FloatMeasurement':
+                           value: int,
+                           ) -> 'FloatMeasurement':
         """Creates a measurement with a FLOAT type.
 
         Args:
@@ -322,7 +321,9 @@ class Metric(abc.ABC):
         The timeseries will have all its labels not set (default).
         """
 
-    def set_call_back(self, updater_function: typing.Callable[..., None]) -> None:
+    def set_call_back(self,
+                      updater_function: typing.Callable[..., None]
+                      ) -> None:
         """Sets a callback that gets executed every time prior to exporting.
 
         This function MUST set the value of the :class:`.Metric` to the
@@ -348,7 +349,7 @@ class Metric(abc.ABC):
 
 class CounterFloat(Metric):
     """A counter type metric that holds float values.
-    
+
     Cumulative values can go up or stay the same, but can never go down.
     Cumulative values cannot be negative.
     """
@@ -359,12 +360,12 @@ class CounterFloat(Metric):
         """Gets a :class:`.CounterTimeSeries` with a cumulated float value."""
 
     def get_default_time_series(self) -> 'CounterTimeSeries':
-        """Returns a :class:`.CounterTimeSeries` with a cumulated float value."""
+        """Returns a :class:`.CounterTimeSeries` with a float value."""
 
 
 class CounterInt(Metric):
     """A counter type metric that holds int values.
-    
+
     Cumulative values can go up or stay the same, but can never go down.
     Cumulative values cannot be negative.
     """
@@ -379,7 +380,7 @@ class CounterInt(Metric):
 
 class GaugeFloat(Metric):
     """A gauge type metric that holds float values.
-    
+
     Cumulative value can go both up and down. Values can be negative.
     """
 
@@ -405,4 +406,3 @@ class GaugeInt(Metric):
 
     def get_default_time_series(self) -> 'GaugeTimeSeries':
         """Returns a :class:`.GaugeTimeSeries` with a cumulated int value."""
-

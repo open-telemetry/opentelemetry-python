@@ -33,7 +33,7 @@ class CounterTimeSeries:
 
 
 class GaugeTimeSeries:
-    
+
     def add(self, value: typing.Union[float, int]) -> None:
         """Adds the given value to the current value.
 

@@ -14,12 +14,17 @@
 
 import psutil
 
-from opentelemetry.distributedcontext import DistributedContext
 from opentelemetry.metrics import Meter
 from opentelemetry.metrics.label_key import LabelKey
 
-meter = Meter()
-label_keys = [LabelKey("environment", "the environment the application is running in")]
-memory_metric = meter.create_int_gauge("available_memory", "available memory over time", "bytes", label_keys)
-label_values = ["Testing"]
-memory_metric.setCallBack(lambda: memory_metric.getOrCreateTimeSeries(label_values).set(psutil.virtual_memory().available))
+METER = Meter()
+LABEL_KEYS = [LabelKey("environment",
+                       "the environment the application is running in")]
+MEMORY_METRIC = METER.create_int_gauge("available_memory", 
+                                       "available memory over time",
+                                       "bytes",
+                                       LABEL_KEYS)
+LABEL_VALUES = ["Testing"]
+MEMORY_METRIC.setCallBack(lambda: MEMORY_METRIC \
+    .getOrCreateTimeSeries(LABEL_VALUES) \
+    .set(psutil.virtual_memory().available))

@@ -27,4 +27,3 @@ class LabelKey:
                  description: str) -> None:
         self.key = key
         self.description = description
-
