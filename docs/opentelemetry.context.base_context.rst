@@ -1,5 +1,5 @@
-context.base\_context module
-============================
+opentelemetry.context.base\_context module
+==========================================
 
 .. automodule:: opentelemetry.context.base_context
     :members:
