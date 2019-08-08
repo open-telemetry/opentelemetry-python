@@ -165,23 +165,38 @@ class Meter:
             A new :class:`.GaugeInt`
         """
 
-    def create_measure(self,
-                       name: str,
-                       description: str,
-                       unit: str,
-                       measure_type: 'MeasureType',
-                       ) -> 'Measure':
-        """Creates a Measure used to record raw :class:`.Measurement` s.
+    def create_int_measure(self,
+                           name: str,
+                           description: str,
+                           unit: str
+                           ) -> 'IntMeasure':
+        """Creates a measure used to record raw :class:`.Measurement` s.
+        The measurements created from this measure will have type INT.
 
         Args:
             name: the name of the measure
             description: Human readable description of this measure.
             unit: Unit of the measure values.
-            measure_type: Type of the measure. Can be one of two values - \
-            `FLOAT` and `INT`. Default type is `FLOAT`.
 
         Returns:
-            A :class:`.Measure`
+            A :class:`.IntMeasure`
+        """
+
+    def create_float_measure(self,
+                             name: str,
+                             description: str,
+                             unit: str
+                             ) -> 'FloatMeasure':
+        """Creates a Measure used to record raw :class:`.Measurement` s.
+        The measurements created from this measure will have type INT.
+
+        Args:
+        name: the name of the measure
+        description: Human readable description of this measure.
+        unit: Unit of the measure values.
+
+        Returns:
+            A :class:`.FloatMeasure`
         """
 
     def record(self,
@@ -205,11 +220,6 @@ class Meter:
         """
 
 
-class MeasureType:
-    FLOAT = 0
-    INT = 1
-
-
 class Measurement:
     """An empty interface that represents a single value.
 
@@ -218,24 +228,65 @@ class Measurement:
     """
 
 
-class Measure:
+class FloatMeasurement(Measurement):
+    """A :class:`.Measurement` with an INT value."""
+
+
+class IntMeasurement(Measurement):
+    """A :class:`.Measurement` with an INT value."""
+
+
+class Measure(abc.ABC):
     """Used to create raw :class:`.Measurement` s.
 
     A contract between the API exposing the raw measurement and SDK
     aggregating these values into the :class:`.Metric`. Measure is
     constructed from the :class:`.Meter` class.
     """
-
+    @abc.abstractmethod
     def create_measurement(self,
                            value: typing.Union[float, int]
                            ) -> 'Measurement':
-        """Creates a measurement with type corresponding to the measure's type.
+        """Creates a measurement.
+
+        The type of the value in the measurement will correspond to the type
+        of measure that overrides this method.
+
+        Args:
+        value: The value of the measurement.
+
+        Returns:
+        A new :class:`.Measurement`
+        """
+
+class FloatMeasure(Measure):
+    """Used to create raw :class:`.FloatMeasurement` s."""
+
+    def create_measurement(self,
+                            value: int,
+                            ) -> 'FloatMeasurement':
+        """Creates a measurement with a FLOAT type.
 
         Args:
             value: The value of the measurement.
 
         Returns:
-            A new :class:`.Measurement`
+            A new :class:`.FloatMeasurement`
+        """
+
+class IntMeasure(Measure):
+    """Used to create raw :class:`.IntMeasurement` s."""
+
+    def create_measurement(self,
+                           value: int,
+                           ) -> 'IntMeasurement':
+        """Creates a measurement with an INT type.
+
+        Args:
+            value: The value of the measurement.
+
+        Returns:
+            A new :class:`.IntMeasurement`
         """
 
 
