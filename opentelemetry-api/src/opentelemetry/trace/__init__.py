@@ -241,6 +241,7 @@ class Tracer:
             The currently active :class:`.Span`, or a placeholder span with an
             invalid :class:`.SpanContext`.
         """
+        # pylint: disable=no-self-use
         return INVALID_SPAN
 
     @contextmanager  # type: ignore
@@ -290,6 +291,7 @@ class Tracer:
         Yields:
             The newly-created span.
         """
+        # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
     def create_span(self,
@@ -326,6 +328,7 @@ class Tracer:
         Returns:
             The newly-created span.
         """
+        # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
     @contextmanager  # type: ignore
@@ -341,6 +344,7 @@ class Tracer:
         Args:
             span: The span to start and make current.
         """
+        # pylint: disable=unused-argument,no-self-use
         yield
 
 
