@@ -75,5 +75,5 @@ class HTTPTextFormat(abc.ABC):
 
     @abc.abstractmethod
     def inject(self, context: SpanContext, set_in_carrier: Setter,
-               carrier: object):
+               carrier: object) -> None:
         pass
