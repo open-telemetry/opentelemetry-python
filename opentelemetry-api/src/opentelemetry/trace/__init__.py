@@ -241,6 +241,7 @@ class Tracer:
             The currently active :class:`.Span`, or a placeholder span with an
             invalid :class:`.SpanContext`.
         """
+        return INVALID_SPAN
 
     @contextmanager  # type: ignore
     def start_span(self,
@@ -289,6 +290,7 @@ class Tracer:
         Yields:
             The newly-created span.
         """
+        yield INVALID_SPAN
 
     def create_span(self,
                     name: str,
@@ -324,6 +326,7 @@ class Tracer:
         Returns:
             The newly-created span.
         """
+        return INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(self, span: 'Span') -> typing.Iterator[None]:
@@ -338,6 +341,7 @@ class Tracer:
         Args:
             span: The span to start and make current.
         """
+        yield
 
 
 _TRACER: typing.Optional[Tracer] = None
