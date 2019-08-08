@@ -253,7 +253,7 @@ class Span(trace_api.Span):
         self.links.append(Link(context, attributes))
 
     def start(self):
-        if self.end_time is None:
+        if self.start_time is None:
             self.start_time = util.time_ns()
 
     def end(self):
