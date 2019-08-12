@@ -14,16 +14,45 @@
 
 import abc
 import typing
+
 from opentelemetry.trace import SpanContext
 
 
 class BinaryFormat(abc.ABC):
+    """API for serialization of span context into binary formats.
+
+    This class provides an interface that enables converting span contexts
+    to and from a binary format.
+    """
     @staticmethod
     @abc.abstractmethod
     def to_bytes(context: SpanContext) -> bytes:
-        pass
+        """Creates a byte representation of a SpanContext.
 
+        to_bytes should read values from a SpanContext and return a data
+        format to represent it, in bytes.
+
+        Args:
+            context: the SpanContext to serialize
+
+        Returns:
+            A bytes representation of the SpanContext.
+
+        """
     @staticmethod
     @abc.abstractmethod
     def from_bytes(byte_representation: bytes) -> typing.Optional[SpanContext]:
-        pass
+        """Return a SpanContext that was represented by bytes.
+
+        from_bytes should return back a SpanContext that was constructed from
+        the data serialized in the byte_representation passed. If it is not
+        possible to read in a proper SpanContext, return None.
+
+        Args:
+            byte_representation: the bytes to deserialize
+
+        Returns:
+            A bytes representation of the SpanContext if it is valid.
+            Otherwise return None.
+
+        """

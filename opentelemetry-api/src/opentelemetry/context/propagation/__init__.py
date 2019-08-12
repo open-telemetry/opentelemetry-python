@@ -1,4 +1,4 @@
-from .httptextformat import HTTPTextFormat
 from .binaryformat import BinaryFormat
+from .httptextformat import HTTPTextFormat
 
-__all__ = ["HTTPTextFormat", "BinaryFormat"]
+__all__ = ["BinaryFormat", "HTTPTextFormat"]

@@ -14,17 +14,18 @@
 
 import abc
 import typing
+
 from opentelemetry.trace import SpanContext
 
 Setter = typing.Callable[[object, str, str], None]
-Getter = typing.Callable[[object, str], str]
+Getter = typing.Callable[[object, str], typing.Optional[str]]
 
 
 class HTTPTextFormat(abc.ABC):
-    """API for propagation of spans via headers.
+    """API for propagation of span context via headers.
 
     This class provides an interface that enables extracting and injecting
-    trace state into headers of HTTP requests. Http frameworks and client
+    span context into headers of HTTP requests. HTTP frameworks and clients
     can integrate with HTTPTextFormat by providing the object containing the
     headers, and a getter and setter function for the extraction and
     injection of values, respectively.
@@ -65,15 +66,43 @@ class HTTPTextFormat(abc.ABC):
 
     .. _Propagation API Specification:
        https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
-
-    Enabling this flexi
     """
     @abc.abstractmethod
     def extract(self, get_from_carrier: Getter,
                 carrier: object) -> SpanContext:
-        pass
+        """Create a SpanContext from values in the carrier.
 
+        The extract function should retrieve values from the carrier
+        object using get_from_carrier, and use values to populate a
+        SpanContext value and return it.
+
+        Args:
+            get_from_carrier: a function that can retrieve a value
+                in the carrier, or return None if not
+            carrier: and object which contains values that are
+                used to construct a SpanContext. This object
+                must be paired with an appropriate get_from_carrier
+                which understands how to extract a value from it
+        Returns:
+            A SpanContext with configuration found in the carrier.
+
+        """
     @abc.abstractmethod
     def inject(self, context: SpanContext, set_in_carrier: Setter,
                carrier: object) -> None:
-        pass
+        """Inject values from a SpanContext into a carrier.
+
+        inject enables the propagation of values into HTTP clients or
+        other objects which perform an HTTP request. Implementations
+        should use the set_in_carrier method to set values on the
+        carrier.
+
+        Args:
+            context: The SpanContext to read values from
+            set_in_carrier: A setter function that can set values
+                on the carrier
+            carrier: An object that a place to define HTTP headers.
+                Should be paired with set_in_carrier, which should
+                know how to set header values on the carrier
+
+        """

@@ -26,16 +26,19 @@ class B3Format(HTTPTextFormat):
     TRACE_ID_KEY = "x-b3-traceid"
     SPAN_ID_KEY = "x-b3-spanid"
     SAMPLED_KEY = "x-b3-sampled"
+    FLAGS_KEY = "x-b3-flags"
+    _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
     @classmethod
     def extract(cls, get_from_carrier, carrier):
         trace_id = trace.INVALID_TRACE_ID
         span_id = trace.INVALID_SPAN_ID
-        sampled = 1
+        sampled = 0
+        flags = None
 
         single_header = get_from_carrier(carrier, cls.SINGLE_HEADER_KEY)
         if single_header:
-            # b3-propagation spec calls for the sampling state to be
+            # The b3 spec calls for the sampling state to be
             # "deferred", which is unspecified. This concept does not
             # translate to SpanContext, so we set it as recorded.
             sampled = "1"
@@ -52,13 +55,29 @@ class B3Format(HTTPTextFormat):
             else:
                 return trace.INVALID_SPAN_CONTEXT
         else:
-            trace_id = get_from_carrier(carrier, cls.TRACE_ID_KEY)
-            span_id = get_from_carrier(carrier, cls.SPAN_ID_KEY)
-            sampled = get_from_carrier(carrier, cls.SAMPLED_KEY)
+            trace_id = get_from_carrier(carrier, cls.TRACE_ID_KEY) or trace_id
+            span_id = get_from_carrier(carrier, cls.SPAN_ID_KEY) or span_id
+            sampled = get_from_carrier(carrier, cls.SAMPLED_KEY) or sampled
+            flags = get_from_carrier(carrier, cls.FLAGS_KEY) or flags
 
         options = 0
-        if sampled == "1":
+        # The b3 spec provides no defined behavior for both sample and
+        # flag values set. Since the setting of at least one implies
+        # the desire for some form of sampling, propagate if either
+        # header is set to allow.
+        if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceOptions.RECORDED
+
+        # trace an span ids are encoded in hex, so must be converted
+        if trace_id != trace.INVALID_TRACE_ID:
+            # Convert 64-bit trace ids to 128-bit
+            if len(trace_id) == 16:
+                trace_id = "0" * 16 + trace_id
+            trace_id = int(trace_id, 16)
+
+        if span_id != trace.INVALID_SPAN_ID:
+            span_id = int(span_id, 16)
+
         return trace.SpanContext(
             trace_id=int(trace_id),
             span_id=int(span_id),
@@ -69,6 +88,10 @@ class B3Format(HTTPTextFormat):
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
         sampled = (trace.TraceOptions.RECORDED & context.trace_options) != 0
-        set_in_carrier(carrier, cls.TRACE_ID_KEY, str(context.trace_id))
-        set_in_carrier(carrier, cls.SPAN_ID_KEY, str(context.span_id))
+        set_in_carrier(
+            carrier, cls.TRACE_ID_KEY, "{:032x}".format(context.trace_id)
+        )
+        set_in_carrier(
+            carrier, cls.SPAN_ID_KEY, "{:016x}".format(context.span_id)
+        )
         set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
