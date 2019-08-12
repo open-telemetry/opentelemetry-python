@@ -114,6 +114,34 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(tracer.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
+    def test_span_members(self):
+        context = contextvars.ContextVar('test_span_members')
+        tracer = trace.Tracer(context)
+
+        other_neighbor = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id()
+        )
+
+        self.assertIsNone(tracer.get_current_span())
+
+        with tracer.start_span('root') as root:
+            root.set_attribute('component', 'http')
+            root.set_attribute('http.method', 'GET')
+            root.set_attribute('http.url',
+                               'https://example.com:779/path/12/?q=d#123')
+            root.set_attribute('http.status_code', 200)
+            root.set_attribute('http.status_text', 'OK')
+
+            # Setting an attribute with the same key as an existing attribute
+            # SHOULD overwrite the existing attribute's value.
+            root.set_attribute('attr-key', 'attr-value1')
+            root.set_attribute('attr-key', 'attr-value2')
+
+            root.add_event('event1', 'event1-detail')
+
+            root.add_link(other_neighbor, 'neighbor')
+
 
 class TestSpan(unittest.TestCase):
 
