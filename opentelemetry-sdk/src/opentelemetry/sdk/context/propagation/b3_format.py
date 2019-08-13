@@ -31,8 +31,8 @@ class B3Format(HTTPTextFormat):
 
     @classmethod
     def extract(cls, get_from_carrier, carrier):
-        trace_id = trace.INVALID_TRACE_ID
-        span_id = trace.INVALID_SPAN_ID
+        trace_id = format_trace_id(trace.INVALID_TRACE_ID)
+        span_id = format_span_id(trace.INVALID_SPAN_ID)
         sampled = 0
         flags = None
 
@@ -69,18 +69,12 @@ class B3Format(HTTPTextFormat):
             options |= trace.TraceOptions.RECORDED
 
         # trace an span ids are encoded in hex, so must be converted
-        if trace_id != trace.INVALID_TRACE_ID:
-            # Convert 64-bit trace ids to 128-bit
-            if len(trace_id) == 16:
-                trace_id = "0" * 16 + trace_id
-            trace_id = int(trace_id, 16)
-
-        if span_id != trace.INVALID_SPAN_ID:
-            span_id = int(span_id, 16)
+        trace_id_as_int = int(trace_id, 16)
+        span_id_as_int = int(span_id, 16)
 
         return trace.SpanContext(
-            trace_id=int(trace_id),
-            span_id=int(span_id),
+            trace_id=trace_id_as_int,
+            span_id=span_id_as_int,
             trace_options=options,
             trace_state={},
         )
@@ -88,10 +82,18 @@ class B3Format(HTTPTextFormat):
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
         sampled = (trace.TraceOptions.RECORDED & context.trace_options) != 0
-        set_in_carrier(
-            carrier, cls.TRACE_ID_KEY, "{:032x}".format(context.trace_id)
-        )
-        set_in_carrier(
-            carrier, cls.SPAN_ID_KEY, "{:016x}".format(context.span_id)
-        )
+        set_in_carrier(carrier, cls.TRACE_ID_KEY,
+                       format_trace_id(context.trace_id))
+        set_in_carrier(carrier, cls.SPAN_ID_KEY,
+                       format_span_id(context.span_id))
         set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
+
+
+def format_trace_id(trace_id: int):
+    """Format the trace id according to b3 specification."""
+    return format(trace_id, "032x")
+
+
+def format_span_id(span_id: int):
+    """Format the span id according to b3 specification."""
+    return format(span_id, "016x")
