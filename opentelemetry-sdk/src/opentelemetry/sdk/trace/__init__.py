@@ -16,10 +16,14 @@
 from collections import OrderedDict
 from collections import deque
 from collections import namedtuple
+from contextlib import contextmanager
+import contextvars
+import random
 import threading
 import typing
 
 from opentelemetry import trace as trace_api
+from opentelemetry import types
 from opentelemetry.sdk import util
 
 try:
@@ -31,11 +35,12 @@ except ImportError:
     from collections import MutableMapping
     from collections import Sequence
 
+
+_CURRENT_SPAN_CV = contextvars.ContextVar('current_span', default=None)
+
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
 MAX_NUM_LINKS = 32
-
-AttributeValue = typing.Union[str, bool, float]
 
 
 class BoundedList(Sequence):
@@ -144,20 +149,28 @@ class BoundedDict(MutableMapping):
         return bounded_dict
 
 
-class SpanContext(trace_api.SpanContext):
-    """See `opentelemetry.trace.SpanContext`."""
-
-    def is_valid(self) -> bool:
-        return (self.trace_id == trace_api.INVALID_TRACE_ID or
-                self.span_id == trace_api.INVALID_SPAN_ID)
-
-
 Event = namedtuple('Event', ('name', 'attributes'))
 
 Link = namedtuple('Link', ('context', 'attributes'))
 
 
 class Span(trace_api.Span):
+    """See `opentelemetry.trace.Span`.
+
+    Users should create `Span`s via the `Tracer` instead of this constructor.
+
+    Args:
+        name: The name of the operation this span represents
+        context: The immutable span context
+        parent: This span's parent, may be a `SpanContext` if the parent is
+            remote, null if this is a root span
+        sampler: TODO
+        trace_config: TODO
+        resource: TODO
+        attributes: The span's attributes to be exported
+        events: Timestamped events to be exported
+        links: Links to other spans to be exported
+    """
 
     # Initialize these lazily assuming most spans won't have them.
     empty_attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
@@ -166,27 +179,19 @@ class Span(trace_api.Span):
 
     def __init__(self: 'Span',
                  name: str,
-                 context: 'SpanContext',
-                 # TODO: span processor
-                 parent: typing.Union['Span', 'SpanContext'] = None,
-                 root: bool = False,
+                 context: 'trace_api.SpanContext',
+                 parent: trace_api.ParentSpan = None,
                  sampler=None,  # TODO
-                 trace_config=None,  # TraceConfig TODO
-                 resource=None,  # Resource TODO
-                 # TODO: is_recording
-                 attributes=None,  # type TODO
-                 events=None,  # type TODO
-                 links=None,  # type TODO
+                 trace_config=None,  # TODO
+                 resource=None,  # TODO
+                 attributes: types.Attributes = None,  # TODO
+                 events: typing.Sequence[Event] = None,  # TODO
+                 links: typing.Sequence[Link] = None,  # TODO
                  ) -> None:
-        """See `opentelemetry.trace.Span`."""
-        if root:
-            if parent is not None:
-                raise ValueError("Root span can't have a parent")
 
         self.name = name
         self.context = context
         self.parent = parent
-        self.root = root
         self.sampler = sampler
         self.trace_config = trace_config
         self.resource = resource
@@ -213,9 +218,19 @@ class Span(trace_api.Span):
         self.end_time = None
         self.start_time = None
 
+    def __repr__(self):
+        return ('{}(name="{}")'
+                .format(
+                    type(self).__name__,
+                    self.name
+                ))
+
+    def get_context(self):
+        return self.context
+
     def set_attribute(self: 'Span',
                       key: str,
-                      value: 'AttributeValue'
+                      value: 'types.AttributeValue'
                       ) -> None:
         if self.attributes is Span.empty_attributes:
             self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
@@ -223,22 +238,22 @@ class Span(trace_api.Span):
 
     def add_event(self: 'Span',
                   name: str,
-                  attributes: typing.Dict[str, 'AttributeValue']
+                  attributes: 'types.Attributes',
                   ) -> None:
         if self.events is Span.empty_events:
             self.events = BoundedList(MAX_NUM_EVENTS)
         self.events.append(Event(name, attributes))
 
     def add_link(self: 'Span',
-                 context: 'SpanContext',
-                 attributes: typing.Dict[str, 'AttributeValue'],
+                 context: 'trace_api.SpanContext',
+                 attributes: 'types.Attributes',
                  ) -> None:
         if self.links is Span.empty_links:
             self.links = BoundedList(MAX_NUM_LINKS)
         self.links.append(Link(context, attributes))
 
     def start(self):
-        if self.end_time is None:
+        if self.start_time is None:
             self.start_time = util.time_ns()
 
     def end(self):
@@ -246,5 +261,88 @@ class Span(trace_api.Span):
             self.end_time = util.time_ns()
 
 
+def generate_span_id():
+    """Get a new random span ID.
+
+    Returns:
+        A random 64-bit int for use as a span ID
+    """
+    return random.getrandbits(64)
+
+
+def generate_trace_id():
+    """Get a new random trace ID.
+
+    Returns:
+        A random 128-bit int for use as a trace ID
+    """
+    return random.getrandbits(128)
+
+
 class Tracer(trace_api.Tracer):
-    pass
+    """See `opentelemetry.trace.Tracer`.
+
+    Args:
+        cv: The context variable that holds the current span.
+    """
+
+    def __init__(self,
+                 cv: 'contextvars.ContextVar' = _CURRENT_SPAN_CV
+                 ) -> None:
+        self._cv = cv
+        try:
+            self._cv.get()
+        except LookupError:
+            self._cv.set(None)
+
+    def get_current_span(self):
+        """See `opentelemetry.trace.Tracer.get_current_span`."""
+        return self._cv.get()
+
+    @contextmanager
+    def start_span(self,
+                   name: str,
+                   parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN
+                   ) -> typing.Iterator['Span']:
+        """See `opentelemetry.trace.Tracer.start_span`."""
+        with self.use_span(self.create_span(name, parent)) as span:
+            yield span
+
+    def create_span(self,
+                    name: str,
+                    parent: trace_api.ParentSpan =
+                    trace_api.Tracer.CURRENT_SPAN
+                    ) -> 'Span':
+        """See `opentelemetry.trace.Tracer.create_span`."""
+        span_id = generate_span_id()
+        if parent is Tracer.CURRENT_SPAN:
+            parent = self.get_current_span()
+        if parent is None:
+            context = trace_api.SpanContext(generate_trace_id(), span_id)
+        else:
+            if isinstance(parent, trace_api.Span):
+                parent_context = parent.get_context()
+            elif isinstance(parent, trace_api.SpanContext):
+                parent_context = parent
+            else:
+                raise TypeError
+            context = trace_api.SpanContext(
+                parent_context.trace_id,
+                span_id,
+                parent_context.trace_options,
+                parent_context.trace_state)
+        return Span(name=name, context=context, parent=parent)
+
+    @contextmanager
+    def use_span(self, span: 'Span') -> typing.Iterator['Span']:
+        """See `opentelemetry.trace.Tracer.use_span`."""
+        span.start()
+        token = self._cv.set(span)
+        try:
+            yield span
+        finally:
+            self._cv.reset(token)
+            span.end()
+
+
+tracer = Tracer()  # pylint: disable=invalid-name
