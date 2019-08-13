@@ -111,7 +111,7 @@ class Meter:
                            unit: str,
                            label_keys: 'types.LabelKeys',
                            constant_labels: 'types.LabelMap' = None,
-                           comonent: str = None,
+                           component: str = None,
                            resource: 'Resource' = None
                            ) -> 'GaugeFloat':
         """Creates a gauge type metric that contains float values.

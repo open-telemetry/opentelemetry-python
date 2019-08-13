@@ -13,8 +13,7 @@
 # limitations under the License.
 
 
-from opentelemetry.metrics import Meter
-from opentelemetry.metrics.label_key import LabelKey
+from opentelemetry.metrics import Meter, LabelKey
 
 METER = Meter()
 LABEL_KEYS = [LabelKey("environment", 
@@ -24,7 +23,7 @@ SUM_METRIC = METER.create_int_counter("sum numbers",
                                       "number",
                                       LABEL_KEYS)
 LABEL_VALUES = ["Testing"]
-SUM_TIME_SERIES = SUM_METRIC.getOrCreateTimeSeries(LABEL_VALUES)
+SUM_TIME_SERIES = SUM_METRIC.get_or_create_time_series(LABEL_VALUES)
 
 for i in range(100):
     SUM_TIME_SERIES.add(i)

@@ -14,8 +14,7 @@
 
 import psutil
 
-from opentelemetry.metrics import Meter
-from opentelemetry.metrics.label_key import LabelKey
+from opentelemetry.metrics import Meter, LabelKey, LabelValue
 
 METER = Meter()
 LABEL_KEYS = [LabelKey("environment",
@@ -24,7 +23,7 @@ MEMORY_METRIC = METER.create_int_gauge("available_memory",
                                        "available memory over time",
                                        "bytes",
                                        LABEL_KEYS)
-LABEL_VALUES = ["Testing"]
-MEMORY_METRIC.setCallBack(lambda: MEMORY_METRIC \
-    .getOrCreateTimeSeries(LABEL_VALUES) \
+LABEL_VALUES = [LabelValue("Testing")]
+MEMORY_METRIC.set_call_back(lambda: MEMORY_METRIC \
+    .get_or_create_time_series(LABEL_VALUES) \
     .set(psutil.virtual_memory().available))

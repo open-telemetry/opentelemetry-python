@@ -24,7 +24,7 @@ MEASURE = METER.create_float_measure("cpu_usage",
 
 MEASUREMENTS = []
 for i in range(100):
-    MEASUREMENTS.append(MEASURE.createMeasurement(psutil.cpu_percent()))
+    MEASUREMENTS.append(MEASURE.create_measurement(psutil.cpu_percent()))
     time.sleep(1)
 
     METER.record(MEASUREMENTS)
