@@ -13,10 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, Union
+import typing
 
-AttributeValue = Union[str, bool, float]
-Attributes = Dict[str, AttributeValue]
-LabelKeys = 'List[LabelKey]'
-LabelMap = 'Dict[LabelKey, LabelValue]'
-LabelValues = 'List[LabelValue]'
+AttributeValue = typing.Union[str, bool, float]
+Attributes = typing.Dict[str, AttributeValue]

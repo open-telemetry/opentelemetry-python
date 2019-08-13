@@ -31,11 +31,14 @@ See the `metrics api`_ spec for terminology and context clarification.
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List
 
-from opentelemetry import types
 from opentelemetry.metrics.time_series import CounterTimeSeries
 from opentelemetry.metrics.time_series import GaugeTimeSeries
 from opentelemetry.resources import Resource
 from opentelemetry.trace import SpanContext
+
+LabelKeys = List['LabelKey']
+LabelMap = Dict['LabelKey', 'LabelValue']
+LabelValues = List['LabelValue']
 
 
 class Meter:
@@ -56,8 +59,8 @@ class Meter:
                              name: str,
                              description: str,
                              unit: str,
-                             label_keys: 'types.LabelKeys',
-                             constant_labels: 'types.LabelMap' = None,
+                             label_keys: LabelKeys,
+                             constant_labels: LabelMap = None,
                              component: str = None,
                              resource: 'Resource' = None
                              ) -> 'CounterFloat':
@@ -82,8 +85,8 @@ class Meter:
                            name: str,
                            description: str,
                            unit: str,
-                           label_keys: 'types.LabelKeys',
-                           constant_labels: 'types.LabelMap' = None,
+                           label_keys: LabelKeys,
+                           constant_labels: LabelMap = None,
                            component: str = None,
                            resource: 'Resource' = None
                            ) -> 'CounterInt':
@@ -109,8 +112,8 @@ class Meter:
                            name: str,
                            description: str,
                            unit: str,
-                           label_keys: 'types.LabelKeys',
-                           constant_labels: 'types.LabelMap' = None,
+                           label_keys: LabelKeys,
+                           constant_labels: LabelMap = None,
                            component: str = None,
                            resource: 'Resource' = None
                            ) -> 'GaugeFloat':
@@ -136,8 +139,8 @@ class Meter:
                          name: str,
                          description: str,
                          unit: str,
-                         label_keys: 'types.LabelKeys',
-                         constant_labels: 'types.LabelMap' = None,
+                         label_keys: LabelKeys,
+                         constant_labels: LabelMap = None,
                          component: str = None,
                          resource: 'Resource' = None
                          ) -> 'GaugeInt':
@@ -164,7 +167,7 @@ class Meter:
                            description: str,
                            unit: str
                            ) -> 'IntMeasure':
-        """Creates a measure used to record raw `Measurement` s.
+        """Creates a measure used to record raw measurements.
         The measurements created from this measure will have type int.
 
         Args:
@@ -181,7 +184,7 @@ class Meter:
                              description: str,
                              unit: str
                              ) -> 'FloatMeasure':
-        """Creates a Measure used to record raw `Measurement` s.
+        """Creates a measure used to record raw measurements.
         The measurements created from this measure will have type float.
 
         Args:
@@ -197,7 +200,7 @@ class Meter:
                measurements: List['Measurement'],
                span_context: 'SpanContext' = None
                ) -> None:
-        """Records a set of `Measurement` s.
+        """Records a set of measurements.
 
         The API is built with the idea that measurement aggregation will occur
         asynchronously. Typical library records multiple measurements at once,
@@ -223,15 +226,15 @@ class Measurement:
 
 
 class FloatMeasurement(Measurement):
-    """A `Measurement` with an float value."""
+    """A measurement with an float value."""
 
 
 class IntMeasurement(Measurement):
-    """A `Measurement` with an int value."""
+    """A measurement with an int value."""
 
 
 class Measure(ABC):
-    """Used to create raw `Measurement` s.
+    """Used to create raw measurements.
 
     A contract between the API exposing the raw measurement and SDK
     aggregating these values into the `Metric`. Measure is
@@ -254,7 +257,7 @@ class Measure(ABC):
         """
 
 class FloatMeasure(Measure):
-    """Used to create raw `FloatMeasurement` s."""
+    """Used to create raw FloatMeasurements."""
 
     def create_measurement(self,
                            value: float,
@@ -269,7 +272,7 @@ class FloatMeasure(Measure):
         """
 
 class IntMeasure(Measure):
-    """Used to create raw `IntMeasurement` s."""
+    """Used to create raw IntMeasurements."""
 
     def create_measurement(self,
                            value: int,
@@ -294,7 +297,7 @@ class Metric(ABC):
 
     @abstractmethod
     def get_or_create_time_series(self,
-                                  label_values: 'types.LabelValues'
+                                  label_values: LabelValues
                                   ) -> 'object':
         """Gets and returns a timeseries, a container for a cumulative value.
 
@@ -329,8 +332,8 @@ class Metric(ABC):
         """
 
     def remove_time_series(self,
-                           label_values: 'types.LabelValues') -> None:
-        """Removes the timeseries from the `Metric`, if present.
+                           label_values: LabelValues) -> None:
+        """Removes the timeseries from the metric, if present.
 
         The timeseries with matching `LabelValue` s will be removed.
 
@@ -350,7 +353,7 @@ class CounterFloat(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: 'types.LabelValues'
+                                  label_values: LabelValues
                                   ) -> 'CounterTimeSeries':
         """Gets a `CounterTimeSeries` with a cumulated float value.
         
@@ -371,7 +374,7 @@ class CounterInt(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: 'types.LabelValues'
+                                  label_values: LabelValues
                                   ) -> 'CounterTimeSeries':
         """Gets a `CounterTimeSeries` with a cumulated int value.
 
@@ -390,9 +393,9 @@ class GaugeFloat(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: 'types.LabelValues'
+                                  label_values: LabelValues
                                   ) -> 'GaugeTimeSeries':
-        """Gets a `GaugeTimeSeries` with a cumulated float value.
+        """Gets a GaugeTimeSeries with a cumulated float value.
                 
         Args:
             label_values: A list of `LabelValue` s that will be associated
@@ -400,7 +403,7 @@ class GaugeFloat(Metric):
         """
 
     def get_default_time_series(self) -> 'GaugeTimeSeries':
-        """Returns a `GaugeTimeSeries` with a cumulated float value."""
+        """Returns a GaugeTimeSeries with a cumulated float value."""
 
 
 class GaugeInt(Metric):
@@ -410,9 +413,9 @@ class GaugeInt(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: 'types.LabelValues'
+                                  label_values: LabelValues
                                   ) -> 'GaugeTimeSeries':
-        """Gets a `GaugeTimeSeries` with a cumulated int value.
+        """Gets a GaugeTimeSeries with a cumulated int value.
                 
         Args:
             label_values: A list of `LabelValue` s that will be associated
@@ -420,7 +423,7 @@ class GaugeInt(Metric):
         """
 
     def get_default_time_series(self) -> 'GaugeTimeSeries':
-        """Returns a `GaugeTimeSeries` with a cumulated int value."""
+        """Returns a GaugeTimeSeries with a cumulated int value."""
 
 class LabelKey:
     """The label keys associated with the metric.
