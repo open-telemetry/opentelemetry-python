@@ -114,7 +114,7 @@ class Span:
 
     def add_event(self: 'Span',
                   name: str,
-                  attributes: 'types.Attributes' = None,
+                  attributes: types.Attributes = None,
                   ) -> None:
         """Adds an Event.
 
