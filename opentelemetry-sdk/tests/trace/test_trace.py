@@ -132,6 +132,7 @@ class TestSpanCreation(unittest.TestCase):
                                'https://example.com:779/path/12/?q=d#123')
             root.set_attribute('http.status_code', 200)
             root.set_attribute('http.status_text', 'OK')
+            root.set_attribute('misc.pi', 3.14)
 
             # Setting an attribute with the same key as an existing attribute
             # SHOULD overwrite the existing attribute's value.
@@ -140,7 +141,32 @@ class TestSpanCreation(unittest.TestCase):
 
             root.add_event('event1', 'event1-detail')
 
-            root.add_link(other_neighbor, 'neighbor')
+            root.add_link(other_neighbor, {'name': 'neighbor'})
+
+            # The public API does not expose getters.
+            # Checks by accessing the span members directly
+
+            self.assertEqual(len(root.attributes), 7)
+            self.assertEqual(root.attributes['component'], 'http')
+            self.assertEqual(root.attributes['http.method'], 'GET')
+            self.assertEqual(root.attributes['http.url'],
+                             'https://example.com:779/path/12/?q=d#123')
+            self.assertEqual(root.attributes['http.status_code'], 200)
+            self.assertEqual(root.attributes['http.status_text'], 'OK')
+            self.assertEqual(root.attributes['misc.pi'], 3.14)
+            self.assertEqual(root.attributes['attr-key'], 'attr-value2')
+
+            self.assertEqual(len(root.events), 1)
+            self.assertEqual(root.events[0],
+                             trace.Event(name='event1',
+                                         attributes='event1-detail'))
+
+            self.assertEqual(len(root.links), 1)
+            self.assertEqual(root.links[0].context.trace_id,
+                             other_neighbor.trace_id)
+            self.assertEqual(root.links[0].context.span_id,
+                             other_neighbor.span_id)
+            self.assertEqual(root.links[0].attributes, {'name': 'neighbor'})
 
 
 class TestSpan(unittest.TestCase):
