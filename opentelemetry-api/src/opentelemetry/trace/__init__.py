@@ -126,7 +126,7 @@ class Span:
                  context: 'SpanContext',
                  attributes: 'types.Attributes',
                  ) -> None:
-        """Adds a Link to another Span.
+        """Adds a Link to another span.
 
         Adds a single Link to the Span via the SpanContext passed as argument.
         """
