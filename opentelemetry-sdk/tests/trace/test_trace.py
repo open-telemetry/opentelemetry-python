@@ -118,7 +118,11 @@ class TestSpanCreation(unittest.TestCase):
         context = contextvars.ContextVar('test_span_members')
         tracer = trace.Tracer(context)
 
-        other_neighbor = trace_api.SpanContext(
+        other_context1 = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id()
+        )
+        other_context2 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id()
         )
@@ -139,9 +143,11 @@ class TestSpanCreation(unittest.TestCase):
             root.set_attribute('attr-key', 'attr-value1')
             root.set_attribute('attr-key', 'attr-value2')
 
-            root.add_event('event1', 'event1-detail')
+            root.add_event('event0')
+            root.add_event('event1', {'name': 'birthday'})
 
-            root.add_link(other_neighbor, {'name': 'neighbor'})
+            root.add_link(other_context1)
+            root.add_link(other_context2, {'name': 'neighbor'})
 
             # The public API does not expose getters.
             # Checks by accessing the span members directly
@@ -156,17 +162,25 @@ class TestSpanCreation(unittest.TestCase):
             self.assertEqual(root.attributes['misc.pi'], 3.14)
             self.assertEqual(root.attributes['attr-key'], 'attr-value2')
 
-            self.assertEqual(len(root.events), 1)
+            self.assertEqual(len(root.events), 2)
             self.assertEqual(root.events[0],
+                             trace.Event(name='event0',
+                                         attributes={}))
+            self.assertEqual(root.events[1],
                              trace.Event(name='event1',
-                                         attributes='event1-detail'))
+                                         attributes={'name': 'birthday'}))
 
-            self.assertEqual(len(root.links), 1)
+            self.assertEqual(len(root.links), 2)
             self.assertEqual(root.links[0].context.trace_id,
-                             other_neighbor.trace_id)
+                             other_context1.trace_id)
             self.assertEqual(root.links[0].context.span_id,
-                             other_neighbor.span_id)
-            self.assertEqual(root.links[0].attributes, {'name': 'neighbor'})
+                             other_context1.span_id)
+            self.assertEqual(root.links[0].attributes, {})
+            self.assertEqual(root.links[1].context.trace_id,
+                             other_context2.trace_id)
+            self.assertEqual(root.links[1].context.span_id,
+                             other_context2.span_id)
+            self.assertEqual(root.links[1].attributes, {'name': 'neighbor'})
 
 
 class TestSpan(unittest.TestCase):

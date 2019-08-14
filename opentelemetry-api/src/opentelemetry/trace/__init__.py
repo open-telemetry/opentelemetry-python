@@ -105,7 +105,7 @@ class Span:
 
     def set_attribute(self: 'Span',
                       key: str,
-                      value: 'types.AttributeValue'
+                      value: 'types.AttributeValue',
                       ) -> None:
         """Sets an Attribute.
 
@@ -114,7 +114,7 @@ class Span:
 
     def add_event(self: 'Span',
                   name: str,
-                  attributes: 'types.Attributes',
+                  attributes: 'types.Attributes' = None,
                   ) -> None:
         """Adds an Event.
 
@@ -124,7 +124,7 @@ class Span:
 
     def add_link(self: 'Span',
                  context: 'SpanContext',
-                 attributes: 'types.Attributes',
+                 attributes: 'types.Attributes' = None,
                  ) -> None:
         """Adds a Link to another span.
 
