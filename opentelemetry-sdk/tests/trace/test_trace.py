@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from unittest import mock
-import contextvars
 import unittest
 
 from opentelemetry import trace as trace_api
@@ -30,8 +29,7 @@ class TestTracer(unittest.TestCase):
 class TestSpanCreation(unittest.TestCase):
 
     def test_start_span_implicit(self):
-        context = contextvars.ContextVar('test_start_span_implicit')
-        tracer = trace.Tracer(context)
+        tracer = trace.Tracer('test_start_span_implicit')
 
         self.assertIsNone(tracer.get_current_span())
 
@@ -69,8 +67,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNotNone(root.end_time)
 
     def test_start_span_explicit(self):
-        context = contextvars.ContextVar('test_start_span_explicit')
-        tracer = trace.Tracer(context)
+        tracer = trace.Tracer('test_start_span_explicit')
 
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000deadbeef,
