@@ -17,6 +17,7 @@ import psutil
 from opentelemetry.metrics import LabelKey
 from opentelemetry.metrics import LabelValue
 from opentelemetry.metrics import Meter
+from opentelemetry.metrics import MeasureBatch
 from opentelemetry.metrics.aggregation import LastValueAggregation
 
 METER = Meter()
@@ -33,4 +34,10 @@ LABEL_VALUE_STAGING = [LabelValue("Staging")]
 MEASURE_METRIC_TESTING = MEASURE.get_or_create_time_series(LABEL_VALUE_TESTING)
 MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series(LABEL_VALUE_STAGING)
 
-MEASURE_METRIC_STAGING.record(psutil.cpu_times_percent().idle)
+# record individual measures
+idle = psutil.cpu_times_percent().idle
+MEASURE_METRIC_STAGING.record(idle)
+
+# record multiple observed values
+batch = MeasureBatch()
+batch.record([(MEASURE_METRIC_TESTING, idle), (MEASURE_METRIC_STAGING, idle)])

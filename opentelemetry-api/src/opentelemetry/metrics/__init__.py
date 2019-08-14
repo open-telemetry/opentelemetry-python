@@ -35,6 +35,7 @@ from opentelemetry.metrics.aggregation import Aggregation
 from opentelemetry.metrics.time_series import CounterTimeSeries
 from opentelemetry.metrics.time_series import GaugeTimeSeries
 from opentelemetry.metrics.time_series import MeasureTimeSeries
+from opentelemetry.trace import SpanContext
 
 LabelKeys = List['LabelKey']
 LabelValues = List['LabelValue']
@@ -53,6 +54,7 @@ class Meter:
                              description: str,
                              unit: str,
                              label_keys: LabelKeys,
+                             span_context: SpanContext = None
                              ) -> 'CounterFloat':
         """Creates a counter type metric that contains float values.
 
@@ -63,6 +65,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
+            span_context: The `SpanContext` that identified the `Span`
+                for which the metrics are associated with.
 
         Returns: A new `CounterFloat`
         """
@@ -72,6 +76,7 @@ class Meter:
                            description: str,
                            unit: str,
                            label_keys: LabelKeys,
+                           span_context: SpanContext = None
                            ) -> 'CounterInt':
         """Creates a counter type metric that contains int values.
 
@@ -82,6 +87,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
+            span_context: The `SpanContext` that identified the `Span`
+                for which the metrics are associated with.
 
         Returns:
             A new `CounterInt`
@@ -92,6 +99,7 @@ class Meter:
                            description: str,
                            unit: str,
                            label_keys: LabelKeys,
+                           span_context: SpanContext = None
                            ) -> 'GaugeFloat':
         """Creates a gauge type metric that contains float values.
 
@@ -102,6 +110,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
+            span_context: The `SpanContext` that identified the `Span`
+                for which the metrics are associated with.
 
         Returns:
             A new `GaugeFloat`
@@ -111,7 +121,8 @@ class Meter:
                          name: str,
                          description: str,
                          unit: str,
-                         label_keys: LabelKeys
+                         label_keys: LabelKeys,
+                         span_context: SpanContext = None
                          ) -> 'GaugeInt':
         """Creates a gauge type metric that contains int values.
 
@@ -122,7 +133,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-
+            span_context: The `SpanContext` that identified the `Span`
+                for which the metrics are associated with.
 
         Returns:
             A new `GaugeInt`
@@ -133,17 +145,21 @@ class Meter:
                            description: str,
                            unit: str,
                            label_keys: LabelKeys,
-                           aggregation: 'Aggregation'
+                           aggregation: 'Aggregation',
+                           span_context: SpanContext = None,
                            ) -> 'MeasureInt':
         """Creates a measure used to record raw int values.
 
         Args:
-            name: the name of the measure
+            name: The name of the measure.
             description: Human readable description of this measure.
             unit: Unit of the measure values.
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
+            aggregation: The type of aggregation to use for this measure metric.
+            span_context: The `SpanContext` that identified the `Span`
+                for which the metrics are associated with.
 
         Returns:
             A new `MeasureInt`
@@ -154,7 +170,8 @@ class Meter:
                              description: str,
                              unit: str,
                              label_keys: LabelKeys,
-                             aggregation: 'Aggregation'
+                             aggregation: 'Aggregation',
+                             span_context: SpanContext = None,
                              ) -> 'MeasureFloat':
         """Creates a Measure used to record raw float values.
 
@@ -165,6 +182,9 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
+            aggregation: The type of aggregation to use for this measure metric.
+            span_context: The `SpanContext` that identified the `Span`
+                for which the metrics are associated with.
 
         Returns:
             A new `MeasureFloat`
@@ -175,8 +195,7 @@ class Metric(ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
-    time series that the metric holds. Metric is constructed from the
-    :class:`.Meter` class.
+    time series that the metric holds. Metric is constructed from the meter.
     """
 
     @abstractmethod
@@ -204,7 +223,7 @@ class Metric(ABC):
         """
 
     def set_call_back(self,
-                      updater_function: typing.Callable[..., None]
+                      updater_function: Callable[..., None]
                       ) -> None:
         """Sets a callback that gets executed every time prior to exporting.
 
@@ -318,6 +337,17 @@ class MeasureInt(Metric):
 
     def get_default_time_series(self) -> 'MeasureTimeSeries':
         """Returns a `.MeasureTimeSeries` with a cumulated int value."""
+
+
+class MeasureBatch:
+
+    def record(metric_pairs):
+        """Records multiple observed values simultaneously.
+
+        Args:
+            metric_pairs: A list of tuples containing the `Metric` and value
+            to be recorded.
+        """
 
 
 class LabelKey:
