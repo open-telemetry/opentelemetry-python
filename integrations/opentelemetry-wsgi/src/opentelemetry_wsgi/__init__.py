@@ -20,6 +20,7 @@ OpenTelemetry.
 
 import functools
 import opentelemetry.trace as trace
+import wsgiref.util as wsgiref_util
 
 
 class OpenTelemetryMiddleware:
@@ -43,7 +44,11 @@ class OpenTelemetryMiddleware:
         if host is not None:
             span.add_attribute("http.host", host)
 
-        url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
+        url = (
+            environ.get("REQUEST_URI")
+            or environ.get("RAW_URI")
+            or wsgiref_util.request_uri(environ, include_query=False)
+        )
         if url is not None:
             span.add_attribute("http.url", url)
 
