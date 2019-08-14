@@ -52,7 +52,7 @@ def error_wsgi(environ, start_response):
     return [b"*"]
 
 
-class TestWsgiMiddleware(unittest.TestCase):
+class TestWsgiApplication(unittest.TestCase):
     def setUp(self):
         tracer = trace_api.tracer()
         self.span_context_manager = mock.MagicMock()
@@ -128,6 +128,44 @@ class TestWsgiMiddleware(unittest.TestCase):
         app = OpenTelemetryMiddleware(error_wsgi)
         response = app(self.environ, self.start_response)
         self.validate_response(response, error=ValueError)
+
+
+class TestWsgiAttributes(unittest.TestCase):
+    def setUp(self):
+        self.environ = {}
+        wsgiref_util.setup_testing_defaults(self.environ)
+        # TODO: enable autospec when set_attribute is ready
+        # self.span = mock.create_autospec(trace_api.Span, spec_set=True)
+        self.span = mock.MagicMock()
+
+    def test_request_attributes(self):
+        OpenTelemetryMiddleware._add_request_attributes(self.span, self.environ)
+        expected = (
+            mock.call("http.method", "GET"),
+            mock.call("http.path", "/"),
+            mock.call("http.host", "127.0.0.1"),
+            mock.call("http.url", "http://127.0.0.1/"),
+        )
+        self.assertEqual(self.span.set_attribute.call_count, len(expected))
+        self.span.set_attribute.assert_has_calls(expected, any_order=True)
+
+    def test_response_attributes(self):
+        OpenTelemetryMiddleware._add_response_attributes(
+            self.span, "404 Not Found", [("Content-Type", "text/plain")]
+        )
+        expected = (
+            mock.call("http.status_code", 404),
+            mock.call("http.status_text", "Not Found"),
+        )
+        self.assertEqual(self.span.set_attribute.call_count, len(expected))
+        self.span.set_attribute.assert_has_calls(expected, any_order=True)
+
+    def test_response_attributes_invalid_status_code(self):
+        OpenTelemetryMiddleware._add_response_attributes(
+            self.span, "Invalid Status Code", [("Content-Type", "text/plain")]
+        )
+        self.assertEqual(self.span.set_attribute.call_count, 1)
+        self.span.set_attribute.assert_called_with("http.status_text", "Status Code")
 
 
 if __name__ == "__main__":
