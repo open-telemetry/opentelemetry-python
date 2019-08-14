@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
+
 from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 import opentelemetry.trace as trace
 
@@ -36,7 +38,8 @@ class B3Format(HTTPTextFormat):
         sampled = 0
         flags = None
 
-        single_header = get_from_carrier(carrier, cls.SINGLE_HEADER_KEY)
+        single_header = _extract_first_element(
+            get_from_carrier(carrier, cls.SINGLE_HEADER_KEY))
         if single_header:
             # The b3 spec calls for the sampling state to be
             # "deferred", which is unspecified. This concept does not
@@ -55,10 +58,14 @@ class B3Format(HTTPTextFormat):
             else:
                 return trace.INVALID_SPAN_CONTEXT
         else:
-            trace_id = get_from_carrier(carrier, cls.TRACE_ID_KEY) or trace_id
-            span_id = get_from_carrier(carrier, cls.SPAN_ID_KEY) or span_id
-            sampled = get_from_carrier(carrier, cls.SAMPLED_KEY) or sampled
-            flags = get_from_carrier(carrier, cls.FLAGS_KEY) or flags
+            trace_id = _extract_first_element(
+                get_from_carrier(carrier, cls.TRACE_ID_KEY)) or trace_id
+            span_id = _extract_first_element(
+                get_from_carrier(carrier, cls.SPAN_ID_KEY)) or span_id
+            sampled = _extract_first_element(
+                get_from_carrier(carrier, cls.SAMPLED_KEY)) or sampled
+            flags = _extract_first_element(
+                get_from_carrier(carrier, cls.FLAGS_KEY)) or flags
 
         options = 0
         # The b3 spec provides no defined behavior for both sample and
@@ -68,13 +75,10 @@ class B3Format(HTTPTextFormat):
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceOptions.RECORDED
 
-        # trace an span ids are encoded in hex, so must be converted
-        trace_id_as_int = int(trace_id, 16)
-        span_id_as_int = int(span_id, 16)
-
         return trace.SpanContext(
-            trace_id=trace_id_as_int,
-            span_id=span_id_as_int,
+            # trace an span ids are encoded in hex, so must be converted
+            trace_id=int(trace_id, 16),
+            span_id=int(span_id, 16),
             trace_options=options,
             trace_state={},
         )
@@ -97,3 +101,9 @@ def format_trace_id(trace_id: int):
 def format_span_id(span_id: int):
     """Format the span id according to b3 specification."""
     return format(span_id, "016x")
+
+
+def _extract_first_element(list_object: list) -> typing.Optional[object]:
+    if list_object:
+        return list_object[0]
+    return None

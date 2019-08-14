@@ -18,7 +18,7 @@ import typing
 from opentelemetry.trace import SpanContext
 
 Setter = typing.Callable[[object, str, str], None]
-Getter = typing.Callable[[object, str], typing.Optional[str]]
+Getter = typing.Callable[[object, str], typing.List[str]]
 
 
 class HTTPTextFormat(abc.ABC):
@@ -41,7 +41,7 @@ class HTTPTextFormat(abc.ABC):
 
 
         def get_header_from_flask_request(request, key):
-            return request.headers[key]
+            return request.headers.get_all(key)
 
         def set_header_into_requests_request(request: requests.Request,
                                              key: str, value: str):
@@ -77,12 +77,13 @@ class HTTPTextFormat(abc.ABC):
         SpanContext value and return it.
 
         Args:
-            get_from_carrier: a function that can retrieve a value
-                in the carrier, or return None if not
+            get_from_carrier: a function that can retrieve zero
+                or more values from the carrier. In the case that
+                the value does not exist, return an empty list.
             carrier: and object which contains values that are
                 used to construct a SpanContext. This object
                 must be paired with an appropriate get_from_carrier
-                which understands how to extract a value from it
+                which understands how to extract a value from it.
         Returns:
             A SpanContext with configuration found in the carrier.
 
@@ -98,11 +99,11 @@ class HTTPTextFormat(abc.ABC):
         carrier.
 
         Args:
-            context: The SpanContext to read values from
+            context: The SpanContext to read values from.
             set_in_carrier: A setter function that can set values
-                on the carrier
+                on the carrier.
             carrier: An object that a place to define HTTP headers.
                 Should be paired with set_in_carrier, which should
-                know how to set header values on the carrier
+                know how to set header values on the carrier.
 
         """
