@@ -98,7 +98,7 @@ class BaseRuntimeContext:
         slot.set(value)
 
     def __getitem__(self, name: str) -> 'object':
-        return self.__getitem__(name)
+        return self.__getattr__(name)
 
     def __setitem__(self, name: str, value: 'object') -> None:
         self.__setattr__(name, value)
