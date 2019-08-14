@@ -37,12 +37,12 @@ class OpenTelemetryMiddleware:
 
     @staticmethod
     def _add_request_attributes(span, environ):
-        span.add_attribute("http.method", environ["REQUEST_METHOD"])
-        span.add_attribute("http.path", environ["PATH_INFO"])
+        span.set_attribute("http.method", environ["REQUEST_METHOD"])
+        span.set_attribute("http.path", environ["PATH_INFO"])
 
         host = environ.get("HTTP_HOST") or environ.get("SERVER_NAME")
         if host is not None:
-            span.add_attribute("http.host", host)
+            span.set_attribute("http.host", host)
 
         url = (
             environ.get("REQUEST_URI")
@@ -50,19 +50,19 @@ class OpenTelemetryMiddleware:
             or wsgiref_util.request_uri(environ, include_query=False)
         )
         if url is not None:
-            span.add_attribute("http.url", url)
+            span.set_attribute("http.url", url)
 
     @staticmethod
     def _add_response_attributes(span, status, response_headers):
         status_code, status_text = status.split(" ", 1)
-        span.add_attribute("http.status_text", status_text)
+        span.set_attribute("http.status_text", status_text)
 
         try:
             status_code = int(status_code)
         except ValueError:
             pass
         else:
-            span.add_attribute("http.status_code", status_code)
+            span.set_attribute("http.status_code", status_code)
 
     @classmethod
     def _create_start_response(cls, start_response, span):
