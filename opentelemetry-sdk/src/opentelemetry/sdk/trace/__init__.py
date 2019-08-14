@@ -280,17 +280,20 @@ class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
     Args:
-        cv: The context variable that holds the current span.
+        name: The name of the tracer.
     """
 
     def __init__(self,
-                 cv: str = 'current_span'
+                 name: str = ''
                  ) -> None:
-        self._cv = cv
+        slot_name = 'current_span'
+        if name:
+            slot_name = '{}.current_span'.format(name)
+        self._current_span_slot = Context.register_slot(slot_name)
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return Context[self._cv]
+        return self._current_span_slot.get()
 
     @contextmanager
     def start_span(self,
@@ -330,12 +333,12 @@ class Tracer(trace_api.Tracer):
     def use_span(self, span: 'Span') -> typing.Iterator['Span']:
         """See `opentelemetry.trace.Tracer.use_span`."""
         span.start()
-        span_snapshot = Context[self._cv]
-        Context[self._cv] = span
+        span_snapshot = self._current_span_slot.get()
+        self._current_span_slot.set(span)
         try:
             yield span
         finally:
-            Context[self._cv] = span_snapshot
+            self._current_span_slot.set(span_snapshot)
             span.end()
 
 
