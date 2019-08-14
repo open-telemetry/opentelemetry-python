@@ -40,17 +40,15 @@ class OpenTelemetryMiddleware:
         span.set_attribute("http.method", environ["REQUEST_METHOD"])
         span.set_attribute("http.path", environ["PATH_INFO"])
 
-        host = environ.get("HTTP_HOST") or environ.get("SERVER_NAME")
-        if host is not None:
-            span.set_attribute("http.host", host)
+        host = environ.get("HTTP_HOST") or environ["SERVER_NAME"]
+        span.set_attribute("http.host", host)
 
         url = (
             environ.get("REQUEST_URI")
             or environ.get("RAW_URI")
             or wsgiref_util.request_uri(environ, include_query=False)
         )
-        if url is not None:
-            span.set_attribute("http.url", url)
+        span.set_attribute("http.url", url)
 
     @staticmethod
     def _add_response_attributes(span, status, response_headers):
