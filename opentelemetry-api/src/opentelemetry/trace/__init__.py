@@ -105,7 +105,7 @@ class Span:
 
     def set_attribute(self: 'Span',
                       key: str,
-                      value: 'types.AttributeValue',
+                      value: types.AttributeValue,
                       ) -> None:
         """Sets an Attribute.
 
