@@ -38,7 +38,6 @@ class OpenTelemetryMiddleware:
     def _add_request_attributes(self, environ):
         self.span.add_attribute("http.method", environ["REQUEST_METHOD"])
         self.span.add_attribute("http.path", environ["PATH_INFO"])
-        self.span.add_attribute("http.route", environ["PATH_INFO"])
 
         host = environ.get("HTTP_HOST") or environ.get("SERVER_NAME")
         if host is not None:
