@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#TODO
+class BaseAggregation:
+    """The base class for all aggregation types."""
 
-class LabelKey:
-    """The label keys associated with the metric.
+class CountAggregation(BaseAggregation):
+    """An aggregation representing a count of values."""
 
-    :type key: str
-    :param key: the key for the label
+class DistributonAggregation(BaseAggregation):
+    """An aggregation representing a distribution."""
 
-    :type description: str
-    :param description: description of the label
-    """
-    def __init__(self,
-                 key: str,
-                 description: str) -> None:
-        self.key = key
-        self.description = description
+class LastValueAggregation(BaseAggregation):
+    """An aggregation representing the last value."""
+
+class SumAggregation(BaseAggregation):
+    """An aggregation representing a sum of values."""

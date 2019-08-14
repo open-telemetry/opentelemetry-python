@@ -28,40 +28,31 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 
-import abc
-import typing
+from abc import ABC, abstractmethod
+from typing import Any, Callable, Dict, List
 
-from opentelemetry.metrics.label_key import LabelKey
-from opentelemetry.metrics.label_value import LabelValue
+from opentelemetry.metrics.aggregation import Aggregation
 from opentelemetry.metrics.time_series import CounterTimeSeries
 from opentelemetry.metrics.time_series import GaugeTimeSeries
-from opentelemetry.resources import Resource
-from opentelemetry.trace import SpanContext
+from opentelemetry.metrics.time_series import MeasureTimeSeries
+
+LabelKeys = List['LabelKey']
+LabelValues = List['LabelValue']
 
 
 class Meter:
-    """An interface to allow the recording of measurements and metrics.
+    """An interface to allow the recording of metrics.
 
-    :class:`.Measurement` s are used for recording raw values, in which the
-    aggregation and labels for the exported metric are defered. This should be
-    used to record measurements like "server_latency" or "received_bytes",
-    where the value of interest is the recorded value itself.
-
-    :class:`.Metric` s are used for recording pre-defined aggregation, or
-    already aggregated data. This should be used to report metrics like
-    cpu/memory usage, in which the type of aggregation is already defined, or
-    simple metrics like "queue_length".
+    `Metric` s are used for recording pre-defined aggregation (gauge and
+    counter), or raw values (measure) in which the aggregation and labels
+    for the exported metric are deferred.
     """
 
     def create_float_counter(self,
                              name: str,
                              description: str,
                              unit: str,
-                             label_keys: typing.List['LabelKey'],
-                             constant_labels: \
-                             typing.Dict['LabelKey', 'LabelValue'] = None,
-                             component: str = None,
-                             resource: 'Resource' = None
+                             label_keys: LabelKeys,
                              ) -> 'CounterFloat':
         """Creates a counter type metric that contains float values.
 
@@ -69,26 +60,18 @@ class Meter:
             name: The name of the counter.
             description: Human readable description of the metric.
             unit: Unit of the metric values.
-            label_keys: list of keys for the labels with dynamic values. \
-            Order of the list is important as the same order MUST be used \
-            on recording when suppling values for these labels
-            constant_labels: A map of constant labels that will be used for \
-            all of the TimeSeries created from the Metric. \
-            component: The name of the component that reports this metric.
-            Resource: Sets the :class:`.Resource` associated with this metric.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order MUST be used
+                on recording when suppling values for these labels.
 
-        Returns: A new :class:`.CounterFloat`
+        Returns: A new `CounterFloat`
         """
 
     def create_int_counter(self,
                            name: str,
                            description: str,
                            unit: str,
-                           label_keys: typing.List['LabelKey'],
-                           constant_labels: \
-                           typing.Dict['LabelKey', 'LabelValue'] = None,
-                           component: str = None,
-                           resource: 'Resource' = None
+                           label_keys: LabelKeys,
                            ) -> 'CounterInt':
         """Creates a counter type metric that contains int values.
 
@@ -96,27 +79,19 @@ class Meter:
             name: The name of the counter.
             description: Human readable description of the metric.
             unit: Unit of the metric values.
-            label_keys: list of keys for the labels with dynamic values. \
-            Order of the list is important as the same order MUST be used \
-            on recording when suppling values for these labels
-            constant_labels: A map of constant labels that will be used for \
-            all of the TimeSeries created from the Metric. \
-            component: The name of the component that reports this metric.
-            Resource: Sets the :class:`.Resource` associated with this metric.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order MUST be used
+                on recording when suppling values for these labels.
 
         Returns:
-            A new :class:`.CounterInt`
+            A new `CounterInt`
         """
 
     def create_float_gauge(self,
                            name: str,
                            description: str,
                            unit: str,
-                           label_keys: typing.List['LabelKey'],
-                           constant_labels: \
-                           typing.Dict['LabelKey', 'LabelValue'] = None,
-                           comonent: str = None,
-                           resource: 'Resource' = None
+                           label_keys: LabelKeys,
                            ) -> 'GaugeFloat':
         """Creates a gauge type metric that contains float values.
 
@@ -124,27 +99,19 @@ class Meter:
             name: The name of the counter.
             description: Human readable description of the metric.
             unit: Unit of the metric values.
-            label_keys: list of keys for the labels with dynamic values. \
-            Order of the list is important as the same order MUST be used \
-            on recording when suppling values for these labels
-            constant_labels: A map of constant labels that will be used for \
-            all of the TimeSeries created from the Metric. \
-            component: The name of the component that reports this metric.
-            Resource: Sets the :class:`.Resource` associated with this metric.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order MUST be used
+                on recording when suppling values for these labels.
 
         Returns:
-            A new :class:`.GaugeFloat`
+            A new `GaugeFloat`
         """
 
     def create_int_gauge(self,
                          name: str,
                          description: str,
                          unit: str,
-                         label_keys: typing.List['LabelKey'],
-                         constant_labels: \
-                         typing.Dict['LabelKey', 'LabelValue'] = None,
-                         component: str = None,
-                         resource: 'Resource' = None
+                         label_keys: LabelKeys
                          ) -> 'GaugeInt':
         """Creates a gauge type metric that contains int values.
 
@@ -152,144 +119,59 @@ class Meter:
             name: The name of the counter.
             description: Human readable description of the metric.
             unit: Unit of the metric values.
-            label_keys: list of keys for the labels with dynamic values. \
-            Order of the list is important as the same order MUST be used \
-            on recording when suppling values for these labels
-            constant_labels: A map of constant labels that will be used for \
-            all of the TimeSeries created from the Metric. \
-            component: The name of the component that reports this metric.
-            Resource: Sets the :class:`.Resource` associated with this metric.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order MUST be used
+                on recording when suppling values for these labels.
+
 
         Returns:
-            A new :class:`.GaugeInt`
+            A new `GaugeInt`
         """
 
     def create_int_measure(self,
                            name: str,
                            description: str,
-                           unit: str
-                           ) -> 'IntMeasure':
-        """Creates a measure used to record raw :class:`.Measurement` s.
-        The measurements created from this measure will have type INT.
+                           unit: str,
+                           label_keys: LabelKeys,
+                           aggregation: 'Aggregation'
+                           ) -> 'MeasureInt':
+        """Creates a measure used to record raw int values.
 
         Args:
             name: the name of the measure
             description: Human readable description of this measure.
             unit: Unit of the measure values.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order MUST be used
+                on recording when suppling values for these labels.
 
         Returns:
-            A :class:`.IntMeasure`
+            A new `MeasureInt`
         """
 
     def create_float_measure(self,
                              name: str,
                              description: str,
-                             unit: str
-                             ) -> 'FloatMeasure':
-        """Creates a Measure used to record raw :class:`.Measurement` s.
-        The measurements created from this measure will have type INT.
+                             unit: str,
+                             label_keys: LabelKeys,
+                             aggregation: 'Aggregation'
+                             ) -> 'MeasureFloat':
+        """Creates a Measure used to record raw float values.
 
         Args:
-        name: the name of the measure
-        description: Human readable description of this measure.
-        unit: Unit of the measure values.
+            name: the name of the measure
+            description: Human readable description of this measure.
+            unit: Unit of the measure values.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order MUST be used
+                on recording when suppling values for these labels.
 
         Returns:
-            A :class:`.FloatMeasure`
-        """
-
-    def record(self,
-               measurements: typing.List['Measurement'],
-               span_context: 'SpanContext' = None
-               ) -> None:
-        """Records a set of :class:`.Measurement` s.
-
-        The API is built with the idea that measurement aggregation will occur
-        asynchronously. Typical library records multiple measurements at once,
-        so this function accepts a collection of measurements so the library
-        can batch all of them that need to be recorded.
-
-        Args:
-            measurements: The collection of measurements to record.
-            span_context: the :class:`.SpanContext` that identified the
-            # TODO: DistributedContext
-            :class:`.Span` for which the measurements are associated with.
-
-        Returns: None
+            A new `MeasureFloat`
         """
 
 
-class Measurement:
-    """An empty interface that represents a single value.
-
-    This single value is recorded for the :class:`.Measure` that created
-    this measurement.
-    """
-
-
-class FloatMeasurement(Measurement):
-    """A :class:`.Measurement` with an INT value."""
-
-
-class IntMeasurement(Measurement):
-    """A :class:`.Measurement` with an INT value."""
-
-
-class Measure(abc.ABC):
-    """Used to create raw :class:`.Measurement` s.
-
-    A contract between the API exposing the raw measurement and SDK
-    aggregating these values into the :class:`.Metric`. Measure is
-    constructed from the :class:`.Meter` class.
-    """
-    @abc.abstractmethod
-    def create_measurement(self,
-                           value: typing.Any
-                           ) -> 'Measurement':
-        """Creates a measurement.
-
-        The type of the value in the measurement will correspond to the type
-        of measure that overrides this method.
-
-        Args:
-        value: The value of the measurement.
-
-        Returns:
-        A new :class:`.Measurement`
-        """
-
-class FloatMeasure(Measure):
-    """Used to create raw :class:`.FloatMeasurement` s."""
-
-    def create_measurement(self,
-                           value: int,
-                           ) -> 'FloatMeasurement':
-        """Creates a measurement with a FLOAT type.
-
-        Args:
-            value: The value of the measurement.
-
-        Returns:
-            A new :class:`.FloatMeasurement`
-        """
-
-class IntMeasure(Measure):
-    """Used to create raw :class:`.IntMeasurement` s."""
-
-    def create_measurement(self,
-                           value: int,
-                           ) -> 'IntMeasurement':
-        """Creates a measurement with an INT type.
-
-        Args:
-            value: The value of the measurement.
-
-        Returns:
-            A new :class:`.IntMeasurement`
-        """
-
-
-class Metric(abc.ABC):
+class Metric(ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
@@ -297,9 +179,9 @@ class Metric(abc.ABC):
     :class:`.Meter` class.
     """
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_or_create_time_series(self,
-                                  label_values: typing.List['LabelValue']
+                                  label_values: LabelValues
                                   ) -> 'object':
         """Gets and returns a timeseries, a container for a cumulative value.
 
@@ -310,11 +192,11 @@ class Metric(abc.ABC):
         overrides this function.
 
         Args:
-            label_values: A map of :class:`.LabelValue` s that will be \
-            associated with the return timeseries.
+            label_values: A map of `LabelValue` s that will be associated
+            with the return timeseries.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_default_time_series(self) -> 'object':
         """Returns a timeseries, a container for a cumulative value.
 
@@ -326,25 +208,25 @@ class Metric(abc.ABC):
                       ) -> None:
         """Sets a callback that gets executed every time prior to exporting.
 
-        This function MUST set the value of the :class:`.Metric` to the
-        value that will be exported.
+        This function MUST set the value of the `Metric` to the value that
+        that will be exported.
 
         args:
             updater_function: The callback function to execute.
         """
 
     def remove_time_series(self,
-                           label_values: typing.List['LabelValue']) -> None:
-        """Removes the timeseries from the :class:`.Metric`, if present.
+                           label_values: LabelValues) -> None:
+        """Removes the timeseries from the Metric, if present.
 
-        The timeseries with matching :class:`.LabelValue` s will be removed.
+        The timeseries with matching `LabelValue` s will be removed.
 
         args:
             label_values: The list of label values to match against.
         """
 
     def clear(self) -> None:
-        """Removes all timeseries from the :class:`.Metric`."""
+        """Removes all timeseries from the `Metric`."""
 
 
 class CounterFloat(Metric):
@@ -355,12 +237,12 @@ class CounterFloat(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: typing.List['LabelValue']
+                                  label_values: LabelValues
                                   ) -> 'CounterTimeSeries':
-        """Gets a :class:`.CounterTimeSeries` with a cumulated float value."""
+        """Gets a CounterTimeSeries with a cumulative float value."""
 
     def get_default_time_series(self) -> 'CounterTimeSeries':
-        """Returns a :class:`.CounterTimeSeries` with a float value."""
+        """Returns a `CounterTimeSeries` with a cumulative float value."""
 
 
 class CounterInt(Metric):
@@ -371,12 +253,12 @@ class CounterInt(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: typing.List['LabelValue']
+                                  label_values: LabelValues
                                   ) -> 'CounterTimeSeries':
-        """Gets a :class:`.CounterTimeSeries` with a cumulated int value."""
+        """Gets a `CounterTimeSeries` with a cumulative int value."""
 
     def get_default_time_series(self) -> 'CounterTimeSeries':
-        """Returns a :class:`.CounterTimeSeries` with a cumulated int value."""
+        """Returns a `CounterTimeSeries` with a cumulative int value."""
 
 class GaugeFloat(Metric):
     """A gauge type metric that holds float values.
@@ -385,12 +267,12 @@ class GaugeFloat(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: typing.List['LabelValue']
+                                  label_values: LabelValues
                                   ) -> 'GaugeTimeSeries':
-        """Gets a :class:`.GaugeTimeSeries` with a cumulated float value."""
+        """Gets a `GaugeTimeSeries` with a cumulative float value."""
 
     def get_default_time_series(self) -> 'GaugeTimeSeries':
-        """Returns a :class:`.GaugeTimeSeries` with a cumulated float value."""
+        """Returns a `GaugeTimeSeries` with a cumulative float value."""
 
 
 class GaugeInt(Metric):
@@ -400,9 +282,65 @@ class GaugeInt(Metric):
     """
 
     def get_or_create_time_series(self,
-                                  label_values: typing.List['LabelValue']
+                                  label_values: LabelValues
                                   ) -> 'GaugeTimeSeries':
-        """Gets a :class:`.GaugeTimeSeries` with a cumulated int value."""
+        """Gets a `GaugeTimeSeries` with a cumulative int value."""
 
     def get_default_time_series(self) -> 'GaugeTimeSeries':
-        """Returns a :class:`.GaugeTimeSeries` with a cumulated int value."""
+        """Returns a `GaugeTimeSeries` with a cumulative int value."""
+
+
+class MeasureFloat(Metric):
+    """A measure type metric that holds float values.
+
+    Measure metrics represent raw statistics that are recorded.
+    """
+
+    def get_or_create_time_series(self,
+                                    label_values: LabelValues
+                                    ) -> 'MeasureTimeSeries':
+        """Gets a `MeasureTimeSeries` with a cumulated float value."""
+
+    def get_default_time_series(self) -> 'MeasureTimeSeries':
+        """Returns a `MeasureTimeSeries` with a cumulated float value."""
+
+
+class MeasureInt(Metric):
+    """A measure type metric that holds int values.
+
+    Measure metrics represent raw statistics that are recorded.
+    """
+
+    def get_or_create_time_series(self,
+                                    label_values: LabelValues
+                                    ) -> 'MeasureTimeSeries':
+        """Gets a `.MeasureTimeSeries` with a cumulated int value."""
+
+    def get_default_time_series(self) -> 'MeasureTimeSeries':
+        """Returns a `.MeasureTimeSeries` with a cumulated int value."""
+
+
+class LabelKey:
+    """The label keys associated with the metric.
+
+    :type key: str
+    :param key: the key for the label
+
+    :type description: str
+    :param description: description of the label
+    """
+    def __init__(self,
+                    key: str,
+                    description: str) -> None:
+        self.key = key
+        self.description = description
+
+class LabelValue:
+    """The label values associated with a TimeSeries.
+
+    :type value: str
+    :param value: the value for the label
+    """
+    def __init__(self,
+                    value: str) -> None:
+        self.value = value

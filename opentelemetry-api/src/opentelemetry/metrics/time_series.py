@@ -18,27 +18,26 @@ import typing
 class CounterTimeSeries:
 
     def add(self, value: typing.Union[float, int]) -> None:
-        """Adds the given value to the current value.
-
-        The values cannot be negative.
-        """
+        """Adds the given value to the current value. Cannot be negative."""
 
     def set(self, value: typing.Union[float, int]) -> None:
         """Sets the current value to the given value.
 
-        The given value must be larger than the current recorded value. In
-        general should be used in combination with `SetCallback` where the
-        recorded value is guaranteed to be monotonically increasing.
+        The given value must be larger than the current recorded value.
         """
 
 
 class GaugeTimeSeries:
 
-    def add(self, value: typing.Union[float, int]) -> None:
-        """Adds the given value to the current value.
-
-        The values can be negative.
-        """
-
     def set(self, value: typing.Union[float, int]) -> None:
-        """Sets the current value to the given value."""
+        """Sets the current value to the given value. Can be negative."""
+
+
+class MeasureTimeSeries:
+
+    def record(self, value: typing.Union[float, int]) -> None:
+        """Records the given value to this measure.
+
+        Logic depends on type of aggregation used for this measure.
+        """
+   

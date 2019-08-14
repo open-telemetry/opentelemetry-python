@@ -12,19 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import psutil
 
+from opentelemetry.metrics import LabelKey
+from opentelemetry.metrics import LabelValue
 from opentelemetry.metrics import Meter
+from opentelemetry.metrics.aggregation import LastValueAggregation
 
 METER = Meter()
-MEASURE = METER.create_float_measure("cpu_usage",
-                                     "cpu usage over time",
-                                     "percentage")
+LABEL_KEYS = [LabelKey("environment",
+                       "the environment the application is running in")]
+MEASURE = METER.create_float_measure("idle_cpu_percentage",
+                                     "cpu idle over time",
+                                     "percentage",
+                                     LastValueAggregation)
+LABEL_VALUE_TESTING = [LabelValue("Testing")]
+LABEL_VALUE_STAGING = [LabelValue("Staging")]
 
-MEASUREMENTS = []
-for i in range(100):
-    MEASUREMENTS.append(MEASURE.createMeasurement(psutil.cpu_percent()))
-    time.sleep(1)
+# Metrics sent to some exporter
+MEASURE_METRIC_TESTING = MEASURE.get_or_create_time_series(LABEL_VALUE_TESTING)
+MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series(LABEL_VALUE_STAGING)
 
-    METER.record(MEASUREMENTS)
+MEASURE_METRIC_STAGING.record(psutil.cpu_times_percent().idle)

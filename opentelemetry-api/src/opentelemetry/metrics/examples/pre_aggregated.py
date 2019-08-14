@@ -13,18 +13,23 @@
 # limitations under the License.
 
 
+from opentelemetry.metrics import LabelKey
+from opentelemetry.metrics import LabelValue
 from opentelemetry.metrics import Meter
-from opentelemetry.metrics.label_key import LabelKey
 
 METER = Meter()
 LABEL_KEYS = [LabelKey("environment", 
                        "the environment the application is running in")]
-SUM_METRIC = METER.create_int_counter("sum numbers", 
+COUNTER = METER.create_int_counter("sum numbers", 
                                       "sum numbers over time",
                                       "number",
                                       LABEL_KEYS)
-LABEL_VALUES = ["Testing"]
-SUM_TIME_SERIES = SUM_METRIC.getOrCreateTimeSeries(LABEL_VALUES)
+LABEL_VALUE_TESTING = [LabelValue("Testing")]
+LABEL_VALUE_STAGING = [LabelValue("Staging")]
+
+# Metrics sent to some exporter
+COUNTER_METRIC_TESTING = COUNTER.get_or_create_time_series(LABEL_VALUE_TESTING)
+COUNTER_METRIC_STAGING = COUNTER.get_or_create_time_series(LABEL_VALUE_STAGING)
 
 for i in range(100):
-    SUM_TIME_SERIES.add(i)
+    COUNTER_METRIC_STAGING.add(i)
