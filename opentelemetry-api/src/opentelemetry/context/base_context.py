@@ -37,7 +37,7 @@ class BaseRuntimeContext:
             raise NotImplementedError
 
     _lock = threading.Lock()
-    _slots: typing.Dict[str, Slot] = {}
+    _slots: typing.Dict[str, 'BaseRuntimeContext.Slot'] = {}
 
     @classmethod
     def clear(cls) -> None:
@@ -48,7 +48,11 @@ class BaseRuntimeContext:
             slot.clear()
 
     @classmethod
-    def register_slot(cls, name: str, default: 'object' = None) -> 'Slot':
+    def register_slot(
+            cls,
+            name: str,
+            default: 'object' = None,
+    ) -> 'BaseRuntimeContext.Slot':
         """Register a context slot with an optional default value.
 
         :type name: str
