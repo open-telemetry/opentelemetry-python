@@ -58,9 +58,11 @@ class OpenTelemetryMiddleware:
         span.add_attribute("http.status_text", status_text)
 
         try:
-            span.add_attribute("http.status_code", int(status_code))
+            status_code = int(status_code)
         except ValueError:
             pass
+        else:
+            span.add_attribute("http.status_code", status_code)
 
     @classmethod
     def _create_start_response(cls, start_response, span):
