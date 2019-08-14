@@ -123,7 +123,7 @@ class Span:
         """
 
     def add_link(self: 'Span',
-                 context: 'SpanContext',
+                 link_target_context: 'SpanContext',
                  attributes: 'types.Attributes' = None,
                  ) -> None:
         """Adds a Link to another span.
