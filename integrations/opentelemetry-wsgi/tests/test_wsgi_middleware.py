@@ -16,6 +16,7 @@ import sys
 import io
 import unittest
 import unittest.mock as mock
+import wsgiref.util as wsgiref_util
 from opentelemetry_wsgi import OpenTelemetryMiddleware
 from opentelemetry import trace as trace_api
 
@@ -63,31 +64,13 @@ class TestWsgiMiddleware(unittest.TestCase):
             return_value=self.span_context_manager,
         )
         self.start_span = self.patcher.start()
-        self.errors = io.StringIO()
-        self.input = io.BytesIO()
+
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
 
-        self.environ = {
-            "REMOTE_ADDR": "1.2.3.4",
-            "REMOTE_HOST": "example.com",
-            "REMOTE_PORT": "1234",
-            "REQUEST_METHOD": "GET",
-            "SERVER_PORT": "80",
-            "SERVER_NAME": "server",
-            "SERVER_SOFTWARE": "TestWsgiMiddleware",
-            "SERVER_PROTOCOL": "HTTP/1.1",
-            "SCRIPT_NAME": "",
-            "PATH_INFO": "/hello",
-            "QUERY_STRING": "world=1",
-            "wsgi.url_scheme": "http",
-            "wsgi.version": (1, 0),
-            "wsgi.errors": self.errors,
-            "wsgi.multithread": True,
-            "wsgi.multiprocess": False,
-            "wsgi.run_once": False,
-            "wsgi.input": self.input,
-        }
+        self.environ = {}
+        wsgiref_util.setup_testing_defaults(self.environ)
+
         self.status = None
         self.response_headers = None
         self.exc_info = None
@@ -102,6 +85,7 @@ class TestWsgiMiddleware(unittest.TestCase):
         self.status = status
         self.response_headers = response_headers
         self.exc_info = exc_info
+        return self.write
 
     def validate_response(self, response, error=False):
         while True:
@@ -122,7 +106,7 @@ class TestWsgiMiddleware(unittest.TestCase):
             self.assertIsNone(self.exc_info)
 
         # Verify that start_span has been called
-        self.start_span.assert_called_once_with("[GET]/hello")
+        self.start_span.assert_called_once_with("[GET]/")
 
     def test_basic_wsgi_call(self):
         app = OpenTelemetryMiddleware(simple_wsgi)
