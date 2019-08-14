@@ -17,13 +17,13 @@ from collections import OrderedDict
 from collections import deque
 from collections import namedtuple
 from contextlib import contextmanager
-import contextvars
 import random
 import threading
 import typing
 
 from opentelemetry import trace as trace_api
 from opentelemetry import types
+from opentelemetry.context import Context
 from opentelemetry.sdk import util
 
 try:
@@ -34,9 +34,6 @@ except ImportError:
     # pylint: disable=no-name-in-module,ungrouped-imports
     from collections import MutableMapping
     from collections import Sequence
-
-
-_CURRENT_SPAN_CV = contextvars.ContextVar('current_span', default=None)
 
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
@@ -287,17 +284,13 @@ class Tracer(trace_api.Tracer):
     """
 
     def __init__(self,
-                 cv: 'contextvars.ContextVar' = _CURRENT_SPAN_CV
+                 cv: str = 'current_span'
                  ) -> None:
         self._cv = cv
-        try:
-            self._cv.get()
-        except LookupError:
-            self._cv.set(None)
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return self._cv.get()
+        return Context[self._cv]
 
     @contextmanager
     def start_span(self,
@@ -337,11 +330,12 @@ class Tracer(trace_api.Tracer):
     def use_span(self, span: 'Span') -> typing.Iterator['Span']:
         """See `opentelemetry.trace.Tracer.use_span`."""
         span.start()
-        token = self._cv.set(span)
+        span_snapshot = Context[self._cv]
+        Context[self._cv] = span
         try:
             yield span
         finally:
-            self._cv.reset(token)
+            Context[self._cv] = span_snapshot
             span.end()
 
 

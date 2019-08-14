@@ -97,6 +97,12 @@ class BaseRuntimeContext:
         slot = self._slots[name]
         slot.set(value)
 
+    def __getitem__(self, name: str) -> 'object':
+        return getattr(self, name)
+
+    def __setitem__(self, name: str, value: 'object') -> None:
+        setattr(self, name, value)
+
     def with_current_context(
             self,
             func: typing.Callable[..., 'object'],
