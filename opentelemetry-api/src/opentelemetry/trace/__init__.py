@@ -128,7 +128,8 @@ class Span:
                  ) -> None:
         """Adds a Link to another span.
 
-        Adds a single Link to the Span via the SpanContext passed as argument.
+        Adds a single `Link` to the span via the `SpanContext` passed as
+        argument.
         """
 
 
