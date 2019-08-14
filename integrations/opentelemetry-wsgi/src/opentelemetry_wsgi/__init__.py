@@ -54,9 +54,11 @@ class OpenTelemetryMiddleware:
 
     @staticmethod
     def _add_response_attributes(span, status, response_headers):
+        status_code, status_text = status.split(" ", 1)
+        span.add_attribute("http.status_text", status_text)
+
         try:
-            status_code = int(status.split(" ", 1)[0])
-            span.add_attribute("http.status_code", status_code)
+            span.add_attribute("http.status_code", int(status_code))
         except ValueError:
             pass
 
