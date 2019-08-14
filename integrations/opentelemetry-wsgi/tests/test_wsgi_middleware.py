@@ -56,6 +56,9 @@ class TestWsgiMiddleware(unittest.TestCase):
     def setUp(self):
         tracer = trace_api.tracer()
         self.span_context_manager = mock.MagicMock()
+        self.span_context_manager.__enter__.return_value = mock.create_autospec(
+            trace_api.Span, spec_set=True
+        )
         self.patcher = mock.patch.object(
             tracer,
             "start_span",
