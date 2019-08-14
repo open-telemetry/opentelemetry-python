@@ -18,6 +18,7 @@ on any WSGI framework (such as Django / Flask) to track requests timing through
 OpenTelemetry.
 """
 
+import functools
 import opentelemetry.trace as trace
 
 
@@ -32,29 +33,38 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
-        self.start_response = None
-        self.span = None
 
-    def _add_request_attributes(self, environ):
-        self.span.add_attribute("http.method", environ["REQUEST_METHOD"])
-        self.span.add_attribute("http.path", environ["PATH_INFO"])
+    @staticmethod
+    def _add_request_attributes(span, environ):
+        span.add_attribute("http.method", environ["REQUEST_METHOD"])
+        span.add_attribute("http.path", environ["PATH_INFO"])
 
         host = environ.get("HTTP_HOST") or environ.get("SERVER_NAME")
         if host is not None:
-            self.span.add_attribute("http.host", host)
+            span.add_attribute("http.host", host)
 
         url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
         if url is not None:
-            self.span.add_attribute("http.url", url)
+            span.add_attribute("http.url", url)
 
-    def _add_response_attributes(self, status, response_headers, *args):
+    @staticmethod
+    def _add_response_attributes(span, status, response_headers):
         try:
             status_code = int(status.split(" ", 1)[0])
-            self.span.add_attribute("http.status_code", status_code)
+            span.add_attribute("http.status_code", status_code)
         except ValueError:
             pass
 
-        return self.start_response(status, response_headers, *args)
+    @classmethod
+    def _create_start_response(cls, start_response, span):
+        @functools.wraps(start_response)
+        def _start_response(status, response_headers, *args):
+            # TODO: enable response attributes after set_attribute API is
+            # implemented
+            # cls._add_response_attributes(span, status, response_headers)
+            return start_response(status, response_headers, *args)
+
+        return _start_response
 
     def __call__(self, environ, start_response):
         """The WSGI application
@@ -62,7 +72,6 @@ class OpenTelemetryMiddleware:
         :param environ: A WSGI environment.
         :param start_response: The WSGI start_response callable.
         """
-        self.start_response = start_response
 
         tracer = trace.tracer()
         method = environ["REQUEST_METHOD"]
@@ -71,12 +80,10 @@ class OpenTelemetryMiddleware:
         span_name = "[{}]{}".format(method, path)
 
         with tracer.start_span(span_name) as span:
-            self.span = span
             # TODO: enable request attributes after set_attribute API is
             # implemented
-            # self._add_request_attributes(environ)
+            # self._add_request_attributes(span, environ)
+            start_response = self._create_start_response(start_response, span)
 
-            # TODO: change start_response to self._add_response_attributes after
-            # set_attribute API is implemented
             for yielded in self.wsgi(environ, start_response):
                 yield yielded
