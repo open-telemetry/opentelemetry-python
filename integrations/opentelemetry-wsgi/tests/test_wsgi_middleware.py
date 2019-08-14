@@ -90,7 +90,7 @@ class TestWsgiMiddleware(unittest.TestCase):
         self.exc_info = exc_info
         return self.write
 
-    def validate_response(self, response, error=False):
+    def validate_response(self, response, error=None):
         while True:
             try:
                 value = next(response)
@@ -103,8 +103,9 @@ class TestWsgiMiddleware(unittest.TestCase):
         self.assertEqual(self.status, "200 OK")
         self.assertEqual(self.response_headers, [("Content-Type", "text/plain")])
         if error:
-            self.assertIsNotNone(self.exc_info)
-            self.assertIs(self.exc_info[0], ValueError)
+            self.assertIs(self.exc_info[0], error)
+            self.assertIsInstance(self.exc_info[1], error)
+            self.assertIsNotNone(self.exc_info[2])
         else:
             self.assertIsNone(self.exc_info)
 
@@ -126,7 +127,7 @@ class TestWsgiMiddleware(unittest.TestCase):
     def test_wsgi_exc_info(self):
         app = OpenTelemetryMiddleware(error_wsgi)
         response = app(self.environ, self.start_response)
-        self.validate_response(response, error=True)
+        self.validate_response(response, error=ValueError)
 
 
 if __name__ == "__main__":
