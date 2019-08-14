@@ -109,7 +109,7 @@ class Span:
                       ) -> None:
         """Sets an Attribute.
 
-        Sets a single `Attribute` with the key and value passed as arguments.
+        Sets a single Attribute with the key and value passed as arguments.
         """
 
     def add_event(self: 'Span',
@@ -128,7 +128,7 @@ class Span:
                  ) -> None:
         """Adds a Link to another span.
 
-        Adds a single `Link` to the span via the `SpanContext` passed as
+        Adds a single Link to the span via the `SpanContext` passed as
         argument.
         """
 
