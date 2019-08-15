@@ -17,15 +17,23 @@ import unittest
 from opentelemetry import trace
 
 
-class TestDefaultSpan(unittest.TestCase):
-    def test_ctor(self):
-        context = trace.SpanContext(1, 1,
-                                    trace.DEFAULT_TRACE_OPTIONS,
-                                    trace.DEFAULT_TRACE_STATE)
-        span = trace.DefaultSpan(context)
-        self.assertEqual(context, span.get_context())
+class TestTracer(unittest.TestCase):
+    def setUp(self):
+        self.tracer = trace.Tracer()
 
-    def test_invalid_span(self):
-        self.assertIsNotNone(trace.INVALID_SPAN)
-        self.assertIsNotNone(trace.INVALID_SPAN.get_context())
-        self.assertFalse(trace.INVALID_SPAN.get_context().is_valid())
+    def test_get_current_span(self):
+        span = self.tracer.get_current_span()
+        self.assertIsInstance(span, trace.Span)
+
+    def test_start_span(self):
+        with self.tracer.start_span("") as span:
+            self.assertIsInstance(span, trace.Span)
+
+    def test_create_span(self):
+        span = self.tracer.create_span("")
+        self.assertIsInstance(span, trace.Span)
+
+    def test_use_span(self):
+        span = trace.Span()
+        with self.tracer.use_span(span):
+            pass

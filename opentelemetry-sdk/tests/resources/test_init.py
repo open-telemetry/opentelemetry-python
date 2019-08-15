@@ -1,4 +1,5 @@
 import unittest
+
 from opentelemetry.sdk import resources
 
 
