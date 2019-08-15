@@ -16,9 +16,8 @@
 The OpenTelemetry metrics API describes the classes used to report raw
 measurements, as well as metrics with known aggregation and labels.
 
-The :class:`.Meter` class is used to construct :class:`.Measure` s to
-record raw measurements and :class:`.Metric` s to record metrics with
-predefined aggregation.
+The `Meter` class is used to construct `Metric` s to record raw statistics
+as well as metrics with predefined aggregation.
 
 See the `metrics api`_ spec for terminology and context clarification.
 
@@ -212,7 +211,7 @@ class Metric(ABC):
 
         Args:
             label_values: A map of `LabelValue` s that will be associated
-            with the return timeseries.
+                with the return timeseries.
         """
 
     @abstractmethod
@@ -258,7 +257,7 @@ class CounterFloat(Metric):
     def get_or_create_time_series(self,
                                   label_values: LabelValues
                                   ) -> 'CounterTimeSeries':
-        """Gets a CounterTimeSeries with a cumulative float value."""
+        """Gets a `CounterTimeSeries` with a cumulative float value."""
 
     def get_default_time_series(self) -> 'CounterTimeSeries':
         """Returns a `CounterTimeSeries` with a cumulative float value."""
@@ -316,8 +315,8 @@ class MeasureFloat(Metric):
     """
 
     def get_or_create_time_series(self,
-                                    label_values: LabelValues
-                                    ) -> 'MeasureTimeSeries':
+                                  label_values: LabelValues
+                                  ) -> 'MeasureTimeSeries':
         """Gets a `MeasureTimeSeries` with a cumulated float value."""
 
     def get_default_time_series(self) -> 'MeasureTimeSeries':
@@ -331,22 +330,22 @@ class MeasureInt(Metric):
     """
 
     def get_or_create_time_series(self,
-                                    label_values: LabelValues
-                                    ) -> 'MeasureTimeSeries':
-        """Gets a `.MeasureTimeSeries` with a cumulated int value."""
+                                  label_values: LabelValues
+                                  ) -> 'MeasureTimeSeries':
+        """Gets a `MeasureTimeSeries` with a cumulated int value."""
 
     def get_default_time_series(self) -> 'MeasureTimeSeries':
-        """Returns a `.MeasureTimeSeries` with a cumulated int value."""
+        """Returns a `MeasureTimeSeries` with a cumulated int value."""
 
 
 class MeasureBatch:
 
-    def record(metric_pairs):
+    def record(self, metric_pairs):
         """Records multiple observed values simultaneously.
 
         Args:
             metric_pairs: A list of tuples containing the `Metric` and value
-            to be recorded.
+                to be recorded.
         """
 
 
@@ -360,8 +359,8 @@ class LabelKey:
     :param description: description of the label
     """
     def __init__(self,
-                    key: str,
-                    description: str) -> None:
+                 key: str,
+                 description: str) -> None:
         self.key = key
         self.description = description
 
@@ -372,5 +371,5 @@ class LabelValue:
     :param value: the value for the label
     """
     def __init__(self,
-                    value: str) -> None:
+                 value: str) -> None:
         self.value = value

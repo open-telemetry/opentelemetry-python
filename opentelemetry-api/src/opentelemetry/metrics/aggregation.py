@@ -13,17 +13,17 @@
 # limitations under the License.
 
 #TODO
-class BaseAggregation:
+class Aggregation:
     """The base class for all aggregation types."""
 
-class CountAggregation(BaseAggregation):
+class CountAggregation(Aggregation):
     """An aggregation representing a count of values."""
 
-class DistributonAggregation(BaseAggregation):
+class DistributonAggregation(Aggregation):
     """An aggregation representing a distribution."""
 
-class LastValueAggregation(BaseAggregation):
+class LastValueAggregation(Aggregation):
     """An aggregation representing the last value."""
 
-class SumAggregation(BaseAggregation):
+class SumAggregation(Aggregation):
     """An aggregation representing a sum of values."""
