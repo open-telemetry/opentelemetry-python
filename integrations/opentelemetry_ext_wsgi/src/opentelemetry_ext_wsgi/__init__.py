@@ -32,8 +32,12 @@ class OpenTelemetryMiddleware:
     :param wsgi: The WSGI application callable.
     """
 
-    def __init__(self, wsgi):
+    def __init__(self, wsgi, span_context_propagator=None, distributed_context_propagator=None):
         self.wsgi = wsgi
+
+        # TODO: implement context propagation
+        self.span_context_propagator = span_context_propagator
+        self.distributed_context_propagator = distributed_context_propagator
 
     @staticmethod
     def _add_request_attributes(span, environ):
