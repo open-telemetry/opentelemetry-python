@@ -23,6 +23,8 @@ import wsgiref.util as wsgiref_util
 
 import opentelemetry.trace as trace
 
+from .version import __version__  # noqa
+
 
 class OpenTelemetryMiddleware:
     """The WSGI application middleware.
@@ -33,7 +35,12 @@ class OpenTelemetryMiddleware:
     :param wsgi: The WSGI application callable.
     """
 
-    def __init__(self, wsgi, span_context_propagator=None, distributed_context_propagator=None):
+    def __init__(
+            self,
+            wsgi,
+            span_context_propagator=None,
+            distributed_context_propagator=None,
+    ):
         self.wsgi = wsgi
 
         # TODO: implement context propagation
@@ -50,14 +57,14 @@ class OpenTelemetryMiddleware:
         span.set_attribute("http.host", host)
 
         url = (
-            environ.get("REQUEST_URI")
-            or environ.get("RAW_URI")
-            or wsgiref_util.request_uri(environ, include_query=False)
+            environ.get("REQUEST_URI") or
+            environ.get("RAW_URI") or
+            wsgiref_util.request_uri(environ, include_query=False)
         )
         span.set_attribute("http.url", url)
 
     @staticmethod
-    def _add_response_attributes(span, status, response_headers):
+    def _add_response_attributes(span, status):
         status_code, status_text = status.split(" ", 1)
         span.set_attribute("http.status_text", status_text)
 
@@ -72,7 +79,7 @@ class OpenTelemetryMiddleware:
     def _create_start_response(cls, span, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args):
-            cls._add_response_attributes(span, status, response_headers)
+            cls._add_response_attributes(span, status)
             return start_response(status, response_headers, *args)
 
         return _start_response
