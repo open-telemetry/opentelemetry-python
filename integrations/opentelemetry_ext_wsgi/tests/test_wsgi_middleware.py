@@ -153,7 +153,6 @@ class TestWsgiAttributes(unittest.TestCase):
         expected = (
             mock.call("component", "http"),
             mock.call("http.method", "GET"),
-            mock.call("http.path", "/"),
             mock.call("http.host", "127.0.0.1"),
             mock.call("http.url", "http://127.0.0.1/"),
         )

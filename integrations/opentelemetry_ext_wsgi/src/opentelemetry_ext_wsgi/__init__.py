@@ -52,7 +52,6 @@ class OpenTelemetryMiddleware:
     def _add_request_attributes(span, environ):
         span.set_attribute("component", "http")
         span.set_attribute("http.method", environ["REQUEST_METHOD"])
-        span.set_attribute("http.path", environ["PATH_INFO"])
 
         host = environ.get("HTTP_HOST") or environ["SERVER_NAME"]
         span.set_attribute("http.host", host)
