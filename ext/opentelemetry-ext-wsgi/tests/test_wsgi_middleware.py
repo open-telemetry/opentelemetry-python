@@ -17,7 +17,7 @@ import io
 import unittest
 import unittest.mock as mock
 import wsgiref.util as wsgiref_util
-from opentelemetry_ext_wsgi import OpenTelemetryMiddleware
+from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry import trace as trace_api
 
 
