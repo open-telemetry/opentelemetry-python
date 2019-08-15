@@ -21,7 +21,7 @@ OpenTelemetry.
 import functools
 import wsgiref.util as wsgiref_util
 
-import opentelemetry.trace as trace
+from opentelemetry import trace
 
 from .version import __version__  # noqa
 
