@@ -87,8 +87,9 @@ class OpenTelemetryMiddleware:
     def __call__(self, environ, start_response):
         """The WSGI application
 
-        :param environ: A WSGI environment.
-        :param start_response: The WSGI start_response callable.
+        Args:
+            environ: A WSGI environment.
+            start_response: The WSGI start_response callable.
         """
 
         tracer = trace.tracer()
