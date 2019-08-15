@@ -32,7 +32,8 @@ class OpenTelemetryMiddleware:
     This class is used to create and annotate spans for requests to a WSGI
     application.
 
-    :param wsgi: The WSGI application callable.
+    Args:
+        wsgi: The WSGI application callable.
     """
 
     def __init__(
