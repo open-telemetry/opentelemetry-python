@@ -141,9 +141,7 @@ class TestWsgiAttributes(unittest.TestCase):
     def setUp(self):
         self.environ = {}
         wsgiref_util.setup_testing_defaults(self.environ)
-        # TODO: enable autospec when set_attribute is ready
-        # self.span = mock.create_autospec(trace_api.Span, spec_set=True)
-        self.span = mock.MagicMock()
+        self.span = mock.create_autospec(trace_api.Span, spec_set=True)
 
     def test_request_attributes(self):
         OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
