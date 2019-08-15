@@ -19,8 +19,9 @@ OpenTelemetry.
 """
 
 import functools
-import opentelemetry.trace as trace
 import wsgiref.util as wsgiref_util
+
+import opentelemetry.trace as trace
 
 
 class OpenTelemetryMiddleware:
