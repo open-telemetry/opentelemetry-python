@@ -70,9 +70,7 @@ class OpenTelemetryMiddleware:
     def _create_start_response(cls, start_response, span):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args):
-            # TODO: enable response attributes after set_attribute API is
-            # implemented
-            # cls._add_response_attributes(span, status, response_headers)
+            cls._add_response_attributes(span, status, response_headers)
             return start_response(status, response_headers, *args)
 
         return _start_response
@@ -91,9 +89,7 @@ class OpenTelemetryMiddleware:
         span_name = "[{}]{}".format(method, path)
 
         with tracer.start_span(span_name) as span:
-            # TODO: enable request attributes after set_attribute API is
-            # implemented
-            # self._add_request_attributes(span, environ)
+            self._add_request_attributes(span, environ)
             start_response = self._create_start_response(start_response, span)
 
             for yielded in self.wsgi(environ, start_response):
