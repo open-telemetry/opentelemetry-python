@@ -68,7 +68,7 @@ class OpenTelemetryMiddleware:
             span.set_attribute("http.status_code", status_code)
 
     @classmethod
-    def _create_start_response(cls, start_response, span):
+    def _create_start_response(cls, span, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args):
             cls._add_response_attributes(span, status, response_headers)
@@ -91,7 +91,7 @@ class OpenTelemetryMiddleware:
 
         with tracer.start_span(span_name) as span:
             self._add_request_attributes(span, environ)
-            start_response = self._create_start_response(start_response, span)
+            start_response = self._create_start_response(span, start_response)
 
             for yielded in self.wsgi(environ, start_response):
                 yield yielded
