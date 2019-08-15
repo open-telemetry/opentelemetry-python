@@ -141,6 +141,7 @@ class TestWsgiAttributes(unittest.TestCase):
     def test_request_attributes(self):
         OpenTelemetryMiddleware._add_request_attributes(self.span, self.environ)
         expected = (
+            mock.call("component", "http"),
             mock.call("http.method", "GET"),
             mock.call("http.path", "/"),
             mock.call("http.host", "127.0.0.1"),
