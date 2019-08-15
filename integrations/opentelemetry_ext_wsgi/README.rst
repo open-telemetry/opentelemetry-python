@@ -11,7 +11,7 @@ Usage (Flask)
 .. code-block:: python
 
     from flask import Flask
-    from opentelemetry_wsgi import OpenTelemetryMiddleware
+    from opentelemetry_ext_wsgi import OpenTelemetryMiddleware
 
     app = Flask(__name__)
     app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
@@ -32,7 +32,7 @@ Modify the application's ``wsgi.py`` file as shown below.
 .. code-block:: python
 
     import os
-    from opentelemetry_wsgi import OpenTelemetryMiddleware
+    from opentelemetry_ext_wsgi import OpenTelemetryMiddleware
     from django.core.wsgi import get_wsgi_application
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'application.settings')

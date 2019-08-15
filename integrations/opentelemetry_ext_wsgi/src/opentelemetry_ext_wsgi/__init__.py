@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-The opentelemetry_wsgi integration provides a WSGI middleware that can be used
+The opentelemetry_ext_wsgi package provides a WSGI middleware that can be used
 on any WSGI framework (such as Django / Flask) to track requests timing through
 OpenTelemetry.
 """
