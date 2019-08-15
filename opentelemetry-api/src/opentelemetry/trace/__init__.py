@@ -65,6 +65,7 @@ from contextlib import contextmanager
 import typing
 
 from opentelemetry import loader
+from opentelemetry import types
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union['Span', 'SpanContext']]
@@ -100,6 +101,35 @@ class Span:
 
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
+        """
+
+    def set_attribute(self: 'Span',
+                      key: str,
+                      value: types.AttributeValue,
+                      ) -> None:
+        """Sets an Attribute.
+
+        Sets a single Attribute with the key and value passed as arguments.
+        """
+
+    def add_event(self: 'Span',
+                  name: str,
+                  attributes: types.Attributes = None,
+                  ) -> None:
+        """Adds an Event.
+
+        Adds a single Event with the name and, optionally, attributes passed
+        as arguments.
+        """
+
+    def add_link(self: 'Span',
+                 link_target_context: 'SpanContext',
+                 attributes: types.Attributes = None,
+                 ) -> None:
+        """Adds a Link to another span.
+
+        Adds a single Link from this Span to another Span identified by the
+        `SpanContext` passed as argument.
         """
 
 
