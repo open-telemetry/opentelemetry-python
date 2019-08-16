@@ -38,14 +38,12 @@ class OpenTelemetryMiddleware:
     def __init__(
             self,
             wsgi,
-            span_context_propagator=None,
-            distributed_context_propagator=None,
+            propagators=None,
     ):
         self.wsgi = wsgi
 
         # TODO: implement context propagation
-        self.span_context_propagator = span_context_propagator
-        self.distributed_context_propagator = distributed_context_propagator
+        self.propagators = propagators
 
     @staticmethod
     def _add_request_attributes(span, environ):
