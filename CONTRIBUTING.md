@@ -48,21 +48,22 @@ Open a pull request against the main opentelemetry-python repo.
 
 ### How to Receive Comments
 
-* If the PR is not ready for review, please put "[WIP]" in the title, or tag it
-  as "work-in-progress", or mark it as "draft".
+* If the PR is not ready for review, please put `[WIP]` in the title, or tag it
+  as `work-in-progress`, or mark it as [`draft`](https://github.blog/2019-02-14-introducing-draft-pull-requests/).
 * Make sure CLA is signed and CI is clear.
 
 ### How to Get PR Merged
 
-A PR is considered as **ready for merge** when:
-* It got two approvals from Collaborators/Maintainers (at different companies).
-* Major feedbacks should be resolved.
+A PR is considered as **ready to merge** when:
+* It has received two approvals from Collaborators/Maintainers (at different
+  companies).
+* Major feedbacks are resolved.
 * The PR should stay at least one working day before getting merged, this
   gives people reasonable time to review.
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
 
-Any Collaborator/Maintainer can merge the PR once it is **ready for merge**.
+Any Collaborator/Maintainer can merge the PR once it is **ready to merge**.
 
 ## Design Choices
 
@@ -83,7 +84,6 @@ It is preferable to have contributions follow the idioms of the language
 rather than conform to specific API names or argument patterns in the spec.
 
 For a deeper discussion, see: https://github.com/open-telemetry/opentelemetry-specification/issues/165
-
 
 ## Styleguide
 
