@@ -10,12 +10,12 @@ meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemet
 
 ## Pull Request
 
-### How to send PR
+### How to Send Pull Requests
 
-* Everyone can send PR.
-* You need to fork the project in GitHub.
+Everyone is welcome to contribute code to `opentelemetry-python` via GitHub
+pull requests (PRs).
 
-Clone the upstream repo:
+To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```sh
 $ git clone https://https://github.com/open-telemetry/opentelemetry-python.git
@@ -35,7 +35,7 @@ $ pip install tox  # only first time.
 $ tox  # execute in the root of the repository
 ```
 
-Checkout a new branch, make modifications and push the branch to your fork:
+Check out a new branch, make modifications and push the branch to your fork:
 
 ```sh
 $ git checkout -b feature
@@ -44,22 +44,22 @@ $ git commit
 $ git push fork feature
 ```
 
-Open a pull request against the main opentelemetry-python repo.
+Open a pull request against the main `opentelemetry-python` repo.
 
 ### How to Receive Comments
 
-* If the PR is not ready for review, please put `[WIP]` in the title, or tag it
+* If the PR is not ready for review, please put `[WIP]` in the title, tag it
   as `work-in-progress`, or mark it as [`draft`](https://github.blog/2019-02-14-introducing-draft-pull-requests/).
 * Make sure CLA is signed and CI is clear.
 
 ### How to Get PR Merged
 
-A PR is considered as **ready to merge** when:
+A PR is considered to be **ready to merge** when:
 * It has received two approvals from Collaborators/Maintainers (at different
   companies).
 * Major feedbacks are resolved.
-* The PR should stay at least one working day before getting merged, this
-  gives people reasonable time to review.
+* It has been open for review for at least one working day. This gives people
+  reasonable time to review.
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
 
