@@ -60,7 +60,7 @@ A PR is considered as **ready for merge** when:
 * The PR should stay at least one working day before getting merged, this
   gives people reasonable time to review.
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
-* Urgent fix can take exception as long as it is been actively communicated.
+* Urgent fix can take exception as long as it has been actively communicated.
 
 Any Collaborator/Maintainer can merge the PR once it is **ready for merge**.
 
