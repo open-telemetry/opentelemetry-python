@@ -5,7 +5,7 @@ The Python special interest group (SIG) meets regularly. See the OpenTelemetry
 information on this and other language SIGs.
 
 See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
-for a summary description of past meetings. To request edit access join the
+for a summary description of past meetings. To request edit access, join the
 meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
 
 ## Running Tests
@@ -44,3 +44,26 @@ For a deeper discussion, see: https://github.com/open-telemetry/opentelemetry-sp
 
 * docstrings should adhere to the Google styleguide as specified
   with the [napolean extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy) extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
+
+## PR Process
+
+## Become a Collaborator
+
+Collaborators have write access to the repo.
+
+To become a Collaborator:
+1. Become an active Contributor by working on PRs.
+2. Actively participate in the community meeting, design discussion, PR review
+   and issue discussion.
+3. Contact the Maintainers, express the willingness and commitment.
+4. Ackownledged and approved by two Maintainers (at different companies).
+
+## Become a Maintainer
+
+Maintainers have admin access to the repo.
+
+To become a Maintainer:
+1. Become a [member of OpenTelemetry organization](https://github.com/orgs/open-telemetry/people).
+2. Become a Collaborator.
+3. Demonstrate the ability and commitment.
+4. Ackownledged and approved by all the current Maintainers.
