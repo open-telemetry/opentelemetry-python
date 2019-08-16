@@ -75,9 +75,9 @@ class OpenTelemetryMiddleware:
     @classmethod
     def _create_start_response(cls, span, start_response):
         @functools.wraps(start_response)
-        def _start_response(status, response_headers, *args):
+        def _start_response(status, response_headers, *args, **kwargs):
             cls._add_response_attributes(span, status)
-            return start_response(status, response_headers, *args)
+            return start_response(status, response_headers, *args, **kwargs)
 
         return _start_response
 
