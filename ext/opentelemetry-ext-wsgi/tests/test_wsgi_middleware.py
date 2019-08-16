@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import io
+import sys
 import unittest
 import unittest.mock as mock
 import wsgiref.util as wsgiref_util
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+
 from opentelemetry import trace as trace_api
+from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 
 
 class Response:
