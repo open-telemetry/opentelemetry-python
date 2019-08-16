@@ -15,6 +15,7 @@
 import abc
 import typing
 
+from opentelemetry.context import UnifiedContext
 from opentelemetry.trace import SpanContext
 
 Setter = typing.Callable[[object, str, str], None]
@@ -35,9 +36,10 @@ class HTTPTextFormat(abc.ABC):
         import flask
         import requests
         from opentelemetry.context.propagation import HTTPTextFormat
+        from opentelemetry.trace import tracer
+        from opentelemetry.context import UnifiedContext
 
         PROPAGATOR = HTTPTextFormat()
-
 
 
         def get_header_from_flask_request(request, key):
@@ -48,15 +50,17 @@ class HTTPTextFormat(abc.ABC):
             request.headers[key] = value
 
         def example_route():
-            span_context = PROPAGATOR.extract(
-                get_header_from_flask_request,
+            span = tracer().create_span("")
+            context = UnifiedContext.create(span)
+            PROPAGATOR.extract(
+                context, get_header_from_flask_request,
                 flask.request
             )
             request_to_downstream = requests.Request(
                 "GET", "http://httpbin.org/get"
             )
             PROPAGATOR.inject(
-                span_context,
+                context,
                 set_header_into_requests_request,
                 request_to_downstream
             )
@@ -70,15 +74,20 @@ class HTTPTextFormat(abc.ABC):
 
     @abc.abstractmethod
     def extract(
-        self, get_from_carrier: Getter, carrier: object
-    ) -> SpanContext:
-        """Create a SpanContext from values in the carrier.
+        self,
+        context: UnifiedContext,
+        get_from_carrier: Getter,
+        carrier: object,
+    ) -> None:
+        """Extract values from the carrier into the context.
 
         The extract function should retrieve values from the carrier
-        object using get_from_carrier, and use values to populate a
-        SpanContext value and return it.
+        object using get_from_carrier, and use values to populate
+        attributes of the UnifiedContext passed in.
 
         Args:
+            context: A UnifiedContext instance that will be
+                populated with values from the carrier.
             get_from_carrier: a function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.

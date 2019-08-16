@@ -32,7 +32,7 @@ class B3Format(HTTPTextFormat):
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
     @classmethod
-    def extract(cls, get_from_carrier, carrier):
+    def extract(cls, context, get_from_carrier, carrier):
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
         span_id = format_span_id(trace.INVALID_SPAN_ID)
         sampled = 0
@@ -57,7 +57,7 @@ class B3Format(HTTPTextFormat):
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _parent_span_id = fields
             else:
-                return trace.INVALID_SPAN_CONTEXT
+                return
         else:
             trace_id = (
                 _extract_first_element(
@@ -92,7 +92,7 @@ class B3Format(HTTPTextFormat):
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceOptions.RECORDED
 
-        return trace.SpanContext(
+        context.span = trace.SpanContext(
             # trace an span ids are encoded in hex, so must be converted
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),

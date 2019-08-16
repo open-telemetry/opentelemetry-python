@@ -11,15 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 """
 The OpenTelemetry context module provides abstraction layer on top of
 thread-local storage and contextvars. The long term direction is to switch to
 contextvars provided by the Python runtime library.
 
 A global object ``Context`` is provided to access all the context related
-functionalities::
+functionalities:
 
     >>> from opentelemetry.context import Context
     >>> Context.foo = 1
@@ -27,9 +25,8 @@ functionalities::
     >>> Context.foo
     2
 
-When explicit thread is used, a helper function
-``Context.with_current_context`` can be used to carry the context across
-threads::
+When explicit thread is used, a helper function `Context.with_current_context`
+can be used to carry the context across threads:
 
     from threading import Thread
     from opentelemetry.context import Context
@@ -62,7 +59,7 @@ threads::
 
         print('Main thread:', Context)
 
-Here goes another example using thread pool::
+Here goes another example using thread pool:
 
     import time
     import threading
@@ -97,7 +94,7 @@ Here goes another example using thread pool::
         pool.join()
         println('Main thread: {}'.format(Context))
 
-Here goes a simple demo of how async could work in Python 3.7+::
+Here goes a simple demo of how async could work in Python 3.7+:
 
     import asyncio
 
@@ -141,9 +138,9 @@ Here goes a simple demo of how async could work in Python 3.7+::
 import typing
 
 from .base_context import BaseRuntimeContext
+from .unified_context import UnifiedContext
 
-__all__ = ["Context"]
-
+__all__ = ["Context", "UnifiedContext"]
 
 Context = None  # type: typing.Optional[BaseRuntimeContext]
 
