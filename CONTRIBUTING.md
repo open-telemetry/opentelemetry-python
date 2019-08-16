@@ -8,16 +8,61 @@ See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-i
 for a summary description of past meetings. To request edit access, join the
 meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
 
-## Running Tests
+## Pull Request
 
-Execute tests as well as the linting process with tox:
+### How to send PR
 
-    pip install --user tox
-    tox  # execute in the root of the repository
+* Everyone can send PR.
+* You need to fork the project in GitHub.
 
-## Testing
+Clone the upstream repo:
 
-The standard Python unittest module is used to author unit tests.
+```sh
+$ git clone https://https://github.com/open-telemetry/opentelemetry-python.git
+```
+
+Add your fork as an origin:
+
+```sh
+$ git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python.git
+```
+
+Run tests:
+
+```sh
+# make sure you have all supported versions of Python installed
+$ pip install tox  # only first time.
+$ tox  # execute in the root of the repository
+```
+
+Checkout a new branch, make modifications and push the branch to your fork:
+
+```sh
+$ git checkout -b feature
+# edit files
+$ git commit
+$ git push fork feature
+```
+
+Open a pull request against the main opentelemetry-python repo.
+
+### How to Receive Comments
+
+* If the PR is not ready for review, please put "[WIP]" in the title, or tag it
+  as "work-in-progress", or mark it as "draft".
+* Make sure CLA is signed and CI is clear.
+
+### How to Get PR Merged
+
+A PR is considered as **ready for merge** when:
+* It got two approvals from Collaborators/Maintainers (at different companies).
+* Major feedbacks should be resolved.
+* The PR should stay at least one working day before getting merged, this
+  gives people reasonable time to review.
+* Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
+* Urgent fix can take exception as long as it is been actively communicated.
+
+Any Collaborator/Maintainer can merge the PR once it is **ready for merge**.
 
 ## Design Choices
 
@@ -45,25 +90,24 @@ For a deeper discussion, see: https://github.com/open-telemetry/opentelemetry-sp
 * docstrings should adhere to the Google styleguide as specified
   with the [napolean extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy) extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
 
-## PR Process
-
 ## Become a Collaborator
 
 Collaborators have write access to the repo.
 
 To become a Collaborator:
-1. Become an active Contributor by working on PRs.
-2. Actively participate in the community meeting, design discussion, PR review
+* Become an active Contributor by working on PRs.
+* Actively participate in the community meeting, design discussion, PR review
    and issue discussion.
-3. Contact the Maintainers, express the willingness and commitment.
-4. Ackownledged and approved by two Maintainers (at different companies).
+* Contact the Maintainers, express the willingness and commitment.
+* Ackownledged and approved by two Maintainers (at different companies).
 
 ## Become a Maintainer
 
 Maintainers have admin access to the repo.
 
 To become a Maintainer:
-1. Become a [member of OpenTelemetry organization](https://github.com/orgs/open-telemetry/people).
-2. Become a Collaborator.
-3. Demonstrate the ability and commitment.
-4. Ackownledged and approved by all the current Maintainers.
+* Become a [member of OpenTelemetry organization](https://github.com/orgs/open-telemetry/people).
+* Become a Collaborator.
+* Demonstrate the ability and commitment.
+* Contact the Maintainers, express the willingness and commitment.
+* Ackownledged and approved by all the current Maintainers.
