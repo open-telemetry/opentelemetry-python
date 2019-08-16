@@ -6,7 +6,7 @@ information on this and other language SIGs.
 
 See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
 for a summary description of past meetings. To request edit access join the
-meeting or get in touch on Gitter.
+meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
 
 ## Running Tests
 
