@@ -13,55 +13,56 @@
 # limitations under the License.
 
 from contextlib import contextmanager
-import string
+import contextvars
 import typing
 
+from opentelemetry import distributedcontext as dctx_api
 
-class EntryMetadata:
-    NO_PROPAGATION = 0
-    UNLIMITED_PROPAGATION = -1
-
-    def __init__(self, entry_ttl: int) -> None:
-        self.entry_ttl = entry_ttl
-
-
-class EntryKey(str):
-    def __new__(cls, value):
-        if any(c not in string.printable for c in value) or len(value) > 255:
-            raise ValueError("Invalid EntryKey", value)
-        return str.__new__(cls, value)
+_CURRENT_DISTRIBUTEDCONTEXT_CV = contextvars.ContextVar(
+    'distributed_context',
+    default=None,
+)
 
 
-class EntryValue(str):
-    def __new__(cls, value):
-        if any(c not in string.printable for c in value):
-            raise ValueError("Invalid EntryValue", value)
-        return str.__new__(cls, value)
+class EntryMetadata(dctx_api.EntryMetadata):
+    pass
 
 
-class Entry:
-    def __init__(
-        self, metadata: EntryMetadata, key: EntryKey, value: EntryValue
-    ) -> None:
-        self.metadata = metadata
-        self.key = key
-        self.value = value
+class EntryKey(dctx_api.EntryKey):
+    pass
 
 
-class DistributedContext:
+class EntryValue(dctx_api.EntryValue):
+    pass
+
+
+class Entry(dctx_api.Entry):
+    pass
+
+
+class DistributedContext(dict, dctx_api.DistributedContext):
     def get_entries(self) -> typing.Iterable[Entry]:
-        pass
+        return self.values()
 
     def get_entry_value(self, key: EntryKey) -> typing.Optional[EntryValue]:
-        pass
+        return self.get(key)
 
 
-class DistributedContextManager:
+class DistributedContextManager(dctx_api.DistributedContextManager):
+    def __init__(self,
+                 cv: 'contextvars.ContextVar' = _CURRENT_DISTRIBUTEDCONTEXT_CV,
+                 ) -> None:
+        self._cv = cv
+
     def get_current_context(self) -> typing.Optional[DistributedContext]:
-        pass
+        return self._cv.get(default=None)
 
     @contextmanager
     def use_context(
         self, context: DistributedContext
     ) -> typing.Iterator[DistributedContext]:
-        yield context
+        token = self._cv.set(context)
+        try:
+            yield context
+        finally:
+            self._cv.reset(token)
