@@ -27,7 +27,7 @@ class EntryMetadata:
 
 class EntryKey(str):
     def __new__(cls, value):
-        if any(c not in string.printable for c in value) or len(value) > 255:
+        if len(value) > 255 or any(c not in string.printable for c in value):
             raise ValueError("Invalid EntryKey", value)
         return str.__new__(cls, value)
 
