@@ -90,12 +90,9 @@ class OpenTelemetryMiddleware:
         """
 
         tracer = trace.tracer()
-        method = environ["REQUEST_METHOD"]
-        path = environ["PATH_INFO"]
+        path_info = environ["PATH_INFO"] or "/"
 
-        span_name = "[{}]{}".format(method, path)
-
-        with tracer.start_span(span_name) as span:
+        with tracer.start_span(path_info) as span:
             self._add_request_attributes(span, environ)
             start_response = self._create_start_response(span, start_response)
 

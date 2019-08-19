@@ -118,7 +118,7 @@ class TestWsgiApplication(unittest.TestCase):
             self.assertIsNone(self.exc_info)
 
         # Verify that start_span has been called
-        self.start_span.assert_called_once_with("[GET]/")
+        self.start_span.assert_called_once_with("/")
 
     def test_basic_wsgi_call(self):
         app = OpenTelemetryMiddleware(simple_wsgi)
