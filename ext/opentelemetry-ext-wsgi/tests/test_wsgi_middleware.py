@@ -25,12 +25,16 @@ from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 class Response:
     def __init__(self):
         self.iter = iter([b"*"])
+        self.close_calls = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
         return next(self.iter)
+
+    def close(self):
+        self.close_calls += 1
 
 
 def simple_wsgi(environ, start_response):
@@ -39,10 +43,12 @@ def simple_wsgi(environ, start_response):
     return [b"*"]
 
 
-def iter_wsgi(environ, start_response):
-    assert isinstance(environ, dict)
-    start_response("200 OK", [("Content-Type", "text/plain")])
-    return Response()
+def create_iter_wsgi(response):
+    def iter_wsgi(environ, start_response):
+        assert isinstance(environ, dict)
+        start_response("200 OK", [("Content-Type", "text/plain")])
+        return response
+    return iter_wsgi
 
 
 def error_wsgi(environ, start_response):
@@ -126,11 +132,16 @@ class TestWsgiApplication(unittest.TestCase):
         self.validate_response(response)
 
     def test_wsgi_iterable(self):
+        original_response = Response()
+        iter_wsgi = create_iter_wsgi(original_response)
         app = OpenTelemetryMiddleware(iter_wsgi)
         response = app(self.environ, self.start_response)
         # Verify that start_response has not been called yet
         self.assertIsNone(self.status)
         self.validate_response(response)
+
+        # Verify that close has been called exactly once
+        assert original_response.close_calls == 1
 
     def test_wsgi_exc_info(self):
         app = OpenTelemetryMiddleware(error_wsgi)

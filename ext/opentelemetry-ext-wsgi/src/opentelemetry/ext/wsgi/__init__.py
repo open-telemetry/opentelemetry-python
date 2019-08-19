@@ -96,5 +96,10 @@ class OpenTelemetryMiddleware:
             self._add_request_attributes(span, environ)
             start_response = self._create_start_response(span, start_response)
 
-            for yielded in self.wsgi(environ, start_response):
-                yield yielded
+            iterable = self.wsgi(environ, start_response)
+            try:
+                for yielded in iterable:
+                    yield yielded
+            finally:
+                if hasattr(iterable, 'close'):
+                    iterable.close()
