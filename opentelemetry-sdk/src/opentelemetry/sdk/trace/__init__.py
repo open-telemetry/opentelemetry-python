@@ -17,13 +17,13 @@ from collections import OrderedDict
 from collections import deque
 from collections import namedtuple
 from contextlib import contextmanager
-import contextvars
 import random
 import threading
 import typing
 
 from opentelemetry import trace as trace_api
 from opentelemetry import types
+from opentelemetry.context import Context
 from opentelemetry.sdk import util
 
 try:
@@ -34,9 +34,6 @@ except ImportError:
     # pylint: disable=no-name-in-module,ungrouped-imports
     from collections import MutableMapping
     from collections import Sequence
-
-
-_CURRENT_SPAN_CV = contextvars.ContextVar('current_span', default=None)
 
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
@@ -287,21 +284,20 @@ class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
     Args:
-        cv: The context variable that holds the current span.
+        name: The name of the tracer.
     """
 
     def __init__(self,
-                 cv: 'contextvars.ContextVar' = _CURRENT_SPAN_CV
+                 name: str = ''
                  ) -> None:
-        self._cv = cv
-        try:
-            self._cv.get()
-        except LookupError:
-            self._cv.set(None)
+        slot_name = 'current_span'
+        if name:
+            slot_name = '{}.current_span'.format(name)
+        self._current_span_slot = Context.register_slot(slot_name)
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return self._cv.get()
+        return self._current_span_slot.get()
 
     @contextmanager
     def start_span(self,
@@ -341,11 +337,12 @@ class Tracer(trace_api.Tracer):
     def use_span(self, span: 'Span') -> typing.Iterator['Span']:
         """See `opentelemetry.trace.Tracer.use_span`."""
         span.start()
-        token = self._cv.set(span)
+        span_snapshot = self._current_span_slot.get()
+        self._current_span_slot.set(span)
         try:
             yield span
         finally:
-            self._cv.reset(token)
+            self._current_span_slot.set(span_snapshot)
             span.end()
 
 
