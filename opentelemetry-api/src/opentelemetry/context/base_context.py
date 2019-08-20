@@ -64,11 +64,9 @@ class BaseRuntimeContext:
         :returns: The registered slot.
         """
         with cls._lock:
-            if name in cls._slots:
-                raise ValueError('slot {} already registered'.format(name))
-            slot = cls.Slot(name, default)
-            cls._slots[name] = slot
-            return slot
+            if name not in cls._slots:
+                cls._slots[name] = cls.Slot(name, default)
+            return cls._slots[name]
 
     def apply(self, snapshot: typing.Dict[str, 'object']) -> None:
         """Set the current context from a given snapshot dictionary"""
@@ -96,6 +94,12 @@ class BaseRuntimeContext:
             self.register_slot(name, None)
         slot = self._slots[name]
         slot.set(value)
+
+    def __getitem__(self, name: str) -> 'object':
+        return self.__getattr__(name)
+
+    def __setitem__(self, name: str, value: 'object') -> None:
+        self.__setattr__(name, value)
 
     def with_current_context(
             self,
