@@ -17,26 +17,39 @@ import string
 import typing
 
 
-class EntryMetadata:
+PRINTABLE = set(string.printable)
+
+
+class EntryMetadata(dict):
     NO_PROPAGATION = 0
     UNLIMITED_PROPAGATION = -1
 
     def __init__(self, entry_ttl: int) -> None:
         self.entry_ttl = entry_ttl
 
+    def __getattr__(self, key: str) -> "object":
+        return self[key]
 
-class EntryKey(str):
-    def __new__(cls, value):
-        if len(value) > 255 or any(c not in string.printable for c in value):
+    def __setattr__(self, key: str, value: "object") -> None:
+        self[key] = value
+
+
+class EntryKey:
+    @staticmethod
+    def create(value):
+        if len(value) > 255 or any(c not in PRINTABLE for c in value):
             raise ValueError("Invalid EntryKey", value)
-        return str.__new__(cls, value)
+
+        return typing.cast(EntryKey, value)
 
 
-class EntryValue(str):
-    def __new__(cls, value):
-        if any(c not in string.printable for c in value):
+class EntryValue:
+    @staticmethod
+    def create(value):
+        if any(c not in PRINTABLE for c in value):
             raise ValueError("Invalid EntryValue", value)
-        return str.__new__(cls, value)
+
+        return typing.cast(EntryValue, value)
 
 
 class Entry:
