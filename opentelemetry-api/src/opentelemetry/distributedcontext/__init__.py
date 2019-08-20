@@ -43,8 +43,11 @@ class EntryMetadata(dict):
         self[key] = value
 
 
-class EntryKey:
+class EntryKey(str):
     """A class representing a key for a DistributedContext entry"""
+
+    def __new__(cls, value: str):
+        return cls.create(value)
 
     @staticmethod
     def create(value: str) -> "EntryKey":
@@ -54,8 +57,11 @@ class EntryKey:
         return typing.cast(EntryKey, value)
 
 
-class EntryValue:
+class EntryValue(str):
     """A class representing the value of a DistributedContext entry"""
+
+    def __new__(cls, value: str):
+        return cls.create(value)
 
     @staticmethod
     def create(value: str) -> "EntryValue":
