@@ -22,14 +22,14 @@ class TestRequestsIntegration(unittest.TestCase):
             self.span_attrs[key] = value
 
         self.span.set_attribute = setspanattr
-        patcher = mock.patch.object(
+        self.patcher = mock.patch.object(
             self.tracer,
             "start_span",
             autospec=True,
             spec_set=True,
             return_value=self.span_context_manager
         )
-        self.start_span = patcher.start()
+        self.start_span = self.patcher.start()
 
         mocked_response = mock.MagicMock()
         mocked_response.status_code = 200
@@ -38,6 +38,9 @@ class TestRequestsIntegration(unittest.TestCase):
             requests.Session, "send", autospec=True, spec_set=True,
             return_value=mocked_response)
         self.send = send.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_basic(self):
         try:
