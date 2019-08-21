@@ -112,7 +112,7 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIsNotNone(child.end_time)
 
     def test_span_members(self):
-        tracer = trace.Tracer()
+        tracer = trace.Tracer('test_span_members')
 
         other_context1 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
