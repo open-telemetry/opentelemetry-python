@@ -34,7 +34,7 @@ class EntryMetadata(dict):
     UNLIMITED_PROPAGATION = -1
 
     def __init__(self, entry_ttl: int) -> None:
-        self.entry_ttl = entry_ttl
+        super().__init__(entry_ttl=entry_ttl)
 
     def __getattr__(self, key: str) -> "object":
         return self[key]
