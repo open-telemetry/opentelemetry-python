@@ -9,10 +9,10 @@ Usage
 .. code-block:: python
 
     import requests
-    from opentelemetry.ext.requests import enable as enable_requests_integration
+    import opentelemetry.ext.http_requests
     from opentelemetry.trace import tracer
 
-    enable_requests_integration(tracer())
+    enable_requests_integration.enable(tracer())
     response = requests.get(url='https://www.example.org/')
 
 Limitations
