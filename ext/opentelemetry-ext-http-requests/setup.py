@@ -20,7 +20,7 @@ VERSION_FILENAME = os.path.join(
     "src",
     "opentelemetry",
     "ext",
-    "requests",
+    "http_requests",
     "version.py",
 )
 PACKAGE_INFO = {}

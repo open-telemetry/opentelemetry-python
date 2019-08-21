@@ -41,8 +41,7 @@ def enable(tracer):
     # https://github.com/psf/requests/commit/4e5c4a6ab7bb0195dececdd19bb8505b872fe120)
 
     # Guard against double instrumentation
-    if getattr(Session.request, "opentelemetry_ext_requests_applied", False):
-        Session.request = Session.request.__wrapped__
+    disable()
 
     wrapped = Session.request
 
@@ -67,7 +66,7 @@ def enable(tracer):
             # TODO: The OTel spec says "SpanKind" MUST be "Client" but that
             #  seems to be a leftover, as Spans have no explicit "Client"
             #  field.
-            span.set_attribute("http.method", method)
+            span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
@@ -88,3 +87,13 @@ def enable(tracer):
     # but to avoid doubled spans, we would need some context-local
     # state (i.e., only create a Span if the current context's URL is
     # different, then push the current URL, pop it afterwards)
+
+
+def disable():
+    """Disables instrumentation of :code:`requests` through this module.
+
+    Note that this only works if no other module also patches requests."""
+
+    if getattr(Session.request, "opentelemetry_ext_requests_applied", False):
+        original = Session.request.__wrapped__  # pylint:disable=no-member
+        Session.request = original
