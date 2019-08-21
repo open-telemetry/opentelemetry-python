@@ -21,7 +21,7 @@ import typing
 PRINTABLE = set(string.printable)
 
 
-class EntryMetadata(dict):
+class EntryMetadata:
     """A class representing metadata of a DistributedContext entry
 
     Args:
@@ -34,13 +34,7 @@ class EntryMetadata(dict):
     UNLIMITED_PROPAGATION = -1
 
     def __init__(self, entry_ttl: int) -> None:
-        super().__init__(entry_ttl=entry_ttl)
-
-    def __getattr__(self, key: str) -> "object":
-        return self[key]
-
-    def __setattr__(self, key: str, value: "object") -> None:
-        self[key] = value
+        self.entry_ttl = entry_ttl
 
 
 class EntryKey(str):
