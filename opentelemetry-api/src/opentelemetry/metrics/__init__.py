@@ -156,7 +156,7 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            aggregation: The type of aggregation to use for this measure metric.
+            aggregation: The type of aggregation to use for this metric.
             span_context: The `SpanContext` that identifies the `Span`
                 that the metric is associated with.
 
@@ -181,7 +181,7 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            aggregation: The type of aggregation to use for this measure metric.
+            aggregation: The type of aggregation to use for this metric.
             span_context: The `SpanContext` that identifies the `Span`
                 that the metric is associated with.
 
@@ -304,7 +304,7 @@ class MeasureInt(Metric):
 
 class MeasureBatch:
 
-    def record(self, metric_pairs):
+    def record(self, metric_pairs) -> None:
         """Records multiple observed values simultaneously.
 
         Args:
