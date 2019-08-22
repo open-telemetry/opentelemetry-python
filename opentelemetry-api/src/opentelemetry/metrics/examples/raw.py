@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: skip-file
 from opentelemetry.metrics import LabelKey
 from opentelemetry.metrics import LabelValue
 from opentelemetry.metrics import Meter
@@ -19,25 +20,25 @@ from opentelemetry.metrics import MeasureBatch
 from opentelemetry.metrics.aggregation import LastValueAggregation
 
 METER = Meter()
-# LABEL_KEYS = [LabelKey("environment",
-#                        "the environment the application is running in")]
-# MEASURE = METER.create_float_measure("idle_cpu_percentage",
-#                                      "cpu idle over time",
-#                                      "percentage",
-#                                      LABEL_KEYS,
-#                                      LastValueAggregation)
-# LABEL_VALUE_TESTING = [LabelValue("Testing")]
-# LABEL_VALUE_STAGING = [LabelValue("Staging")]
+LABEL_KEYS = [LabelKey("environment",
+                       "the environment the application is running in")]
+MEASURE = METER.create_float_measure("idle_cpu_percentage",
+                                     "cpu idle over time",
+                                     "percentage",
+                                     LABEL_KEYS,
+                                     LastValueAggregation)
+LABEL_VALUE_TESTING = [LabelValue("Testing")]
+LABEL_VALUE_STAGING = [LabelValue("Staging")]
 
-# # Metrics sent to some exporter
-# MEASURE_METRIC_TESTING = MEASURE.get_or_create_time_series(LABEL_VALUE_TESTING)
-# MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series(LABEL_VALUE_STAGING)
+# Metrics sent to some exporter
+MEASURE_METRIC_TESTING = MEASURE.get_or_create_time_series(LABEL_VALUE_TESTING)
+MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series(LABEL_VALUE_STAGING)
 
-# # record individual measures
-# STATISTIC = 100
-# MEASURE_METRIC_STAGING.record(STATISTIC)
+# record individual measures
+STATISTIC = 100
+MEASURE_METRIC_STAGING.record(STATISTIC)
 
-# # record multiple observed values
-# BATCH = MeasureBatch()
-# BATCH.record([(MEASURE_METRIC_TESTING, STATISTIC), \
-#     (MEASURE_METRIC_STAGING, STATISTIC)])
+# record multiple observed values
+BATCH = MeasureBatch()
+BATCH.record([(MEASURE_METRIC_TESTING, STATISTIC), \
+    (MEASURE_METRIC_STAGING, STATISTIC)])
