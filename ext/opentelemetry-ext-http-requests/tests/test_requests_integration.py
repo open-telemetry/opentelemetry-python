@@ -60,3 +60,17 @@ class TestRequestsIntegration(unittest.TestCase):
             "http.status_code": 200,
             "http.status_text": "Roger that!"
         })
+
+    def test_invalid_url(self):
+        url = "http://[::1/nope"
+        with self.assertRaises(requests.exceptions.InvalidURL):
+            _response = requests.post(url=url)
+        self.assertTrue(self.tracer.start_span.call_args[0][0].startswith(
+            "<Unparsable URL"), msg=self.tracer.start_span.call_args)
+        self.span_context_manager.__enter__.assert_called()
+        self.span_context_manager.__exit__.assert_called()
+        self.assertEqual(self.span_attrs, {
+            "component": "http",
+            "http.method": "POST",
+            "http.url": url,
+        })
