@@ -69,6 +69,9 @@ def enable(tracer):
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
+            # TODO: Propagate the trace context via headers once we have a way
+            # to access propagators.
+
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)
