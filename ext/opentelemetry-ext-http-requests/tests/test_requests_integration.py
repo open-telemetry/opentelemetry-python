@@ -31,7 +31,7 @@ class TestRequestsIntegration(unittest.TestCase):
         )
         self.start_span = self.patcher.start()
 
-        mocked_response = mock.MagicMock()
+        mocked_response = requests.models.Response()
         mocked_response.status_code = 200
         mocked_response.reason = "Roger that!"
         send = mock.patch.object(
