@@ -42,6 +42,8 @@ setuptools.setup(
     include_package_data=True,
     long_description=open("README.rst").read(),
     install_requires=[
+        # contextvars backport
+        "contextvars; python_version>='3.5' and python_version<'3.7'",
         "typing; python_version<'3.5'",
     ],
     extras_require={},
