@@ -18,18 +18,18 @@ from opentelemetry.metrics import LabelValue
 from opentelemetry.metrics import Meter
 
 METER = Meter()
-LABEL_KEYS = [LabelKey("environment",
-                       "the environment the application is running in")]
-COUNTER = METER.create_int_counter("sum numbers",  # pragma: no cover
-                                   "sum numbers over time",
-                                   "number",
-                                   LABEL_KEYS)
-LABEL_VALUE_TESTING = [LabelValue("Testing")]
-LABEL_VALUE_STAGING = [LabelValue("Staging")]
+# LABEL_KEYS = [LabelKey("environment",
+#                        "the environment the application is running in")]
+# COUNTER = METER.create_int_counter("sum numbers",  # pragma: no cover
+#                                    "sum numbers over time",
+#                                    "number",
+#                                    LABEL_KEYS)
+# LABEL_VALUE_TESTING = [LabelValue("Testing")]
+# LABEL_VALUE_STAGING = [LabelValue("Staging")]
 
-# Metrics sent to some exporter
-COUNTER_METRIC_TESTING = COUNTER.get_or_create_time_series(LABEL_VALUE_TESTING)
-COUNTER_METRIC_STAGING = COUNTER.get_or_create_time_series(LABEL_VALUE_STAGING)
+# # Metrics sent to some exporter
+# COUNTER_METRIC_TESTING = COUNTER.get_or_create_time_series(LABEL_VALUE_TESTING)
+# COUNTER_METRIC_STAGING = COUNTER.get_or_create_time_series(LABEL_VALUE_STAGING)
 
-for i in range(100):
-    COUNTER_METRIC_STAGING.add(i)
+# for i in range(100):
+#     COUNTER_METRIC_STAGING.add(i)
