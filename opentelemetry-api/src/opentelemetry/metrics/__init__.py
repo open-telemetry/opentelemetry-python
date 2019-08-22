@@ -28,7 +28,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from opentelemetry.metrics.aggregation import Aggregation
 from opentelemetry.metrics.time_series import CounterTimeSeries
@@ -304,12 +304,14 @@ class MeasureInt(Metric):
 
 class MeasureBatch:
 
-    def record(self, metric_pairs: List[Tuple]) -> None:
+    def record(self, 
+               metrics: List['Metric'],
+               values: List[Union[float, int]]) -> None:
         """Records multiple observed values simultaneously.
 
         Args:
-            metric_pairs: A list of tuples containing the `Metric` and value
-                to be recorded.
+            metric: A list containing the `Metric` s to be recorded
+            values: A list containing the values to record
         """
 
 
