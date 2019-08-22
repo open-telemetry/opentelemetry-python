@@ -55,24 +55,24 @@ def enable(tracer):
         try:
             parsed_url = urlparse(url)
         except ValueError as exc:  # Invalid URL
-            path = '<Unparsable URL: {}>'.format(exc)
+            path = "<Unparsable URL: {}>".format(exc)
         else:
             if parsed_url is None:
-                path = '<URL parses to None>'
+                path = "<URL parses to None>"
             path = parsed_url.path
 
         with tracer.start_span(path) as span:
             span.set_attribute("component", "http")
             # TODO: The OTel spec says "SpanKind" MUST be "Client" but that
-            #  seems to be a leftover, as Spans have no explicit "Client"
-            #  field.
+            #  seems to be a leftover, as Spans have no explicit field for
+            #  kind.
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
-            span.set_attribute('http.status_code', result.status_code)
-            span.set_attribute('http.status_text', result.reason)
+            span.set_attribute("http.status_code", result.status_code)
+            span.set_attribute("http.status_text", result.reason)
 
             return result
 

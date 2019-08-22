@@ -49,7 +49,7 @@ class TestRequestsIntegration(unittest.TestCase):
             url = "https://www.example.org/foo/bar?x=y#top"
             _response = requests.get(url=url)
             self.send.assert_called()
-            self.tracer.start_span.assert_called_with('/foo/bar')
+            self.tracer.start_span.assert_called_with("/foo/bar")
             self.span_context_manager.__enter__.assert_called()
             self.span_context_manager.__exit__.assert_called()
             self.assertEqual(self.span_attrs, {
