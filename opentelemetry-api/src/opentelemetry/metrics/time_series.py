@@ -40,4 +40,3 @@ class MeasureTimeSeries:
 
         Logic depends on type of aggregation used for this measure.
         """
-   

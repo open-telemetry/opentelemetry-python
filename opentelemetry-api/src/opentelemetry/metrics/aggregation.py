@@ -12,18 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#TODO
+
 class Aggregation:
     """The base class for all aggregation types."""
+
 
 class CountAggregation(Aggregation):
     """An aggregation representing a count of values."""
 
+
 class DistributonAggregation(Aggregation):
     """An aggregation representing a distribution."""
 
+
 class LastValueAggregation(Aggregation):
     """An aggregation representing the last value."""
+
 
 class SumAggregation(Aggregation):
     """An aggregation representing a sum of values."""
