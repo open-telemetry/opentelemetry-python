@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import threading
-import typing
+import typing  # pylint: disable=unused-import
 
 from . import base_context
 
@@ -25,15 +25,16 @@ class ThreadLocalRuntimeContext(base_context.BaseRuntimeContext):
         def __init__(self, name: str, default: 'object'):
             # pylint: disable=super-init-not-called
             self.name = name
-            self.default: typing.Callable[..., object]
-            self.default = base_context.wrap_callable(default)
+            self.default = base_context.wrap_callable(
+                default
+            )  # type: typing.Callable[..., object]
 
         def clear(self) -> None:
             setattr(self._thread_local, self.name, self.default())
 
         def get(self) -> 'object':
             try:
-                got: object = getattr(self._thread_local, self.name)
+                got = getattr(self._thread_local, self.name)  # type: object
                 return got
             except AttributeError:
                 value = self.default()

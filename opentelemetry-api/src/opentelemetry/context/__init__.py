@@ -145,7 +145,9 @@ from .base_context import BaseRuntimeContext
 __all__ = ['Context']
 
 
-Context: typing.Optional[BaseRuntimeContext]
+Context = (  # pylint: disable=invalid-name
+    None
+)  # type: typing.Optional[BaseRuntimeContext]
 
 try:
     from .async_context import AsyncRuntimeContext
