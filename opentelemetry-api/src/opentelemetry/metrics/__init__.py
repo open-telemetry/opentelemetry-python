@@ -27,13 +27,16 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
+from typing import List
+from typing import Union
+
 from opentelemetry.metrics.aggregation import Aggregation
 from opentelemetry.metrics.time_series import CounterTimeSeries
 from opentelemetry.metrics.time_series import GaugeTimeSeries
 from opentelemetry.metrics.time_series import MeasureTimeSeries
 from opentelemetry.trace import SpanContext
-from typing import List, Union
 
 LabelKeys = List['LabelKey']
 LabelValues = List['LabelValue']
