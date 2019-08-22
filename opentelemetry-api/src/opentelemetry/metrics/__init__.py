@@ -304,7 +304,7 @@ class MeasureInt(Metric):
 
 class MeasureBatch:
 
-    def record(self, 
+    def record(self,
                metrics: List['Metric'],
                values: List[Union[float, int]]) -> None:
         """Records multiple observed values simultaneously.
