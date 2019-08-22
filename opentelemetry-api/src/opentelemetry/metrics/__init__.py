@@ -64,8 +64,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            span_context: The `SpanContext` that identified the `Span`
-                for which the metrics are associated with.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
         Returns: A new `CounterFloat`
         """
@@ -86,8 +86,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            span_context: The `SpanContext` that identified the `Span`
-                for which the metrics are associated with.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
         Returns:
             A new `CounterInt`
@@ -109,8 +109,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            span_context: The `SpanContext` that identified the `Span`
-                for which the metrics are associated with.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
         Returns:
             A new `GaugeFloat`
@@ -132,8 +132,8 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            span_context: The `SpanContext` that identified the `Span`
-                for which the metrics are associated with.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
         Returns:
             A new `GaugeInt`
@@ -157,8 +157,8 @@ class Meter:
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
             aggregation: The type of aggregation to use for this measure metric.
-            span_context: The `SpanContext` that identified the `Span`
-                for which the metrics are associated with.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
         Returns:
             A new `MeasureInt`
@@ -182,8 +182,8 @@ class Meter:
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
             aggregation: The type of aggregation to use for this measure metric.
-            span_context: The `SpanContext` that identified the `Span`
-                for which the metrics are associated with.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
         Returns:
             A new `MeasureFloat`
@@ -214,25 +214,6 @@ class Metric(ABC):
                 with the return timeseries.
         """
 
-    @abstractmethod
-    def get_default_time_series(self) -> 'object':
-        """Returns a timeseries, a container for a cumulative value.
-
-        The timeseries will have all its labels not set (default).
-        """
-
-    def set_call_back(self,
-                      updater_function: Callable[..., None]
-                      ) -> None:
-        """Sets a callback that gets executed every time prior to exporting.
-
-        This function MUST set the value of the `Metric` to the value that
-        that will be exported.
-
-        args:
-            updater_function: The callback function to execute.
-        """
-
     def remove_time_series(self,
                            label_values: LabelValues) -> None:
         """Removes the timeseries from the Metric, if present.
@@ -259,9 +240,6 @@ class CounterFloat(Metric):
                                   ) -> 'CounterTimeSeries':
         """Gets a `CounterTimeSeries` with a cumulative float value."""
 
-    def get_default_time_series(self) -> 'CounterTimeSeries':
-        """Returns a `CounterTimeSeries` with a cumulative float value."""
-
 
 class CounterInt(Metric):
     """A counter type metric that holds int values.
@@ -275,8 +253,6 @@ class CounterInt(Metric):
                                   ) -> 'CounterTimeSeries':
         """Gets a `CounterTimeSeries` with a cumulative int value."""
 
-    def get_default_time_series(self) -> 'CounterTimeSeries':
-        """Returns a `CounterTimeSeries` with a cumulative int value."""
 
 class GaugeFloat(Metric):
     """A gauge type metric that holds float values.
@@ -288,9 +264,6 @@ class GaugeFloat(Metric):
                                   label_values: LabelValues
                                   ) -> 'GaugeTimeSeries':
         """Gets a `GaugeTimeSeries` with a cumulative float value."""
-
-    def get_default_time_series(self) -> 'GaugeTimeSeries':
-        """Returns a `GaugeTimeSeries` with a cumulative float value."""
 
 
 class GaugeInt(Metric):
@@ -304,9 +277,6 @@ class GaugeInt(Metric):
                                   ) -> 'GaugeTimeSeries':
         """Gets a `GaugeTimeSeries` with a cumulative int value."""
 
-    def get_default_time_series(self) -> 'GaugeTimeSeries':
-        """Returns a `GaugeTimeSeries` with a cumulative int value."""
-
 
 class MeasureFloat(Metric):
     """A measure type metric that holds float values.
@@ -319,9 +289,6 @@ class MeasureFloat(Metric):
                                   ) -> 'MeasureTimeSeries':
         """Gets a `MeasureTimeSeries` with a cumulated float value."""
 
-    def get_default_time_series(self) -> 'MeasureTimeSeries':
-        """Returns a `MeasureTimeSeries` with a cumulated float value."""
-
 
 class MeasureInt(Metric):
     """A measure type metric that holds int values.
@@ -333,9 +300,6 @@ class MeasureInt(Metric):
                                   label_values: LabelValues
                                   ) -> 'MeasureTimeSeries':
         """Gets a `MeasureTimeSeries` with a cumulated int value."""
-
-    def get_default_time_series(self) -> 'MeasureTimeSeries':
-        """Returns a `MeasureTimeSeries` with a cumulated int value."""
 
 
 class MeasureBatch:
@@ -363,6 +327,7 @@ class LabelKey:
                  description: str) -> None:
         self.key = key
         self.description = description
+
 
 class LabelValue:
     """The label values associated with a TimeSeries.
