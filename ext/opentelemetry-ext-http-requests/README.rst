@@ -12,7 +12,7 @@ Usage
     import opentelemetry.ext.http_requests
     from opentelemetry.trace import tracer
 
-    enable_requests_integration.enable(tracer())
+    opentelemetry.ext.http_requests.enable(tracer())
     response = requests.get(url='https://www.example.org/')
 
 Limitations
