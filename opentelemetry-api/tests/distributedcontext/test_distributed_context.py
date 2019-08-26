@@ -71,6 +71,6 @@ class TestDistributedContextManager(unittest.TestCase):
         self.assertIsNone(self.manager.get_current_context())
 
     def test_use_context(self):
-        o = object()
-        with self.manager.use_context(o) as output:
-            self.assertIs(output, o)
+        expected = object()
+        with self.manager.use_context(expected) as output:
+            self.assertIs(output, expected)

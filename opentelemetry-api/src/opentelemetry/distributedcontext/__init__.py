@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
 from contextlib import contextmanager
+import abc
 import string
 import typing
-
 
 PRINTABLE = set(string.printable)
 
@@ -67,7 +66,10 @@ class EntryValue(str):
 
 class Entry:
     def __init__(
-        self, metadata: EntryMetadata, key: EntryKey, value: EntryValue
+            self,
+            metadata: EntryMetadata,
+            key: EntryKey,
+            value: EntryValue,
     ) -> None:
         self.metadata = metadata
         self.key = key
@@ -80,7 +82,6 @@ class DistributedContext(abc.ABC):
     @abc.abstractmethod
     def get_entries(self) -> typing.Iterable[Entry]:
         """Returns an immutable iterator to entries."""
-        pass
 
     @abc.abstractmethod
     def get_entry_value(self, key: EntryKey) -> typing.Optional[EntryValue]:
@@ -89,7 +90,6 @@ class DistributedContext(abc.ABC):
         Args:
             key: the key with which to perform a lookup
         """
-        pass
 
 
 class DistributedContextManager:
@@ -99,11 +99,11 @@ class DistributedContextManager:
         Returns:
             A DistributedContext instance representing the current context.
         """
-        pass
 
     @contextmanager
     def use_context(
-        self, context: DistributedContext
+            self,
+            context: DistributedContext,
     ) -> typing.Iterator[DistributedContext]:
         """Context manager for controlling a DistributedContext lifetime.
 
@@ -115,4 +115,5 @@ class DistributedContextManager:
         Args:
             context: A DistributedContext instance to make current.
         """
+        # pylint: disable=no-self-use
         yield context

@@ -15,8 +15,8 @@
 from contextlib import contextmanager
 import typing
 
-from opentelemetry.context import Context
 from opentelemetry import distributedcontext as dctx_api
+from opentelemetry.context import Context
 
 
 class DistributedContext(dict, dctx_api.DistributedContext):
@@ -27,7 +27,8 @@ class DistributedContext(dict, dctx_api.DistributedContext):
         return self.values()
 
     def get_entry_value(
-        self, key: dctx_api.EntryKey
+            self,
+            key: dctx_api.EntryKey
     ) -> typing.Optional[dctx_api.EntryValue]:
         """Returns the entry associated with a key or None
 
@@ -62,7 +63,8 @@ class DistributedContextManager(dctx_api.DistributedContextManager):
 
     @contextmanager
     def use_context(
-        self, context: DistributedContext
+            self,
+            context: DistributedContext,
     ) -> typing.Iterator[DistributedContext]:
         """Context manager for controlling a DistributedContext lifetime.
 
