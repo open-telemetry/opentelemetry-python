@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from contextvars import ContextVar
-import typing
+import typing  # pylint: disable=unused-import
 
 from . import base_context
 
@@ -23,9 +23,10 @@ class AsyncRuntimeContext(base_context.BaseRuntimeContext):
         def __init__(self, name: str, default: 'object'):
             # pylint: disable=super-init-not-called
             self.name = name
-            self.contextvar: 'ContextVar[object]' = ContextVar(name)
-            self.default: typing.Callable[..., object]
-            self.default = base_context.wrap_callable(default)
+            self.contextvar = ContextVar(name)  # type: ContextVar[object]
+            self.default = base_context.wrap_callable(
+                default
+            )  # type: typing.Callable[..., object]
 
         def clear(self) -> None:
             self.contextvar.set(self.default())

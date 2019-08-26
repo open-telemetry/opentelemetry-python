@@ -94,7 +94,7 @@ class TestWsgiApplication(unittest.TestCase):
 
     def start_response(self, status, response_headers, exc_info=None):
         # The span should have started already
-        self.span_context_manager.__enter__.assert_called()
+        self.span_context_manager.__enter__.assert_called_with()
 
         self.status = status
         self.response_headers = response_headers
@@ -108,7 +108,9 @@ class TestWsgiApplication(unittest.TestCase):
                 self.span_context_manager.__exit__.assert_not_called()
                 self.assertEqual(value, b"*")
             except StopIteration:
-                self.span_context_manager.__exit__.assert_called()
+                self.span_context_manager.__exit__.assert_called_with(
+                    None, None, None
+                )
                 break
 
         self.assertEqual(self.status, "200 OK")

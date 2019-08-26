@@ -37,7 +37,7 @@ class BaseRuntimeContext:
             raise NotImplementedError
 
     _lock = threading.Lock()
-    _slots: typing.Dict[str, 'BaseRuntimeContext.Slot'] = {}
+    _slots = {}  # type: typing.Dict[str, 'BaseRuntimeContext.Slot']
 
     @classmethod
     def clear(cls) -> None:
@@ -112,7 +112,7 @@ class BaseRuntimeContext:
 
         def call_with_current_context(
                 *args: 'object',
-                **kwargs: 'object',
+                **kwargs: 'object'
         ) -> 'object':
             try:
                 backup_context = self.snapshot()
