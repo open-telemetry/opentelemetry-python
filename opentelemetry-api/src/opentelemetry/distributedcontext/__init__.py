@@ -39,7 +39,7 @@ class EntryMetadata:
 class EntryKey(str):
     """A class representing a key for a DistributedContext entry"""
 
-    def __new__(cls, value: str):
+    def __new__(cls, value: str) -> "EntryKey":
         return cls.create(value)
 
     @staticmethod
@@ -53,7 +53,7 @@ class EntryKey(str):
 class EntryValue(str):
     """A class representing the value of a DistributedContext entry"""
 
-    def __new__(cls, value: str):
+    def __new__(cls, value: str) -> "EntryValue":
         return cls.create(value)
 
     @staticmethod
@@ -100,7 +100,7 @@ class DistributedContextManager:
             A DistributedContext instance representing the current context.
         """
 
-    @contextmanager
+    @contextmanager  # type: ignore
     def use_context(
             self,
             context: DistributedContext,
