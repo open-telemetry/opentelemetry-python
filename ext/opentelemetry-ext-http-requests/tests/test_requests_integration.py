@@ -49,10 +49,10 @@ class TestRequestsIntegration(unittest.TestCase):
     def test_basic(self):
         url = "https://www.example.org/foo/bar?x=y#top"
         _response = requests.get(url=url)
-        self.send.assert_called()
+        self.send.assert_called_with()
         self.tracer.start_span.assert_called_with("/foo/bar")
-        self.span_context_manager.__enter__.assert_called()
-        self.span_context_manager.__exit__.assert_called()
+        self.span_context_manager.__enter__.assert_called_with()
+        self.span_context_manager.__exit__.assert_called_with(None, None, None)
         self.assertEqual(self.span_attrs, {
             "component": "http",
             "http.method": "GET",
@@ -67,8 +67,8 @@ class TestRequestsIntegration(unittest.TestCase):
             _response = requests.post(url=url)
         self.assertTrue(self.tracer.start_span.call_args[0][0].startswith(
             "<Unparsable URL"), msg=self.tracer.start_span.call_args)
-        self.span_context_manager.__enter__.assert_called()
-        self.span_context_manager.__exit__.assert_called()
+        self.span_context_manager.__enter__.assert_called_with()
+        self.span_context_manager.__exit__.assert_called(None, None, None)
         self.assertEqual(self.span_attrs, {
             "component": "http",
             "http.method": "POST",
