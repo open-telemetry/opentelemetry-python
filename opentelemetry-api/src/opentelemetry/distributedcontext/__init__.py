@@ -14,10 +14,9 @@
 
 from contextlib import contextmanager
 import abc
-import string
 import typing
 
-PRINTABLE = set(string.printable)
+PRINTABLE = set(chr(num) for num in range(32, 127))
 
 
 class EntryMetadata:
