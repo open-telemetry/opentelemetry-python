@@ -72,8 +72,9 @@ class TestDistributedContext(unittest.TestCase):
             distributedcontext.EntryKey("key"),
             distributedcontext.EntryValue("value"),
         )
-        context = self.context = distributedcontext.DistributedContext()
-        context[entry.key] = entry
+        self.context = distributedcontext.DistributedContext((
+            entry,
+        ))
 
     def test_get_entries(self):
         self.assertIn(self.entry, self.context.get_entries())

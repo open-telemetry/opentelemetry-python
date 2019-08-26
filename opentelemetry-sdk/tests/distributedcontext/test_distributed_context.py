@@ -27,7 +27,7 @@ class TestDistributedContextManager(unittest.TestCase):
         self.assertIsNone(self.manager.get_current_context())
 
         # Start initial context
-        dctx = dctx_api.DistributedContext()
+        dctx = dctx_api.DistributedContext(())
         with self.manager.use_context(dctx) as current:
             self.assertIs(current, dctx)
             self.assertIs(
@@ -36,7 +36,7 @@ class TestDistributedContextManager(unittest.TestCase):
             )
 
             # Context is overridden
-            nested_dctx = dctx_api.DistributedContext()
+            nested_dctx = dctx_api.DistributedContext(())
             with self.manager.use_context(nested_dctx) as current:
                 self.assertIs(current, nested_dctx)
                 self.assertIs(

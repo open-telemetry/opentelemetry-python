@@ -74,23 +74,26 @@ class Entry:
         self.value = value
 
 
-class DistributedContext(dict):
+class DistributedContext:
     """A container for distributed context entries"""
+
+    def __init__(self, entries: typing.Iterable[Entry]) -> None:
+        self._container = {entry.key: entry for entry in entries}
 
     def get_entries(self) -> typing.Iterable[Entry]:
         """Returns an immutable iterator to entries."""
-        return self.values()
+        return self._container.values()
 
     def get_entry_value(
             self,
             key: EntryKey
-    ) -> typing.Optional[EntryValue]:
+    ) -> typing.Optional[Entry]:
         """Returns the entry associated with a key or None
 
         Args:
             key: the key with which to perform a lookup
         """
-        return self.get(key)
+        return self._container.get(key)
 
 
 class DistributedContextManager:
