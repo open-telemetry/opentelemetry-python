@@ -22,8 +22,8 @@ manages span creation. Each operation in a trace is represented by a
 the operation.
 
 This module provides abstract (i.e. unimplemented) classes required for
-tracing, and a concrete no-op ``BlankSpan`` that allows applications to use the
-API package alone without a supporting implementation.
+tracing, and a concrete no-op :class:`.DefaultSpan` that allows applications
+to use the API package alone without a supporting implementation.
 
 The tracer supports creating spans that are "attached" or "detached" from the
 context. By default, new spans are "attached" to the context in that they are
