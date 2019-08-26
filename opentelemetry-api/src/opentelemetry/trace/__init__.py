@@ -378,9 +378,15 @@ class Tracer:
         yield
 
 
-_TRACER: typing.Optional[Tracer] = None
-_TRACER_FACTORY: typing.Optional[
-    typing.Callable[[typing.Type[Tracer]], typing.Optional[Tracer]]] = None
+# Once https://github.com/python/mypy/issues/7092 is resolved,
+# the following type definition should be replaced with
+# from opentelemetry.loader import ImplementationFactory
+ImplementationFactory = typing.Callable[
+    [typing.Type[Tracer]], typing.Optional[Tracer]
+]
+
+_TRACER = None  # type: typing.Optional[Tracer]
+_TRACER_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
 def tracer() -> Tracer:
@@ -399,9 +405,8 @@ def tracer() -> Tracer:
 
 
 def set_preferred_tracer_implementation(
-        factory: typing.Callable[
-            [typing.Type[Tracer]], typing.Optional[Tracer]]
-        ) -> None:
+        factory: ImplementationFactory
+) -> None:
     """Set the factory to be used to create the tracer.
 
     See :mod:`opentelemetry.loader` for details.

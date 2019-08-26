@@ -83,7 +83,7 @@ _UntrustedImplFactory = Callable[[Type[_T]], Optional[object]]
 # code.
 # ImplementationFactory = Callable[[Type[_T]], Optional[_T]]
 
-_DEFAULT_FACTORY: Optional[_UntrustedImplFactory[object]] = None
+_DEFAULT_FACTORY = None  # type: Optional[_UntrustedImplFactory[object]]
 
 
 def _try_load_impl_from_modname(
