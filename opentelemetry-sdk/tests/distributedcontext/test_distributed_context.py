@@ -14,40 +14,8 @@
 
 import unittest
 
-
-from opentelemetry.distributedcontext import (
-    Entry,
-    EntryMetadata,
-    EntryKey,
-    EntryValue,
-)
-
+from opentelemetry import distributedcontext as dctx_api
 from opentelemetry.sdk import distributedcontext
-
-
-class TestDistributedContext(unittest.TestCase):
-    def setUp(self):
-        entry = self.entry = Entry(
-            EntryMetadata(EntryMetadata.NO_PROPAGATION),
-            EntryKey("key"),
-            EntryValue("value"),
-        )
-        context = self.context = distributedcontext.DistributedContext()
-        context[entry.key] = entry
-
-    def test_get_entries(self):
-        self.assertIn(self.entry, self.context.get_entries())
-
-    def test_get_entry_value_present(self):
-        value = self.context.get_entry_value(
-            self.entry.key,
-        )
-        self.assertIs(value, self.entry)
-
-    def test_get_entry_value_missing(self):
-        key = EntryKey("missing")
-        value = self.context.get_entry_value(key)
-        self.assertIsNone(value)
 
 
 class TestDistributedContextManager(unittest.TestCase):
@@ -59,7 +27,7 @@ class TestDistributedContextManager(unittest.TestCase):
         self.assertIsNone(self.manager.get_current_context())
 
         # Start initial context
-        dctx = distributedcontext.DistributedContext()
+        dctx = dctx_api.DistributedContext()
         with self.manager.use_context(dctx) as current:
             self.assertIs(current, dctx)
             self.assertIs(
@@ -68,7 +36,7 @@ class TestDistributedContextManager(unittest.TestCase):
             )
 
             # Context is overridden
-            nested_dctx = distributedcontext.DistributedContext()
+            nested_dctx = dctx_api.DistributedContext()
             with self.manager.use_context(nested_dctx) as current:
                 self.assertIs(current, nested_dctx)
                 self.assertIs(

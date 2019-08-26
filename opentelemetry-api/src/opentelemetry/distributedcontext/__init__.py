@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from contextlib import contextmanager
-import abc
 import typing
 
 PRINTABLE = set(chr(num) for num in range(32, 127))
@@ -75,20 +74,23 @@ class Entry:
         self.value = value
 
 
-class DistributedContext(abc.ABC):
+class DistributedContext(dict):
     """A container for distributed context entries"""
 
-    @abc.abstractmethod
     def get_entries(self) -> typing.Iterable[Entry]:
         """Returns an immutable iterator to entries."""
+        return self.values()
 
-    @abc.abstractmethod
-    def get_entry_value(self, key: EntryKey) -> typing.Optional[EntryValue]:
+    def get_entry_value(
+            self,
+            key: EntryKey
+    ) -> typing.Optional[EntryValue]:
         """Returns the entry associated with a key or None
 
         Args:
             key: the key with which to perform a lookup
         """
+        return self.get(key)
 
 
 class DistributedContextManager:

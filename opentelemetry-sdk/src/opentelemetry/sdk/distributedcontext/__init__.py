@@ -19,25 +19,6 @@ from opentelemetry import distributedcontext as dctx_api
 from opentelemetry.context import Context
 
 
-class DistributedContext(dict, dctx_api.DistributedContext):
-    """A container for distributed context entries"""
-
-    def get_entries(self) -> typing.Iterable[dctx_api.Entry]:
-        """Returns an immutable iterator to entries."""
-        return self.values()
-
-    def get_entry_value(
-            self,
-            key: dctx_api.EntryKey
-    ) -> typing.Optional[dctx_api.EntryValue]:
-        """Returns the entry associated with a key or None
-
-        Args:
-            key: the key with which to perform a lookup
-        """
-        return self.get(key)
-
-
 class DistributedContextManager(dctx_api.DistributedContextManager):
     """See `opentelemetry.distributedcontext.DistributedContextManager`
 
@@ -53,7 +34,9 @@ class DistributedContextManager(dctx_api.DistributedContextManager):
 
         self._current_context = Context.register_slot(slot_name)
 
-    def get_current_context(self) -> typing.Optional[DistributedContext]:
+    def get_current_context(
+            self,
+    ) -> typing.Optional[dctx_api.DistributedContext]:
         """Gets the current DistributedContext.
 
         Returns:
@@ -64,8 +47,8 @@ class DistributedContextManager(dctx_api.DistributedContextManager):
     @contextmanager
     def use_context(
             self,
-            context: DistributedContext,
-    ) -> typing.Iterator[DistributedContext]:
+            context: dctx_api.DistributedContext,
+    ) -> typing.Iterator[dctx_api.DistributedContext]:
         """Context manager for controlling a DistributedContext lifetime.
 
         Set the context as the active DistributedContext.

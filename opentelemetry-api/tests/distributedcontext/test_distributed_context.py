@@ -63,6 +63,33 @@ class TestEntryValue(unittest.TestCase):
         self.assertEqual(key, "ok")
 
 
+class TestDistributedContext(unittest.TestCase):
+    def setUp(self):
+        entry = self.entry = distributedcontext.Entry(
+            distributedcontext.EntryMetadata(
+                distributedcontext.EntryMetadata.NO_PROPAGATION,
+            ),
+            distributedcontext.EntryKey("key"),
+            distributedcontext.EntryValue("value"),
+        )
+        context = self.context = distributedcontext.DistributedContext()
+        context[entry.key] = entry
+
+    def test_get_entries(self):
+        self.assertIn(self.entry, self.context.get_entries())
+
+    def test_get_entry_value_present(self):
+        value = self.context.get_entry_value(
+            self.entry.key,
+        )
+        self.assertIs(value, self.entry)
+
+    def test_get_entry_value_missing(self):
+        key = distributedcontext.EntryKey("missing")
+        value = self.context.get_entry_value(key)
+        self.assertIsNone(value)
+
+
 class TestDistributedContextManager(unittest.TestCase):
     def setUp(self):
         self.manager = distributedcontext.DistributedContextManager()
