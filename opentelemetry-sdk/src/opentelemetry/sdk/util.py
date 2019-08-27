@@ -15,7 +15,7 @@
 import time
 
 try:
-    time_ns = time.time_ns  # pylint: disable=invalid-name
+    time_ns = time.time_ns
 # Python versions < 3.7
 except AttributeError:
     def time_ns():

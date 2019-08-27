@@ -346,4 +346,4 @@ class Tracer(trace_api.Tracer):
             span.end()
 
 
-tracer = Tracer()  # pylint: disable=invalid-name
+tracer = Tracer()
