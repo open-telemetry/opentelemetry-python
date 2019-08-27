@@ -49,6 +49,7 @@ class EntryKey(str):
 
     @staticmethod
     def create(value: str) -> "EntryKey":
+        # pylint: disable=len-as-condition
         if not 0 < len(value) <= 255 or any(c not in PRINTABLE for c in value):
             raise ValueError("Invalid EntryKey", value)
 
