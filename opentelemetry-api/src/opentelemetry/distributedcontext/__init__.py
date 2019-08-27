@@ -87,13 +87,14 @@ class DistributedContext:
     def get_entry_value(
             self,
             key: EntryKey
-    ) -> typing.Optional[Entry]:
+    ) -> typing.Optional[EntryValue]:
         """Returns the entry associated with a key or None
 
         Args:
             key: the key with which to perform a lookup
         """
-        return self._container.get(key)
+        if key in self._container:
+            return self._container[key].value
 
 
 class DistributedContextManager:

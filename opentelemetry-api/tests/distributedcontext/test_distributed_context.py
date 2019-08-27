@@ -83,7 +83,7 @@ class TestDistributedContext(unittest.TestCase):
         value = self.context.get_entry_value(
             self.entry.key,
         )
-        self.assertIs(value, self.entry)
+        self.assertIs(value, self.entry.value)
 
     def test_get_entry_value_missing(self):
         key = distributedcontext.EntryKey("missing")
