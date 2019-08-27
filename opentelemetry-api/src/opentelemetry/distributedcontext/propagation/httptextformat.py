@@ -38,8 +38,6 @@ class HTTPTextFormat(abc.ABC):
 
         PROPAGATOR = HTTPTextFormat()
 
-
-
         def get_header_from_flask_request(request, key):
             return request.headers.get_all(key)
 
