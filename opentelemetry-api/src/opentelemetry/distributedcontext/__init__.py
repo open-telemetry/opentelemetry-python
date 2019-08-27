@@ -95,6 +95,7 @@ class DistributedContext:
         """
         if key in self._container:
             return self._container[key].value
+        return None
 
 
 class DistributedContextManager:
