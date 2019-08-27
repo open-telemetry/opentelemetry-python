@@ -1,9 +1,13 @@
 import unittest
 from unittest import mock
+import sys
 
 import requests
+import urllib3
+
 import opentelemetry.ext.http_requests
 from opentelemetry import trace
+
 
 class TestRequestsIntegration(unittest.TestCase):
 
@@ -63,16 +67,21 @@ class TestRequestsIntegration(unittest.TestCase):
 
     def test_invalid_url(self):
         url = "http://[::1/nope"
-        with self.assertRaises(requests.exceptions.InvalidURL):
+        exception_type = requests.exceptions.InvalidURL
+        if (sys.version_info[:2] < (3, 5)
+                and tuple(map(
+                    int, urllib3.__version__.split('.')[:2])) < (1, 25)):
+            exception_type = ValueError
+
+        with self.assertRaises(exception_type):
             _response = requests.post(url=url)
         self.assertTrue(self.tracer.start_span.call_args[0][0].startswith(
             "<Unparsable URL"), msg=self.tracer.start_span.call_args)
         self.span_context_manager.__enter__.assert_called_with()
         exitspan = self.span_context_manager.__exit__
         self.assertEqual(1, len(exitspan.call_args_list))
-        self.assertIs(requests.exceptions.InvalidURL, exitspan.call_args[0][0])
-        self.assertIsInstance(
-            exitspan.call_args[0][1], requests.exceptions.InvalidURL)
+        self.assertIs(exception_type, exitspan.call_args[0][0])
+        self.assertIsInstance(exitspan.call_args[0][1], exception_type)
         self.assertEqual(self.span_attrs, {
             "component": "http",
             "http.method": "POST",
