@@ -145,6 +145,9 @@ class TestSpanCreation(unittest.TestCase):
             root.add_link(other_context1)
             root.add_link(other_context2, {'name': 'neighbor'})
 
+            root.update_name('toor')
+            self.assertEqual(root.name, 'toor')
+
             # The public API does not expose getters.
             # Checks by accessing the span members directly
 
