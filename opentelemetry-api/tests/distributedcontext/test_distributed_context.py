@@ -32,6 +32,10 @@ class TestEntryMetadata(unittest.TestCase):
 
 
 class TestEntryKey(unittest.TestCase):
+    def test_create_empty(self):
+        with self.assertRaises(ValueError):
+            distributedcontext.EntryKey.create("")
+
     def test_create_too_long(self):
         with self.assertRaises(ValueError):
             distributedcontext.EntryKey.create("a" * 256)

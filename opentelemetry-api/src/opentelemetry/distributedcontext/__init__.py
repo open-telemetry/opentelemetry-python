@@ -49,7 +49,7 @@ class EntryKey(str):
 
     @staticmethod
     def create(value: str) -> "EntryKey":
-        if len(value) > 255 or any(c not in PRINTABLE for c in value):
+        if not 0 < len(value) <= 255 or any(c not in PRINTABLE for c in value):
             raise ValueError("Invalid EntryKey", value)
 
         return typing.cast(EntryKey, value)
