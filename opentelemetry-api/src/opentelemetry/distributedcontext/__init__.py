@@ -15,7 +15,7 @@
 from contextlib import contextmanager
 import typing
 
-PRINTABLE = set(chr(num) for num in range(32, 127))
+PRINTABLE = frozenset(chr(num) for num in range(32, 127))
 
 
 class EntryMetadata:
