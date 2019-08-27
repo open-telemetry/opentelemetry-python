@@ -13,9 +13,16 @@
 # limitations under the License.
 
 from contextlib import contextmanager
+import itertools
+import string
 import typing
 
-PRINTABLE = frozenset(chr(num) for num in range(32, 127))
+PRINTABLE = frozenset(itertools.chain(
+    string.ascii_letters,
+    string.digits,
+    string.punctuation,
+    " ",
+))
 
 
 class EntryMetadata:
