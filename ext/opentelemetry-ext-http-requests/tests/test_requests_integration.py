@@ -49,7 +49,7 @@ class TestRequestsIntegration(unittest.TestCase):
     def test_basic(self):
         url = "https://www.example.org/foo/bar?x=y#top"
         _response = requests.get(url=url)
-        self.send.assert_called_with()
+        self.assertEqual(1, len(self.send.calls_args_list))
         self.tracer.start_span.assert_called_with("/foo/bar")
         self.span_context_manager.__enter__.assert_called_with()
         self.span_context_manager.__exit__.assert_called_with(None, None, None)
@@ -68,7 +68,7 @@ class TestRequestsIntegration(unittest.TestCase):
         self.assertTrue(self.tracer.start_span.call_args[0][0].startswith(
             "<Unparsable URL"), msg=self.tracer.start_span.call_args)
         self.span_context_manager.__enter__.assert_called_with()
-        self.span_context_manager.__exit__.assert_called(None, None, None)
+        self.span_context_manager.__exit__.assert_called_with(None, None, None)
         self.assertEqual(self.span_attrs, {
             "component": "http",
             "http.method": "POST",
