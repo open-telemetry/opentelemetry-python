@@ -139,16 +139,17 @@ def _try_load_configured_impl(
     configured, or a load error occurs, returns `None`
     """
     implementation_modname = None
-    if sys.flags.ignore_environment:
-        return None
-    implementation_modname = os.getenv(
-        'OPENTELEMETRY_PYTHON_IMPLEMENTATION_' + api_type.__name__.upper())
-    if implementation_modname:
-        return _try_load_impl_from_modname(implementation_modname, api_type)
-    implementation_modname = os.getenv(
-        'OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT')
-    if implementation_modname:
-        return _try_load_impl_from_modname(implementation_modname, api_type)
+    if not sys.flags.ignore_environment:
+        implementation_modname = os.getenv(
+            'OPENTELEMETRY_PYTHON_IMPLEMENTATION_' + api_type.__name__.upper())
+        if implementation_modname:
+            return _try_load_impl_from_modname(implementation_modname,
+                                               api_type)
+        implementation_modname = os.getenv(
+            'OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT')
+        if implementation_modname:
+            return _try_load_impl_from_modname(implementation_modname,
+                                               api_type)
     if factory is not None:
         return _try_load_impl_from_callback(factory, api_type)
     if _DEFAULT_FACTORY is not None:
