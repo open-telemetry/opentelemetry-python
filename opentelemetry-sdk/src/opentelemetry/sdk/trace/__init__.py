@@ -304,10 +304,11 @@ class Tracer(trace_api.Tracer):
                    name: str,
                    parent: trace_api.ParentSpan =
                    trace_api.Tracer.CURRENT_SPAN,
-                   span_id: typing.Optional[int] = None
+                   span_id: typing.Optional[int] = None,
+                   trace_id: typing.Optional[int] = None,
                    ) -> typing.Iterator['Span']:
         """See `opentelemetry.trace.Tracer.start_span`."""
-        with self.use_span(self.create_span(name, parent,
+        with self.use_span(self.create_span(name, parent, trace_id=trace_id,
                                             span_id=span_id)) as span:
             yield span
 
@@ -315,7 +316,8 @@ class Tracer(trace_api.Tracer):
                     name: str,
                     parent: trace_api.ParentSpan =
                     trace_api.Tracer.CURRENT_SPAN,
-                    span_id: typing.Optional[int] = None
+                    span_id: typing.Optional[int] = None,
+                    trace_id: typing.Optional[int] = None,
                     ) -> 'Span':
         """See `opentelemetry.trace.Tracer.create_span`."""
         if span_id is None:
@@ -323,7 +325,9 @@ class Tracer(trace_api.Tracer):
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
         if parent is None:
-            context = trace_api.SpanContext(generate_trace_id(), span_id)
+            if trace_id is None:
+                trace_id = generate_trace_id()
+            context = trace_api.SpanContext(trace_id, span_id)
         else:
             if isinstance(parent, trace_api.Span):
                 parent_context = parent.get_context()
@@ -331,6 +335,8 @@ class Tracer(trace_api.Tracer):
                 parent_context = parent
             else:
                 raise TypeError
+            if trace_id is not None and trace_id != parent_context.trace_id:
+                raise ValueError
             context = trace_api.SpanContext(
                 parent_context.trace_id,
                 span_id,
