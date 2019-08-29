@@ -29,9 +29,11 @@ class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.serialized_trace_id = b3_format.format_trace_id(
-            trace.generate_trace_id())
+            trace.generate_trace_id()
+        )
         cls.serialized_span_id = b3_format.format_span_id(
-            trace.generate_span_id())
+            trace.generate_span_id()
+        )
 
     def test_extract_multi_header(self):
         """Test the extraction of B3 headers."""
@@ -43,25 +45,30 @@ class TestB3Format(unittest.TestCase):
         span_context = FORMAT.extract(get_as_list, carrier)
         new_carrier = {}
         FORMAT.inject(span_context, dict.__setitem__, new_carrier)
-        self.assertEqual(new_carrier[FORMAT.TRACE_ID_KEY],
-                         self.serialized_trace_id)
-        self.assertEqual(new_carrier[FORMAT.SPAN_ID_KEY],
-                         self.serialized_span_id)
+        self.assertEqual(
+            new_carrier[FORMAT.TRACE_ID_KEY], self.serialized_trace_id
+        )
+        self.assertEqual(
+            new_carrier[FORMAT.SPAN_ID_KEY], self.serialized_span_id
+        )
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_single_header(self):
         """Test the extraction from a single b3 header."""
         carrier = {
-            FORMAT.SINGLE_HEADER_KEY:
-            "{}-{}".format(self.serialized_trace_id, self.serialized_span_id)
+            FORMAT.SINGLE_HEADER_KEY: "{}-{}".format(
+                self.serialized_trace_id, self.serialized_span_id
+            )
         }
         span_context = FORMAT.extract(get_as_list, carrier)
         new_carrier = {}
         FORMAT.inject(span_context, dict.__setitem__, new_carrier)
-        self.assertEqual(new_carrier[FORMAT.TRACE_ID_KEY],
-                         self.serialized_trace_id)
-        self.assertEqual(new_carrier[FORMAT.SPAN_ID_KEY],
-                         self.serialized_span_id)
+        self.assertEqual(
+            new_carrier[FORMAT.TRACE_ID_KEY], self.serialized_trace_id
+        )
+        self.assertEqual(
+            new_carrier[FORMAT.SPAN_ID_KEY], self.serialized_span_id
+        )
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_header_precedence(self):
@@ -70,20 +77,19 @@ class TestB3Format(unittest.TestCase):
         """
         single_header_trace_id = self.serialized_trace_id[:-3] + "123"
         carrier = {
-            FORMAT.SINGLE_HEADER_KEY:
-            "{}-{}".format(single_header_trace_id, self.serialized_span_id),
-            FORMAT.TRACE_ID_KEY:
-            self.serialized_trace_id,
-            FORMAT.SPAN_ID_KEY:
-            self.serialized_span_id,
-            FORMAT.SAMPLED_KEY:
-            "1",
+            FORMAT.SINGLE_HEADER_KEY: "{}-{}".format(
+                single_header_trace_id, self.serialized_span_id
+            ),
+            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+            FORMAT.SAMPLED_KEY: "1",
         }
         span_context = FORMAT.extract(get_as_list, carrier)
         new_carrier = {}
         FORMAT.inject(span_context, dict.__setitem__, new_carrier)
-        self.assertEqual(new_carrier[FORMAT.TRACE_ID_KEY],
-                         single_header_trace_id)
+        self.assertEqual(
+            new_carrier[FORMAT.TRACE_ID_KEY], single_header_trace_id
+        )
 
     def test_enabled_sampling(self):
         """Test b3 sample key variants that turn on sampling."""
@@ -146,8 +152,9 @@ class TestB3Format(unittest.TestCase):
         span_context = FORMAT.extract(get_as_list, carrier)
         new_carrier = {}
         FORMAT.inject(span_context, dict.__setitem__, new_carrier)
-        self.assertEqual(new_carrier[FORMAT.TRACE_ID_KEY],
-                         "0" * 16 + trace_id_64_bit)
+        self.assertEqual(
+            new_carrier[FORMAT.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
+        )
 
     def test_invalid_single_header(self):
         """If an invalid single header is passed, return an
@@ -162,7 +169,7 @@ class TestB3Format(unittest.TestCase):
         """If a trace id is missing, populate an invalid trace id."""
         carrier = {
             FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-            FORMAT.FLAGS_KEY: "1"
+            FORMAT.FLAGS_KEY: "1",
         }
         span_context = FORMAT.extract(get_as_list, carrier)
         self.assertEqual(span_context.trace_id, api_trace.INVALID_TRACE_ID)
@@ -171,7 +178,7 @@ class TestB3Format(unittest.TestCase):
         """If a trace id is missing, populate an invalid trace id."""
         carrier = {
             FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-            FORMAT.FLAGS_KEY: "1"
+            FORMAT.FLAGS_KEY: "1",
         }
         span_context = FORMAT.extract(get_as_list, carrier)
         self.assertEqual(span_context.span_id, api_trace.INVALID_SPAN_ID)

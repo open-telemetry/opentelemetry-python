@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import trace
-from . import util
+from . import trace, util
 
-__all__ = [
-    "trace",
-    "util",
-]
+__all__ = ["trace", "util"]

@@ -18,6 +18,7 @@ import typing
 
 class Resource(abc.ABC):
     """The interface that resources must implement."""
+
     @staticmethod
     @abc.abstractmethod
     def create(labels: typing.Dict[str, str]) -> "Resource":
@@ -30,6 +31,7 @@ class Resource(abc.ABC):
             The resource with the labels in question
 
         """
+
     @property
     @abc.abstractmethod
     def labels(self) -> typing.Dict[str, str]:
@@ -39,6 +41,7 @@ class Resource(abc.ABC):
             A dictionary with the labels of the resource
 
         """
+
     @abc.abstractmethod
     def merge(self, other: typing.Optional["Resource"]) -> "Resource":
         """Return a resource with the union of labels for both resources.

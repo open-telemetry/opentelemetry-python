@@ -20,13 +20,13 @@ from opentelemetry import distributedcontext
 class TestEntryMetadata(unittest.TestCase):
     def test_entry_ttl_no_propagation(self):
         metadata = distributedcontext.EntryMetadata(
-            distributedcontext.EntryMetadata.NO_PROPAGATION,
+            distributedcontext.EntryMetadata.NO_PROPAGATION
         )
         self.assertEqual(metadata.entry_ttl, 0)
 
     def test_entry_ttl_unlimited_propagation(self):
         metadata = distributedcontext.EntryMetadata(
-            distributedcontext.EntryMetadata.UNLIMITED_PROPAGATION,
+            distributedcontext.EntryMetadata.UNLIMITED_PROPAGATION
         )
         self.assertEqual(metadata.entry_ttl, -1)
 
@@ -71,22 +71,18 @@ class TestDistributedContext(unittest.TestCase):
     def setUp(self):
         entry = self.entry = distributedcontext.Entry(
             distributedcontext.EntryMetadata(
-                distributedcontext.EntryMetadata.NO_PROPAGATION,
+                distributedcontext.EntryMetadata.NO_PROPAGATION
             ),
             distributedcontext.EntryKey("key"),
             distributedcontext.EntryValue("value"),
         )
-        self.context = distributedcontext.DistributedContext((
-            entry,
-        ))
+        self.context = distributedcontext.DistributedContext((entry,))
 
     def test_get_entries(self):
         self.assertIn(self.entry, self.context.get_entries())
 
     def test_get_entry_value_present(self):
-        value = self.context.get_entry_value(
-            self.entry.key,
-        )
+        value = self.context.get_entry_value(self.entry.key)
         self.assertIs(value, self.entry.value)
 
     def test_get_entry_value_missing(self):
