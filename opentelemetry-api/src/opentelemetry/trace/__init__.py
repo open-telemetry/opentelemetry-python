@@ -132,6 +132,16 @@ class Span:
         `SpanContext` passed as argument.
         """
 
+    def update_name(self, name: str) -> None:
+        """Updates the `Span` name.
+
+        This will override the name provided via :func:`Tracer.create_span`
+        or :func:`Tracer.start_span`.
+
+        Upon this update, any sampling behavior based on Span name will depend
+        on the implementation.
+        """
+
 
 class TraceOptions(int):
     """A bitmask that represents options specific to the trace.
