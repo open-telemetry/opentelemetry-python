@@ -261,6 +261,9 @@ class Span(trace_api.Span):
         if self.end_time is None:
             self.end_time = util.time_ns()
 
+    def update_name(self, name: str) -> None:
+        self.name = name
+
 
 def generate_span_id():
     """Get a new random span ID.
