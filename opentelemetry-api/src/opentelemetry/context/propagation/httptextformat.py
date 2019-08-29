@@ -67,9 +67,11 @@ class HTTPTextFormat(abc.ABC):
     .. _Propagation API Specification:
        https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
     """
+
     @abc.abstractmethod
-    def extract(self, get_from_carrier: Getter,
-                carrier: object) -> SpanContext:
+    def extract(
+        self, get_from_carrier: Getter, carrier: object
+    ) -> SpanContext:
         """Create a SpanContext from values in the carrier.
 
         The extract function should retrieve values from the carrier
@@ -88,9 +90,11 @@ class HTTPTextFormat(abc.ABC):
             A SpanContext with configuration found in the carrier.
 
         """
+
     @abc.abstractmethod
-    def inject(self, context: SpanContext, set_in_carrier: Setter,
-               carrier: object) -> None:
+    def inject(
+        self, context: SpanContext, set_in_carrier: Setter, carrier: object
+    ) -> None:
         """Inject values from a SpanContext into a carrier.
 
         inject enables the propagation of values into HTTP clients or

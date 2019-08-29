@@ -14,8 +14,8 @@
 
 import typing
 
-from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 import opentelemetry.trace as trace
+from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 
 
 class B3Format(HTTPTextFormat):
@@ -39,7 +39,8 @@ class B3Format(HTTPTextFormat):
         flags = None
 
         single_header = _extract_first_element(
-            get_from_carrier(carrier, cls.SINGLE_HEADER_KEY))
+            get_from_carrier(carrier, cls.SINGLE_HEADER_KEY)
+        )
         if single_header:
             # The b3 spec calls for the sampling state to be
             # "deferred", which is unspecified. This concept does not
@@ -58,14 +59,30 @@ class B3Format(HTTPTextFormat):
             else:
                 return trace.INVALID_SPAN_CONTEXT
         else:
-            trace_id = _extract_first_element(
-                get_from_carrier(carrier, cls.TRACE_ID_KEY)) or trace_id
-            span_id = _extract_first_element(
-                get_from_carrier(carrier, cls.SPAN_ID_KEY)) or span_id
-            sampled = _extract_first_element(
-                get_from_carrier(carrier, cls.SAMPLED_KEY)) or sampled
-            flags = _extract_first_element(
-                get_from_carrier(carrier, cls.FLAGS_KEY)) or flags
+            trace_id = (
+                _extract_first_element(
+                    get_from_carrier(carrier, cls.TRACE_ID_KEY)
+                )
+                or trace_id
+            )
+            span_id = (
+                _extract_first_element(
+                    get_from_carrier(carrier, cls.SPAN_ID_KEY)
+                )
+                or span_id
+            )
+            sampled = (
+                _extract_first_element(
+                    get_from_carrier(carrier, cls.SAMPLED_KEY)
+                )
+                or sampled
+            )
+            flags = (
+                _extract_first_element(
+                    get_from_carrier(carrier, cls.FLAGS_KEY)
+                )
+                or flags
+            )
 
         options = 0
         # The b3 spec provides no defined behavior for both sample and
@@ -86,10 +103,12 @@ class B3Format(HTTPTextFormat):
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
         sampled = (trace.TraceOptions.RECORDED & context.trace_options) != 0
-        set_in_carrier(carrier, cls.TRACE_ID_KEY,
-                       format_trace_id(context.trace_id))
-        set_in_carrier(carrier, cls.SPAN_ID_KEY,
-                       format_span_id(context.span_id))
+        set_in_carrier(
+            carrier, cls.TRACE_ID_KEY, format_trace_id(context.trace_id)
+        )
+        set_in_carrier(
+            carrier, cls.SPAN_ID_KEY, format_span_id(context.span_id)
+        )
         set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
 
 

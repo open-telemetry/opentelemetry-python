@@ -17,8 +17,8 @@ The opentelemetry-ext-requests package allows tracing HTTP requests made by the
 popular requests library.
 """
 
-from urllib.parse import urlparse
 import functools
+from urllib.parse import urlparse
 
 from requests.sessions import Session
 

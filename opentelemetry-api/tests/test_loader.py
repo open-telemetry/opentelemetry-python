@@ -36,8 +36,8 @@ def get_opentelemetry_implementation(type_):
 
 # pylint:disable=redefined-outer-name,protected-access,unidiomatic-typecheck
 
-class TestLoader(unittest.TestCase):
 
+class TestLoader(unittest.TestCase):
     def setUp(self):
         reload(loader)
         reload(trace)
@@ -52,7 +52,8 @@ class TestLoader(unittest.TestCase):
 
     def test_preferred_impl(self):
         trace.set_preferred_tracer_implementation(
-            get_opentelemetry_implementation)
+            get_opentelemetry_implementation
+        )
         tracer = trace.tracer()
         self.assertIs(tracer, DUMMY_TRACER)
 
@@ -68,15 +69,17 @@ class TestLoader(unittest.TestCase):
 
     def test_preferred_impl_with_default(self):
         self.do_test_preferred_impl(
-            loader.set_preferred_default_implementation)
+            loader.set_preferred_default_implementation
+        )
 
     def test_try_set_again(self):
         self.assertTrue(trace.tracer())
         # Try setting after the tracer has already been created:
         with self.assertRaises(RuntimeError) as einfo:
             trace.set_preferred_tracer_implementation(
-                get_opentelemetry_implementation)
-        self.assertIn('already loaded', str(einfo.exception))
+                get_opentelemetry_implementation
+            )
+        self.assertIn("already loaded", str(einfo.exception))
 
     def do_test_get_envvar(self, envvar_suffix):
         global DUMMY_TRACER  # pylint:disable=global-statement
@@ -84,7 +87,7 @@ class TestLoader(unittest.TestCase):
         # Test is not runnable with this!
         self.assertFalse(sys.flags.ignore_environment)
 
-        envname = 'OPENTELEMETRY_PYTHON_IMPLEMENTATION_' + envvar_suffix
+        envname = "OPENTELEMETRY_PYTHON_IMPLEMENTATION_" + envvar_suffix
         os.environ[envname] = __name__
         try:
             tracer = trace.tracer()
@@ -95,7 +98,7 @@ class TestLoader(unittest.TestCase):
         self.assertIs(type(tracer), DummyTracer)
 
     def test_get_envvar_tracer(self):
-        return self.do_test_get_envvar('TRACER')
+        return self.do_test_get_envvar("TRACER")
 
     def test_get_envvar_default(self):
-        return self.do_test_get_envvar('DEFAULT')
+        return self.do_test_get_envvar("DEFAULT")

@@ -41,15 +41,16 @@ setuptools.setup(
     description="OpenTelemetry Python API",
     include_package_data=True,
     long_description=open("README.rst").read(),
-    install_requires=[
-        "typing; python_version<'3.5'",
-    ],
+    install_requires=["typing; python_version<'3.5'"],
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
-    packages=setuptools.find_namespace_packages(where="src",
-                                                include="opentelemetry.*"),
-    url=("https://github.com/open-telemetry/opentelemetry-python"
-         "/tree/master/opentelemetry-api"),
+    packages=setuptools.find_namespace_packages(
+        where="src", include="opentelemetry.*"
+    ),
+    url=(
+        "https://github.com/open-telemetry/opentelemetry-python"
+        "/tree/master/opentelemetry-api"
+    ),
     zip_safe=False,
 )
