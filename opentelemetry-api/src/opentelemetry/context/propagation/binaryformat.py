@@ -24,6 +24,7 @@ class BinaryFormat(abc.ABC):
     This class provides an interface that enables converting span contexts
     to and from a binary format.
     """
+
     @staticmethod
     @abc.abstractmethod
     def to_bytes(context: SpanContext) -> bytes:
@@ -39,6 +40,7 @@ class BinaryFormat(abc.ABC):
             A bytes representation of the SpanContext.
 
         """
+
     @staticmethod
     @abc.abstractmethod
     def from_bytes(byte_representation: bytes) -> typing.Optional[SpanContext]:

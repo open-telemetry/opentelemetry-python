@@ -19,9 +19,9 @@ from opentelemetry import trace
 
 class TestDefaultSpan(unittest.TestCase):
     def test_ctor(self):
-        context = trace.SpanContext(1, 1,
-                                    trace.DEFAULT_TRACE_OPTIONS,
-                                    trace.DEFAULT_TRACE_STATE)
+        context = trace.SpanContext(
+            1, 1, trace.DEFAULT_TRACE_OPTIONS, trace.DEFAULT_TRACE_STATE
+        )
         span = trace.DefaultSpan(context)
         self.assertEqual(context, span.get_context())
 

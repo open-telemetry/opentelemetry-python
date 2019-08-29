@@ -35,11 +35,7 @@ class OpenTelemetryMiddleware:
         wsgi: The WSGI application callable.
     """
 
-    def __init__(
-            self,
-            wsgi,
-            propagators=None,
-    ):
+    def __init__(self, wsgi, propagators=None):
         self.wsgi = wsgi
 
         # TODO: implement context propagation
@@ -54,9 +50,9 @@ class OpenTelemetryMiddleware:
         span.set_attribute("http.host", host)
 
         url = (
-            environ.get("REQUEST_URI") or
-            environ.get("RAW_URI") or
-            wsgiref_util.request_uri(environ, include_query=False)
+            environ.get("REQUEST_URI")
+            or environ.get("RAW_URI")
+            or wsgiref_util.request_uri(environ, include_query=False)
         )
         span.set_attribute("http.url", url)
 
@@ -101,5 +97,5 @@ class OpenTelemetryMiddleware:
                 for yielded in iterable:
                     yield yielded
             finally:
-                if hasattr(iterable, 'close'):
+                if hasattr(iterable, "close"):
                     iterable.close()

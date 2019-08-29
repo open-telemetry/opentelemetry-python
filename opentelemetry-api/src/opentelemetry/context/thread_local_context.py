@@ -22,7 +22,7 @@ class ThreadLocalRuntimeContext(base_context.BaseRuntimeContext):
     class Slot(base_context.BaseRuntimeContext.Slot):
         _thread_local = threading.local()
 
-        def __init__(self, name: str, default: 'object'):
+        def __init__(self, name: str, default: "object"):
             # pylint: disable=super-init-not-called
             self.name = name
             self.default = base_context.wrap_callable(
@@ -32,7 +32,7 @@ class ThreadLocalRuntimeContext(base_context.BaseRuntimeContext):
         def clear(self) -> None:
             setattr(self._thread_local, self.name, self.default())
 
-        def get(self) -> 'object':
+        def get(self) -> "object":
             try:
                 got = getattr(self._thread_local, self.name)  # type: object
                 return got
@@ -41,5 +41,5 @@ class ThreadLocalRuntimeContext(base_context.BaseRuntimeContext):
                 self.set(value)
                 return value
 
-        def set(self, value: 'object') -> None:
+        def set(self, value: "object") -> None:
             setattr(self._thread_local, self.name, value)

@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import contextmanager
 import itertools
 import string
 import typing
+from contextlib import contextmanager
 
-PRINTABLE = frozenset(itertools.chain(
-    string.ascii_letters,
-    string.digits,
-    string.punctuation,
-    " ",
-))
+PRINTABLE = frozenset(
+    itertools.chain(
+        string.ascii_letters, string.digits, string.punctuation, " "
+    )
+)
 
 
 class EntryMetadata:
@@ -72,10 +71,7 @@ class EntryValue(str):
 
 class Entry:
     def __init__(
-            self,
-            metadata: EntryMetadata,
-            key: EntryKey,
-            value: EntryValue,
+        self, metadata: EntryMetadata, key: EntryKey, value: EntryValue
     ) -> None:
         self.metadata = metadata
         self.key = key
@@ -92,10 +88,7 @@ class DistributedContext:
         """Returns an immutable iterator to entries."""
         return self._container.values()
 
-    def get_entry_value(
-            self,
-            key: EntryKey
-    ) -> typing.Optional[EntryValue]:
+    def get_entry_value(self, key: EntryKey) -> typing.Optional[EntryValue]:
         """Returns the entry associated with a key or None
 
         Args:
@@ -116,8 +109,7 @@ class DistributedContextManager:
 
     @contextmanager  # type: ignore
     def use_context(
-            self,
-            context: DistributedContext,
+        self, context: DistributedContext
     ) -> typing.Iterator[DistributedContext]:
         """Context manager for controlling a DistributedContext lifetime.
 
