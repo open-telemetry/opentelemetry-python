@@ -70,6 +70,7 @@ class SimpleExportSpanProcessor(SpanProcessor):
     def on_end(self, span: Span) -> None:
         try:
             self.span_exporter.export((span,))
+        # pylint: disable=broad-except
         except Exception as exc:
             logger.warning("Exception while exporting data: %s", exc)
 
