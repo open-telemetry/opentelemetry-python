@@ -39,7 +39,7 @@ from opentelemetry.metrics.time_series import MeasureTimeSeries
 from opentelemetry.trace import SpanContext
 
 LabelKeys = List['LabelKey']
-LabelValues = List['LabelValue']
+LabelValues = List[str]
 
 
 class Meter:
@@ -212,7 +212,7 @@ class Metric(ABC):
         overrides this function.
 
         Args:
-            label_values: A map of `LabelValue` s that will be associated
+            label_values: A list of label values that will be associated
                 with the return timeseries.
         """
 
@@ -220,7 +220,7 @@ class Metric(ABC):
                            label_values: LabelValues) -> None:
         """Removes the timeseries from the Metric, if present.
 
-        The timeseries with matching `LabelValue` s will be removed.
+        The timeseries with matching label values will be removed.
 
         args:
             label_values: The list of label values to match against.
@@ -332,13 +332,3 @@ class LabelKey:
         self.key = key
         self.description = description
 
-
-class LabelValue:
-    """The label values associated with a TimeSeries.
-
-    :type value: str
-    :param value: the value for the label
-    """
-    def __init__(self,
-                 value: str) -> None:
-        self.value = value
