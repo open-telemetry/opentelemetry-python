@@ -13,10 +13,7 @@
 # limitations under the License.
 
 # pylint: skip-file
-from opentelemetry.metrics import LabelKey
-from opentelemetry.metrics import LabelValue
-from opentelemetry.metrics import MeasureBatch
-from opentelemetry.metrics import Meter
+from opentelemetry.metrics import LabelKey, LabelValue, MeasureBatch, Meter
 from opentelemetry.metrics.aggregation import LastValueAggregation
 
 METER = Meter()

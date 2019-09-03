@@ -13,9 +13,7 @@
 # limitations under the License.
 
 # pylint: skip-file
-from opentelemetry.metrics import LabelKey
-from opentelemetry.metrics import LabelValue
-from opentelemetry.metrics import Meter
+from opentelemetry.metrics import LabelKey, LabelValue, Meter
 
 METER = Meter()
 LABEL_KEYS = [
