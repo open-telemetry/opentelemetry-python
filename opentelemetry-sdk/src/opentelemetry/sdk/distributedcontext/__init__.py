@@ -26,11 +26,13 @@ class DistributedContextManager(dctx_api.DistributedContextManager):
         name: The name of the context manager
     """
 
+    CONTEXT_SLOT_NAME = "DistributedContext"
+
     def __init__(self, name: str = "") -> None:
         if name:
             slot_name = "DistributedContext.{}".format(name)
         else:
-            slot_name = "DistributedContext"
+            slot_name = self.CONTEXT_SLOT_NAME
 
         self._current_context = Context.register_slot(slot_name)
 

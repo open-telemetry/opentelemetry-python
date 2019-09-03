@@ -14,10 +14,10 @@
 
 import unittest
 import opentelemetry.trace as api_trace
-import opentelemetry.sdk.context.propagation.b3_format as b3_format
+import opentelemetry.context as context
+import opentelemetry.sdk.propagator.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
 
-from opentelemetry.context import UnifiedContext
 from opentelemetry.sdk.trace import tracer
 
 FORMAT = b3_format.B3Format()
@@ -40,8 +40,13 @@ class TestB3Format(unittest.TestCase):
 
     def setUp(self):
         span_context = tracer.create_span("").context
-        self.context = UnifiedContext.create(span_context)
+        self.context = context.create_context()
+        self.context[tracer.CONTEXT_SLOT_NAME] = span_context
         self.carrier = {}
+
+    @property
+    def _span_context(self):
+        return self.context[tracer.CONTEXT_SLOT_NAME]
 
     def test_extract_multi_header(self):
         """Test the extraction of B3 headers."""
@@ -160,14 +165,14 @@ class TestB3Format(unittest.TestCase):
         """If an invalid single header is passed, return an
         invalid SpanContext.
         """
-        self.context.span.trace_id = api_trace.INVALID_TRACE_ID
-        self.context.span.span_id = api_trace.INVALID_SPAN_ID
+        self._span_context.trace_id = api_trace.INVALID_TRACE_ID
+        self._span_context.span_id = api_trace.INVALID_TRACE_ID
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         FORMAT.extract(self.context, get_as_list, carrier)
         self.assertEqual(
-            self.context.span.trace_id, api_trace.INVALID_TRACE_ID
+            self._span_context.trace_id, api_trace.INVALID_TRACE_ID
         )
-        self.assertEqual(self.context.span.span_id, api_trace.INVALID_SPAN_ID)
+        self.assertEqual(self._span_context.span_id, api_trace.INVALID_SPAN_ID)
 
     def test_missing_trace_id(self):
         """If a trace id is missing, populate an invalid trace id."""
@@ -177,7 +182,7 @@ class TestB3Format(unittest.TestCase):
         }
         FORMAT.extract(self.context, get_as_list, carrier)
         self.assertEqual(
-            self.context.span.trace_id, api_trace.INVALID_TRACE_ID
+            self._span_context.trace_id, api_trace.INVALID_TRACE_ID
         )
 
     def test_missing_span_id(self):
@@ -187,4 +192,4 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
         FORMAT.extract(self.context, get_as_list, carrier)
-        self.assertEqual(self.context.span.span_id, api_trace.INVALID_SPAN_ID)
+        self.assertEqual(self._span_context.span_id, api_trace.INVALID_SPAN_ID)

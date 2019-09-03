@@ -15,7 +15,7 @@
 import abc
 import typing
 
-from opentelemetry.distributedcontext import DistributedContext
+from opentelemetry.context import BaseRuntimeContext
 
 Setter = typing.Callable[[object, str, str], None]
 Getter = typing.Callable[[object, str], typing.List[str]]
@@ -35,8 +35,11 @@ class HTTPTextFormat(abc.ABC):
         import flask
         import requests
         from opentelemetry.context.propagation import HTTPTextFormat
+        from opentelemetry.trace import tracer
+        from opentelemetry.context import UnifiedContext
 
         PROPAGATOR = HTTPTextFormat()
+
 
         def get_header_from_flask_request(request, key):
             return request.headers.get_all(key)
@@ -46,15 +49,17 @@ class HTTPTextFormat(abc.ABC):
             request.headers[key] = value
 
         def example_route():
-            distributed_context = PROPAGATOR.extract(
-                get_header_from_flask_request,
+            span = tracer().create_span("")
+            context = UnifiedContext.create(span)
+            PROPAGATOR.extract(
+                context, get_header_from_flask_request,
                 flask.request
             )
             request_to_downstream = requests.Request(
                 "GET", "http://httpbin.org/get"
             )
             PROPAGATOR.inject(
-                distributed_context,
+                context,
                 set_header_into_requests_request,
                 request_to_downstream
             )
@@ -68,35 +73,40 @@ class HTTPTextFormat(abc.ABC):
 
     @abc.abstractmethod
     def extract(
-        self, get_from_carrier: Getter, carrier: object
-    ) -> DistributedContext:
-        """Create a DistributedContext from values in the carrier.
+        self,
+        context: BaseRuntimeContext,
+        get_from_carrier: Getter,
+        carrier: object,
+    ) -> None:
+        """Extract values from the carrier into the context.
 
         The extract function should retrieve values from the carrier
-        object using get_from_carrier, and use values to populate a
-        DistributedContext value and return it.
+        object using get_from_carrier, and use values to populate
+        attributes of the UnifiedContext passed in.
 
         Args:
+            context: A UnifiedContext instance that will be
+                populated with values from the carrier.
             get_from_carrier: a function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.
             carrier: and object which contains values that are
-                used to construct a DistributedContext. This object
+                used to construct a SpanContext. This object
                 must be paired with an appropriate get_from_carrier
                 which understands how to extract a value from it.
         Returns:
-            A DistributedContext with configuration found in the carrier.
+            A SpanContext with configuration found in the carrier.
 
         """
 
     @abc.abstractmethod
     def inject(
         self,
-        context: DistributedContext,
+        context: BaseRuntimeContext,
         set_in_carrier: Setter,
         carrier: object,
     ) -> None:
-        """Inject values from a DistributedContext into a carrier.
+        """Inject values from a SpanContext into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
@@ -104,7 +114,7 @@ class HTTPTextFormat(abc.ABC):
         carrier.
 
         Args:
-            context: The DistributedContext to read values from.
+            context: The SpanContext to read values from.
             set_in_carrier: A setter function that can set values
                 on the carrier.
             carrier: An object that a place to define HTTP headers.

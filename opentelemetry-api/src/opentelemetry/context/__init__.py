@@ -135,20 +135,26 @@ Here goes a simple demo of how async could work in Python 3.7+:
         asyncio.run(main())
 """
 
-import typing
-
 from .base_context import BaseRuntimeContext
-from .unified_context import UnifiedContext
 
-__all__ = ["Context", "UnifiedContext"]
+__all__ = ["Context"]
 
-Context = None  # type: typing.Optional[BaseRuntimeContext]
 
-try:
-    from .async_context import AsyncRuntimeContext
+def create_context() -> BaseRuntimeContext:
+    """Create a new context object.
 
-    Context = AsyncRuntimeContext()
-except ImportError:
-    from .thread_local_context import ThreadLocalRuntimeContext
+    Return a new RuntimeContext, instantiating the variant that
+    is the most appropriate for the version of Python being used.
+    """
 
-    Context = ThreadLocalRuntimeContext()
+    try:
+        from .async_context import AsyncRuntimeContext
+
+        return AsyncRuntimeContext()
+    except ImportError:
+        from .thread_local_context import ThreadLocalRuntimeContext
+
+        return ThreadLocalRuntimeContext()
+
+
+Context = create_context()

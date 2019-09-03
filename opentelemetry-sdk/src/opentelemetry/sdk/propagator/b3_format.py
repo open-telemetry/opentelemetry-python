@@ -15,7 +15,8 @@
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
+from opentelemetry.propagator.httptextformat import HTTPTextFormat
+from opentelemetry.sdk.trace import Tracer
 
 
 class B3Format(HTTPTextFormat):
@@ -92,7 +93,11 @@ class B3Format(HTTPTextFormat):
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceOptions.RECORDED
 
-        context.span = trace.SpanContext(
+        # TODO: there is no standard way to retrieve
+        # the SpanContext or DistributedContext from a
+        # context object declared in opentelemetry-api.
+        # this should be more standard.
+        context[Tracer.CONTEXT_SLOT_NAME] = trace.SpanContext(
             # trace an span ids are encoded in hex, so must be converted
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),
@@ -102,12 +107,15 @@ class B3Format(HTTPTextFormat):
 
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
-        sampled = (trace.TraceOptions.RECORDED & context.trace_options) != 0
+        span_context = context[Tracer.CONTEXT_SLOT_NAME]
+        sampled = (
+            trace.TraceOptions.RECORDED & span_context.trace_options
+        ) != 0
         set_in_carrier(
-            carrier, cls.TRACE_ID_KEY, format_trace_id(context.trace_id)
+            carrier, cls.TRACE_ID_KEY, format_trace_id(span_context.trace_id)
         )
         set_in_carrier(
-            carrier, cls.SPAN_ID_KEY, format_span_id(context.span_id)
+            carrier, cls.SPAN_ID_KEY, format_span_id(span_context.span_id)
         )
         set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
 

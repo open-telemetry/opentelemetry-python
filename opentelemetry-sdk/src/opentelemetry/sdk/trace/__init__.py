@@ -281,8 +281,10 @@ class Tracer(trace_api.Tracer):
         name: The name of the tracer.
     """
 
+    CONTEXT_SLOT_NAME = "current_span"
+
     def __init__(self, name: str = "") -> None:
-        slot_name = "current_span"
+        slot_name = self.CONTEXT_SLOT_NAME
         if name:
             slot_name = "{}.current_span".format(name)
         self._current_span_slot = Context.register_slot(slot_name)
