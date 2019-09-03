@@ -17,7 +17,7 @@ thread-local storage and contextvars. The long term direction is to switch to
 contextvars provided by the Python runtime library.
 
 A global object ``Context`` is provided to access all the context related
-functionalities:
+functionalities::
 
     >>> from opentelemetry.context import Context
     >>> Context.foo = 1
@@ -94,7 +94,7 @@ Here goes another example using thread pool:
         pool.join()
         println('Main thread: {}'.format(Context))
 
-Here goes a simple demo of how async could work in Python 3.7+:
+Here goes a simple demo of how async could work in Python 3.7+::
 
     import asyncio
 
