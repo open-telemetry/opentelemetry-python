@@ -20,13 +20,16 @@ from opentelemetry.metrics import Meter
 from opentelemetry.metrics.aggregation import LastValueAggregation
 
 METER = Meter()
-LABEL_KEYS = [LabelKey("environment",
-                       "the environment the application is running in")]
-MEASURE = METER.create_float_measure("idle_cpu_percentage",
-                                     "cpu idle over time",
-                                     "percentage",
-                                     LABEL_KEYS,
-                                     LastValueAggregation)
+LABEL_KEYS = [
+    LabelKey("environment", "the environment the application is running in")
+]
+MEASURE = METER.create_float_measure(
+    "idle_cpu_percentage",
+    "cpu idle over time",
+    "percentage",
+    LABEL_KEYS,
+    LastValueAggregation,
+)
 LABEL_VALUE_TESTING = [LabelValue("Testing")]
 LABEL_VALUE_STAGING = [LabelValue("Staging")]
 
@@ -40,5 +43,6 @@ MEASURE_METRIC_STAGING.record(STATISTIC)
 
 # record multiple observed values
 BATCH = MeasureBatch()
-BATCH.record([(MEASURE_METRIC_TESTING, STATISTIC),
-              (MEASURE_METRIC_STAGING, STATISTIC)])
+BATCH.record(
+    [(MEASURE_METRIC_TESTING, STATISTIC), (MEASURE_METRIC_STAGING, STATISTIC)]
+)

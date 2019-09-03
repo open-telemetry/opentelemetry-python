@@ -18,12 +18,15 @@ from opentelemetry.metrics import LabelValue
 from opentelemetry.metrics import Meter
 
 METER = Meter()
-LABEL_KEYS = [LabelKey("environment",
-                       "the environment the application is running in")]
-COUNTER = METER.create_int_counter("sum numbers",  # pragma: no cover
-                                   "sum numbers over time",
-                                   "number",
-                                   LABEL_KEYS)
+LABEL_KEYS = [
+    LabelKey("environment", "the environment the application is running in")
+]
+COUNTER = METER.create_int_counter(
+    "sum numbers",  # pragma: no cover
+    "sum numbers over time",
+    "number",
+    LABEL_KEYS,
+)
 LABEL_VALUE_TESTING = [LabelValue("Testing")]
 LABEL_VALUE_STAGING = [LabelValue("Staging")]
 

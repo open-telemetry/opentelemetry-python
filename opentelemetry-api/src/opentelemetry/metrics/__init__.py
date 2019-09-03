@@ -38,7 +38,7 @@ from opentelemetry.metrics.time_series import GaugeTimeSeries
 from opentelemetry.metrics.time_series import MeasureTimeSeries
 from opentelemetry.trace import SpanContext
 
-LabelKeys = List['LabelKey']
+LabelKeys = List["LabelKey"]
 LabelValues = List[str]
 
 
@@ -50,13 +50,14 @@ class Meter:
     for the exported metric are deferred.
     """
 
-    def create_float_counter(self,
-                             name: str,
-                             description: str,
-                             unit: str,
-                             label_keys: LabelKeys,
-                             span_context: SpanContext = None
-                             ) -> 'CounterFloat':
+    def create_float_counter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        label_keys: LabelKeys,
+        span_context: SpanContext = None,
+    ) -> "CounterFloat":
         """Creates a counter type metric that contains float values.
 
         Args:
@@ -72,13 +73,14 @@ class Meter:
         Returns: A new `CounterFloat`
         """
 
-    def create_int_counter(self,
-                           name: str,
-                           description: str,
-                           unit: str,
-                           label_keys: LabelKeys,
-                           span_context: SpanContext = None
-                           ) -> 'CounterInt':
+    def create_int_counter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        label_keys: LabelKeys,
+        span_context: SpanContext = None,
+    ) -> "CounterInt":
         """Creates a counter type metric that contains int values.
 
         Args:
@@ -95,13 +97,14 @@ class Meter:
             A new `CounterInt`
         """
 
-    def create_float_gauge(self,
-                           name: str,
-                           description: str,
-                           unit: str,
-                           label_keys: LabelKeys,
-                           span_context: SpanContext = None
-                           ) -> 'GaugeFloat':
+    def create_float_gauge(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        label_keys: LabelKeys,
+        span_context: SpanContext = None,
+    ) -> "GaugeFloat":
         """Creates a gauge type metric that contains float values.
 
         Args:
@@ -118,13 +121,14 @@ class Meter:
             A new `GaugeFloat`
         """
 
-    def create_int_gauge(self,
-                         name: str,
-                         description: str,
-                         unit: str,
-                         label_keys: LabelKeys,
-                         span_context: SpanContext = None
-                         ) -> 'GaugeInt':
+    def create_int_gauge(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        label_keys: LabelKeys,
+        span_context: SpanContext = None,
+    ) -> "GaugeInt":
         """Creates a gauge type metric that contains int values.
 
         Args:
@@ -141,14 +145,15 @@ class Meter:
             A new `GaugeInt`
         """
 
-    def create_int_measure(self,
-                           name: str,
-                           description: str,
-                           unit: str,
-                           label_keys: LabelKeys,
-                           aggregation: 'Aggregation',
-                           span_context: SpanContext = None,
-                           ) -> 'MeasureInt':
+    def create_int_measure(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        label_keys: LabelKeys,
+        aggregation: "Aggregation",
+        span_context: SpanContext = None,
+    ) -> "MeasureInt":
         """Creates a measure used to record raw int values.
 
         Args:
@@ -166,14 +171,15 @@ class Meter:
             A new `MeasureInt`
         """
 
-    def create_float_measure(self,
-                             name: str,
-                             description: str,
-                             unit: str,
-                             label_keys: LabelKeys,
-                             aggregation: 'Aggregation',
-                             span_context: SpanContext = None,
-                             ) -> 'MeasureFloat':
+    def create_float_measure(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        label_keys: LabelKeys,
+        aggregation: "Aggregation",
+        span_context: SpanContext = None,
+    ) -> "MeasureFloat":
         """Creates a Measure used to record raw float values.
 
         Args:
@@ -200,9 +206,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_or_create_time_series(self,
-                                  label_values: LabelValues
-                                  ) -> 'object':
+    def get_or_create_time_series(self, label_values: LabelValues) -> "object":
         """Gets and returns a timeseries, a container for a cumulative value.
 
         If the provided label values are not already associated with this
@@ -216,8 +220,7 @@ class Metric(ABC):
                 with the return timeseries.
         """
 
-    def remove_time_series(self,
-                           label_values: LabelValues) -> None:
+    def remove_time_series(self, label_values: LabelValues) -> None:
         """Removes the timeseries from the Metric, if present.
 
         The timeseries with matching label values will be removed.
@@ -237,9 +240,9 @@ class CounterFloat(Metric):
     Cumulative values cannot be negative.
     """
 
-    def get_or_create_time_series(self,
-                                  label_values: LabelValues
-                                  ) -> 'CounterTimeSeries':
+    def get_or_create_time_series(
+        self, label_values: LabelValues
+    ) -> "CounterTimeSeries":
         """Gets a `CounterTimeSeries` with a cumulative float value."""
 
 
@@ -250,9 +253,9 @@ class CounterInt(Metric):
     Cumulative values cannot be negative.
     """
 
-    def get_or_create_time_series(self,
-                                  label_values: LabelValues
-                                  ) -> 'CounterTimeSeries':
+    def get_or_create_time_series(
+        self, label_values: LabelValues
+    ) -> "CounterTimeSeries":
         """Gets a `CounterTimeSeries` with a cumulative int value."""
 
 
@@ -262,9 +265,9 @@ class GaugeFloat(Metric):
     Cumulative value can go both up and down. Values can be negative.
     """
 
-    def get_or_create_time_series(self,
-                                  label_values: LabelValues
-                                  ) -> 'GaugeTimeSeries':
+    def get_or_create_time_series(
+        self, label_values: LabelValues
+    ) -> "GaugeTimeSeries":
         """Gets a `GaugeTimeSeries` with a cumulative float value."""
 
 
@@ -274,9 +277,9 @@ class GaugeInt(Metric):
     Cumulative value can go both up and down. Values can be negative.
     """
 
-    def get_or_create_time_series(self,
-                                  label_values: LabelValues
-                                  ) -> 'GaugeTimeSeries':
+    def get_or_create_time_series(
+        self, label_values: LabelValues
+    ) -> "GaugeTimeSeries":
         """Gets a `GaugeTimeSeries` with a cumulative int value."""
 
 
@@ -286,9 +289,9 @@ class MeasureFloat(Metric):
     Measure metrics represent raw statistics that are recorded.
     """
 
-    def get_or_create_time_series(self,
-                                  label_values: LabelValues
-                                  ) -> 'MeasureTimeSeries':
+    def get_or_create_time_series(
+        self, label_values: LabelValues
+    ) -> "MeasureTimeSeries":
         """Gets a `MeasureTimeSeries` with a cumulated float value."""
 
 
@@ -298,17 +301,16 @@ class MeasureInt(Metric):
     Measure metrics represent raw statistics that are recorded.
     """
 
-    def get_or_create_time_series(self,
-                                  label_values: LabelValues
-                                  ) -> 'MeasureTimeSeries':
+    def get_or_create_time_series(
+        self, label_values: LabelValues
+    ) -> "MeasureTimeSeries":
         """Gets a `MeasureTimeSeries` with a cumulated int value."""
 
 
 class MeasureBatch:
-
-    def record(self,
-               metrics: List['Metric'],
-               values: List[Union[float, int]]) -> None:
+    def record(
+        self, metrics: List["Metric"], values: List[Union[float, int]]
+    ) -> None:
         """Records multiple observed values simultaneously.
 
         Args:
@@ -326,9 +328,7 @@ class LabelKey:
     :type description: str
     :param description: description of the label
     """
-    def __init__(self,
-                 key: str,
-                 description: str) -> None:
+
+    def __init__(self, key: str, description: str) -> None:
         self.key = key
         self.description = description
-
