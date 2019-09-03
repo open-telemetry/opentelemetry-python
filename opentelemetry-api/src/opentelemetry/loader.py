@@ -61,15 +61,12 @@ skipped if :data:`sys.flags` has ``ignore_environment`` set (which usually
 means that the Python interpreter was invoked with the ``-E`` or ``-I`` flag).
 """
 
-from typing import Callable
-from typing import Optional
-from typing import Type
-from typing import TypeVar
 import importlib
 import os
 import sys
+from typing import Callable, Optional, Type, TypeVar
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 # "Untrusted" because this is usually user-provided and we don't trust the user
 # to really return a _T: by using object, mypy forces us to check/cast
@@ -83,11 +80,12 @@ _UntrustedImplFactory = Callable[[Type[_T]], Optional[object]]
 # code.
 # ImplementationFactory = Callable[[Type[_T]], Optional[_T]]
 
-_DEFAULT_FACTORY: Optional[_UntrustedImplFactory[object]] = None
+_DEFAULT_FACTORY = None  # type: Optional[_UntrustedImplFactory[object]]
 
 
 def _try_load_impl_from_modname(
-        implementation_modname: str, api_type: Type[_T]) -> Optional[_T]:
+    implementation_modname: str, api_type: Type[_T]
+) -> Optional[_T]:
     try:
         implementation_mod = importlib.import_module(implementation_modname)
     except (ImportError, SyntaxError):
@@ -98,15 +96,15 @@ def _try_load_impl_from_modname(
 
 
 def _try_load_impl_from_mod(
-        implementation_mod: object, api_type: Type[_T]) -> Optional[_T]:
+    implementation_mod: object, api_type: Type[_T]
+) -> Optional[_T]:
 
     try:
         # Note: We use such a long name to avoid calling a function that is not
         # intended for this API.
 
         implementation_fn = getattr(
-            implementation_mod,
-            'get_opentelemetry_implementation'
+            implementation_mod, "get_opentelemetry_implementation"
         )  # type: _UntrustedImplFactory[_T]
     except AttributeError:
         # TODO Log/warn
@@ -116,9 +114,8 @@ def _try_load_impl_from_mod(
 
 
 def _try_load_impl_from_callback(
-        implementation_fn: _UntrustedImplFactory[_T],
-        api_type: Type[_T]
-        ) -> Optional[_T]:
+    implementation_fn: _UntrustedImplFactory[_T], api_type: Type[_T]
+) -> Optional[_T]:
     result = implementation_fn(api_type)
     if result is None:
         return None
@@ -133,22 +130,27 @@ def _try_load_impl_from_callback(
 
 
 def _try_load_configured_impl(
-        api_type: Type[_T], factory: Optional[_UntrustedImplFactory[_T]]
-        ) -> Optional[_T]:
+    api_type: Type[_T], factory: Optional[_UntrustedImplFactory[_T]]
+) -> Optional[_T]:
     """Attempts to find any specially configured implementation. If none is
     configured, or a load error occurs, returns `None`
     """
     implementation_modname = None
-    if sys.flags.ignore_environment:
-        return None
-    implementation_modname = os.getenv(
-        'OPENTELEMETRY_PYTHON_IMPLEMENTATION_' + api_type.__name__.upper())
-    if implementation_modname:
-        return _try_load_impl_from_modname(implementation_modname, api_type)
-    implementation_modname = os.getenv(
-        'OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT')
-    if implementation_modname:
-        return _try_load_impl_from_modname(implementation_modname, api_type)
+    if not sys.flags.ignore_environment:
+        implementation_modname = os.getenv(
+            "OPENTELEMETRY_PYTHON_IMPLEMENTATION_" + api_type.__name__.upper()
+        )
+        if implementation_modname:
+            return _try_load_impl_from_modname(
+                implementation_modname, api_type
+            )
+        implementation_modname = os.getenv(
+            "OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT"
+        )
+        if implementation_modname:
+            return _try_load_impl_from_modname(
+                implementation_modname, api_type
+            )
     if factory is not None:
         return _try_load_impl_from_callback(factory, api_type)
     if _DEFAULT_FACTORY is not None:
@@ -157,8 +159,9 @@ def _try_load_configured_impl(
 
 
 # Public to other opentelemetry-api modules
-def _load_impl(api_type: Type[_T],
-               factory: Optional[Callable[[Type[_T]], Optional[_T]]]) -> _T:
+def _load_impl(
+    api_type: Type[_T], factory: Optional[Callable[[Type[_T]], Optional[_T]]]
+) -> _T:
     """Tries to load a configured implementation, if unsuccessful, returns a
     fast no-op implemenation that is always available.
     """
@@ -170,7 +173,8 @@ def _load_impl(api_type: Type[_T],
 
 
 def set_preferred_default_implementation(
-        implementation_factory: _UntrustedImplFactory[_T]) -> None:
+    implementation_factory: _UntrustedImplFactory[_T]
+) -> None:
     """Sets a factory function that may be called for any implementation
     object. See the :ref:`module docs <loader-factory>` for more details."""
     global _DEFAULT_FACTORY  # pylint:disable=global-statement

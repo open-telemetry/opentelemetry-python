@@ -142,14 +142,16 @@ import typing
 
 from .base_context import BaseRuntimeContext
 
-__all__ = ['Context']
+__all__ = ["Context"]
 
 
-Context: typing.Optional[BaseRuntimeContext]
+Context = None  # type: typing.Optional[BaseRuntimeContext]
 
 try:
     from .async_context import AsyncRuntimeContext
-    Context = AsyncRuntimeContext()  # pylint:disable=invalid-name
+
+    Context = AsyncRuntimeContext()
 except ImportError:
     from .thread_local_context import ThreadLocalRuntimeContext
-    Context = ThreadLocalRuntimeContext()  # pylint:disable=invalid-name
+
+    Context = ThreadLocalRuntimeContext()

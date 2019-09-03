@@ -15,7 +15,7 @@
 import abc
 import typing
 
-from opentelemetry.trace import SpanContext
+from opentelemetry.distributedcontext import DistributedContext
 
 
 class BinaryFormat(abc.ABC):
@@ -27,34 +27,36 @@ class BinaryFormat(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def to_bytes(context: SpanContext) -> bytes:
-        """Creates a byte representation of a SpanContext.
+    def to_bytes(context: DistributedContext) -> bytes:
+        """Creates a byte representation of a DistributedContext.
 
-        to_bytes should read values from a SpanContext and return a data
+        to_bytes should read values from a DistributedContext and return a data
         format to represent it, in bytes.
 
         Args:
-            context: the SpanContext to serialize
+            context: the DistributedContext to serialize
 
         Returns:
-            A bytes representation of the SpanContext.
+            A bytes representation of the DistributedContext.
 
         """
 
     @staticmethod
     @abc.abstractmethod
-    def from_bytes(byte_representation: bytes) -> typing.Optional[SpanContext]:
-        """Return a SpanContext that was represented by bytes.
+    def from_bytes(
+        byte_representation: bytes
+    ) -> typing.Optional[DistributedContext]:
+        """Return a DistributedContext that was represented by bytes.
 
-        from_bytes should return back a SpanContext that was constructed from
-        the data serialized in the byte_representation passed. If it is not
-        possible to read in a proper SpanContext, return None.
+        from_bytes should return back a DistributedContext that was constructed
+        from the data serialized in the byte_representation passed. If it is
+        not possible to read in a proper DistributedContext, return None.
 
         Args:
             byte_representation: the bytes to deserialize
 
         Returns:
-            A bytes representation of the SpanContext if it is valid.
+            A bytes representation of the DistributedContext if it is valid.
             Otherwise return None.
 
         """

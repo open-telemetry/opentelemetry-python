@@ -9,10 +9,8 @@ class TestResources(unittest.TestCase):
         right = resources.Resource({"host": "service-host"})
         self.assertEqual(
             left.merge(right),
-            resources.Resource({
-                "service": "ui",
-                "host": "service-host"
-            }))
+            resources.Resource({"service": "ui", "host": "service-host"}),
+        )
 
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.
@@ -22,13 +20,10 @@ class TestResources(unittest.TestCase):
 
         """
         left = resources.Resource({"service": "ui", "host": ""})
-        right = resources.Resource({
-            "host": "service-host",
-            "service": "not-ui"
-        })
+        right = resources.Resource(
+            {"host": "service-host", "service": "not-ui"}
+        )
         self.assertEqual(
             left.merge(right),
-            resources.Resource({
-                "service": "ui",
-                "host": "service-host"
-            }))
+            resources.Resource({"service": "ui", "host": "service-host"}),
+        )

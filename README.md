@@ -6,6 +6,26 @@
 
 The Python [OpenTelemetry](https://opentelemetry.io/) client.
 
+## Installation
+
+## Usage
+```python
+from opentelemetry import trace
+from opentelemetry.context import Context
+from opentelemetry.sdk.trace import Tracer
+
+trace.set_preferred_tracer_implementation(lambda T: Tracer())
+tracer = trace.tracer()
+with tracer.start_span('foo'):
+    print(Context)
+    with tracer.start_span('bar'):
+        print(Context)
+        with tracer.start_span('baz'):
+            print(Context)
+        print(Context)
+    print(Context)
+```
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)

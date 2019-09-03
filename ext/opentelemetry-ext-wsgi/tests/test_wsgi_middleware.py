@@ -48,6 +48,7 @@ def create_iter_wsgi(response):
         assert isinstance(environ, dict)
         start_response("200 OK", [("Content-Type", "text/plain")])
         return response
+
     return iter_wsgi
 
 
@@ -66,10 +67,9 @@ class TestWsgiApplication(unittest.TestCase):
     def setUp(self):
         tracer = trace_api.tracer()
         self.span_context_manager = mock.MagicMock()
-        self.span_context_manager.__enter__.return_value = \
-            mock.create_autospec(
-                trace_api.Span, spec_set=True
-            )
+        self.span_context_manager.__enter__.return_value = mock.create_autospec(
+            trace_api.Span, spec_set=True
+        )
         self.patcher = mock.patch.object(
             tracer,
             "start_span",
@@ -94,7 +94,7 @@ class TestWsgiApplication(unittest.TestCase):
 
     def start_response(self, status, response_headers, exc_info=None):
         # The span should have started already
-        self.span_context_manager.__enter__.assert_called()
+        self.span_context_manager.__enter__.assert_called_with()
 
         self.status = status
         self.response_headers = response_headers
@@ -108,13 +108,14 @@ class TestWsgiApplication(unittest.TestCase):
                 self.span_context_manager.__exit__.assert_not_called()
                 self.assertEqual(value, b"*")
             except StopIteration:
-                self.span_context_manager.__exit__.assert_called()
+                self.span_context_manager.__exit__.assert_called_with(
+                    None, None, None
+                )
                 break
 
         self.assertEqual(self.status, "200 OK")
         self.assertEqual(
-            self.response_headers,
-            [("Content-Type", "text/plain")]
+            self.response_headers, [("Content-Type", "text/plain")]
         )
         if error:
             self.assertIs(self.exc_info[0], error)
@@ -157,8 +158,7 @@ class TestWsgiAttributes(unittest.TestCase):
 
     def test_request_attributes(self):
         OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
-            self.span,
-            self.environ,
+            self.span, self.environ
         )
         expected = (
             mock.call("component", "http"),
@@ -171,7 +171,7 @@ class TestWsgiAttributes(unittest.TestCase):
 
     def test_response_attributes(self):
         OpenTelemetryMiddleware._add_response_attributes(  # noqa pylint: disable=protected-access
-            self.span, "404 Not Found",
+            self.span, "404 Not Found"
         )
         expected = (
             mock.call("http.status_code", 404),
@@ -182,12 +182,11 @@ class TestWsgiAttributes(unittest.TestCase):
 
     def test_response_attributes_invalid_status_code(self):
         OpenTelemetryMiddleware._add_response_attributes(  # noqa pylint: disable=protected-access
-            self.span, "Invalid Status Code",
+            self.span, "Invalid Status Code"
         )
         self.assertEqual(self.span.set_attribute.call_count, 1)
         self.span.set_attribute.assert_called_with(
-            "http.status_text",
-            "Status Code",
+            "http.status_text", "Status Code"
         )
 
 
