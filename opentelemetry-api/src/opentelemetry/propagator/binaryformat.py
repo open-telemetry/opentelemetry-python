@@ -45,7 +45,7 @@ class BinaryFormat(abc.ABC):
     def from_bytes(
         context: BaseRuntimeContext, byte_representation: bytes
     ) -> None:
-        """Populate context with context data that existed in the byte representation.
+        """Populate context with data that existed in the byte representation.
 
         from_bytes should add values into the context from the data serialized in the
         byte_representation passed. If it is not possible to read in a proper

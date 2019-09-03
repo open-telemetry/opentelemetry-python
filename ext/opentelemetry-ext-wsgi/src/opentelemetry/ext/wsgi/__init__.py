@@ -22,6 +22,7 @@ import functools
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import trace
+from opentelemetry import propagator
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 
 

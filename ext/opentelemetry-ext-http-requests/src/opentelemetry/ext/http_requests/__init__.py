@@ -21,6 +21,7 @@ import functools
 from urllib.parse import urlparse
 
 from requests.sessions import Session
+from opentelemetry import propagator
 
 
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user
@@ -76,6 +77,10 @@ def enable(tracer):
 
             span.set_attribute("http.status_code", result.status_code)
             span.set_attribute("http.status_text", result.reason)
+
+            propagator.global_propagator().inject(
+                result.headers.set, result.headers
+            )
 
             return result
 
