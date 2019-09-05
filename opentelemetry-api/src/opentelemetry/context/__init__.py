@@ -25,8 +25,8 @@ functionalities::
     >>> Context.foo
     2
 
-When explicit thread is used, a helper function `Context.with_current_context`
-can be used to carry the context across threads:
+When explicit thread is used, a helper function `BaseRuntimeContext.with_current_context`
+can be used to carry the context across threads::
 
     from threading import Thread
     from opentelemetry.context import Context
@@ -59,7 +59,7 @@ can be used to carry the context across threads:
 
         print('Main thread:', Context)
 
-Here goes another example using thread pool:
+Here goes another example using thread pool::
 
     import time
     import threading
