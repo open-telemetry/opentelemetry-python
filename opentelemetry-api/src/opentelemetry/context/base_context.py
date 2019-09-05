@@ -48,7 +48,9 @@ class BaseRuntimeContext:
             slot.clear()
 
     @classmethod
-    def register_slot(cls, name: str, default: "object" = None) -> "Slot":
+    def register_slot(
+        cls, name: str, default: "object" = None
+    ) -> "BaseRuntimeContext.Slot":
         """Register a context slot with an optional default value.
 
         :type name: str
