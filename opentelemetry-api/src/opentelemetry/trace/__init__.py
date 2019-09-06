@@ -70,6 +70,24 @@ from opentelemetry import loader, types
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
+class Link:
+    """A link to a `Span`."""
+
+    def __init__(
+        self, context: "SpanContext", attributes: types.Attributes = None
+    ) -> None:
+        self._context = context
+        self._attributes = attributes
+
+    @property
+    def context(self) -> "SpanContext":
+        return self._context
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._attributes
+
+
 class Span:
     """A span represents a single operation within a trace."""
 
@@ -122,10 +140,16 @@ class Span:
         link_target_context: "SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
-        """Adds a Link to another span.
+        """Adds a `Link` to another span.
 
-        Adds a single Link from this Span to another Span identified by the
+        Adds a single `Link` from this Span to another Span identified by the
         `SpanContext` passed as argument.
+        """
+
+    def add_lazy_link(self, link: "Link") -> None:
+        """Adds a `Link` to another span.
+
+        Adds a `Link` that has previously been created.
         """
 
     def update_name(self, name: str) -> None:

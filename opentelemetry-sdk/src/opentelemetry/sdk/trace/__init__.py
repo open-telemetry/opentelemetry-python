@@ -142,8 +142,6 @@ class BoundedDict(MutableMapping):
 
 Event = namedtuple("Event", ("name", "attributes"))
 
-Link = namedtuple("Link", ("context", "attributes"))
-
 
 class SpanProcessor:
     """Interface which allows hooks for SDK's `Span`s start and end method
@@ -242,7 +240,7 @@ class Span(trace_api.Span):
         resource=None,  # TODO
         attributes: types.Attributes = None,  # TODO
         events: typing.Sequence[Event] = None,  # TODO
-        links: typing.Sequence[Link] = None,  # TODO
+        links: typing.Sequence[trace_api.Link] = None,  # TODO
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
 
@@ -302,11 +300,14 @@ class Span(trace_api.Span):
         link_target_context: "trace_api.SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
-        if self.links is Span.empty_links:
-            self.links = BoundedList(MAX_NUM_LINKS)
         if attributes is None:
             attributes = Span.empty_attributes
-        self.links.append(Link(link_target_context, attributes))
+        self.add_lazy_link(trace_api.Link(link_target_context, attributes))
+
+    def add_lazy_link(self, link: "trace_api.Link") -> None:
+        if self.links is Span.empty_links:
+            self.links = BoundedList(MAX_NUM_LINKS)
+        self.links.append(link)
 
     def start(self):
         if self.start_time is None:
