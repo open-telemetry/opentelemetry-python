@@ -130,6 +130,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNone(tracer.get_current_span())
 
         with tracer.start_span("root") as root:
+            # attributes
             root.set_attribute("component", "http")
             root.set_attribute("http.method", "GET")
             root.set_attribute(
@@ -144,18 +145,6 @@ class TestSpanCreation(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value1")
             root.set_attribute("attr-key", "attr-value2")
 
-            root.add_event("event0")
-            root.add_event("event1", {"name": "birthday"})
-
-            root.add_link(other_context1)
-            root.add_link(other_context2, {"name": "neighbor"})
-
-            root.update_name("toor")
-            self.assertEqual(root.name, "toor")
-
-            # The public API does not expose getters.
-            # Checks by accessing the span members directly
-
             self.assertEqual(len(root.attributes), 7)
             self.assertEqual(root.attributes["component"], "http")
             self.assertEqual(root.attributes["http.method"], "GET")
@@ -168,6 +157,10 @@ class TestSpanCreation(unittest.TestCase):
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
+            # events
+            root.add_event("event0")
+            root.add_event("event1", {"name": "birthday"})
+
             self.assertEqual(len(root.events), 2)
             self.assertEqual(
                 root.events[0], trace.Event(name="event0", attributes={})
@@ -176,6 +169,10 @@ class TestSpanCreation(unittest.TestCase):
                 root.events[1],
                 trace.Event(name="event1", attributes={"name": "birthday"}),
             )
+
+            # links
+            root.add_link(other_context1)
+            root.add_link(other_context2, {"name": "neighbor"})
 
             self.assertEqual(len(root.links), 2)
             self.assertEqual(
@@ -193,6 +190,9 @@ class TestSpanCreation(unittest.TestCase):
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
 
+            # name
+            root.update_name("toor")
+            self.assertEqual(root.name, "toor")
 
 class TestSpan(unittest.TestCase):
     def test_basic_span(self):
