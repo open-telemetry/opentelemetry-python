@@ -198,3 +198,116 @@ class TestSpan(unittest.TestCase):
     def test_basic_span(self):
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
         self.assertEqual(span.name, "name")
+
+
+def span_event_start_fmt(span_processor_name, span_name):
+    return span_processor_name + ":" + span_name + ":start"
+
+
+def span_event_end_fmt(span_processor_name, span_name):
+    return span_processor_name + ":" + span_name + ":end"
+
+
+class MySpanProcessor(trace.SpanProcessor):
+    def __init__(self, name, span_list):
+        self.name = name
+        self.span_list = span_list
+
+    def on_start(self, span: "trace.Span") -> None:
+        self.span_list.append(span_event_start_fmt(self.name, span.name))
+
+    def on_end(self, span: "trace.Span") -> None:
+        self.span_list.append(span_event_end_fmt(self.name, span.name))
+
+
+class TestSpanProcessor(unittest.TestCase):
+    def test_span_processor(self):
+        tracer = trace.Tracer()
+
+        spans_calls_list = []  # filled by MySpanProcessor
+        expected_list = []  # filled by hand
+
+        # Span processors are created but not added to the tracer yet
+        sp1 = MySpanProcessor("SP1", spans_calls_list)
+        sp2 = MySpanProcessor("SP2", spans_calls_list)
+
+        with tracer.start_span("foo"):
+            with tracer.start_span("bar"):
+                with tracer.start_span("baz"):
+                    pass
+
+        # at this point lists must be empty
+        self.assertEqual(len(spans_calls_list), 0)
+
+        # add single span processor
+        tracer.add_span_processor(sp1)
+
+        with tracer.start_span("foo"):
+            expected_list.append(span_event_start_fmt("SP1", "foo"))
+
+            with tracer.start_span("bar"):
+                expected_list.append(span_event_start_fmt("SP1", "bar"))
+
+                with tracer.start_span("baz"):
+                    expected_list.append(span_event_start_fmt("SP1", "baz"))
+
+                expected_list.append(span_event_end_fmt("SP1", "baz"))
+
+            expected_list.append(span_event_end_fmt("SP1", "bar"))
+
+        expected_list.append(span_event_end_fmt("SP1", "foo"))
+
+        self.assertListEqual(spans_calls_list, expected_list)
+
+        spans_calls_list.clear()
+        expected_list.clear()
+
+        # go for multiple span processors
+        tracer.add_span_processor(sp2)
+
+        with tracer.start_span("foo"):
+            expected_list.append(span_event_start_fmt("SP1", "foo"))
+            expected_list.append(span_event_start_fmt("SP2", "foo"))
+
+            with tracer.start_span("bar"):
+                expected_list.append(span_event_start_fmt("SP1", "bar"))
+                expected_list.append(span_event_start_fmt("SP2", "bar"))
+
+                with tracer.start_span("baz"):
+                    expected_list.append(span_event_start_fmt("SP1", "baz"))
+                    expected_list.append(span_event_start_fmt("SP2", "baz"))
+
+                expected_list.append(span_event_end_fmt("SP1", "baz"))
+                expected_list.append(span_event_end_fmt("SP2", "baz"))
+
+            expected_list.append(span_event_end_fmt("SP1", "bar"))
+            expected_list.append(span_event_end_fmt("SP2", "bar"))
+
+        expected_list.append(span_event_end_fmt("SP1", "foo"))
+        expected_list.append(span_event_end_fmt("SP2", "foo"))
+
+        # compare if two lists are the same
+        self.assertListEqual(spans_calls_list, expected_list)
+
+    def test_add_span_processor_after_span_creation(self):
+        tracer = trace.Tracer()
+
+        spans_calls_list = []  # filled by MySpanProcessor
+        expected_list = []  # filled by hand
+
+        # Span processors are created but not added to the tracer yet
+        sp = MySpanProcessor("SP1", spans_calls_list)
+
+        with tracer.start_span("foo"):
+            with tracer.start_span("bar"):
+                with tracer.start_span("baz"):
+                    # add span processor after spans have been created
+                    tracer.add_span_processor(sp)
+
+                expected_list.append(span_event_end_fmt("SP1", "baz"))
+
+            expected_list.append(span_event_end_fmt("SP1", "bar"))
+
+        expected_list.append(span_event_end_fmt("SP1", "foo"))
+
+        self.assertListEqual(spans_calls_list, expected_list)
