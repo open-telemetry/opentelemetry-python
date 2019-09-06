@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import abc
-from opentelemetry import loader
-import opentelemetry.propagator.httptextformat as httptextformat
+import typing
+
 import opentelemetry.propagator.binaryformat as binaryformat
-from opentelemetry.context import BaseRuntimeContext, Context
+import opentelemetry.propagator.httptextformat as httptextformat
+from opentelemetry.context import BaseRuntimeContext
 
 
-class Propagator(abc.ABC):
+class Propagator:
     """Class which encapsulates propagation of values to and from context.
 
     In contract to using the formatters directly, a propagator object can
@@ -30,26 +30,16 @@ class Propagator(abc.ABC):
     def __init__(
         self,
         context: BaseRuntimeContext,
-        http_format: httptextformat.HTTPTextFormat,
-        binary_format: binaryformat.BinaryFormat,
+        httptextformat_instance: httptextformat.HTTPTextFormat,
+        binaryformat_instance: binaryformat.BinaryFormat,
     ):
         self._context = context
-        self._http_format = http_format
-        self._binary_format = binary_format
+        self._httptextformat = httptextformat_instance
+        self._binaryformat = binaryformat_instance
 
-    @classmethod
-    def create(
-        cls,
-        http_format: httptextformat.HTTPTextFormat,
-        binary_format: binaryformat.BinaryFormat,
-    ) -> "Propagator":
-        """Create a propagator with the current context."""
-        return Propagator(Context, http_format, binary_format)
-
-    @abc.abstractmethod
     def extract(
         self, get_from_carrier: httptextformat.Getter, carrier: object
-    ):
+    ) -> None:
         """Extract context data from the carrier, add to the context.
 
         Using the http_format specified in the constructor, extract the
@@ -65,7 +55,6 @@ class Propagator(abc.ABC):
                 which understands how to extract a value from it.
         """
 
-    @abc.abstractmethod
     def inject(
         self, set_in_carrier: httptextformat.Setter, carrier: object
     ) -> None:
@@ -84,7 +73,6 @@ class Propagator(abc.ABC):
                 know how to set header values on the carrier.
         """
 
-    @abc.abstractmethod
     def from_bytes(self, byte_representation: bytes) -> None:
         """Populate context with data that existed in the byte representation.
 
@@ -95,11 +83,10 @@ class Propagator(abc.ABC):
             byte_representation: the bytes to deserialize.
         """
 
-    @abc.abstractmethod
     def to_bytes(self) -> bytes:
         """Creates a byte representation of the context configured.
 
-        to_bytes should read values from the configured context and 
+        to_bytes should read values from the configured context and
         return a bytes object to represent it.
 
         Returns:
@@ -110,11 +97,11 @@ class Propagator(abc.ABC):
 def set_propagator(propagator_instance: Propagator) -> None:
     """Set the propagator instance singleton.
     """
-    global _PROPAGATOR
+    global _PROPAGATOR  # pylint:disable=global-statement
     _PROPAGATOR = propagator_instance
 
 
-def global_propagator() -> Propagator:
+def global_propagator() -> typing.Optional[Propagator]:
     """Return the singleton propagator instance."""
     return _PROPAGATOR
 

@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import unittest
-import opentelemetry.trace as api_trace
+
 import opentelemetry.context as context
 import opentelemetry.sdk.propagator.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
-
+import opentelemetry.trace as api_trace
 from opentelemetry.sdk.trace import tracer
 
 FORMAT = b3_format.B3Format()

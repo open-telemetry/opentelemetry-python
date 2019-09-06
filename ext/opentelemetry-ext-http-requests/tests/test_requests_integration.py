@@ -2,16 +2,20 @@ import sys
 import unittest
 from unittest import mock
 
-import opentelemetry.ext.http_requests
 import requests
 import urllib3
+
+import opentelemetry.ext.http_requests
 from opentelemetry import trace
+from opentelemetry import propagator
+from opentelemetry.context import Context
 
 
 class TestRequestsIntegration(unittest.TestCase):
 
     # TODO: Copy & paste from test_wsgi_middleware
     def setUp(self):
+        propagator.set_propagator(propagator.Propagator(Context, None, None))
         self.span_attrs = {}
         self.tracer = trace.tracer()
         self.span_context_manager = mock.MagicMock()

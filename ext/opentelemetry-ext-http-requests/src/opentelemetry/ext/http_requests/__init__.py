@@ -21,6 +21,7 @@ import functools
 from urllib.parse import urlparse
 
 from requests.sessions import Session
+
 from opentelemetry import propagator
 
 
@@ -79,7 +80,7 @@ def enable(tracer):
             span.set_attribute("http.status_text", result.reason)
 
             propagator.global_propagator().inject(
-                result.headers.set, result.headers
+                result.headers.__setitem__, result.headers
             )
 
             return result
