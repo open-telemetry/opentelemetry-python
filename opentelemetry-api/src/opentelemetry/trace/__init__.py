@@ -88,6 +88,29 @@ class Link:
         return self._attributes
 
 
+class Event:
+    """A text annotation with a set of attributes."""
+
+    def __init__(
+        self, name: str, timestamp: int, attributes: types.Attributes = None
+    ) -> None:
+        self._name = name
+        self._attributes = attributes
+        self._timestamp = timestamp
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._attributes
+
+    @property
+    def timestamp(self) -> int:
+        return self._timestamp
+
+
 class Span:
     """A span represents a single operation within a trace."""
 
@@ -129,10 +152,16 @@ class Span:
     def add_event(
         self, name: str, attributes: types.Attributes = None
     ) -> None:
-        """Adds an Event.
+        """Adds an `Event`.
 
-        Adds a single Event with the name and, optionally, attributes passed
+        Adds a single `Event` with the name and, optionally, attributes passed
         as arguments.
+        """
+
+    def add_lazy_event(self, event: Event) -> None:
+        """Adds an `Event`.
+
+        Adds an `Event` that has previously been created.
         """
 
     def add_link(

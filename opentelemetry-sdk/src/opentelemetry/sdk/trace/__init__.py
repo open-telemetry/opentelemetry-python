@@ -16,7 +16,7 @@
 import random
 import threading
 import typing
-from collections import OrderedDict, deque, namedtuple
+from collections import OrderedDict, deque
 from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
@@ -140,9 +140,6 @@ class BoundedDict(MutableMapping):
         return bounded_dict
 
 
-Event = namedtuple("Event", ("name", "attributes"))
-
-
 class SpanProcessor:
     """Interface which allows hooks for SDK's `Span`s start and end method
     invocations.
@@ -239,7 +236,7 @@ class Span(trace_api.Span):
         trace_config=None,  # TODO
         resource=None,  # TODO
         attributes: types.Attributes = None,  # TODO
-        events: typing.Sequence[Event] = None,  # TODO
+        events: typing.Sequence[trace_api.Event] = None,  # TODO
         links: typing.Sequence[trace_api.Link] = None,  # TODO
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
@@ -289,11 +286,14 @@ class Span(trace_api.Span):
     def add_event(
         self, name: str, attributes: types.Attributes = None
     ) -> None:
-        if self.events is Span.empty_events:
-            self.events = BoundedList(MAX_NUM_EVENTS)
         if attributes is None:
             attributes = Span.empty_attributes
-        self.events.append(Event(name, attributes))
+        self.add_lazy_event(trace_api.Event(name, util.time_ns(), attributes))
+
+    def add_lazy_event(self, event: trace_api.Event) -> None:
+        if self.events is Span.empty_events:
+            self.events = BoundedList(MAX_NUM_EVENTS)
+        self.events.append(event)
 
     def add_link(
         self,

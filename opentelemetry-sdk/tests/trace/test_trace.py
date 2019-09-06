@@ -17,6 +17,7 @@ import unittest
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
+from opentelemetry.sdk import util
 
 
 class TestTracer(unittest.TestCase):
@@ -164,15 +165,22 @@ class TestSpanCreation(unittest.TestCase):
             # events
             root.add_event("event0")
             root.add_event("event1", {"name": "birthday"})
+            now = util.time_ns()
+            root.add_lazy_event(
+                trace_api.Event("event2", now, {"name": "hello"})
+            )
 
-            self.assertEqual(len(root.events), 2)
-            self.assertEqual(
-                root.events[0], trace.Event(name="event0", attributes={})
-            )
-            self.assertEqual(
-                root.events[1],
-                trace.Event(name="event1", attributes={"name": "birthday"}),
-            )
+            self.assertEqual(len(root.events), 3)
+
+            self.assertEqual(root.events[0].name, "event0")
+            self.assertEqual(root.events[0].attributes, {})
+
+            self.assertEqual(root.events[1].name, "event1")
+            self.assertEqual(root.events[1].attributes, {"name": "birthday"})
+
+            self.assertEqual(root.events[2].name, "event2")
+            self.assertEqual(root.events[2].attributes, {"name": "hello"})
+            self.assertEqual(root.events[2].timestamp, now)
 
             # links
             root.add_link(other_context1)
