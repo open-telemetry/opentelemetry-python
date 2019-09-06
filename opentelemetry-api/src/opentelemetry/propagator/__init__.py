@@ -13,9 +13,9 @@
 # limitations under the License.
 import typing
 
-import opentelemetry.propagator.binaryformat as binaryformat
-import opentelemetry.propagator.httptextformat as httptextformat
 from opentelemetry.context import BaseRuntimeContext
+
+from . import binaryformat, httptextformat
 
 
 class Propagator:

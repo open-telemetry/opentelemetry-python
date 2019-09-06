@@ -6,8 +6,7 @@ import requests
 import urllib3
 
 import opentelemetry.ext.http_requests
-from opentelemetry import trace
-from opentelemetry import propagator
+from opentelemetry import propagator, trace
 from opentelemetry.context import Context
 
 
