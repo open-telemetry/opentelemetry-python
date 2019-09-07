@@ -233,7 +233,7 @@ class Span(trace_api.Span):
     empty_links = BoundedList(MAX_NUM_LINKS)
 
     def __init__(
-        self: "Span",
+        self,
         name: str,
         context: "trace_api.SpanContext",
         parent: trace_api.ParentSpan = None,
@@ -283,15 +283,13 @@ class Span(trace_api.Span):
     def get_context(self):
         return self.context
 
-    def set_attribute(
-        self: "Span", key: str, value: types.AttributeValue
-    ) -> None:
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         if self.attributes is Span.empty_attributes:
             self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         self.attributes[key] = value
 
     def add_event(
-        self: "Span", name: str, attributes: types.Attributes = None
+        self, name: str, attributes: types.Attributes = None
     ) -> None:
         if self.events is Span.empty_events:
             self.events = BoundedList(MAX_NUM_EVENTS)
@@ -300,7 +298,7 @@ class Span(trace_api.Span):
         self.events.append(Event(name, attributes))
 
     def add_link(
-        self: "Span",
+        self,
         link_target_context: "trace_api.SpanContext",
         attributes: types.Attributes = None,
     ) -> None:

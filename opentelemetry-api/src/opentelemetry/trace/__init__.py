@@ -102,16 +102,14 @@ class Span:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
 
-    def set_attribute(
-        self: "Span", key: str, value: types.AttributeValue
-    ) -> None:
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
         """
 
     def add_event(
-        self: "Span", name: str, attributes: types.Attributes = None
+        self, name: str, attributes: types.Attributes = None
     ) -> None:
         """Adds an Event.
 
@@ -120,7 +118,7 @@ class Span:
         """
 
     def add_link(
-        self: "Span",
+        self,
         link_target_context: "SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
