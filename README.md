@@ -14,6 +14,10 @@ package includes abstract classes and no-op implementations that comprise the Op
 specification](https://github.com/open-telemetry/opentelemetry-specification).
 The `opentelemetry-sdk` package is the reference implementation of the API.
 
+Libraries that produce telemetry data should only depend on `opentelemetry-api`,
+and defer the choice of the SDK to the application developer. Applications may
+depend on `opentelemetry-sdk` or another package that implements the API. 
+
 To install the API and SDK packages, fork or clone this repo and do an
 [editable
 install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
