@@ -8,7 +8,26 @@ See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-i
 for a summary description of past meetings. To request edit access, join the
 meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
 
-## Pull Request
+## Development
+
+This project uses [`tox`](https://tox.readthedocs.io) to automate some aspects
+of development, including testing against multiple Python versions.
+
+You can run:
+
+- `tox` to run all existing tox commands, including unit tests for all packages
+  under multiple Python versions
+- `tox -e docs` to regenerate the API docs
+- `tox -e test-api` and `tox -e test-sdk` to run the API and SDK unit tests
+- `tox -e py37-test-api` to e.g. run the the API unit tests under a specific
+  Python version
+- `tox -e lint` to run lint checks on all code
+
+See
+[`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/master/tox.ini)
+for more detail on available tox commands.
+
+## Pull Requests
 
 ### How to Send Pull Requests
 
@@ -52,7 +71,7 @@ Open a pull request against the main `opentelemetry-python` repo.
   as `work-in-progress`, or mark it as [`draft`](https://github.blog/2019-02-14-introducing-draft-pull-requests/).
 * Make sure CLA is signed and CI is clear.
 
-### How to Get PR Merged
+### How to Get PRs Merged
 
 A PR is considered to be **ready to merge** when:
 * It has received two approvals from Collaborators/Maintainers (at different
@@ -85,10 +104,13 @@ rather than conform to specific API names or argument patterns in the spec.
 
 For a deeper discussion, see: https://github.com/open-telemetry/opentelemetry-specification/issues/165
 
-## Styleguide
+## Style Guide
 
-* docstrings should adhere to the Google styleguide as specified
-  with the [napolean extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy) extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
+* docstrings should adhere to the [Google Python Style
+  Guide](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
+  as specified with the [napolean
+  extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy)
+  extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
 
 ## Become a Collaborator
 
