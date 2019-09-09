@@ -79,8 +79,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 OpenTelemetry Python is under active development. Our goal is to release an
 _alpha_ version of the library at the end of September 2019. This release isn't
-guaranteed to conform to a specific version of the specification, and is likely
-to include backwards-incompatible changes in later releases.
+guaranteed to conform to a specific version of the specification, and future
+releases will not attempt to maintain backwards compatibility with the alpha
+release.
 
 | Component                   | Version | Target Date       |
 | --------------------------- | ------- | ----------------- |
