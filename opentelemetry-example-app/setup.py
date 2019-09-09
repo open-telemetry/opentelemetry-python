@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import setuptools
 
 setuptools.setup(
-    name="opentelemetry-integration-example",
+    name="opentelemetry-example-app",
     version="0.0.1alpha0",
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
@@ -44,13 +42,12 @@ setuptools.setup(
         "flask",
         "requests",
     ],
-    extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
     packages=setuptools.find_namespace_packages(where="src"),
     url=(
         "https://github.com/open-telemetry/opentelemetry-python"
-        "/tree/master/opentelemetry-integration-example"
+        "/tree/master/opentelemetry-example-app"
     ),
     zip_safe=False,
 )

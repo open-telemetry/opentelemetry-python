@@ -26,6 +26,8 @@ with tracer.start_span('foo'):
     print(Context)
 ```
 
+See [opentelemetry-example-app](./opentelemetry-example-app/README.rst) for a complete example.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)

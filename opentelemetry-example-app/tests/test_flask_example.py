@@ -1,5 +1,6 @@
 import unittest
-import opentelemetry_integration_example.flask_example as flask_example
+
+import opentelemetry_example_app.flask_example as flask_example
 
 
 class TestFlaskExample(unittest.TestCase):
@@ -10,4 +11,4 @@ class TestFlaskExample(unittest.TestCase):
     def test_full_path(self):
         with self.app.test_client() as client:
             response = client.get("/")
-            assert "hello" == response.data.decode()
+            assert response.data.decode() == "hello"
