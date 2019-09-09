@@ -9,7 +9,7 @@ The Python [OpenTelemetry](https://opentelemetry.io/) client.
 ## Installation
 
 This repository includes multiple installable packages. The `opentelemetry-api`
-package includes abstract classes that comprise the OpenTelemetry API following
+package includes abstract classes and no-op implementations that comprise the OpenTelemetry API following
 [the
 specification](https://github.com/open-telemetry/opentelemetry-specification).
 The `opentelemetry-sdk` package is the reference implementation of the API.
