@@ -256,6 +256,7 @@ class Span(trace_api.Span):
         self.events = events
         self.links = links
         self.span_processor = span_processor
+        self._lock = threading.Lock()
 
         if attributes is None:
             self.attributes = Span.empty_attributes
@@ -286,15 +287,17 @@ class Span(trace_api.Span):
     def set_attribute(
         self: "Span", key: str, value: types.AttributeValue
     ) -> None:
-        if self.attributes is Span.empty_attributes:
-            self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+        with self._lock:
+            if self.attributes is Span.empty_attributes:
+                self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         self.attributes[key] = value
 
     def add_event(
         self: "Span", name: str, attributes: types.Attributes = None
     ) -> None:
-        if self.events is Span.empty_events:
-            self.events = BoundedList(MAX_NUM_EVENTS)
+        with self._lock:
+            if self.events is Span.empty_events:
+                self.events = BoundedList(MAX_NUM_EVENTS)
         if attributes is None:
             attributes = Span.empty_attributes
         self.events.append(Event(name, attributes))
@@ -304,21 +307,24 @@ class Span(trace_api.Span):
         link_target_context: "trace_api.SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
-        if self.links is Span.empty_links:
-            self.links = BoundedList(MAX_NUM_LINKS)
+        with self._lock:
+            if self.links is Span.empty_links:
+                self.links = BoundedList(MAX_NUM_LINKS)
         if attributes is None:
             attributes = Span.empty_attributes
         self.links.append(Link(link_target_context, attributes))
 
     def start(self):
-        if self.start_time is None:
-            self.start_time = util.time_ns()
-            self.span_processor.on_start(self)
+        with self._lock:
+            if self.start_time is None:
+                self.start_time = util.time_ns()
+                self.span_processor.on_start(self)
 
     def end(self):
-        if self.end_time is None:
-            self.end_time = util.time_ns()
-            self.span_processor.on_end(self)
+        with self._lock:
+            if self.end_time is None:
+                self.end_time = util.time_ns()
+                self.span_processor.on_end(self)
 
     def update_name(self, name: str) -> None:
         self.name = name
