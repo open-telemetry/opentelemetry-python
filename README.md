@@ -8,7 +8,37 @@ The Python [OpenTelemetry](https://opentelemetry.io/) client.
 
 ## Installation
 
-## Usage
+This repository includes multiple installable packages. The `opentelemetry-api`
+package includes abstract classes and no-op implementations that comprise the OpenTelemetry API following
+[the
+specification](https://github.com/open-telemetry/opentelemetry-specification).
+The `opentelemetry-sdk` package is the reference implementation of the API.
+
+Libraries that produce telemetry data should only depend on `opentelemetry-api`,
+and defer the choice of the SDK to the application developer. Applications may
+depend on `opentelemetry-sdk` or another package that implements the API. 
+
+To install the API and SDK packages, fork or clone this repo and do an
+[editable
+install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
+via `pip`:
+
+```sh
+pip install -e ./opentelemetry-api
+pip install -e ./opentelemetry-sdk
+```
+
+The
+[`ext/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/ext)
+directory includes OpenTelemetry integration packages, which can be installed
+separately as:
+
+```sh
+pip install -e ./ext/opentelemetry-ext-{integration}
+```
+
+## Quick Start
+
 ```python
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -29,3 +59,23 @@ with tracer.start_span('foo'):
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Release Schedule
+
+OpenTelemetry Python is under active development. Our goal is to release an
+_alpha_ version of the library at the end of September 2019. This release isn't
+guaranteed to conform to a specific version of the specification, and future
+releases will not attempt to maintain backwards compatibility with the alpha
+release.
+
+| Component                   | Version | Target Date       |
+| --------------------------- | ------- | ----------------- |
+| Tracing API                 | Alpha   | September 30 2019 |
+| Tracing SDK                 | Alpha   | September 30 2019 |
+| Metrics API                 | Alpha   | September 30 2019 |
+| Metrics SDK                 | Alpha   | September 30 2019 |
+| Jaeger Trace Exporter       | Alpha   | Unknown           |
+| Prometheus Metrics Exporter | Alpha   | Unknown           |
+| Context Propagation         | Alpha   | September 30 2019 |
+| OpenTracing Bridge          | Alpha   | Unknown           |
+| OpenCensus Bridge           | Alpha   | Unknown           |
