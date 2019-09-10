@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import logging
 import random
 import threading
 import typing
@@ -23,6 +24,8 @@ from opentelemetry import trace as trace_api
 from opentelemetry import types
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
+
+logger = logging.getLogger(__name__)
 
 try:
     # pylint: disable=ungrouped-imports
@@ -288,6 +291,9 @@ class Span(trace_api.Span):
         self: "Span", key: str, value: types.AttributeValue
     ) -> None:
         with self._lock:
+            if self.end_time is not None:
+                logger.warning("Calling set_attribute() on an ended span.")
+                return
             if self.attributes is Span.empty_attributes:
                 self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         self.attributes[key] = value
@@ -296,6 +302,9 @@ class Span(trace_api.Span):
         self: "Span", name: str, attributes: types.Attributes = None
     ) -> None:
         with self._lock:
+            if self.end_time is not None:
+                logger.warning("Calling add_event() on an ended span.")
+                return
             if self.events is Span.empty_events:
                 self.events = BoundedList(MAX_NUM_EVENTS)
         if attributes is None:
@@ -308,6 +317,9 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,
     ) -> None:
         with self._lock:
+            if self.end_time is not None:
+                logger.warning("Calling add_link() on an ended span.")
+                return
             if self.links is Span.empty_links:
                 self.links = BoundedList(MAX_NUM_LINKS)
         if attributes is None:
@@ -316,17 +328,27 @@ class Span(trace_api.Span):
 
     def start(self):
         with self._lock:
-            if self.start_time is None:
-                self.start_time = util.time_ns()
-                self.span_processor.on_start(self)
+            if self.start_time is not None:
+                logger.warning("Calling start() on a started span.")
+                return
+            self.start_time = util.time_ns()
+        self.span_processor.on_start(self)
 
     def end(self):
         with self._lock:
-            if self.end_time is None:
-                self.end_time = util.time_ns()
-                self.span_processor.on_end(self)
+            if self.start_time is None:
+                raise RuntimeError("Calling end() on a not started span.")
+            if self.end_time is not None:
+                logger.warning("Calling end() on an ended span.")
+                return
+            self.end_time = util.time_ns()
+        self.span_processor.on_end(self)
 
     def update_name(self, name: str) -> None:
+        with self._lock:
+            if self.end_time is not None:
+                logger.warning("Calling update_name() on an ended span.")
+                return
         self.name = name
 
 
