@@ -16,7 +16,7 @@ import setuptools
 
 setuptools.setup(
     name="opentelemetry-example-app",
-    version="0.0.1alpha0",
+    version="0.1.dev0",
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
     classifiers=[
