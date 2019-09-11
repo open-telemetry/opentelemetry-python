@@ -22,18 +22,111 @@ def create_tracer(tracer: OTelTracer) -> OTTracer:
     return TracerWrapper(tracer)
 
 class SpanWrapper(OTSpan):
-    # def __init__(self, span: OTelSpan):
-        # self._otel_span = span
-    def __init__(self):
+    # def __init__(self, tracer, context):
+    #     self._tracer = tracer
+    #     self._context = context
+    def __init__(self, span: OTelSpan):
+        self._otel_span = span
+
+    @property
+    def otel_span(self):
+        """Returns the OpenTelemetry span embedded in the SpanWrapper."""
+        return self._otel_span
+
+    @property
+    def context(self):
+        # return self._context
+        pass
+
+    @property
+    def tracer(self):
+        # return self._tracer
+        pass
+
+    def set_operation_name(self, operation_name):
+        self._otel_span.update_name(operation_name)
+        return self
+
+    def finish(self, finish_time=None):
+        pass
+
+    def set_tag(self, key, value):
+        return self
+
+    def log_kv(self, key_values, timestamp=None):
+        return self
+
+    def set_baggage_item(self, key, value):
+        return self
+
+    def get_baggage_item(self, key):
+        return None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        Span._on_error(self, exc_type, exc_val, exc_tb)
+        self.finish()
+
+    @staticmethod
+    def _on_error(span, exc_type, exc_val, exc_tb):
+        # if not span or not exc_val:
+        #     return
+
+        # span.set_tag(tags.ERROR, True)
+        # span.log_kv({
+        #     logs.EVENT: tags.ERROR,
+        #     logs.MESSAGE: str(exc_val),
+        #     logs.ERROR_OBJECT: exc_val,
+        #     logs.ERROR_KIND: exc_type,
+        #     logs.STACK: exc_tb,
+        # })
+        pass
+
+    def log_event(self, event, payload=None):
+        # """DEPRECATED"""
+        # if payload is None:
+        #     return self.log_kv({logs.EVENT: event})
+        # else:
+        #     return self.log_kv({logs.EVENT: event, 'payload': payload})
+        pass
+
+    def log(self, **kwargs):
+        # """DEPRECATED"""
+        # key_values = {}
+        # if logs.EVENT in kwargs:
+        #     key_values[logs.EVENT] = kwargs[logs.EVENT]
+        # if 'payload' in kwargs:
+        #     key_values['payload'] = kwargs['payload']
+        # timestamp = None
+        # if 'timestamp' in kwargs:
+        #     timestamp = kwargs['timestamp']
+        # return self.log_kv(key_values, timestamp)
         pass
 
 class ScopeWrapper(OTScope):
-    def __init__(self):
-        self._span = SpanWrapper()
+    def __init__(self, manager, span):
+        self._manager = manager
+        self._span = span
 
     @property
     def span(self):
         return self._span
+
+    @property
+    def manager(self):
+        return self._manager
+
+    def close(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        SpanWrapper._on_error(self.span, exc_type, exc_val, exc_tb)
+        self.close()
 
 class TracerWrapper(OTTracer):
     def __init__(self, tracer: OTelTracer):
