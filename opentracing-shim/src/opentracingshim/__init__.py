@@ -18,8 +18,10 @@ from opentracing import Scope as OTScope
 from opentracing import Tracer as OTTracer
 from opentracing import Span as OTSpan
 
+
 def create_tracer(tracer: OTelTracer) -> OTTracer:
     return TracerWrapper(tracer)
+
 
 class SpanWrapper(OTSpan):
     # def __init__(self, tracer, context):
@@ -105,6 +107,7 @@ class SpanWrapper(OTSpan):
         # return self.log_kv(key_values, timestamp)
         pass
 
+
 class ScopeWrapper(OTScope):
     def __init__(self, manager, span):
         self._manager = manager
@@ -128,6 +131,7 @@ class ScopeWrapper(OTScope):
         SpanWrapper._on_error(self.span, exc_type, exc_val, exc_tb)
         self.close()
 
+
 class TracerWrapper(OTTracer):
     def __init__(self, tracer: OTelTracer):
         self._otel_tracer = tracer
@@ -146,26 +150,30 @@ class TracerWrapper(OTTracer):
         # TODO: Implement.
         pass
 
-    def start_active_span(self,
-                          operation_name,
-                          child_of=None,
-                          references=None,
-                          tags=None,
-                          start_time=None,
-                          ignore_active_span=False,
-                          finish_on_close=True) -> ScopeWrapper:
+    def start_active_span(
+        self,
+        operation_name,
+        child_of=None,
+        references=None,
+        tags=None,
+        start_time=None,
+        ignore_active_span=False,
+        finish_on_close=True,
+    ) -> ScopeWrapper:
         # TODO: Activate the OTel span.
         # otel_span = self._otel_tracer.start_span(operation_name)
         otel_span = self._otel_tracer.create_span(operation_name)
         return ScopeWrapper(None, SpanWrapper(otel_span))
 
-    def start_span(self,
-                   operation_name=None,
-                   child_of=None,
-                   references=None,
-                   tags=None,
-                   start_time=None,
-                   ignore_active_span=False):
+    def start_span(
+        self,
+        operation_name=None,
+        child_of=None,
+        references=None,
+        tags=None,
+        start_time=None,
+        ignore_active_span=False,
+    ):
         # return self._noop_span
         # TODO: Implement.
         pass

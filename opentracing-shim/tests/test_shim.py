@@ -20,6 +20,7 @@ from opentracing import Tracer, Scope, Span
 
 import opentracingshim
 
+
 class TestShim(unittest.TestCase):
     def setUp(self):
         self.tracer = trace.tracer()
