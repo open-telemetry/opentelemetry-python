@@ -46,6 +46,13 @@ class TestShim(unittest.TestCase):
             # expected one.
             # self.assertEqual(self.tracer.get_current_span(), "fake")
 
+    def test_set_operation_name(self):
+        with self.ot_tracer.start_active_span("TestName") as scope:
+            self.assertEqual(scope.span.otel_span.name, "TestName")
+
+            scope.span.set_operation_name("NewName")
+            self.assertEqual(scope.span.otel_span.name, "NewName")
+
     def test_set_tag(self):
         with self.ot_tracer.start_active_span("TestSetTag") as scope:
             scope.span.set_tag("my", "tag")
