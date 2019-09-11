@@ -154,8 +154,10 @@ class TracerWrapper(OTTracer):
                           start_time=None,
                           ignore_active_span=False,
                           finish_on_close=True) -> ScopeWrapper:
-        # TODO: Implement.
-        return ScopeWrapper()
+        # TODO: Activate the OTel span.
+        # otel_span = self._otel_tracer.start_span(operation_name)
+        otel_span = self._otel_tracer.create_span(operation_name)
+        return ScopeWrapper(None, SpanWrapper(otel_span))
 
     def start_span(self,
                    operation_name=None,
