@@ -19,23 +19,23 @@ from opentracing import Tracer as OTTracer
 from opentracing import Span as OTSpan
 
 def create_tracer(tracer: OTelTracer) -> OTTracer:
-    return TracerShim(tracer)
+    return TracerWrapper(tracer)
 
-class SpanShim(OTSpan):
+class SpanWrapper(OTSpan):
     # def __init__(self, span: OTelSpan):
         # self._otel_span = span
     def __init__(self):
         pass
 
-class ScopeShim(OTScope):
+class ScopeWrapper(OTScope):
     def __init__(self):
-        self._span = SpanShim()
+        self._span = SpanWrapper()
 
     @property
     def span(self):
         return self._span
 
-class TracerShim(OTTracer):
+class TracerWrapper(OTTracer):
     def __init__(self, tracer: OTelTracer):
         self._otel_tracer = tracer
         # TODO: Finish implementation.
@@ -60,9 +60,9 @@ class TracerShim(OTTracer):
                           tags=None,
                           start_time=None,
                           ignore_active_span=False,
-                          finish_on_close=True) -> ScopeShim:
+                          finish_on_close=True) -> ScopeWrapper:
         # TODO: Implement.
-        return ScopeShim()
+        return ScopeWrapper()
 
     def start_span(self,
                    operation_name=None,
