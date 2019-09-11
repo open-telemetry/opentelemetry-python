@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from importlib import reload
 import os
 import sys
 import unittest
+from importlib import reload
 
-from opentelemetry import loader
-from opentelemetry import trace
+from opentelemetry import loader, trace
 
 DUMMY_TRACER = None
 
