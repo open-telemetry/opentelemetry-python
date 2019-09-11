@@ -42,6 +42,9 @@ class TestShim(unittest.TestCase):
         with self.ot_tracer.start_active_span("TestBasic") as scope:
             self.assertIsInstance(scope, Scope)
             self.assertIsInstance(scope.span, Span)
+            # TODO: Verify that the current span in the OTel Tracer is the
+            # expected one.
+            # self.assertEqual(self.tracer.get_current_span(), "fake")
 
     def test_set_tag(self):
         with self.ot_tracer.start_active_span("TestSetTag") as scope:
