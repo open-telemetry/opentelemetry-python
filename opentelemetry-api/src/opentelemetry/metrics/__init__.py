@@ -56,7 +56,7 @@ class Meter:
         unit: str,
         label_keys: LabelKeys,
         span_context: SpanContext = None,
-    ) -> "CounterFloat":
+    ) -> "FloatCounter":
         """Creates a counter type metric that contains float values.
 
         Args:
@@ -69,7 +69,7 @@ class Meter:
             span_context: The `SpanContext` that identifies the `Span`
                 that the metric is associated with.
 
-        Returns: A new `CounterFloat`
+        Returns: A new `FloatCounter`
         """
 
     def create_int_counter(
@@ -79,7 +79,7 @@ class Meter:
         unit: str,
         label_keys: LabelKeys,
         span_context: SpanContext = None,
-    ) -> "CounterInt":
+    ) -> "IntCounter":
         """Creates a counter type metric that contains int values.
 
         Args:
@@ -93,7 +93,7 @@ class Meter:
                 that the metric is associated with.
 
         Returns:
-            A new `CounterInt`
+            A new `IntCounter`
         """
 
     def create_float_gauge(
@@ -103,7 +103,7 @@ class Meter:
         unit: str,
         label_keys: LabelKeys,
         span_context: SpanContext = None,
-    ) -> "GaugeFloat":
+    ) -> "FloatGauge":
         """Creates a gauge type metric that contains float values.
 
         Args:
@@ -117,7 +117,7 @@ class Meter:
                 that the metric is associated with.
 
         Returns:
-            A new `GaugeFloat`
+            A new `FloatGauge`
         """
 
     def create_int_gauge(
@@ -127,7 +127,7 @@ class Meter:
         unit: str,
         label_keys: LabelKeys,
         span_context: SpanContext = None,
-    ) -> "GaugeInt":
+    ) -> "IntGauge":
         """Creates a gauge type metric that contains int values.
 
         Args:
@@ -141,7 +141,7 @@ class Meter:
                 that the metric is associated with.
 
         Returns:
-            A new `GaugeInt`
+            A new `IntGauge`
         """
 
     def create_int_measure(
@@ -151,7 +151,7 @@ class Meter:
         unit: str,
         label_keys: LabelKeys,
         span_context: SpanContext = None,
-    ) -> "MeasureInt":
+    ) -> "IntMeasure":
         """Creates a measure used to record raw int values.
 
         Args:
@@ -165,7 +165,7 @@ class Meter:
                 that the metric is associated with.
 
         Returns:
-            A new `MeasureInt`
+            A new `IntMeasure`
         """
 
     def create_float_measure(
@@ -175,7 +175,7 @@ class Meter:
         unit: str,
         label_keys: LabelKeys,
         span_context: SpanContext = None,
-    ) -> "MeasureFloat":
+    ) -> "FloatMeasure":
         """Creates a Measure used to record raw float values.
 
         Args:
@@ -189,7 +189,7 @@ class Meter:
                 that the metric is associated with.
 
         Returns:
-            A new `MeasureFloat`
+            A new `FloatMeasure`
         """
 
 
@@ -228,7 +228,7 @@ class Metric(ABC):
         """Removes all timeseries from the `Metric`."""
 
 
-class CounterFloat(Metric):
+class FloatCounter(Metric):
     """A counter type metric that holds float values.
 
     Cumulative values can go up or stay the same, but can never go down.
@@ -241,7 +241,7 @@ class CounterFloat(Metric):
         """Gets a `CounterTimeSeries` with a cumulative float value."""
 
 
-class CounterInt(Metric):
+class IntCounter(Metric):
     """A counter type metric that holds int values.
 
     Cumulative values can go up or stay the same, but can never go down.
@@ -254,7 +254,7 @@ class CounterInt(Metric):
         """Gets a `CounterTimeSeries` with a cumulative int value."""
 
 
-class GaugeFloat(Metric):
+class FloatGauge(Metric):
     """A gauge type metric that holds float values.
 
     Cumulative value can go both up and down. Values can be negative.
@@ -266,7 +266,7 @@ class GaugeFloat(Metric):
         """Gets a `GaugeTimeSeries` with a cumulative float value."""
 
 
-class GaugeInt(Metric):
+class IntGauge(Metric):
     """A gauge type metric that holds int values.
 
     Cumulative value can go both up and down. Values can be negative.
@@ -278,7 +278,7 @@ class GaugeInt(Metric):
         """Gets a `GaugeTimeSeries` with a cumulative int value."""
 
 
-class MeasureFloat(Metric):
+class FloatMeasure(Metric):
     """A measure type metric that holds float values.
 
     Measure metrics represent raw statistics that are recorded.
@@ -290,7 +290,7 @@ class MeasureFloat(Metric):
         """Gets a `MeasureTimeSeries` with a cumulated float value."""
 
 
-class MeasureInt(Metric):
+class IntMeasure(Metric):
     """A measure type metric that holds int values.
 
     Measure metrics represent raw statistics that are recorded.
@@ -300,18 +300,6 @@ class MeasureInt(Metric):
         self, label_values: LabelValues
     ) -> "MeasureTimeSeries":
         """Gets a `MeasureTimeSeries` with a cumulated int value."""
-
-
-class MeasureBatch:
-    def record(
-        self, metrics: List["Metric"], values: List[Union[float, int]]
-    ) -> None:
-        """Records multiple observed values simultaneously.
-
-        Args:
-            metric: A list containing the `Metric` s to be recorded
-            values: A list containing the values to record
-        """
 
 
 class LabelKey:
