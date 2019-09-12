@@ -28,7 +28,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import List
 
 from opentelemetry.metrics.time_series import (
     CounterTimeSeries,
