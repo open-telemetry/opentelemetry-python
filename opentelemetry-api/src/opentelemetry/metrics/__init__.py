@@ -30,7 +30,6 @@ See the `metrics api`_ spec for terminology and context clarification.
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from opentelemetry.metrics.aggregation import Aggregation
 from opentelemetry.metrics.time_series import (
     CounterTimeSeries,
     GaugeTimeSeries,
@@ -151,7 +150,6 @@ class Meter:
         description: str,
         unit: str,
         label_keys: LabelKeys,
-        aggregation: "Aggregation",
         span_context: SpanContext = None,
     ) -> "MeasureInt":
         """Creates a measure used to record raw int values.
@@ -163,7 +161,6 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            aggregation: The type of aggregation to use for this metric.
             span_context: The `SpanContext` that identifies the `Span`
                 that the metric is associated with.
 
@@ -177,7 +174,6 @@ class Meter:
         description: str,
         unit: str,
         label_keys: LabelKeys,
-        aggregation: "Aggregation",
         span_context: SpanContext = None,
     ) -> "MeasureFloat":
         """Creates a Measure used to record raw float values.
@@ -189,7 +185,6 @@ class Meter:
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order MUST be used
                 on recording when suppling values for these labels.
-            aggregation: The type of aggregation to use for this metric.
             span_context: The `SpanContext` that identifies the `Span`
                 that the metric is associated with.
 
