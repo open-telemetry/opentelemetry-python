@@ -45,6 +45,7 @@ class Meter:
     counter), or raw values (measure) in which the aggregation and labels
     for the exported metric are deferred.
     """
+
     # TODO: RecordBatch
 
 
@@ -86,7 +87,6 @@ def create_counter(
 
 
 def create_gauge(
-    self,
     name: str,
     description: str,
     unit: str,
@@ -116,8 +116,8 @@ def create_gauge(
     Returns: A new gauge metric with corresponding value_type.
     """
 
+
 def create_measure(
-    self,
     name: str,
     description: str,
     unit: str,
@@ -196,7 +196,7 @@ class IntCounter(Metric):
     """A counter type metric that holds int values."""
 
     def get_or_create_time_series(
-        self, label_values: List[str],
+        self, label_values: List[str]
     ) -> "CounterTimeSeries":
         """Gets a `CounterTimeSeries` with an int value."""
 
