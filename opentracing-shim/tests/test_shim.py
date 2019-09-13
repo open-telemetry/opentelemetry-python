@@ -44,7 +44,9 @@ class TestShim(unittest.TestCase):
             self.assertIsInstance(scope.span, opentracing.Span)
             # TODO: Verify that the current span in the OTel Tracer is the
             # expected one.
-            # self.assertEqual(self.tracer.get_current_span(), "fake")
+
+        # Verify the span has ended in the OpenTelemetry tracer.
+        self.assertIsNotNone(scope.span.otel_span.end_time)
 
     def test_set_operation_name(self):
         with self.ot_tracer.start_active_span("TestName") as scope:
