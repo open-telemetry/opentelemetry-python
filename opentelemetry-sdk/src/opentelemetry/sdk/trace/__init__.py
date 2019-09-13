@@ -284,11 +284,13 @@ class Span(trace_api.Span):
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
-            if self.end_time is not None:
-                logger.warning("Calling set_attribute() on an ended span.")
-                return
-            if self.attributes is Span.empty_attributes:
-                self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+            has_ended = self.end_time is not None
+            if not has_ended:
+                if self.attributes is Span.empty_attributes:
+                    self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+        if has_ended:
+            logger.warning("Setting attribute on ended span.")
+            return
         self.attributes[key] = value
 
     def add_event(
@@ -300,11 +302,13 @@ class Span(trace_api.Span):
 
     def add_lazy_event(self, event: trace_api.Event) -> None:
         with self._lock:
-            if self.end_time is not None:
-                logger.warning("Calling add_event() on an ended span.")
-                return
-            if self.events is Span.empty_events:
-                self.events = BoundedList(MAX_NUM_EVENTS)
+            has_ended = self.end_time is not None
+            if not has_ended:
+                if self.events is Span.empty_events:
+                    self.events = BoundedList(MAX_NUM_EVENTS)
+        if has_ended:
+            logger.warning("Calling add_event() on an ended span.")
+            return
         self.events.append(event)
 
     def add_link(
@@ -318,36 +322,44 @@ class Span(trace_api.Span):
 
     def add_lazy_link(self, link: "trace_api.Link") -> None:
         with self._lock:
-            if self.end_time is not None:
-                logger.warning("Calling add_link() on an ended span.")
-                return
-            if self.links is Span.empty_links:
-                self.links = BoundedList(MAX_NUM_LINKS)
+            has_ended = self.end_time is not None
+            if not has_ended:
+                if self.links is Span.empty_links:
+                    self.links = BoundedList(MAX_NUM_LINKS)
+        if has_ended:
+            logger.warning("Calling add_link() on an ended span.")
+            return
         self.links.append(link)
 
     def start(self):
         with self._lock:
-            if self.start_time is not None:
-                logger.warning("Calling start() on a started span.")
-                return
-            self.start_time = util.time_ns()
+            has_started = self.start_time is not None
+            if not has_started:
+                self.start_time = util.time_ns()
+        if has_started:
+            logger.warning("Calling start() on a started span.")
+            return
         self.span_processor.on_start(self)
 
     def end(self):
         with self._lock:
             if self.start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
-            if self.end_time is not None:
-                logger.warning("Calling end() on an ended span.")
-                return
-            self.end_time = util.time_ns()
+            has_ended = self.end_time is not None
+            if not has_ended:
+                self.end_time = util.time_ns()
+        if has_ended:
+            logger.warning("Calling end() on an ended span.")
+            return
+
         self.span_processor.on_end(self)
 
     def update_name(self, name: str) -> None:
         with self._lock:
-            if self.end_time is not None:
-                logger.warning("Calling update_name() on an ended span.")
-                return
+            has_ended = self.end_time is not None
+        if has_ended:
+            logger.warning("Calling update_name() on an ended span.")
+            return
         self.name = name
 
 
