@@ -31,4 +31,3 @@ MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series("Staging")
 # record individual measures
 STATISTIC = 100
 MEASURE_METRIC_STAGING.record(STATISTIC)
-

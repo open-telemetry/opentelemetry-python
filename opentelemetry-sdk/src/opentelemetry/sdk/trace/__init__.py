@@ -16,7 +16,7 @@
 import random
 import threading
 import typing
-from collections import OrderedDict, deque, namedtuple
+from collections import OrderedDict, deque
 from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
@@ -140,9 +140,66 @@ class BoundedDict(MutableMapping):
         return bounded_dict
 
 
-Event = namedtuple("Event", ("name", "attributes"))
+class SpanProcessor:
+    """Interface which allows hooks for SDK's `Span`s start and end method
+    invocations.
 
-Link = namedtuple("Link", ("context", "attributes"))
+    Span processors can be registered directly using
+    :func:`~Tracer:add_span_processor` and they are invoked in the same order
+    as they were registered.
+    """
+
+    def on_start(self, span: "Span") -> None:
+        """Called when a :class:`Span` is started.
+
+        This method is called synchronously on the thread that starts the
+        span, therefore it should not block or throw an exception.
+
+        Args:
+            span: The :class:`Span` that just started.
+        """
+
+    def on_end(self, span: "Span") -> None:
+        """Called when a :class:`Span` is ended.
+
+        This method is called synchronously on the thread that ends the
+        span, therefore it should not block or throw an exception.
+
+        Args:
+            span: The :class:`Span` that just ended.
+        """
+
+    def shutdown(self) -> None:
+        """Called when a :class:`Tracer` is shutdown."""
+
+
+class MultiSpanProcessor(SpanProcessor):
+    """Implementation of :class:`SpanProcessor` that forwards all received
+    events to a list of `SpanProcessor`.
+    """
+
+    def __init__(self):
+        # use a tuple to avoid race conditions when adding a new span and
+        # iterating through it on "on_start" and "on_end".
+        self._span_processors = ()
+        self._lock = threading.Lock()
+
+    def add_span_processor(self, span_processor: SpanProcessor):
+        """Adds a SpanProcessor to the list handled by this instance."""
+        with self._lock:
+            self._span_processors = self._span_processors + (span_processor,)
+
+    def on_start(self, span: "Span") -> None:
+        for sp in self._span_processors:
+            sp.on_start(span)
+
+    def on_end(self, span: "Span") -> None:
+        for sp in self._span_processors:
+            sp.on_end(span)
+
+    def shutdown(self) -> None:
+        for sp in self._span_processors:
+            sp.shutdown()
 
 
 class Span(trace_api.Span):
@@ -161,6 +218,8 @@ class Span(trace_api.Span):
         attributes: The span's attributes to be exported
         events: Timestamped events to be exported
         links: Links to other spans to be exported
+        span_processor: `SpanProcessor` to invoke when starting and ending
+            this `Span`.
     """
 
     # Initialize these lazily assuming most spans won't have them.
@@ -169,7 +228,7 @@ class Span(trace_api.Span):
     empty_links = BoundedList(MAX_NUM_LINKS)
 
     def __init__(
-        self: "Span",
+        self,
         name: str,
         context: "trace_api.SpanContext",
         parent: trace_api.ParentSpan = None,
@@ -177,8 +236,9 @@ class Span(trace_api.Span):
         trace_config=None,  # TODO
         resource=None,  # TODO
         attributes: types.Attributes = None,  # TODO
-        events: typing.Sequence[Event] = None,  # TODO
-        links: typing.Sequence[Link] = None,  # TODO
+        events: typing.Sequence[trace_api.Event] = None,  # TODO
+        links: typing.Sequence[trace_api.Link] = None,  # TODO
+        span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
 
         self.name = name
@@ -190,6 +250,7 @@ class Span(trace_api.Span):
         self.attributes = attributes
         self.events = events
         self.links = links
+        self.span_processor = span_processor
 
         if attributes is None:
             self.attributes = Span.empty_attributes
@@ -217,40 +278,46 @@ class Span(trace_api.Span):
     def get_context(self):
         return self.context
 
-    def set_attribute(
-        self: "Span", key: str, value: types.AttributeValue
-    ) -> None:
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         if self.attributes is Span.empty_attributes:
             self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         self.attributes[key] = value
 
     def add_event(
-        self: "Span", name: str, attributes: types.Attributes = None
+        self, name: str, attributes: types.Attributes = None
     ) -> None:
-        if self.events is Span.empty_events:
-            self.events = BoundedList(MAX_NUM_EVENTS)
         if attributes is None:
             attributes = Span.empty_attributes
-        self.events.append(Event(name, attributes))
+        self.add_lazy_event(trace_api.Event(name, util.time_ns(), attributes))
+
+    def add_lazy_event(self, event: trace_api.Event) -> None:
+        if self.events is Span.empty_events:
+            self.events = BoundedList(MAX_NUM_EVENTS)
+        self.events.append(event)
 
     def add_link(
-        self: "Span",
+        self,
         link_target_context: "trace_api.SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
-        if self.links is Span.empty_links:
-            self.links = BoundedList(MAX_NUM_LINKS)
         if attributes is None:
             attributes = Span.empty_attributes
-        self.links.append(Link(link_target_context, attributes))
+        self.add_lazy_link(trace_api.Link(link_target_context, attributes))
+
+    def add_lazy_link(self, link: "trace_api.Link") -> None:
+        if self.links is Span.empty_links:
+            self.links = BoundedList(MAX_NUM_LINKS)
+        self.links.append(link)
 
     def start(self):
         if self.start_time is None:
             self.start_time = util.time_ns()
+            self.span_processor.on_start(self)
 
     def end(self):
         if self.end_time is None:
             self.end_time = util.time_ns()
+            self.span_processor.on_end(self)
 
     def update_name(self, name: str) -> None:
         self.name = name
@@ -286,6 +353,7 @@ class Tracer(trace_api.Tracer):
         if name:
             slot_name = "{}.current_span".format(name)
         self._current_span_slot = Context.register_slot(slot_name)
+        self._active_span_processor = MultiSpanProcessor()
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
@@ -325,7 +393,12 @@ class Tracer(trace_api.Tracer):
                 parent_context.trace_options,
                 parent_context.trace_state,
             )
-        return Span(name=name, context=context, parent=parent)
+        return Span(
+            name=name,
+            context=context,
+            parent=parent,
+            span_processor=self._active_span_processor,
+        )
 
     @contextmanager
     def use_span(self, span: "Span") -> typing.Iterator["Span"]:
@@ -338,6 +411,16 @@ class Tracer(trace_api.Tracer):
         finally:
             self._current_span_slot.set(span_snapshot)
             span.end()
+
+    def add_span_processor(self, span_processor: SpanProcessor) -> None:
+        """Registers a new :class:`SpanProcessor` for this `Tracer`.
+
+        The span processors are invoked in the same order they are registered.
+        """
+
+        # no lock here because MultiSpanProcessor.add_span_processor is
+        # thread safe
+        self._active_span_processor.add_span_processor(span_processor)
 
 
 tracer = Tracer()

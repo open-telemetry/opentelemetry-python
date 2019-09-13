@@ -235,4 +235,3 @@ class IntMeasure(Metric):
         self, label_values: List[str]
     ) -> "MeasureTimeSeries":
         """Gets a `MeasureTimeSeries` with an int value."""
-

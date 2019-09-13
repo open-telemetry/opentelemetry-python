@@ -70,6 +70,47 @@ from opentelemetry import loader, types
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
+class Link:
+    """A link to a `Span`."""
+
+    def __init__(
+        self, context: "SpanContext", attributes: types.Attributes = None
+    ) -> None:
+        self._context = context
+        self._attributes = attributes
+
+    @property
+    def context(self) -> "SpanContext":
+        return self._context
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._attributes
+
+
+class Event:
+    """A text annotation with a set of attributes."""
+
+    def __init__(
+        self, name: str, timestamp: int, attributes: types.Attributes = None
+    ) -> None:
+        self._name = name
+        self._attributes = attributes
+        self._timestamp = timestamp
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._attributes
+
+    @property
+    def timestamp(self) -> int:
+        return self._timestamp
+
+
 class Span:
     """A span represents a single operation within a trace."""
 
@@ -102,32 +143,42 @@ class Span:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
 
-    def set_attribute(
-        self: "Span", key: str, value: types.AttributeValue
-    ) -> None:
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
         """
 
     def add_event(
-        self: "Span", name: str, attributes: types.Attributes = None
+        self, name: str, attributes: types.Attributes = None
     ) -> None:
-        """Adds an Event.
+        """Adds an `Event`.
 
-        Adds a single Event with the name and, optionally, attributes passed
+        Adds a single `Event` with the name and, optionally, attributes passed
         as arguments.
         """
 
+    def add_lazy_event(self, event: Event) -> None:
+        """Adds an `Event`.
+
+        Adds an `Event` that has previously been created.
+        """
+
     def add_link(
-        self: "Span",
+        self,
         link_target_context: "SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
-        """Adds a Link to another span.
+        """Adds a `Link` to another span.
 
-        Adds a single Link from this Span to another Span identified by the
+        Adds a single `Link` from this Span to another Span identified by the
         `SpanContext` passed as argument.
+        """
+
+    def add_lazy_link(self, link: "Link") -> None:
+        """Adds a `Link` to another span.
+
+        Adds a `Link` that has previously been created.
         """
 
     def update_name(self, name: str) -> None:

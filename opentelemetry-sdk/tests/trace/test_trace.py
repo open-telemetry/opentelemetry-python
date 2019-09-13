@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import mock
 import unittest
+from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
+from opentelemetry.sdk import util
 
 
 class TestTracer(unittest.TestCase):
@@ -126,10 +127,15 @@ class TestSpanCreation(unittest.TestCase):
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
         )
+        other_context3 = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id(),
+        )
 
         self.assertIsNone(tracer.get_current_span())
 
         with tracer.start_span("root") as root:
+            # attributes
             root.set_attribute("component", "http")
             root.set_attribute("http.method", "GET")
             root.set_attribute(
@@ -144,18 +150,6 @@ class TestSpanCreation(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value1")
             root.set_attribute("attr-key", "attr-value2")
 
-            root.add_event("event0")
-            root.add_event("event1", {"name": "birthday"})
-
-            root.add_link(other_context1)
-            root.add_link(other_context2, {"name": "neighbor"})
-
-            root.update_name("toor")
-            self.assertEqual(root.name, "toor")
-
-            # The public API does not expose getters.
-            # Checks by accessing the span members directly
-
             self.assertEqual(len(root.attributes), 7)
             self.assertEqual(root.attributes["component"], "http")
             self.assertEqual(root.attributes["http.method"], "GET")
@@ -168,16 +162,34 @@ class TestSpanCreation(unittest.TestCase):
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
-            self.assertEqual(len(root.events), 2)
-            self.assertEqual(
-                root.events[0], trace.Event(name="event0", attributes={})
-            )
-            self.assertEqual(
-                root.events[1],
-                trace.Event(name="event1", attributes={"name": "birthday"}),
+            # events
+            root.add_event("event0")
+            root.add_event("event1", {"name": "birthday"})
+            now = util.time_ns()
+            root.add_lazy_event(
+                trace_api.Event("event2", now, {"name": "hello"})
             )
 
-            self.assertEqual(len(root.links), 2)
+            self.assertEqual(len(root.events), 3)
+
+            self.assertEqual(root.events[0].name, "event0")
+            self.assertEqual(root.events[0].attributes, {})
+
+            self.assertEqual(root.events[1].name, "event1")
+            self.assertEqual(root.events[1].attributes, {"name": "birthday"})
+
+            self.assertEqual(root.events[2].name, "event2")
+            self.assertEqual(root.events[2].attributes, {"name": "hello"})
+            self.assertEqual(root.events[2].timestamp, now)
+
+            # links
+            root.add_link(other_context1)
+            root.add_link(other_context2, {"name": "neighbor"})
+            root.add_lazy_link(
+                trace_api.Link(other_context3, {"component": "http"})
+            )
+
+            self.assertEqual(len(root.links), 3)
             self.assertEqual(
                 root.links[0].context.trace_id, other_context1.trace_id
             )
@@ -192,9 +204,130 @@ class TestSpanCreation(unittest.TestCase):
                 root.links[1].context.span_id, other_context2.span_id
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
+            self.assertEqual(
+                root.links[2].context.span_id, other_context3.span_id
+            )
+            self.assertEqual(root.links[2].attributes, {"component": "http"})
+
+            # name
+            root.update_name("toor")
+            self.assertEqual(root.name, "toor")
 
 
 class TestSpan(unittest.TestCase):
     def test_basic_span(self):
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
         self.assertEqual(span.name, "name")
+
+
+def span_event_start_fmt(span_processor_name, span_name):
+    return span_processor_name + ":" + span_name + ":start"
+
+
+def span_event_end_fmt(span_processor_name, span_name):
+    return span_processor_name + ":" + span_name + ":end"
+
+
+class MySpanProcessor(trace.SpanProcessor):
+    def __init__(self, name, span_list):
+        self.name = name
+        self.span_list = span_list
+
+    def on_start(self, span: "trace.Span") -> None:
+        self.span_list.append(span_event_start_fmt(self.name, span.name))
+
+    def on_end(self, span: "trace.Span") -> None:
+        self.span_list.append(span_event_end_fmt(self.name, span.name))
+
+
+class TestSpanProcessor(unittest.TestCase):
+    def test_span_processor(self):
+        tracer = trace.Tracer()
+
+        spans_calls_list = []  # filled by MySpanProcessor
+        expected_list = []  # filled by hand
+
+        # Span processors are created but not added to the tracer yet
+        sp1 = MySpanProcessor("SP1", spans_calls_list)
+        sp2 = MySpanProcessor("SP2", spans_calls_list)
+
+        with tracer.start_span("foo"):
+            with tracer.start_span("bar"):
+                with tracer.start_span("baz"):
+                    pass
+
+        # at this point lists must be empty
+        self.assertEqual(len(spans_calls_list), 0)
+
+        # add single span processor
+        tracer.add_span_processor(sp1)
+
+        with tracer.start_span("foo"):
+            expected_list.append(span_event_start_fmt("SP1", "foo"))
+
+            with tracer.start_span("bar"):
+                expected_list.append(span_event_start_fmt("SP1", "bar"))
+
+                with tracer.start_span("baz"):
+                    expected_list.append(span_event_start_fmt("SP1", "baz"))
+
+                expected_list.append(span_event_end_fmt("SP1", "baz"))
+
+            expected_list.append(span_event_end_fmt("SP1", "bar"))
+
+        expected_list.append(span_event_end_fmt("SP1", "foo"))
+
+        self.assertListEqual(spans_calls_list, expected_list)
+
+        spans_calls_list.clear()
+        expected_list.clear()
+
+        # go for multiple span processors
+        tracer.add_span_processor(sp2)
+
+        with tracer.start_span("foo"):
+            expected_list.append(span_event_start_fmt("SP1", "foo"))
+            expected_list.append(span_event_start_fmt("SP2", "foo"))
+
+            with tracer.start_span("bar"):
+                expected_list.append(span_event_start_fmt("SP1", "bar"))
+                expected_list.append(span_event_start_fmt("SP2", "bar"))
+
+                with tracer.start_span("baz"):
+                    expected_list.append(span_event_start_fmt("SP1", "baz"))
+                    expected_list.append(span_event_start_fmt("SP2", "baz"))
+
+                expected_list.append(span_event_end_fmt("SP1", "baz"))
+                expected_list.append(span_event_end_fmt("SP2", "baz"))
+
+            expected_list.append(span_event_end_fmt("SP1", "bar"))
+            expected_list.append(span_event_end_fmt("SP2", "bar"))
+
+        expected_list.append(span_event_end_fmt("SP1", "foo"))
+        expected_list.append(span_event_end_fmt("SP2", "foo"))
+
+        # compare if two lists are the same
+        self.assertListEqual(spans_calls_list, expected_list)
+
+    def test_add_span_processor_after_span_creation(self):
+        tracer = trace.Tracer()
+
+        spans_calls_list = []  # filled by MySpanProcessor
+        expected_list = []  # filled by hand
+
+        # Span processors are created but not added to the tracer yet
+        sp = MySpanProcessor("SP1", spans_calls_list)
+
+        with tracer.start_span("foo"):
+            with tracer.start_span("bar"):
+                with tracer.start_span("baz"):
+                    # add span processor after spans have been created
+                    tracer.add_span_processor(sp)
+
+                expected_list.append(span_event_end_fmt("SP1", "baz"))
+
+            expected_list.append(span_event_end_fmt("SP1", "bar"))
+
+        expected_list.append(span_event_end_fmt("SP1", "foo"))
+
+        self.assertListEqual(spans_calls_list, expected_list)
