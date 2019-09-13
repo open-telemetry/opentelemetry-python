@@ -61,7 +61,7 @@ def create_counter(
     bidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
-) -> Union[FloatCounter, IntCounter]:
+) -> Union["FloatCounter", "IntCounter"]:
     """Creates a counter metric with type value_type.
 
     By default, counter values can only go up (unidirectional). The API
@@ -94,7 +94,7 @@ def create_gauge(
     unidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
-) -> Union[FloatGauge, IntGauge]:
+) -> Union["FloatGauge", "IntGauge"]:
     """Creates a gauge metric with type value_type.
 
     By default, gauge values can go both up and down (bidirectional). The API
@@ -125,7 +125,7 @@ def create_measure(
     non_negative: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
-) -> Union[FloatMeasure, IntMeasure]:
+) -> Union["FloatMeasure", "IntMeasure"]:
     """Creates a measure metric with type value_type.
 
     Measure metrics represent raw statistics that are recorded. As an option,
