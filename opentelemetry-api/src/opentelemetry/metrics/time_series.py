@@ -18,7 +18,7 @@ import typing
 class CounterTimeSeries:
     def add(self, value: typing.Union[float, int]) -> None:
         """Adds the given value to the current value.
-        
+
         The input value cannot be negative if not bidirectional.
         """
 
