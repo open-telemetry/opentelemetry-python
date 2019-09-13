@@ -2,9 +2,10 @@ import sys
 import unittest
 from unittest import mock
 
-import opentelemetry.ext.http_requests
 import requests
 import urllib3
+
+import opentelemetry.ext.http_requests
 from opentelemetry import trace
 
 
@@ -53,7 +54,7 @@ class TestRequestsIntegration(unittest.TestCase):
 
     def test_basic(self):
         url = "https://www.example.org/foo/bar?x=y#top"
-        _response = requests.get(url=url)
+        requests.get(url=url)
         self.assertEqual(1, len(self.send.call_args_list))
         self.tracer.start_span.assert_called_with("/foo/bar")
         self.span_context_manager.__enter__.assert_called_with()
@@ -78,7 +79,7 @@ class TestRequestsIntegration(unittest.TestCase):
             exception_type = ValueError
 
         with self.assertRaises(exception_type):
-            _response = requests.post(url=url)
+            requests.post(url=url)
         self.assertTrue(
             self.tracer.start_span.call_args[0][0].startswith(
                 "<Unparsable URL"

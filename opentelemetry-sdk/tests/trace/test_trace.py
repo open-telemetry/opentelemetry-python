@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import mock
 import unittest
+from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
+from opentelemetry.sdk import util
 
 
 class TestTracer(unittest.TestCase):
@@ -132,10 +133,15 @@ class TestSpan(unittest.TestCase):
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
         )
+        other_context3 = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id(),
+        )
 
         self.assertIsNone(tracer.get_current_span())
 
         with tracer.start_span("root") as root:
+            # attributes
             root.set_attribute("component", "http")
             root.set_attribute("http.method", "GET")
             root.set_attribute(
@@ -150,18 +156,6 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value1")
             root.set_attribute("attr-key", "attr-value2")
 
-            root.add_event("event0")
-            root.add_event("event1", {"name": "birthday"})
-
-            root.add_link(other_context1)
-            root.add_link(other_context2, {"name": "neighbor"})
-
-            root.update_name("toor")
-            self.assertEqual(root.name, "toor")
-
-            # The public API does not expose getters.
-            # Checks by accessing the span members directly
-
             self.assertEqual(len(root.attributes), 7)
             self.assertEqual(root.attributes["component"], "http")
             self.assertEqual(root.attributes["http.method"], "GET")
@@ -174,16 +168,34 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
-            self.assertEqual(len(root.events), 2)
-            self.assertEqual(
-                root.events[0], trace.Event(name="event0", attributes={})
-            )
-            self.assertEqual(
-                root.events[1],
-                trace.Event(name="event1", attributes={"name": "birthday"}),
+            # events
+            root.add_event("event0")
+            root.add_event("event1", {"name": "birthday"})
+            now = util.time_ns()
+            root.add_lazy_event(
+                trace_api.Event("event2", now, {"name": "hello"})
             )
 
-            self.assertEqual(len(root.links), 2)
+            self.assertEqual(len(root.events), 3)
+
+            self.assertEqual(root.events[0].name, "event0")
+            self.assertEqual(root.events[0].attributes, {})
+
+            self.assertEqual(root.events[1].name, "event1")
+            self.assertEqual(root.events[1].attributes, {"name": "birthday"})
+
+            self.assertEqual(root.events[2].name, "event2")
+            self.assertEqual(root.events[2].attributes, {"name": "hello"})
+            self.assertEqual(root.events[2].timestamp, now)
+
+            # links
+            root.add_link(other_context1)
+            root.add_link(other_context2, {"name": "neighbor"})
+            root.add_lazy_link(
+                trace_api.Link(other_context3, {"component": "http"})
+            )
+
+            self.assertEqual(len(root.links), 3)
             self.assertEqual(
                 root.links[0].context.trace_id, other_context1.trace_id
             )
@@ -198,6 +210,14 @@ class TestSpan(unittest.TestCase):
                 root.links[1].context.span_id, other_context2.span_id
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
+            self.assertEqual(
+                root.links[2].context.span_id, other_context3.span_id
+            )
+            self.assertEqual(root.links[2].attributes, {"component": "http"})
+
+            # name
+            root.update_name("toor")
+            self.assertEqual(root.name, "toor")
 
     def test_start_span(self):
         """Start twice, end a not started"""
