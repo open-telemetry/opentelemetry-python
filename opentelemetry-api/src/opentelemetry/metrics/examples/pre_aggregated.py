@@ -13,24 +13,20 @@
 # limitations under the License.
 
 # pylint: skip-file
-from opentelemetry.metrics import LabelKey, LabelValue, Meter
+from opentelemetry import metrics
 
 METER = Meter()
-LABEL_KEYS = [
-    LabelKey("environment", "the environment the application is running in")
-]
 COUNTER = METER.create_int_counter(
-    "sum numbers",  # pragma: no cover
+    "sum numbers",
     "sum numbers over time",
     "number",
-    LABEL_KEYS,
+    metrics.ValueType.FLOAT,
+    ["environment"],
 )
-LABEL_VALUE_TESTING = [LabelValue("Testing")]
-LABEL_VALUE_STAGING = [LabelValue("Staging")]
 
 # Metrics sent to some exporter
-METRIC_TESTING = COUNTER.get_or_create_time_series(LABEL_VALUE_TESTING)
-METRIC_STAGING = COUNTER.get_or_create_time_series(LABEL_VALUE_STAGING)
+METRIC_TESTING = COUNTER.get_or_create_time_series("Testing")
+METRIC_STAGING = COUNTER.get_or_create_time_series("Staging")
 
 for i in range(100):
     METRIC_STAGING.add(i)

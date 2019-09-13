@@ -17,12 +17,9 @@ import typing
 
 class CounterTimeSeries:
     def add(self, value: typing.Union[float, int]) -> None:
-        """Adds the given value to the current value. Cannot be negative."""
-
-    def set(self, value: typing.Union[float, int]) -> None:
-        """Sets the current value to the given value.
-
-        The given value must be larger than the current recorded value.
+        """Adds the given value to the current value.
+        
+        The input value cannot be negative if not bidirectional.
         """
 
 
@@ -33,7 +30,4 @@ class GaugeTimeSeries:
 
 class MeasureTimeSeries:
     def record(self, value: typing.Union[float, int]) -> None:
-        """Records the given value to this measure.
-
-        Logic depends on type of aggregation used for this measure.
-        """
+        """Records the given value to this measure."""

@@ -13,33 +13,22 @@
 # limitations under the License.
 
 # pylint: skip-file
-from opentelemetry.metrics import LabelKey, LabelValue, MeasureBatch, Meter
-from opentelemetry.metrics.aggregation import LastValueAggregation
+from opentelemetry import metrics
 
-METER = Meter()
-LABEL_KEYS = [
-    LabelKey("environment", "the environment the application is running in")
-]
-MEASURE = METER.create_float_measure(
+METER = metrics.Meter()
+MEASURE = metrics.create_measure(
     "idle_cpu_percentage",
     "cpu idle over time",
     "percentage",
-    LABEL_KEYS,
-    LastValueAggregation,
+    metrics.ValueType.FLOAT,
+    ["environment"],
 )
-LABEL_VALUE_TESTING = [LabelValue("Testing")]
-LABEL_VALUE_STAGING = [LabelValue("Staging")]
 
 # Metrics sent to some exporter
-MEASURE_METRIC_TESTING = MEASURE.get_or_create_time_series(LABEL_VALUE_TESTING)
-MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series(LABEL_VALUE_STAGING)
+MEASURE_METRIC_TESTING = MEASURE.get_or_create_time_series("Testing")
+MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series("Staging")
 
 # record individual measures
 STATISTIC = 100
 MEASURE_METRIC_STAGING.record(STATISTIC)
 
-# record multiple observed values
-BATCH = MeasureBatch()
-BATCH.record(
-    [(MEASURE_METRIC_TESTING, STATISTIC), (MEASURE_METRIC_STAGING, STATISTIC)]
-)
