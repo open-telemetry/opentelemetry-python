@@ -15,6 +15,7 @@
 from opentelemetry.trace import Tracer
 from opentelemetry.trace import Span
 import opentracing
+from contextlib import contextmanager
 
 
 def create_tracer(tracer: Tracer) -> opentracing.Tracer:
@@ -148,6 +149,7 @@ class TracerWrapper(opentracing.Tracer):
         # TODO: Implement.
         pass
 
+    @contextmanager
     def start_active_span(
         self,
         operation_name,
@@ -158,10 +160,8 @@ class TracerWrapper(opentracing.Tracer):
         ignore_active_span=False,
         finish_on_close=True,
     ) -> ScopeWrapper:
-        # TODO: Activate the OTel span.
-        # otel_span = self._otel_tracer.start_span(operation_name)
-        otel_span = self._otel_tracer.create_span(operation_name)
-        return ScopeWrapper(None, SpanWrapper(otel_span))
+        with self._otel_tracer.start_span(operation_name) as span:
+            yield ScopeWrapper(opentracing.ScopeManager, SpanWrapper(span))
 
     def start_span(
         self,
