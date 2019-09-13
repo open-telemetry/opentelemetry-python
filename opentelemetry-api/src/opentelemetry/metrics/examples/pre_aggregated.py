@@ -15,7 +15,7 @@
 # pylint: skip-file
 from opentelemetry import metrics
 
-METER = Meter()
+METER = metrics.Meter()
 COUNTER = METER.create_int_counter(
     "sum numbers",
     "sum numbers over time",
