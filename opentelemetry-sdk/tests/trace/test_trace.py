@@ -16,8 +16,7 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk import trace
-from opentelemetry.sdk import util
+from opentelemetry.sdk import trace, util
 
 
 class TestTracer(unittest.TestCase):
