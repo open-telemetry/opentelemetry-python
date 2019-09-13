@@ -16,7 +16,7 @@
 import random
 import threading
 import typing
-from collections import OrderedDict, deque, namedtuple
+from collections import OrderedDict, deque
 from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
@@ -140,11 +140,6 @@ class BoundedDict(MutableMapping):
         return bounded_dict
 
 
-Event = namedtuple("Event", ("name", "attributes"))
-
-Link = namedtuple("Link", ("context", "attributes"))
-
-
 class SpanProcessor:
     """Interface which allows hooks for SDK's `Span`s start and end method
     invocations.
@@ -233,7 +228,7 @@ class Span(trace_api.Span):
     empty_links = BoundedList(MAX_NUM_LINKS)
 
     def __init__(
-        self: "Span",
+        self,
         name: str,
         context: "trace_api.SpanContext",
         parent: trace_api.ParentSpan = None,
@@ -241,8 +236,8 @@ class Span(trace_api.Span):
         trace_config=None,  # TODO
         resource=None,  # TODO
         attributes: types.Attributes = None,  # TODO
-        events: typing.Sequence[Event] = None,  # TODO
-        links: typing.Sequence[Link] = None,  # TODO
+        events: typing.Sequence[trace_api.Event] = None,  # TODO
+        links: typing.Sequence[trace_api.Link] = None,  # TODO
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
 
@@ -283,32 +278,36 @@ class Span(trace_api.Span):
     def get_context(self):
         return self.context
 
-    def set_attribute(
-        self: "Span", key: str, value: types.AttributeValue
-    ) -> None:
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         if self.attributes is Span.empty_attributes:
             self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         self.attributes[key] = value
 
     def add_event(
-        self: "Span", name: str, attributes: types.Attributes = None
+        self, name: str, attributes: types.Attributes = None
     ) -> None:
-        if self.events is Span.empty_events:
-            self.events = BoundedList(MAX_NUM_EVENTS)
         if attributes is None:
             attributes = Span.empty_attributes
-        self.events.append(Event(name, attributes))
+        self.add_lazy_event(trace_api.Event(name, util.time_ns(), attributes))
+
+    def add_lazy_event(self, event: trace_api.Event) -> None:
+        if self.events is Span.empty_events:
+            self.events = BoundedList(MAX_NUM_EVENTS)
+        self.events.append(event)
 
     def add_link(
-        self: "Span",
+        self,
         link_target_context: "trace_api.SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
-        if self.links is Span.empty_links:
-            self.links = BoundedList(MAX_NUM_LINKS)
         if attributes is None:
             attributes = Span.empty_attributes
-        self.links.append(Link(link_target_context, attributes))
+        self.add_lazy_link(trace_api.Link(link_target_context, attributes))
+
+    def add_lazy_link(self, link: "trace_api.Link") -> None:
+        if self.links is Span.empty_links:
+            self.links = BoundedList(MAX_NUM_LINKS)
+        self.links.append(link)
 
     def start(self):
         if self.start_time is None:
