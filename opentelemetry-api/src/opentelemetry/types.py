@@ -16,4 +16,4 @@
 import typing
 
 AttributeValue = typing.Union[str, bool, float]
-Attributes = typing.Dict[str, AttributeValue]
+Attributes = typing.Optional[typing.Dict[str, AttributeValue]]
