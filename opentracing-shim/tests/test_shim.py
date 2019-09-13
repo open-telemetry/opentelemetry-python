@@ -15,9 +15,8 @@
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.sdk.trace import Tracer as OTelTracer
-from opentracing import Tracer, Scope, Span
-
+from opentelemetry.sdk.trace import Tracer
+import opentracing
 import opentracingshim
 
 
@@ -34,15 +33,15 @@ class TestShim(unittest.TestCase):
         # TODO: Do we need to call setUpClass() on super()?
         # Seems to work fine without it.
         super(TestShim, cls).setUpClass()
-        trace.set_preferred_tracer_implementation(lambda T: OTelTracer())
+        trace.set_preferred_tracer_implementation(lambda T: Tracer())
 
     def test_basic(self):
         # Verify shim is an OpenTracing tracer.
-        self.assertIsInstance(self.ot_tracer, Tracer)
+        self.assertIsInstance(self.ot_tracer, opentracing.Tracer)
 
         with self.ot_tracer.start_active_span("TestBasic") as scope:
-            self.assertIsInstance(scope, Scope)
-            self.assertIsInstance(scope.span, Span)
+            self.assertIsInstance(scope, opentracing.Scope)
+            self.assertIsInstance(scope.span, opentracing.Span)
             # TODO: Verify that the current span in the OTel Tracer is the
             # expected one.
             # self.assertEqual(self.tracer.get_current_span(), "fake")

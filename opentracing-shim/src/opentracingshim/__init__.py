@@ -12,22 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.trace import Tracer as OTelTracer
-from opentelemetry.trace import Span as OTelSpan
-from opentracing import Scope as OTScope
-from opentracing import Tracer as OTTracer
-from opentracing import Span as OTSpan
+from opentelemetry.trace import Tracer
+from opentelemetry.trace import Span
+import opentracing
 
 
-def create_tracer(tracer: OTelTracer) -> OTTracer:
+def create_tracer(tracer: Tracer) -> opentracing.Tracer:
     return TracerWrapper(tracer)
 
 
-class SpanWrapper(OTSpan):
+class SpanWrapper(opentracing.Span):
     # def __init__(self, tracer, context):
     #     self._tracer = tracer
     #     self._context = context
-    def __init__(self, span: OTelSpan):
+    def __init__(self, span: Span):
         self._otel_span = span
 
     @property
@@ -108,7 +106,7 @@ class SpanWrapper(OTSpan):
         pass
 
 
-class ScopeWrapper(OTScope):
+class ScopeWrapper(opentracing.Scope):
     def __init__(self, manager, span):
         self._manager = manager
         self._span = span
@@ -132,8 +130,8 @@ class ScopeWrapper(OTScope):
         self.close()
 
 
-class TracerWrapper(OTTracer):
-    def __init__(self, tracer: OTelTracer):
+class TracerWrapper(opentracing.Tracer):
+    def __init__(self, tracer: Tracer):
         self._otel_tracer = tracer
         # TODO: Finish implementation.
 
