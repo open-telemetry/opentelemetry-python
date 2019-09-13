@@ -37,7 +37,7 @@ from opentelemetry.metrics.time_series import (
 )
 from opentelemetry.trace import SpanContext
 
-#pylint: disable=unused-argument
+# pylint: disable=unused-argument
 class Meter:
     """An interface to allow the recording of metrics.
 
