@@ -16,13 +16,13 @@
 This module serves as an example to integrate with flask, using
 the requests library to perform downstream requests
 """
-import time
-
 import flask
+import requests
 
 import opentelemetry.ext.http_requests
-from opentelemetry import trace
+from opentelemetry import propagator, trace
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.sdk.context.propagation.b3_format import B3Format
 from opentelemetry.sdk.trace import Tracer
 
 
@@ -39,7 +39,6 @@ def configure_opentelemetry(flask_app: flask.Flask):
 
     * processors?
     * exporters?
-    * propagators?
     """
     # Start by configuring all objects required to ensure
     # a complete end to end workflow.
@@ -47,6 +46,13 @@ def configure_opentelemetry(flask_app: flask.Flask):
     # as the opentelemetry-api defines the interface with a no-op
     # implementation.
     trace.set_preferred_tracer_implementation(lambda _: Tracer())
+    # Next, we need to configure how the values that are used by
+    # traces and metrics are propagated (such as what specific headers
+    # carry this value).
+
+    # TBD: can remove once default TraceState propagators are installed.
+    propagator.set_global_propagator(propagator.Propagator(B3Format()))
+
     # Integrations are the glue that binds the OpenTelemetry API
     # and the frameworks and libraries that are used together, automatically
     # creating Spans and propagating context as appropriate.
@@ -61,8 +67,8 @@ app = flask.Flask(__name__)
 def hello():
     # emit a trace that measures how long the
     # sleep takes
-    with trace.tracer().start_span("sleep"):
-        time.sleep(0.001)
+    with trace.tracer().start_span("example-request"):
+        requests.get("http://www.example.com")
     return "hello"
 
 

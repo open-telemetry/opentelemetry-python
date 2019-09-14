@@ -22,6 +22,8 @@ from urllib.parse import urlparse
 
 from requests.sessions import Session
 
+import opentelemetry.propagator as propagator
+
 
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user
 # to configure a SDK before enabling this integration. In turn, this means that
@@ -72,6 +74,11 @@ def enable(tracer):
             # TODO: Propagate the trace context via headers once we have a way
             # to access propagators.
 
+            headers = kwargs.get("headers", {})
+            propagator.get_global_propagator().inject(
+                tracer, type(headers).__setitem__, headers
+            )
+            kwargs["headers"] = headers
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)
