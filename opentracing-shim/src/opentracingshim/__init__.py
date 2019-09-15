@@ -52,7 +52,7 @@ class SpanWrapper(opentracing.Span):
         pass
 
     def set_tag(self, key, value):
-        return self
+        self._otel_span.set_attribute(key, value)
 
     def log_kv(self, key_values, timestamp=None):
         return self

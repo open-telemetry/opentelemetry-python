@@ -59,4 +59,8 @@ class TestShim(unittest.TestCase):
 
     def test_set_tag(self):
         with self.ot_tracer.start_active_span("TestSetTag") as scope:
+            with self.assertRaises(KeyError):
+                scope.span.otel_span.attributes["my"]
+
             scope.span.set_tag("my", "tag")
+            self.assertEqual(scope.span.otel_span.attributes["my"], "tag")
