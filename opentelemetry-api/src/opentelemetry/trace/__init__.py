@@ -64,7 +64,7 @@ implicit or explicit context propagation consistently throughout.
 import typing
 from contextlib import contextmanager
 
-from opentelemetry import loader, types
+from opentelemetry.util import loader, types
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -445,7 +445,7 @@ class Tracer:
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
-# from opentelemetry.loader import ImplementationFactory
+# from opentelemetry.util.loader import ImplementationFactory
 ImplementationFactory = typing.Callable[
     [typing.Type[Tracer]], typing.Optional[Tracer]
 ]
@@ -474,7 +474,7 @@ def set_preferred_tracer_implementation(
 ) -> None:
     """Set the factory to be used to create the tracer.
 
-    See :mod:`opentelemetry.loader` for details.
+    See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 

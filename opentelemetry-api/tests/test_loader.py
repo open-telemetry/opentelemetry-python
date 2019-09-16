@@ -17,7 +17,8 @@ import sys
 import unittest
 from importlib import reload
 
-from opentelemetry import loader, trace
+from opentelemetry import trace
+from opentelemetry.util import loader
 
 DUMMY_TRACER = None
 
