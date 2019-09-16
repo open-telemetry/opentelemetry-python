@@ -6,7 +6,7 @@ Submodules
 
 .. toctree::
 
-   opentelemetry.metrics.time_series
+   opentelemetry.metrics.handle
 
 Module contents
 ---------------

@@ -15,7 +15,7 @@
 import typing
 
 
-class CounterTimeSeries:
+class CounterHandle():
     def add(self, value: typing.Union[float, int]) -> None:
         """Adds the given value to the current value.
 
@@ -23,11 +23,11 @@ class CounterTimeSeries:
         """
 
 
-class GaugeTimeSeries:
+class GaugeHandle():
     def set(self, value: typing.Union[float, int]) -> None:
         """Sets the current value to the given value. Can be negative."""
 
 
-class MeasureTimeSeries:
+class MeasureHandle():
     def record(self, value: typing.Union[float, int]) -> None:
         """Records the given value to this measure."""
