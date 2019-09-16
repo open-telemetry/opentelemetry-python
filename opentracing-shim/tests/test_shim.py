@@ -100,3 +100,11 @@ class TestShim(unittest.TestCase):
     def test_span(self):
         pass
         # TODO: Verify finish() on span.
+
+    def test_span_context(self):
+        otel_context = trace.SpanContext(1234, 5678)
+        context = opentracingshim.SpanContextWrapper(otel_context)
+
+        self.assertIsInstance(context, opentracing.SpanContext)
+        self.assertEqual(context.otel_context.trace_id, 1234)
+        self.assertEqual(context.otel_context.span_id, 5678)

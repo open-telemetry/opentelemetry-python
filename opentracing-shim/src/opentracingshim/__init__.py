@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.trace import Tracer
-from opentelemetry.trace import Span
+from opentelemetry.trace import Span, SpanContext, Tracer
 import opentracing
 from contextlib import contextmanager
 
@@ -23,11 +22,12 @@ def create_tracer(tracer: Tracer) -> opentracing.Tracer:
 
 
 class SpanContextWrapper(opentracing.SpanContext):
-    # def __init__(self, trace_id, span_id):
-    #     self._trace_id = trace_id
-    #     self._span_id = span_id
-    pass
-    # TODO: Implement.
+    def __init__(self, otel_context: SpanContext):
+        self._otel_context = otel_context
+
+    @property
+    def otel_context(self):
+        return self._otel_context
 
 
 class SpanWrapper(opentracing.Span):
