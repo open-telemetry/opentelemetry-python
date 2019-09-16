@@ -16,7 +16,6 @@ abstract types for OpenTelemetry implementations.
    :caption: Contents:
 
    opentelemetry.context
-   opentelemetry.util.loader
    opentelemetry.metrics
    opentelemetry.trace
    opentelemetry.util.loader
