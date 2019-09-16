@@ -125,7 +125,7 @@ class SpanKind(enum.Enum):
     #: Indicates that the span describes an operation that handles a remote request.
     SERVER = 1
 
-    #: Indicates that the span describes an request to some remote service.
+    #: Indicates that the span describes a request to some remote service.
     CLIENT = 2
 
     #: Indicates that the span describes a producer sending a message to a
