@@ -153,12 +153,12 @@ class Metric(ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
-    time series that the metric holds. Metric is constructed from the meter.
+    time series that the metric holds.
     """
 
     @abstractmethod
     def get_or_create_time_series(self, label_values: List[str]) -> "object":
-        """Gets and returns a timeseries, a container for a counter value.
+        """Gets a timeseries, used for repeated-use of metrics instruments.
 
         If the provided label values are not already associated with this
         metric, a new timeseries is returned, otherwise it returns the existing
