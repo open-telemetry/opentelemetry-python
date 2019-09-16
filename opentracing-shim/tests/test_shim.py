@@ -35,11 +35,12 @@ class TestShim(unittest.TestCase):
         super(TestShim, cls).setUpClass()
         trace.set_preferred_tracer_implementation(lambda T: Tracer())
 
-    def test_basic(self):
+    def test_shim_type(self):
         # Verify shim is an OpenTracing tracer.
         self.assertIsInstance(self.ot_tracer, opentracing.Tracer)
 
-        with self.ot_tracer.start_active_span("TestBasic") as scope:
+    def test_start_active_span(self):
+        with self.ot_tracer.start_active_span("TestSpan") as scope:
             self.assertIsInstance(scope, opentracing.Scope)
             self.assertIsInstance(scope.span, opentracing.Span)
 
