@@ -28,7 +28,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from opentelemetry.metrics.handle import (
     CounterHandle,
@@ -48,17 +48,21 @@ class Meter:
     """
 
     def record_batch(
-        self, record_tuples: List[Tuple["MeasureHandle", Union[float, int]]]
+        self,
+        label_tuples: Dict[str, str],
+        record_tuples: List[Tuple["Metric", Union[float, int]]]
     ) -> None:
-        """Atomically records a batch of `MeasureHandle` and value pairs.
+        """Atomically records a batch of `Metric` and value pairs.
 
-        Recording batches will be restricted to measure metrics. Allows the
-        functionality of acting upon multiple metric handles with a single
-        API call.
+        Allows the functionality of acting upon multiple metrics with
+        a single API call. Implementations should find handles that match
+        the key-value pairs in the label tuples.
 
         Args:
-            record_tuples: A list of pairs of `MeasureHandle` s and the
-                corresponding value to record for that handle.
+            label_tuples: A collection of key value pairs that will be matched
+                against to record for the metric-handle that has those labels.
+            record_tuples: A list of pairs of `Metric` s and the
+                corresponding value to record for that metric.
         """
 
 
