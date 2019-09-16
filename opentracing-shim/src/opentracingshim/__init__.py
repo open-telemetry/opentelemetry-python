@@ -172,7 +172,11 @@ class TracerWrapper(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ) -> SpanWrapper:
-        span = self._otel_tracer.create_span(operation_name)
+        parent = child_of
+        if parent is not None:
+            parent = child_of.otel_span
+
+        span = self._otel_tracer.create_span(operation_name, parent)
         span.start()
         return SpanWrapper(span)
 
