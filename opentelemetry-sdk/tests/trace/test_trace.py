@@ -36,10 +36,14 @@ class TestSpanCreation(unittest.TestCase):
 
             self.assertIsNotNone(root.start_time)
             self.assertIsNone(root.end_time)
+            self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
-            with tracer.start_span("child") as child:
+            with tracer.start_span(
+                "child", kind=trace_api.SpanKind.CLIENT
+            ) as child:
                 self.assertIs(tracer.get_current_span(), child)
                 self.assertIs(child.parent, root)
+                self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
                 self.assertIsNotNone(child.start_time)
                 self.assertIsNone(child.end_time)
