@@ -74,11 +74,10 @@ def enable(tracer):
             # TODO: Propagate the trace context via headers once we have a way
             # to access propagators.
 
-            headers = kwargs.get("headers", {})
+            headers = kwargs.setdefault("headers", {})
             propagator.get_global_propagator().inject(
                 tracer, type(headers).__setitem__, headers
             )
-            kwargs["headers"] = headers
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)

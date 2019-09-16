@@ -104,11 +104,14 @@ class OpenTelemetryMiddleware:
 
 def get_header_from_environ(
     environ: dict, header_name: str
-) -> typing.Optional[str]:
+) -> typing.List[str]:
     """Retrieve the header value from the wsgi environ dictionary.
 
     Returns:
         A string with the header value if it exists, else None.
     """
     environ_key = "HTTP_" + header_name.upper().replace("-", "_")
-    return [environ.get(environ_key)]
+    value = environ.get(environ_key)
+    if value:
+        return [value]
+    return []

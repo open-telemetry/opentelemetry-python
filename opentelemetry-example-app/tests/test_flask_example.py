@@ -53,5 +53,7 @@ class TestFlaskExample(unittest.TestCase):
         prepared_request = self.send.call_args[0][1]
         headers = prepared_request.headers
         for required_header in {"x-b3-traceid", "x-b3-spanid", "x-b3-sampled"}:
-            assert required_header in headers
-        assert headers["x-b3-traceid"] == b3_format.format_trace_id(trace_id)
+            self.assertIn(required_header, headers)
+        self.assertEqual(
+            headers["x-b3-traceid"], b3_format.format_trace_id(trace_id)
+        )
