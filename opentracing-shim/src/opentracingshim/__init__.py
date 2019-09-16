@@ -171,10 +171,10 @@ class TracerWrapper(opentracing.Tracer):
         tags=None,
         start_time=None,
         ignore_active_span=False,
-    ):
-        # return self._noop_span
-        # TODO: Implement.
-        pass
+    ) -> SpanWrapper:
+        span = self._otel_tracer.create_span(operation_name)
+        span.start()
+        return SpanWrapper(span)
 
     def inject(self, span_context, format, carrier):
         # if format in Tracer._supported_formats:

@@ -50,6 +50,15 @@ class TestShim(unittest.TestCase):
         self.assertIsNotNone(scope.span.otel_span.end_time)
         self.assertIsNone(self.tracer.get_current_span())
 
+
+    def test_start_span(self):
+        span = self.ot_tracer.start_span("TestSpan")
+
+        self.assertIsInstance(span, opentracing.Span)
+
+        # Verify the span is started.
+        self.assertIsNotNone(span.otel_span.start_time)
+
     def test_set_operation_name(self):
         with self.ot_tracer.start_active_span("TestName") as scope:
             self.assertEqual(scope.span.otel_span.name, "TestName")
