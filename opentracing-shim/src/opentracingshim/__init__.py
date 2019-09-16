@@ -29,6 +29,8 @@ class SpanContextWrapper(opentracing.SpanContext):
     def otel_context(self):
         return self._otel_context
 
+    # TODO: Finish implementation.
+
 
 class SpanWrapper(opentracing.Span):
     # def __init__(self, tracer, context):
@@ -36,6 +38,7 @@ class SpanWrapper(opentracing.Span):
     #     self._context = context
     def __init__(self, span: Span):
         self._otel_span = span
+        # TODO: Finish initialization.
 
     @property
     def otel_span(self):
@@ -46,11 +49,13 @@ class SpanWrapper(opentracing.Span):
     def context(self):
         # return self._context
         pass
+        # TODO: Implement.
 
     @property
     def tracer(self):
         # return self._tracer
         pass
+        # TODO: Implement.
 
     def set_operation_name(self, operation_name):
         self._otel_span.update_name(operation_name)
@@ -58,40 +63,31 @@ class SpanWrapper(opentracing.Span):
 
     def finish(self, finish_time=None):
         pass
+        # TODO: Implement.
 
     def set_tag(self, key, value):
         self._otel_span.set_attribute(key, value)
 
     def log_kv(self, key_values, timestamp=None):
         return self
+        # TODO: Implement.
 
     def set_baggage_item(self, key, value):
         return self
+        # TODO: Implement.
 
     def get_baggage_item(self, key):
         return None
+        # TODO: Implement.
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        Span._on_error(self, exc_type, exc_val, exc_tb)
-        self.finish()
-
-    @staticmethod
-    def _on_error(span, exc_type, exc_val, exc_tb):
-        # if not span or not exc_val:
-        #     return
-
-        # span.set_tag(tags.ERROR, True)
-        # span.log_kv({
-        #     logs.EVENT: tags.ERROR,
-        #     logs.MESSAGE: str(exc_val),
-        #     logs.ERROR_OBJECT: exc_val,
-        #     logs.ERROR_KIND: exc_type,
-        #     logs.STACK: exc_tb,
-        # })
+        # Span._on_error(self, exc_type, exc_val, exc_tb)
+        # self.finish()
         pass
+        # TODO: Implement.
 
     def log_event(self, event, payload=None):
         # """DEPRECATED"""
@@ -100,6 +96,7 @@ class SpanWrapper(opentracing.Span):
         # else:
         #     return self.log_kv({logs.EVENT: event, 'payload': payload})
         pass
+        # TODO: Implement.
 
     def log(self, **kwargs):
         # """DEPRECATED"""
@@ -113,6 +110,7 @@ class SpanWrapper(opentracing.Span):
         #     timestamp = kwargs['timestamp']
         # return self.log_kv(key_values, timestamp)
         pass
+        # TODO: Implement.
 
 
 class ScopeWrapper(opentracing.Scope):
@@ -130,13 +128,16 @@ class ScopeWrapper(opentracing.Scope):
 
     def close(self):
         pass
+        # TODO: Implement.
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        SpanWrapper._on_error(self.span, exc_type, exc_val, exc_tb)
-        self.close()
+        # SpanWrapper._on_error(self.span, exc_type, exc_val, exc_tb)
+        # self.close()
+        pass
+        # TODO: Implement.
 
 
 class TracerWrapper(opentracing.Tracer):
@@ -147,15 +148,15 @@ class TracerWrapper(opentracing.Tracer):
     @property
     def scope_manager(self):
         # return self._scope_manager
-        # TODO: Implement.
         pass
+        # TODO: Implement.
 
     @property
     def active_span(self):
         # scope = self._scope_manager.active
         # return None if scope is None else scope.span
-        # TODO: Implement.
         pass
+        # TODO: Implement.
 
     @contextmanager
     def start_active_span(
@@ -168,6 +169,7 @@ class TracerWrapper(opentracing.Tracer):
         ignore_active_span=False,
         finish_on_close=True,
     ) -> ScopeWrapper:
+        # TODO: Handle optional arguments.
         with self._otel_tracer.start_span(operation_name) as span:
             yield ScopeWrapper(opentracing.ScopeManager, SpanWrapper(span))
 
@@ -180,6 +182,7 @@ class TracerWrapper(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ) -> SpanWrapper:
+        # TODO: Handle optional arguments.
         parent = child_of
         if parent is not None:
             parent = child_of.otel_span
@@ -192,12 +195,12 @@ class TracerWrapper(opentracing.Tracer):
         # if format in Tracer._supported_formats:
         #     return
         # raise UnsupportedFormatException(format)
-        # TODO: Implement.
         pass
+        # TODO: Implement.
 
     def extract(self, format, carrier):
         # if format in Tracer._supported_formats:
         #     return self._noop_span_context
         # raise UnsupportedFormatException(format)
-        # TODO: Implement.
         pass
+        # TODO: Implement.

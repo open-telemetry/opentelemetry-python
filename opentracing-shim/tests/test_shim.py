@@ -40,6 +40,8 @@ class TestShim(unittest.TestCase):
         self.assertIsInstance(self.ot_tracer, opentracing.Tracer)
 
     def test_start_active_span(self):
+        # TODO: Verify whether we should save `scope` and `span` outside the
+        # `with` block.
         with self.ot_tracer.start_active_span("TestSpan") as scope:
             self.assertIsInstance(scope, opentracing.Scope)
             self.assertIsInstance(scope.span, opentracing.Span)
@@ -55,10 +57,20 @@ class TestShim(unittest.TestCase):
         with self.ot_tracer.start_active_span("ParentSpan") as parent:
             parent_trace_id = parent.span.otel_span.get_context().trace_id
 
+            # TODO: Check active_span() on OT tracer.
+
             with self.ot_tracer.start_active_span("ChildSpan") as child:
                 child_trace_id = child.span.otel_span.get_context().trace_id
 
+                # TODO: Check active_span() on OT tracer.
+
                 self.assertEqual(parent_trace_id, child_trace_id)
+                # TODO: Verify that the child span's `parent` field is equal to
+                # the parent span's `span_id` field.
+
+            # TODO: Check active_span() on OT tracer.
+
+        # TODO: Check active_span() on OT tracer.
 
     def test_start_span(self):
         span = self.ot_tracer.start_span("TestSpan")
