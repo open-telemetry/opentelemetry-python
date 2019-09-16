@@ -33,4 +33,4 @@ STATISTIC = 100
 MEASURE_METRIC_STAGING.record(STATISTIC)
 
 # Batch recording
-meter.record_batch([tuple(MEASURE_METRIC_STAGING, STATISTIC)])
+METER.record_batch([tuple(MEASURE_METRIC_STAGING, STATISTIC)])

@@ -15,7 +15,7 @@
 import typing
 
 
-class CounterHandle():
+class CounterHandle:
     def add(self, value: typing.Union[float, int]) -> None:
         """Adds the given value to the current value.
 
@@ -23,11 +23,11 @@ class CounterHandle():
         """
 
 
-class GaugeHandle():
+class GaugeHandle:
     def set(self, value: typing.Union[float, int]) -> None:
         """Sets the current value to the given value. Can be negative."""
 
 
-class MeasureHandle():
+class MeasureHandle:
     def record(self, value: typing.Union[float, int]) -> None:
         """Records the given value to this measure."""

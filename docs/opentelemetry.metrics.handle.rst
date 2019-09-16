@@ -1,4 +1,4 @@
-opentelemetry.metrics.time\_series module
+opentelemetry.metrics.handle module
 ==========================================
 
 .. automodule:: opentelemetry.metrics.handle

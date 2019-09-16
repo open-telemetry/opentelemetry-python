@@ -48,8 +48,7 @@ class Meter:
     """
 
     def record_batch(
-        self,
-        record_tuples: List[Tuple["MeasureHandle", Union[float, int]]]
+        self, record_tuples: List[Tuple["MeasureHandle", Union[float, int]]]
     ) -> None:
         """Atomically records a batch of `MeasureHandle` and value pairs.
 
@@ -58,10 +57,9 @@ class Meter:
         API call.
 
         Args:
-            record_tuples: A list of pairs of `MeasureHandle`s and the
+            record_tuples: A list of pairs of `MeasureHandle` s and the
                 corresponding value to record for that handle.
         """
-
 
 
 class ValueType(Enum):
@@ -202,52 +200,40 @@ class Metric(ABC):
 class FloatCounter(Metric):
     """A counter type metric that holds float values."""
 
-    def get_handle(
-        self, label_values: List[str]
-    ) -> "CounterHandle":
+    def get_handle(self, label_values: List[str]) -> "CounterHandle":
         """Gets a `CounterHandle` with a float value."""
 
 
 class IntCounter(Metric):
     """A counter type metric that holds int values."""
 
-    def get_handle(
-        self, label_values: List[str]
-    ) -> "CounterHandle":
+    def get_handle(self, label_values: List[str]) -> "CounterHandle":
         """Gets a `CounterHandle` with an int value."""
 
 
 class FloatGauge(Metric):
     """A gauge type metric that holds float values."""
 
-    def get_handle(
-        self, label_values: List[str]
-    ) -> "GaugeHandle":
+    def get_handle(self, label_values: List[str]) -> "GaugeHandle":
         """Gets a `GaugeHandle` with a float value."""
 
 
 class IntGauge(Metric):
     """A gauge type metric that holds int values."""
 
-    def get_handle(
-        self, label_values: List[str]
-    ) -> "GaugeHandle":
+    def get_handle(self, label_values: List[str]) -> "GaugeHandle":
         """Gets a `GaugeHandle` with an int value."""
 
 
 class FloatMeasure(Metric):
     """A measure type metric that holds float values."""
 
-    def get_handle(
-        self, label_values: List[str]
-    ) -> "MeasureHandle":
+    def get_handle(self, label_values: List[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
 
 
 class IntMeasure(Metric):
     """A measure type metric that holds int values."""
 
-    def get_handle(
-        self, label_values: List[str]
-    ) -> "MeasureHandle":
+    def get_handle(self, label_values: List[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with an int value."""
