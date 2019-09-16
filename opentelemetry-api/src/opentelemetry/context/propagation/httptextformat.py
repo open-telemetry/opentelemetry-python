@@ -14,11 +14,14 @@
 
 import abc
 import typing
+from typing import Type, TypeVar
 
 from opentelemetry.trace import SpanContext
 
-Setter = typing.Callable[[object, str, str], None]
-Getter = typing.Callable[[object, str], typing.List[str]]
+_T = typing.TypeVar("_T")
+
+Setter = typing.Callable[[Type[_T], str, str], None]
+Getter = typing.Callable[[Type[_T], str], typing.List[str]]
 
 
 class HTTPTextFormat(abc.ABC):
@@ -70,7 +73,7 @@ class HTTPTextFormat(abc.ABC):
 
     @abc.abstractmethod
     def extract(
-        self, get_from_carrier: Getter, carrier: object
+        self, get_from_carrier: Getter[_T], carrier: _T
     ) -> SpanContext:
         """Create a SpanContext from values in the carrier.
 
@@ -93,7 +96,7 @@ class HTTPTextFormat(abc.ABC):
 
     @abc.abstractmethod
     def inject(
-        self, context: SpanContext, set_in_carrier: Setter, carrier: object
+        self, context: SpanContext, set_in_carrier: Setter[_T], carrier: _T
     ) -> None:
         """Inject values from a SpanContext into a carrier.
 
