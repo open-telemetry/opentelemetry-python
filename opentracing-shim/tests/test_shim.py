@@ -51,6 +51,14 @@ class TestShim(unittest.TestCase):
         self.assertIsNotNone(scope.span.otel_span.end_time)
         self.assertIsNone(self.tracer.get_current_span())
 
+        # Verify parent-child relationship.
+        with self.ot_tracer.start_active_span("ParentSpan") as parent:
+            parent_trace_id = parent.span.otel_span.get_context().trace_id
+
+            with self.ot_tracer.start_active_span("ChildSpan") as child:
+                child_trace_id = child.span.otel_span.get_context().trace_id
+
+                self.assertEqual(parent_trace_id, child_trace_id)
 
     def test_start_span(self):
         span = self.ot_tracer.start_span("TestSpan")
