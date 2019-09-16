@@ -21,9 +21,9 @@ from collections import OrderedDict, deque
 from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
-from opentelemetry import types
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
+from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
 
