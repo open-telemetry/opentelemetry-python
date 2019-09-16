@@ -50,7 +50,7 @@ class Meter:
     def record_batch(
         self,
         label_tuples: Dict[str, str],
-        record_tuples: List[Tuple["Metric", Union[float, int]]]
+        record_tuples: List[Tuple["Metric", Union[float, int]]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
