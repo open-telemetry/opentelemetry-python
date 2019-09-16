@@ -69,6 +69,7 @@ class TestShim(unittest.TestCase):
         self.assertIsNotNone(span.otel_span.start_time)
 
     def test_explicit_parent(self):
+        # Test explicit parent of type Span.
         parent = self.ot_tracer.start_span("ParentSpan")
         child = self.ot_tracer.start_span("ChildSpan", child_of=parent)
 
@@ -76,6 +77,9 @@ class TestShim(unittest.TestCase):
         child_trace_id = child.otel_span.get_context().trace_id
 
         self.assertEqual(child_trace_id, parent_trace_id)
+
+        # TODO: Test explicit parent of type SpanContext (the above tests only
+        # with a parent of type Span).
 
     def test_set_operation_name(self):
         with self.ot_tracer.start_active_span("TestName") as scope:
@@ -92,3 +96,7 @@ class TestShim(unittest.TestCase):
 
             scope.span.set_tag("my", "tag")
             self.assertEqual(scope.span.otel_span.attributes["my"], "tag")
+
+    def test_span(self):
+        pass
+        # TODO: Verify finish() on span.

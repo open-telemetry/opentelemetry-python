@@ -22,6 +22,14 @@ def create_tracer(tracer: Tracer) -> opentracing.Tracer:
     return TracerWrapper(tracer)
 
 
+class SpanContextWrapper(opentracing.SpanContext):
+    # def __init__(self, trace_id, span_id):
+    #     self._trace_id = trace_id
+    #     self._span_id = span_id
+    pass
+    # TODO: Implement.
+
+
 class SpanWrapper(opentracing.Span):
     # def __init__(self, tracer, context):
     #     self._tracer = tracer
