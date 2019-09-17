@@ -33,8 +33,10 @@ class OpenTelemetryMiddleware:
 
     Args:
         wsgi: The WSGI application callable.
+        propagators: TODO
     """
 
+    # pylint: disable=missing-type-doc
     def __init__(self, wsgi, propagators=None):
         self.wsgi = wsgi
 
@@ -77,12 +79,16 @@ class OpenTelemetryMiddleware:
 
         return _start_response
 
+    # pylint: disable=missing-type-doc
     def __call__(self, environ, start_response):
         """The WSGI application
 
         Args:
             environ: A WSGI environment.
             start_response: The WSGI start_response callable.
+
+        Yields:
+            Zero or more strings that comprise the WSGI response.
         """
 
         tracer = trace.tracer()
