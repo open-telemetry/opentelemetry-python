@@ -195,7 +195,7 @@ class Span:
         """Returns whether this span will be recorded.
 
         Returns true if this Span is active and recording information like
-        events with the AddEvent operation and attributes using SetAttributes.
+        events with the add_event operation and attributes using set_attribute.
         """
 
 
