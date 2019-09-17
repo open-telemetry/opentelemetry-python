@@ -192,7 +192,7 @@ class Span:
         """
 
     def is_recording_events(self) -> bool:
-        """Returns the flag whether this span will be recorded.
+        """Returns whether this span will be recorded.
 
         Returns true if this Span is active and recording information like
         events with the AddEvent operation and attributes using SetAttributes.
