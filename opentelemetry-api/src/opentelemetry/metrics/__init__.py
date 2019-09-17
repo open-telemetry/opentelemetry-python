@@ -60,7 +60,7 @@ def create_counter(
     description: str,
     unit: str,
     value_type: "ValueType",
-    bidirectional: bool = False,
+    is_bidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
 ) -> Union["FloatCounter", "IntCounter"]:
@@ -76,7 +76,7 @@ def create_counter(
         description: Human readable description of the metric.
         unit: Unit of the metric values.
         value_type: The type of values being recorded by the metric.
-        bidirectional: Set to true to allow negative inputs.
+        is_bidirectional: Set to true to allow negative inputs.
         label_keys: list of keys for the labels with dynamic values.
             Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
@@ -92,7 +92,7 @@ def create_gauge(
     description: str,
     unit: str,
     value_type: "ValueType",
-    unidirectional: bool = False,
+    is_unidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
 ) -> Union["FloatGauge", "IntGauge"]:
@@ -107,7 +107,7 @@ def create_gauge(
         description: Human readable description of the metric.
         unit: Unit of the metric values.
         value_type: The type of values being recorded by the metric.
-        unidirectional: Set to true to reject negative inputs.
+        is_unidirectional: Set to true to reject negative inputs.
         label_keys: list of keys for the labels with dynamic values.
             Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
@@ -123,7 +123,7 @@ def create_measure(
     description: str,
     unit: str,
     value_type: "ValueType",
-    non_negative: bool = False,
+    is_non_negative: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
 ) -> Union["FloatMeasure", "IntMeasure"]:
@@ -138,7 +138,7 @@ def create_measure(
         description: Human readable description of the metric.
         unit: Unit of the metric values.
         value_type: The type of values being recorded by the metric.
-        non_negative: Set to true to reject negative inputs.
+        is_non_negative: Set to true to reject negative inputs.
         label_keys: list of keys for the labels with dynamic values.
             Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
