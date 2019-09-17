@@ -57,6 +57,9 @@ class DistributedContextManager(dctx_api.DistributedContextManager):
 
         Args:
             context: A DistributedContext instance to make current.
+
+        Yields:
+            The current DistributedContext.
         """
         snapshot = self._current_context.get()
         self._current_context.set(context)

@@ -235,9 +235,9 @@ class Span(trace_api.Span):
         name: str,
         context: "trace_api.SpanContext",
         parent: trace_api.ParentSpan = None,
-        sampler=None,  # TODO
-        trace_config=None,  # TODO
-        resource=None,  # TODO
+        sampler: object = None,  # TODO
+        trace_config: object = None,  # TODO
+        resource: object = None,  # TODO
         attributes: types.Attributes = None,  # TODO
         events: typing.Sequence[trace_api.Event] = None,  # TODO
         links: typing.Sequence[trace_api.Link] = None,  # TODO
@@ -363,7 +363,7 @@ class Span(trace_api.Span):
         self.name = name
 
 
-def generate_span_id():
+def generate_span_id() -> int:
     """Get a new random span ID.
 
     Returns:
@@ -372,7 +372,7 @@ def generate_span_id():
     return random.getrandbits(64)
 
 
-def generate_trace_id():
+def generate_trace_id() -> int:
     """Get a new random trace ID.
 
     Returns:
