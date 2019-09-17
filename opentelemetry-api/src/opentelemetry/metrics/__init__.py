@@ -67,7 +67,7 @@ def create_counter(
     """Creates a counter metric with type value_type.
 
     By default, counter values can only go up (unidirectional). The API
-    should reject negative inputs to unidirectional counter metric.
+    should reject negative inputs to unidirectional counter metrics.
     Counter metrics have a bidirectional option to allow for negative
     inputs.
 
@@ -78,12 +78,12 @@ def create_counter(
         value_type: The type of values being recorded by the metric.
         bidirectional: Set to true to allow negative inputs.
         label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order MUST be used
+            Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
         span_context: The `SpanContext` that identifies the `Span`
             that the metric is associated with.
 
-    Returns: A new counter metric with corresponding value_type.
+    Returns: A new counter metric for values of the given value_type.
     """
 
 
@@ -109,12 +109,12 @@ def create_gauge(
         value_type: The type of values being recorded by the metric.
         unidirectional: Set to true to reject negative inputs.
         label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order MUST be used
+            Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
         span_context: The `SpanContext` that identifies the `Span`
             that the metric is associated with.
 
-    Returns: A new gauge metric with corresponding value_type.
+    Returns: A new gauge metric for values of the given value_type.
     """
 
 
@@ -140,12 +140,12 @@ def create_measure(
         value_type: The type of values being recorded by the metric.
         non_negative: Set to true to reject negative inputs.
         label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order MUST be used
+            Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
         span_context: The `SpanContext` that identifies the `Span`
             that the metric is associated with.
 
-    Returns: A new measure metric with corresponding value_type.
+    Returns: A new measure metric for values of the given value_type.
     """
 
 
