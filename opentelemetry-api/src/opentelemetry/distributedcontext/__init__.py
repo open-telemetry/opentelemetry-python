@@ -93,6 +93,9 @@ class DistributedContext:
 
         Args:
             key: the key with which to perform a lookup
+
+        Returns:
+            The value of the entry associated with `key`
         """
         if key in self._container:
             return self._container[key].value
@@ -120,6 +123,9 @@ class DistributedContextManager:
 
         Args:
             context: A DistributedContext instance to make current.
+
+        Yields:
+            The current DistributedContext.
         """
         # pylint: disable=no-self-use
         yield context

@@ -53,13 +53,12 @@ class BaseRuntimeContext:
     ) -> "BaseRuntimeContext.Slot":
         """Register a context slot with an optional default value.
 
-        :type name: str
-        :param name: The name of the context slot.
+        Args:
+            name: The name of the context slot.
+            default: The default value of the slot, can be a value or lambda.
 
-        :type default: object
-        :param name: The default value of the slot, can be a value or lambda.
-
-        :returns: The registered slot.
+        Returns:
+            The registered slot.
         """
         with cls._lock:
             if name not in cls._slots:

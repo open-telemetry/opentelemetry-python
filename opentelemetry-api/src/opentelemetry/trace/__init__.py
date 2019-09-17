@@ -251,8 +251,8 @@ class SpanContext:
     Args:
         trace_id: The ID of the trace that this span belongs to.
         span_id: This span's ID.
-        options: Trace options to propagate.
-        state: Tracing-system-specific info to propagate.
+        trace_options: Trace options to propagate.
+        trace_state: Tracing-system-specific info to propagate.
     """
 
     def __init__(
@@ -438,6 +438,9 @@ class Tracer:
 
         Args:
             span: The span to start and make current.
+
+        Yields:
+            `None`
         """
         # pylint: disable=unused-argument,no-self-use
         yield
@@ -480,6 +483,9 @@ def set_preferred_tracer_implementation(
 
     Args:
         factory: Callback that should create a new :class:`Tracer` instance.
+
+    Raises:
+        RuntimeError: On repeated attempts to load the tracer.
     """
     global _TRACER_FACTORY  # pylint:disable=global-statement
 
