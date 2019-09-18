@@ -21,6 +21,7 @@ VERSION_FILENAME = os.path.join(
     BASE_DIR, "src", "opentelemetry", "util", "version.py"
 )
 PACKAGE_INFO = {}
+# pylint:disable=exec-used
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
 
