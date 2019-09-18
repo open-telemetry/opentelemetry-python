@@ -17,6 +17,7 @@ import sys
 import unittest
 import unittest.mock as mock
 import wsgiref.util as wsgiref_util
+from urllib.parse import urlparse
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
@@ -191,35 +192,63 @@ class TestWsgiAttributes(unittest.TestCase):
         self.assertEqual(self.span.set_attribute.call_count, len(expected))
         self.span.set_attribute.assert_has_calls(expected, any_order=True)
 
-    def test_request_attributes_with_partial_raw_uri(self):
-        self.environ["RAW_URI"] = "/#top"
+    def validate_url(self, expected_url):
         OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
             self.span, self.environ
         )
-        self.span.set_attribute.assert_any_call(
-            "http.url", "http://127.0.0.1/#top"
+        attrs = {
+            args[0][0]: args[0][1]
+            for args in self.span.set_attribute.call_args_list
+        }
+        self.assertIn("http.url", attrs)
+        self.assertEqual(attrs["http.url"], expected_url)
+        self.assertIn("http.host", attrs)
+        self.assertEqual(
+            attrs["http.host"], urlparse(attrs["http.url"]).netloc
         )
+
+    def test_request_attributes_with_partial_raw_uri(self):
+        self.environ["RAW_URI"] = "/#top"
+        self.validate_url("http://127.0.0.1/#top")
 
     def test_request_attributes_with_partial_raw_uri_and_nonstandard_port(
         self
     ):
-        self.environ["RAW_URI"] = "/#top"
+        self.environ["RAW_URI"] = "/?"
+        del self.environ["HTTP_HOST"]
         self.environ["SERVER_PORT"] = "8080"
-        OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
-            self.span, self.environ
-        )
-        self.span.set_attribute.assert_any_call(
-            "http.url", "http://127.0.0.1:8080/#top"
-        )
+        self.validate_url("http://127.0.0.1:8080/?")
+
+    def test_request_attributes_with_nonstandard_port_and_no_host(self):
+        del self.environ["HTTP_HOST"]
+        self.environ["SERVER_PORT"] = "8080"
+        self.validate_url("http://127.0.0.1:8080/")
+
+    def test_request_attributes_with_nonstandard_port(self):
+        self.environ["HTTP_HOST"] += ":8080"
+        self.validate_url("http://127.0.0.1:8080/")
+
+    def test_request_attributes_with_scheme_relative_raw_uri(self):
+        self.environ["RAW_URI"] = "//127.0.0.1/?"
+        self.validate_url("http://127.0.0.1/?")
+
+    def test_request_attributes_with_netlocless_raw_uri(self):
+        self.environ["RAW_URI"] = "http:///?"
+        self.validate_url("http://127.0.0.1/?")
+
+    def test_request_attributes_with_pathless_raw_uri(self):
+        self.environ["RAW_URI"] = "http://hello"
+        self.environ["HTTP_HOST"] = "hello"
+        self.validate_url("http://hello")
+
+    def test_request_attributes_with_strange_raw_uri(self):
+        self.environ["RAW_URI"] = "http://?"
+        self.validate_url("http://127.0.0.1?")
 
     def test_request_attributes_with_full_request_uri(self):
-        self.environ["REQUEST_URI"] = "http://foobar.com:8080/?foo=bar#top"
-        OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
-            self.span, self.environ
-        )
-        self.span.set_attribute.assert_any_call(
-            "http.url", "http://foobar.com:8080/?foo=bar#top"
-        )
+        self.environ["HTTP_HOST"] = "127.0.0.1:8080"
+        self.environ["REQUEST_URI"] = "http://127.0.0.1:8080/?foo=bar#top"
+        self.validate_url("http://127.0.0.1:8080/?foo=bar#top")
 
     def test_response_attributes(self):
         OpenTelemetryMiddleware._add_response_attributes(  # noqa pylint: disable=protected-access

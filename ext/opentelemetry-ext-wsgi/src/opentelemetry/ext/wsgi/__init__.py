@@ -45,8 +45,17 @@ class OpenTelemetryMiddleware:
         span.set_attribute("component", "http")
         span.set_attribute("http.method", environ["REQUEST_METHOD"])
 
-        host = environ.get("HTTP_HOST") or environ["SERVER_NAME"]
-        span.set_attribute("http.host", host)  # NOTE: Nonstandard.
+        host = environ.get("HTTP_HOST")
+        if not host:
+            host = environ["SERVER_NAME"]
+            if environ["wsgi.url_scheme"] == "https":
+                if environ.get("SERVER_PORT", "443") != "443":
+                    host += ":" + environ["SERVER_PORT"]
+            elif environ.get("SERVER_PORT", "80") != "80":
+                host += ":" + environ["SERVER_PORT"]
+
+        # NOTE: Nonstandard, may (not) include port
+        span.set_attribute("http.host", host)
 
         url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
 
@@ -58,18 +67,18 @@ class OpenTelemetryMiddleware:
             except Exception:  # pylint:disable=broad-except
                 url = wsgiref_util.request_uri(environ)
             else:
-                if not urlparts.netloc:
-                    scheme = environ["wsgi.url_scheme"]
-                    portstr = ""
-                    if scheme == "https":
-                        if environ.get("SERVER_PORT", "443") != "443":
-                            portstr = ":" + environ["SERVER_PORT"]
-                    elif environ.get("SERVER_PORT", "80") != "80":
-                        portstr = ":" + environ["SERVER_PORT"]
-
-                    url = (
-                        scheme + "://" + (host or "localhost") + portstr + url
-                    )
+                if url.startswith("//"):  # Scheme-relative URL
+                    url = url[2:]
+                if (
+                    not urlparts.netloc and urlparts.scheme
+                ):  # E.g., "http:///?"
+                    scheme, path = url.split("://", 1)
+                    url = scheme + "://" + host + path
+                elif not urlparts.netloc or not urlparts.scheme:
+                    scheme = environ["wsgi.url_scheme"] + "://"
+                    if not urlparts.netloc:
+                        url = host + url
+                    url = scheme + url
         else:
             url = wsgiref_util.request_uri(environ)
 
