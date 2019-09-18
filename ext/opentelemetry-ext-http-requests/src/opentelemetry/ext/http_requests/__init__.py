@@ -25,6 +25,7 @@ from requests.sessions import Session
 from opentelemetry import propagators
 from opentelemetry.trace import SpanKind
 
+
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user
 # to configure a SDK before enabling this integration. In turn, this means that
 # if the SDK/tracer is already using `requests` they may, in theory, bypass our
