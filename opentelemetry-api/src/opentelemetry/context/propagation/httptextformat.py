@@ -14,14 +14,13 @@
 
 import abc
 import typing
-from typing import Type, TypeVar
 
 from opentelemetry.trace import SpanContext
 
 _T = typing.TypeVar("_T")
 
-Setter = typing.Callable[[Type[_T], str, str], None]
-Getter = typing.Callable[[Type[_T], str], typing.List[str]]
+Setter = typing.Callable[[typing.Type[_T], str, str], None]
+Getter = typing.Callable[[typing.Type[_T], str], typing.List[str]]
 
 
 class HTTPTextFormat(abc.ABC):

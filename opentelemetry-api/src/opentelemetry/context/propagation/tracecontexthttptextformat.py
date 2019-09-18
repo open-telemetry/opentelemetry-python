@@ -13,8 +13,12 @@
 # limitations under the License.
 #
 
+import typing
+
 import opentelemetry.trace as trace
 from opentelemetry.context.propagation import httptextformat
+
+_T = typing.TypeVar("_T")
 
 
 class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
@@ -22,14 +26,14 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     """
 
     def extract(
-        self, _get_from_carrier: httptextformat.Getter, _carrier: object
+        self, _get_from_carrier: httptextformat.Getter[_T], _carrier: _T
     ) -> trace.SpanContext:
         return trace.INVALID_SPAN_CONTEXT
 
     def inject(
         self,
         context: trace.SpanContext,
-        set_in_carrier: httptextformat.Setter,
-        carrier: object,
+        set_in_carrier: httptextformat.Setter[_T],
+        carrier: _T,
     ) -> None:
         pass
