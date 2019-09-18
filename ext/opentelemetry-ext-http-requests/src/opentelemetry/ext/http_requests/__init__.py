@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 
 from requests.sessions import Session
 
-import opentelemetry.propagator as propagator
+from opentelemetry import propagators
 
 
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user
@@ -75,9 +75,7 @@ def enable(tracer):
             # to access propagators.
 
             headers = kwargs.setdefault("headers", {})
-            propagator.get_global_propagator().inject(
-                tracer, type(headers).__setitem__, headers
-            )
+            propagators.inject(tracer, type(headers).__setitem__, headers)
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)

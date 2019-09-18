@@ -22,7 +22,7 @@ import functools
 import typing
 import wsgiref.util as wsgiref_util
 
-from opentelemetry import propagator, trace
+from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 
 
@@ -85,9 +85,7 @@ class OpenTelemetryMiddleware:
 
         tracer = trace.tracer()
         path_info = environ["PATH_INFO"] or "/"
-        parent_span = propagator.get_global_propagator().extract(
-            get_header_from_environ, environ
-        )
+        parent_span = propagators.extract(get_header_from_environ, environ)
 
         with tracer.start_span(path_info, parent_span) as span:
             self._add_request_attributes(span, environ)
