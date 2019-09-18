@@ -241,6 +241,7 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,  # TODO
         events: typing.Sequence[trace_api.Event] = None,  # TODO
         links: typing.Sequence[trace_api.Link] = None,  # TODO
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
 
@@ -253,6 +254,8 @@ class Span(trace_api.Span):
         self.attributes = attributes
         self.events = events
         self.links = links
+        self.kind = kind
+
         self.span_processor = span_processor
         self._lock = threading.Lock()
 
@@ -417,15 +420,17 @@ class Tracer(trace_api.Tracer):
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
     ) -> typing.Iterator["Span"]:
         """See `opentelemetry.trace.Tracer.start_span`."""
-        with self.use_span(self.create_span(name, parent)) as span:
+        with self.use_span(self.create_span(name, parent, kind)) as span:
             yield span
 
     def create_span(
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
     ) -> "Span":
         """See `opentelemetry.trace.Tracer.create_span`."""
         span_id = generate_span_id()
@@ -451,6 +456,7 @@ class Tracer(trace_api.Tracer):
             context=context,
             parent=parent,
             span_processor=self._active_span_processor,
+            kind=kind,
         )
 
     @contextmanager
