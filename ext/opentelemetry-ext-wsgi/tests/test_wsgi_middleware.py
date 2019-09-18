@@ -171,6 +171,36 @@ class TestWsgiAttributes(unittest.TestCase):
         self.assertEqual(self.span.set_attribute.call_count, len(expected))
         self.span.set_attribute.assert_has_calls(expected, any_order=True)
 
+    def test_request_attributes_with_partial_raw_uri(self):
+        self.environ["RAW_URI"] = "/#top"
+        OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
+            self.span, self.environ
+        )
+        self.span.set_attribute.assert_any_call(
+            "http.url", "http://127.0.0.1/#top"
+        )
+
+    def test_request_attributes_with_partial_raw_uri_and_nonstandard_port(
+        self
+    ):
+        self.environ["RAW_URI"] = "/#top"
+        self.environ["SERVER_PORT"] = "8080"
+        OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
+            self.span, self.environ
+        )
+        self.span.set_attribute.assert_any_call(
+            "http.url", "http://127.0.0.1:8080/#top"
+        )
+
+    def test_request_attributes_with_full_request_uri(self):
+        self.environ["REQUEST_URI"] = "http://foobar.com:8080/?foo=bar#top"
+        OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
+            self.span, self.environ
+        )
+        self.span.set_attribute.assert_any_call(
+            "http.url", "http://foobar.com:8080/?foo=bar#top"
+        )
+
     def test_response_attributes(self):
         OpenTelemetryMiddleware._add_response_attributes(  # noqa pylint: disable=protected-access
             self.span, "404 Not Found"

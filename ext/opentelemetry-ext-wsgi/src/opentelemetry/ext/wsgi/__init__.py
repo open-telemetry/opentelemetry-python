@@ -21,6 +21,7 @@ OpenTelemetry.
 import functools
 import typing
 import wsgiref.util as wsgiref_util
+from urllib.parse import urlparse
 
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
@@ -45,13 +46,33 @@ class OpenTelemetryMiddleware:
         span.set_attribute("http.method", environ["REQUEST_METHOD"])
 
         host = environ.get("HTTP_HOST") or environ["SERVER_NAME"]
-        span.set_attribute("http.host", host)
+        span.set_attribute("http.host", host)  # NOTE: Nonstandard.
 
-        url = (
-            environ.get("REQUEST_URI")
-            or environ.get("RAW_URI")
-            or wsgiref_util.request_uri(environ, include_query=False)
-        )
+        url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
+
+        if url:  # We got something, but is absolute?
+            # The simplistic ``"://" in url` is not sufficient,
+            # as that could be contained in the query string.
+            try:
+                urlparts = urlparse(url)
+            except Exception:  # pylint:disable=broad-except
+                url = wsgiref_util.request_uri(environ)
+            else:
+                if not urlparts.netloc:
+                    scheme = environ["wsgi.url_scheme"]
+                    portstr = ""
+                    if scheme == "https":
+                        if environ.get("SERVER_PORT", "443") != "443":
+                            portstr = ":" + environ["SERVER_PORT"]
+                    elif environ.get("SERVER_PORT", "80") != "80":
+                        portstr = ":" + environ["SERVER_PORT"]
+
+                    url = (
+                        scheme + "://" + (host or "localhost") + portstr + url
+                    )
+        else:
+            url = wsgiref_util.request_uri(environ)
+
         span.set_attribute("http.url", url)
 
     @staticmethod
