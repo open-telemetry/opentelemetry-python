@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 from requests.sessions import Session
 
 from opentelemetry import propagators
-
+from opentelemetry.trace import SpanKind
 
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user
 # to configure a SDK before enabling this integration. In turn, this means that
@@ -63,11 +63,8 @@ def enable(tracer):
                 path = "<URL parses to None>"
             path = parsed_url.path
 
-        with tracer.start_span(path) as span:
+        with tracer.start_span(path, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", "http")
-            # TODO: The OTel spec says "SpanKind" MUST be "Client" but that
-            #  seems to be a leftover, as Spans have no explicit field for
-            #  kind.
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 

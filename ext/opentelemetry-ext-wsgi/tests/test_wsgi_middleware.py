@@ -126,7 +126,7 @@ class TestWsgiApplication(unittest.TestCase):
 
         # Verify that start_span has been called
         self.start_span.assert_called_once_with(
-            "/", trace_api.INVALID_SPAN_CONTEXT
+            "/", trace_api.INVALID_SPAN_CONTEXT, kind=trace_api.SpanKind.SERVER
         )
 
     def test_basic_wsgi_call(self):
