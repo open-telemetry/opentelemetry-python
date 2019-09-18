@@ -191,6 +191,13 @@ class Span:
         on the implementation.
         """
 
+    def is_recording_events(self) -> bool:
+        """Returns whether this span will be recorded.
+
+        Returns true if this Span is active and recording information like
+        events with the add_event operation and attributes using set_attribute.
+        """
+
 
 class TraceOptions(int):
     """A bitmask that represents options specific to the trace.

@@ -284,6 +284,8 @@ class Span(trace_api.Span):
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
+            if not self.is_recording_events():
+                return
             has_ended = self.end_time is not None
             if not has_ended:
                 if self.attributes is Span.empty_attributes:
@@ -302,6 +304,8 @@ class Span(trace_api.Span):
 
     def add_lazy_event(self, event: trace_api.Event) -> None:
         with self._lock:
+            if not self.is_recording_events():
+                return
             has_ended = self.end_time is not None
             if not has_ended:
                 if self.events is Span.empty_events:
@@ -322,6 +326,8 @@ class Span(trace_api.Span):
 
     def add_lazy_link(self, link: "trace_api.Link") -> None:
         with self._lock:
+            if not self.is_recording_events():
+                return
             has_ended = self.end_time is not None
             if not has_ended:
                 if self.links is Span.empty_links:
@@ -333,6 +339,8 @@ class Span(trace_api.Span):
 
     def start(self):
         with self._lock:
+            if not self.is_recording_events():
+                return
             has_started = self.start_time is not None
             if not has_started:
                 self.start_time = util.time_ns()
@@ -343,6 +351,8 @@ class Span(trace_api.Span):
 
     def end(self):
         with self._lock:
+            if not self.is_recording_events():
+                return
             if self.start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
             has_ended = self.end_time is not None
@@ -361,6 +371,9 @@ class Span(trace_api.Span):
             logger.warning("Calling update_name() on an ended span.")
             return
         self.name = name
+
+    def is_recording_events(self) -> bool:
+        return True
 
 
 def generate_span_id():
