@@ -176,14 +176,17 @@ class TestWsgiAttributes(unittest.TestCase):
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
 
     def test_request_attributes(self):
+        self.environ["QUERY_STRING"] = "foo=bar"
+
         OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
             self.span, self.environ
         )
+
         expected = (
             mock.call("component", "http"),
             mock.call("http.method", "GET"),
             mock.call("http.host", "127.0.0.1"),
-            mock.call("http.url", "http://127.0.0.1/"),
+            mock.call("http.url", "http://127.0.0.1/?foo=bar"),
         )
         self.assertEqual(self.span.set_attribute.call_count, len(expected))
         self.span.set_attribute.assert_has_calls(expected, any_order=True)
