@@ -108,19 +108,32 @@ class OpenTelemetryMiddleware:
         path_info = environ["PATH_INFO"] or "/"
         parent_span = propagators.extract(get_header_from_environ, environ)
 
-        with tracer.start_span(
+        span = tracer.create_span(
             path_info, parent_span, kind=trace.SpanKind.SERVER
-        ) as span:
+        )
+        span.start()
+        try:
             self._add_request_attributes(span, environ)
             start_response = self._create_start_response(span, start_response)
 
             iterable = self.wsgi(environ, start_response)
-            try:
-                for yielded in iterable:
-                    yield yielded
-            finally:
-                if hasattr(iterable, "close"):
-                    iterable.close()
+
+            # Put this in a subfunction to not delay the call to the wrapped
+            # WSGI application (instrumentation should change the application
+            # behavior as little as possible).
+            def iter_result():
+                try:
+                    for yielded in iterable:
+                        yield yielded
+                finally:
+                    if hasattr(iterable, "close"):
+                        iterable.close()
+                    span.end()
+
+            return iter_result()
+        except:  # noqa
+            span.end()
+            raise
 
 
 def get_header_from_environ(

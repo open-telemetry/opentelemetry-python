@@ -52,6 +52,15 @@ def create_iter_wsgi(response):
     return iter_wsgi
 
 
+def create_gen_wsgi(response):
+    def gen_wsgi(environ, start_response):
+        result = create_iter_wsgi(response)(environ, start_response)
+        yield from result
+        getattr(result, "close", lambda: None)()
+
+    return gen_wsgi
+
+
 def error_wsgi(environ, start_response):
     assert isinstance(environ, dict)
     try:
@@ -66,18 +75,15 @@ def error_wsgi(environ, start_response):
 class TestWsgiApplication(unittest.TestCase):
     def setUp(self):
         tracer = trace_api.tracer()
-        self.span_context_manager = mock.MagicMock()
-        self.span_context_manager.__enter__.return_value = mock.create_autospec(
-            trace_api.Span, spec_set=True
-        )
-        self.patcher = mock.patch.object(
+        self.span = mock.create_autospec(trace_api.Span, spec_set=True)
+        self.create_span_patcher = mock.patch.object(
             tracer,
-            "start_span",
+            "create_span",
             autospec=True,
             spec_set=True,
-            return_value=self.span_context_manager,
+            return_value=self.span,
         )
-        self.start_span = self.patcher.start()
+        self.create_span = self.create_span_patcher.start()
 
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
@@ -90,11 +96,11 @@ class TestWsgiApplication(unittest.TestCase):
         self.exc_info = None
 
     def tearDown(self):
-        self.patcher.stop()
+        self.create_span_patcher.stop()
 
     def start_response(self, status, response_headers, exc_info=None):
         # The span should have started already
-        self.span_context_manager.__enter__.assert_called_with()
+        self.span.start.assert_called_once_with()
 
         self.status = status
         self.response_headers = response_headers
@@ -105,12 +111,10 @@ class TestWsgiApplication(unittest.TestCase):
         while True:
             try:
                 value = next(response)
-                self.span_context_manager.__exit__.assert_not_called()
+                self.assertEqual(0, self.span.end.call_count)
                 self.assertEqual(value, b"*")
             except StopIteration:
-                self.span_context_manager.__exit__.assert_called_with(
-                    None, None, None
-                )
+                self.span.end.assert_called_once_with()
                 break
 
         self.assertEqual(self.status, "200 OK")
@@ -125,9 +129,10 @@ class TestWsgiApplication(unittest.TestCase):
             self.assertIsNone(self.exc_info)
 
         # Verify that start_span has been called
-        self.start_span.assert_called_once_with(
+        self.create_span.assert_called_with(
             "/", trace_api.INVALID_SPAN_CONTEXT, kind=trace_api.SpanKind.SERVER
         )
+        self.span.start.assert_called_with()
 
     def test_basic_wsgi_call(self):
         app = OpenTelemetryMiddleware(simple_wsgi)
@@ -139,12 +144,24 @@ class TestWsgiApplication(unittest.TestCase):
         iter_wsgi = create_iter_wsgi(original_response)
         app = OpenTelemetryMiddleware(iter_wsgi)
         response = app(self.environ, self.start_response)
-        # Verify that start_response has not been called yet
+        # Verify that start_response has been called
+        self.assertTrue(self.status)
+        self.validate_response(response)
+
+        # Verify that close has been called exactly once
+        self.assertEqual(original_response.close_calls, 1)
+
+    def test_wsgi_generator(self):
+        original_response = Response()
+        gen_wsgi = create_gen_wsgi(original_response)
+        app = OpenTelemetryMiddleware(gen_wsgi)
+        response = app(self.environ, self.start_response)
+        # Verify that start_response has not been called
         self.assertIsNone(self.status)
         self.validate_response(response)
 
         # Verify that close has been called exactly once
-        assert original_response.close_calls == 1
+        self.assertEqual(original_response.close_calls, 1)
 
     def test_wsgi_exc_info(self):
         app = OpenTelemetryMiddleware(error_wsgi)
