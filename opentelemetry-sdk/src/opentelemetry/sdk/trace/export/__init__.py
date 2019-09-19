@@ -79,8 +79,12 @@ class SimpleExportSpanProcessor(SpanProcessor):
 
 
 class ConsoleSpanExporter(SpanExporter):
+<<<<<<< HEAD
     """Implementation of :class:`SpanExporter` that prints spans to the
     console.
+=======
+    """Implementation of :class:`Exporter` that prints spans to the console.
+>>>>>>> add console exporter
 
     This class can be used for diagnostic purposes. It prints the exported
     spans to the console STDOUT.
