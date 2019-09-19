@@ -21,7 +21,6 @@ OpenTelemetry.
 import functools
 import typing
 import wsgiref.util as wsgiref_util
-from urllib.parse import urlparse
 
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
@@ -121,16 +120,17 @@ class OpenTelemetryMiddleware:
             # Put this in a subfunction to not delay the call to the wrapped
             # WSGI application (instrumentation should change the application
             # behavior as little as possible).
-            def iter_result():
+            def iter_result(iterable, span):
                 try:
                     for yielded in iterable:
                         yield yielded
                 finally:
-                    if hasattr(iterable, "close"):
-                        iterable.close()
+                    close = getattr(iterable, "close", None)
+                    if close:
+                        close()
                     span.end()
 
-            return iter_result()
+            return iter_result(iterable, span)
         except:  # noqa
             span.end()
             raise
