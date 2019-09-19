@@ -65,98 +65,101 @@ class Meter:
         """
 
 
-def create_counter(
-    name: str,
-    description: str,
-    unit: str,
-    value_type: Union[Type[float], Type[int]],
-    is_bidirectional: bool = False,
-    label_keys: List[str] = None,
-    span_context: SpanContext = None,
-) -> Union["FloatCounter", "IntCounter"]:
-    """Creates a counter metric with type value_type.
+    def create_counter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Union[Type[float], Type[int]],
+        is_bidirectional: bool = False,
+        label_keys: List[str] = None,
+        span_context: SpanContext = None,
+    ) -> Union["FloatCounter", "IntCounter"]:
+        """Creates a counter metric with type value_type.
 
-    By default, counter values can only go up (unidirectional). The API
-    should reject negative inputs to unidirectional counter metrics.
-    Counter metrics have a bidirectional option to allow for negative
-    inputs.
+        By default, counter values can only go up (unidirectional). The API
+        should reject negative inputs to unidirectional counter metrics.
+        Counter metrics have a bidirectional option to allow for negative
+        inputs.
 
-    Args:
-        name: The name of the counter.
-        description: Human readable description of the metric.
-        unit: Unit of the metric values.
-        value_type: The type of values being recorded by the metric.
-        is_bidirectional: Set to true to allow negative inputs.
-        label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order must be used
-            on recording when suppling values for these labels.
-        span_context: The `SpanContext` that identifies the `Span`
-            that the metric is associated with.
+        Args:
+            name: The name of the counter.
+            description: Human readable description of the metric.
+            unit: Unit of the metric values.
+            value_type: The type of values being recorded by the metric.
+            is_bidirectional: Set to true to allow negative inputs.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order must be used
+                on recording when suppling values for these labels.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
-    Returns: A new counter metric for values of the given value_type.
-    """
-
-
-def create_gauge(
-    name: str,
-    description: str,
-    unit: str,
-    value_type: Union[Type[float], Type[int]],
-    is_unidirectional: bool = False,
-    label_keys: List[str] = None,
-    span_context: SpanContext = None,
-) -> Union["FloatGauge", "IntGauge"]:
-    """Creates a gauge metric with type value_type.
-
-    By default, gauge values can go both up and down (bidirectional). The API
-    allows for an optional unidirectional flag, in which when set will reject
-    descending update values.
-
-    Args:
-        name: The name of the gauge.
-        description: Human readable description of the metric.
-        unit: Unit of the metric values.
-        value_type: The type of values being recorded by the metric.
-        is_unidirectional: Set to true to reject negative inputs.
-        label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order must be used
-            on recording when suppling values for these labels.
-        span_context: The `SpanContext` that identifies the `Span`
-            that the metric is associated with.
-
-    Returns: A new gauge metric for values of the given value_type.
-    """
+        Returns: A new counter metric for values of the given value_type.
+        """
 
 
-def create_measure(
-    name: str,
-    description: str,
-    unit: str,
-    value_type: Union[Type[float], Type[int]],
-    is_non_negative: bool = False,
-    label_keys: List[str] = None,
-    span_context: SpanContext = None,
-) -> Union["FloatMeasure", "IntMeasure"]:
-    """Creates a measure metric with type value_type.
+    def create_gauge(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Union[Type[float], Type[int]],
+        is_unidirectional: bool = False,
+        label_keys: List[str] = None,
+        span_context: SpanContext = None,
+    ) -> Union["FloatGauge", "IntGauge"]:
+        """Creates a gauge metric with type value_type.
 
-    Measure metrics represent raw statistics that are recorded. As an option,
-    measure metrics can be declared as non-negative. The API will reject
-    negative metric events for non-negative measures.
+        By default, gauge values can go both up and down (bidirectional). The API
+        allows for an optional unidirectional flag, in which when set will reject
+        descending update values.
 
-    Args:
-        name: The name of the measure.
-        description: Human readable description of the metric.
-        unit: Unit of the metric values.
-        value_type: The type of values being recorded by the metric.
-        is_non_negative: Set to true to reject negative inputs.
-        label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order must be used
-            on recording when suppling values for these labels.
-        span_context: The `SpanContext` that identifies the `Span`
-            that the metric is associated with.
+        Args:
+            name: The name of the gauge.
+            description: Human readable description of the metric.
+            unit: Unit of the metric values.
+            value_type: The type of values being recorded by the metric.
+            is_unidirectional: Set to true to reject negative inputs.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order must be used
+                on recording when suppling values for these labels.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
 
-    Returns: A new measure metric for values of the given value_type.
-    """
+        Returns: A new gauge metric for values of the given value_type.
+        """
+
+
+    def create_measure(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Union[Type[float], Type[int]],
+        is_non_negative: bool = False,
+        label_keys: List[str] = None,
+        span_context: SpanContext = None,
+    ) -> Union["FloatMeasure", "IntMeasure"]:
+        """Creates a measure metric with type value_type.
+
+        Measure metrics represent raw statistics that are recorded. As an option,
+        measure metrics can be declared as non-negative. The API will reject
+        negative metric events for non-negative measures.
+
+        Args:
+            name: The name of the measure.
+            description: Human readable description of the metric.
+            unit: Unit of the metric values.
+            value_type: The type of values being recorded by the metric.
+            is_non_negative: Set to true to reject negative inputs.
+            label_keys: list of keys for the labels with dynamic values.
+                Order of the list is important as the same order must be used
+                on recording when suppling values for these labels.
+            span_context: The `SpanContext` that identifies the `Span`
+                that the metric is associated with.
+
+        Returns: A new measure metric for values of the given value_type.
+        """
 
 
 class Metric(ABC):
@@ -235,3 +238,21 @@ class IntMeasure(Metric):
 
     def get_handle(self, label_values: List[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with an int value."""
+
+
+class CounterHandle:
+    def add(self, value: Union[float, int]) -> None:
+        """Adds the given value to the current value.
+
+        The input value cannot be negative if not bidirectional.
+        """
+
+
+class GaugeHandle:
+    def set(self, value: Union[float, int]) -> None:
+        """Sets the current value to the given value. Can be negative."""
+
+
+class MeasureHandle:
+    def record(self, value: Union[float, int]) -> None:
+        """Records the given value to this measure."""
