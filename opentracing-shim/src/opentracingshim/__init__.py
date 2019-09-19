@@ -29,7 +29,23 @@ class SpanContextWrapper(opentracing.SpanContext):
     def otel_context(self):
         return self._otel_context
 
-    # TODO: Finish implementation.
+    @property
+    def baggage(self):
+        """
+        Return baggage associated with this :class:`SpanContext`.
+        If no baggage has been added to the :class:`Span`, returns an empty
+        dict.
+
+        The caller must not modify the returned dictionary.
+
+        See also: :meth:`Span.set_baggage_item()` /
+        :meth:`Span.get_baggage_item()`
+
+        :rtype: dict
+        :return: baggage associated with this :class:`SpanContext` or ``{}``.
+        """
+        return {}
+        # TODO: Implement.
 
 
 class SpanWrapper(opentracing.Span):
