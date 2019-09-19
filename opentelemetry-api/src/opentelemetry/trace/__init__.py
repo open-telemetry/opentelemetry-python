@@ -61,10 +61,11 @@ implicit or explicit context propagation consistently throughout.
 .. versionadded:: 0.1.0
 """
 
+import enum
 import typing
 from contextlib import contextmanager
 
-from opentelemetry import loader, types
+from opentelemetry.util import loader, types
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -109,6 +110,33 @@ class Event:
     @property
     def timestamp(self) -> int:
         return self._timestamp
+
+
+class SpanKind(enum.Enum):
+    """Specifies additional details on how this span relates to its parent span.
+
+    Note that this enumeration is experimental and likely to change. See
+    https://github.com/open-telemetry/opentelemetry-specification/pull/226.
+    """
+
+    #: Default value. Indicates that the span is used internally in the application.
+    INTERNAL = 0
+
+    #: Indicates that the span describes an operation that handles a remote request.
+    SERVER = 1
+
+    #: Indicates that the span describes a request to some remote service.
+    CLIENT = 2
+
+    #: Indicates that the span describes a producer sending a message to a
+    #: broker. Unlike client and server, there is usually no direct critical
+    #: path latency relationship between producer and consumer spans.
+    PRODUCER = 3
+
+    #: Indicates that the span describes consumer receiving a message from a
+    #: broker. Unlike client and server, there is usually no direct critical
+    #: path latency relationship between producer and consumer spans.
+    CONSUMER = 4
 
 
 class Span:
@@ -189,6 +217,13 @@ class Span:
 
         Upon this update, any sampling behavior based on Span name will depend
         on the implementation.
+        """
+
+    def is_recording_events(self) -> bool:
+        """Returns whether this span will be recorded.
+
+        Returns true if this Span is active and recording information like
+        events with the add_event operation and attributes using set_attribute.
         """
 
 
@@ -343,7 +378,10 @@ class Tracer:
 
     @contextmanager  # type: ignore
     def start_span(
-        self, name: str, parent: ParentSpan = CURRENT_SPAN
+        self,
+        name: str,
+        parent: ParentSpan = CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
     ) -> typing.Iterator["Span"]:
         """Context manager for span creation.
 
@@ -383,6 +421,8 @@ class Tracer:
         Args:
             name: The name of the span to be created.
             parent: The span's parent. Defaults to the current span.
+            kind: The span's kind (relationship to parent). Note that is
+                meaningful even if there is no parent.
 
         Yields:
             The newly-created span.
@@ -391,7 +431,10 @@ class Tracer:
         yield INVALID_SPAN
 
     def create_span(
-        self, name: str, parent: ParentSpan = CURRENT_SPAN
+        self,
+        name: str,
+        parent: ParentSpan = CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
     ) -> "Span":
         """Creates a span.
 
@@ -419,6 +462,8 @@ class Tracer:
         Args:
             name: The name of the span to be created.
             parent: The span's parent. Defaults to the current span.
+            kind: The span's kind (relationship to parent). Note that is
+                meaningful even if there is no parent.
 
         Returns:
             The newly-created span.
@@ -445,7 +490,7 @@ class Tracer:
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
-# from opentelemetry.loader import ImplementationFactory
+# from opentelemetry.util.loader import ImplementationFactory
 ImplementationFactory = typing.Callable[
     [typing.Type[Tracer]], typing.Optional[Tracer]
 ]
@@ -474,7 +519,7 @@ def set_preferred_tracer_implementation(
 ) -> None:
     """Set the factory to be used to create the tracer.
 
-    See :mod:`opentelemetry.loader` for details.
+    See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 

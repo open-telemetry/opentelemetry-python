@@ -76,14 +76,14 @@ def create_counter(
     description: str,
     unit: str,
     value_type: "ValueType",
-    bidirectional: bool = False,
+    is_bidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
 ) -> Union["FloatCounter", "IntCounter"]:
     """Creates a counter metric with type value_type.
 
     By default, counter values can only go up (unidirectional). The API
-    should reject negative inputs to unidirectional counter metric.
+    should reject negative inputs to unidirectional counter metrics.
     Counter metrics have a bidirectional option to allow for negative
     inputs.
 
@@ -92,14 +92,14 @@ def create_counter(
         description: Human readable description of the metric.
         unit: Unit of the metric values.
         value_type: The type of values being recorded by the metric.
-        bidirectional: Set to true to allow negative inputs.
+        is_bidirectional: Set to true to allow negative inputs.
         label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order MUST be used
+            Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
         span_context: The `SpanContext` that identifies the `Span`
             that the metric is associated with.
 
-    Returns: A new counter metric with corresponding value_type.
+    Returns: A new counter metric for values of the given value_type.
     """
 
 
@@ -108,7 +108,7 @@ def create_gauge(
     description: str,
     unit: str,
     value_type: "ValueType",
-    unidirectional: bool = False,
+    is_unidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
 ) -> Union["FloatGauge", "IntGauge"]:
@@ -123,14 +123,14 @@ def create_gauge(
         description: Human readable description of the metric.
         unit: Unit of the metric values.
         value_type: The type of values being recorded by the metric.
-        unidirectional: Set to true to reject negative inputs.
+        is_unidirectional: Set to true to reject negative inputs.
         label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order MUST be used
+            Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
         span_context: The `SpanContext` that identifies the `Span`
             that the metric is associated with.
 
-    Returns: A new gauge metric with corresponding value_type.
+    Returns: A new gauge metric for values of the given value_type.
     """
 
 
@@ -139,7 +139,7 @@ def create_measure(
     description: str,
     unit: str,
     value_type: "ValueType",
-    non_negative: bool = False,
+    is_non_negative: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
 ) -> Union["FloatMeasure", "IntMeasure"]:
@@ -154,14 +154,14 @@ def create_measure(
         description: Human readable description of the metric.
         unit: Unit of the metric values.
         value_type: The type of values being recorded by the metric.
-        non_negative: Set to true to reject negative inputs.
+        is_non_negative: Set to true to reject negative inputs.
         label_keys: list of keys for the labels with dynamic values.
-            Order of the list is important as the same order MUST be used
+            Order of the list is important as the same order must be used
             on recording when suppling values for these labels.
         span_context: The `SpanContext` that identifies the `Span`
             that the metric is associated with.
 
-    Returns: A new measure metric with corresponding value_type.
+    Returns: A new measure metric for values of the given value_type.
     """
 
 
@@ -169,12 +169,12 @@ class Metric(ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
-    handle that the metric holds.
+    time series that the metric holds.
     """
 
     @abstractmethod
-    def get_handle(self, label_values: List[str]) -> "object":
-        """Gets a handle, used for repeated-use of metrics instruments.
+    def get_or_create_time_series(self, label_values: List[str]) -> "object":
+        """Gets a timeseries, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
         with a pre-defined set of label values. All metric kinds (counter,

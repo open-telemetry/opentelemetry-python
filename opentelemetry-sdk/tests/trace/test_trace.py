@@ -16,8 +16,7 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk import trace
-from opentelemetry.sdk import util
+from opentelemetry.sdk import trace, util
 
 
 class TestTracer(unittest.TestCase):
@@ -37,10 +36,14 @@ class TestSpanCreation(unittest.TestCase):
 
             self.assertIsNotNone(root.start_time)
             self.assertIsNone(root.end_time)
+            self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
-            with tracer.start_span("child") as child:
+            with tracer.start_span(
+                "child", kind=trace_api.SpanKind.CLIENT
+            ) as child:
                 self.assertIs(tracer.get_current_span(), child)
                 self.assertIs(child.parent, root)
+                self.assertEqual(child.kind, trace_api.SpanKind.CLIENT)
 
                 self.assertIsNotNone(child.start_time)
                 self.assertIsNone(child.end_time)
@@ -115,6 +118,12 @@ class TestSpanCreation(unittest.TestCase):
             self.assertNotEqual(tracer.get_current_span(), other_parent)
             self.assertIs(tracer.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
+
+
+class TestSpan(unittest.TestCase):
+    def test_basic_span(self):
+        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        self.assertEqual(span.name, "name")
 
     def test_span_members(self):
         tracer = trace.Tracer("test_span_members")
@@ -213,11 +222,53 @@ class TestSpanCreation(unittest.TestCase):
             root.update_name("toor")
             self.assertEqual(root.name, "toor")
 
-
-class TestSpan(unittest.TestCase):
-    def test_basic_span(self):
+    def test_start_span(self):
+        """Start twice, end a not started"""
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
-        self.assertEqual(span.name, "name")
+
+        # end not started span
+        self.assertRaises(RuntimeError, span.end)
+
+        span.start()
+        start_time = span.start_time
+        span.start()
+        self.assertEqual(start_time, span.start_time)
+
+    def test_ended_span(self):
+        """"Events, attributes are not allowed after span is ended"""
+        tracer = trace.Tracer("test_ended_span")
+
+        other_context1 = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id(),
+        )
+
+        with tracer.start_span("root") as root:
+            # everything should be empty at the beginning
+            self.assertEqual(len(root.attributes), 0)
+            self.assertEqual(len(root.events), 0)
+            self.assertEqual(len(root.links), 0)
+
+            # call end first time
+            root.end()
+            end_time0 = root.end_time
+
+            # call it a second time
+            root.end()
+            # end time shouldn't be changed
+            self.assertEqual(end_time0, root.end_time)
+
+            root.set_attribute("component", "http")
+            self.assertEqual(len(root.attributes), 0)
+
+            root.add_event("event1")
+            self.assertEqual(len(root.events), 0)
+
+            root.add_link(other_context1)
+            self.assertEqual(len(root.links), 0)
+
+            root.update_name("xxx")
+            self.assertEqual(root.name, "root")
 
 
 def span_event_start_fmt(span_processor_name, span_name):

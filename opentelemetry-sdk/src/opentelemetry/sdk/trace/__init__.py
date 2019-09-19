@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import logging
 import random
 import threading
 import typing
@@ -20,9 +21,11 @@ from collections import OrderedDict, deque
 from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
-from opentelemetry import types
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
+from opentelemetry.util import types
+
+logger = logging.getLogger(__name__)
 
 try:
     # pylint: disable=ungrouped-imports
@@ -238,6 +241,7 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,  # TODO
         events: typing.Sequence[trace_api.Event] = None,  # TODO
         links: typing.Sequence[trace_api.Link] = None,  # TODO
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
 
@@ -250,7 +254,10 @@ class Span(trace_api.Span):
         self.attributes = attributes
         self.events = events
         self.links = links
+        self.kind = kind
+
         self.span_processor = span_processor
+        self._lock = threading.Lock()
 
         if attributes is None:
             self.attributes = Span.empty_attributes
@@ -279,8 +286,16 @@ class Span(trace_api.Span):
         return self.context
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        if self.attributes is Span.empty_attributes:
-            self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+        with self._lock:
+            if not self.is_recording_events():
+                return
+            has_ended = self.end_time is not None
+            if not has_ended:
+                if self.attributes is Span.empty_attributes:
+                    self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+        if has_ended:
+            logger.warning("Setting attribute on ended span.")
+            return
         self.attributes[key] = value
 
     def add_event(
@@ -291,8 +306,16 @@ class Span(trace_api.Span):
         self.add_lazy_event(trace_api.Event(name, util.time_ns(), attributes))
 
     def add_lazy_event(self, event: trace_api.Event) -> None:
-        if self.events is Span.empty_events:
-            self.events = BoundedList(MAX_NUM_EVENTS)
+        with self._lock:
+            if not self.is_recording_events():
+                return
+            has_ended = self.end_time is not None
+            if not has_ended:
+                if self.events is Span.empty_events:
+                    self.events = BoundedList(MAX_NUM_EVENTS)
+        if has_ended:
+            logger.warning("Calling add_event() on an ended span.")
+            return
         self.events.append(event)
 
     def add_link(
@@ -305,22 +328,55 @@ class Span(trace_api.Span):
         self.add_lazy_link(trace_api.Link(link_target_context, attributes))
 
     def add_lazy_link(self, link: "trace_api.Link") -> None:
-        if self.links is Span.empty_links:
-            self.links = BoundedList(MAX_NUM_LINKS)
+        with self._lock:
+            if not self.is_recording_events():
+                return
+            has_ended = self.end_time is not None
+            if not has_ended:
+                if self.links is Span.empty_links:
+                    self.links = BoundedList(MAX_NUM_LINKS)
+        if has_ended:
+            logger.warning("Calling add_link() on an ended span.")
+            return
         self.links.append(link)
 
     def start(self):
-        if self.start_time is None:
-            self.start_time = util.time_ns()
-            self.span_processor.on_start(self)
+        with self._lock:
+            if not self.is_recording_events():
+                return
+            has_started = self.start_time is not None
+            if not has_started:
+                self.start_time = util.time_ns()
+        if has_started:
+            logger.warning("Calling start() on a started span.")
+            return
+        self.span_processor.on_start(self)
 
     def end(self):
-        if self.end_time is None:
-            self.end_time = util.time_ns()
-            self.span_processor.on_end(self)
+        with self._lock:
+            if not self.is_recording_events():
+                return
+            if self.start_time is None:
+                raise RuntimeError("Calling end() on a not started span.")
+            has_ended = self.end_time is not None
+            if not has_ended:
+                self.end_time = util.time_ns()
+        if has_ended:
+            logger.warning("Calling end() on an ended span.")
+            return
+
+        self.span_processor.on_end(self)
 
     def update_name(self, name: str) -> None:
+        with self._lock:
+            has_ended = self.end_time is not None
+        if has_ended:
+            logger.warning("Calling update_name() on an ended span.")
+            return
         self.name = name
+
+    def is_recording_events(self) -> bool:
+        return True
 
 
 def generate_span_id():
@@ -364,15 +420,17 @@ class Tracer(trace_api.Tracer):
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
     ) -> typing.Iterator["Span"]:
         """See `opentelemetry.trace.Tracer.start_span`."""
-        with self.use_span(self.create_span(name, parent)) as span:
+        with self.use_span(self.create_span(name, parent, kind)) as span:
             yield span
 
     def create_span(
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
     ) -> "Span":
         """See `opentelemetry.trace.Tracer.create_span`."""
         span_id = generate_span_id()
@@ -398,6 +456,7 @@ class Tracer(trace_api.Tracer):
             context=context,
             parent=parent,
             span_processor=self._active_span_processor,
+            kind=kind,
         )
 
     @contextmanager

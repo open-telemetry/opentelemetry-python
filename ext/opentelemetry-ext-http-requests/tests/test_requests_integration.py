@@ -56,7 +56,9 @@ class TestRequestsIntegration(unittest.TestCase):
         url = "https://www.example.org/foo/bar?x=y#top"
         requests.get(url=url)
         self.assertEqual(1, len(self.send.call_args_list))
-        self.tracer.start_span.assert_called_with("/foo/bar")
+        self.tracer.start_span.assert_called_with(
+            "/foo/bar", kind=trace.SpanKind.CLIENT
+        )
         self.span_context_manager.__enter__.assert_called_with()
         self.span_context_manager.__exit__.assert_called_with(None, None, None)
         self.assertEqual(
