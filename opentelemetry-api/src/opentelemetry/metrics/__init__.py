@@ -173,8 +173,8 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_or_create_time_series(self, label_values: List[str]) -> "object":
-        """Gets a timeseries, used for repeated-use of metrics instruments.
+    def get_handle(self, label_values: List[str]) -> "object":
+        """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
         with a pre-defined set of label values. All metric kinds (counter,
