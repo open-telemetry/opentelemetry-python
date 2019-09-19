@@ -17,5 +17,5 @@ The opentelemetry-ext-azure-monitor package provides integration with
 Microsoft Azure Monitor.
 """
 
-from .trace import AzureMonitorSpanExporter
-from .version import __version__  # noqa
+from opentelemetry.ext.azure_monitor.trace import AzureMonitorSpanExporter
+from opentelemetry.ext.azure_monitor.version import __version__  # noqa
