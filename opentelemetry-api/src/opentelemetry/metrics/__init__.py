@@ -27,7 +27,6 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import Dict, List, Tuple, Type, Union
 
 from opentelemetry.metrics.handle import (
