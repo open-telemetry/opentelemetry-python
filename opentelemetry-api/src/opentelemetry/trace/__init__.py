@@ -474,7 +474,7 @@ class Tracer:
 
     @contextmanager  # type: ignore
     def use_span(
-        self, span: "Span", end_on_exit=False
+        self, span: "Span", end_on_exit: bool = False
     ) -> typing.Iterator[None]:
         """Context manager for controlling a span's lifetime.
 

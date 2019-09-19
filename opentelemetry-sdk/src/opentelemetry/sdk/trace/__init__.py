@@ -463,7 +463,9 @@ class Tracer(trace_api.Tracer):
         )
 
     @contextmanager
-    def use_span(self, span: Span, end_on_exit=False) -> typing.Iterator[Span]:
+    def use_span(
+        self, span: Span, end_on_exit: bool = False
+    ) -> typing.Iterator[Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self._current_span_slot.get()
