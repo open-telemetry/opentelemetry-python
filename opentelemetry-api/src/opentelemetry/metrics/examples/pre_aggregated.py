@@ -16,7 +16,7 @@
 from opentelemetry import metrics
 
 METER = metrics.Meter()
-COUNTER = METER.create_int_counter(
+COUNTER = METER.create_counter(
     "sum numbers",
     "sum numbers over time",
     "number",
@@ -25,8 +25,8 @@ COUNTER = METER.create_int_counter(
 )
 
 # Metrics sent to some exporter
-METRIC_TESTING = COUNTER.get_or_create_time_series("Testing")
-METRIC_STAGING = COUNTER.get_or_create_time_series("Staging")
+METRIC_TESTING = COUNTER.get_handle("Testing")
+METRIC_STAGING = COUNTER.get_handle("Staging")
 
 for i in range(100):
     METRIC_STAGING.add(i)

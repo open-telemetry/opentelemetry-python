@@ -27,13 +27,12 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import List, Union
+from typing import Dict, List, Tuple, Type, Union
 
-from opentelemetry.metrics.time_series import (
-    CounterTimeSeries,
-    GaugeTimeSeries,
-    MeasureTimeSeries,
+from opentelemetry.metrics.handle import (
+    CounterHandle,
+    GaugeHandle,
+    MeasureHandle,
 )
 from opentelemetry.trace import SpanContext
 
@@ -47,19 +46,30 @@ class Meter:
     for the exported metric are deferred.
     """
 
-    # TODO: RecordBatch
+    def record_batch(
+        self,
+        label_tuples: Dict[str, str],
+        record_tuples: List[Tuple["Metric", Union[float, int]]],
+    ) -> None:
+        """Atomically records a batch of `Metric` and value pairs.
 
+        Allows the functionality of acting upon multiple metrics with
+        a single API call. Implementations should find handles that match
+        the key-value pairs in the label tuples.
 
-class ValueType(Enum):
-    FLOAT = 0
-    INT = 1
+        Args:
+            label_tuples: A collection of key value pairs that will be matched
+                against to record for the metric-handle that has those labels.
+            record_tuples: A list of pairs of `Metric` s and the
+                corresponding value to record for that metric.
+        """
 
 
 def create_counter(
     name: str,
     description: str,
     unit: str,
-    value_type: "ValueType",
+    value_type: Union[Type[float], Type[int]],
     is_bidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
@@ -91,7 +101,7 @@ def create_gauge(
     name: str,
     description: str,
     unit: str,
-    value_type: "ValueType",
+    value_type: Union[Type[float], Type[int]],
     is_unidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
@@ -122,7 +132,7 @@ def create_measure(
     name: str,
     description: str,
     unit: str,
-    value_type: "ValueType",
+    value_type: Union[Type[float], Type[int]],
     is_non_negative: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
@@ -157,82 +167,71 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_or_create_time_series(self, label_values: List[str]) -> "object":
-        """Gets a timeseries, used for repeated-use of metrics instruments.
+    def get_handle(self, label_values: List[str]) -> "object":
+        """Gets a handle, used for repeated-use of metrics instruments.
 
-        If the provided label values are not already associated with this
-        metric, a new timeseries is returned, otherwise it returns the existing
-        timeseries with the exact label values. The timeseries returned
-        contains logic and behaviour specific to the type of metric that
-        overrides this function.
+        Handles are useful to reduce the cost of repeatedly recording a metric
+        with a pre-defined set of label values. All metric kinds (counter,
+        gauge, measure) support declaring a set of required label keys. The
+        values corresponding to these keys should be specified in every handle.
+        "Unspecified" label values, in cases where a handle is requested but
+        a value was not provided are permitted.
 
         Args:
             label_values: A list of label values that will be associated
-                with the return timeseries.
+                with the return handle.
         """
 
-    def remove_time_series(self, label_values: List[str]) -> None:
-        """Removes the timeseries from the Metric, if present.
+    def remove_handle(self, label_values: List[str]) -> None:
+        """Removes the handle from the Metric, if present.
 
-        The timeseries with matching label values will be removed.
+        The handle with matching label values will be removed.
 
         args:
             label_values: The list of label values to match against.
         """
 
     def clear(self) -> None:
-        """Removes all timeseries from the `Metric`."""
+        """Removes all handles from the `Metric`."""
 
 
 class FloatCounter(Metric):
     """A counter type metric that holds float values."""
 
-    def get_or_create_time_series(
-        self, label_values: List[str]
-    ) -> "CounterTimeSeries":
-        """Gets a `CounterTimeSeries` with a float value."""
+    def get_handle(self, label_values: List[str]) -> "CounterHandle":
+        """Gets a `CounterHandle` with a float value."""
 
 
 class IntCounter(Metric):
     """A counter type metric that holds int values."""
 
-    def get_or_create_time_series(
-        self, label_values: List[str]
-    ) -> "CounterTimeSeries":
-        """Gets a `CounterTimeSeries` with an int value."""
+    def get_handle(self, label_values: List[str]) -> "CounterHandle":
+        """Gets a `CounterHandle` with an int value."""
 
 
 class FloatGauge(Metric):
     """A gauge type metric that holds float values."""
 
-    def get_or_create_time_series(
-        self, label_values: List[str]
-    ) -> "GaugeTimeSeries":
-        """Gets a `GaugeTimeSeries` with a float value."""
+    def get_handle(self, label_values: List[str]) -> "GaugeHandle":
+        """Gets a `GaugeHandle` with a float value."""
 
 
 class IntGauge(Metric):
     """A gauge type metric that holds int values."""
 
-    def get_or_create_time_series(
-        self, label_values: List[str]
-    ) -> "GaugeTimeSeries":
-        """Gets a `GaugeTimeSeries` with an int value."""
+    def get_handle(self, label_values: List[str]) -> "GaugeHandle":
+        """Gets a `GaugeHandle` with an int value."""
 
 
 class FloatMeasure(Metric):
     """A measure type metric that holds float values."""
 
-    def get_or_create_time_series(
-        self, label_values: List[str]
-    ) -> "MeasureTimeSeries":
-        """Gets a `MeasureTimeSeries` with a float value."""
+    def get_handle(self, label_values: List[str]) -> "MeasureHandle":
+        """Gets a `MeasureHandle` with a float value."""
 
 
 class IntMeasure(Metric):
     """A measure type metric that holds int values."""
 
-    def get_or_create_time_series(
-        self, label_values: List[str]
-    ) -> "MeasureTimeSeries":
-        """Gets a `MeasureTimeSeries` with an int value."""
+    def get_handle(self, label_values: List[str]) -> "MeasureHandle":
+        """Gets a `MeasureHandle` with an int value."""
