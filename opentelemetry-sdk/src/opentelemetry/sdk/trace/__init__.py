@@ -423,7 +423,10 @@ class Tracer(trace_api.Tracer):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
     ) -> typing.Iterator["Span"]:
         """See `opentelemetry.trace.Tracer.start_span`."""
-        with self.use_span(self.create_span(name, parent, kind)) as span:
+
+        span = self.create_span(name, parent, kind)
+        span.start()
+        with self.use_span(span, end_on_exit=True) as span:
             yield span
 
     def create_span(
@@ -460,16 +463,18 @@ class Tracer(trace_api.Tracer):
         )
 
     @contextmanager
-    def use_span(self, span: "Span") -> typing.Iterator["Span"]:
+    def use_span(self, span: Span, end_on_exit=False) -> typing.Iterator[Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
-        span.start()
-        span_snapshot = self._current_span_slot.get()
-        self._current_span_slot.set(span)
         try:
-            yield span
+            span_snapshot = self._current_span_slot.get()
+            self._current_span_slot.set(span)
+            try:
+                yield span
+            finally:
+                self._current_span_slot.set(span_snapshot)
         finally:
-            self._current_span_slot.set(span_snapshot)
-            span.end()
+            if end_on_exit:
+                span.end()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `Tracer`.

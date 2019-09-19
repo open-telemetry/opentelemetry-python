@@ -415,7 +415,8 @@ class Tracer:
         is equivalent to::
 
             span = tracer.create_span(name)
-            with tracer.use_span(span):
+            span.start()
+            with tracer.use_span(span, end_on_exit=True):
                 do_work()
 
         Args:
@@ -472,17 +473,21 @@ class Tracer:
         return INVALID_SPAN
 
     @contextmanager  # type: ignore
-    def use_span(self, span: "Span") -> typing.Iterator[None]:
+    def use_span(
+        self, span: "Span", end_on_exit=False
+    ) -> typing.Iterator[None]:
         """Context manager for controlling a span's lifetime.
 
-        Start the given span and set it as the current span in this tracer's
-        context.
+        Set the given span as the current span in this tracer's context.
 
-        On exiting the context manager stop the span and set its parent as the
-        current span.
+        On exiting the context manager set the span that was previously active
+        as the current span (this is usually but not necessarily the parent of
+        the given span). If ``end_on_exit`` is ``True``, then the span is also
+        ended when exiting the context manager.
 
         Args:
             span: The span to start and make current.
+            end_on_exit: Whether to end the span automatically when leaving the context manager.
         """
         # pylint: disable=unused-argument,no-self-use
         yield
