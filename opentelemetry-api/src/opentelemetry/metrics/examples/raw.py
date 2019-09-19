@@ -25,9 +25,12 @@ MEASURE = metrics.create_measure(
 )
 
 # Metrics sent to some exporter
-MEASURE_METRIC_TESTING = MEASURE.get_or_create_time_series("Testing")
-MEASURE_METRIC_STAGING = MEASURE.get_or_create_time_series("Staging")
+MEASURE_METRIC_TESTING = MEASURE.get_handle("Testing")
+MEASURE_METRIC_STAGING = MEASURE.get_handle("Staging")
 
 # record individual measures
 STATISTIC = 100
 MEASURE_METRIC_STAGING.record(STATISTIC)
+
+# Batch recording
+METER.record_batch([tuple(MEASURE_METRIC_STAGING, STATISTIC)])
