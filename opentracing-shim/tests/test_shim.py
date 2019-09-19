@@ -47,7 +47,9 @@ class TestShim(unittest.TestCase):
             self.assertIsInstance(scope.span, opentracing.Span)
 
             # Verify the span is active in the OpenTelemetry tracer.
-            self.assertEqual(self.tracer.get_current_span(), scope.span.otel_span)
+            self.assertEqual(
+                self.tracer.get_current_span(), scope.span.otel_span
+            )
 
         # Verify the span has ended in the OpenTelemetry tracer.
         self.assertIsNotNone(scope.span.otel_span.end_time)
