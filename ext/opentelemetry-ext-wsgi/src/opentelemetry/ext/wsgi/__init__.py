@@ -112,25 +112,27 @@ class OpenTelemetryMiddleware:
         )
         span.start()
         try:
-            self._add_request_attributes(span, environ)
-            start_response = self._create_start_response(span, start_response)
+            with tracer.use_span(span):
+                self._add_request_attributes(span, environ)
+                start_response = self._create_start_response(span, start_response)
 
-            iterable = self.wsgi(environ, start_response)
+                iterable = self.wsgi(environ, start_response)
 
-            # Put this in a subfunction to not delay the call to the wrapped
-            # WSGI application (instrumentation should change the application
-            # behavior as little as possible).
-            def iter_result(iterable, span):
-                try:
-                    for yielded in iterable:
-                        yield yielded
-                finally:
-                    close = getattr(iterable, "close", None)
-                    if close:
-                        close()
-                    span.end()
+                # Put this in a subfunction to not delay the call to the wrapped
+                # WSGI application (instrumentation should change the application
+                # behavior as little as possible).
+                def iter_result(iterable, span):
+                    try:
+                        with tracer.use_span(span):
+                            for yielded in iterable:
+                                yield yielded
+                    finally:
+                        close = getattr(iterable, "close", None)
+                        if close:
+                            close()
+                        span.end()
 
-            return iter_result(iterable, span)
+                return iter_result(iterable, span)
         except:  # noqa
             span.end()
             raise
