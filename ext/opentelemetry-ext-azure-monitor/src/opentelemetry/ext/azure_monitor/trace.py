@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.sdk.trace.export import SpanExporter
-from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 
 class AzureMonitorSpanExporter(SpanExporter):
