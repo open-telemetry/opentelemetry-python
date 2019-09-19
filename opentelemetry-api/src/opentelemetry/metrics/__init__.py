@@ -28,7 +28,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Type, Union
 
 from opentelemetry.metrics.handle import (
     CounterHandle,
@@ -66,16 +66,11 @@ class Meter:
         """
 
 
-class ValueType(Enum):
-    FLOAT = 0
-    INT = 1
-
-
 def create_counter(
     name: str,
     description: str,
     unit: str,
-    value_type: "ValueType",
+    value_type: Union[Type[float], Type[int]],
     is_bidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
@@ -107,7 +102,7 @@ def create_gauge(
     name: str,
     description: str,
     unit: str,
-    value_type: "ValueType",
+    value_type: Union[Type[float], Type[int]],
     is_unidirectional: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
@@ -138,7 +133,7 @@ def create_measure(
     name: str,
     description: str,
     unit: str,
-    value_type: "ValueType",
+    value_type: Union[Type[float], Type[int]],
     is_non_negative: bool = False,
     label_keys: List[str] = None,
     span_context: SpanContext = None,
