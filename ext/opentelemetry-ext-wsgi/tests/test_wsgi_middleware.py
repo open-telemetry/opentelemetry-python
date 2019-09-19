@@ -219,31 +219,39 @@ class TestWsgiAttributes(unittest.TestCase):
         self.environ["SERVER_PORT"] = "8080"
         self.validate_url("http://127.0.0.1:8080/?")
 
+    def test_https_uri_port(self):
+        del self.environ["HTTP_HOST"]
+        self.environ["SERVER_PORT"] = "443"
+        self.environ["wsgi.url_scheme"] = "https"
+        self.validate_url("https://127.0.0.1/")
+
+        self.environ["SERVER_PORT"] = "8080"
+        self.validate_url("https://127.0.0.1:8080/")
+
+        self.environ["SERVER_PORT"] = "80"
+        self.validate_url("https://127.0.0.1:80/")
+
     def test_request_attributes_with_nonstandard_port_and_no_host(self):
         del self.environ["HTTP_HOST"]
         self.environ["SERVER_PORT"] = "8080"
         self.validate_url("http://127.0.0.1:8080/")
 
+        self.environ["SERVER_PORT"] = "443"
+        self.validate_url("http://127.0.0.1:443/")
+
     def test_request_attributes_with_nonstandard_port(self):
         self.environ["HTTP_HOST"] += ":8080"
         self.validate_url("http://127.0.0.1:8080/")
 
-    def test_request_attributes_with_scheme_relative_raw_uri(self):
+    def test_request_attributes_with_faux_scheme_relative_raw_uri(self):
         self.environ["RAW_URI"] = "//127.0.0.1/?"
-        self.validate_url("http://127.0.0.1/?")
-
-    def test_request_attributes_with_netlocless_raw_uri(self):
-        self.environ["RAW_URI"] = "http:///?"
-        self.validate_url("http://127.0.0.1/?")
+        self.validate_url("http://127.0.0.1//127.0.0.1/?")
 
     def test_request_attributes_with_pathless_raw_uri(self):
+        self.environ["PATH_INFO"] = ""
         self.environ["RAW_URI"] = "http://hello"
         self.environ["HTTP_HOST"] = "hello"
         self.validate_url("http://hello")
-
-    def test_request_attributes_with_strange_raw_uri(self):
-        self.environ["RAW_URI"] = "http://?"
-        self.validate_url("http://127.0.0.1?")
 
     def test_request_attributes_with_full_request_uri(self):
         self.environ["HTTP_HOST"] = "127.0.0.1:8080"
