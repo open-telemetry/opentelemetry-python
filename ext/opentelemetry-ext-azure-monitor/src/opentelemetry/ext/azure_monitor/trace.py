@@ -15,6 +15,7 @@
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.sdk.trace.export import SpanExportResult
 
+
 class AzureMonitorSpanExporter(SpanExporter):
     def __init__(self):
         pass

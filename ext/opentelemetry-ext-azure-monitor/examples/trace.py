@@ -5,7 +5,9 @@ from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
-tracer.add_span_processor(SimpleExportSpanProcessor(AzureMonitorSpanExporter()))
+tracer.add_span_processor(
+    SimpleExportSpanProcessor(AzureMonitorSpanExporter())
+)
 
-with tracer.start_span('hello') as span:
-    print('Hello, World!')
+with tracer.start_span("hello") as span:
+    print("Hello, World!")
