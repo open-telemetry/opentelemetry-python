@@ -42,3 +42,87 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
                     pass
 
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
+
+
+class TestBatchExportSpanProcessor(unittest.TestCase):
+    def test_batch_span_processor(self):
+        class MySpanExporter(export.SpanExporter):
+            def __init__(self, destination):
+                self.destination = destination
+
+            def export(self, spans: trace.Span) -> export.SpanExportResult:
+                self.destination.extend(span.name for span in spans)
+                return export.SpanExportResult.SUCCESS
+
+        tracer = trace.Tracer()
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.BatchExportSpanProcessor(my_exporter)
+        tracer.add_span_processor(span_processor)
+
+        with tracer.start_span("foo"):
+            with tracer.start_span("bar"):
+                with tracer.start_span("xxx"):
+                    pass
+
+        # call shutdown on specific span processor
+        # TODO: this call is missing in the tracer
+        span_processor.shutdown()
+        self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
+
+    def test_batch_span_processor_parameters(self):
+        # zero max_queue_size
+        self.assertRaises(
+            ValueError, export.BatchExportSpanProcessor, None, max_queue_size=0
+        )
+
+        # negative max_queue_size
+        self.assertRaises(
+            ValueError,
+            export.BatchExportSpanProcessor,
+            None,
+            max_queue_size=-500,
+        )
+
+        # zero schedule_delay_millis
+        self.assertRaises(
+            ValueError,
+            export.BatchExportSpanProcessor,
+            None,
+            schedule_delay_millis=0,
+        )
+
+        # negative schedule_delay_millis
+        self.assertRaises(
+            ValueError,
+            export.BatchExportSpanProcessor,
+            None,
+            schedule_delay_millis=-500,
+        )
+
+        # zero max_export_batch_size
+        self.assertRaises(
+            ValueError,
+            export.BatchExportSpanProcessor,
+            None,
+            max_export_batch_size=0,
+        )
+
+        # negative max_export_batch_size
+        self.assertRaises(
+            ValueError,
+            export.BatchExportSpanProcessor,
+            None,
+            max_export_batch_size=-500,
+        )
+
+        # max_export_batch_size > max_queue_size:
+        self.assertRaises(
+            ValueError,
+            export.BatchExportSpanProcessor,
+            None,
+            max_queue_size=256,
+            max_export_batch_size=512,
+        )
