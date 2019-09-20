@@ -281,7 +281,7 @@ class Span(trace_api.Span):
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
-           type(self).__name__, self.name, self.context
+            type(self).__name__, self.name, self.context
         )
 
     def __str__(self):
