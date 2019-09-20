@@ -169,10 +169,7 @@ class TracerWrapper(opentracing.Tracer):
 
     @property
     def active_span(self):
-        # scope = self._scope_manager.active
-        # return None if scope is None else scope.span
-        pass
-        # TODO: Implement.
+        return self._otel_tracer.get_current_span()
 
     @contextmanager
     def start_active_span(
