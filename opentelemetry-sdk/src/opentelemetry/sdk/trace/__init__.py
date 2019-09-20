@@ -280,30 +280,17 @@ class Span(trace_api.Span):
         self.start_time = None
 
     def __repr__(self):
-<<<<<<< HEAD
         return '{}(name="{}", context={})'.format(
             type(self).__name__, self.name, self.context
         )
 
     def __str__(self):
-=======
->>>>>>> improve span.__repr__
         return '{}(name="{}", context={}, kind={}, parent={}, start_time={}, end_time={})'.format(
             type(self).__name__,
             self.name,
             self.context,
             self.kind,
-<<<<<<< HEAD
             repr(self.parent),
-=======
-            '{}(name="{}", context={})'.format(
-                type(self.parent).__name__,
-                self.parent.name,
-                self.parent.context,
-            )
-            if self.parent
-            else "None",
->>>>>>> improve span.__repr__
             util.ns_to_iso_str(self.start_time) if self.start_time else "None",
             util.ns_to_iso_str(self.end_time) if self.end_time else "None",
         )
