@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Tuple, Type, Union
+from typing import List, Tuple, Type, Union
 from opentelemetry import metrics, trace as metrics_api, trace_api
 
 
@@ -27,11 +27,11 @@ class Meter(metrics_api.Meter):
 
     def record_batch(
         self,
-        label_tuples: Dict[str, str],
+        label_values: List[str],
         record_tuples: List[Tuple[metrics_api.Metric, Union[float, int]]],
     ) -> None:
-        pass
-
+        """See `opentelemetry.metrics.Meter.record_batch`."""
+        
 
     def create_counter(
         self,
@@ -44,6 +44,17 @@ class Meter(metrics_api.Meter):
         span_context: trace_api.SpanContext = None,
     ) -> Union[metrics_api.FloatCounter, metrics_api.IntCounter]:
         """See `opentelemetry.metrics.Meter.create_counter`."""
+        counter_class = FloatCounter
+        if value_type == int:
+            counter_class = IntCounter
+        return counter_class(
+            name,
+            description,
+            unit,
+            is_bidirectional=is_bidirectional,
+            label_keys=label_keys,
+            span_context=span_context)
+        
 
 class FloatCounter(metrics_api.FloatCounter):
     """See `opentelemetry.metrics.FloatCounter`."""
@@ -69,6 +80,34 @@ class FloatCounter(metrics_api.FloatCounter):
                    label_values: List[str]) -> metrics_api.CounterHandle:
         """See `opentelemetry.metrics.FloatCounter.get_handle`."""
         handle = self.handles.get(label_values, CounterHandle(float, self.is_bidirectional))
+        self.handles[label_values] = handle
+        return handle
+
+
+class IntCounter(metrics_api.IntCounter):
+    """See `opentelemetry.metrics.IntCounter`."""
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        is_bidirectional: bool = False,
+        label_keys: List[str] = None,
+        span_context: trace_api.SpanContext = None,
+    ) -> None:
+        self.name = name
+        self.description = description
+        self.unit = unit
+        self.is_bidirectional = is_bidirectional
+        self.label_keys = label_keys
+        self.span_context = span_context
+        self.handles = {}
+
+    def get_handle(self,
+                   label_values: List[str]) -> metrics_api.CounterHandle:
+        """See `opentelemetry.metrics.IntCounter.get_handle`."""
+        handle = self.handles.get(label_values, CounterHandle(int, self.is_bidirectional))
         self.handles[label_values] = handle
         return handle
 

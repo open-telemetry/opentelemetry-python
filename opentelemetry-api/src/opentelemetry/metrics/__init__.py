@@ -27,13 +27,8 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Type, Union
+from typing import List, Tuple, Type, Union
 
-from opentelemetry.metrics.handle import (
-    CounterHandle,
-    GaugeHandle,
-    MeasureHandle,
-)
 from opentelemetry.trace import SpanContext
 
 
@@ -48,18 +43,19 @@ class Meter:
 
     def record_batch(
         self,
-        label_tuples: Dict[str, str],
+        label_values: List[str],
         record_tuples: List[Tuple["Metric", Union[float, int]]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
         Allows the functionality of acting upon multiple metrics with
-        a single API call. Implementations should find handles that match
-        the key-value pairs in the label tuples.
+        a single API call. Implementations should find metric and handles that
+        match the key-value pairs in the label tuples.
 
         Args:
-            label_tuples: A collection of key value pairs that will be matched
-                against to record for the metric-handle that has those labels.
+            label_values: A list of label values that will be matched
+                against to record for the handles under each metric that has
+                those labels.
             record_tuples: A list of pairs of `Metric` s and the
                 corresponding value to record for that metric.
         """
