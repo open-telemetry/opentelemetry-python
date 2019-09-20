@@ -49,12 +49,9 @@ class SpanContextWrapper(opentracing.SpanContext):
 
 
 class SpanWrapper(opentracing.Span):
-    # def __init__(self, tracer, context):
-    #     self._tracer = tracer
-    #     self._context = context
-    def __init__(self, span: Span):
+    def __init__(self, tracer, context, span: Span):
         self._otel_span = span
-        # TODO: Finish initialization.
+        opentracing.Span.__init__(self, tracer, context)
 
     @property
     def otel_span(self):
@@ -63,8 +60,7 @@ class SpanWrapper(opentracing.Span):
 
     @property
     def context(self):
-        # return self._context
-        pass
+        return self._context
         # TODO: Implement.
 
     @property
@@ -184,7 +180,8 @@ class TracerWrapper(opentracing.Tracer):
     ) -> ScopeWrapper:
         # TODO: Handle optional arguments.
         with self._otel_tracer.start_span(operation_name) as span:
-            yield ScopeWrapper(opentracing.ScopeManager, SpanWrapper(span))
+            wrapped_span = SpanWrapper(self, span.get_context(), span)
+            yield ScopeWrapper(opentracing.ScopeManager, wrapped_span)
 
     def start_span(
         self,
@@ -202,7 +199,7 @@ class TracerWrapper(opentracing.Tracer):
 
         span = self._otel_tracer.create_span(operation_name, parent)
         span.start()
-        return SpanWrapper(span)
+        return SpanWrapper(self, span.get_context(), span)
 
     def inject(self, span_context, format, carrier):
         # if format in Tracer._supported_formats:
