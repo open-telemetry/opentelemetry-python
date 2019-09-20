@@ -11,22 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+"""
+This module serves as an example for a simple application using metrics
+"""
 
-# pylint: skip-file
 from opentelemetry import metrics
+from opentelemetry.sdk.metrics import Meter
 
-METER = metrics.Meter()
+
+metrics.set_preferred_meter_implementation(lambda _: Meter())
+METER = metrics.meter()
 COUNTER = METER.create_counter(
     "sum numbers",
     "sum numbers over time",
     "number",
-    metrics.ValueType.FLOAT,
+    int,
+    False,
     ["environment"],
 )
 
-# Metrics sent to some exporter
-METRIC_TESTING = COUNTER.get_handle("Testing")
-METRIC_STAGING = COUNTER.get_handle("Staging")
+counter_handle = COUNTER.get_handle("Staging")
 
 for i in range(100):
-    METRIC_STAGING.add(i)
+    counter_handle.add(i)
+
+print(counter_handle.data)
+
+# TODO: exporters

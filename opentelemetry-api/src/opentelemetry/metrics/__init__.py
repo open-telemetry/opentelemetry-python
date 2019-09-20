@@ -27,9 +27,10 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Type, Union
+from typing import Callable, List, Optional, Tuple, Type, Union
 
 from opentelemetry.trace import SpanContext
+from opentelemetry.util import loader
 
 
 # pylint: disable=unused-argument
@@ -156,6 +157,50 @@ class Meter:
 
         Returns: A new measure metric for values of the given value_type.
         """
+
+# Once https://github.com/python/mypy/issues/7092 is resolved,
+# the following type definition should be replaced with
+# from opentelemetry.util.loader import ImplementationFactory
+ImplementationFactory = Callable[
+    [Type[Meter]], Optional[Meter]
+]
+
+_METER = None
+_METER_FACTORY = None
+
+def meter() -> Meter:
+    """Gets the current global :class:`~.Meter` object.
+
+    If there isn't one set yet, a default will be loaded.
+    """
+    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+
+    if _METER is None:
+        # pylint:disable=protected-access
+        _METER = loader._load_impl(Meter, _METER_FACTORY)
+        del _METER_FACTORY
+
+    return _METER
+
+
+def set_preferred_meter_implementation(
+    factory: ImplementationFactory
+) -> None:
+    """Set the factory to be used to create the meter.
+
+    See :mod:`opentelemetry.util.loader` for details.
+
+    This function may not be called after a meter is already loaded.
+
+    Args:
+        factory: Callback that should create a new :class:`Meter` instance.
+    """
+    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+
+    if _METER:
+        raise RuntimeError("Meter already loaded.")
+
+    _METER_FACTORY = factory
 
 
 class Metric(ABC):

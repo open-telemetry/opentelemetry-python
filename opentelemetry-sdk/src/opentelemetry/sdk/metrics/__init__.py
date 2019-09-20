@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from typing import List, Tuple, Type, Union
-from opentelemetry import metrics, trace as metrics_api, trace_api
+from opentelemetry import metrics as metrics_api
+from opentelemetry import trace as trace_api
 
 
 class Meter(metrics_api.Meter):
@@ -31,7 +32,11 @@ class Meter(metrics_api.Meter):
         record_tuples: List[Tuple[metrics_api.Metric, Union[float, int]]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
-        
+        for tuple in record_tuples:
+            handle = tuple[0].get_handle(label_values)
+            if isinstance(handle, CounterHandle):
+                handle.add(tuple[1])
+
 
     def create_counter(
         self,
@@ -118,8 +123,8 @@ class CounterHandle(metrics_api.CounterHandle):
         self,
         value_type: Union[Type[float], Type[int]],
         is_bidirectional: bool) -> None:
-        self.counter_data = 0
-        self.type = value_type
+        self.data = 0
+        self.value_type = value_type
         self.is_bidirectional = is_bidirectional
 
     def add(self, value: Union[float, int]) -> None:
@@ -127,8 +132,8 @@ class CounterHandle(metrics_api.CounterHandle):
         if not self.is_bidirectional and value < 0:
             raise ValueError("Unidirectional counter cannot descend.")
         if not isinstance(value, self.value_type):
-            raise ValueError("Invalid value passed for " + self.value_type)
-        self.counter_data += value
+            raise ValueError("Invalid value passed for " + self.value_type.__name__)
+        self.data += value
 
 
 meter = Meter()
