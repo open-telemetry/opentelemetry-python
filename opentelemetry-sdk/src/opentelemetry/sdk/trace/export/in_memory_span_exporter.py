@@ -20,7 +20,7 @@ from . import SpanExporter, SpanExportResult
 
 
 class InMemorySpanExporter(SpanExporter):
-    """Implementation of :class:`.Exporter` that stores spans in memory.
+    """Implementation of :class:`.SpanExporter` that stores spans in memory.
 
     This class can be used for testing purposes. It stores the exported spans
     in a list in memory that can be retrieved using the
