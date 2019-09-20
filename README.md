@@ -43,17 +43,18 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
+tracer.add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
 with tracer.start_span('foo'):
-    print(Context)
     with tracer.start_span('bar'):
-        print(Context)
         with tracer.start_span('baz'):
             print(Context)
-        print(Context)
-    print(Context)
 ```
 
 See [opentelemetry-example-app](./opentelemetry-example-app/README.rst) for a complete example.

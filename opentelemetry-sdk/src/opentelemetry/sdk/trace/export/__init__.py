@@ -76,3 +76,17 @@ class SimpleExportSpanProcessor(SpanProcessor):
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
+
+
+class ConsoleSpanExporter(SpanExporter):
+    """Implementation of :class:`SpanExporter` that prints spans to the
+    console.
+
+    This class can be used for diagnostic purposes. It prints the exported
+    spans to the console STDOUT.
+    """
+
+    def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
+        for span in spans:
+            print(span)
+        return SpanExportResult.SUCCESS
