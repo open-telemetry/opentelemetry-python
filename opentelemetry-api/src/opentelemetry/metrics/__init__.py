@@ -29,7 +29,6 @@ See the `metrics api`_ spec for terminology and context clarification.
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Tuple, Type, Union
 
-from opentelemetry.trace import SpanContext
 from opentelemetry.util import loader
 
 
@@ -68,28 +67,27 @@ class Meter:
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        is_bidirectional: bool = False,
         label_keys: List[str] = None,
-        span_context: SpanContext = None,
+        disabled: bool = False,
+        non_monotonic: bool = False,
     ) -> Union["FloatCounter", "IntCounter"]:
         """Creates a counter metric with type value_type.
 
-        By default, counter values can only go up (unidirectional). The API
-        should reject negative inputs to unidirectional counter metrics.
-        Counter metrics have a bidirectional option to allow for negative
-        inputs.
+        By default, counter values can only go up (monotonic). The API
+        should reject negative inputs to monotonic counter metrics.
+        Counter metrics that have a non_monotonic option set to True allows
+        negative inputs.
 
         Args:
             name: The name of the counter.
             description: Human readable description of the metric.
             unit: Unit of the metric values.
             value_type: The type of values being recorded by the metric.
-            is_bidirectional: Set to true to allow negative inputs.
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order must be used
                 on recording when suppling values for these labels.
-            span_context: The `SpanContext` that identifies the `Span`
-                that the metric is associated with.
+            disabled: True value tells the SDK not to report by default.
+            non_monotonic: Set to true to allow negative inputs.
 
         Returns: A new counter metric for values of the given value_type.
         """
@@ -101,27 +99,26 @@ class Meter:
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        is_unidirectional: bool = False,
         label_keys: List[str] = None,
-        span_context: SpanContext = None,
+        disabled: bool = False,
+        is_monotonic: bool = False,
     ) -> Union["FloatGauge", "IntGauge"]:
         """Creates a gauge metric with type value_type.
 
-        By default, gauge values can go both up and down (bidirectional). The API
-        allows for an optional unidirectional flag, in which when set will reject
-        descending update values.
+        By default, gauge values can go both up and down (non-monotic). The API
+        allows for an optional is_monotonic flag, in which when set to True will
+        reject descending update values.
 
         Args:
             name: The name of the gauge.
             description: Human readable description of the metric.
             unit: Unit of the metric values.
             value_type: The type of values being recorded by the metric.
-            is_unidirectional: Set to true to reject negative inputs.
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order must be used
                 on recording when suppling values for these labels.
-            span_context: The `SpanContext` that identifies the `Span`
-                that the metric is associated with.
+            disabled: True value tells the SDK not to report by default.
+            is_monotonic: Set to true to reject negative inputs.
 
         Returns: A new gauge metric for values of the given value_type.
         """
@@ -133,9 +130,9 @@ class Meter:
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        is_non_negative: bool = False,
         label_keys: List[str] = None,
-        span_context: SpanContext = None,
+        disabled: bool = False,
+        non_negative: bool = False,
     ) -> Union["FloatMeasure", "IntMeasure"]:
         """Creates a measure metric with type value_type.
 
@@ -148,12 +145,11 @@ class Meter:
             description: Human readable description of the metric.
             unit: Unit of the metric values.
             value_type: The type of values being recorded by the metric.
-            is_non_negative: Set to true to reject negative inputs.
             label_keys: list of keys for the labels with dynamic values.
                 Order of the list is important as the same order must be used
                 on recording when suppling values for these labels.
-            span_context: The `SpanContext` that identifies the `Span`
-                that the metric is associated with.
+            disabled: True value tells the SDK not to report by default.
+            non_negative: Set to true to reject negative inputs.
 
         Returns: A new measure metric for values of the given value_type.
         """
@@ -211,7 +207,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_handle(self, label_values: List[str]) -> "object":
+    def get_handle(self, label_values: Tuple[str]) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -222,17 +218,17 @@ class Metric(ABC):
         a value was not provided are permitted.
 
         Args:
-            label_values: A list of label values that will be associated
+            label_values: A tuple of label values that will be associated
                 with the return handle.
         """
 
-    def remove_handle(self, label_values: List[str]) -> None:
+    def remove_handle(self, label_values: Tuple[str]) -> None:
         """Removes the handle from the Metric, if present.
 
         The handle with matching label values will be removed.
 
         args:
-            label_values: The list of label values to match against.
+            label_values: The tuple of label values to match against.
         """
 
     def clear(self) -> None:
@@ -242,58 +238,88 @@ class Metric(ABC):
 class FloatCounter(Metric):
     """A counter type metric that holds float values."""
 
-    def get_handle(self, label_values: List[str]) -> "CounterHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "CounterHandle":
         """Gets a `CounterHandle` with a float value."""
 
 
 class IntCounter(Metric):
     """A counter type metric that holds int values."""
 
-    def get_handle(self, label_values: List[str]) -> "CounterHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "CounterHandle":
         """Gets a `CounterHandle` with an int value."""
 
 
 class FloatGauge(Metric):
     """A gauge type metric that holds float values."""
 
-    def get_handle(self, label_values: List[str]) -> "GaugeHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "GaugeHandle":
         """Gets a `GaugeHandle` with a float value."""
 
 
 class IntGauge(Metric):
     """A gauge type metric that holds int values."""
 
-    def get_handle(self, label_values: List[str]) -> "GaugeHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "GaugeHandle":
         """Gets a `GaugeHandle` with an int value."""
 
 
 class FloatMeasure(Metric):
     """A measure type metric that holds float values."""
 
-    def get_handle(self, label_values: List[str]) -> "MeasureHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
 
 
 class IntMeasure(Metric):
     """A measure type metric that holds int values."""
 
-    def get_handle(self, label_values: List[str]) -> "MeasureHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with an int value."""
 
 
-class CounterHandle:
-    def add(self, value: Union[float, int]) -> None:
+class BaseHandle():
+    """An interface for metric handles."""
+
+    @abstractmethod
+    def update(self, value: Union[float, int]) -> None:
+        """A generic update method to alter the value of the handle.
+
+            Useful for record_batch, where the type of the handle does not
+            matter. Implementation should call the appropriate method that
+            alters the underlying data for that handle type.
+        """ 
+
+
+class CounterHandle(BaseHandle):
+    def update(self, value: Union[float, int]) -> None:
+        """Alters the value of the counter handle.
+        
+            Implementations should call _add().
+        """
+
+    def _add(self, value: Union[float, int]) -> None:
         """Adds the given value to the current value.
 
         The input value cannot be negative if not bidirectional.
         """
 
 
-class GaugeHandle:
-    def set(self, value: Union[float, int]) -> None:
+class GaugeHandle(BaseHandle):
+    def update(self, value: Union[float, int]) -> None:
+        """Alters the value of the gauge handle.
+        
+            Implementations should call _set().
+        """
+    def _set(self, value: Union[float, int]) -> None:
         """Sets the current value to the given value. Can be negative."""
 
 
-class MeasureHandle:
-    def record(self, value: Union[float, int]) -> None:
+class MeasureHandle(BaseHandle):
+    def update(self, value: Union[float, int]) -> None:
+        """Alters the value of the measure handle.
+        
+            Implementations should call _record().
+        """
+
+    def _record(self, value: Union[float, int]) -> None:
         """Records the given value to this measure."""

@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from typing import List, Tuple, Type, Union
 from opentelemetry import metrics as metrics_api
-from opentelemetry import trace as trace_api
+
+logger = logging.getLogger(__name__)
 
 
 class Meter(metrics_api.Meter):
@@ -28,14 +31,13 @@ class Meter(metrics_api.Meter):
 
     def record_batch(
         self,
-        label_values: List[str],
+        label_values: Tuple[str],
         record_tuples: List[Tuple[metrics_api.Metric, Union[float, int]]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
-        for tuple in record_tuples:
-            handle = tuple[0].get_handle(label_values)
-            if isinstance(handle, CounterHandle):
-                handle.add(tuple[1])
+        for pair in record_tuples:
+            handle = pair[0].get_handle(label_values)
+            handle.update(pair[1])
 
 
     def create_counter(
@@ -44,21 +46,19 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        is_bidirectional: bool = False,
         label_keys: List[str] = None,
-        span_context: trace_api.SpanContext = None,
+        disabled: bool = False,
+        non_monotonic: bool = False,
     ) -> Union[metrics_api.FloatCounter, metrics_api.IntCounter]:
         """See `opentelemetry.metrics.Meter.create_counter`."""
-        counter_class = FloatCounter
-        if value_type == int:
-            counter_class = IntCounter
+        counter_class = FloatCounter if value_type == float else IntCounter
         return counter_class(
             name,
             description,
             unit,
-            is_bidirectional=is_bidirectional,
             label_keys=label_keys,
-            span_context=span_context)
+            disabled=disabled,
+            non_monotonic=non_monotonic)
         
 
 class FloatCounter(metrics_api.FloatCounter):
@@ -69,22 +69,24 @@ class FloatCounter(metrics_api.FloatCounter):
         name: str,
         description: str,
         unit: str,
-        is_bidirectional: bool = False,
         label_keys: List[str] = None,
-        span_context: trace_api.SpanContext = None,
+        disabled: bool = False,
+        non_monotonic: bool = False,
     ) -> None:
         self.name = name
         self.description = description
         self.unit = unit
-        self.is_bidirectional = is_bidirectional
         self.label_keys = label_keys
-        self.span_context = span_context
+        self.disabled = disabled
+        self.non_monotonic = non_monotonic
         self.handles = {}
 
     def get_handle(self,
-                   label_values: List[str]) -> metrics_api.CounterHandle:
+                   label_values: Tuple[str]) -> metrics_api.CounterHandle:
         """See `opentelemetry.metrics.FloatCounter.get_handle`."""
-        handle = self.handles.get(label_values, CounterHandle(float, self.is_bidirectional))
+        handle = self.handles.get(
+            label_values,
+            CounterHandle(float, self.disabled, self.non_monotonic))
         self.handles[label_values] = handle
         return handle
 
@@ -97,22 +99,24 @@ class IntCounter(metrics_api.IntCounter):
         name: str,
         description: str,
         unit: str,
-        is_bidirectional: bool = False,
         label_keys: List[str] = None,
-        span_context: trace_api.SpanContext = None,
+        disabled: bool = False,
+        non_monotonic: bool = False,
     ) -> None:
         self.name = name
         self.description = description
         self.unit = unit
-        self.is_bidirectional = is_bidirectional
         self.label_keys = label_keys
-        self.span_context = span_context
+        self.disabled = disabled
+        self.non_monotonic = non_monotonic
         self.handles = {}
 
     def get_handle(self,
                    label_values: List[str]) -> metrics_api.CounterHandle:
         """See `opentelemetry.metrics.IntCounter.get_handle`."""
-        handle = self.handles.get(label_values, CounterHandle(int, self.is_bidirectional))
+        handle = self.handles.get(
+            label_values,
+            CounterHandle(int, self.disabled, self.non_monotonic))
         self.handles[label_values] = handle
         return handle
 
@@ -122,17 +126,28 @@ class CounterHandle(metrics_api.CounterHandle):
     def __init__(
         self,
         value_type: Union[Type[float], Type[int]],
-        is_bidirectional: bool) -> None:
+        disabled: bool,
+        non_monotonic: bool) -> None:
         self.data = 0
         self.value_type = value_type
-        self.is_bidirectional = is_bidirectional
+        self.disabled = disabled
+        self.non_monotonic = non_monotonic
 
-    def add(self, value: Union[float, int]) -> None:
-        """See `opentelemetry.metrics.CounterHandle.add`."""
-        if not self.is_bidirectional and value < 0:
-            raise ValueError("Unidirectional counter cannot descend.")
+    def update(self, value: Union[float, int]) -> None:
+        """See `opentelemetry.metrics.CounterHandle.update`."""
+        self._add(value)
+
+    def _add(self, value: Union[float, int]) -> None:
+        """See `opentelemetry.metrics.CounterHandle._add`."""
+        if self.disabled:
+            logger.warning("Counter metric is disabled.")
+            return
+        if not self.non_monotonic and value < 0:
+            logger.warning("Monotonic counter cannot descend.")
+            return
         if not isinstance(value, self.value_type):
-            raise ValueError("Invalid value passed for " + self.value_type.__name__)
+            logger.warning("Invalid value passed for %s", self.value_type.__name__)
+            return
         self.data += value
 
 
