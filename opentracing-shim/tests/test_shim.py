@@ -60,13 +60,17 @@ class TestShim(unittest.TestCase):
             parent_trace_id = parent.span.otel_span.get_context().trace_id
 
             # Verify parent span is the active span.
-            self.assertEqual(self.ot_tracer.active_span.context, parent.span.context)
+            self.assertEqual(
+                self.ot_tracer.active_span.context, parent.span.context
+            )
 
             with self.ot_tracer.start_active_span("ChildSpan") as child:
                 child_trace_id = child.span.otel_span.get_context().trace_id
 
                 # Verify child span is the active span.
-                self.assertEqual(self.ot_tracer.active_span.context, child.span.context)
+                self.assertEqual(
+                    self.ot_tracer.active_span.context, child.span.context
+                )
 
                 # Verify parent-child relationship.
                 self.assertEqual(parent_trace_id, child_trace_id)
@@ -74,7 +78,9 @@ class TestShim(unittest.TestCase):
                 # the parent span's `span_id` field.
 
             # Verify parent span becomes the active span again.
-            self.assertEqual(self.ot_tracer.active_span.context, parent.span.context)
+            self.assertEqual(
+                self.ot_tracer.active_span.context, parent.span.context
+            )
 
         # Verify there is no active span.
         self.assertIsNone(self.ot_tracer.active_span)
