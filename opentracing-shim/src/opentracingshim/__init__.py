@@ -127,6 +127,7 @@ class SpanWrapper(opentracing.Span):
 
 class ScopeWrapper(opentracing.Scope):
     def __init__(self, manager, span):
+        # pylint: disable=super-init-not-called
         self._manager = manager
         self._span = span
 
@@ -154,6 +155,7 @@ class ScopeWrapper(opentracing.Scope):
 
 class TracerWrapper(opentracing.Tracer):
     def __init__(self, tracer: Tracer):
+        # pylint: disable=super-init-not-called
         self._otel_tracer = tracer
         # TODO: Finish implementation.
 
