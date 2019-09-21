@@ -202,6 +202,7 @@ class TracerWrapper(opentracing.Tracer):
         return SpanWrapper(self, span.get_context(), span)
 
     def inject(self, span_context, format, carrier):
+        # pylint: disable=redefined-builtin
         # if format in Tracer._supported_formats:
         #     return
         # raise UnsupportedFormatException(format)
@@ -209,6 +210,7 @@ class TracerWrapper(opentracing.Tracer):
         # TODO: Implement.
 
     def extract(self, format, carrier):
+        # pylint: disable=redefined-builtin
         # if format in Tracer._supported_formats:
         #     return self._noop_span_context
         # raise UnsupportedFormatException(format)
