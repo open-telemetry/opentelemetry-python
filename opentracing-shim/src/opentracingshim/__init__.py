@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.trace import Span, SpanContext, Tracer
-import opentracing
 from contextlib import contextmanager
+
+import opentracing
+
+from opentelemetry.trace import Span, SpanContext, Tracer
 
 
 def create_tracer(tracer: Tracer) -> opentracing.Tracer:

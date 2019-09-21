@@ -14,10 +14,11 @@
 
 import unittest
 
+import opentracing
+
+import opentracingshim
 from opentelemetry import trace
 from opentelemetry.sdk.trace import Tracer
-import opentracing
-import opentracingshim
 
 
 class TestShim(unittest.TestCase):
