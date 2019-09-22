@@ -19,9 +19,10 @@ OpenTelemetry.
 """
 
 import functools
+import typing
 import wsgiref.util as wsgiref_util
 
-from opentelemetry import trace
+from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 
 
@@ -35,11 +36,8 @@ class OpenTelemetryMiddleware:
         wsgi: The WSGI application callable.
     """
 
-    def __init__(self, wsgi, propagators=None):
+    def __init__(self, wsgi):
         self.wsgi = wsgi
-
-        # TODO: implement context propagation
-        self.propagators = propagators
 
     @staticmethod
     def _add_request_attributes(span, environ):
@@ -87,8 +85,11 @@ class OpenTelemetryMiddleware:
 
         tracer = trace.tracer()
         path_info = environ["PATH_INFO"] or "/"
+        parent_span = propagators.extract(get_header_from_environ, environ)
 
-        with tracer.start_span(path_info, kind=trace.SpanKind.SERVER) as span:
+        with tracer.start_span(
+            path_info, parent_span, kind=trace.SpanKind.SERVER
+        ) as span:
             self._add_request_attributes(span, environ)
             start_response = self._create_start_response(span, start_response)
 
@@ -99,3 +100,18 @@ class OpenTelemetryMiddleware:
             finally:
                 if hasattr(iterable, "close"):
                     iterable.close()
+
+
+def get_header_from_environ(
+    environ: dict, header_name: str
+) -> typing.List[str]:
+    """Retrieve the header value from the wsgi environ dictionary.
+
+    Returns:
+        A string with the header value if it exists, else None.
+    """
+    environ_key = "HTTP_" + header_name.upper().replace("-", "_")
+    value = environ.get(environ_key)
+    if value:
+        return [value]
+    return []

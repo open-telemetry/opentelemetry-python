@@ -91,7 +91,6 @@ class B3Format(HTTPTextFormat):
         # header is set to allow.
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceOptions.RECORDED
-
         return trace.SpanContext(
             # trace an span ids are encoded in hex, so must be converted
             trace_id=int(trace_id, 16),

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import time
 
 try:
@@ -21,3 +22,9 @@ except AttributeError:
 
     def time_ns():
         return int(time.time() * 1e9)
+
+
+def ns_to_iso_str(nanoseconds):
+    """Get an ISO 8601 string from time_ns value."""
+    ts = datetime.datetime.fromtimestamp(nanoseconds / 1e9)
+    return ts.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
