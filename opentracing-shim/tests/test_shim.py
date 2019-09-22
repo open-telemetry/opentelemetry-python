@@ -73,8 +73,9 @@ class TestShim(unittest.TestCase):
 
                 # Verify parent-child relationship.
                 self.assertEqual(parent_trace_id, child_trace_id)
-                # TODO: Verify that the child span's `parent` field is equal to
-                # the parent span's `span_id` field.
+                self.assertEqual(
+                    child.span.otel_span.parent, parent.span.otel_span
+                )
 
             # Verify parent span becomes the active span again.
             self.assertEqual(
