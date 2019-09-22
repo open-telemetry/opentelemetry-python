@@ -41,8 +41,6 @@ class TestShim(unittest.TestCase):
         self.assertIsInstance(self.ot_tracer, opentracing.Tracer)
 
     def test_start_active_span(self):
-        # TODO: Verify whether we should save `scope` and `span` outside the
-        # `with` block.
         with self.ot_tracer.start_active_span("TestSpan") as scope:
             self.assertIsInstance(scope, opentracing.Scope)
             self.assertIsInstance(scope.span, opentracing.Span)
