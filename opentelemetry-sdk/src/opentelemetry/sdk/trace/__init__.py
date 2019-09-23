@@ -426,7 +426,7 @@ class Tracer(trace_api.Tracer):
 
         span = self.create_span(name, parent, kind)
         span.start()
-        with self.use_span(span, end_on_exit=True) as span:
+        with self.use_span(span, end_on_exit=True):
             yield span
 
     def create_span(
