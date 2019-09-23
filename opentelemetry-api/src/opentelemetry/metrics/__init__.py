@@ -26,10 +26,15 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 
 """
+import enum
+
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple, Type, Union
+from typing import Callable, Generic, Optional, Tuple, Type, TypeVar, Union
 
 from opentelemetry.util import loader
+
+MetricKind = Union[Type["Counter"], Type["Gauge"], Type["Measure"]]
+ValueType = TypeVar('ValueType', int, float)
 
 
 # pylint: disable=unused-argument
@@ -44,7 +49,7 @@ class Meter:
     def record_batch(
         self,
         label_values: Tuple[str],
-        record_tuples: Tuple[Tuple["Metric", Union[float, int]]],
+        record_tuples: Tuple[Tuple["Metric", "ValueType"]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
@@ -60,22 +65,18 @@ class Meter:
         """
 
 
-    def create_counter(
+    def create_metric(
         self,
         name: str,
         description: str,
         unit: str,
-        value_type: Union[Type[float], Type[int]],
+        value_type: "ValueType",
+        metric_kind: "MetricKind",
         label_keys: Tuple[str] = None,
         enabled: bool = True,
-        monotonic: bool = True,
-    ) -> Union["FloatCounter", "IntCounter"]:
-        """Creates a counter metric with type value_type.
-
-        Counter metric expresses the computation of a sum. By default, counter
-        values can only go up (monotonic). Negative inputs will be discarded
-        for monotonic counter metrics. Counter metrics that have a monotonic
-        option set to False allows negative inputs.
+        monotonic: bool = False,
+    ) -> "MetricKind":
+        """Creates a `metric_kind` metric with type `value_type`.
 
         Args:
             name: The name of the counter.
@@ -88,73 +89,7 @@ class Meter:
             enabled: Whether to report the metric by default.
             monotonic: Whether to only allow non-negative values.
 
-        Returns: A new counter metric for values of the given ``value_type``.
-        """
-
-
-    def create_gauge(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Union[Type[float], Type[int]],
-        label_keys: Tuple[str] = None,
-        enabled: bool = True,
-        monotonic: bool = False,
-    ) -> Union["FloatGauge", "IntGauge"]:
-        """Creates a gauge metric with type value_type.
-
-        Gauge metrics express a pre-calculated value that is either `Set()`
-        by explicit instrumentation or observed through a callback. This kind
-        of metric should be used when the metric cannot be expressed as a sum
-        or because the measurement interval is arbitrary.
-
-        By default, gauge values can go both up and down (non-monotonic).
-        Negative inputs will be discarded for monotonic gauge metrics.
-
-        Args:
-            name: The name of the gauge.
-            description: Human-readable description of the metric.
-            unit: Unit of the metric values.
-            value_type: The type of values being recorded by the metric.
-            label_keys: The keys for the labels with dynamic values.
-                Order of the tuple is important as the same order must be used
-                on recording when suppling values for these labels.
-            enabled: Whether to report the metric by default.
-            monotonic: Whether to only allow non-negative values.
-
-        Returns: A new gauge metric for values of the given ``value_type``.
-        """
-
-
-    def create_measure(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Union[Type[float], Type[int]],
-        label_keys: Tuple[str] = None,
-        enabled: bool = True,
-        monotonic: bool = False,
-    ) -> Union["FloatMeasure", "IntMeasure"]:
-        """Creates a measure metric with type value_type.
-
-        Measure metrics represent raw statistics that are recorded. By
-        default, measure metrics can accept both positive and negatives.
-        Negative inputs will be discarded when monotonic is True.
-
-        Args:
-            name: The name of the measure.
-            description: Human-readable description of the metric.
-            unit: Unit of the metric values.
-            value_type: The type of values being recorded by the metric.
-            label_keys: The keys for the labels with dynamic values.
-                Order of the tuple is important as the same order must be used
-                on recording when suppling values for these labels.
-            enabled: Whether to report the metric by default.
-            monotonic: Whether to only allow non-negative values.
-
-        Returns: A new measure metric for values of the given ``value_type``.
+        Returns: A new ``metric_kind`` metric with values of ``value_type``.
         """
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
@@ -206,11 +141,11 @@ class Metric(ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
-    time series that the metric holds.
+    handle that the metric holds.
     """
 
     @abstractmethod
-    def get_handle(self, label_values: Tuple[str]) -> "BaseHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "MetricHandle":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -237,88 +172,52 @@ class Metric(ABC):
         """Removes all handles from the `Metric`."""
 
 
-class FloatCounter(Metric):
-    """A counter type metric that holds float values."""
+class Counter(Metric):
+    """A counter type metric that expresses the computation of a sum."""
 
     def get_handle(self, label_values: Tuple[str]) -> "CounterHandle":
-        """Gets a `CounterHandle` with a float value."""
+        """Gets a `CounterHandle`."""
 
 
-class IntCounter(Metric):
-    """A counter type metric that holds int values."""
-
-    def get_handle(self, label_values: Tuple[str]) -> "CounterHandle":
-        """Gets a `CounterHandle` with an int value."""
-
-
-class FloatGauge(Metric):
-    """A gauge type metric that holds float values."""
-
-    def get_handle(self, label_values: Tuple[str]) -> "GaugeHandle":
-        """Gets a `GaugeHandle` with a float value."""
-
-
-class IntGauge(Metric):
-    """A gauge type metric that holds int values."""
+class Gauge(Metric):
+    """A gauge type metric that expresses a pre-calculated value.
+    
+    Gauge metrics have a value that is either `Set()` by explicit
+    instrumentation or observed through a callback. This kind of metric
+    should be used when the metric cannot be expressed as a sum or because
+    the measurement interval is arbitrary.
+    """
 
     def get_handle(self, label_values: Tuple[str]) -> "GaugeHandle":
-        """Gets a `GaugeHandle` with an int value."""
+        """Gets a `GaugeHandle`."""
 
 
-class FloatMeasure(Metric):
-    """A measure type metric that holds float values."""
+class Measure(Metric):
+    """A measure type metric that represent raw stats that are recorded.
+    
+    Measure metrics represent raw statistics that are recorded. By
+    default, measure metrics can accept both positive and negatives.
+    Negative inputs will be discarded when monotonic is True.
+    """
 
     def get_handle(self, label_values: Tuple[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
 
 
-class IntMeasure(Metric):
-    """A measure type metric that holds int values."""
-
-    def get_handle(self, label_values: Tuple[str]) -> "MeasureHandle":
-        """Gets a `MeasureHandle` with an int value."""
-
-
-class BaseHandle:
+class MetricHandle:
     """An interface for metric handles."""
 
-    @abstractmethod
-    def update(self, value: Union[float, int]) -> None:
-        """A generic update method to alter the value of the handle.
 
-            Useful for record_batch, where the type of the handle does not
-            matter. Implementation should call the appropriate method that
-            alters the underlying data for that handle type.
-        """ 
+class CounterHandle(MetricHandle):
+    def add(self, value: "ValueType") -> None:
+        """Increases the value of the handle by `value`"""
 
 
-class CounterHandle(BaseHandle):
-    def update(self, value: Union[float, int]) -> None:
-        """Alters the value of the counter handle.
-        
-            Implementations should call _add().
-        """
-
-    def _add(self, value: Union[float, int]) -> None:
-        """Adds the given value to the current value."""
+class GaugeHandle(MetricHandle):
+    def set(self, value: "ValueType") -> None:
+        """Sets the current value of the handle to `value`."""
 
 
-class GaugeHandle(BaseHandle):
-    def update(self, value: Union[float, int]) -> None:
-        """Alters the value of the gauge handle.
-        
-            Implementations should call _set().
-        """
-    def _set(self, value: Union[float, int]) -> None:
-        """Sets the current value to the given value. Can be negative."""
-
-
-class MeasureHandle(BaseHandle):
-    def update(self, value: Union[float, int]) -> None:
-        """Alters the value of the measure handle.
-        
-            Implementations should call _record().
-        """
-
-    def _record(self, value: Union[float, int]) -> None:
-        """Records the given value to this measure."""
+class MeasureHandle(MetricHandle):
+    def record(self, value: "ValueType") -> None:
+        """Records the given `value` to this handle."""
