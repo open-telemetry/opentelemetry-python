@@ -18,6 +18,8 @@ import threading
 import typing
 from enum import Enum
 
+from opentelemetry.sdk import util
+
 from .. import Span, SpanProcessor
 
 logger = logging.getLogger(__name__)
@@ -135,10 +137,11 @@ class BatchExportSpanProcessor(SpanProcessor):
                 self.condition.notify_all()
 
     def worker(self):
+        timeout = self.schedule_delay_millis / 1e3
         while not self.done:
             if self.queue.qsize() < self.max_export_batch_size:
                 with self.condition:
-                    self.condition.wait(self.schedule_delay_millis / 1000)
+                    self.condition.wait(timeout)
                     if self.queue.empty():
                         # spurious notification, let's wait again
                         continue
@@ -146,7 +149,12 @@ class BatchExportSpanProcessor(SpanProcessor):
                         # missing spans will be sent when calling flush
                         break
 
+            # substract the duration of this export call to the next timeout
+            start = util.time_ns()
             self.export()
+            end = util.time_ns()
+            duration = (end - start) / 1e9
+            timeout = self.schedule_delay_millis / 1e3 - duration
 
         # be sure that all spans are sent
         self._flush()
