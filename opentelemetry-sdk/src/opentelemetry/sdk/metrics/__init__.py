@@ -14,30 +14,23 @@
 
 import logging
 
-from typing import List, Tuple, Type, Union
+from typing import Tuple, Type, Union
 from opentelemetry import metrics as metrics_api
 
 logger = logging.getLogger(__name__)
 
 
 class Meter(metrics_api.Meter):
-    """See `opentelemetry.metrics.Meter`.
-
-    Args:
-        name: The name of the meter.
-    """
-    def __init__(self, name: str = "") -> None:
-        self.name = name
+    """See `opentelemetry.metrics.Meter`."""
 
     def record_batch(
         self,
         label_values: Tuple[str],
-        record_tuples: List[Tuple[metrics_api.Metric, Union[float, int]]],
+        record_tuples: Tuple[Tuple[metrics_api.Metric, Union[float, int]]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
-        for pair in record_tuples:
-            handle = pair[0].get_handle(label_values)
-            handle.update(pair[1])
+        for metric, value in record_tuples:
+            handle = metric.get_handle(label_values).update(value)
 
 
     def create_counter(
@@ -46,9 +39,9 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_monotonic: bool = False,
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = True,
     ) -> Union[metrics_api.FloatCounter, metrics_api.IntCounter]:
         """See `opentelemetry.metrics.Meter.create_counter`."""
         counter_class = FloatCounter if value_type == float else IntCounter
@@ -57,8 +50,8 @@ class Meter(metrics_api.Meter):
             description,
             unit,
             label_keys=label_keys,
-            disabled=disabled,
-            non_monotonic=non_monotonic)
+            enabled=enabled,
+            monotonic=monotonic)
 
     
     def create_gauge(
@@ -67,9 +60,9 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        is_monotonic: bool = False,
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False,
     ) -> Union[metrics_api.FloatGauge, metrics_api.IntGauge]:
         """See `opentelemetry.metrics.Meter.create_gauge`."""
         gauge_class = FloatGauge if value_type == float else IntGauge
@@ -78,8 +71,8 @@ class Meter(metrics_api.Meter):
             description,
             unit,
             label_keys=label_keys,
-            disabled=disabled,
-            is_monotonic=is_monotonic)
+            enabled=enabled,
+            monotonic=monotonic)
 
     def create_measure(
         self,
@@ -87,9 +80,9 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_negative: bool = False,
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False,
     ) -> Union[metrics_api.FloatMeasure, metrics_api.IntMeasure]:
         """See `opentelemetry.metrics.Meter.create_measure`."""
         measure_class = FloatMeasure if value_type == float else IntMeasure
@@ -98,8 +91,8 @@ class Meter(metrics_api.Meter):
             description,
             unit,
             label_keys=label_keys,
-            disabled=disabled,
-            non_negative=non_negative)
+            enabled=enabled,
+            monotonic=monotonic)
         
 
 class FloatCounter(metrics_api.FloatCounter):
@@ -110,16 +103,16 @@ class FloatCounter(metrics_api.FloatCounter):
         name: str,
         description: str,
         unit: str,
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_monotonic: bool = False,
-    ) -> None:
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False
+    ):
         self.name = name
         self.description = description
         self.unit = unit
         self.label_keys = label_keys
-        self.disabled = disabled
-        self.non_monotonic = non_monotonic
+        self.enabled = enabled
+        self.monotonic = monotonic
         self.handles = {}
 
     def get_handle(self,
@@ -127,7 +120,7 @@ class FloatCounter(metrics_api.FloatCounter):
         """See `opentelemetry.metrics.FloatCounter.get_handle`."""
         handle = self.handles.get(
             label_values,
-            CounterHandle(float, self.disabled, self.non_monotonic))
+            CounterHandle(float, self.enabled, self.monotonic))
         self.handles[label_values] = handle
         return handle
 
@@ -140,24 +133,24 @@ class IntCounter(metrics_api.IntCounter):
         name: str,
         description: str,
         unit: str,
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_monotonic: bool = False,
-    ) -> None:
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False
+    ):
         self.name = name
         self.description = description
         self.unit = unit
         self.label_keys = label_keys
-        self.disabled = disabled
-        self.non_monotonic = non_monotonic
+        self.enabled = enabled
+        self.monotonic = monotonic
         self.handles = {}
 
     def get_handle(self,
-                   label_values: List[str]) -> metrics_api.GaugeHandle:
+                   label_values: Tuple[str]) -> metrics_api.GaugeHandle:
         """See `opentelemetry.metrics.IntCounter.get_handle`."""
         handle = self.handles.get(
             label_values,
-            GaugeHandle(int, self.disabled, self.non_monotonic))
+            GaugeHandle(int, self.enabled, self.monotonic))
         self.handles[label_values] = handle
         return handle
 
@@ -170,16 +163,16 @@ class FloatGauge(metrics_api.FloatGauge):
         name: str,
         description: str,
         unit: str,
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        is_monotonic: bool = False,
-    ) -> None:
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False
+    ):
         self.name = name
         self.description = description
         self.unit = unit
         self.label_keys = label_keys
-        self.disabled = disabled
-        self.is_monotonic = is_monotonic
+        self.enabled = enabled
+        self.monotonic = monotonic
         self.handles = {}
 
     def get_handle(self,
@@ -187,7 +180,7 @@ class FloatGauge(metrics_api.FloatGauge):
         """See `opentelemetry.metrics.FloatGauge.get_handle`."""
         handle = self.handles.get(
             label_values,
-            GaugeHandle(float, self.disabled, self.is_monotonic))
+            GaugeHandle(float, self.enabled, self.monotonic))
         self.handles[label_values] = handle
         return handle
 
@@ -200,24 +193,24 @@ class IntGauge(metrics_api.IntGauge):
         name: str,
         description: str,
         unit: str,
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        is_monotonic: bool = False,
-    ) -> None:
+        label_keys: Tuple[str] = None,
+        enabled: bool = False,
+        monotonic: bool = False
+    ):
         self.name = name
         self.description = description
         self.unit = unit
         self.label_keys = label_keys
-        self.disabled = disabled
-        self.is_monotonic = is_monotonic
+        self.enabled = enabled
+        self.monotonic = monotonic
         self.handles = {}
 
     def get_handle(self,
-                   label_values: List[str]) -> metrics_api.GaugeHandle:
+                   label_values: Tuple[str]) -> metrics_api.GaugeHandle:
         """See `opentelemetry.metrics.IntGauge.get_handle`."""
         handle = self.handles.get(
             label_values,
-            GaugeHandle(int, self.disabled, self.is_monotonic))
+            GaugeHandle(int, self.enabled, self.monotonic))
         self.handles[label_values] = handle
         return handle
 
@@ -230,16 +223,16 @@ class FloatMeasure(metrics_api.FloatMeasure):
         name: str,
         description: str,
         unit: str,
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_negative: bool = False,
-    ) -> None:
+        label_keys: Tuple[str] = None,
+        enabled: bool = False,
+        monotonic: bool = False
+    ):
         self.name = name
         self.description = description
         self.unit = unit
         self.label_keys = label_keys
-        self.disabled = disabled
-        self.non_negative = non_negative
+        self.enabled = enabled
+        self.monotonic = monotonic
         self.handles = {}
 
     def get_handle(self,
@@ -247,7 +240,7 @@ class FloatMeasure(metrics_api.FloatMeasure):
         """See `opentelemetry.metrics.FloatMeasure.get_handle`."""
         handle = self.handles.get(
             label_values,
-            MeasureHandle(float, self.disabled, self.non_negative))
+            MeasureHandle(float, self.enabled, self.monotonic))
         self.handles[label_values] = handle
         return handle
 
@@ -260,24 +253,24 @@ class IntMeasure(metrics_api.IntMeasure):
         name: str,
         description: str,
         unit: str,
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_negative: bool = False,
-    ) -> None:
+        label_keys: Tuple[str] = None,
+        enabled: bool = False,
+        allow_negative: bool = False
+    ):
         self.name = name
         self.description = description
         self.unit = unit
         self.label_keys = label_keys
-        self.disabled = disabled
-        self.non_negative = non_negative
+        self.enabled = enabled
+        self.allow_negative = allow_negative
         self.handles = {}
 
     def get_handle(self,
-                   label_values: List[str]) -> metrics_api.MeasureHandle:
+                   label_values: Tuple[str]) -> metrics_api.MeasureHandle:
         """See `opentelemetry.metrics.IntMeasure.get_handle`."""
         handle = self.handles.get(
             label_values,
-            MeasureHandle(int, self.disabled, self.non_negative))
+            MeasureHandle(int, self.enabled, self.allow_negative))
         self.handles[label_values] = handle
         return handle
 
@@ -287,12 +280,13 @@ class CounterHandle(metrics_api.CounterHandle):
     def __init__(
         self,
         value_type: Union[Type[float], Type[int]],
-        disabled: bool,
-        non_monotonic: bool) -> None:
+        enabled: bool,
+        monotonic: bool
+    ):
         self.data = 0
         self.value_type = value_type
-        self.disabled = disabled
-        self.non_monotonic = non_monotonic
+        self.enabled = enabled
+        self.monotonic = monotonic
 
     def update(self, value: Union[float, int]) -> None:
         """See `opentelemetry.metrics.CounterHandle.update`."""
@@ -300,10 +294,9 @@ class CounterHandle(metrics_api.CounterHandle):
 
     def _add(self, value: Union[float, int]) -> None:
         """See `opentelemetry.metrics.CounterHandle._add`."""
-        if self.disabled:
-            logger.warning("Counter metric is disabled.")
+        if not self.enabled:
             return
-        if not self.non_monotonic and value < 0:
+        if not self.monotonic and value < 0:
             logger.warning("Monotonic counter cannot descend.")
             return
         if not isinstance(value, self.value_type):
@@ -317,12 +310,13 @@ class GaugeHandle(metrics_api.GaugeHandle):
     def __init__(
         self,
         value_type: Union[Type[float], Type[int]],
-        disabled: bool,
-        is_monotonic: bool) -> None:
+        enabled: bool,
+        monotonic: bool
+    ):
         self.data = 0
         self.value_type = value_type
-        self.disabled = disabled
-        self.is_monotonic = is_monotonic
+        self.enabled = enabled
+        self.monotonic = monotonic
 
     def update(self, value: Union[float, int]) -> None:
         """See `opentelemetry.metrics.GaugeHandle.update`."""
@@ -330,10 +324,9 @@ class GaugeHandle(metrics_api.GaugeHandle):
 
     def _set(self, value: Union[float, int]) -> None:
         """See `opentelemetry.metrics.GaugeHandle._set`."""
-        if self.disabled:
-            logger.warning("Gauge metric is disabled.")
+        if not self.enabled:
             return
-        if self.is_monotonic and value < 0:
+        if self.monotonic and value < 0:
             logger.warning("Monotonic gauge cannot descend.")
             return
         if not isinstance(value, self.value_type):
@@ -347,12 +340,13 @@ class MeasureHandle(metrics_api.MeasureHandle):
     def __init__(
         self,
         value_type: Union[Type[float], Type[int]],
-        disabled: bool,
-        non_negative: bool) -> None:
+        enabled: bool,
+        monotonic: bool
+    ):
         self.data = 0
         self.value_type = value_type
-        self.disabled = disabled
-        self.non_negative = non_negative
+        self.enabled = enabled
+        self.monotonic = monotonic
 
     def update(self, value: Union[float, int]) -> None:
         """See `opentelemetry.metrics.MeasureHandle.update`."""
@@ -360,10 +354,9 @@ class MeasureHandle(metrics_api.MeasureHandle):
 
     def _record(self, value: Union[float, int]) -> None:
         """See `opentelemetry.metrics.MeasureHandle._record`."""
-        if self.disabled:
-            logger.warning("Measure metric is disabled.")
+        if not self.enabled:
             return
-        if self.non_negative and value < 0:
+        if self.monotonic and value < 0:
             logger.warning("Non-negative measure cannot descend.")
             return
         if not isinstance(value, self.value_type):

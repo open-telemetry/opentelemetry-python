@@ -22,7 +22,7 @@ from contextlib import contextmanager
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
-from opentelemetry.sdk.common import BoundedDict, BoundedList
+from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)

@@ -27,7 +27,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 from abc import ABC, abstractmethod
-from typing import Callable, List, Optional, Tuple, Type, Union
+from typing import Callable, Optional, Tuple, Type, Union
 
 from opentelemetry.util import loader
 
@@ -43,8 +43,8 @@ class Meter:
 
     def record_batch(
         self,
-        label_values: List[str],
-        record_tuples: List[Tuple["Metric", Union[float, int]]],
+        label_values: Tuple[str],
+        record_tuples: Tuple[Tuple["Metric", Union[float, int]]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
@@ -53,10 +53,9 @@ class Meter:
         match the key-value pairs in the label tuples.
 
         Args:
-            label_values: A list of label values that will be matched
-                against to record for the handles under each metric that has
-                those labels.
-            record_tuples: A list of pairs of `Metric` s and the
+            label_values: The values that will be matched against to record for
+            the handles under each metric that has those labels.
+            record_tuples: A tuple of pairs of `Metric` s and the
                 corresponding value to record for that metric.
         """
 
@@ -67,29 +66,29 @@ class Meter:
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_monotonic: bool = False,
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = True,
     ) -> Union["FloatCounter", "IntCounter"]:
         """Creates a counter metric with type value_type.
 
-        By default, counter values can only go up (monotonic). The API
-        should reject negative inputs to monotonic counter metrics.
-        Counter metrics that have a non_monotonic option set to True allows
-        negative inputs.
+        Counter metric expresses the computation of a sum. By default, counter
+        values can only go up (monotonic). Negative inputs will be discarded
+        for monotonic counter metrics. Counter metrics that have a monotonic
+        option set to False allows negative inputs.
 
         Args:
             name: The name of the counter.
-            description: Human readable description of the metric.
+            description: Human-readable description of the metric.
             unit: Unit of the metric values.
             value_type: The type of values being recorded by the metric.
-            label_keys: list of keys for the labels with dynamic values.
-                Order of the list is important as the same order must be used
+            label_keys: The keys for the labels with dynamic values.
+                Order of the tuple is important as the same order must be used
                 on recording when suppling values for these labels.
-            disabled: True value tells the SDK not to report by default.
-            non_monotonic: Set to true to allow negative inputs.
+            enabled: Whether to report the metric by default.
+            monotonic: Whether to only allow non-negative values.
 
-        Returns: A new counter metric for values of the given value_type.
+        Returns: A new counter metric for values of the given ``value_type``.
         """
 
 
@@ -99,28 +98,32 @@ class Meter:
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        is_monotonic: bool = False,
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False,
     ) -> Union["FloatGauge", "IntGauge"]:
         """Creates a gauge metric with type value_type.
 
-        By default, gauge values can go both up and down (non-monotic). The API
-        allows for an optional is_monotonic flag, in which when set to True will
-        reject descending update values.
+        Gauge metrics express a pre-calculated value that is either `Set()`
+        by explicit instrumentation or observed through a callback. This kind
+        of metric should be used when the metric cannot be expressed as a sum
+        or because the measurement interval is arbitrary.
+
+        By default, gauge values can go both up and down (non-monotonic).
+        Negative inputs will be discarded for monotonic gauge metrics.
 
         Args:
             name: The name of the gauge.
-            description: Human readable description of the metric.
+            description: Human-readable description of the metric.
             unit: Unit of the metric values.
             value_type: The type of values being recorded by the metric.
-            label_keys: list of keys for the labels with dynamic values.
-                Order of the list is important as the same order must be used
+            label_keys: The keys for the labels with dynamic values.
+                Order of the tuple is important as the same order must be used
                 on recording when suppling values for these labels.
-            disabled: True value tells the SDK not to report by default.
-            is_monotonic: Set to true to reject negative inputs.
+            enabled: Whether to report the metric by default.
+            monotonic: Whether to only allow non-negative values.
 
-        Returns: A new gauge metric for values of the given value_type.
+        Returns: A new gauge metric for values of the given ``value_type``.
         """
 
 
@@ -130,28 +133,28 @@ class Meter:
         description: str,
         unit: str,
         value_type: Union[Type[float], Type[int]],
-        label_keys: List[str] = None,
-        disabled: bool = False,
-        non_negative: bool = False,
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False,
     ) -> Union["FloatMeasure", "IntMeasure"]:
         """Creates a measure metric with type value_type.
 
-        Measure metrics represent raw statistics that are recorded. As an option,
-        measure metrics can be declared as non-negative. The API will reject
-        negative metric events for non-negative measures.
+        Measure metrics represent raw statistics that are recorded. By
+        default, measure metrics can accept both positive and negatives.
+        Negative inputs will be discarded when monotonic is True.
 
         Args:
             name: The name of the measure.
-            description: Human readable description of the metric.
+            description: Human-readable description of the metric.
             unit: Unit of the metric values.
             value_type: The type of values being recorded by the metric.
-            label_keys: list of keys for the labels with dynamic values.
-                Order of the list is important as the same order must be used
+            label_keys: The keys for the labels with dynamic values.
+                Order of the tuple is important as the same order must be used
                 on recording when suppling values for these labels.
-            disabled: True value tells the SDK not to report by default.
-            non_negative: Set to true to reject negative inputs.
+            enabled: Whether to report the metric by default.
+            monotonic: Whether to only allow non-negative values.
 
-        Returns: A new measure metric for values of the given value_type.
+        Returns: A new measure metric for values of the given ``value_type``.
         """
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
@@ -207,7 +210,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_handle(self, label_values: Tuple[str]) -> "object":
+    def get_handle(self, label_values: Tuple[str]) -> "BaseHandle":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -218,8 +221,7 @@ class Metric(ABC):
         a value was not provided are permitted.
 
         Args:
-            label_values: A tuple of label values that will be associated
-                with the return handle.
+            label_values: Values to associate with the returned handle.
         """
 
     def remove_handle(self, label_values: Tuple[str]) -> None:
@@ -228,7 +230,7 @@ class Metric(ABC):
         The handle with matching label values will be removed.
 
         args:
-            label_values: The tuple of label values to match against.
+            label_values: The label values to match against.
         """
 
     def clear(self) -> None:
@@ -277,7 +279,7 @@ class IntMeasure(Metric):
         """Gets a `MeasureHandle` with an int value."""
 
 
-class BaseHandle():
+class BaseHandle:
     """An interface for metric handles."""
 
     @abstractmethod
@@ -298,10 +300,7 @@ class CounterHandle(BaseHandle):
         """
 
     def _add(self, value: Union[float, int]) -> None:
-        """Adds the given value to the current value.
-
-        The input value cannot be negative if not bidirectional.
-        """
+        """Adds the given value to the current value."""
 
 
 class GaugeHandle(BaseHandle):
