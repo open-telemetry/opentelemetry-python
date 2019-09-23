@@ -91,7 +91,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         self,
         span_exporter: SpanExporter,
         max_queue_size: int = 2048,
-        schedule_delay_millis: int = 5000,
+        schedule_delay_millis: float = 5000,
         max_export_batch_size: int = 512,
     ):
         if max_queue_size <= 0:
@@ -101,7 +101,9 @@ class BatchExportSpanProcessor(SpanProcessor):
             raise ValueError("schedule_delay_millis must be positive.")
 
         if max_export_batch_size <= 0:
-            raise ValueError("max_export_batch_size must be positive.")
+            raise ValueError(
+                "max_export_batch_size must be a positive integer."
+            )
 
         if max_export_batch_size > max_queue_size:
             raise ValueError(
@@ -110,11 +112,11 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         self.span_exporter = span_exporter
         self.queue = queue.Queue(max_queue_size)
-        self.worker_thread = threading.Thread(target=self.worker)
+        self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.condition = threading.Condition()
         self.schedule_delay_millis = schedule_delay_millis
         self.max_export_batch_size = max_export_batch_size
-        self.half_max_queue_size = max_queue_size / 2
+        self.half_max_queue_size = max_queue_size // 2
         self.done = False
 
         self.worker_thread.start()
@@ -147,7 +149,7 @@ class BatchExportSpanProcessor(SpanProcessor):
             self.export()
 
         # be sure that all spans are sent
-        self.flush()
+        self._flush()
 
     def export(self):
         """Exports at most max_export_batch_size spans."""
@@ -164,7 +166,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         except Exception as exc:
             logger.warning("Exception while exporting data: %s", exc)
 
-    def flush(self):
+    def _flush(self):
         while not self.queue.empty():
             self.export()
 
