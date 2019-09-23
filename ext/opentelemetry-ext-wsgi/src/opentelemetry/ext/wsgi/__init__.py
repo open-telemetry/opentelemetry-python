@@ -47,8 +47,8 @@ class OpenTelemetryMiddleware:
         host = environ.get("HTTP_HOST")
         if not host:
             host = environ["SERVER_NAME"]
-            port = environ.get("SERVER_PORT")
-            if port and (
+            port = environ["SERVER_PORT"]
+            if (
                 port != "80"
                 and environ["wsgi.url_scheme"] == "http"
                 or port != "443"
@@ -114,7 +114,9 @@ class OpenTelemetryMiddleware:
         try:
             with tracer.use_span(span):
                 self._add_request_attributes(span, environ)
-                start_response = self._create_start_response(span, start_response)
+                start_response = self._create_start_response(
+                    span, start_response
+                )
 
                 iterable = self.wsgi(environ, start_response)
 
