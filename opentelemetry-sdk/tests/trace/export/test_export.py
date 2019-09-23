@@ -12,22 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import unittest
 
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
 
 
+class MySpanExporter(export.SpanExporter):
+    """Very simple span exporter used for testing."""
+
+    def __init__(self, destination, max_export_batch_size=None):
+        self.destination = destination
+        self.max_export_batch_size = max_export_batch_size
+
+    def export(self, spans: trace.Span) -> export.SpanExportResult:
+        if (
+            self.max_export_batch_size is not None
+            and len(spans) > self.max_export_batch_size
+        ):
+            raise ValueError("Batch is too big")
+        self.destination.extend(span.name for span in spans)
+        return export.SpanExportResult.SUCCESS
+
+
 class TestSimpleExportSpanProcessor(unittest.TestCase):
     def test_simple_span_processor(self):
-        class MySpanExporter(export.SpanExporter):
-            def __init__(self, destination):
-                self.destination = destination
-
-            def export(self, spans: trace.Span) -> export.SpanExportResult:
-                self.destination.extend(span.name for span in spans)
-                return export.SpanExportResult.SUCCESS
-
         tracer = trace.Tracer()
 
         spans_names_list = []
@@ -46,14 +56,6 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
 
 class TestBatchExportSpanProcessor(unittest.TestCase):
     def test_batch_span_processor(self):
-        class MySpanExporter(export.SpanExporter):
-            def __init__(self, destination):
-                self.destination = destination
-
-            def export(self, spans: trace.Span) -> export.SpanExportResult:
-                self.destination.extend(span.name for span in spans)
-                return export.SpanExportResult.SUCCESS
-
         tracer = trace.Tracer()
 
         spans_names_list = []
@@ -71,6 +73,53 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         # TODO: this call is missing in the tracer
         span_processor.shutdown()
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
+
+    def test_batch_span_processor_lossless(self):
+        """Test that no spans are lost when sending max_queue_size spans"""
+        tracer = trace.Tracer()
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(
+            destination=spans_names_list, max_export_batch_size=128
+        )
+        span_processor = export.BatchExportSpanProcessor(
+            my_exporter, max_queue_size=512, max_export_batch_size=128
+        )
+        tracer.add_span_processor(span_processor)
+
+        for idx in range(512):
+            with tracer.start_span("foo{}".format(idx)):
+                pass
+
+        # call shutdown on specific span processor
+        # TODO: this call is missing in the tracer
+        span_processor.shutdown()
+        self.assertEqual(len(spans_names_list), 512)
+
+    def test_batch_span_processor_scheduled_delay(self):
+        """Test that spans are exported each schedule_delay_millis"""
+        tracer = trace.Tracer()
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.BatchExportSpanProcessor(
+            my_exporter, schedule_delay_millis=50
+        )
+        tracer.add_span_processor(span_processor)
+
+        # start single span
+        with tracer.start_span("foo1"):
+            pass
+
+        time.sleep(0.05)
+        # span should be already exported
+        self.assertEqual(len(spans_names_list), 1)
+
+        # call shutdown on specific span processor
+        # TODO: this call is missing in the tracer
+        span_processor.shutdown()
 
     def test_batch_span_processor_parameters(self):
         # zero max_queue_size
