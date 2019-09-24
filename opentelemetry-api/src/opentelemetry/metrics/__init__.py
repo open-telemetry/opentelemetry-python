@@ -33,7 +33,7 @@ from typing import Callable, Generic, Optional, Tuple, Type, TypeVar, Union
 
 from opentelemetry.util import loader
 
-ValueType = TypeVar('ValueType', int, float)
+ValueType = TypeVar("ValueType", int, float)
 
 
 class MetricKind(enum.Enum):
@@ -69,7 +69,6 @@ class Meter:
                 corresponding value to record for that metric.
         """
 
-
     def create_metric(
         self,
         name: str,
@@ -97,15 +96,15 @@ class Meter:
         Returns: A new ``metric_kind`` metric with values of ``value_type``.
         """
 
+
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = Callable[
-    [Type[Meter]], Optional[Meter]
-]
+ImplementationFactory = Callable[[Type[Meter]], Optional[Meter]]
 
 _METER = None
 _METER_FACTORY = None
+
 
 def meter() -> Meter:
     """Gets the current global :class:`~.Meter` object.
@@ -122,9 +121,7 @@ def meter() -> Meter:
     return _METER
 
 
-def set_preferred_meter_implementation(
-    factory: ImplementationFactory
-) -> None:
+def set_preferred_meter_implementation(factory: ImplementationFactory) -> None:
     """Set the factory to be used to create the meter.
 
     See :mod:`opentelemetry.util.loader` for details.

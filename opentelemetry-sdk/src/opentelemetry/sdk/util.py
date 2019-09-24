@@ -142,4 +142,3 @@ class BoundedDict(MutableMapping):
         # pylint: disable=protected-access
         bounded_dict._dict = mapping
         return bounded_dict
-

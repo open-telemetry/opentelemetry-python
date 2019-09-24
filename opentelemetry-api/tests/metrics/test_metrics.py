@@ -20,7 +20,7 @@ from opentelemetry import metrics
 class TestMeter(unittest.TestCase):
     def setUp(self):
         self.meter = metrics.Meter()
-    
+
     def test_record_batch(self):
         self.meter.record_batch((), ())
 
@@ -29,7 +29,6 @@ class TestMeter(unittest.TestCase):
 
 
 class TestMetrics(unittest.TestCase):
-
     def test_counter(self):
         counter = metrics.Counter()
         counter.get_handle(())

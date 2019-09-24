@@ -26,15 +26,9 @@ class TestMeter(unittest.TestCase):
 
     def test_record_batch(self):
         meter = metrics.Meter()
-        label_keys = ("key1")
-        label_values = ("value1")
-        counter = metrics.Counter(
-            "name",
-            "desc",
-            "unit",
-            float,
-            label_keys,
-        )
+        label_keys = "key1"
+        label_values = "value1"
+        counter = metrics.Counter("name", "desc", "unit", float, label_keys)
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_values, record_tuples)
         self.assertEqual(counter.get_handle(label_values).data, 1.0)
@@ -43,27 +37,9 @@ class TestMeter(unittest.TestCase):
         meter = metrics.Meter()
         label_keys = ("key1", "key2", "key3")
         label_values = ("value1", "value2", "value3")
-        counter = metrics.Counter(
-            "name",
-            "desc",
-            "unit",
-            float,
-            label_keys,
-        )
-        gauge = metrics.Gauge(
-            "name",
-            "desc",
-            "unit",
-            int,
-            label_keys
-        )
-        measure = metrics.Measure(
-            "name",
-            "desc",
-            "unit",
-            float,
-            label_keys
-        )
+        counter = metrics.Counter("name", "desc", "unit", float, label_keys)
+        gauge = metrics.Gauge("name", "desc", "unit", int, label_keys)
+        measure = metrics.Measure("name", "desc", "unit", float, label_keys)
         record_tuples = [(counter, 1.0), (gauge, 5), (measure, 3.0)]
         meter.record_batch(label_values, record_tuples)
         self.assertEqual(counter.get_handle(label_values).data, 1.0)
@@ -72,15 +48,9 @@ class TestMeter(unittest.TestCase):
 
     def test_record_batch_exists(self):
         meter = metrics.Meter()
-        label_keys = ("key1")
-        label_values = ("value1")
-        counter = metrics.Counter(
-            "name",
-            "desc",
-            "unit",
-            float,
-            label_keys
-        )
+        label_keys = "key1"
+        label_values = "value1"
+        counter = metrics.Counter("name", "desc", "unit", float, label_keys)
         handle = counter.get_handle(label_values)
         handle._update(1.0)
         record_tuples = [(counter, 1.0)]
@@ -91,12 +61,7 @@ class TestMeter(unittest.TestCase):
     def test_create_metric(self):
         meter = metrics.Meter()
         counter = meter.create_metric(
-            "name",
-            "desc",
-            "unit",
-            int,
-            metrics_api.MetricKind.COUNTER,
-            ()
+            "name", "desc", "unit", int, metrics_api.MetricKind.COUNTER, ()
         )
         self.assertTrue(isinstance(counter, metrics.Counter))
         self.assertEqual(counter.value_type, int)
@@ -105,12 +70,7 @@ class TestMeter(unittest.TestCase):
     def test_create_gauge(self):
         meter = metrics.Meter()
         gauge = meter.create_metric(
-            "name",
-            "desc",
-            "unit",
-            float,
-            metrics_api.MetricKind.GAUGE,
-            ()
+            "name", "desc", "unit", float, metrics_api.MetricKind.GAUGE, ()
         )
         self.assertTrue(isinstance(gauge, metrics.Gauge))
         self.assertEqual(gauge.value_type, float)
@@ -119,12 +79,7 @@ class TestMeter(unittest.TestCase):
     def test_create_measure(self):
         meter = metrics.Meter()
         measure = meter.create_metric(
-            "name",
-            "desc",
-            "unit",
-            float,
-            metrics_api.MetricKind.MEASURE,
-            ()
+            "name", "desc", "unit", float, metrics_api.MetricKind.MEASURE, ()
         )
         self.assertTrue(isinstance(measure, metrics.Measure))
         self.assertEqual(measure.value_type, float)
@@ -133,29 +88,17 @@ class TestMeter(unittest.TestCase):
 
 class TestMetric(unittest.TestCase):
     def test_get_handle(self):
-        metric_types = [metrics.Counter,
-                        metrics.Gauge,
-                        metrics.Measure]
+        metric_types = [metrics.Counter, metrics.Gauge, metrics.Measure]
         for _type in metric_types:
-            metric = _type(
-            "name",
-            "desc",
-            "unit",
-            int,
-            ("key"))
-            label_values = ("value")
+            metric = _type("name", "desc", "unit", int, ("key"))
+            label_values = "value"
             handle = metric.get_handle(label_values)
             self.assertEqual(metric.handles.get(label_values), handle)
 
     def test_remove_handle(self):
-        metric = metrics.Counter(
-            "name",
-            "desc",
-            "unit",
-            int,
-            ("key"))
-        label_values1 = ("value")
-        label_values2 = ("value2")
+        metric = metrics.Counter("name", "desc", "unit", int, ("key"))
+        label_values1 = "value"
+        label_values2 = "value2"
         metric.get_handle(label_values1)
         metric.get_handle(label_values2)
         metric.remove_handle(label_values1)
@@ -163,66 +106,42 @@ class TestMetric(unittest.TestCase):
         self.assertIsNotNone(metric.handles.get(label_values2))
 
     def test_clear(self):
-        metric = metrics.Counter(
-            "name",
-            "desc",
-            "unit",
-            int,
-            ("key"))
-        label_values1 = ("value")
-        label_values2 = ("value2")
+        metric = metrics.Counter("name", "desc", "unit", int, ("key"))
+        label_values1 = "value"
+        label_values2 = "value2"
         metric.get_handle(label_values1)
         metric.get_handle(label_values2)
         metric.clear()
         self.assertIsNone(metric.handles.get(label_values1))
         self.assertIsNone(metric.handles.get(label_values2))
 
+
 class TestCounterHandle(unittest.TestCase):
     def test_update(self):
-        handle = metrics.CounterHandle(
-            float,
-            True,
-            False
-        )
+        handle = metrics.CounterHandle(float, True, False)
         handle._update(2.0)
         self.assertEqual(handle.data, 2.0)
 
     def test_add(self):
-        handle = metrics.CounterHandle(
-            int,
-            True,
-            False
-        )
+        handle = metrics.CounterHandle(int, True, False)
         handle.add(3)
         self.assertEqual(handle.data, 3)
 
     def test_add_disabled(self):
-        handle = metrics.CounterHandle(
-            int,
-            False,
-            False
-        )
+        handle = metrics.CounterHandle(int, False, False)
         handle.add(3)
         self.assertEqual(handle.data, 0)
 
-    @mock.patch('opentelemetry.sdk.metrics.logger')
+    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_monotonic(self, logger_mock):
-        handle = metrics.CounterHandle(
-            int,
-            True,
-            False
-        )
+        handle = metrics.CounterHandle(int, True, False)
         handle.add(-3)
         self.assertEqual(handle.data, 0)
         logger_mock.warning.assert_called()
 
-    @mock.patch('opentelemetry.sdk.metrics.logger')
+    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
-        handle = metrics.CounterHandle(
-            int,
-            True,
-            False
-        )
+        handle = metrics.CounterHandle(int, True, False)
         handle.add(3.0)
         self.assertEqual(handle.data, 0)
         logger_mock.warning.assert_called()
@@ -230,50 +149,30 @@ class TestCounterHandle(unittest.TestCase):
 
 class TestGaugeHandle(unittest.TestCase):
     def test_update(self):
-        handle = metrics.GaugeHandle(
-            float,
-            True,
-            False
-        )
+        handle = metrics.GaugeHandle(float, True, False)
         handle._update(2.0)
         self.assertEqual(handle.data, 2.0)
 
     def test_set(self):
-        handle = metrics.GaugeHandle(
-            int,
-            True,
-            False
-        )
+        handle = metrics.GaugeHandle(int, True, False)
         handle.set(3)
         self.assertEqual(handle.data, 3)
 
     def test_set_disabled(self):
-        handle = metrics.GaugeHandle(
-            int,
-            False,
-            False
-        )
+        handle = metrics.GaugeHandle(int, False, False)
         handle.set(3)
         self.assertEqual(handle.data, 0)
 
-    @mock.patch('opentelemetry.sdk.metrics.logger')
+    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_set_monotonic(self, logger_mock):
-        handle = metrics.GaugeHandle(
-            int,
-            True,
-            True
-        )
+        handle = metrics.GaugeHandle(int, True, True)
         handle.set(-3)
         self.assertEqual(handle.data, 0)
         logger_mock.warning.assert_called()
 
-    @mock.patch('opentelemetry.sdk.metrics.logger')
+    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_set_incorrect_type(self, logger_mock):
-        handle = metrics.GaugeHandle(
-            int,
-            True,
-            False
-        )
+        handle = metrics.GaugeHandle(int, True, False)
         handle.set(3.0)
         self.assertEqual(handle.data, 0)
         logger_mock.warning.assert_called()
@@ -281,50 +180,30 @@ class TestGaugeHandle(unittest.TestCase):
 
 class TestMeasureHandle(unittest.TestCase):
     def test_update(self):
-        handle = metrics.MeasureHandle(
-            float,
-            False,
-            False
-        )
+        handle = metrics.MeasureHandle(float, False, False)
         handle._update(2.0)
         self.assertEqual(handle.data, 0)
 
     def test_record(self):
-        handle = metrics.MeasureHandle(
-            int,
-            False,
-            False
-        )
+        handle = metrics.MeasureHandle(int, False, False)
         handle.record(3)
         self.assertEqual(handle.data, 0)
 
     def test_record_disabled(self):
-        handle = metrics.MeasureHandle(
-            int,
-            False,
-            False
-        )
+        handle = metrics.MeasureHandle(int, False, False)
         handle.record(3)
         self.assertEqual(handle.data, 0)
 
-    @mock.patch('opentelemetry.sdk.metrics.logger')
+    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_monotonic(self, logger_mock):
-        handle = metrics.MeasureHandle(
-            int,
-            True,
-            True
-        )
+        handle = metrics.MeasureHandle(int, True, True)
         handle.record(-3)
         self.assertEqual(handle.data, 0)
         logger_mock.warning.assert_called()
 
-    @mock.patch('opentelemetry.sdk.metrics.logger')
+    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
-        handle = metrics.MeasureHandle(
-            int,
-            True,
-            False
-        )
+        handle = metrics.MeasureHandle(int, True, False)
         handle.record(3.0)
         self.assertEqual(handle.data, 0)
         logger_mock.warning.assert_called()

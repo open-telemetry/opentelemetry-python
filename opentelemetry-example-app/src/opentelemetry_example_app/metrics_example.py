@@ -28,10 +28,10 @@ counter = meter.create_metric(
     "number",
     int,
     metrics.MetricKind.COUNTER,
-    ("environment")
+    ("environment"),
 )
 
-label_values = ("staging")
+label_values = "staging"
 
 counter_handle = counter.get_handle(label_values)
 
