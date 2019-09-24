@@ -16,21 +16,8 @@ jobs:
         pip install tox
         tox -e docs
     - name: Publish to gh-pages
-      run: |
-        pwd
-        cp -R docs/_build/html/* docs/
-        rm -rf docs/build/
-        ls -lah docs/
-        git add -f docs/
-        echo 'GITHUB_EVENT_PATH'
-        echo $GITHUB_EVENT_PATH
-        cat $GITHUB_EVENT_PATH
-        echo 'GITHUB_ACTOR'
-        echo $GITHUB_ACTOR
-        echo 'GITHUB_EVENT_NAME'
-        git config --global user.email "libc@google.com"
-        git config --global user.name "Chris Kleinknecht"
-        git commit -m "Publish to GH pages"
-        echo "nop"
-        echo "git@github.com:${GITHUB_REPOSITORY}.git"
-        git push -f "git@github.com:${GITHUB_REPOSITORY}.git" HEAD:gh-pages
+      uses: JamesIves/github-pages-deploy-action@2.0.2
+      env:
+        ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: docs/_build/html/
