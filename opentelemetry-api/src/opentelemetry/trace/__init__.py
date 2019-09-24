@@ -487,7 +487,8 @@ class Tracer:
 
         Args:
             span: The span to start and make current.
-            end_on_exit: Whether to end the span automatically when leaving the context manager.
+            end_on_exit: Whether to end the span automatically when leaving the
+                context manager.
         """
         # pylint: disable=unused-argument,no-self-use
         yield
