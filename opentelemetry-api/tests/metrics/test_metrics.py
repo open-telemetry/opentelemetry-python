@@ -32,19 +32,19 @@ class TestMeter(unittest.TestCase):
 class TestMetrics(unittest.TestCase):
     def test_counter(self):
         counter = metrics.Counter()
-        counter.get_handle(())
+        counter.get_handle(("test"))
 
     def test_gauge(self):
         gauge = metrics.Gauge()
-        gauge.get_handle(())
+        gauge.get_handle(("test"))
 
     def test_measure(self):
         measure = metrics.Measure()
-        measure.get_handle(())
+        measure.get_handle(("test"))
 
     def test_remove_handle(self):
         counter = metrics.Counter()
-        counter.remove_handle(())
+        counter.remove_handle(("test"))
 
     def test_clear(self):
         counter = metrics.Counter()

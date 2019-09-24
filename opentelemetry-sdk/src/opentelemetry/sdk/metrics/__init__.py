@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class Metric(metrics_api.Metric):
     """See `opentelemetry.metrics.Metric`."""
+
     def __init__(
         self,
         name: str,
@@ -41,10 +42,7 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(
-        self,
-        label_values: Tuple[str]
-    ) -> metrics_api.MetricHandle:
+    def get_handle(self, label_values: Tuple[str]) -> metrics_api.MetricHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
         pass
 
