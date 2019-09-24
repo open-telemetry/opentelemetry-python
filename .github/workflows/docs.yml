@@ -1,0 +1,36 @@
+name: Docs
+
+on:
+  pull_request: # change to 'push'
+    branches:
+    - master
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+    - name: Build docs
+      run: |
+        pip install tox
+        tox -e docs
+    - name: Publish to gh-pages
+      run: |
+        pwd
+        cp -R docs/_build/html/* docs/
+        rm -rf docs/build/
+        ls -lah docs/
+        git add -f docs/
+        echo 'GITHUB_EVENT_PATH'
+        echo $GITHUB_EVENT_PATH
+        cat $GITHUB_EVENT_PATH
+        echo 'GITHUB_ACTOR'
+        echo $GITHUB_ACTOR
+        echo 'GITHUB_EVENT_NAME'
+        git config --global user.email "libc@google.com"
+        git config --global user.name "Chris Kleinknecht"
+        git commit -m "Publish to GH pages"
+        echo "nop"
+        echo "git@github.com:${GITHUB_REPOSITORY}.git"
+        git push -f "git@github.com:${GITHUB_REPOSITORY}.git" HEAD:gh-pages
