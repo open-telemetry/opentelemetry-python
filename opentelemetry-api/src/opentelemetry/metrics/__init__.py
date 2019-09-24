@@ -183,7 +183,7 @@ class Counter(Metric):
 
 class Gauge(Metric):
     """A gauge type metric that expresses a pre-calculated value.
-    
+
     Gauge metrics have a value that is either `Set()` by explicit
     instrumentation or observed through a callback. This kind of metric
     should be used when the metric cannot be expressed as a sum or because
@@ -196,7 +196,7 @@ class Gauge(Metric):
 
 class Measure(Metric):
     """A measure type metric that represent raw stats that are recorded.
-    
+
     Measure metrics represent raw statistics that are recorded. By
     default, measure metrics can accept both positive and negatives.
     Negative inputs will be discarded when monotonic is True.

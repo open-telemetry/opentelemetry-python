@@ -17,6 +17,7 @@ import unittest
 from opentelemetry import metrics
 
 
+# pylint: disable=no-self-use
 class TestMeter(unittest.TestCase):
     def setUp(self):
         self.meter = metrics.Meter()

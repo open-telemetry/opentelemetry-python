@@ -52,7 +52,7 @@ class TestMeter(unittest.TestCase):
         label_values = "value1"
         counter = metrics.Counter("name", "desc", "unit", float, label_keys)
         handle = counter.get_handle(label_values)
-        handle._update(1.0)
+        handle.update(1.0)
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_values, record_tuples)
         self.assertEqual(counter.get_handle(label_values), handle)
@@ -119,7 +119,7 @@ class TestMetric(unittest.TestCase):
 class TestCounterHandle(unittest.TestCase):
     def test_update(self):
         handle = metrics.CounterHandle(float, True, False)
-        handle._update(2.0)
+        handle.update(2.0)
         self.assertEqual(handle.data, 2.0)
 
     def test_add(self):
@@ -150,7 +150,7 @@ class TestCounterHandle(unittest.TestCase):
 class TestGaugeHandle(unittest.TestCase):
     def test_update(self):
         handle = metrics.GaugeHandle(float, True, False)
-        handle._update(2.0)
+        handle.update(2.0)
         self.assertEqual(handle.data, 2.0)
 
     def test_set(self):
@@ -181,7 +181,7 @@ class TestGaugeHandle(unittest.TestCase):
 class TestMeasureHandle(unittest.TestCase):
     def test_update(self):
         handle = metrics.MeasureHandle(float, False, False)
-        handle._update(2.0)
+        handle.update(2.0)
         self.assertEqual(handle.data, 0)
 
     def test_record(self):

@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class Metric(metrics_api.Metric):
+    """See `opentelemetry.metrics.Metric`."""
     def __init__(
         self,
         name: str,
@@ -40,6 +41,14 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
+    @abstractmethod
+    def get_handle(
+        self,
+        label_values: Tuple[str]
+    ) -> metrics_api.MetricHandle:
+        """See `opentelemetry.metrics.Metric.get_handle`."""
+        pass
+
     def remove_handle(self, label_values: Tuple[str]) -> None:
         """See `opentelemetry.metrics.Metric.remove_handle`."""
         self.handles.pop(label_values, None)
@@ -51,7 +60,7 @@ class Metric(metrics_api.Metric):
 
 class Counter(Metric):
     """See `opentelemetry.metrics.Counter`.
-    
+
     By default, counter values can only go up (monotonic). Negative inputs
     will be discarded for monotonic counter metrics. Counter metrics that
     have a monotonic option set to False allows negative inputs.
@@ -85,7 +94,7 @@ class Counter(Metric):
 
 class Gauge(Metric):
     """See `opentelemetry.metrics.Gauge`.
-    
+
     By default, gauge values can go both up and down (non-monotonic).
     Negative inputs will be discarded for monotonic gauge metrics.
     """
@@ -116,7 +125,7 @@ class Gauge(Metric):
 
 class Measure(Metric):
     """See `opentelemetry.metrics.Measure`.
-    
+
     By default, measure metrics can accept both positive and negatives.
     Negative inputs will be discarded when monotonic is True.
     """
@@ -156,7 +165,7 @@ class CounterHandle(metrics_api.CounterHandle):
         self.enabled = enabled
         self.monotonic = monotonic
 
-    def _update(self, value: metrics_api.ValueType) -> None:
+    def update(self, value: metrics_api.ValueType) -> None:
         if not self.enabled:
             return
         if not self.monotonic and value < 0:
@@ -186,7 +195,7 @@ class GaugeHandle(metrics_api.GaugeHandle):
         self.enabled = enabled
         self.monotonic = monotonic
 
-    def _update(self, value: metrics_api.ValueType) -> None:
+    def update(self, value: metrics_api.ValueType) -> None:
         if not self.enabled:
             return
         if self.monotonic and value < 0:
@@ -216,7 +225,7 @@ class MeasureHandle(metrics_api.MeasureHandle):
         self.enabled = enabled
         self.monotonic = monotonic
 
-    def _update(self, value: metrics_api.ValueType) -> None:
+    def update(self, value: metrics_api.ValueType) -> None:
         if not self.enabled:
             return
         if self.monotonic and value < 0:
@@ -251,7 +260,7 @@ class Meter(metrics_api.Meter):
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
-            handle = metric.get_handle(label_values)._update(value)
+            metric.get_handle(label_values).update(value)
 
     def create_metric(
         self,
