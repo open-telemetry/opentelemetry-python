@@ -105,7 +105,7 @@ class OpenTelemetryMiddleware:
 
         tracer = trace.tracer()
         path_info = environ["PATH_INFO"] or "/"
-        parent_span = propagators.extract(get_header_from_environ, environ)
+        parent_span = propagators.extract(_get_header_from_environ, environ)
 
         span = tracer.create_span(
             path_info, parent_span, kind=trace.SpanKind.SERVER
@@ -119,28 +119,13 @@ class OpenTelemetryMiddleware:
                 )
 
                 iterable = self.wsgi(environ, start_response)
-
-                # Put this in a subfunction to not delay the call to the wrapped
-                # WSGI application (instrumentation should change the application
-                # behavior as little as possible).
-                def iter_result(iterable, span):
-                    try:
-                        with tracer.use_span(span):
-                            for yielded in iterable:
-                                yield yielded
-                    finally:
-                        close = getattr(iterable, "close", None)
-                        if close:
-                            close()
-                        span.end()
-
-                return iter_result(iterable, span)
+                return _end_span_after_iterating(iterable, span, tracer)
         except:  # noqa
             span.end()
             raise
 
 
-def get_header_from_environ(
+def _get_header_from_environ(
     environ: dict, header_name: str
 ) -> typing.List[str]:
     """Retrieve the header value from the wsgi environ dictionary.
@@ -153,3 +138,18 @@ def get_header_from_environ(
     if value:
         return [value]
     return []
+
+
+# Put this in a subfunction to not delay the call to the wrapped
+# WSGI application (instrumentation should change the application
+# behavior as little as possible).
+def _end_span_after_iterating(iterable, span, tracer):
+    try:
+        with tracer.use_span(span):
+            for yielded in iterable:
+                yield yielded
+    finally:
+        close = getattr(iterable, "close", None)
+        if close:
+            close()
+        span.end()
