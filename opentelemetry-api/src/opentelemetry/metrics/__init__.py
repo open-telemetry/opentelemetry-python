@@ -33,7 +33,7 @@ from typing import Callable, Optional, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
 
-_ValueType = TypeVar("_ValueType", int, float)
+ValueType = TypeVar("_ValueType", int, float)
 
 
 class MetricKind(enum.Enum):
@@ -54,7 +54,7 @@ class Meter:
     def record_batch(
         self,
         label_values: Tuple[str],
-        record_tuples: Tuple[Tuple["Metric", _ValueType]],
+        record_tuples: Tuple[Tuple["Metric", ValueType]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
@@ -74,7 +74,7 @@ class Meter:
         name: str,
         description: str,
         unit: str,
-        value_type: Type[_ValueType],
+        value_type: Type[ValueType],
         metric_kind: MetricKind,
         label_keys: Tuple[str] = None,
         enabled: bool = True,
@@ -212,15 +212,15 @@ class MetricHandle:
 
 
 class CounterHandle(MetricHandle):
-    def add(self, value: _ValueType) -> None:
+    def add(self, value: ValueType) -> None:
         """Increases the value of the handle by ``value``"""
 
 
 class GaugeHandle(MetricHandle):
-    def set(self, value: _ValueType) -> None:
+    def set(self, value: ValueType) -> None:
         """Sets the current value of the handle to ``value``."""
 
 
 class MeasureHandle(MetricHandle):
-    def record(self, value: _ValueType) -> None:
+    def record(self, value: ValueType) -> None:
         """Records the given ``value`` to this handle."""
