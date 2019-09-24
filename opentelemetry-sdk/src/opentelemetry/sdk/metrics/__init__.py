@@ -74,7 +74,13 @@ class Counter(Metric):
         monotonic: bool = True,
     ):
         super(Counter, self).__init__(
-            name, description, unit, value_type, label_keys, enabled, monotonic
+            name,
+            description,
+            unit,
+            value_type,
+            label_keys=label_keys,
+            enabled=enabled,
+            monotonic=monotonic
         )
 
     def get_handle(
@@ -107,7 +113,13 @@ class Gauge(Metric):
         monotonic: bool = False,
     ):
         super(Gauge, self).__init__(
-            name, description, unit, value_type, label_keys, enabled, monotonic
+            name,
+            description,
+            unit,
+            value_type,
+            label_keys=label_keys,
+            enabled=enabled,
+            monotonic=monotonic
         )
 
     def get_handle(self, label_values: Tuple[str]) -> metrics_api.GaugeHandle:
@@ -138,7 +150,13 @@ class Measure(Metric):
         monotonic: bool = False,
     ):
         super(Measure, self).__init__(
-            name, description, unit, value_type, label_keys, enabled, monotonic
+            name,
+            description,
+            unit,
+            value_type,
+            label_keys=label_keys,
+            enabled=enabled,
+            monotonic=monotonic
         )
 
     def get_handle(

@@ -29,11 +29,11 @@ See the `metrics api`_ spec for terminology and context clarification.
 import enum
 
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple, Type, TypeVar
+from typing import Callable, Optional, Tuple, Type, Union
 
 from opentelemetry.util import loader
 
-ValueType = TypeVar("_ValueType", int, float)
+ValueType = Union[int, float]
 
 
 class MetricKind(enum.Enum):
@@ -74,7 +74,7 @@ class Meter:
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueType],
+        value_type: ValueType,
         metric_kind: MetricKind,
         label_keys: Tuple[str] = None,
         enabled: bool = True,
