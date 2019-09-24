@@ -20,40 +20,6 @@ from opentelemetry import metrics as metrics_api
 logger = logging.getLogger(__name__)
 
 
-class Meter(metrics_api.Meter):
-    """See `opentelemetry.metrics.Meter`."""
-
-    def record_batch(
-        self,
-        label_values: Tuple[str],
-        record_tuples: Tuple[Tuple[metrics_api.Metric, metrics_api.ValueType]],
-    ) -> None:
-        """See `opentelemetry.metrics.Meter.record_batch`."""
-        for metric, value in record_tuples:
-            handle = metric.get_handle(label_values)._update(value)
-
-    def create_metric(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: metrics_api.ValueType,
-        metric_kind: metrics_api.MetricKind,
-        label_keys: Tuple[str] = None,
-        enabled: bool = True,
-        monotonic: bool = False,
-    ) -> "Metric":
-        """See `opentelemetry.metrics.Meter.create_metric`."""
-        return metric_kind(
-            name,
-            description,
-            unit,
-            value_type,
-            label_keys=label_keys,
-            enabled=enabled,
-            monotonic=monotonic)
-        
-
 class Metric(metrics_api.Metric):
 
     def __init__(
@@ -102,15 +68,15 @@ class Counter(Metric):
         enabled: bool = True,
         monotonic: bool = True
     ):
-    # super(Counter, self).__init__(self, name, description, unit, value_type)
-        self.name = name
-        self.description = description
-        self.unit = unit,
-        self.value_type = value_type
-        self.label_keys = label_keys
-        self.enabled = enabled
-        self.monotonic = monotonic
-        self.handles = {}
+        super(Counter, self).__init__(
+            name,
+            description,
+            unit,
+            value_type,
+            label_keys,
+            enabled,
+            monotonic)
+
 
     def get_handle(self,
                    label_values: Tuple[str]) -> metrics_api.CounterHandle:
@@ -139,14 +105,14 @@ class Gauge(Metric):
         enabled: bool = True,
         monotonic: bool = False
     ):
-        self.name = name
-        self.description = description
-        self.unit = unit,
-        self.value_type = value_type
-        self.label_keys = label_keys
-        self.enabled = enabled
-        self.monotonic = monotonic
-        self.handles = {}
+        super(Gauge, self).__init__(
+            name,
+            description,
+            unit,
+            value_type,
+            label_keys,
+            enabled,
+            monotonic)
 
     def get_handle(self,
                    label_values: Tuple[str]) -> metrics_api.GaugeHandle:
@@ -175,14 +141,14 @@ class Measure(Metric):
         enabled: bool = False,
         monotonic: bool = False
     ):
-        self.name = name
-        self.description = description
-        self.unit = unit,
-        self.value_type = value_type
-        self.label_keys = label_keys
-        self.enabled = enabled
-        self.monotonic = monotonic
-        self.handles = {}
+        super(Measure, self).__init__(
+            name,
+            description,
+            unit,
+            value_type,
+            label_keys,
+            enabled,
+            monotonic)
 
     def get_handle(self,
                    label_values: Tuple[str]) -> metrics_api.MeasureHandle:
@@ -279,6 +245,45 @@ class MeasureHandle(metrics_api.MeasureHandle):
     def record(self, value: metrics_api.ValueType) -> None:
         """See `opentelemetry.metrics.MeasureHandle._record`."""
         self._update(value)
+
+
+METRIC_KIND_MAP = {
+    metrics_api.MetricKind.COUNTER: Counter,
+    metrics_api.MetricKind.GAUGE: Gauge,
+    metrics_api.MetricKind.MEASURE: Measure
+}
+class Meter(metrics_api.Meter):
+    """See `opentelemetry.metrics.Meter`."""
+
+    def record_batch(
+        self,
+        label_values: Tuple[str],
+        record_tuples: Tuple[Tuple[metrics_api.Metric, metrics_api.ValueType]],
+    ) -> None:
+        """See `opentelemetry.metrics.Meter.record_batch`."""
+        for metric, value in record_tuples:
+            handle = metric.get_handle(label_values)._update(value)
+
+    def create_metric(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: metrics_api.ValueType,
+        metric_kind: metrics_api.MetricKind,
+        label_keys: Tuple[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False
+    ) -> "Metric":
+        """See `opentelemetry.metrics.Meter.create_metric`."""
+        return METRIC_KIND_MAP[metric_kind](
+            name,
+            description,
+            unit,
+            value_type,
+            label_keys=label_keys,
+            enabled=enabled,
+            monotonic=monotonic)
 
 
 meter = Meter()

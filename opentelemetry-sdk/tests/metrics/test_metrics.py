@@ -95,7 +95,7 @@ class TestMeter(unittest.TestCase):
             "desc",
             "unit",
             int,
-            metrics.Counter,
+            metrics_api.MetricKind.COUNTER,
             ()
         )
         self.assertTrue(isinstance(counter, metrics.Counter))
@@ -109,7 +109,7 @@ class TestMeter(unittest.TestCase):
             "desc",
             "unit",
             float,
-            metrics.Gauge,
+            metrics_api.MetricKind.GAUGE,
             ()
         )
         self.assertTrue(isinstance(gauge, metrics.Gauge))
@@ -123,7 +123,7 @@ class TestMeter(unittest.TestCase):
             "desc",
             "unit",
             float,
-            metrics.Measure,
+            metrics_api.MetricKind.MEASURE,
             ()
         )
         self.assertTrue(isinstance(measure, metrics.Measure))

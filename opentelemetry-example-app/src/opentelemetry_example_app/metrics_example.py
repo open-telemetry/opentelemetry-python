@@ -22,20 +22,20 @@ from opentelemetry.sdk.metrics import Meter
 
 metrics.set_preferred_meter_implementation(lambda _: Meter())
 meter = metrics.meter()
-counter = meter.create_counter(
+counter = meter.create_metric(
     "sum numbers",
     "sum numbers over time",
     "number",
     int,
-    False,
-    ["environment"],
+    metrics.MetricKind.COUNTER,
+    ("environment")
 )
 
 label_values = ("staging")
 
 counter_handle = counter.get_handle(label_values)
 
-counter_handle.update(100)
+counter_handle.add(100)
 meter.record_batch(label_values, [(counter, 50)])
 
 print(counter_handle.data)

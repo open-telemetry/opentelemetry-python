@@ -33,8 +33,13 @@ from typing import Callable, Generic, Optional, Tuple, Type, TypeVar, Union
 
 from opentelemetry.util import loader
 
-MetricKind = Union[Type["Counter"], Type["Gauge"], Type["Measure"]]
 ValueType = TypeVar('ValueType', int, float)
+
+
+class MetricKind(enum.Enum):
+    COUNTER = 0
+    GAUGE = 1
+    MEASURE = 2
 
 
 # pylint: disable=unused-argument
