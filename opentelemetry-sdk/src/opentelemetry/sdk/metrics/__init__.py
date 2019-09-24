@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import logging
-
 from typing import Tuple, Type, Union
+
 from opentelemetry import metrics as metrics_api
 
 logger = logging.getLogger(__name__)
