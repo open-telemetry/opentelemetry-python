@@ -134,7 +134,10 @@ class TestShim(unittest.TestCase):
             self.assertEqual(scope.span.otel_span.attributes["my"], "tag")
 
     def test_span(self):
-        pass
+        # Test tracer property.
+        span = self.shim.start_span("TestSpan")
+        self.assertEqual(span.tracer, self.shim)
+
         # TODO: Verify finish() on span.
 
     def test_span_context(self):

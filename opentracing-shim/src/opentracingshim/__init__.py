@@ -67,9 +67,7 @@ class SpanWrapper(opentracing.Span):
 
     @property
     def tracer(self):
-        # return self._tracer
-        pass
-        # TODO: Implement.
+        return self._tracer
 
     def set_operation_name(self, operation_name):
         self._otel_span.update_name(operation_name)
