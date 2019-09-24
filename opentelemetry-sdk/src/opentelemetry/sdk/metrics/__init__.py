@@ -179,7 +179,7 @@ class CounterHandle(metrics_api.CounterHandle):
 
     def add(self, value: metrics_api.ValueType) -> None:
         """See `opentelemetry.metrics.CounterHandle._add`."""
-        self._update(value)
+        self.update(value)
 
 
 class GaugeHandle(metrics_api.GaugeHandle):
@@ -209,7 +209,7 @@ class GaugeHandle(metrics_api.GaugeHandle):
 
     def set(self, value: metrics_api.ValueType) -> None:
         """See `opentelemetry.metrics.GaugeHandle._set`."""
-        self._update(value)
+        self.update(value)
 
 
 class MeasureHandle(metrics_api.MeasureHandle):
@@ -239,7 +239,7 @@ class MeasureHandle(metrics_api.MeasureHandle):
 
     def record(self, value: metrics_api.ValueType) -> None:
         """See `opentelemetry.metrics.MeasureHandle._record`."""
-        self._update(value)
+        self.update(value)
 
 
 METRIC_KIND_MAP = {
