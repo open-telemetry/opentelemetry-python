@@ -33,19 +33,6 @@ class SpanContextWrapper(opentracing.SpanContext):
 
     @property
     def baggage(self):
-        """
-        Return baggage associated with this :class:`SpanContext`.
-        If no baggage has been added to the :class:`Span`, returns an empty
-        dict.
-
-        The caller must not modify the returned dictionary.
-
-        See also: :meth:`Span.set_baggage_item()` /
-        :meth:`Span.get_baggage_item()`
-
-        :rtype: dict
-        :return: baggage associated with this :class:`SpanContext` or ``{}``.
-        """
         return {}
         # TODO: Implement.
 
@@ -63,7 +50,6 @@ class SpanWrapper(opentracing.Span):
     @property
     def context(self):
         return self._context
-        # TODO: Implement.
 
     @property
     def tracer(self):
@@ -99,31 +85,14 @@ class SpanWrapper(opentracing.Span):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Span._on_error(self, exc_type, exc_val, exc_tb)
-        # self.finish()
         pass
         # TODO: Implement.
 
     def log_event(self, event, payload=None):
-        # """DEPRECATED"""
-        # if payload is None:
-        #     return self.log_kv({logs.EVENT: event})
-        # else:
-        #     return self.log_kv({logs.EVENT: event, 'payload': payload})
         pass
         # TODO: Implement.
 
     def log(self, **kwargs):
-        # """DEPRECATED"""
-        # key_values = {}
-        # if logs.EVENT in kwargs:
-        #     key_values[logs.EVENT] = kwargs[logs.EVENT]
-        # if 'payload' in kwargs:
-        #     key_values['payload'] = kwargs['payload']
-        # timestamp = None
-        # if 'timestamp' in kwargs:
-        #     timestamp = kwargs['timestamp']
-        # return self.log_kv(key_values, timestamp)
         pass
         # TODO: Implement.
 
@@ -150,8 +119,6 @@ class ScopeWrapper(opentracing.Scope):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # SpanWrapper._on_error(self.span, exc_type, exc_val, exc_tb)
-        # self.close()
         pass
         # TODO: Implement.
 
@@ -164,7 +131,6 @@ class TracerWrapper(opentracing.Tracer):
 
     @property
     def scope_manager(self):
-        # return self._scope_manager
         pass
         # TODO: Implement.
 
@@ -214,16 +180,10 @@ class TracerWrapper(opentracing.Tracer):
 
     def inject(self, span_context, format, carrier):
         # pylint: disable=redefined-builtin
-        # if format in Tracer._supported_formats:
-        #     return
-        # raise UnsupportedFormatException(format)
         pass
         # TODO: Implement.
 
     def extract(self, format, carrier):
         # pylint: disable=redefined-builtin
-        # if format in Tracer._supported_formats:
-        #     return self._noop_span_context
-        # raise UnsupportedFormatException(format)
         pass
         # TODO: Implement.
