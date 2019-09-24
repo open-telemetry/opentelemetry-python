@@ -41,7 +41,6 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    @abstractmethod
     def get_handle(
         self,
         label_values: Tuple[str]
