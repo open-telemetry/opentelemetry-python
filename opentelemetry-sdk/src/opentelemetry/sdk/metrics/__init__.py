@@ -80,7 +80,7 @@ class Counter(Metric):
             value_type,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic
+            monotonic=monotonic,
         )
 
     def get_handle(
@@ -119,7 +119,7 @@ class Gauge(Metric):
             value_type,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic
+            monotonic=monotonic,
         )
 
     def get_handle(self, label_values: Tuple[str]) -> metrics_api.GaugeHandle:
@@ -156,7 +156,7 @@ class Measure(Metric):
             value_type,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic
+            monotonic=monotonic,
         )
 
     def get_handle(
@@ -188,7 +188,7 @@ class CounterHandle(metrics_api.CounterHandle):
             return
         if not isinstance(value, self.value_type):
             logger.warning(
-                "Invalid value passed for %s", self.value_type.__name__
+                "Invalid value passed for %s.", self.value_type.__name__
             )
             return
         self.data += value
@@ -244,7 +244,7 @@ class MeasureHandle(metrics_api.MeasureHandle):
         if not self.enabled:
             return
         if self.monotonic and value < 0:
-            logger.warning("Non-negative measure cannot descend.")
+            logger.warning("Monotonic measure cannot descend.")
             return
         if not isinstance(value, self.value_type):
             logger.warning(
