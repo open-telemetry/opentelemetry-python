@@ -44,14 +44,34 @@ class OpenTelemetryMiddleware:
         span.set_attribute("component", "http")
         span.set_attribute("http.method", environ["REQUEST_METHOD"])
 
-        host = environ.get("HTTP_HOST") or environ["SERVER_NAME"]
+        host = environ.get("HTTP_HOST")
+        if not host:
+            host = environ["SERVER_NAME"]
+            port = environ["SERVER_PORT"]
+            if (
+                port != "80"
+                and environ["wsgi.url_scheme"] == "http"
+                or port != "443"
+            ):
+                host += ":" + port
+
+        # NOTE: Nonstandard
         span.set_attribute("http.host", host)
 
-        url = (
-            environ.get("REQUEST_URI")
-            or environ.get("RAW_URI")
-            or wsgiref_util.request_uri(environ, include_query=False)
-        )
+        url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
+
+        if url:
+            if url[0] == "/":
+                # We assume that no scheme-relative URLs will be in url here.
+                # After all, if a request is made to http://myserver//foo, we may get
+                # //foo which looks like scheme-relative but isn't.
+                url = environ["wsgi.url_scheme"] + "://" + host + url
+            elif not url.startswith(environ["wsgi.url_scheme"] + ":"):
+                # Something fishy is in RAW_URL. Let's fall back to request_uri()
+                url = wsgiref_util.request_uri(environ)
+        else:
+            url = wsgiref_util.request_uri(environ)
+
         span.set_attribute("http.url", url)
 
     @staticmethod
@@ -85,24 +105,27 @@ class OpenTelemetryMiddleware:
 
         tracer = trace.tracer()
         path_info = environ["PATH_INFO"] or "/"
-        parent_span = propagators.extract(get_header_from_environ, environ)
+        parent_span = propagators.extract(_get_header_from_environ, environ)
 
-        with tracer.start_span(
+        span = tracer.create_span(
             path_info, parent_span, kind=trace.SpanKind.SERVER
-        ) as span:
-            self._add_request_attributes(span, environ)
-            start_response = self._create_start_response(span, start_response)
+        )
+        span.start()
+        try:
+            with tracer.use_span(span):
+                self._add_request_attributes(span, environ)
+                start_response = self._create_start_response(
+                    span, start_response
+                )
 
-            iterable = self.wsgi(environ, start_response)
-            try:
-                for yielded in iterable:
-                    yield yielded
-            finally:
-                if hasattr(iterable, "close"):
-                    iterable.close()
+                iterable = self.wsgi(environ, start_response)
+                return _end_span_after_iterating(iterable, span, tracer)
+        except:  # noqa
+            span.end()
+            raise
 
 
-def get_header_from_environ(
+def _get_header_from_environ(
     environ: dict, header_name: str
 ) -> typing.List[str]:
     """Retrieve the header value from the wsgi environ dictionary.
@@ -115,3 +138,18 @@ def get_header_from_environ(
     if value:
         return [value]
     return []
+
+
+# Put this in a subfunction to not delay the call to the wrapped
+# WSGI application (instrumentation should change the application
+# behavior as little as possible).
+def _end_span_after_iterating(iterable, span, tracer):
+    try:
+        with tracer.use_span(span):
+            for yielded in iterable:
+                yield yielded
+    finally:
+        close = getattr(iterable, "close", None)
+        if close:
+            close()
+        span.end()
