@@ -74,8 +74,11 @@ class SpanWrapper(opentracing.Span):
         return self
 
     def finish(self, finish_time=None):
-        pass
-        # TODO: Implement.
+        self._otel_span.end()
+        # TODO: Handle finish_time. The OpenTelemetry API doesn't currently
+        # support setting end time on a span and we cannot assume that all
+        # OpenTelemetry Tracer implementations have an `end_time` field.
+        # https://github.com/open-telemetry/opentelemetry-python/issues/134
 
     def set_tag(self, key, value):
         self._otel_span.set_attribute(key, value)

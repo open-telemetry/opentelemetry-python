@@ -138,7 +138,10 @@ class TestShim(unittest.TestCase):
         span = self.shim.start_span("TestSpan")
         self.assertEqual(span.tracer, self.shim)
 
-        # TODO: Verify finish() on span.
+        # Test finish() on span.
+        self.assertIsNone(span.otel_span.end_time)
+        span.finish()
+        self.assertIsNotNone(span.otel_span.end_time)
 
     def test_span_context(self):
         otel_context = trace.SpanContext(1234, 5678)
