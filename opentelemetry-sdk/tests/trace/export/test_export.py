@@ -113,7 +113,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         with tracer.start_span("foo1"):
             pass
 
-        time.sleep(0.05)
+        time.sleep(0.05 + 0.02)
         # span should be already exported
         self.assertEqual(len(spans_names_list), 1)
 
