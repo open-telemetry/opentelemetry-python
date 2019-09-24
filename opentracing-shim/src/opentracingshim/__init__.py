@@ -199,7 +199,10 @@ class TracerWrapper(opentracing.Tracer):
         # TODO: Handle optional arguments.
         parent = child_of
         if parent is not None:
-            parent = child_of.otel_span
+            if isinstance(parent, SpanWrapper):
+                parent = child_of.otel_span
+            elif isinstance(parent, SpanContextWrapper):
+                parent = child_of.otel_context
 
         span = self._otel_tracer.create_span(operation_name, parent)
         span.start()

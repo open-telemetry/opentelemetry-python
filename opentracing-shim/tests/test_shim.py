@@ -102,9 +102,19 @@ class TestShim(unittest.TestCase):
         child_trace_id = child.otel_span.get_context().trace_id
 
         self.assertEqual(child_trace_id, parent_trace_id)
+        self.assertEqual(child.otel_span.parent, parent.otel_span)
 
-        # TODO: Test explicit parent of type SpanContext (the above tests only
-        # with a parent of type Span).
+        # Test explicit parent of type SpanContext.
+        parent = self.ot_tracer.start_span("ParentSpan")
+        child = self.ot_tracer.start_span(
+            "SpanWithContextParent", child_of=parent.context
+        )
+
+        parent_trace_id = parent.otel_span.get_context().trace_id
+        child_trace_id = child.otel_span.get_context().trace_id
+
+        self.assertEqual(child_trace_id, parent_trace_id)
+        self.assertEqual(child.otel_span.parent, parent.context)
 
     def test_set_operation_name(self):
         with self.ot_tracer.start_active_span("TestName") as scope:
