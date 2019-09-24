@@ -46,9 +46,10 @@ class TestShim(unittest.TestCase):
             self.assertIsInstance(scope.span, opentracing.Span)
 
             # Verify the span is active in the OpenTelemetry tracer.
-            self.assertEqual(
-                self.tracer.get_current_span(), scope.span.otel_span
-            )
+            # TODO: We can't check for equality of self.shim.active_span and
+            # scope.span because the same OpenTelemetry span is returned inside
+            # different SpanWrapper objects. Is this a problem?
+            self.assertEqual(self.shim.active_span.context, scope.span.context)
 
         # Verify the span has ended in the OpenTelemetry tracer.
         self.assertIsNotNone(scope.span.otel_span.end_time)
