@@ -44,7 +44,7 @@ class Metric(metrics_api.Metric):
 
     def get_handle(self, label_values: Tuple[str]) -> metrics_api.MetricHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
-        pass
+        pass  # pylint: disable=unnecessary-pass
 
     def remove_handle(self, label_values: Tuple[str]) -> None:
         """See `opentelemetry.metrics.Metric.remove_handle`."""

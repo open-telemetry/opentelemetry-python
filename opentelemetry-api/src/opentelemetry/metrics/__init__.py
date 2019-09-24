@@ -29,11 +29,11 @@ See the `metrics api`_ spec for terminology and context clarification.
 import enum
 
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Optional, Tuple, Type, TypeVar, Union
+from typing import Callable, Optional, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
 
-ValueType = TypeVar("ValueType", int, float)
+_ValueType = TypeVar("_ValueType", int, float)
 
 
 class MetricKind(enum.Enum):
@@ -54,7 +54,7 @@ class Meter:
     def record_batch(
         self,
         label_values: Tuple[str],
-        record_tuples: Tuple[Tuple["Metric", "ValueType"]],
+        record_tuples: Tuple[Tuple["Metric", _ValueType]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
@@ -64,7 +64,7 @@ class Meter:
 
         Args:
             label_values: The values that will be matched against to record for
-            the handles under each metric that has those labels.
+                the handles under each metric that has those labels.
             record_tuples: A tuple of pairs of `Metric` s and the
                 corresponding value to record for that metric.
         """
@@ -74,19 +74,20 @@ class Meter:
         name: str,
         description: str,
         unit: str,
-        value_type: "ValueType",
-        metric_kind: "MetricKind",
+        value_type: Type[_ValueType],
+        metric_kind: MetricKind,
         label_keys: Tuple[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
-    ) -> "MetricKind":
-        """Creates a `metric_kind` metric with type `value_type`.
+    ) -> "Metric":
+        """Creates a ``metric_kind`` metric with type ``value_type``.
 
         Args:
             name: The name of the counter.
             description: Human-readable description of the metric.
             unit: Unit of the metric values.
             value_type: The type of values being recorded by the metric.
+            metric_kind: The kind of metric being created.
             label_keys: The keys for the labels with dynamic values.
                 Order of the tuple is important as the same order must be used
                 on recording when suppling values for these labels.
@@ -184,7 +185,7 @@ class Counter(Metric):
 class Gauge(Metric):
     """A gauge type metric that expresses a pre-calculated value.
 
-    Gauge metrics have a value that is either `Set()` by explicit
+    Gauge metrics have a value that is either ``Set`` by explicit
     instrumentation or observed through a callback. This kind of metric
     should be used when the metric cannot be expressed as a sum or because
     the measurement interval is arbitrary.
@@ -211,15 +212,15 @@ class MetricHandle:
 
 
 class CounterHandle(MetricHandle):
-    def add(self, value: "ValueType") -> None:
-        """Increases the value of the handle by `value`"""
+    def add(self, value: _ValueType) -> None:
+        """Increases the value of the handle by ``value``"""
 
 
 class GaugeHandle(MetricHandle):
-    def set(self, value: "ValueType") -> None:
-        """Sets the current value of the handle to `value`."""
+    def set(self, value: _ValueType) -> None:
+        """Sets the current value of the handle to ``value``."""
 
 
 class MeasureHandle(MetricHandle):
-    def record(self, value: "ValueType") -> None:
-        """Records the given `value` to this handle."""
+    def record(self, value: _ValueType) -> None:
+        """Records the given ``value`` to this handle."""
