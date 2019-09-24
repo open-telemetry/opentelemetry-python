@@ -18,6 +18,6 @@ jobs:
     - name: Publish to gh-pages
       uses: JamesIves/github-pages-deploy-action@2.0.2
       env:
-        ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACCESS_TOKEN: ${{ secrets.DocsPushToken }}
         BRANCH: gh-pages
         FOLDER: docs/_build/html/
