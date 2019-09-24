@@ -77,6 +77,7 @@ release.
 | Tracing SDK                 | Alpha   | September 30 2019 |
 | Metrics API                 | Alpha   | September 30 2019 |
 | Metrics SDK                 | Alpha   | September 30 2019 |
+| B3 Trace Exporter           | Alpha   | September 30 2019 |
 | Jaeger Trace Exporter       | Alpha   | Unknown           |
 | Prometheus Metrics Exporter | Alpha   | Unknown           |
 | Context Propagation         | Alpha   | September 30 2019 |
