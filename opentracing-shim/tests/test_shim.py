@@ -24,7 +24,7 @@ from opentelemetry.sdk.trace import Tracer
 class TestShim(unittest.TestCase):
     def setUp(self):
         self.tracer = trace.tracer()
-        self.ot_tracer = opentracingshim.create_tracer(self.tracer)
+        self.shim = opentracingshim.create_tracer(self.tracer)
 
     @classmethod
     def setUpClass(cls):
@@ -38,10 +38,10 @@ class TestShim(unittest.TestCase):
 
     def test_shim_type(self):
         # Verify shim is an OpenTracing tracer.
-        self.assertIsInstance(self.ot_tracer, opentracing.Tracer)
+        self.assertIsInstance(self.shim, opentracing.Tracer)
 
     def test_start_active_span(self):
-        with self.ot_tracer.start_active_span("TestSpan") as scope:
+        with self.shim.start_active_span("TestSpan") as scope:
             self.assertIsInstance(scope, opentracing.Scope)
             self.assertIsInstance(scope.span, opentracing.Span)
 
@@ -55,20 +55,20 @@ class TestShim(unittest.TestCase):
         self.assertIsNone(self.tracer.get_current_span())
 
     def test_parent_child(self):
-        with self.ot_tracer.start_active_span("ParentSpan") as parent:
+        with self.shim.start_active_span("ParentSpan") as parent:
             parent_trace_id = parent.span.otel_span.get_context().trace_id
 
             # Verify parent span is the active span.
             self.assertEqual(
-                self.ot_tracer.active_span.context, parent.span.context
+                self.shim.active_span.context, parent.span.context
             )
 
-            with self.ot_tracer.start_active_span("ChildSpan") as child:
+            with self.shim.start_active_span("ChildSpan") as child:
                 child_trace_id = child.span.otel_span.get_context().trace_id
 
                 # Verify child span is the active span.
                 self.assertEqual(
-                    self.ot_tracer.active_span.context, child.span.context
+                    self.shim.active_span.context, child.span.context
                 )
 
                 # Verify parent-child relationship.
@@ -79,14 +79,14 @@ class TestShim(unittest.TestCase):
 
             # Verify parent span becomes the active span again.
             self.assertEqual(
-                self.ot_tracer.active_span.context, parent.span.context
+                self.shim.active_span.context, parent.span.context
             )
 
         # Verify there is no active span.
-        self.assertIsNone(self.ot_tracer.active_span)
+        self.assertIsNone(self.shim.active_span)
 
     def test_start_span(self):
-        span = self.ot_tracer.start_span("TestSpan")
+        span = self.shim.start_span("TestSpan")
 
         self.assertIsInstance(span, opentracing.Span)
 
@@ -95,8 +95,8 @@ class TestShim(unittest.TestCase):
 
     def test_explicit_parent(self):
         # Test explicit parent of type Span.
-        parent = self.ot_tracer.start_span("ParentSpan")
-        child = self.ot_tracer.start_span("ChildSpan", child_of=parent)
+        parent = self.shim.start_span("ParentSpan")
+        child = self.shim.start_span("ChildSpan", child_of=parent)
 
         parent_trace_id = parent.otel_span.get_context().trace_id
         child_trace_id = child.otel_span.get_context().trace_id
@@ -105,8 +105,8 @@ class TestShim(unittest.TestCase):
         self.assertEqual(child.otel_span.parent, parent.otel_span)
 
         # Test explicit parent of type SpanContext.
-        parent = self.ot_tracer.start_span("ParentSpan")
-        child = self.ot_tracer.start_span(
+        parent = self.shim.start_span("ParentSpan")
+        child = self.shim.start_span(
             "SpanWithContextParent", child_of=parent.context
         )
 
@@ -117,14 +117,14 @@ class TestShim(unittest.TestCase):
         self.assertEqual(child.otel_span.parent, parent.context)
 
     def test_set_operation_name(self):
-        with self.ot_tracer.start_active_span("TestName") as scope:
+        with self.shim.start_active_span("TestName") as scope:
             self.assertEqual(scope.span.otel_span.name, "TestName")
 
             scope.span.set_operation_name("NewName")
             self.assertEqual(scope.span.otel_span.name, "NewName")
 
     def test_set_tag(self):
-        with self.ot_tracer.start_active_span("TestSetTag") as scope:
+        with self.shim.start_active_span("TestSetTag") as scope:
             with self.assertRaises(KeyError):
                 # pylint: disable=pointless-statement
                 scope.span.otel_span.attributes["my"]
