@@ -22,9 +22,9 @@ from opentelemetry.sdk.metrics import Meter
 metrics.set_preferred_meter_implementation(lambda _: Meter())
 meter = metrics.meter()
 counter = meter.create_metric(
-    "sum numbers",
-    "sum numbers over time",
-    "number",
+    "available memory",
+    "available memory",
+    "bytes",
     int,
     metrics.MetricKind.COUNTER,
     ("environment"),
