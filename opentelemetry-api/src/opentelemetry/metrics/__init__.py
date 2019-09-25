@@ -97,6 +97,7 @@ class Meter:
         """
         return DefaultMetric()
 
+
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
@@ -177,7 +178,7 @@ class Metric(ABC):
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def get_handle(self, label_values: Tuple[str]) -> "MetricHandle":
+    def get_handle(self, label_values: Tuple[str]) -> "DefaultMetricHandle":
         return DefaultMetricHandle()
 
 
