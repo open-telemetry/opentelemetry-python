@@ -48,10 +48,12 @@ class OpenTelemetryMiddleware:
         if not host:
             host = environ["SERVER_NAME"]
             port = environ["SERVER_PORT"]
+            scheme = environ["wsgi.url_scheme"]
             if (
-                port != "80"
-                and environ["wsgi.url_scheme"] == "http"
-                or port != "443"
+                scheme == "http"
+                and port != "80"
+                or scheme == "https"
+                and port != "443"
             ):
                 host += ":" + port
 
