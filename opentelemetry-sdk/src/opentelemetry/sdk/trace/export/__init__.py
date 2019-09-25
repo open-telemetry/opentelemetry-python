@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import logging
-import queue
 import sys
 import threading
 import typing
@@ -114,12 +114,12 @@ class BatchExportSpanProcessor(SpanProcessor):
             )
 
         self.span_exporter = span_exporter
-        self.queue = queue.Queue(max_queue_size)
+        self.queue = collections.deque([], max_queue_size)
         self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.condition = threading.Condition(threading.Lock())
         self.schedule_delay_millis = schedule_delay_millis
         self.max_export_batch_size = max_export_batch_size
-        self.half_max_queue_size = max_queue_size // 2
+        self.max_queue_size = max_queue_size
         self.done = False
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
@@ -134,14 +134,14 @@ class BatchExportSpanProcessor(SpanProcessor):
         if self.done:
             logging.warning("Already shutdown, dropping span.")
             return
-        try:
-            self.queue.put_nowait(span)
-        except queue.Full:
-            # TODO: dropped spans counter?
+        if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
-                logging.warning("Dropping spans.")
+                logging.warning("Queue is full, likely spans will be dropped.")
                 self._spans_dropped = True
-        if self.queue.qsize() >= self.half_max_queue_size:
+
+        self.queue.appendleft(span)
+
+        if len(self.queue) >= self.max_queue_size // 2:
             with self.condition:
                 if not self.notified:
                     self.notified = True
@@ -150,11 +150,11 @@ class BatchExportSpanProcessor(SpanProcessor):
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
         while not self.done:
-            if self.queue.qsize() < self.max_export_batch_size:
+            if len(self.queue) < self.max_export_batch_size:
                 with self.condition:
                     self.notified = False
                     self.condition.wait(timeout)
-                    if self.queue.empty():
+                    if not self.queue:
                         # spurious notification, let's wait again
                         continue
                     if self.done:
@@ -175,10 +175,10 @@ class BatchExportSpanProcessor(SpanProcessor):
         """Exports at most max_export_batch_size spans."""
         idx = 0
         spans = [None] * self.max_export_batch_size
-        # currently only a single thread acts as consumer, so queue.get() will
-        # never block
-        while idx < self.max_export_batch_size and not self.queue.empty():
-            spans[idx] = self.queue.get()
+        # currently only a single thread acts as consumer, so queue.pop() will
+        # raise an exception
+        while idx < self.max_export_batch_size and self.queue:
+            spans[idx] = self.queue.pop()
             idx += 1
         try:
             self.span_exporter.export(spans[:idx])
@@ -188,7 +188,7 @@ class BatchExportSpanProcessor(SpanProcessor):
                 "Exception while exporting data.", exc_info=sys.exc_info()
             )
 
-        return not self.queue.empty()
+        return self.queue
 
     def _flush(self):
         while self.export():
