@@ -57,7 +57,11 @@ with tracer.start_span('foo'):
             print(Context)
 ```
 
-See [opentelemetry-example-app](./opentelemetry-example-app/README.rst) for a complete example.
+See the [API
+documentation](https://open-telemetry.github.io/opentelemetry-python/) for more
+detail, and the
+[opentelemetry-example-app](./opentelemetry-example-app/README.rst) for a
+complete example.
 
 ## Contributing
 
