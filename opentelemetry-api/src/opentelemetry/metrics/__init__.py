@@ -95,6 +95,7 @@ class Meter:
 
         Returns: A new ``metric_kind`` metric with values of ``value_type``.
         """
+        # pylint: disable=no-self-use
         return DefaultMetric()
 
 
@@ -221,9 +222,9 @@ class MetricHandle(ABC):
     """An interface for metric handles."""
 
 
-class DefaultMetricHandle:
+class DefaultMetricHandle(MetricHandle):
     """The default MetricHandle.
-    
+
     Used when no MetricHandle implementation is available.
     """
 
