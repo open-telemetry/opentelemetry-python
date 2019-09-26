@@ -27,8 +27,9 @@ class BaseObject(dict):
                 if item[0] not in tmp:
                     tmp[item[0]] = item[1]
             if (
-                current._default == current
-            ):  # noqa pylint: disable=protected-access
+                current._default  # noqa pylint: disable=protected-access
+                == current
+            ):
                 break
             current = current._default  # noqa pylint: disable=protected-access
         return repr(tmp)
