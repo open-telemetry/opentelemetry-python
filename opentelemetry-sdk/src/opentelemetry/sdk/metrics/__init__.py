@@ -29,7 +29,7 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: metrics_api.ValueType,
-        label_keys: Tuple[str] = None,
+        label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ):
@@ -42,11 +42,11 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(self, label_values: Tuple[str]) -> metrics_api.MetricHandle:
+    def get_handle(self, label_values: Tuple[str, ...]) -> metrics_api.MetricHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
         pass  # pylint: disable=unnecessary-pass
 
-    def remove_handle(self, label_values: Tuple[str]) -> None:
+    def remove_handle(self, label_values: Tuple[str, ...]) -> None:
         """See `opentelemetry.metrics.Metric.remove_handle`."""
         self.handles.pop(label_values, None)
 
@@ -69,7 +69,7 @@ class Counter(Metric):
         description: str,
         unit: str,
         value_type: metrics_api.ValueType,
-        label_keys: Tuple[str] = None,
+        label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = True,
     ):
@@ -84,7 +84,7 @@ class Counter(Metric):
         )
 
     def get_handle(
-        self, label_values: Tuple[str]
+        self, label_values: Tuple[str, ...]
     ) -> metrics_api.CounterHandle:
         """See `opentelemetry.metrics.FloatCounter.get_handle`."""
         handle = self.handles.get(
@@ -108,7 +108,7 @@ class Gauge(Metric):
         description: str,
         unit: str,
         value_type: metrics_api.ValueType,
-        label_keys: Tuple[str] = None,
+        label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ):
@@ -122,7 +122,7 @@ class Gauge(Metric):
             monotonic=monotonic,
         )
 
-    def get_handle(self, label_values: Tuple[str]) -> metrics_api.GaugeHandle:
+    def get_handle(self, label_values: Tuple[str, ...]) -> metrics_api.GaugeHandle:
         """See `opentelemetry.metrics.Gauge.get_handle`."""
         handle = self.handles.get(
             label_values,
@@ -145,7 +145,7 @@ class Measure(Metric):
         description: str,
         unit: str,
         value_type: metrics_api.ValueType,
-        label_keys: Tuple[str] = None,
+        label_keys: Tuple[str, ...] = None,
         enabled: bool = False,
         monotonic: bool = False,
     ):
@@ -160,7 +160,7 @@ class Measure(Metric):
         )
 
     def get_handle(
-        self, label_values: Tuple[str]
+        self, label_values: Tuple[str, ...]
     ) -> metrics_api.MeasureHandle:
         """See `opentelemetry.metrics.Measure.get_handle`."""
         handle = self.handles.get(
@@ -270,7 +270,7 @@ class Meter(metrics_api.Meter):
 
     def record_batch(
         self,
-        label_values: Tuple[str],
+        label_values: Tuple[str, ...],
         record_tuples: Tuple[Tuple[metrics_api.Metric, metrics_api.ValueType]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
@@ -284,7 +284,7 @@ class Meter(metrics_api.Meter):
         unit: str,
         value_type: metrics_api.ValueType,
         metric_kind: metrics_api.MetricKind,
-        label_keys: Tuple[str] = None,
+        label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ) -> "Metric":

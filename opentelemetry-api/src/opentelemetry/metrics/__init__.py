@@ -52,7 +52,7 @@ class Meter:
 
     def record_batch(
         self,
-        label_values: Tuple[str],
+        label_values: Tuple[str, ...],
         record_tuples: Tuple[Tuple["Metric", ValueType]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
@@ -75,7 +75,7 @@ class Meter:
         unit: str,
         value_type: ValueType,
         metric_kind: MetricKind,
-        label_keys: Tuple[str] = None,
+        label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ) -> "Metric":
@@ -147,7 +147,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_handle(self, label_values: Tuple[str]) -> "MetricHandle":
+    def get_handle(self, label_values: Tuple[str, ...]) -> "MetricHandle":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -161,7 +161,7 @@ class Metric(ABC):
             label_values: Values to associate with the returned handle.
         """
 
-    def remove_handle(self, label_values: Tuple[str]) -> None:
+    def remove_handle(self, label_values: Tuple[str, ...]) -> None:
         """Removes the handle from the Metric, if present.
 
         The handle with matching label values will be removed.
@@ -177,7 +177,7 @@ class Metric(ABC):
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def get_handle(self, label_values: Tuple[str]) -> "CounterHandle":
+    def get_handle(self, label_values: Tuple[str, ...]) -> "CounterHandle":
         """Gets a `CounterHandle`."""
 
 
@@ -190,7 +190,7 @@ class Gauge(Metric):
     the measurement interval is arbitrary.
     """
 
-    def get_handle(self, label_values: Tuple[str]) -> "GaugeHandle":
+    def get_handle(self, label_values: Tuple[str, ...]) -> "GaugeHandle":
         """Gets a `GaugeHandle`."""
 
 
@@ -202,7 +202,7 @@ class Measure(Metric):
     Negative inputs will be discarded when monotonic is True.
     """
 
-    def get_handle(self, label_values: Tuple[str]) -> "MeasureHandle":
+    def get_handle(self, label_values: Tuple[str, ...]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
 
 
