@@ -22,7 +22,10 @@ logger = logging.getLogger(__name__)
 
 class BaseHandle:
     def __init__(
-        self, value_type: metrics_api._ValueT, enabled: bool, monotonic: bool
+        self,
+        value_type: Type[metrics_api._ValueT],
+        enabled: bool,
+        monotonic: bool,
     ):
         self.data = 0
         self.value_type = value_type
@@ -84,7 +87,7 @@ class Metric(metrics_api.Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: metrics_api._ValueT,
+        value_type: Type[metrics_api._ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -98,13 +101,13 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(
-        self, label_values: Tuple[str, ...]
-    ) -> BaseHandle:
+    def get_handle(self, label_values: Tuple[str, ...]) -> BaseHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
         handle = self.handles.get(label_values)
         if not handle:
-            handle = self.__class__.HANDLE_TYPE(self.value_type, self.enabled, self.monotonic)
+            handle = self.__class__.HANDLE_TYPE(
+                self.value_type, self.enabled, self.monotonic
+            )
         self.handles[label_values] = handle
         return handle
 
@@ -124,7 +127,7 @@ class Counter(Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: metrics_api._ValueT,
+        value_type: Type[metrics_api._ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = True,
@@ -154,7 +157,7 @@ class Gauge(Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: metrics_api._ValueT,
+        value_type: Type[metrics_api._ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -184,7 +187,7 @@ class Measure(Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: metrics_api._ValueT,
+        value_type: Type[metrics_api._ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = False,
         monotonic: bool = False,
@@ -217,8 +220,8 @@ class Meter(metrics_api.Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: metrics_api._ValueT,
-        metric_type: metrics_api._MetricT,
+        value_type: Type[metrics_api._ValueT],
+        metric_type: Type[metrics_api._MetricT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,

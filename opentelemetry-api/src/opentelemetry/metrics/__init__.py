@@ -43,17 +43,17 @@ class DefaultMetricHandle:
 
 
 class CounterHandle:
-    def add(self, value: Type[_ValueT]) -> None:
+    def add(self, value: _ValueT) -> None:
         """Increases the value of the handle by ``value``"""
 
 
 class GaugeHandle:
-    def set(self, value: Type[_ValueT]) -> None:
+    def set(self, value: _ValueT) -> None:
         """Sets the current value of the handle to ``value``."""
 
 
 class MeasureHandle:
-    def record(self, value: Type[_ValueT]) -> None:
+    def record(self, value: _ValueT) -> None:
         """Records the given ``value`` to this handle."""
 
 
@@ -123,6 +123,7 @@ class Measure(Metric):
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
+
 _MetricT = TypeVar("_MetricT", Counter, Gauge, Measure)
 
 
@@ -138,7 +139,7 @@ class Meter:
     def record_batch(
         self,
         label_values: Tuple[str, ...],
-        record_tuples: Tuple[Tuple["Metric", Type[_ValueT]]],
+        record_tuples: Tuple[Tuple["Metric", _ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
