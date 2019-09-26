@@ -32,8 +32,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             print(self.span_to_envelope(span))
         return SpanExportResult.SUCCESS
 
-    @staticmethod
-    def ns_to_duration(nanoseconds):
+    def ns_to_duration(self, nanoseconds):
         n = (nanoseconds + 500000) // 1000000  # duration in milliseconds
         n, ms = divmod(n, 1000)
         n, s = divmod(n, 60)
