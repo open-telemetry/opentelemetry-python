@@ -57,7 +57,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             logger.warning("Error while reading response body %s.", ex)
         else:
             try:
-                data = json.loads(text)
+                data = json.loads(text)  # noqa pylint: disable=unused-variable
             except Exception:  # noqa pylint: disable=broad-except
                 pass
 
