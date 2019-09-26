@@ -95,6 +95,8 @@ class Meter:
 
         Returns: A new ``metric_kind`` metric with values of ``value_type``.
         """
+        # pylint: disable=no-self-use
+        return DefaultMetric()
 
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
@@ -174,11 +176,19 @@ class Metric(ABC):
         """Removes all handles from the `Metric`."""
 
 
+class DefaultMetric(Metric):
+    """The default Metric used when no Metric implementation is available."""
+
+    def get_handle(self, label_values: Tuple[str]) -> "DefaultMetricHandle":
+        return DefaultMetricHandle()
+
+
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
     def get_handle(self, label_values: Tuple[str, ...]) -> "CounterHandle":
         """Gets a `CounterHandle`."""
+        return CounterHandle()
 
 
 class Gauge(Metric):
@@ -192,6 +202,7 @@ class Gauge(Metric):
 
     def get_handle(self, label_values: Tuple[str, ...]) -> "GaugeHandle":
         """Gets a `GaugeHandle`."""
+        return GaugeHandle()
 
 
 class Measure(Metric):
@@ -204,10 +215,18 @@ class Measure(Metric):
 
     def get_handle(self, label_values: Tuple[str, ...]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
+        return MeasureHandle()
 
 
-class MetricHandle:
+class MetricHandle(ABC):
     """An interface for metric handles."""
+
+
+class DefaultMetricHandle(MetricHandle):
+    """The default MetricHandle.
+
+    Used when no MetricHandle implementation is available.
+    """
 
 
 class CounterHandle(MetricHandle):

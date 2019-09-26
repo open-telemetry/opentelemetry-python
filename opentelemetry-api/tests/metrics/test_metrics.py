@@ -26,21 +26,25 @@ class TestMeter(unittest.TestCase):
         self.meter.record_batch((), ())
 
     def test_create_metric(self):
-        self.meter.create_metric("", "", "", float, metrics.Counter)
+        metric = self.meter.create_metric("", "", "", float, metrics.Counter)
+        self.assertIsInstance(metric, metrics.DefaultMetric)
 
 
 class TestMetrics(unittest.TestCase):
     def test_counter(self):
         counter = metrics.Counter()
-        counter.get_handle(("test",))
+        handle = counter.get_handle(("test",))
+        self.assertIsInstance(handle, metrics.CounterHandle)
 
     def test_gauge(self):
         gauge = metrics.Gauge()
-        gauge.get_handle(("test",))
+        handle = gauge.get_handle(("test",))
+        self.assertIsInstance(handle, metrics.GaugeHandle)
 
     def test_measure(self):
         measure = metrics.Measure()
-        measure.get_handle(("test",))
+        handle = measure.get_handle(("test",))
+        self.assertIsInstance(handle, metrics.MeasureHandle)
 
     def test_remove_handle(self):
         counter = metrics.Counter()
