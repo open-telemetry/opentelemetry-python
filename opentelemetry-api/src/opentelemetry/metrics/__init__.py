@@ -179,7 +179,7 @@ class Metric(ABC):
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def get_handle(self, label_values: Tuple[str]) -> "DefaultMetricHandle":
+    def get_handle(self, label_values: Tuple[str, ...]) -> "DefaultMetricHandle":
         return DefaultMetricHandle()
 
 
