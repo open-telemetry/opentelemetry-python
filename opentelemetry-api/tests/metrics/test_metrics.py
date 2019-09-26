@@ -32,20 +32,28 @@ class TestMeter(unittest.TestCase):
 
 
 class TestMetrics(unittest.TestCase):
+    def test_default(self):
+        default = metrics.DefaultMetric()
+        handle = default.get_handle(("test", "test1"))
+        self.assertIsInstance(handle, metrics.DefaultMetricHandle)
+
     def test_counter(self):
         counter = metrics.Counter()
-        handle = counter.get_handle(("test",))
+        handle = counter.get_handle(("test", "test1"))
         self.assertIsInstance(handle, metrics.CounterHandle)
 
     def test_gauge(self):
         gauge = metrics.Gauge()
-        handle = gauge.get_handle(("test",))
+        handle = gauge.get_handle(("test", "test1"))
         self.assertIsInstance(handle, metrics.GaugeHandle)
 
     def test_measure(self):
         measure = metrics.Measure()
-        handle = measure.get_handle(("test",))
+        handle = measure.get_handle(("test", "test1"))
         self.assertIsInstance(handle, metrics.MeasureHandle)
+
+    def test_default_handle(self):
+        handle = metrics.DefaultMetricHandle()
 
     def test_counter_handle(self):
         handle = metrics.CounterHandle()
