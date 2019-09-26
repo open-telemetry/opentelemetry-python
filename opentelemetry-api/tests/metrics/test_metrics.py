@@ -53,7 +53,7 @@ class TestMetrics(unittest.TestCase):
         self.assertIsInstance(handle, metrics.MeasureHandle)
 
     def test_default_handle(self):
-        handle = metrics.DefaultMetricHandle()
+        metrics.DefaultMetricHandle()
 
     def test_counter_handle(self):
         handle = metrics.CounterHandle()
