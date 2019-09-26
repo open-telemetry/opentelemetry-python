@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry import trace as trace_api
 from opentelemetry.ext.azure_monitor import protocol
 from opentelemetry.ext.azure_monitor import util
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.trace import SpanKind
 from urllib.parse import urlparse
 
 
@@ -53,7 +53,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 span.context.trace_id,
                 span.parent.span_id,
             )
-        if span.kind in (trace_api.SpanKind.SERVER, trace_api.SpanKind.CONSUMER):
+        if span.kind in (SpanKind.CONSUMER, SpanKind.SERVER):
             envelope.name = "Microsoft.ApplicationInsights.Request"
             data = protocol.Request(
                 id="|{:032x}.{:016x}.".format(span.context.trace_id, span.context.span_id),
@@ -91,7 +91,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 baseData=data,
                 baseType="RemoteDependencyData",
             )
-            if span.kind in (trace_api.SpanKind.CLIENT, trace_api.SpanKind.PRODUCER):
+            if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
                 data.type = "HTTP"  # TODO
                 if "http.url" in span.attributes:
                     url = span.attributes["http.url"]
