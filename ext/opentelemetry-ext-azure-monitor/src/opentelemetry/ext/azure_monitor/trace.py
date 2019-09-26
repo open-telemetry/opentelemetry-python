@@ -40,21 +40,21 @@ class AzureMonitorSpanExporter(SpanExporter):
                 url=self.options.endpoint,
                 data=json.dumps(envelopes),
                 headers={
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json; charset=utf-8',
+                    "Accept": "application/json",
+                    "Content-Type": "application/json; charset=utf-8",
                 },
                 timeout=self.options.timeout,
             )
         except requests.RequestException as ex:
-            logger.warning('Transient client side error %s.', ex)
+            logger.warning("Transient client side error %s.", ex)
             return SpanExportResult.FAILED_RETRYABLE
 
-        text = 'N/A'
+        text = "N/A"
         data = None
         try:
             text = response.text
         except Exception as ex:
-            logger.warning('Error while reading response body %s.', ex)
+            logger.warning("Error while reading response body %s.", ex)
         else:
             try:
                 data = json.loads(text)
@@ -62,14 +62,14 @@ class AzureMonitorSpanExporter(SpanExporter):
                 pass
 
         if response.status_code == 200:
-            logger.info('Transmission succeeded: %s.', text)
+            logger.info("Transmission succeeded: %s.", text)
             return SpanExportResult.SUCCESS
 
         if response.status_code in (
-                206,  # Partial Content
-                429,  # Too Many Requests
-                500,  # Internal Server Error
-                503,  # Service Unavailable
+            206,  # Partial Content
+            429,  # Too Many Requests
+            500,  # Internal Server Error
+            503,  # Service Unavailable
         ):
             return SpanExportResult.FAILED_RETRYABLE
 
@@ -89,7 +89,9 @@ class AzureMonitorSpanExporter(SpanExporter):
             tags=dict(util.azure_monitor_context),
             time=ns_to_iso_str(span.start_time),
         )
-        envelope.tags["ai.operation.id"] = "{:032x}".format(span.context.trace_id)
+        envelope.tags["ai.operation.id"] = "{:032x}".format(
+            span.context.trace_id
+        )
         if span.parent:
             envelope.tags["ai.operation.parentId"] = "|{:032x}.{:016x}.".format(
                 span.context.trace_id,
@@ -115,15 +117,16 @@ class AzureMonitorSpanExporter(SpanExporter):
             if "http.status_code" in span.attributes:
                 status_code = span.attributes["http.status_code"]
                 data.responseCode = str(status_code)
-                data.success = (
-                    status_code >= 200 and status_code <= 399
-                )
+                data.success = status_code >= 200 and status_code <= 399
         else:
             envelope.name = \
                 "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
                 name=span.name,
-                id="|{:032x}.{:016x}.".format(span.context.trace_id, span.context.span_id),
+                id="|{:032x}.{:016x}.".format(
+                    span.context.trace_id,
+                    span.context.span_id,
+                ),
                 resultCode="0",  # TODO
                 duration=self.ns_to_duration(span.end_time - span.start_time),
                 success=True,  # TODO

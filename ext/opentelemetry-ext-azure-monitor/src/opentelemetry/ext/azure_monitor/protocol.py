@@ -67,8 +67,8 @@ class Data(BaseObject):
 
 class DataPoint(BaseObject):
     _default = BaseObject(
-        ns='',
-        name='',
+        ns="",
+        name="",
         kind=None,
         value=0.0,
         count=None,
@@ -86,8 +86,8 @@ class DataPoint(BaseObject):
 class Envelope(BaseObject):
     _default = BaseObject(
         ver=1,
-        name='',
-        time='',
+        name="",
+        time="",
         sampleRate=None,
         seq=None,
         iKey=None,
@@ -105,7 +105,7 @@ class Envelope(BaseObject):
 class Event(BaseObject):
     _default = BaseObject(
         ver=2,
-        name='',
+        name="",
         properties=None,
         measurements=None,
     )
@@ -135,7 +135,7 @@ class ExceptionData(BaseObject):
 class Message(BaseObject):
     _default = BaseObject(
         ver=2,
-        message='',
+        message="",
         severityLevel=None,
         properties=None,
         measurements=None,
@@ -163,10 +163,10 @@ class MetricData(BaseObject):
 class RemoteDependency(BaseObject):
     _default = BaseObject(
         ver=2,
-        name='',
-        id='',
-        resultCode='',
-        duration='',
+        name="",
+        id="",
+        resultCode="",
+        duration="",
         success=True,
         data=None,
         type=None,
@@ -186,9 +186,9 @@ class RemoteDependency(BaseObject):
 class Request(BaseObject):
     _default = BaseObject(
         ver=2,
-        id='',
-        duration='',
-        responseCode='',
+        id="",
+        duration="",
+        responseCode="",
         success=True,
         source=None,
         name=None,
