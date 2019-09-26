@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Tuple, Type, Union
+from typing import Tuple, Type
 
 from opentelemetry import metrics as metrics_api
 

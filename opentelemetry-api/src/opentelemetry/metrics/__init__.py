@@ -26,7 +26,6 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 
 """
-import enum
 from abc import ABC, abstractmethod
 from typing import Callable, Optional, Tuple, Type, TypeVar
 
