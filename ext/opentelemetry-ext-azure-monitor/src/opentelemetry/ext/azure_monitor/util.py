@@ -29,9 +29,7 @@ azure_monitor_context = {
     "ai.device.osVersion": platform.version(),
     "ai.device.type": "Other",
     "ai.internal.sdkVersion": "py{}:ot{}:ext{}".format(
-        platform.python_version(),
-        opentelemetry_version,
-        ext_version,
+        platform.python_version(), opentelemetry_version, ext_version
     ),
 }
 

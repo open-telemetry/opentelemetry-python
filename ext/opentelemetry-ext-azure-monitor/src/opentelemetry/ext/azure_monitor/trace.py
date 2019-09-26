@@ -93,20 +93,25 @@ class AzureMonitorSpanExporter(SpanExporter):
             span.context.trace_id
         )
         if span.parent:
-            envelope.tags["ai.operation.parentId"] = "|{:032x}.{:016x}.".format(
-                span.context.trace_id,
-                span.parent.span_id,
+            envelope.tags[
+                "ai.operation.parentId"
+            ] = "|{:032x}.{:016x}.".format(
+                span.context.trace_id, span.parent.span_id
             )
         if span.kind in (SpanKind.CONSUMER, SpanKind.SERVER):
             envelope.name = "Microsoft.ApplicationInsights.Request"
             data = protocol.Request(
-                id="|{:032x}.{:016x}.".format(span.context.trace_id, span.context.span_id),
+                id="|{:032x}.{:016x}.".format(
+                    span.context.trace_id, span.context.span_id
+                ),
                 duration=self.ns_to_duration(span.end_time - span.start_time),
                 responseCode="0",
                 success=False,
                 properties={},
             )
-            envelope.data = protocol.Data(baseData=data, baseType="RequestData")
+            envelope.data = protocol.Data(
+                baseData=data, baseType="RequestData"
+            )
             if "http.method" in span.attributes:
                 data.name = span.attributes["http.method"]
             if "http.route" in span.attributes:
@@ -119,13 +124,11 @@ class AzureMonitorSpanExporter(SpanExporter):
                 data.responseCode = str(status_code)
                 data.success = status_code >= 200 and status_code <= 399
         else:
-            envelope.name = \
-                "Microsoft.ApplicationInsights.RemoteDependency"
+            envelope.name = "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
                 name=span.name,
                 id="|{:032x}.{:016x}.".format(
-                    span.context.trace_id,
-                    span.context.span_id,
+                    span.context.trace_id, span.context.span_id
                 ),
                 resultCode="0",  # TODO
                 duration=self.ns_to_duration(span.end_time - span.start_time),
@@ -133,8 +136,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 properties={},
             )
             envelope.data = protocol.Data(
-                baseData=data,
-                baseType="RemoteDependencyData",
+                baseData=data, baseType="RemoteDependencyData"
             )
             if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
                 data.type = "HTTP"  # TODO

@@ -37,10 +37,11 @@ class BaseObject(dict):
         try:
             return self[name]
         except KeyError:
-            raise AttributeError("'{}' object has no attribute {}".format(
-                type(self).__name__,
-                name,
-            ))
+            raise AttributeError(
+                "'{}' object has no attribute {}".format(
+                    type(self).__name__, name
+                )
+            )
 
     def __getitem__(self, key):
         if self._default is self:
@@ -54,10 +55,7 @@ BaseObject._default = BaseObject()
 
 
 class Data(BaseObject):
-    _default = BaseObject(
-        baseData=None,
-        baseType=None,
-    )
+    _default = BaseObject(baseData=None, baseType=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,12 +101,7 @@ class Envelope(BaseObject):
 
 
 class Event(BaseObject):
-    _default = BaseObject(
-        ver=2,
-        name="",
-        properties=None,
-        measurements=None,
-    )
+    _default = BaseObject(ver=2, name="", properties=None, measurements=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -148,11 +141,7 @@ class Message(BaseObject):
 
 
 class MetricData(BaseObject):
-    _default = BaseObject(
-        ver=2,
-        metrics=[],
-        properties=None,
-    )
+    _default = BaseObject(ver=2, metrics=[], properties=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
