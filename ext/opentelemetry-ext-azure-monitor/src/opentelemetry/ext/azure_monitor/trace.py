@@ -14,14 +14,14 @@
 
 import json
 import logging
+from urllib.parse import urlparse
+
 import requests
 
-from opentelemetry.ext.azure_monitor import protocol
-from opentelemetry.ext.azure_monitor import util
+from opentelemetry.ext.azure_monitor import protocol, util
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.trace import SpanKind
-from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
