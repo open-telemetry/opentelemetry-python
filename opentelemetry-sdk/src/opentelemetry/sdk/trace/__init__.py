@@ -340,19 +340,21 @@ class Span(trace_api.Span):
             return
         self.links.append(link)
 
-    def start(self):
+    def start(self, start_time: int = None):
         with self._lock:
             if not self.is_recording_events():
                 return
             has_started = self.start_time is not None
             if not has_started:
                 self.start_time = util.time_ns()
+            if start_time is not None :
+                self.start_time = start_time
         if has_started:
             logger.warning("Calling start() on a started span.")
             return
         self.span_processor.on_start(self)
 
-    def end(self):
+    def end(self, end_time: int = None):
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -361,6 +363,8 @@ class Span(trace_api.Span):
             has_ended = self.end_time is not None
             if not has_ended:
                 self.end_time = util.time_ns()
+            if end_time is not None:
+                self.end_time = end_time
         if has_ended:
             logger.warning("Calling end() on an ended span.")
             return
