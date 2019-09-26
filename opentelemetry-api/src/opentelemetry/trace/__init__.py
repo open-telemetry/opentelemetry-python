@@ -62,7 +62,9 @@ implicit or explicit context propagation consistently throughout.
 """
 
 import enum
+import re
 import typing
+from collections import OrderedDict
 from contextlib import contextmanager
 
 from opentelemetry.util import loader, types
@@ -250,7 +252,7 @@ class TraceOptions(int):
 DEFAULT_TRACE_OPTIONS = TraceOptions.get_default()
 
 
-class TraceState(typing.Dict[str, str]):
+class TraceState(OrderedDict):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
@@ -261,9 +263,38 @@ class TraceState(typing.Dict[str, str]):
         https://www.w3.org/TR/trace-context/#tracestate-field
     """
 
+    MAX_TRACESTATE_VALUES = 32
+    KEY_WITHOUT_VENDOR_FORMAT = r"[a-z][_0-9a-z\-\*\/]{0,255}"
+    KEY_WITH_VENDOR_FORMAT = (
+        r"[a-z][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
+    )
+    KEY_FORMAT = KEY_WITHOUT_VENDOR_FORMAT + "|" + KEY_WITH_VENDOR_FORMAT
+    VALUE_FORMAT = (
+        r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
+    )
+
+    KEY_VALIDATION_RE = re.compile("^" + KEY_FORMAT + "$")
+    VALUE_VALIDATION_RE = re.compile("^" + VALUE_FORMAT + "$")
+
     @classmethod
     def get_default(cls) -> "TraceState":
         return cls()
+
+    def __setitem__(self, key: str, value: str) -> None:
+        # According to the w3c spec, we can only store 32 values
+        if len(self) >= self.MAX_TRACESTATE_VALUES:
+            return
+        # TODO: I believe the otel spec calls for no exceptions
+        # that interfere with execution in the API.
+        # if not isinstance(key, str):
+        #     raise ValueError("key must be an instance of str")
+        # if not re.match(self._KEY_VALIDATION_RE, key):
+        #     raise ValueError("illegal key provided")
+        # if not isinstance(value, str):
+        #     raise ValueError("value must be an instance of str")
+        # if not re.match(self._VALUE_VALIDATION_RE, value):
+        #     raise ValueError("illegal value provided")
+        super().__setitem__(key, value)
 
 
 DEFAULT_TRACE_STATE = TraceState.get_default()
