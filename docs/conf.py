@@ -42,6 +42,9 @@ extensions = [
     "sphinx.ext.viewcode",
     # Link to other sphinx docs
     "sphinx.ext.intersphinx",
+    # Add a .nojekyll file to the generated HTML docs
+    # https://help.github.com/en/articles/files-that-start-with-an-underscore-are-missing
+    "sphinx.ext.githubpages",
 ]
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
