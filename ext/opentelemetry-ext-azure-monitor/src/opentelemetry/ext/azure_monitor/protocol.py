@@ -21,13 +21,16 @@ class BaseObject(dict):
 
     def __repr__(self):
         tmp = {}
+        current = self
         while True:
-            for item in self.items():
+            for item in current.items():
                 if item[0] not in tmp:
                     tmp[item[0]] = item[1]
-            if self._default == self:
+            if (
+                current._default == current
+            ):  # noqa pylint: disable=protected-access
                 break
-            self = self._default
+            current = current._default  # noqa pylint: disable=protected-access
         return repr(tmp)
 
     def __setattr__(self, name, value):
@@ -51,7 +54,7 @@ class BaseObject(dict):
         return self._default[key]
 
 
-BaseObject._default = BaseObject()
+BaseObject._default = BaseObject()  # noqa pylint: disable=protected-access
 
 
 class Data(BaseObject):
@@ -59,8 +62,8 @@ class Data(BaseObject):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.baseData = self.baseData
-        self.baseType = self.baseType
+        self.baseData = self.baseData  # noqa pylint: disable=invalid-name
+        self.baseType = self.baseType  # noqa pylint: disable=invalid-name
 
 
 class DataPoint(BaseObject):
@@ -168,7 +171,7 @@ class RemoteDependency(BaseObject):
         super().__init__(*args, **kwargs)
         self.ver = self.ver
         self.name = self.name
-        self.resultCode = self.resultCode
+        self.resultCode = self.resultCode  # noqa pylint: disable=invalid-name
         self.duration = self.duration
 
 
@@ -189,7 +192,9 @@ class Request(BaseObject):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ver = self.ver
-        self.id = self.id
+        self.id = self.id  # noqa pylint: disable=invalid-name
         self.duration = self.duration
-        self.responseCode = self.responseCode
+        self.responseCode = (
+            self.responseCode
+        )  # noqa pylint: disable=invalid-name
         self.success = self.success

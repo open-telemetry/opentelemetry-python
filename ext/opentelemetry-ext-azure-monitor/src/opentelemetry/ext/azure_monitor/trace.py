@@ -50,15 +50,15 @@ class AzureMonitorSpanExporter(SpanExporter):
             return SpanExportResult.FAILED_RETRYABLE
 
         text = "N/A"
-        data = None
+        data = None  # noqa pylint: disable=unused-variable
         try:
             text = response.text
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             logger.warning("Error while reading response body %s.", ex)
         else:
             try:
                 data = json.loads(text)
-            except Exception:
+            except Exception:  # noqa pylint: disable=broad-except
                 pass
 
         if response.status_code == 200:
@@ -75,13 +75,16 @@ class AzureMonitorSpanExporter(SpanExporter):
 
         return SpanExportResult.FAILED_NOT_RETRYABLE
 
-    def ns_to_duration(self, nanoseconds):
-        n = (nanoseconds + 500000) // 1000000  # duration in milliseconds
-        n, ms = divmod(n, 1000)
-        n, s = divmod(n, 60)
-        n, m = divmod(n, 60)
-        d, h = divmod(n, 24)
-        return "{:d}.{:02d}:{:02d}:{:02d}.{:03d}".format(d, h, m, s, ms)
+    @staticmethod
+    def ns_to_duration(nanoseconds):
+        value = (nanoseconds + 500000) // 1000000  # duration in milliseconds
+        value, microseconds = divmod(value, 1000)
+        value, seconds = divmod(value, 60)
+        value, minutes = divmod(value, 60)
+        days, hours = divmod(value, 24)
+        return "{:d}.{:02d}:{:02d}:{:02d}.{:03d}".format(
+            days, hours, minutes, seconds, microseconds
+        )
 
     def span_to_envelope(self, span):
         envelope = protocol.Envelope(
@@ -122,7 +125,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             if "http.status_code" in span.attributes:
                 status_code = span.attributes["http.status_code"]
                 data.responseCode = str(status_code)
-                data.success = status_code >= 200 and status_code <= 399
+                data.success = 200 <= status_code < 400
         else:
             envelope.name = "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
