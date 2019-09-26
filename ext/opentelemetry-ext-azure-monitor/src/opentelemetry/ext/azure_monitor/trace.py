@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import logging
+import requests
+
 from opentelemetry.ext.azure_monitor import protocol
 from opentelemetry.ext.azure_monitor import util
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.trace import SpanKind
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 
 class AzureMonitorSpanExporter(SpanExporter):
@@ -27,10 +33,47 @@ class AzureMonitorSpanExporter(SpanExporter):
             raise ValueError("The instrumentation_key is not provided.")
 
     def export(self, spans):
-        for span in spans:
-            print(span)  # TODO: add actual implementation here
-            print(self.span_to_envelope(span))
-        return SpanExportResult.SUCCESS
+        envelopes = tuple(map(self.span_to_envelope, spans))
+
+        try:
+            response = requests.post(
+                url=self.options.endpoint,
+                data=json.dumps(envelopes),
+                headers={
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                timeout=self.options.timeout,
+            )
+        except requests.RequestException as ex:
+            logger.warning('Transient client side error %s.', ex)
+            return SpanExportResult.FAILED_RETRYABLE
+
+        text = 'N/A'
+        data = None
+        try:
+            text = response.text
+        except Exception as ex:
+            logger.warning('Error while reading response body %s.', ex)
+        else:
+            try:
+                data = json.loads(text)
+            except Exception:
+                pass
+
+        if response.status_code == 200:
+            logger.info('Transmission succeeded: %s.', text)
+            return SpanExportResult.SUCCESS
+
+        if response.status_code in (
+                206,  # Partial Content
+                429,  # Too Many Requests
+                500,  # Internal Server Error
+                503,  # Service Unavailable
+        ):
+            return SpanExportResult.FAILED_RETRYABLE
+
+        return SpanExportResult.FAILED_NOT_RETRYABLE
 
     def ns_to_duration(self, nanoseconds):
         n = (nanoseconds + 500000) // 1000000  # duration in milliseconds
@@ -79,7 +122,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             envelope.name = \
                 "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
-                name=span.name,  # TODO
+                name=span.name,
                 id="|{:032x}.{:016x}.".format(span.context.trace_id, span.context.span_id),
                 resultCode="0",  # TODO
                 duration=self.ns_to_duration(span.end_time - span.start_time),
@@ -98,12 +141,9 @@ class AzureMonitorSpanExporter(SpanExporter):
                     data.name = urlparse(url).netloc
                 if "http.status_code" in span.attributes:
                     data.resultCode = str(span.attributes["http.status_code"])
-            else: # SpanKind.INTERNAL
+            else:  # SpanKind.INTERNAL
                 data.type = "InProc"
         # TODO: links, tracestate, tags
         for key in span.attributes:
-            # This removes redundant data from ApplicationInsights
-            if key.startswith("http."):
-                continue
             data.properties[key] = span.attributes[key]
         return envelope
