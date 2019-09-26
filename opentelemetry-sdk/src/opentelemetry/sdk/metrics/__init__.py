@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class BaseHandle:
     def __init__(
         self,
-        value_type: Type[metrics_api._ValueT],
+        value_type: Type[metrics_api.ValueT],
         enabled: bool,
         monotonic: bool,
     ):
@@ -32,7 +32,7 @@ class BaseHandle:
         self.enabled = enabled
         self.monotonic = monotonic
 
-    def _validate_update(self, value: metrics_api._ValueT):
+    def _validate_update(self, value: metrics_api.ValueT):
         if not self.enabled:
             return False
         if self.monotonic and value < 0:
@@ -47,32 +47,32 @@ class BaseHandle:
 
 
 class CounterHandle(metrics_api.CounterHandle, BaseHandle):
-    def update(self, value: metrics_api._ValueT) -> None:
+    def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
             self.data += value
 
-    def add(self, value: metrics_api._ValueT) -> None:
+    def add(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.CounterHandle._add`."""
         self.update(value)
 
 
 class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
-    def update(self, value: metrics_api._ValueT) -> None:
+    def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
             self.data = value
 
-    def set(self, value: metrics_api._ValueT) -> None:
+    def set(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.GaugeHandle._set`."""
         self.update(value)
 
 
 class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
-    def update(self, value: metrics_api._ValueT) -> None:
+    def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
             pass
             # TODO: record
 
-    def record(self, value: metrics_api._ValueT) -> None:
+    def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.MeasureHandle._record`."""
         self.update(value)
 
@@ -87,7 +87,7 @@ class Metric(metrics_api.Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api._ValueT],
+        value_type: Type[metrics_api.ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -127,7 +127,7 @@ class Counter(Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api._ValueT],
+        value_type: Type[metrics_api.ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = True,
@@ -157,7 +157,7 @@ class Gauge(Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api._ValueT],
+        value_type: Type[metrics_api.ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -187,7 +187,7 @@ class Measure(Metric):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api._ValueT],
+        value_type: Type[metrics_api.ValueT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = False,
         monotonic: bool = False,
@@ -209,7 +209,7 @@ class Meter(metrics_api.Meter):
     def record_batch(
         self,
         label_values: Tuple[str, ...],
-        record_tuples: Tuple[Tuple[metrics_api.Metric, metrics_api._ValueT]],
+        record_tuples: Tuple[Tuple[metrics_api.Metric, metrics_api.ValueT]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
@@ -220,8 +220,8 @@ class Meter(metrics_api.Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api._ValueT],
-        metric_type: Type[metrics_api._MetricT],
+        value_type: Type[metrics_api.ValueT],
+        metric_type: Type[metrics_api.MetricT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,

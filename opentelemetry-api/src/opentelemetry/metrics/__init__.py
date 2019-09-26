@@ -32,7 +32,7 @@ from typing import Callable, Optional, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
 
-_ValueT = TypeVar("_ValueT", int, float)
+ValueT = TypeVar("ValueT", int, float)
 
 
 class DefaultMetricHandle:
@@ -43,17 +43,17 @@ class DefaultMetricHandle:
 
 
 class CounterHandle:
-    def add(self, value: _ValueT) -> None:
+    def add(self, value: ValueT) -> None:
         """Increases the value of the handle by ``value``"""
 
 
 class GaugeHandle:
-    def set(self, value: _ValueT) -> None:
+    def set(self, value: ValueT) -> None:
         """Sets the current value of the handle to ``value``."""
 
 
 class MeasureHandle:
-    def record(self, value: _ValueT) -> None:
+    def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this handle."""
 
 
@@ -124,7 +124,7 @@ class Measure(Metric):
         return MeasureHandle()
 
 
-_MetricT = TypeVar("_MetricT", Counter, Gauge, Measure)
+MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 
 
 # pylint: disable=unused-argument
@@ -139,7 +139,7 @@ class Meter:
     def record_batch(
         self,
         label_values: Tuple[str, ...],
-        record_tuples: Tuple[Tuple["Metric", _ValueT]],
+        record_tuples: Tuple[Tuple["Metric", ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
@@ -159,8 +159,8 @@ class Meter:
         name: str,
         description: str,
         unit: str,
-        value_type: Type[_ValueT],
-        metric_type: Type[_MetricT],
+        value_type: Type[ValueT],
+        metric_type: Type[MetricT],
         label_keys: Tuple[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
