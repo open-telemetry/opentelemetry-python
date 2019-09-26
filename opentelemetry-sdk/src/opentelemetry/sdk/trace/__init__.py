@@ -347,7 +347,7 @@ class Span(trace_api.Span):
             has_started = self.start_time is not None
             if not has_started:
                 self.start_time = util.time_ns()
-            if start_time is not None :
+            if start_time is not None:
                 self.start_time = start_time
         if has_started:
             logger.warning("Calling start() on a started span.")
