@@ -42,7 +42,9 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(self, label_values: Tuple[str, ...]) -> metrics_api.MetricHandle:
+    def get_handle(
+        self, label_values: Tuple[str, ...]
+    ) -> metrics_api.MetricHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
         pass  # pylint: disable=unnecessary-pass
 
@@ -122,7 +124,9 @@ class Gauge(Metric):
             monotonic=monotonic,
         )
 
-    def get_handle(self, label_values: Tuple[str, ...]) -> metrics_api.GaugeHandle:
+    def get_handle(
+        self, label_values: Tuple[str, ...]
+    ) -> metrics_api.GaugeHandle:
         """See `opentelemetry.metrics.Gauge.get_handle`."""
         handle = self.handles.get(
             label_values,
