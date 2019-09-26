@@ -28,117 +28,33 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 import enum
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple, Type, Union
+from typing import Callable, Optional, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
 
-ValueType = Union[int, float]
+_ValueT = TypeVar("_ValueT", int, float)
 
 
-class MetricKind(enum.Enum):
-    COUNTER = 0
-    GAUGE = 1
-    MEASURE = 2
+class DefaultMetricHandle:
+    """The default MetricHandle.
 
-
-# pylint: disable=unused-argument
-class Meter:
-    """An interface to allow the recording of metrics.
-
-    `Metric` s are used for recording pre-defined aggregation (gauge and
-    counter), or raw values (measure) in which the aggregation and labels
-    for the exported metric are deferred.
+    Used when no MetricHandle implementation is available.
     """
 
-    def record_batch(
-        self,
-        label_values: Tuple[str, ...],
-        record_tuples: Tuple[Tuple["Metric", ValueType]],
-    ) -> None:
-        """Atomically records a batch of `Metric` and value pairs.
 
-        Allows the functionality of acting upon multiple metrics with
-        a single API call. Implementations should find metric and handles that
-        match the key-value pairs in the label tuples.
-
-        Args:
-            label_values: The values that will be matched against to record for
-                the handles under each metric that has those labels.
-            record_tuples: A tuple of pairs of `Metric` s and the
-                corresponding value to record for that metric.
-        """
-
-    def create_metric(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: ValueType,
-        metric_kind: MetricKind,
-        label_keys: Tuple[str, ...] = None,
-        enabled: bool = True,
-        monotonic: bool = False,
-    ) -> "Metric":
-        """Creates a ``metric_kind`` metric with type ``value_type``.
-
-        Args:
-            name: The name of the counter.
-            description: Human-readable description of the metric.
-            unit: Unit of the metric values.
-            value_type: The type of values being recorded by the metric.
-            metric_kind: The kind of metric being created.
-            label_keys: The keys for the labels with dynamic values.
-                Order of the tuple is important as the same order must be used
-                on recording when suppling values for these labels.
-            enabled: Whether to report the metric by default.
-            monotonic: Whether to only allow non-negative values.
-
-        Returns: A new ``metric_kind`` metric with values of ``value_type``.
-        """
-        # pylint: disable=no-self-use
-        return DefaultMetric()
+class CounterHandle:
+    def add(self, value: Type[_ValueT]) -> None:
+        """Increases the value of the handle by ``value``"""
 
 
-# Once https://github.com/python/mypy/issues/7092 is resolved,
-# the following type definition should be replaced with
-# from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = Callable[[Type[Meter]], Optional[Meter]]
-
-_METER = None
-_METER_FACTORY = None
+class GaugeHandle:
+    def set(self, value: Type[_ValueT]) -> None:
+        """Sets the current value of the handle to ``value``."""
 
 
-def meter() -> Meter:
-    """Gets the current global :class:`~.Meter` object.
-
-    If there isn't one set yet, a default will be loaded.
-    """
-    global _METER, _METER_FACTORY  # pylint:disable=global-statement
-
-    if _METER is None:
-        # pylint:disable=protected-access
-        _METER = loader._load_impl(Meter, _METER_FACTORY)
-        del _METER_FACTORY
-
-    return _METER
-
-
-def set_preferred_meter_implementation(factory: ImplementationFactory) -> None:
-    """Set the factory to be used to create the meter.
-
-    See :mod:`opentelemetry.util.loader` for details.
-
-    This function may not be called after a meter is already loaded.
-
-    Args:
-        factory: Callback that should create a new :class:`Meter` instance.
-    """
-    global _METER, _METER_FACTORY  # pylint:disable=global-statement
-
-    if _METER:
-        raise RuntimeError("Meter already loaded.")
-
-    _METER_FACTORY = factory
+class MeasureHandle:
+    def record(self, value: Type[_ValueT]) -> None:
+        """Records the given ``value`` to this handle."""
 
 
 class Metric(ABC):
@@ -149,7 +65,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_handle(self, label_values: Tuple[str, ...]) -> "MetricHandle":
+    def get_handle(self, label_values: Tuple[str, ...]) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -162,18 +78,6 @@ class Metric(ABC):
         Args:
             label_values: Values to associate with the returned handle.
         """
-
-    def remove_handle(self, label_values: Tuple[str, ...]) -> None:
-        """Removes the handle from the Metric, if present.
-
-        The handle with matching label values will be removed.
-
-        args:
-            label_values: The label values to match against.
-        """
-
-    def clear(self) -> None:
-        """Removes all handles from the `Metric`."""
 
 
 class DefaultMetric(Metric):
@@ -219,28 +123,104 @@ class Measure(Metric):
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
-
-class MetricHandle(ABC):
-    """An interface for metric handles."""
+_MetricT = TypeVar("_MetricT", Counter, Gauge, Measure)
 
 
-class DefaultMetricHandle(MetricHandle):
-    """The default MetricHandle.
+# pylint: disable=unused-argument
+class Meter:
+    """An interface to allow the recording of metrics.
 
-    Used when no MetricHandle implementation is available.
+    `Metric` s are used for recording pre-defined aggregation (gauge and
+    counter), or raw values (measure) in which the aggregation and labels
+    for the exported metric are deferred.
     """
 
+    def record_batch(
+        self,
+        label_values: Tuple[str, ...],
+        record_tuples: Tuple[Tuple["Metric", Type[_ValueT]]],
+    ) -> None:
+        """Atomically records a batch of `Metric` and value pairs.
 
-class CounterHandle(MetricHandle):
-    def add(self, value: ValueType) -> None:
-        """Increases the value of the handle by ``value``"""
+        Allows the functionality of acting upon multiple metrics with
+        a single API call. Implementations should find metric and handles that
+        match the key-value pairs in the label tuples.
+
+        Args:
+            label_values: The values that will be matched against to record for
+                the handles under each metric that has those labels.
+            record_tuples: A tuple of pairs of `Metric` s and the
+                corresponding value to record for that metric.
+        """
+
+    def create_metric(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[_ValueT],
+        metric_type: Type[_MetricT],
+        label_keys: Tuple[str, ...] = None,
+        enabled: bool = True,
+        monotonic: bool = False,
+    ) -> "Metric":
+        """Creates a ``metric_kind`` metric with type ``value_type``.
+
+        Args:
+            name: The name of the counter.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values.
+            value_type: The type of values being recorded by the metric.
+            metric_type: The type of metric being created.
+            label_keys: The keys for the labels with dynamic values.
+                Order of the tuple is important as the same order must be used
+                on recording when suppling values for these labels.
+            enabled: Whether to report the metric by default.
+            monotonic: Whether to only allow non-negative values.
+
+        Returns: A new ``metric_type`` metric with values of ``value_type``.
+        """
+        # pylint: disable=no-self-use
+        return DefaultMetric()
 
 
-class GaugeHandle(MetricHandle):
-    def set(self, value: ValueType) -> None:
-        """Sets the current value of the handle to ``value``."""
+# Once https://github.com/python/mypy/issues/7092 is resolved,
+# the following type definition should be replaced with
+# from opentelemetry.util.loader import ImplementationFactory
+ImplementationFactory = Callable[[Type[Meter]], Optional[Meter]]
+
+_METER = None
+_METER_FACTORY = None
 
 
-class MeasureHandle(MetricHandle):
-    def record(self, value: ValueType) -> None:
-        """Records the given ``value`` to this handle."""
+def meter() -> Meter:
+    """Gets the current global :class:`~.Meter` object.
+
+    If there isn't one set yet, a default will be loaded.
+    """
+    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+
+    if _METER is None:
+        # pylint:disable=protected-access
+        _METER = loader._load_impl(Meter, _METER_FACTORY)
+        del _METER_FACTORY
+
+    return _METER
+
+
+def set_preferred_meter_implementation(factory: ImplementationFactory) -> None:
+    """Set the factory to be used to create the meter.
+
+    See :mod:`opentelemetry.util.loader` for details.
+
+    This function may not be called after a meter is already loaded.
+
+    Args:
+        factory: Callback that should create a new :class:`Meter` instance.
+    """
+    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+
+    if _METER:
+        raise RuntimeError("Meter already loaded.")
+
+    _METER_FACTORY = factory

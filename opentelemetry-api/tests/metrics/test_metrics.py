@@ -46,14 +46,6 @@ class TestMetrics(unittest.TestCase):
         handle = measure.get_handle(("test",))
         self.assertIsInstance(handle, metrics.MeasureHandle)
 
-    def test_remove_handle(self):
-        counter = metrics.Counter()
-        counter.remove_handle(("test",))
-
-    def test_clear(self):
-        counter = metrics.Counter()
-        counter.clear()
-
     def test_counter_handle(self):
         handle = metrics.CounterHandle()
         handle.add(1)

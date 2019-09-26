@@ -61,7 +61,7 @@ class TestMeter(unittest.TestCase):
     def test_create_metric(self):
         meter = metrics.Meter()
         counter = meter.create_metric(
-            "name", "desc", "unit", int, metrics_api.MetricKind.COUNTER, ()
+            "name", "desc", "unit", int, metrics.Counter, ()
         )
         self.assertTrue(isinstance(counter, metrics.Counter))
         self.assertEqual(counter.value_type, int)
@@ -70,7 +70,7 @@ class TestMeter(unittest.TestCase):
     def test_create_gauge(self):
         meter = metrics.Meter()
         gauge = meter.create_metric(
-            "name", "desc", "unit", float, metrics_api.MetricKind.GAUGE, ()
+            "name", "desc", "unit", float, metrics.Gauge, ()
         )
         self.assertTrue(isinstance(gauge, metrics.Gauge))
         self.assertEqual(gauge.value_type, float)
@@ -79,7 +79,7 @@ class TestMeter(unittest.TestCase):
     def test_create_measure(self):
         meter = metrics.Meter()
         measure = meter.create_metric(
-            "name", "desc", "unit", float, metrics_api.MetricKind.MEASURE, ()
+            "name", "desc", "unit", float, metrics.Measure, ()
         )
         self.assertTrue(isinstance(measure, metrics.Measure))
         self.assertEqual(measure.value_type, float)
@@ -94,26 +94,6 @@ class TestMetric(unittest.TestCase):
             label_values = ("value",)
             handle = metric.get_handle(label_values)
             self.assertEqual(metric.handles.get(label_values), handle)
-
-    def test_remove_handle(self):
-        metric = metrics.Counter("name", "desc", "unit", int, ("key"))
-        label_values1 = ("value",)
-        label_values2 = ("value2",)
-        metric.get_handle(label_values1)
-        metric.get_handle(label_values2)
-        metric.remove_handle(label_values1)
-        self.assertIsNone(metric.handles.get(label_values1))
-        self.assertIsNotNone(metric.handles.get(label_values2))
-
-    def test_clear(self):
-        metric = metrics.Counter("name", "desc", "unit", int, ("key"))
-        label_values1 = ("value",)
-        label_values2 = ("value2",)
-        metric.get_handle(label_values1)
-        metric.get_handle(label_values2)
-        metric.clear()
-        self.assertIsNone(metric.handles.get(label_values1))
-        self.assertIsNone(metric.handles.get(label_values2))
 
 
 class TestCounterHandle(unittest.TestCase):
@@ -134,7 +114,7 @@ class TestCounterHandle(unittest.TestCase):
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_monotonic(self, logger_mock):
-        handle = metrics.CounterHandle(int, True, False)
+        handle = metrics.CounterHandle(int, True, True)
         handle.add(-3)
         self.assertEqual(handle.data, 0)
         self.assertTrue(logger_mock.warning.called)
