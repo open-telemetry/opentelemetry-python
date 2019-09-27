@@ -82,9 +82,7 @@ class Metric(ABC):
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def get_handle(
-        self, label_values: Sequence[str]
-    ) -> "DefaultMetricHandle":
+    def get_handle(self, label_values: Sequence[str]) -> "DefaultMetricHandle":
         return DefaultMetricHandle()
 
 
