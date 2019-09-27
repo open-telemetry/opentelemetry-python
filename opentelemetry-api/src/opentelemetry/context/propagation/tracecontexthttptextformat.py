@@ -20,6 +20,30 @@ from opentelemetry.context.propagation import httptextformat
 
 _T = typing.TypeVar("_T")
 
+#    Keys and values are strings of up to 256 printable US-ASCII characters.
+#    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+#    spec, which describes additional restrictions on valid field values.
+#
+#    .. _W3C Trace Context - Tracestate:
+#        https://www.w3.org/TR/trace-context/#tracestate-field
+
+
+_KEY_WITHOUT_VENDOR_FORMAT = r"[a-z][_0-9a-z\-\*\/]{0,255}"
+_KEY_WITH_VENDOR_FORMAT = (
+    r"[a-z][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
+)
+
+_KEY_FORMAT = _KEY_WITHOUT_VENDOR_FORMAT + "|" + _KEY_WITH_VENDOR_FORMAT
+_VALUE_FORMAT = (
+    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
+)
+
+_DELIMITER_FORMAT = "[ \t]*,[ \t]*"
+_MEMBER_FORMAT = "({})(=)({})".format(_KEY_FORMAT, _VALUE_FORMAT)
+
+_DELIMITER_FORMAT_RE = re.compile(_DELIMITER_FORMAT)
+_MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
+
 
 class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     """Extracts and injects using w3c TraceContext's headers.
@@ -88,13 +112,8 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     ) -> None:
         if context == trace.INVALID_SPAN_CONTEXT:
             return
-        traceparent_string = "-".join(
-            [
-                "00",
-                format(context.trace_id, "032x"),
-                format(context.span_id, "016x"),
-                format(context.trace_options, "02x"),
-            ]
+        traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
+            context.trace_id, context.span_id, context.trace_options
         )
         set_in_carrier(
             carrier, cls._TRACEPARENT_HEADER_NAME, traceparent_string
@@ -104,16 +123,6 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             set_in_carrier(
                 carrier, cls._TRACESTATE_HEADER_NAME, tracestate_string
             )
-
-
-_DELIMITER_FORMAT = "[ \t]*,[ \t]*"
-_MEMBER_FORMAT = "(%s)(=)(%s)" % (
-    trace.TraceState.KEY_FORMAT,
-    trace.TraceState.VALUE_FORMAT,
-)
-
-_DELIMITER_FORMAT_RE = re.compile(_DELIMITER_FORMAT)
-_MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
 
 
 def _parse_tracestate(string: str) -> trace.TraceState:

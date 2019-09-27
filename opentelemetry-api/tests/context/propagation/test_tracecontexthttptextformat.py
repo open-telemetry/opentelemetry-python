@@ -43,7 +43,10 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
     def test_from_headers_tracestate_entry_limit(self):
-        """If more than 32 entries are passed, do not propagate tracestate.
+        """If more than 33 entries are passed, allow them.
+
+        We are explicitly choosing not to limit the list members
+        as outlined in RFC 3.3.1.1
 
         RFC 3.3.1.1
 
@@ -64,7 +67,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 ),
             },
         )
-        self.assertEqual(len(span_context.trace_state), 32)
+        self.assertEqual(len(span_context.trace_state), 33)
 
     def test_from_headers_tracestate_duplicated_keys(self):
         """If a duplicate tracestate header is present, the most recent entry
