@@ -12,8 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.trace
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 
-def dummy_check_mypy_returntype() -> opentelemetry.trace.Tracer:
-    return opentelemetry.trace.tracer()
+class AzureMonitorSpanExporter(SpanExporter):
+    def __init__(self):
+        pass
+
+    def export(self, spans):
+        for span in spans:
+            print(span)  # TODO: add actual implementation here
+        return SpanExportResult.SUCCESS

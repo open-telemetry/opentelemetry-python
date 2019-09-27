@@ -12,8 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.trace
-
-
-def dummy_check_mypy_returntype() -> opentelemetry.trace.Tracer:
-    return opentelemetry.trace.tracer()
+__version__ = "0.1.dev0"
