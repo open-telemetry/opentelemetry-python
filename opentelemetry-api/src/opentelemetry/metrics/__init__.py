@@ -27,7 +27,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple, Type, TypeVar
+from typing import Callable, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
 
@@ -64,7 +64,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_handle(self, label_values: Tuple[str, ...]) -> "object":
+    def get_handle(self, label_values: Sequence[str, ...]) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -83,7 +83,7 @@ class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
     def get_handle(
-        self, label_values: Tuple[str, ...]
+        self, label_values: Sequence[str, ...]
     ) -> "DefaultMetricHandle":
         return DefaultMetricHandle()
 
@@ -91,7 +91,7 @@ class DefaultMetric(Metric):
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def get_handle(self, label_values: Tuple[str, ...]) -> "CounterHandle":
+    def get_handle(self, label_values: Sequence[str, ...]) -> "CounterHandle":
         """Gets a `CounterHandle`."""
         return CounterHandle()
 
@@ -105,7 +105,7 @@ class Gauge(Metric):
     the measurement interval is arbitrary.
     """
 
-    def get_handle(self, label_values: Tuple[str, ...]) -> "GaugeHandle":
+    def get_handle(self, label_values: Sequence[str, ...]) -> "GaugeHandle":
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
 
@@ -118,7 +118,7 @@ class Measure(Metric):
     Negative inputs will be discarded when monotonic is True.
     """
 
-    def get_handle(self, label_values: Tuple[str, ...]) -> "MeasureHandle":
+    def get_handle(self, label_values: Sequence[str, ...]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
@@ -137,8 +137,8 @@ class Meter:
 
     def record_batch(
         self,
-        label_values: Tuple[str, ...],
-        record_tuples: Tuple[Tuple["Metric", ValueT]],
+        label_values: Sequence[str, ...],
+        record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
@@ -149,7 +149,7 @@ class Meter:
         Args:
             label_values: The values that will be matched against to record for
                 the handles under each metric that has those labels.
-            record_tuples: A tuple of pairs of `Metric` s and the
+            record_tuples: A sequence of pairs of `Metric` s and the
                 corresponding value to record for that metric.
         """
 
@@ -160,7 +160,7 @@ class Meter:
         unit: str,
         value_type: Type[ValueT],
         metric_type: Type[MetricT],
-        label_keys: Tuple[str, ...] = None,
+        label_keys: Sequence[str, ...] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ) -> "Metric":
@@ -173,8 +173,8 @@ class Meter:
             value_type: The type of values being recorded by the metric.
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
-                Order of the tuple is important as the same order must be used
-                on recording when suppling values for these labels.
+                Order of the sequence is important as the same order must be
+                used on recording when suppling values for these labels.
             enabled: Whether to report the metric by default.
             monotonic: Whether to only allow non-negative values.
 
