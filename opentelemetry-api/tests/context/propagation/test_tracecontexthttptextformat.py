@@ -40,7 +40,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
         If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
         """
-        output: typing.Dict[str, str] = {}
+        output = {}  # type:typing.Dict[str, str]
         span_context = FORMAT.extract(get_as_list, output)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
@@ -117,7 +117,7 @@ class TestTraceContextFormat(unittest.TestCase):
             span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
 
-        output: typing.Dict[str, str] = {}
+        output = {}  # type:typing.Dict[str, str]
         FORMAT.inject(span_context, dict.__setitem__, output)
         self.assertEqual(output["traceparent"], traceparent_value)
         self.assertEqual(output["tracestate"], tracestate_value)
@@ -178,7 +178,7 @@ class TestTraceContextFormat(unittest.TestCase):
         Empty and whitespace-only list members are allowed. Vendors MUST accept empty
         tracestate headers but SHOULD avoid sending them.
         """
-        output: typing.Dict[str, str] = {}
+        output = {}  # type:typing.Dict[str, str]
         FORMAT.inject(
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID),
             dict.__setitem__,
