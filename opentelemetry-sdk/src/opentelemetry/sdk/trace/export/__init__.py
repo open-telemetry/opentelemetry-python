@@ -22,6 +22,7 @@ from opentelemetry.context import Context
 from opentelemetry.sdk import util
 
 from .. import Span, SpanProcessor
+from opentelemetry.context import Context
 
 logger = logging.getLogger(__name__)
 
