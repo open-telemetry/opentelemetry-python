@@ -346,9 +346,10 @@ class Span(trace_api.Span):
                 return
             has_started = self.start_time is not None
             if not has_started:
-                self.start_time = util.time_ns()
-            if start_time is not None:
-                self.start_time = start_time
+                if start_time is not None:
+                    self.start_time = start_time
+                else:
+                    self.start_time = util.time_ns()
         if has_started:
             logger.warning("Calling start() on a started span.")
             return
@@ -362,9 +363,10 @@ class Span(trace_api.Span):
                 raise RuntimeError("Calling end() on a not started span.")
             has_ended = self.end_time is not None
             if not has_ended:
-                self.end_time = util.time_ns()
-            if end_time is not None:
-                self.end_time = end_time
+                if end_time is not None:
+                    self.end_time = end_time
+                else:
+                    self.end_time = util.time_ns()
         if has_ended:
             logger.warning("Calling end() on an ended span.")
             return
