@@ -64,7 +64,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_handle(self, label_values: Sequence[str] -> "object":
+    def get_handle(self, label_values: Sequence[str]) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -83,7 +83,7 @@ class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
     def get_handle(
-        self, label_values: Sequence[str, ...]
+        self, label_values: Sequence[str]
     ) -> "DefaultMetricHandle":
         return DefaultMetricHandle()
 
@@ -137,7 +137,7 @@ class Meter:
 
     def record_batch(
         self,
-        label_values: Sequence[str, ...],
+        label_values: Sequence[str],
         record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
@@ -160,7 +160,7 @@ class Meter:
         unit: str,
         value_type: Type[ValueT],
         metric_type: Type[MetricT],
-        label_keys: Sequence[str, ...] = None,
+        label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ) -> "Metric":

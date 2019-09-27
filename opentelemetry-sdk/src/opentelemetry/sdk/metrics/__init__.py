@@ -101,7 +101,7 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(self, label_values: Sequence[str, ...]) -> BaseHandle:
+    def get_handle(self, label_values: Sequence[str]) -> BaseHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
         handle = self.handles.get(label_values)
         if not handle:
