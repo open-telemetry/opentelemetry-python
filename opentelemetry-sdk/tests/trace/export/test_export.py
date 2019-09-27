@@ -15,6 +15,8 @@
 import time
 import unittest
 
+from unittest import mock
+from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
 
@@ -55,29 +57,31 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
 
 
 class TestBatchExportSpanProcessor(unittest.TestCase):
-    def test_batch_span_processor(self):
-        tracer = trace.Tracer()
+    def _create_start_and_end_span(self, name, span_processor):
+        span = trace.Span(
+            name,
+            mock.Mock(spec=trace_api.SpanContext),
+            span_processor=span_processor
+        )
+        span.start()
+        span.end()
 
+    def test_batch_span_processor(self):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor = export.BatchExportSpanProcessor(my_exporter)
-        tracer.add_span_processor(span_processor)
 
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("xxx"):
-                    pass
+        span_names = ["xxx", "bar", "foo"]
 
-        # call shutdown on specific span processor
-        # TODO: this call is missing in the tracer
+        for name in span_names:
+            self._create_start_and_end_span(name, span_processor)
+
         span_processor.shutdown()
-        self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
+        self.assertListEqual(span_names, spans_names_list)
 
     def test_batch_span_processor_lossless(self):
         """Test that no spans are lost when sending max_queue_size spans"""
-        tracer = trace.Tracer()
-
         spans_names_list = []
 
         my_exporter = MySpanExporter(
@@ -86,21 +90,15 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         span_processor = export.BatchExportSpanProcessor(
             my_exporter, max_queue_size=512, max_export_batch_size=128
         )
-        tracer.add_span_processor(span_processor)
 
         for idx in range(512):
-            with tracer.start_span("foo{}".format(idx)):
-                pass
+            self._create_start_and_end_span("foo", span_processor)
 
-        # call shutdown on specific span processor
-        # TODO: this call is missing in the tracer
         span_processor.shutdown()
         self.assertEqual(len(spans_names_list), 512)
 
     def test_batch_span_processor_many_spans(self):
-        """Test that no spans are lost when sending max_queue_size spans"""
-        tracer = trace.Tracer()
-
+        """Test that no spans are lost when sending many spans"""
         spans_names_list = []
 
         my_exporter = MySpanExporter(
@@ -109,41 +107,32 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         span_processor = export.BatchExportSpanProcessor(
             my_exporter, max_queue_size=256, max_export_batch_size=64, schedule_delay_millis=100
         )
-        tracer.add_span_processor(span_processor)
 
         for iteration in range(4):
             for idx in range(256):
-                with tracer.start_span("foo{}".format(idx)):
-                    pass
+                self._create_start_and_end_span("foo", span_processor)
+
             time.sleep(0.05)  # give some time for the exporter to upload spans
 
-        # call shutdown on specific span processor
-        # TODO: this call is missing in the tracer
         span_processor.shutdown()
         self.assertEqual(len(spans_names_list), 1024)
 
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""
-        tracer = trace.Tracer()
-
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor = export.BatchExportSpanProcessor(
             my_exporter, schedule_delay_millis=50
         )
-        tracer.add_span_processor(span_processor)
 
-        # start single span
-        with tracer.start_span("foo1"):
-            pass
+        # create single span
+        self._create_start_and_end_span("foo", span_processor)
 
         time.sleep(0.05 + 0.02)
         # span should be already exported
         self.assertEqual(len(spans_names_list), 1)
 
-        # call shutdown on specific span processor
-        # TODO: this call is missing in the tracer
         span_processor.shutdown()
 
     def test_batch_span_processor_parameters(self):
