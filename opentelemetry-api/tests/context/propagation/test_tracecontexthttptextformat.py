@@ -208,6 +208,6 @@ class TestTraceContextFormat(unittest.TestCase):
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context.
         """
-        output: typing.Dict[str, str] = {}
+        output = {}  # type:typing.Dict[str, str]
         FORMAT.inject(trace.INVALID_SPAN_CONTEXT, dict.__setitem__, output)
         self.assertFalse("traceparent" in output)
