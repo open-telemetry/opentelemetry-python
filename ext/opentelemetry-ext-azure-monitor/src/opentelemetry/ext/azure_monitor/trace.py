@@ -152,7 +152,22 @@ class AzureMonitorSpanExporter(SpanExporter):
                     data.resultCode = str(span.attributes["http.status_code"])
             else:  # SpanKind.INTERNAL
                 data.type = "InProc"
-        # TODO: links, tracestate, tags
         for key in span.attributes:
             data.properties[key] = span.attributes[key]
+        if span.links:
+            links = []
+            for link in span.links:
+                links.append(
+                    {
+                        "operation_Id": "{:032x}".format(
+                            link.context.trace_id
+                        ),
+                        "id": "|{:032x}.{:016x}.".format(
+                            link.context.trace_id, link.context.span_id
+                        ),
+                    }
+                )
+            data.properties["_MS.links"] = json.dumps(links)
+            print(data.properties["_MS.links"])
+        # TODO: tracestate, tags
         return envelope
