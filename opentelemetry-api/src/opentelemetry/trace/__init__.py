@@ -62,9 +62,7 @@ implicit or explicit context propagation consistently throughout.
 """
 
 import enum
-import re
 import typing
-from collections import OrderedDict
 from contextlib import contextmanager
 
 from opentelemetry.util import loader, types

@@ -62,8 +62,6 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         cls, get_from_carrier: httptextformat.Getter[_T], carrier: _T
     ) -> trace.SpanContext:
         """Extracts a valid SpanContext from the carrier.
-
-        If a header
         """
         header = get_from_carrier(carrier, cls._TRACEPARENT_HEADER_NAME)
 
@@ -92,7 +90,11 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         for tracestate_header in get_from_carrier(
             carrier, cls._TRACESTATE_HEADER_NAME
         ):
-            tracestate.update(_parse_tracestate(tracestate_header))
+            # typing.Dict's update is not recognized by pylint:
+            # https://github.com/PyCQA/pylint/issues/2420
+            tracestate.update(  # pylint:disable=E1101
+                _parse_tracestate(tracestate_header)
+            )
 
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
@@ -141,7 +143,9 @@ def _parse_tracestate(string: str) -> trace.TraceState:
         if not match:
             raise ValueError("illegal key-value format %r" % (member))
         key, _eq, value = match.groups()
-        tracestate[key] = value
+        # typing.Dict's update is not recognized by pylint:
+        # https://github.com/PyCQA/pylint/issues/2420
+        tracestate[key] = value  # pylint:disable=E1137
     return tracestate
 
 
@@ -155,4 +159,4 @@ def _format_tracestate(tracestate: trace.TraceState) -> str:
         A string that adheres to the w3c tracestate
         header format.
     """
-    return ",".join(map(lambda key: key + "=" + tracestate[key], tracestate))
+    return ",".join(key + "=" + value for key, value in tracestate.items())

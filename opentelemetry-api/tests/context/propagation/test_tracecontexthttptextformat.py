@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
 import unittest
 
 from opentelemetry import trace
@@ -20,16 +21,16 @@ from opentelemetry.context.propagation import tracecontexthttptextformat
 FORMAT = tracecontexthttptextformat.TraceContextHTTPTextFormat()
 
 
-def get_as_list(dict_object, key):
+def get_as_list(
+    dict_object: typing.Dict[str, str], key: str
+) -> typing.List[str]:
     value = dict_object.get(key)
     return [value] if value is not None else []
 
 
 class TestTraceContextFormat(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.trace_id = int("12345678901234567890123456789012", 16)
-        cls.span_id = int("1234567890123456", 16)
+    TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
+    SPAN_ID = int("1234567890123456", 16)  # type:int
 
     def test_no_traceparent_header(self):
         """When tracecontext headers are not present, a new SpanContext
@@ -39,7 +40,8 @@ class TestTraceContextFormat(unittest.TestCase):
 
         If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
         """
-        span_context = FORMAT.extract(get_as_list, {})
+        output: typing.Dict[str, str] = {}
+        span_context = FORMAT.extract(get_as_list, output)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
     def test_from_headers_tracestate_entry_limit(self):
@@ -101,21 +103,21 @@ class TestTraceContextFormat(unittest.TestCase):
         both should be addded to the SpanContext.
         """
         traceparent_value = "00-{trace_id}-{span_id}-00".format(
-            trace_id=format(self.trace_id, "032x"),
-            span_id=format(self.span_id, "016x"),
+            trace_id=format(self.TRACE_ID, "032x"),
+            span_id=format(self.SPAN_ID, "016x"),
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         span_context = FORMAT.extract(
             get_as_list,
             {"traceparent": traceparent_value, "tracestate": tracestate_value},
         )
-        self.assertEqual(span_context.trace_id, self.trace_id)
-        self.assertEqual(span_context.span_id, self.span_id)
+        self.assertEqual(span_context.trace_id, self.TRACE_ID)
+        self.assertEqual(span_context.span_id, self.SPAN_ID)
         self.assertEqual(
             span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
 
-        output = {}
+        output: typing.Dict[str, str] = {}
         FORMAT.inject(span_context, dict.__setitem__, output)
         self.assertEqual(output["traceparent"], traceparent_value)
         self.assertEqual(output["tracestate"], tracestate_value)
@@ -176,9 +178,9 @@ class TestTraceContextFormat(unittest.TestCase):
         Empty and whitespace-only list members are allowed. Vendors MUST accept empty
         tracestate headers but SHOULD avoid sending them.
         """
-        output = {}
+        output: typing.Dict[str, str] = {}
         FORMAT.inject(
-            trace.SpanContext(self.trace_id, self.span_id),
+            trace.SpanContext(self.TRACE_ID, self.SPAN_ID),
             dict.__setitem__,
             output,
         )
@@ -206,6 +208,6 @@ class TestTraceContextFormat(unittest.TestCase):
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context.
         """
-        output = {}
+        output: typing.Dict[str, str] = {}
         FORMAT.inject(trace.INVALID_SPAN_CONTEXT, dict.__setitem__, output)
         self.assertFalse("traceparent" in output)
