@@ -101,9 +101,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 parent = parent.context
             envelope.tags[
                 "ai.operation.parentId"
-            ] = "|{:032x}.{:016x}.".format(
-                parent.trace_id, parent.span_id
-            )
+            ] = "|{:032x}.{:016x}.".format(parent.trace_id, parent.span_id)
         if span.kind in (SpanKind.CONSUMER, SpanKind.SERVER):
             envelope.name = "Microsoft.ApplicationInsights.Request"
             data = protocol.Request(
