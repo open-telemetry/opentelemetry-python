@@ -21,7 +21,7 @@ import requests
 from opentelemetry.ext.azure_monitor import protocol, util
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import Span, SpanKind
 
 logger = logging.getLogger(__name__)
 
@@ -96,10 +96,13 @@ class AzureMonitorSpanExporter(SpanExporter):
             span.context.trace_id
         )
         if span.parent:
+            parent = span.parent
+            if isinstance(parent, Span):
+                parent = parent.context
             envelope.tags[
                 "ai.operation.parentId"
             ] = "|{:032x}.{:016x}.".format(
-                span.context.trace_id, span.context.span_id
+                parent.trace_id, parent.span_id
             )
         if span.kind in (SpanKind.CONSUMER, SpanKind.SERVER):
             envelope.name = "Microsoft.ApplicationInsights.Request"
