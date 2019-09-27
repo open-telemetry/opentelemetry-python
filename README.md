@@ -60,8 +60,8 @@ with tracer.start_span('foo'):
 See the [API
 documentation](https://open-telemetry.github.io/opentelemetry-python/) for more
 detail, and the
-[opentelemetry-example-app](./opentelemetry-example-app/README.rst) for a
-complete example.
+[opentelemetry-example-app](./examples/opentelemetry-example-app/README.rst)
+for a complete example.
 
 ## Contributing
 

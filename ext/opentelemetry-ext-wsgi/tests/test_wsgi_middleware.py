@@ -203,9 +203,7 @@ class TestWsgiAttributes(unittest.TestCase):
         self.assertIn("http.url", attrs)
         self.assertEqual(attrs["http.url"], expected_url)
         self.assertIn("http.host", attrs)
-        self.assertEqual(
-            attrs["http.host"], urlparse(attrs["http.url"]).netloc
-        )
+        self.assertEqual(attrs["http.host"], urlparse(expected_url).netloc)
 
     def test_request_attributes_with_partial_raw_uri(self):
         self.environ["RAW_URI"] = "/#top"
@@ -230,6 +228,18 @@ class TestWsgiAttributes(unittest.TestCase):
 
         self.environ["SERVER_PORT"] = "80"
         self.validate_url("https://127.0.0.1:80/")
+
+    def test_http_uri_port(self):
+        del self.environ["HTTP_HOST"]
+        self.environ["SERVER_PORT"] = "80"
+        self.environ["wsgi.url_scheme"] = "http"
+        self.validate_url("http://127.0.0.1/")
+
+        self.environ["SERVER_PORT"] = "8080"
+        self.validate_url("http://127.0.0.1:8080/")
+
+        self.environ["SERVER_PORT"] = "443"
+        self.validate_url("http://127.0.0.1:443/")
 
     def test_request_attributes_with_nonstandard_port_and_no_host(self):
         del self.environ["HTTP_HOST"]
