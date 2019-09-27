@@ -86,7 +86,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             days, hours, minutes, seconds, microseconds
         )
 
-    def span_to_envelope(self, span):
+    def span_to_envelope(self, span):  # noqa pylint: disable=too-many-branches
         envelope = protocol.Envelope(
             iKey=self.options.instrumentation_key,
             tags=dict(util.azure_monitor_context),
@@ -95,10 +95,10 @@ class AzureMonitorSpanExporter(SpanExporter):
         envelope.tags["ai.operation.id"] = "{:032x}".format(
             span.context.trace_id
         )
-        if span.parent:
-            parent = span.parent
-            if isinstance(parent, Span):
-                parent = parent.context
+        parent = span.parent
+        if isinstance(parent, Span):
+            parent = parent.context
+        if parent:
             envelope.tags[
                 "ai.operation.parentId"
             ] = "|{:032x}.{:016x}.".format(parent.trace_id, parent.span_id)
