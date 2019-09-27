@@ -88,7 +88,7 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str, ...] = None,
+        label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ):
@@ -128,7 +128,7 @@ class Counter(Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str, ...] = None,
+        label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = True,
     ):
@@ -158,7 +158,7 @@ class Gauge(Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str, ...] = None,
+        label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ):
@@ -188,7 +188,7 @@ class Measure(Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str, ...] = None,
+        label_keys: Sequence[str] = None,
         enabled: bool = False,
         monotonic: bool = False,
     ):
@@ -208,7 +208,7 @@ class Meter(metrics_api.Meter):
 
     def record_batch(
         self,
-        label_values: Sequence[str, ...],
+        label_values: Sequence[str],
         record_tuples: Sequence[Tuple[metrics_api.Metric, metrics_api.ValueT]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
@@ -222,7 +222,7 @@ class Meter(metrics_api.Meter):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         metric_type: Type[metrics_api.MetricT],
-        label_keys: Sequence[str, ...] = None,
+        label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
     ) -> "Metric":

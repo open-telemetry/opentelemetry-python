@@ -64,7 +64,7 @@ class Metric(ABC):
     """
 
     @abstractmethod
-    def get_handle(self, label_values: Sequence[str, ...]) -> "object":
+    def get_handle(self, label_values: Sequence[str] -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -91,7 +91,7 @@ class DefaultMetric(Metric):
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def get_handle(self, label_values: Sequence[str, ...]) -> "CounterHandle":
+    def get_handle(self, label_values: Sequence[str]) -> "CounterHandle":
         """Gets a `CounterHandle`."""
         return CounterHandle()
 
@@ -105,7 +105,7 @@ class Gauge(Metric):
     the measurement interval is arbitrary.
     """
 
-    def get_handle(self, label_values: Sequence[str, ...]) -> "GaugeHandle":
+    def get_handle(self, label_values: Sequence[str]) -> "GaugeHandle":
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
 
@@ -118,7 +118,7 @@ class Measure(Metric):
     Negative inputs will be discarded when monotonic is True.
     """
 
-    def get_handle(self, label_values: Sequence[str, ...]) -> "MeasureHandle":
+    def get_handle(self, label_values: Sequence[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
