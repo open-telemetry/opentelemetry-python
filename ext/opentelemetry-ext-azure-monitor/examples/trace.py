@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 from opentelemetry import trace
 from opentelemetry.ext.azure_monitor import AzureMonitorSpanExporter
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-
-logging.basicConfig(level=logging.INFO)
 
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
