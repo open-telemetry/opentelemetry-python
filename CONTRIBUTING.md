@@ -50,7 +50,7 @@ Run tests:
 
 ```sh
 # make sure you have all supported versions of Python installed
-$ pip install tox # only first time.
+$ pip install tox  # only first time.
 $ tox  # execute in the root of the repository
 ```
 
