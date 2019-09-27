@@ -120,7 +120,9 @@ class TestTraceContextFormat(unittest.TestCase):
         output = {}  # type:typing.Dict[str, str]
         FORMAT.inject(span_context, dict.__setitem__, output)
         self.assertEqual(output["traceparent"], traceparent_value)
-        self.assertEqual(output["tracestate"], tracestate_value)
+        for pair in ["foo=1", "bar=2", "baz=3"]:
+            self.assertIn(pair, output["tracestate"])
+        self.assertEqual(output["tracestate"].count(","), 2)
 
     def test_invalid_trace_id(self):
         """If the trace id is invalid, we must ignore the full traceparent header.
