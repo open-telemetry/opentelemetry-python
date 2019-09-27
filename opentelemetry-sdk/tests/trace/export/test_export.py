@@ -14,8 +14,8 @@
 
 import time
 import unittest
-
 from unittest import mock
+
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
@@ -56,16 +56,17 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
 
 
-class TestBatchExportSpanProcessor(unittest.TestCase):
-    def _create_start_and_end_span(self, name, span_processor):
-        span = trace.Span(
-            name,
-            mock.Mock(spec=trace_api.SpanContext),
-            span_processor=span_processor
-        )
-        span.start()
-        span.end()
+def _create_start_and_end_span(name, span_processor):
+    span = trace.Span(
+        name,
+        mock.Mock(spec=trace_api.SpanContext),
+        span_processor=span_processor,
+    )
+    span.start()
+    span.end()
 
+
+class TestBatchExportSpanProcessor(unittest.TestCase):
     def test_batch_span_processor(self):
         spans_names_list = []
 
@@ -75,7 +76,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         span_names = ["xxx", "bar", "foo"]
 
         for name in span_names:
-            self._create_start_and_end_span(name, span_processor)
+            _create_start_and_end_span(name, span_processor)
 
         span_processor.shutdown()
         self.assertListEqual(span_names, spans_names_list)
@@ -91,8 +92,8 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
             my_exporter, max_queue_size=512, max_export_batch_size=128
         )
 
-        for idx in range(512):
-            self._create_start_and_end_span("foo", span_processor)
+        for _ in range(512):
+            _create_start_and_end_span("foo", span_processor)
 
         span_processor.shutdown()
         self.assertEqual(len(spans_names_list), 512)
@@ -105,12 +106,15 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
             destination=spans_names_list, max_export_batch_size=128
         )
         span_processor = export.BatchExportSpanProcessor(
-            my_exporter, max_queue_size=256, max_export_batch_size=64, schedule_delay_millis=100
+            my_exporter,
+            max_queue_size=256,
+            max_export_batch_size=64,
+            schedule_delay_millis=100,
         )
 
-        for iteration in range(4):
-            for idx in range(256):
-                self._create_start_and_end_span("foo", span_processor)
+        for _ in range(4):
+            for _ in range(256):
+                _create_start_and_end_span("foo", span_processor)
 
             time.sleep(0.05)  # give some time for the exporter to upload spans
 
@@ -127,7 +131,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         )
 
         # create single span
-        self._create_start_and_end_span("foo", span_processor)
+        _create_start_and_end_span("foo", span_processor)
 
         time.sleep(0.05 + 0.02)
         # span should be already exported

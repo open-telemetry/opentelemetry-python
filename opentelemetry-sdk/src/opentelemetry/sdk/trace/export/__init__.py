@@ -142,7 +142,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if len(self.queue) >= self.max_queue_size // 2:
             with self.condition:
-                    self.condition.notify()
+                self.condition.notify()
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
