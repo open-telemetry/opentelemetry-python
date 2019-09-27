@@ -32,34 +32,27 @@ DEFAULT_COLLECTOR_ENDPOINT = "/api/traces?format=jaeger.thrift"
 
 UDP_PACKET_MAX_LENGTH = 65000
 
-logging = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class JaegerSpanExporter(SpanExporter):
+    """Jaeger span exporter for OpenTelemetry.
 
-    """Exports the spans to Jaeger.
-
-    :param service_name: Service that logged an annotation in a trace.
-                         Classifier when query for spans.
-
-    :param collector_host_name: (Optional) The host name of the Jaeger-
-                                Collector HTTP Thrift.
-
-    :param collector_port: (Optional) The port of the Jaeger-Collector HTTP
-                           Thrift.
-
-    :param username: (Optional) The user name of the Basic Auth
-                     if authentication is required.
-
-    :param password: (Optional) The password of the Basic Auth
-                     if authentication is required.
-
-    :param collector_endpoint: (Optional) The endpoint of the Jaeger-Collector
-                               HTTP Thrift.
-
-    :param agent_host_name: (Optional) The host name of the Jaeger-Agent.
-
-    :param agent_port: (Optional) The port of the Jaeger-Agent.
+    Args:
+        service_name: Service that logged an annotation in a trace.Classifier
+            when query for spans.
+        collector_host_name: (Optional) The host name of the Jaeger-Collector
+            HTTP Thrift.
+        collector_port: (Optional) The port of the Jaeger-Collector HTTP
+            Thrift.
+        username: (Optional) The user name of the Basic Auth if authentication
+            is required.
+        password: (Optional) The password of the Basic Auth if authentication
+            is required.
+        collector_endpoint: (Optional) The endpoint of the Jaeger-Collector
+            HTTP Thrift.
+        agent_host_name: (Optional) The host name of the Jaeger-Agent.
+        agent_port: (Optional) The port of the Jaeger-Agent.
     """
 
     def __init__(
@@ -114,10 +107,6 @@ class JaegerSpanExporter(SpanExporter):
         return self._collector
 
     def export(self, spans: typing.Sequence[Span]):
-        """
-        :param spans:
-            Tuple of spans to export.
-        """
         jaeger_spans = self.translate_to_jaeger(spans)
 
         batch = jaeger.Batch(
@@ -132,17 +121,13 @@ class JaegerSpanExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def shutdown(self):
-        """Shutdown the Exporter
-
-        After this called is made not further spans will be summited
-        """
         pass
 
     def translate_to_jaeger(self, spans: typing.Sequence[Span]):
         """Translate the spans to Jaeger format.
 
-        :param spans:
-            Tuple of spans to convert
+        Args:
+            spans: Tuple of spans to convert
         """
 
         jaeger_spans = []
@@ -174,6 +159,7 @@ class JaegerSpanExporter(SpanExporter):
             jaeger_span = jaeger.Span(
                 traceIdHigh=_get_trace_id_high(trace_id),
                 traceIdLow=_get_trace_id_low(trace_id),
+                # generated code expects i64
                 spanId=_convert_int_to_i64(span_id),
                 operationName=span.name,
                 startTime=int(start_time_us),
@@ -191,7 +177,7 @@ class JaegerSpanExporter(SpanExporter):
 
 
 def _extract_refs_from_span(span):
-    if len(span.links) == 0:
+    if not span.links:
         return None
 
     refs = []
@@ -225,7 +211,7 @@ def _get_trace_id_high(trace_id):
 
 
 def _extract_logs_from_span(span):
-    if len(span.events) == 0:
+    if not span.events:
         return None
 
     logs = []
@@ -249,7 +235,7 @@ def _extract_logs_from_span(span):
 
 
 def _extract_tags(attr):
-    if attr is None:
+    if not attr:
         return []
     tags = []
     for attribute_key, attribute_value in attr.items():
@@ -270,23 +256,21 @@ def _convert_attribute_to_tag(key, attr):
         return jaeger.Tag(key=key, vLong=attr, vType=jaeger.TagType.LONG)
     if isinstance(attr, float):
         return jaeger.Tag(key=key, vDouble=attr, vType=jaeger.TagType.DOUBLE)
-    logging.warning("Could not serialize attribute %s:%r to tag", key, attr)
+    logger.warning("Could not serialize attribute %s:%r to tag", key, attr)
     return None
 
 
 class AgentClientUDP:
     """Implement a UDP client to agent.
 
-    :param host_name: The host name of the Jaeger server.
-
-    :param port: The port of the Jaeger server.
-
-    :param max_packet_size: (Optional) Maximum size of UDP packet.
-
-    :param client: Class for creating new client objects for agencies. It
-                   should extend from the agent :class: `.AgentIface` type
-                   and implement :meth:`.AgentIface.emitBatch`.Default and
-                   only option to :class:`.AgentClient`.
+    Args:
+        host_name: The host name of the Jaeger server.
+        port: The port of the Jaeger server.
+        max_packet_size: (Optional) Maximum size of UDP packet.
+        client: Class for creating new client objects for agencies. It should
+            extend from the agent :class: `.AgentIface` type and implement
+            :meth:`.AgentIface.emitBatch`. Default and only option to
+            :class:`.AgentClient`.
     """
 
     def __init__(
@@ -305,44 +289,36 @@ class AgentClientUDP:
 
     def emit(self, batch: jaeger.Batch):
         """
-        :param batch: Object to emit Jaeger spans.
+        Args:
+            batch: Object to emit Jaeger spans.
         """
-        udp_socket = None
-        try:
-            self.client._seqid = 0
-            #  truncate and reset the position of BytesIO object
-            self.buffer._buffer.truncate(0)
-            self.buffer._buffer.seek(0)
-            self.client.emitBatch(batch)
-            buff = self.buffer.getvalue()
-            if len(buff) > self.max_packet_size:
-                logging.warning(
-                    "Data exceeds the max UDP packet size; size %r, max %r",
-                    len(buff),
-                    self.max_packet_size,
-                )
-            else:
-                udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                udp_socket.sendto(buff, self.address)
 
-        except Exception as e:  # pragma: NO COVER
-            logging.error(getattr(e, "message", e))
+        self.client._seqid = 0
+        #  truncate and reset the position of BytesIO object
+        self.buffer._buffer.truncate(0)
+        self.buffer._buffer.seek(0)
+        self.client.emitBatch(batch)
+        buff = self.buffer.getvalue()
+        if len(buff) > self.max_packet_size:
+            logger.warning(
+                "Data exceeds the max UDP packet size; size %r, max %r",
+                len(buff),
+                self.max_packet_size,
+            )
+            return
 
-        finally:
-            if udp_socket is not None:
-                udp_socket.close()
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            udp_socket.sendto(buff, self.address)
 
 
 class Collector:
     """Submits collected spans to Thrift HTTP server.
 
-    :param thrift_url: URL of the Jaeger HTTP Thrift.
-
-    :param auth: (Optional) Auth tuple that contains username and
-                password for Basic Auth.
-
-    :param http_transport: Class for creating new client for Thrift
-                           HTTP server.
+    Args:
+        thrift_url: URL of the Jaeger HTTP Thrift.
+        auth: (Optional) Auth tuple that contains username and password for
+            Basic Auth.
+        http_transport: Class for creating new client for Thrift HTTP server.
     """
 
     def __init__(
@@ -371,7 +347,8 @@ class Collector:
     def submit(self, batch: jaeger.Batch):
         """Submits batches to Thrift HTTP Server through Binary Protocol.
 
-        :param batch: Object to emit Jaeger spans.
+        Args:
+            batch: Object to emit Jaeger spans.
         """
         try:
             self.client.submitBatches([batch])
@@ -380,15 +357,12 @@ class Collector:
             code = self.http_transport.code
             msg = self.http_transport.message
             if code >= 300 or code < 200:
-                logging.error(
+                logger.error(
                     "Traces cannot be uploaded;\
                         HTTP status code: {}, message {}".format(
                         code, msg
                     )
                 )
-        except Exception as e:  # pragma: NO COVER
-            logging.error(getattr(e, "message", e))
-
         finally:
             if self.http_transport.isOpen():
                 self.http_transport.close()

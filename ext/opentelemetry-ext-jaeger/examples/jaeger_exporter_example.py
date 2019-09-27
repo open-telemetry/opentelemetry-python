@@ -4,7 +4,7 @@ import opentelemetry.ext.jaeger as exporter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
 
-tracer = trace.Tracer()
+tracer = trace.tracer
 
 # Create a JaegerSpanExporter
 jaeger_exporter = exporter.JaegerSpanExporter()
