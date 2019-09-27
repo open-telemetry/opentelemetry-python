@@ -23,6 +23,7 @@ from urllib.parse import urlparse
 from requests.sessions import Session
 
 from opentelemetry import propagators
+from opentelemetry.context import Context
 from opentelemetry.trace import SpanKind
 
 
@@ -50,8 +51,8 @@ def enable(tracer):
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
-        # TODO: Check if we are in an exporter, cf. OpenCensus
-        # execution_context.is_exporter()
+        if Context.is_exporter:  # Check if we are in an exporter
+            return wrapped(self, method, url, *args, **kwargs)
 
         # See
         # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/data-semantic-conventions.md#http-client

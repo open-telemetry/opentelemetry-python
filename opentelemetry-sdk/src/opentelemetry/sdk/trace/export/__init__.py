@@ -21,6 +21,7 @@ from enum import Enum
 from opentelemetry.sdk import util
 
 from .. import Span, SpanProcessor
+from opentelemetry.context import Context
 
 logger = logging.getLogger(__name__)
 
@@ -72,11 +73,15 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
+        is_exporter = Context.is_exporter
         try:
+            Context.is_exporter = True
             self.span_exporter.export((span,))
         # pylint: disable=broad-except
         except Exception as exc:
             logger.warning("Exception while exporting data: %s", exc)
+        finally:
+            Context.is_exporter = is_exporter
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
