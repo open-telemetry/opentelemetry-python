@@ -31,6 +31,7 @@ trace.tracer().add_span_processor(span_processor)
 app = flask.Flask(__name__)
 app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
+
 @app.route("/")
 def hello():
     with trace.tracer().start_span("parent"):
