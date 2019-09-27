@@ -51,7 +51,7 @@ def enable(tracer):
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
-        if Context.is_exporter:  # Check if we are in an exporter
+        if Context.suppress_instrumentation:
             return wrapped(self, method, url, *args, **kwargs)
 
         # See

@@ -73,15 +73,15 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        is_exporter = Context.is_exporter
+        suppress_instrumentation = Context.suppress_instrumentation
         try:
-            Context.is_exporter = True
+            Context.suppress_instrumentation = True
             self.span_exporter.export((span,))
         # pylint: disable=broad-except
         except Exception as exc:
             logger.warning("Exception while exporting data: %s", exc)
         finally:
-            Context.is_exporter = is_exporter
+            Context.suppress_instrumentation = suppress_instrumentation
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -181,11 +181,15 @@ class BatchExportSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
+        suppress_instrumentation = Context.suppress_instrumentation
         try:
+            Context.suppress_instrumentation = True
             self.span_exporter.export(self.spans_list[:idx])
         # pylint: disable=broad-except
         except Exception:
             logger.exception("Exception while exporting data.")
+        finally:
+            Context.suppress_instrumentation = suppress_instrumentation
 
         # clean up list
         for index in range(idx):
