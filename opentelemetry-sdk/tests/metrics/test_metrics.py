@@ -90,7 +90,7 @@ class TestMetric(unittest.TestCase):
     def test_get_handle(self):
         metric_types = [metrics.Counter, metrics.Gauge, metrics.Measure]
         for _type in metric_types:
-            metric = _type("name", "desc", "unit", int, ("key"))
+            metric = _type("name", "desc", "unit", int, ("key",))
             label_values = ("value",)
             handle = metric.get_handle(label_values)
             self.assertEqual(metric.handles.get(label_values), handle)

@@ -35,9 +35,6 @@ class BaseHandle:
     def _validate_update(self, value: metrics_api.ValueT):
         if not self.enabled:
             return False
-        if self.monotonic and value < 0:
-            logger.warning("Monotonic metric cannot descend.")
-            return False
         if not isinstance(value, self.value_type):
             logger.warning(
                 "Invalid value passed for %s.", self.value_type.__name__
@@ -49,6 +46,9 @@ class BaseHandle:
 class CounterHandle(metrics_api.CounterHandle, BaseHandle):
     def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
+            if self.monotonic and value < 0:
+                logger.warning("Monotonic counter cannot descend.")
+                return
             self.data += value
 
     def add(self, value: metrics_api.ValueT) -> None:
@@ -59,6 +59,9 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
 class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
     def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
+            if self.monotonic and value < self.data:
+                logger.warning("Monotonic gauge cannot descend.")
+                return
             self.data = value
 
     def set(self, value: metrics_api.ValueT) -> None:
@@ -69,7 +72,9 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
 class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
     def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
-            pass
+            if self.monotonic and value < 0:
+                logger.warning("Monotonic measure cannot accept negatives.")
+                return
             # TODO: record
 
     def record(self, value: metrics_api.ValueT) -> None:
@@ -105,7 +110,7 @@ class Metric(metrics_api.Metric):
         """See `opentelemetry.metrics.Metric.get_handle`."""
         handle = self.handles.get(label_values)
         if not handle:
-            handle = self.__class__.HANDLE_TYPE(
+            handle = self.HANDLE_TYPE(
                 self.value_type, self.enabled, self.monotonic
             )
         self.handles[label_values] = handle
