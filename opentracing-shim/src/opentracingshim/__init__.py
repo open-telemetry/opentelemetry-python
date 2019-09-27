@@ -16,7 +16,8 @@ from contextlib import contextmanager
 
 import opentracing
 
-from opentelemetry.trace import Span, SpanContext, Tracer
+from opentelemetry.trace import Event, Span, SpanContext, Tracer
+from opentracingshim import util
 
 
 def create_tracer(tracer: Tracer) -> opentracing.Tracer:
@@ -70,8 +71,16 @@ class SpanWrapper(opentracing.Span):
         self._otel_span.set_attribute(key, value)
 
     def log_kv(self, key_values, timestamp=None):
+        # TODO: Is it OK to set the event name to an empty string? log_kv
+        # doesn't have a `name` argument.
+        if timestamp is None:
+            timestamp = util.time_ns()
+
+        event = Event("", timestamp, key_values)
+        self._otel_span.add_lazy_event(event)
+
+        # Return self for call chaining.
         return self
-        # TODO: Implement.
 
     def set_baggage_item(self, key, value):
         return self

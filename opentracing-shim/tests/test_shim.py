@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import unittest
 
 import opentracing
@@ -142,6 +143,19 @@ class TestShim(unittest.TestCase):
         self.assertIsNone(span.otel_span.end_time)
         span.finish()
         self.assertIsNotNone(span.otel_span.end_time)
+
+    def test_log_kv(self):
+        span = self.shim.start_span("TestSpan")
+
+        span.log_kv({"foo": "bar"})
+        self.assertEqual(span.otel_span.events[0].attributes["foo"], "bar")
+        # Verify timestamp was generated automatically.
+        self.assertIsNotNone(span.otel_span.events[0].timestamp)
+
+        # Test explicit timestamp.
+        now = time.time()
+        span.log_kv({"foo": "bar"}, now)
+        self.assertEqual(span.otel_span.events[1].timestamp, now)
 
     def test_span_context(self):
         otel_context = trace.SpanContext(1234, 5678)
