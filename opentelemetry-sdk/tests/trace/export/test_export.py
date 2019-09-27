@@ -97,6 +97,31 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         span_processor.shutdown()
         self.assertEqual(len(spans_names_list), 512)
 
+    def test_batch_span_processor_many_spans(self):
+        """Test that no spans are lost when sending max_queue_size spans"""
+        tracer = trace.Tracer()
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(
+            destination=spans_names_list, max_export_batch_size=128
+        )
+        span_processor = export.BatchExportSpanProcessor(
+            my_exporter, max_queue_size=256, max_export_batch_size=64, schedule_delay_millis=100
+        )
+        tracer.add_span_processor(span_processor)
+
+        for iteration in range(4):
+            for idx in range(256):
+                with tracer.start_span("foo{}".format(idx)):
+                    pass
+            time.sleep(0.05)  # give some time for the exporter to upload spans
+
+        # call shutdown on specific span processor
+        # TODO: this call is missing in the tracer
+        span_processor.shutdown()
+        self.assertEqual(len(spans_names_list), 1024)
+
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""
         tracer = trace.Tracer()

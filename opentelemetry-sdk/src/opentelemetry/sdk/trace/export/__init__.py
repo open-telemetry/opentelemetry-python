@@ -14,7 +14,6 @@
 
 import collections
 import logging
-import sys
 import threading
 import typing
 from enum import Enum
@@ -110,7 +109,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if max_export_batch_size > max_queue_size:
             raise ValueError(
-                "max_export_batch_size must be less and equal to max_export_batch_size."
+                "max_export_batch_size must be less than and equal to max_export_batch_size."
             )
 
         self.span_exporter = span_exporter
@@ -123,8 +122,8 @@ class BatchExportSpanProcessor(SpanProcessor):
         self.done = False
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
-        # used to avoid sending too much notifications to worker
-        self.notified = False
+        # precallocated list to send spans to exporter
+        self.spans_list = [None] * self.max_export_batch_size
         self.worker_thread.start()
 
     def on_start(self, span: Span) -> None:
@@ -143,16 +142,13 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if len(self.queue) >= self.max_queue_size // 2:
             with self.condition:
-                if not self.notified:
-                    self.notified = True
-                    self.condition.notify_all()
+                    self.condition.notify()
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
         while not self.done:
             if len(self.queue) < self.max_export_batch_size:
                 with self.condition:
-                    self.notified = False
                     self.condition.wait(timeout)
                     if not self.queue:
                         # spurious notification, let's wait again
@@ -174,25 +170,26 @@ class BatchExportSpanProcessor(SpanProcessor):
     def export(self) -> bool:
         """Exports at most max_export_batch_size spans."""
         idx = 0
-        spans = [None] * self.max_export_batch_size
+
         # currently only a single thread acts as consumer, so queue.pop() will
-        # raise an exception
+        # not raise an exception
         while idx < self.max_export_batch_size and self.queue:
-            spans[idx] = self.queue.pop()
+            self.spans_list[idx] = self.queue.pop()
             idx += 1
         try:
-            self.span_exporter.export(spans[:idx])
+            self.span_exporter.export(self.spans_list[:idx])
         # pylint: disable=broad-except
         except Exception:
-            logger.warning(
-                "Exception while exporting data.", exc_info=sys.exc_info()
-            )
+            logger.exception("Exception while exporting data.")
 
-        return self.queue
+        # clean up list
+        for index in range(idx):
+            self.spans_list[index] = None
 
     def _flush(self):
-        while self.export():
-            pass
+        # export all elements until queue is empty
+        while self.queue:
+            self.export()
 
     def shutdown(self) -> None:
         # signal the worker thread to finish and then wait for it
