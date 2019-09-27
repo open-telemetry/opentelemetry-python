@@ -17,7 +17,7 @@ This module serves as an example for a simple application using metrics
 """
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Meter
+from opentelemetry.sdk.metrics import Counter, Meter
 
 metrics.set_preferred_meter_implementation(lambda _: Meter())
 meter = metrics.meter()
@@ -26,17 +26,14 @@ counter = meter.create_metric(
     "available memory",
     "bytes",
     int,
-    metrics.MetricKind.COUNTER,
-    ("environment"),
+    Counter,
+    ("environment",),
 )
 
-label_values = "staging"
-
+label_values = ("staging",)
 counter_handle = counter.get_handle(label_values)
-
 counter_handle.add(100)
 meter.record_batch(label_values, [(counter, 50)])
-
 print(counter_handle.data)
 
 # TODO: exporters
