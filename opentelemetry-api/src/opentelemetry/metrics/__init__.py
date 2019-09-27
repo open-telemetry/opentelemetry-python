@@ -161,7 +161,7 @@ class Meter:
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
-    ) -> "Metric":
+    ) -> MetricT:
         """Creates a ``metric_kind`` metric with type ``value_type``.
 
         Args:

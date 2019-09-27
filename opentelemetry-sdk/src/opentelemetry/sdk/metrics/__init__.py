@@ -225,7 +225,7 @@ class Meter(metrics_api.Meter):
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
-    ) -> "Metric":
+    ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
         return metric_type(
             name,
