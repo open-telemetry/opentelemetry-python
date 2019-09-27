@@ -3,6 +3,13 @@ OpenTelemetry Azure Monitor Exporters
 
 This library provides integration with Microsoft Azure Monitor.
 
+Installation
+------------
+
+::
+
+    pip install opentelemetry-ext-azure-monitor
+
 References
 ----------
 
