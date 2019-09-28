@@ -32,8 +32,7 @@ class MetricsExporter:
     """
 
     def export(
-        self,
-        metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
+        self, metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
     ) -> "MetricsExportResult":
         """Exports a batch of telemetry data.
 
@@ -63,11 +62,15 @@ class ConsoleMetricsExporter(MetricsExporter):
     """
 
     def export(
-        self,
-        metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
+        self, metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
     ) -> "MetricsExportResult":
         for metric_tuple in metric_tuples:
             handle = metric_tuple[0].get_handle(metric_tuple[1])
-            print(str(metric_tuple[0]) + ", LabelValues: " +
-                str(metric_tuple[1]) + ", " + str(handle))
+            print(
+                str(metric_tuple[0])
+                + ", LabelValues: "
+                + str(metric_tuple[1])
+                + ", "
+                + str(handle)
+            )
         return MetricsExportResult.SUCCESS
