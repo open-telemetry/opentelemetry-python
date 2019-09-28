@@ -14,7 +14,7 @@
 
 from opentelemetry import metrics
 from opentelemetry.ext.azure_monitor import AzureMonitorMetricsExporter
-from opentelemetry.sdk.metrics import Counter, Meter
+from opentelemetry.sdk.metrics import Counter, Gauge, Meter
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
 metrics.set_preferred_meter_implementation(lambda T: Meter())
@@ -30,9 +30,21 @@ counter = meter.create_metric(
     Counter,
     ("environment",),
 )
+gauge = meter.create_metric(
+    "process cpu usage",
+    "process cpu usage",
+    "percentage",
+    float,
+    Gauge,
+    ("environment",),
+)
 label_values = ("staging",)
+label_values2 = ("testing",)
 counter_handle = counter.get_handle(label_values)
 counter_handle.add(100)
+gauge_handle = gauge.get_handle(label_values2)
+gauge_handle.set(20.5)
 
-console_exporter.export([(counter, label_values)])
-exporter.export([(counter, label_values)])
+
+console_exporter.export([(counter, label_values), (gauge, label_values2)])
+exporter.export([(counter, label_values), (gauge, label_values2)])

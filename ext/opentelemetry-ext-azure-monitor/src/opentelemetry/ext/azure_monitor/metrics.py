@@ -32,6 +32,7 @@ class AzureMonitorMetricsExporter(MetricsExporter):
             raise ValueError("The instrumentation_key is not provided.")
 
     def export(self, metric_tuples):
+        # Metric tuples is a sequence of metric to label values pairs
         envelopes = tuple(map(self.metric_tuple_to_envelope, metric_tuples))
 
         try:
@@ -88,8 +89,8 @@ class AzureMonitorMetricsExporter(MetricsExporter):
         properties = {metric.label_keys[idx]: label_values[idx]
             for idx, value in enumerate(label_values, start=0)}
         data_point = protocol.DataPoint(ns=metric.name,
-                                   name=metric.name,
-                                   value=handle.data)
+                                        name=metric.name,
+                                        value=handle.data)
         data = protocol.MetricData(
             metrics=[data_point],
             properties=properties
