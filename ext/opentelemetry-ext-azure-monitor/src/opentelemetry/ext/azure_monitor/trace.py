@@ -16,7 +16,6 @@ import json
 import logging
 from urllib.parse import urlparse
 
-
 from opentelemetry.ext.azure_monitor import protocol, transport, util
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
