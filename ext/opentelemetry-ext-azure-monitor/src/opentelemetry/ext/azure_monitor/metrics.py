@@ -23,7 +23,6 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExportResult,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

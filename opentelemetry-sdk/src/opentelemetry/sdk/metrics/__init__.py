@@ -14,7 +14,6 @@
 
 import logging
 from datetime import datetime
-
 from typing import Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
