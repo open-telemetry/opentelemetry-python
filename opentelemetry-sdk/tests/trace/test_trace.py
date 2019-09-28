@@ -234,6 +234,16 @@ class TestSpan(unittest.TestCase):
         span.start()
         self.assertEqual(start_time, span.start_time)
 
+    def test_span_override_start_and_end_time(self):
+        """Span sending custom start_time and end_time values"""
+        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        start_time = 123
+        span.start(start_time)
+        self.assertEqual(start_time, span.start_time)
+        end_time = 456
+        span.end(end_time)
+        self.assertEqual(end_time, span.end_time)
+
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
         tracer = trace.Tracer("test_ended_span")
