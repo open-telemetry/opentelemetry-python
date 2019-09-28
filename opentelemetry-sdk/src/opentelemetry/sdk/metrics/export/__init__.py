@@ -66,7 +66,12 @@ class ConsoleMetricsExporter(MetricsExporter):
     ) -> "MetricsExportResult":
         for metric_tuple in metric_tuples:
             handle = metric_tuple[0].get_handle(metric_tuple[1])
-            print('{}(data="{}", label_values="{}", metric_data={})'.format(
-                type(self).__name__, metric_tuple[0], metric_tuple[1], handle)
+            print(
+                '{}(data="{}", label_values="{}", metric_data={})'.format(
+                    type(self).__name__,
+                    metric_tuple[0],
+                    metric_tuple[1],
+                    handle,
+                )
             )
         return MetricsExportResult.SUCCESS
