@@ -48,3 +48,4 @@ gauge_handle.set(20.5)
 
 console_exporter.export([(counter, label_values), (gauge, label_values2)])
 exporter.export([(counter, label_values), (gauge, label_values2)])
+exporter.shutdown()

@@ -16,9 +16,8 @@ import json
 import logging
 from urllib.parse import urlparse
 
-import requests
 
-from opentelemetry.ext.azure_monitor import protocol, util
+from opentelemetry.ext.azure_monitor import protocol, transport, util
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.trace import Span, SpanKind
@@ -26,54 +25,15 @@ from opentelemetry.trace import Span, SpanKind
 logger = logging.getLogger(__name__)
 
 
-class AzureMonitorSpanExporter(SpanExporter):
+class AzureMonitorSpanExporter(SpanExporter, transport.TransportMixin):
     def __init__(self, **options):
         self.options = util.Options(**options)
-        if not self.options.instrumentation_key:
-            raise ValueError("The instrumentation_key is not provided.")
+        util.validate_key(self.options.instrumentation_key)
+        self.export_result_type = SpanExportResult
 
     def export(self, spans):
         envelopes = tuple(map(self.span_to_envelope, spans))
-
-        try:
-            response = requests.post(
-                url=self.options.endpoint,
-                data=json.dumps(envelopes),
-                headers={
-                    "Accept": "application/json",
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                timeout=self.options.timeout,
-            )
-        except requests.RequestException as ex:
-            logger.warning("Transient client side error %s.", ex)
-            return SpanExportResult.FAILED_RETRYABLE
-
-        text = "N/A"
-        data = None  # noqa pylint: disable=unused-variable
-        try:
-            text = response.text
-        except Exception as ex:  # noqa pylint: disable=broad-except
-            logger.warning("Error while reading response body %s.", ex)
-        else:
-            try:
-                data = json.loads(text)  # noqa pylint: disable=unused-variable
-            except Exception:  # noqa pylint: disable=broad-except
-                pass
-
-        if response.status_code == 200:
-            logger.info("Transmission succeeded: %s.", text)
-            return SpanExportResult.SUCCESS
-
-        if response.status_code in (
-            206,  # Partial Content
-            429,  # Too Many Requests
-            500,  # Internal Server Error
-            503,  # Service Unavailable
-        ):
-            return SpanExportResult.FAILED_RETRYABLE
-
-        return SpanExportResult.FAILED_NOT_RETRYABLE
+        return self._transmit(envelopes)
 
     @staticmethod
     def ns_to_duration(nanoseconds):

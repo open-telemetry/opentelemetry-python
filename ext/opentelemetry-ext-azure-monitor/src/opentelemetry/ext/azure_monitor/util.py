@@ -40,3 +40,7 @@ class Options(BaseObject):
         instrumentation_key=os.getenv("APPINSIGHTS_INSTRUMENTATIONKEY", None),
         timeout=10.0,  # networking timeout in seconds
     )
+
+def validate_key(instrumentation_key):
+    if not instrumentation_key:
+        raise ValueError("The instrumentation_key is not provided.")

@@ -27,8 +27,8 @@ class MetricsExportResult(Enum):
 class MetricsExporter:
     """Interface for exporting metrics.
 
-    Interface to be implemented by services that want to export recorded in
-    its own format.
+    Interface to be implemented by services that want to export recorded
+    metrics in its own format.
     """
 
     def export(
@@ -66,11 +66,7 @@ class ConsoleMetricsExporter(MetricsExporter):
     ) -> "MetricsExportResult":
         for metric_tuple in metric_tuples:
             handle = metric_tuple[0].get_handle(metric_tuple[1])
-            print(
-                str(metric_tuple[0])
-                + ", LabelValues: "
-                + str(metric_tuple[1])
-                + ", "
-                + str(handle)
+            print('{}(data="{}", label_values="{}", metric_data={})'.format(
+                type(self).__name__, metric_tuple[0], metric_tuple[1], handle)
             )
         return MetricsExportResult.SUCCESS
