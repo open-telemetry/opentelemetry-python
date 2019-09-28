@@ -19,7 +19,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-class TransportMixin(object):
+class TransportMixin:
     def _transmit(self, envelopes):
         try:
             response = requests.post(
