@@ -41,7 +41,7 @@ class AzureMonitorMetricsExporter(MetricsExporter, transport.TransportMixin):
         envelope = protocol.Envelope(
             iKey=self.options.instrumentation_key,
             tags=dict(util.azure_monitor_context),
-            time=handle.timestamp.isoformat(),
+            time=handle.last_update_timestamp,
         )
         envelope.name = "Microsoft.ApplicationInsights.Metric"
         # label_keys and label_values assumed to have the same length

@@ -49,7 +49,7 @@ class TransportMixin:
                 pass
 
         if response.status_code == 200:
-            logger.info("Transmission succeeded: %s.", text)
+            logger.debug("Transmission succeeded: %s.", text)
             return self.export_result_type.SUCCESS
 
         if response.status_code in (
