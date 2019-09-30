@@ -37,7 +37,7 @@ pull requests (PRs).
 To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```sh
-$ git clone https://https://github.com/open-telemetry/opentelemetry-python.git
+$ git clone https://github.com/open-telemetry/opentelemetry-python.git
 ```
 
 Add your fork as an origin:
