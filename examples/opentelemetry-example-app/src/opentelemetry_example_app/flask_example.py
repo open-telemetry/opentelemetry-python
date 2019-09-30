@@ -42,17 +42,14 @@ def configure_opentelemetry(flask_app: flask.Flask):
     """
     # Start by configuring all objects required to ensure
     # a complete end to end workflow.
-    # the preferred implementation of these objects must be set,
+    # The preferred implementation of these objects must be set,
     # as the opentelemetry-api defines the interface with a no-op
     # implementation.
     trace.set_preferred_tracer_implementation(lambda _: Tracer())
+
     # Next, we need to configure how the values that are used by
     # traces and metrics are propagated (such as what specific headers
     # carry this value).
-
-    # TBD: can remove once default TraceContext propagators are installed.
-    propagators.set_global_httptextformat(B3Format())
-
     # Integrations are the glue that binds the OpenTelemetry API
     # and the frameworks and libraries that are used together, automatically
     # creating Spans and propagating context as appropriate.
