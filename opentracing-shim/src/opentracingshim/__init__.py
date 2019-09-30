@@ -71,12 +71,11 @@ class SpanWrapper(opentracing.Span):
         self._otel_span.set_attribute(key, value)
 
     def log_kv(self, key_values, timestamp=None):
-        # TODO: Is it OK to set the event name to an empty string? log_kv
-        # doesn't have a `name` argument.
         if timestamp is None:
             timestamp = util.time_ns()
 
-        event = Event("", timestamp, key_values)
+        event_name = util.event_name_from_kv(key_values)
+        event = Event(event_name, timestamp, key_values)
         self._otel_span.add_lazy_event(event)
 
         # Return self for call chaining.

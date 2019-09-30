@@ -21,3 +21,19 @@ except AttributeError:
 
     def time_ns():
         return int(time.time() * 1e9)
+
+
+# A default event name to be used for logging events when a better event name
+# can't be derived from the event's key-value pairs.
+DEFAULT_EVENT_NAME = "log"
+
+
+def event_name_from_kv(key_values: dict) -> str:
+    """A helper function which returns an event name from the given dict, or a
+    default event name.
+    """
+
+    if key_values is None or "event" not in key_values:
+        return DEFAULT_EVENT_NAME
+
+    return key_values["event"]
