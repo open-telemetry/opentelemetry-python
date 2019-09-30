@@ -39,7 +39,7 @@ class MetricsExporter:
         Args:
             metric_tuples: A sequence of metric pairs. A metric pair consists
                 of a `Metric` and a sequence of strings. The sequence of
-                 strings will be used to get the corresponding `MetricHandle`
+                strings will be used to get the corresponding `MetricHandle`
                 from the `Metric` to import.
 
         Returns:
