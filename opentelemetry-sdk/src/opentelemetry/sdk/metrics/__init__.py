@@ -21,7 +21,7 @@ from opentelemetry.sdk.util import time_ns
 logger = logging.getLogger(__name__)
 
 
-class MetricHandle:
+class BaseHandle:
     def __init__(
         self,
         value_type: Type[metrics_api.ValueT],
@@ -32,7 +32,7 @@ class MetricHandle:
         self.value_type = value_type
         self.enabled = enabled
         self.monotonic = monotonic
-        self.timestamp = time_ns()
+        self.last_update_timestamp = time_ns()
 
     def _validate_update(self, value: metrics_api.ValueT):
         if not self.enabled:
@@ -45,51 +45,46 @@ class MetricHandle:
         return True
 
     def __repr__(self):
-        return '{}(data="{}", timestamp={})'.format(
-            type(self).__name__, self.data, self.timestamp
-        )
-
-    def __str__(self):
-        return '{}(data="{}", timestamp={})'.format(
-            type(self).__name__, self.data, self.timestamp
+        return '{}(data="{}", last_update_timestamp={})'.format(
+            type(self).__name__, self.data, self.last_update_timestamp
         )
 
 
-class CounterHandle(metrics_api.CounterHandle, MetricHandle):
+class CounterHandle(metrics_api.CounterHandle, BaseHandle):
     def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
                 return
             self.data += value
-            self.timestamp = time_ns()
+            self.last_update_timestamp = time_ns()
 
     def add(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.CounterHandle._add`."""
         self.update(value)
 
 
-class GaugeHandle(metrics_api.GaugeHandle, MetricHandle):
+class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
     def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
             if self.monotonic and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
             self.data = value
-            self.timestamp = time_ns()
+            self.last_update_timestamp = time_ns()
 
     def set(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.GaugeHandle._set`."""
         self.update(value)
 
 
-class MeasureHandle(metrics_api.MeasureHandle, MetricHandle):
+class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
     def update(self, value: metrics_api.ValueT) -> None:
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic measure cannot accept negatives.")
                 return
-            self.timestamp = time_ns()
+            self.last_update_timestamp = time_ns()
 
     def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.MeasureHandle._record`."""
@@ -99,7 +94,7 @@ class MeasureHandle(metrics_api.MeasureHandle, MetricHandle):
 class Metric(metrics_api.Metric):
     """See `opentelemetry.metrics.Metric`."""
 
-    HANDLE_TYPE = MetricHandle
+    HANDLE_TYPE = BaseHandle
 
     def __init__(
         self,
@@ -120,7 +115,7 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(self, label_values: Sequence[str]) -> MetricHandle:
+    def get_handle(self, label_values: Sequence[str]) -> BaseHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
         handle = self.handles.get(label_values)
         if not handle:
@@ -131,11 +126,6 @@ class Metric(metrics_api.Metric):
         return handle
 
     def __repr__(self):
-        return '{}(name="{}", description={})'.format(
-            type(self).__name__, self.name, self.description
-        )
-
-    def __str__(self):
         return '{}(name="{}", description={})'.format(
             type(self).__name__, self.name, self.description
         )
