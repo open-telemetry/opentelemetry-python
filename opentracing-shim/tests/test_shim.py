@@ -88,12 +88,14 @@ class TestShim(unittest.TestCase):
         self.assertIsNone(self.shim.active_span)
 
     def test_start_span(self):
-        span = self.shim.start_span("TestSpan")
+        with self.shim.start_span("TestSpan") as span:
+            self.assertIsInstance(span, opentracing.Span)
 
-        self.assertIsInstance(span, opentracing.Span)
+            # Verify the span is started.
+            self.assertIsNotNone(span.otel_span.start_time)
 
-        # Verify the span is started.
-        self.assertIsNotNone(span.otel_span.start_time)
+        # Verify the span has ended.
+        self.assertIsNotNone(span.otel_span.end_time)
 
     def test_explicit_parent(self):
         # Test explicit parent of type Span.
