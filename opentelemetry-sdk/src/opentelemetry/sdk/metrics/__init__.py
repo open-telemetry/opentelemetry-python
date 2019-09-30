@@ -56,8 +56,8 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
                 return
-            self.data += value
             self.last_update_timestamp = time_ns()
+            self.data += value
 
     def add(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.CounterHandle._add`."""
@@ -70,8 +70,8 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
             if self.monotonic and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
-            self.data = value
             self.last_update_timestamp = time_ns()
+            self.data = value
 
     def set(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.GaugeHandle._set`."""
@@ -85,6 +85,7 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
                 logger.warning("Monotonic measure cannot accept negatives.")
                 return
             self.last_update_timestamp = time_ns()
+            # TODO: record
 
     def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.MeasureHandle._record`."""

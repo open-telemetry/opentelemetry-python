@@ -16,7 +16,6 @@ import datetime
 import threading
 import time
 from collections import OrderedDict, deque
-from enum import Enum
 
 try:
     # pylint: disable=ungrouped-imports
