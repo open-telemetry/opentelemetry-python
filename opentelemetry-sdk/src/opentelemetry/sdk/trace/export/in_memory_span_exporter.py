@@ -16,8 +16,7 @@ import threading
 import typing
 
 from .. import Span
-from . import SpanExporter
-from opentelemetry.sdk import util
+from . import SpanExporter, SpanExportResult
 
 
 class InMemorySpanExporter(SpanExporter):
@@ -43,13 +42,13 @@ class InMemorySpanExporter(SpanExporter):
         with self._lock:
             return tuple(self._finished_spans)
 
-    def export(self, spans: typing.Sequence[Span]) -> util.ExportResult:
+    def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         """Stores a list of spans in memory."""
         if self._stopped:
-            return util.ExportResult.FAILED_NOT_RETRYABLE
+            return SpanExportResult.FAILED_NOT_RETRYABLE
         with self._lock:
             self._finished_spans.extend(spans)
-        return util.ExportResult.SUCCESS
+        return SpanExportResult.SUCCESS
 
     def shutdown(self):
         """Shut downs the exporter.

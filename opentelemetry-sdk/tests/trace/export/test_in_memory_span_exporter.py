@@ -21,7 +21,6 @@ from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from opentelemetry.sdk.util import ExportResult
 
 
 class TestInMemorySpanExporter(unittest.TestCase):
@@ -89,10 +88,10 @@ class TestInMemorySpanExporter(unittest.TestCase):
         memory_exporter = InMemorySpanExporter()
 
         ret = memory_exporter.export(span_list)
-        self.assertEqual(ret, ExportResult.SUCCESS)
+        self.assertEqual(ret, export.SpanExportResult.SUCCESS)
 
         memory_exporter.shutdown()
 
         # after shutdown export should fail
         ret = memory_exporter.export(span_list)
-        self.assertEqual(ret, ExportResult.FAILED_NOT_RETRYABLE)
+        self.assertEqual(ret, export.SpanExportResult.FAILED_NOT_RETRYABLE)

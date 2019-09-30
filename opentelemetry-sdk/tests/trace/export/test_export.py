@@ -19,7 +19,6 @@ from unittest import mock
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
-from opentelemetry.sdk.util import ExportResult
 
 
 class MySpanExporter(export.SpanExporter):
@@ -29,14 +28,14 @@ class MySpanExporter(export.SpanExporter):
         self.destination = destination
         self.max_export_batch_size = max_export_batch_size
 
-    def export(self, spans: trace.Span) -> ExportResult:
+    def export(self, spans: trace.Span) -> export.SpanExportResult:
         if (
             self.max_export_batch_size is not None
             and len(spans) > self.max_export_batch_size
         ):
             raise ValueError("Batch is too big")
         self.destination.extend(span.name for span in spans)
-        return ExportResult.SUCCESS
+        return export.SpanExportResult.SUCCESS
 
 
 class TestSimpleExportSpanProcessor(unittest.TestCase):

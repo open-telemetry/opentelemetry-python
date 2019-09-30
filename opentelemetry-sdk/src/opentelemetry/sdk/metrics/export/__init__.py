@@ -16,7 +16,12 @@ from enum import Enum
 from typing import Sequence, Tuple
 
 from .. import Metric
-from opentelemetry.sdk.util import ExportResult
+
+
+class MetricsExportResult(Enum):
+    SUCCESS = 0
+    FAILED_RETRYABLE = 1
+    FAILED_NOT_RETRYABLE = 2
 
 
 class MetricsExporter:
@@ -28,7 +33,7 @@ class MetricsExporter:
 
     def export(
         self, metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
-    ) -> "ExportResult":
+    ) -> "MetricsExportResult":
         """Exports a batch of telemetry data.
 
         Args:
@@ -58,7 +63,7 @@ class ConsoleMetricsExporter(MetricsExporter):
 
     def export(
         self, metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
-    ) -> "ExportResult":
+    ) -> "MetricsExportResult":
         for metric_tuple in metric_tuples:
             handle = metric_tuple[0].get_handle(metric_tuple[1])
             print(
@@ -69,4 +74,4 @@ class ConsoleMetricsExporter(MetricsExporter):
                     handle,
                 )
             )
-        return ExportResult.SUCCESS
+        return MetricsExportResult.SUCCESS

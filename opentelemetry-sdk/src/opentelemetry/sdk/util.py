@@ -142,9 +142,3 @@ class BoundedDict(MutableMapping):
         # pylint: disable=protected-access
         bounded_dict._dict = mapping
         return bounded_dict
-
-
-class ExportResult(Enum):
-    SUCCESS = 0
-    FAILED_RETRYABLE = 1
-    FAILED_NOT_RETRYABLE = 2

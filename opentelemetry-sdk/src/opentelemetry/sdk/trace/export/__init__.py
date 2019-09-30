@@ -26,6 +26,12 @@ from .. import Span, SpanProcessor
 logger = logging.getLogger(__name__)
 
 
+class SpanExportResult(Enum):
+    SUCCESS = 0
+    FAILED_RETRYABLE = 1
+    FAILED_NOT_RETRYABLE = 2
+
+
 class SpanExporter:
     """Interface for exporting spans.
 
@@ -36,7 +42,7 @@ class SpanExporter:
     `SimpleExportSpanProcessor` or a `BatchSpanProcessor`.
     """
 
-    def export(self, spans: typing.Sequence[Span]) -> "ExportResult":
+    def export(self, spans: typing.Sequence[Span]) -> "SpanExportResult":
         """Exports a batch of telemetry data.
 
         Args:
@@ -211,7 +217,7 @@ class ConsoleSpanExporter(SpanExporter):
     spans to the console STDOUT.
     """
 
-    def export(self, spans: typing.Sequence[Span]) -> ExportResult:
+    def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
             print(span)
-        return util.ExportResult.SUCCESS
+        return SpanExportResult.SUCCESS
