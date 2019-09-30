@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
+from opentelemetry.sdk.util import ExportResult
 
 
 class TestInMemorySpanExporter(unittest.TestCase):
