@@ -17,7 +17,7 @@ import logging
 from urllib.parse import urlparse
 
 from opentelemetry.ext.azure_monitor import protocol, transport, util
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.trace import Span, SpanKind
 
@@ -28,7 +28,6 @@ class AzureMonitorSpanExporter(SpanExporter, transport.TransportMixin):
     def __init__(self, **options):
         self.options = util.Options(**options)
         util.validate_key(self.options.instrumentation_key)
-        self.export_result_type = SpanExportResult
 
     def export(self, spans):
         envelopes = tuple(map(self.span_to_envelope, spans))

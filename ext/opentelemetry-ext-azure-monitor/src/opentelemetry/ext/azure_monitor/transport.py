@@ -32,16 +32,16 @@ class TransportMixin:
                 },
                 timeout=self.options.timeout,
             )
-        except requests.RequestException:
-            logger.exception("Transient client side error.")
+        except requests.RequestException as ex:
+            logger.warning("Transient client side error %s.", ex)
             return self.export_result_type.FAILED_RETRYABLE
 
         text = "N/A"
         data = None  # noqa pylint: disable=unused-variable
         try:
             text = response.text
-        except Exception:  # noqa pylint: disable=broad-except
-            logger.exception("Error while reading response body %s.")
+        except Exception as ex:  # noqa pylint: disable=broad-except
+            logger.warning("Error while reading response body %s.", ex)
         else:
             try:
                 data = json.loads(text)  # noqa pylint: disable=unused-variable

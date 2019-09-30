@@ -16,7 +16,7 @@ import logging
 from typing import Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
-from opentelemetry.sdk.util import ns_to_iso_str, time_ns
+from opentelemetry.sdk.util import time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class BaseHandle:
         self.value_type = value_type
         self.enabled = enabled
         self.monotonic = monotonic
-        self.last_update_timestamp = ns_to_iso_str(time_ns())
+        self.last_update_timestamp = time_ns()
 
     def _validate_update(self, value: metrics_api.ValueT):
         if not self.enabled:
@@ -57,7 +57,7 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
                 logger.warning("Monotonic counter cannot descend.")
                 return
             self.data += value
-            self.last_update_timestamp = ns_to_iso_str(time_ns())
+            self.last_update_timestamp = time_ns()
 
     def add(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.CounterHandle._add`."""
@@ -71,7 +71,7 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
                 logger.warning("Monotonic gauge cannot descend.")
                 return
             self.data = value
-            self.last_update_timestamp = ns_to_iso_str(time_ns())
+            self.last_update_timestamp = time_ns()
 
     def set(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.GaugeHandle._set`."""
@@ -84,7 +84,7 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic measure cannot accept negatives.")
                 return
-            self.last_update_timestamp = ns_to_iso_str(time_ns())
+            self.last_update_timestamp = time_ns()
 
     def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.MeasureHandle._record`."""

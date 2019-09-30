@@ -15,10 +15,8 @@
 import logging
 
 from opentelemetry.ext.azure_monitor import protocol, transport, util
-from opentelemetry.sdk.metrics.export import (
-    MetricsExporter,
-    MetricsExportResult,
-)
+from opentelemetry.sdk.metrics.export import MetricsExporter
+from opentelemetry.sdk.util import ns_to_iso_str
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +25,15 @@ class AzureMonitorMetricsExporter(MetricsExporter, transport.TransportMixin):
     def __init__(self, **options):
         self.options = util.Options(**options)
         util.validate_key(self.options.instrumentation_key)
-        self.export_result_type = MetricsExportResult
 
     def export(self, metric_tuples):
-        # Metric tuples is a sequence of metric to label values pairs
+        """Exports metrics with specified label values.
+        
+        Args:
+            metrics_tuples: a sequence of metric to label value pairs.
+                The metric handles with the corresponding label values for
+                each metric will be used for exporting.
+        """
         envelopes = tuple(map(self._metric_tuple_to_envelope, metric_tuples))
         return self._transmit(envelopes)
 
@@ -41,7 +44,7 @@ class AzureMonitorMetricsExporter(MetricsExporter, transport.TransportMixin):
         envelope = protocol.Envelope(
             iKey=self.options.instrumentation_key,
             tags=dict(util.azure_monitor_context),
-            time=handle.last_update_timestamp,
+            time=ns_to_iso_str(handle.last_update_timestamp),
         )
         envelope.name = "Microsoft.ApplicationInsights.Metric"
         # label_keys and label_values assumed to have the same length
