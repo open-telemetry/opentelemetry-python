@@ -89,13 +89,9 @@ class SpanWrapper(opentracing.Span):
         return None
         # TODO: Implement.
 
-    def log_event(self, event, payload=None):
-        pass
-        # TODO: Implement.
-
-    def log(self, **kwargs):
-        pass
-        # TODO: Implement.
+    # TODO: Verify calls to deprecated methods `log_event()` and `log()` on
+    # base class work properly (it's probably fine because both methods call
+    # `log_kv()`).
 
 
 class ScopeWrapper(opentracing.Scope):
