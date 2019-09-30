@@ -91,7 +91,6 @@ The _alpha_ release includes:
 - Tracing SDK
 - Metrics API
 - Metrics SDK
-- Zipkin Trace Exporter
 - W3C Context Propagation
 - B3 Context Propagation
 
@@ -99,6 +98,7 @@ Future release targets include:
 
 | Component                   | Version | Target Date     |
 | --------------------------- | ------- | --------------- |
+| Zipkin Trace Exporter       | Beta    | October 14 2019 |
 | Jaeger Trace Exporter       | Beta    | October 14 2019 |
 | Prometheus Metrics Exporter | Beta    | October 14 2019 |
 | OpenTracing Bridge          | Beta    | October 14 2019 |
