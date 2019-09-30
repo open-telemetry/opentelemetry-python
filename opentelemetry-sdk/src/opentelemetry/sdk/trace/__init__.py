@@ -321,18 +321,29 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
         return self._current_span_slot.get()
 
-    @contextmanager
     def start_span(
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> typing.Iterator["Span"]:
+    ) -> "Span":
         """See `opentelemetry.trace.Tracer.start_span`."""
 
         span = self.create_span(name, parent, kind)
         span.start()
-        with self.use_span(span, end_on_exit=True):
+        return span
+
+    @contextmanager
+    def start_as_current_span(
+        self,
+        name: str,
+        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+    ) -> typing.Iterator["Span"]:
+        """See `opentelemetry.trace.Tracer.start_as_current_span`."""
+
+        span = self.start_span(name, parent, kind)
+        with self.use_span(span, True):
             yield span
 
     def create_span(
