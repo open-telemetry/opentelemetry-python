@@ -89,13 +89,6 @@ class SpanWrapper(opentracing.Span):
         return None
         # TODO: Implement.
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-        # TODO: Implement.
-
     def log_event(self, event, payload=None):
         pass
         # TODO: Implement.
@@ -120,13 +113,6 @@ class ScopeWrapper(opentracing.Scope):
         return self._manager
 
     def close(self):
-        pass
-        # TODO: Implement.
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
         pass
         # TODO: Implement.
 
