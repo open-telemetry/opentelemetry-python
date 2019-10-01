@@ -41,39 +41,84 @@ class TestShim(unittest.TestCase):
         # Verify shim is an OpenTracing tracer.
         self.assertIsInstance(self.shim, opentracing.Tracer)
 
-    def test_start_active_span(self):
+    def test_basic_behavior(self):
+        """Test span creation, activation and deactivation."""
+
         with self.shim.start_active_span("TestSpan") as scope:
+            # Verify correct type of Scope and Span objects.
             self.assertIsInstance(scope, opentracing.Scope)
             self.assertIsInstance(scope.span, opentracing.Span)
+
+            # Verify the span is started.
+            self.assertIsNotNone(scope.span.otel_span.start_time)
 
             # Verify the span is active in the OpenTelemetry tracer.
             # TODO: We can't check for equality of self.shim.active_span and
             # scope.span because the same OpenTelemetry span is returned inside
-            # different SpanWrapper objects. Is this a problem?
+            # different SpanWrapper objects. A possible solution is described
+            # here:
+            # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
             self.assertEqual(self.shim.active_span.context, scope.span.context)
 
         # Verify the span has ended in the OpenTelemetry tracer.
         self.assertIsNotNone(scope.span.otel_span.end_time)
+
+        # Verify no span is active on the OpenTelemetry tracer.
         self.assertIsNone(self.tracer.get_current_span())
 
-    def test_parent_child(self):
-        with self.shim.start_active_span("ParentSpan") as parent:
-            parent_trace_id = parent.span.otel_span.get_context().trace_id
+    def test_start_span(self):
+        """Test span creation using `start_span()`."""
 
+        with self.shim.start_span("TestSpan") as span:
+            # Verify correct type of Span object.
+            self.assertIsInstance(span, opentracing.Span)
+
+            # Verify the span is started.
+            self.assertIsNotNone(span.otel_span.start_time)
+
+        # Verify the span has ended in the OpenTelemetry tracer.
+        self.assertIsNotNone(span.otel_span.end_time)
+
+        # Verify `start_span()` does NOT make the span active.
+        self.assertIsNone(self.shim.active_span)
+
+    def test_start_span_no_contextmanager(self):
+        """Test `start_span()` without a `with` statement."""
+
+        span = self.shim.start_span("TestSpan")
+
+        # Verify the span is started.
+        self.assertIsNotNone(span.otel_span.start_time)
+
+        # Verify `start_span()` does NOT make the span active.
+        self.assertIsNone(self.shim.active_span)
+
+        span.finish()
+
+        # Verify the span has ended in the OpenTelemetry tracer.
+        self.assertIsNotNone(span.otel_span.end_time)
+
+    def test_parent_child_implicit(self):
+        """Test parent-child relationship of spans without specifying the
+        parent span upon creation, as well as span activation/deactivation.
+        """
+
+        with self.shim.start_active_span("ParentSpan") as parent:
             # Verify parent span is the active span.
             self.assertEqual(
                 self.shim.active_span.context, parent.span.context
             )
 
             with self.shim.start_active_span("ChildSpan") as child:
-                child_trace_id = child.span.otel_span.get_context().trace_id
-
                 # Verify child span is the active span.
                 self.assertEqual(
                     self.shim.active_span.context, child.span.context
                 )
 
                 # Verify parent-child relationship.
+                parent_trace_id = parent.span.otel_span.get_context().trace_id
+                child_trace_id = child.span.otel_span.get_context().trace_id
+
                 self.assertEqual(parent_trace_id, child_trace_id)
                 self.assertEqual(
                     child.span.otel_span.parent, parent.span.otel_span
@@ -81,24 +126,23 @@ class TestShim(unittest.TestCase):
 
             # Verify parent span becomes the active span again.
             self.assertEqual(
-                self.shim.active_span.context, parent.span.context
+                self.shim.active_span.context,
+                parent.span.context
+                # TODO: Check equality of the spans themselves rather than
+                # their context once the SpanWrapper reconstruction problem
+                # has been addressed (see previous TODO).
             )
 
         # Verify there is no active span.
         self.assertIsNone(self.shim.active_span)
 
-    def test_start_span(self):
-        with self.shim.start_span("TestSpan") as span:
-            self.assertIsInstance(span, opentracing.Span)
+    def test_parent_child_explicit_span(self):
+        """Test parent-child relationship of spans when specifying a `Span`
+        object as a parent upon creation.
+        """
 
-            # Verify the span is started.
-            self.assertIsNotNone(span.otel_span.start_time)
+        # TODO: Test explicit parent also with `start_active_span()`.
 
-        # Verify the span has ended.
-        self.assertIsNotNone(span.otel_span.end_time)
-
-    def test_explicit_parent(self):
-        # Test explicit parent of type Span.
         parent = self.shim.start_span("ParentSpan")
         child = self.shim.start_span("ChildSpan", child_of=parent)
 
@@ -108,7 +152,13 @@ class TestShim(unittest.TestCase):
         self.assertEqual(child_trace_id, parent_trace_id)
         self.assertEqual(child.otel_span.parent, parent.otel_span)
 
-        # Test explicit parent of type SpanContext.
+    def test_parent_child_explicit_span_context(self):
+        """Test parent-child relationship of spans when specifying a
+        `SpanContext` object as a parent upon creation.
+        """
+
+        # TODO: Test explicit parent also with `start_active_span()`.
+
         parent = self.shim.start_span("ParentSpan")
         child = self.shim.start_span(
             "SpanWithContextParent", child_of=parent.context
