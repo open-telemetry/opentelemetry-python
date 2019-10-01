@@ -1,13 +1,6 @@
 opentelemetry.metrics package
 =============================
 
-Submodules
-----------
-
-.. toctree::
-
-   opentelemetry.metrics.handle
-
 Module contents
 ---------------
 

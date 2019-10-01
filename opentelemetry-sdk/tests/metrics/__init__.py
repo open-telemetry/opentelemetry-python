@@ -11,26 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# pylint: skip-file
-from opentelemetry import metrics
-
-METER = metrics.Meter()
-MEASURE = metrics.create_measure(
-    "idle_cpu_percentage",
-    "cpu idle over time",
-    "percentage",
-    metrics.ValueType.FLOAT,
-    ["environment"],
-)
-
-# Metrics sent to some exporter
-MEASURE_METRIC_TESTING = MEASURE.get_handle("Testing")
-MEASURE_METRIC_STAGING = MEASURE.get_handle("Staging")
-
-# record individual measures
-STATISTIC = 100
-MEASURE_METRIC_STAGING.record(STATISTIC)
-
-# Batch recording
-METER.record_batch([tuple(MEASURE_METRIC_STAGING, STATISTIC)])
