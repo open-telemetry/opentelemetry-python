@@ -189,7 +189,9 @@ class TracerWrapper(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ) -> SpanWrapper:
-        # TODO: Handle optional arguments.
+        # TODO: Handle `references` argument.
+        # TODO: Handle `tags` argument.
+        # TODO: Handle `start_time` argument.
         parent = child_of
         if parent is not None:
             if isinstance(parent, SpanWrapper):
