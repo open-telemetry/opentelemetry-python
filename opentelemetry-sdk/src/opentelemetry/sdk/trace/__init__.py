@@ -17,130 +17,19 @@ import logging
 import random
 import threading
 import typing
-from collections import OrderedDict, deque
 from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
+from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
 
-try:
-    # pylint: disable=ungrouped-imports
-    from collections.abc import MutableMapping
-    from collections.abc import Sequence
-except ImportError:
-    # pylint: disable=no-name-in-module,ungrouped-imports
-    from collections import MutableMapping
-    from collections import Sequence
-
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
 MAX_NUM_LINKS = 32
-
-
-class BoundedList(Sequence):
-    """An append only list with a fixed max size."""
-
-    def __init__(self, maxlen):
-        self.dropped = 0
-        self._dq = deque(maxlen=maxlen)
-        self._lock = threading.Lock()
-
-    def __repr__(self):
-        return "{}({}, maxlen={})".format(
-            type(self).__name__, list(self._dq), self._dq.maxlen
-        )
-
-    def __getitem__(self, index):
-        return self._dq[index]
-
-    def __len__(self):
-        return len(self._dq)
-
-    def __iter__(self):
-        with self._lock:
-            return iter(self._dq.copy())
-
-    def append(self, item):
-        with self._lock:
-            if len(self._dq) == self._dq.maxlen:
-                self.dropped += 1
-            self._dq.append(item)
-
-    def extend(self, seq):
-        with self._lock:
-            to_drop = len(seq) + len(self._dq) - self._dq.maxlen
-            if to_drop > 0:
-                self.dropped += to_drop
-            self._dq.extend(seq)
-
-    @classmethod
-    def from_seq(cls, maxlen, seq):
-        seq = tuple(seq)
-        if len(seq) > maxlen:
-            raise ValueError
-        bounded_list = cls(maxlen)
-        # pylint: disable=protected-access
-        bounded_list._dq = deque(seq, maxlen=maxlen)
-        return bounded_list
-
-
-class BoundedDict(MutableMapping):
-    """A dict with a fixed max capacity."""
-
-    def __init__(self, maxlen):
-        if not isinstance(maxlen, int):
-            raise ValueError
-        if maxlen < 0:
-            raise ValueError
-        self.maxlen = maxlen
-        self.dropped = 0
-        self._dict = OrderedDict()
-        self._lock = threading.Lock()
-
-    def __repr__(self):
-        return "{}({}, maxlen={})".format(
-            type(self).__name__, dict(self._dict), self.maxlen
-        )
-
-    def __getitem__(self, key):
-        return self._dict[key]
-
-    def __setitem__(self, key, value):
-        with self._lock:
-            if self.maxlen == 0:
-                self.dropped += 1
-                return
-
-            if key in self._dict:
-                del self._dict[key]
-            elif len(self._dict) == self.maxlen:
-                del self._dict[next(iter(self._dict.keys()))]
-                self.dropped += 1
-            self._dict[key] = value
-
-    def __delitem__(self, key):
-        del self._dict[key]
-
-    def __iter__(self):
-        with self._lock:
-            return iter(self._dict.copy())
-
-    def __len__(self):
-        return len(self._dict)
-
-    @classmethod
-    def from_map(cls, maxlen, mapping):
-        mapping = OrderedDict(mapping)
-        if len(mapping) > maxlen:
-            raise ValueError
-        bounded_dict = cls(maxlen)
-        # pylint: disable=protected-access
-        bounded_dict._dict = mapping
-        return bounded_dict
 
 
 class SpanProcessor:
@@ -280,7 +169,20 @@ class Span(trace_api.Span):
         self.start_time = None
 
     def __repr__(self):
-        return '{}(name="{}")'.format(type(self).__name__, self.name)
+        return '{}(name="{}", context={})'.format(
+            type(self).__name__, self.name, self.context
+        )
+
+    def __str__(self):
+        return '{}(name="{}", context={}, kind={}, parent={}, start_time={}, end_time={})'.format(
+            type(self).__name__,
+            self.name,
+            self.context,
+            self.kind,
+            repr(self.parent),
+            util.ns_to_iso_str(self.start_time) if self.start_time else "None",
+            util.ns_to_iso_str(self.end_time) if self.end_time else "None",
+        )
 
     def get_context(self):
         return self.context
@@ -427,7 +329,10 @@ class Tracer(trace_api.Tracer):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
     ) -> typing.Iterator["Span"]:
         """See `opentelemetry.trace.Tracer.start_span`."""
-        with self.use_span(self.create_span(name, parent, kind)) as span:
+
+        span = self.create_span(name, parent, kind)
+        span.start()
+        with self.use_span(span, end_on_exit=True):
             yield span
 
     def create_span(
@@ -464,16 +369,20 @@ class Tracer(trace_api.Tracer):
         )
 
     @contextmanager
-    def use_span(self, span: "Span") -> typing.Iterator["Span"]:
+    def use_span(
+        self, span: Span, end_on_exit: bool = False
+    ) -> typing.Iterator[Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
-        span.start()
-        span_snapshot = self._current_span_slot.get()
-        self._current_span_slot.set(span)
         try:
-            yield span
+            span_snapshot = self._current_span_slot.get()
+            self._current_span_slot.set(span)
+            try:
+                yield span
+            finally:
+                self._current_span_slot.set(span_snapshot)
         finally:
-            self._current_span_slot.set(span_snapshot)
-            span.end()
+            if end_on_exit:
+                span.end()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `Tracer`.

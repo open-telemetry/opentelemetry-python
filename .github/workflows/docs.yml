@@ -1,0 +1,23 @@
+name: Docs
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+    - name: Build docs
+      run: |
+        pip install --upgrade tox
+        tox -e docs
+    - name: Publish to gh-pages
+      uses: JamesIves/github-pages-deploy-action@2.0.2
+      env:
+        ACCESS_TOKEN: ${{ secrets.DocsPushToken }}
+        BRANCH: gh-pages
+        FOLDER: docs/_build/html/

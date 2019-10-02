@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import metrics, trace, util
+"""
+The opentelemetry-ext-azure-monitor package provides integration with
+Microsoft Azure Monitor.
+"""
 
-__all__ = ["metrics", "trace", "util"]
+from opentelemetry.ext.azure_monitor.trace import AzureMonitorSpanExporter
+from opentelemetry.ext.azure_monitor.version import __version__  # noqa
+
+__all__ = ["AzureMonitorSpanExporter"]

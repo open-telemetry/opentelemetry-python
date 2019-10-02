@@ -16,16 +16,16 @@ The `opentelemetry-sdk` package is the reference implementation of the API.
 
 Libraries that produce telemetry data should only depend on `opentelemetry-api`,
 and defer the choice of the SDK to the application developer. Applications may
-depend on `opentelemetry-sdk` or another package that implements the API. 
+depend on `opentelemetry-sdk` or another package that implements the API.
 
-To install the API and SDK packages, fork or clone this repo and do an
-[editable
-install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
-via `pip`:
+**Please note** that this library is currently in _alpha_, and shouldn't be
+used in production environments.
+
+The API and SDK packages are available on PyPI, and can installed via `pip`:
 
 ```sh
-pip install -e ./opentelemetry-api
-pip install -e ./opentelemetry-sdk
+pip install opentelemetry-api
+pip install opentelemetry-sdk
 ```
 
 The
@@ -34,6 +34,16 @@ directory includes OpenTelemetry integration packages, which can be installed
 separately as:
 
 ```sh
+pip install opentelemetry-ext-{integration}
+```
+
+To install the development versions of these packages instead, clone or fork
+this repo and do an [editable
+install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs):
+
+```sh
+pip install -e ./opentelemetry-api
+pip install -e ./opentelemetry-sdk
 pip install -e ./ext/opentelemetry-ext-{integration}
 ```
 
@@ -43,20 +53,25 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
+tracer.add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
 with tracer.start_span('foo'):
-    print(Context)
     with tracer.start_span('bar'):
-        print(Context)
         with tracer.start_span('baz'):
             print(Context)
-        print(Context)
-    print(Context)
 ```
 
-See [opentelemetry-example-app](./opentelemetry-example-app/README.rst) for a complete example.
+See the [API
+documentation](https://open-telemetry.github.io/opentelemetry-python/) for more
+detail, and the
+[opentelemetry-example-app](./examples/opentelemetry-example-app/README.rst)
+for a complete example.
 
 ## Contributing
 
@@ -64,20 +79,27 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Release Schedule
 
-OpenTelemetry Python is under active development. Our goal is to release an
-_alpha_ version of the library at the end of September 2019. This release isn't
-guaranteed to conform to a specific version of the specification, and future
-releases will not attempt to maintain backwards compatibility with the alpha
-release.
+OpenTelemetry Python is under active development.
 
-| Component                   | Version | Target Date       |
-| --------------------------- | ------- | ----------------- |
-| Tracing API                 | Alpha   | September 30 2019 |
-| Tracing SDK                 | Alpha   | September 30 2019 |
-| Metrics API                 | Alpha   | September 30 2019 |
-| Metrics SDK                 | Alpha   | September 30 2019 |
-| Jaeger Trace Exporter       | Alpha   | Unknown           |
-| Prometheus Metrics Exporter | Alpha   | Unknown           |
-| Context Propagation         | Alpha   | September 30 2019 |
-| OpenTracing Bridge          | Alpha   | Unknown           |
-| OpenCensus Bridge           | Alpha   | Unknown           |
+The library is not yet _generally available_, and releases aren't guaranteed to
+conform to a specific version of the specification.  Future releases will not
+attempt to maintain backwards compatibility with current releases.
+
+The _alpha_ release includes:
+
+- Tracing API
+- Tracing SDK
+- Metrics API
+- Metrics SDK
+- W3C Context Propagation
+- B3 Context Propagation
+
+Future release targets include:
+
+| Component                   | Version | Target Date     |
+| --------------------------- | ------- | --------------- |
+| Zipkin Trace Exporter       | Beta    | October 14 2019 |
+| Jaeger Trace Exporter       | Beta    | October 14 2019 |
+| Prometheus Metrics Exporter | Beta    | October 14 2019 |
+| OpenTracing Bridge          | Beta    | October 14 2019 |
+| OpenCensus Bridge           | Beta    | October 14 2019 |
