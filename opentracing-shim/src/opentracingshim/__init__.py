@@ -189,7 +189,6 @@ class TracerWrapper(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ) -> SpanWrapper:
-        # TODO: Handle `start_time` argument.
         parent = child_of
         if parent is not None:
             if isinstance(parent, SpanWrapper):
@@ -223,7 +222,7 @@ class TracerWrapper(opentracing.Tracer):
             for key, value in tags.items():
                 span.set_attribute(key, value)
 
-        span.start()
+        span.start(start_time=start_time)
         context = SpanContextWrapper(span.get_context())
         return SpanWrapper(self, context, span)
 

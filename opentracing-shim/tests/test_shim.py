@@ -82,6 +82,13 @@ class TestShim(unittest.TestCase):
         # Verify `start_span()` does NOT make the span active.
         self.assertIsNone(self.shim.active_span)
 
+    def test_explicit_start_time(self):
+        """Test `start_time` argument."""
+
+        now = opentracingshim.util.time_ns()
+        with self.shim.start_active_span("TestSpan", start_time=now) as scope:
+            self.assertEqual(scope.span.otel_span.start_time, now)
+
     def test_start_span_no_contextmanager(self):
         """Test `start_span()` without a `with` statement."""
 
