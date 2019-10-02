@@ -79,7 +79,7 @@ Open a pull request against the main `opentelemetry-python` repo.
 ### How to Get PRs Merged
 
 A PR is considered to be **ready to merge** when:
-* It has received two approvals from [Approvers]((https://github.com/open-telemetry/community/blob/master/community-membership.md#approver))
+* It has received two approvals from [Approvers](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver)
   / [Maintainers](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer)
   (at different companies).
 * Major feedbacks are resolved.
