@@ -8,10 +8,10 @@ See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-i
 for a summary description of past meetings. To request edit access, join the
 meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
 
-Please refer to the [Community Membership](https://github.com/open-telemetry/community/blob/master/community-membership.md)
-document on how to become a [Member](https://github.com/open-telemetry/community/blob/master/community-membership.md#member),
-[Approver](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver)
-and [Maintainer](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).
+See to the [community membership document](https://github.com/open-telemetry/community/blob/master/community-membership.md)
+on how to become a [**Member**](https://github.com/open-telemetry/community/blob/master/community-membership.md#member),
+[**Approver**](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver)
+and [**Maintainer**](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).
 
 ## Development
 
