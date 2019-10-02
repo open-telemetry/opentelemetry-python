@@ -105,12 +105,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
         parent_context = trace_api.SpanContext(trace_id, parent_id)
         other_context = trace_api.SpanContext(trace_id, other_id)
 
-        span_attributes = {
-            "key_bool": False,
-            "key_string": "hello_world",
-            "key_float": 111.22,
-        }
-
         event_attributes = {
             "annotation_bool": True,
             "annotation_string": "annotation_test",
@@ -135,7 +129,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 name=span_names[0],
                 context=span_context,
                 parent=parent_context,
-                attributes=span_attributes,
                 events=(event,),
                 links=(link,),
             ),
@@ -146,6 +139,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
         ]
 
         otel_spans[0].start_time = start_times[0]
+        # added here to preserve order
+        otel_spans[0].set_attribute("key_bool", False)
+        otel_spans[0].set_attribute("key_string", "hello_world")
+        otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].end_time = end_times[0]
 
         otel_spans[1].start_time = start_times[1]
@@ -240,4 +237,13 @@ class TestJaegerSpanExporter(unittest.TestCase):
             ),
         ]
 
-        self.assertListEqual(spans, expected_spans)
+        # events are complicated to compare because order of fields
+        # (attributes) is otel is not important but in jeager it is
+        self.assertCountEqual(
+            spans[0].logs[0].fields, expected_spans[0].logs[0].fields
+        )
+        # get rid of fields to be able to compare the whole spans
+        spans[0].logs[0].fields = None
+        expected_spans[0].logs[0].fields = None
+
+        self.assertEqual(spans, expected_spans)
