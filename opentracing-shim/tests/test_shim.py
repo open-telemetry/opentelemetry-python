@@ -170,6 +170,23 @@ class TestShim(unittest.TestCase):
         self.assertEqual(child_trace_id, parent_trace_id)
         self.assertEqual(child.otel_span.parent, parent.context)
 
+    def test_explicit_span_activation(self):
+        """Test manual activation and deactivation of a span."""
+
+        span = self.shim.start_span("TestSpan")
+
+        # Verify no span is currently active.
+        self.assertIsNone(self.shim.active_span)
+
+        with self.shim.scope_manager.activate(
+            span, finish_on_close=True
+        ) as scope:
+            # Verify span is active.
+            self.assertEqual(self.shim.active_span.context, scope.span.context)
+
+        # Verify no span is active.
+        self.assertIsNone(self.shim.active_span)
+
     def test_set_operation_name(self):
         with self.shim.start_active_span("TestName") as scope:
             self.assertEqual(scope.span.otel_span.name, "TestName")

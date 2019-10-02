@@ -113,16 +113,40 @@ class ScopeWrapper(opentracing.Scope):
         # TODO: Implement.
 
 
-class TracerWrapper(opentracing.Tracer):
+class ScopeManager(opentracing.ScopeManager):
     def __init__(self, tracer: Tracer):
         # pylint: disable=super-init-not-called
+        self._tracer = tracer
+
+    @contextmanager
+    def activate(self, span, finish_on_close):
+        with self._tracer.use_span(
+            span.otel_span, end_on_exit=finish_on_close
+        ) as otel_span:
+            wrapped_span = SpanWrapper(
+                self._tracer, otel_span.get_context(), otel_span
+            )
+            yield ScopeWrapper(self, wrapped_span)
+
+    @property
+    def active(self):
+        span = self._tracer.get_current_span()
+        wrapped_span = SpanWrapper(self._tracer, span.get_context(), span)
+        return ScopeWrapper(self, wrapped_span)
+
+
+class TracerWrapper(opentracing.Tracer):
+    def __init__(self, tracer: Tracer, scope_manager: ScopeManager = None):
+        # pylint: disable=super-init-not-called
         self._otel_tracer = tracer
-        # TODO: Finish implementation.
+        if scope_manager is not None:
+            self._scope_manager = scope_manager
+        else:
+            self._scope_manager = ScopeManager(tracer)
 
     @property
     def scope_manager(self):
-        pass
-        # TODO: Implement.
+        return self._scope_manager
 
     @property
     def active_span(self):
