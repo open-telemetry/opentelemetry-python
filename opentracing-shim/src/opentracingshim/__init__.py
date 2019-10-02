@@ -189,7 +189,6 @@ class TracerWrapper(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ) -> SpanWrapper:
-        # TODO: Handle `references` argument.
         # TODO: Handle `tags` argument.
         # TODO: Handle `start_time` argument.
         parent = child_of
@@ -212,6 +211,13 @@ class TracerWrapper(opentracing.Tracer):
             parent = self.active_span.otel_span
 
         span = self._otel_tracer.create_span(operation_name, parent)
+
+        if references:
+            if not isinstance(references, list):
+                references = [references]
+            for ref in references:
+                span.add_link(ref.referenced_context.otel_context)
+
         span.start()
         context = SpanContextWrapper(span.get_context())
         return SpanWrapper(self, context, span)

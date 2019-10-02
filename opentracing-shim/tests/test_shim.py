@@ -170,6 +170,17 @@ class TestShim(unittest.TestCase):
         self.assertEqual(child_trace_id, parent_trace_id)
         self.assertEqual(child.otel_span.parent, parent.context.otel_context)
 
+    def test_references(self):
+        """Test span creation using the `references` argument."""
+
+        parent = self.shim.start_span("ParentSpan")
+        ref = opentracing.child_of(parent.context)
+        child = self.shim.start_span("ChildSpan", references=[ref])
+
+        self.assertEqual(
+            child.otel_span.links[0].context, parent.context.otel_context
+        )
+
     def test_explicit_span_activation(self):
         """Test manual activation and deactivation of a span."""
 
