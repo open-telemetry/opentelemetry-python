@@ -169,10 +169,16 @@ class TracerWrapper(opentracing.Tracer):
         ignore_active_span=False,
         finish_on_close=True,
     ) -> ScopeWrapper:
-        # TODO: Handle optional arguments.
-        with self._otel_tracer.start_span(operation_name) as span:
-            wrapped_span = SpanWrapper(self, span.get_context(), span)
-            yield ScopeWrapper(opentracing.ScopeManager, wrapped_span)
+        span = self.start_span(
+            operation_name=operation_name,
+            child_of=child_of,
+            references=references,
+            tags=tags,
+            start_time=start_time,
+            ignore_active_span=ignore_active_span,
+        )
+        with self._scope_manager.activate(span, finish_on_close) as scope:
+            yield scope
 
     def start_span(
         self,
