@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import unittest
 
 import opentracing
@@ -241,7 +240,7 @@ class TestShim(unittest.TestCase):
         self.assertIsNotNone(span.otel_span.events[0].timestamp)
 
         # Test explicit timestamp.
-        now = time.time()
+        now = opentracingshim.util.time_ns()
         span.log_kv({"foo": "bar"}, now)
         self.assertEqual(span.otel_span.events[1].timestamp, now)
 
