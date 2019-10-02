@@ -62,7 +62,7 @@ class BoundedList(Sequence):
 
     def __iter__(self):
         with self._lock:
-            return iter(self._dq.copy())
+            return iter(deque(self._dq))
 
     def append(self, item):
         with self._lock:
@@ -89,7 +89,7 @@ class BoundedList(Sequence):
 
 
 class BoundedDict(MutableMapping):
-    """A dict with a fixed max capacity."""
+    """An ordered dict with a fixed max capacity."""
 
     def __init__(self, maxlen):
         if not isinstance(maxlen, int):
