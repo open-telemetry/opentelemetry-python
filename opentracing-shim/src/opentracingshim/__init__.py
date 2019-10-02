@@ -114,7 +114,7 @@ class ScopeWrapper(opentracing.Scope):
         # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
 
 
-class ScopeManager(opentracing.ScopeManager):
+class ScopeManagerWrapper(opentracing.ScopeManager):
     def __init__(self, tracer: Tracer):
         # pylint: disable=super-init-not-called
         self._tracer = tracer
@@ -137,13 +137,15 @@ class ScopeManager(opentracing.ScopeManager):
 
 
 class TracerWrapper(opentracing.Tracer):
-    def __init__(self, tracer: Tracer, scope_manager: ScopeManager = None):
+    def __init__(
+        self, tracer: Tracer, scope_manager: ScopeManagerWrapper = None
+    ):
         # pylint: disable=super-init-not-called
         self._otel_tracer = tracer
         if scope_manager is not None:
             self._scope_manager = scope_manager
         else:
-            self._scope_manager = ScopeManager(tracer)
+            self._scope_manager = ScopeManagerWrapper(tracer)
 
     @property
     def scope_manager(self):
