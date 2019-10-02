@@ -201,6 +201,14 @@ class TracerWrapper(opentracing.Tracer):
                     "Invalid parent type when calling start_span()."
                 )
 
+        # Use active span as parent when no explicit parent is specified.
+        if (
+            self.active_span is not None
+            and not ignore_active_span
+            and not parent
+        ):
+            parent = self.active_span.otel_span
+
         span = self._otel_tracer.create_span(operation_name, parent)
         span.start()
         context = SpanContextWrapper(span.get_context())
