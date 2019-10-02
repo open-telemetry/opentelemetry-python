@@ -205,14 +205,15 @@ class TestShim(unittest.TestCase):
             scope.span.set_operation_name("NewName")
             self.assertEqual(scope.span.otel_span.name, "NewName")
 
-    def test_set_tag(self):
-        with self.shim.start_active_span("TestSetTag") as scope:
-            with self.assertRaises(KeyError):
-                # pylint: disable=pointless-statement
-                scope.span.otel_span.attributes["my"]
+    def test_tags(self):
+        """Test tags behavior."""
 
-            scope.span.set_tag("my", "tag")
-            self.assertEqual(scope.span.otel_span.attributes["my"], "tag")
+        tags = {"foo": "bar"}
+        with self.shim.start_active_span("TestSetTag", tags=tags) as scope:
+            scope.span.set_tag("baz", "qux")
+
+            self.assertEqual(scope.span.otel_span.attributes["foo"], "bar")
+            self.assertEqual(scope.span.otel_span.attributes["baz"], "qux")
 
     def test_span(self):
         # Test tracer property.
