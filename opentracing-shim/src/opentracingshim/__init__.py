@@ -201,6 +201,8 @@ class TracerWrapper(opentracing.Tracer):
                 raise RuntimeError(
                     "Invalid parent type when calling start_span()."
                 )
+            # TODO: Should we use the OpenTracing base classes for the type
+            # check?
 
         # Use active span as parent when no explicit parent is specified.
         if (
