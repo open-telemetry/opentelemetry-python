@@ -23,7 +23,8 @@ from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
 import opentelemetry.trace as trace_api
-from opentelemetry.ext.jaeger.gen.jaeger import agent, jaeger
+from opentelemetry.ext.jaeger.gen.agent import Agent as agent
+from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
@@ -236,7 +237,7 @@ def _extract_logs_from_span(span):
 
 def _extract_tags(attr):
     if not attr:
-        return []
+        return None
     tags = []
     for attribute_key, attribute_value in attr.items():
         tag = _convert_attribute_to_tag(attribute_key, attribute_value)

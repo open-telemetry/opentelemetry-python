@@ -14,6 +14,7 @@
 import os
 
 import setuptools
+from setuptools.command.install import install
 
 BASE_DIR = os.path.dirname(__file__)
 VERSION_FILENAME = os.path.join(
@@ -23,4 +24,41 @@ PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
 
-setuptools.setup(version=PACKAGE_INFO["__version__"])
+BASE_CMD = """docker run --user `id -u` -v "$PWD:/data" \
+    thrift:0.10.0 thrift \
+    -out /data/build/lib/opentelemetry/ext/jaeger/gen/ \
+    --gen py /data/thrift/{}
+"""
+
+init_py_str = """
+import sys
+from os.path import dirname
+sys.path.append(dirname(__file__))
+"""
+
+
+def gen_thrift(path):
+    os.system(BASE_CMD.format(path))
+
+
+class JaegerInstallCommand(install):
+    """Generates Jaeger thrift files before installing"""
+
+    def run(self):
+        path = "build/lib/opentelemetry/ext/jaeger/gen"
+        os.makedirs(path, exist_ok=True)
+
+        with open(path + "/__init__.py", "w") as init_py_f:
+            init_py_f.write(init_py_str)
+
+        gen_thrift("agent.thrift")
+        gen_thrift("zipkincore.thrift")
+        gen_thrift("jaeger.thrift")
+
+        install.run(self)
+
+
+setuptools.setup(
+    version=PACKAGE_INFO["__version__"],
+    cmdclass={"install": JaegerInstallCommand},
+)
