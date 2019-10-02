@@ -196,6 +196,10 @@ class TracerWrapper(opentracing.Tracer):
                 parent = child_of.otel_span
             elif isinstance(parent, SpanContextWrapper):
                 parent = child_of.otel_context
+            else:
+                raise RuntimeError(
+                    "Invalid parent type when calling start_span()."
+                )
 
         span = self._otel_tracer.create_span(operation_name, parent)
         span.start()
