@@ -247,3 +247,5 @@ class TestShim(unittest.TestCase):
 
         # Verify span has ended.
         self.assertIsNotNone(span.otel_span.end_time)
+
+    # TODO: Test finish_on_close on `start_active_span()``.
