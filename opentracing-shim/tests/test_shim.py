@@ -233,3 +233,17 @@ class TestShim(unittest.TestCase):
         self.assertIsInstance(context, opentracing.SpanContext)
         self.assertEqual(context.otel_context.trace_id, 1234)
         self.assertEqual(context.otel_context.span_id, 5678)
+
+    def test_explicit_scope_close(self):
+        """Test `close()` method on `ScopeWrapper`."""
+
+        span = self.shim.start_span("TestSpan")
+        scope = opentracingshim.ScopeWrapper(self.shim.scope_manager, span)
+
+        # Verify span hasn't ended.
+        self.assertIsNone(span.otel_span.end_time)
+
+        scope.close()
+
+        # Verify span has ended.
+        self.assertIsNotNone(span.otel_span.end_time)

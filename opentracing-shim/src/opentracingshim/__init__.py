@@ -109,8 +109,9 @@ class ScopeWrapper(opentracing.Scope):
         return self._manager
 
     def close(self):
-        pass
-        # TODO: Implement.
+        self._span.finish()
+        # TODO: Set active span on OpenTelemetry tracer.
+        # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
 
 
 class ScopeManager(opentracing.ScopeManager):
