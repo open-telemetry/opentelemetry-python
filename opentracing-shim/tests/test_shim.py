@@ -168,7 +168,7 @@ class TestShim(unittest.TestCase):
         child_trace_id = child.otel_span.get_context().trace_id
 
         self.assertEqual(child_trace_id, parent_trace_id)
-        self.assertEqual(child.otel_span.parent, parent.context)
+        self.assertEqual(child.otel_span.parent, parent.context.otel_context)
 
     def test_explicit_span_activation(self):
         """Test manual activation and deactivation of a span."""

@@ -199,7 +199,8 @@ class TracerWrapper(opentracing.Tracer):
 
         span = self._otel_tracer.create_span(operation_name, parent)
         span.start()
-        return SpanWrapper(self, span.get_context(), span)
+        context = SpanContextWrapper(span.get_context())
+        return SpanWrapper(self, context, span)
 
     def inject(self, span_context, format, carrier):
         # pylint: disable=redefined-builtin
