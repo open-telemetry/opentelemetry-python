@@ -240,7 +240,7 @@ class Span:
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[python_types.TracebackType],
     ) -> bool:
-        """Ends context manager and calls end() on the `Span`.
+        """Ends context manager and calls ``end()`` on the `Span`.
 
         Returns False.
         """
