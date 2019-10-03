@@ -30,13 +30,13 @@ class TestBoundedList(unittest.TestCase):
         blist.append(13)
 
         with self.assertRaises(IndexError):
-            blist[2]
+            _ = blist[2]
 
         with self.assertRaises(IndexError):
-            blist[4]
+            _ = blist[4]
 
         with self.assertRaises(IndexError):
-            blist[-3]
+            _ = blist[-3]
 
     def test_from_seq(self):
         list_len = len(TestBoundedList.base)
@@ -207,4 +207,4 @@ class TestBoundedDict(unittest.TestCase):
         self.assertEqual(len(bdict), dic_len - 1)
 
         with self.assertRaises(KeyError):
-            bdict["new-name"]
+            _ = bdict["new-name"]
