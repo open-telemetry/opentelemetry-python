@@ -42,18 +42,18 @@ class JaegerSpanExporter(SpanExporter):
     Args:
         service_name: Service that logged an annotation in a trace.Classifier
             when query for spans.
+        agent_host_name: (Optional) The host name of the Jaeger-Agent.
+        agent_port: (Optional) The port of the Jaeger-Agent.
         collector_host_name: (Optional) The host name of the Jaeger-Collector
             HTTP Thrift.
         collector_port: (Optional) The port of the Jaeger-Collector HTTP
             Thrift.
+        collector_endpoint: (Optional) The endpoint of the Jaeger-Collector
+            HTTP Thrift.
         username: (Optional) The user name of the Basic Auth if authentication
             is required.
         password: (Optional) The password of the Basic Auth if authentication
             is required.
-        collector_endpoint: (Optional) The endpoint of the Jaeger-Collector
-            HTTP Thrift.
-        agent_host_name: (Optional) The host name of the Jaeger-Agent.
-        agent_port: (Optional) The port of the Jaeger-Agent.
     """
 
     def __init__(

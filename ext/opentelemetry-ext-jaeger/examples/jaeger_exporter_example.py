@@ -1,16 +1,29 @@
 import time
 
-import opentelemetry.ext.jaeger as exporter
-from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import export
+from opentelemetry import trace
+from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+from opentelemetry.ext import jaeger
 
-tracer = trace.tracer
+trace.set_preferred_tracer_implementation(lambda T: Tracer())
+tracer = trace.tracer()
 
-# Create a JaegerSpanExporter
-jaeger_exporter = exporter.JaegerSpanExporter()
+# create a JaegerSpanExporter
+jaeger_exporter = jaeger.JaegerSpanExporter(
+    service_name='my-helloworld-service',
+    # configure agent
+    agent_host_name='localhost',
+    agent_port=6831,
+    # optional: configure also collector
+    #collector_host_name='localhost',
+    #collector_port=14268,
+    #collector_endpoint='/api/traces?format=jaeger.thrift',
+    #username=xxxx, # optional
+    #password=xxxx, # optional
+)
 
-# Create a SimpleExportSpanProcessor and add the exporter to it
-span_processor = export.SimpleExportSpanProcessor(jaeger_exporter)
+# create a BatchExportSpanProcessor and add the exporter to it
+span_processor = BatchExportSpanProcessor(jaeger_exporter)
 
 # add to the tracer
 tracer.add_span_processor(span_processor)
@@ -32,3 +45,7 @@ with tracer.start_span("foo") as foo:
         time.sleep(0.2)
 
     time.sleep(0.1)
+
+# shutdown the span processor
+# TODO: this has to be improved so user doesn't need to call it manually
+span_processor.shutdown()
