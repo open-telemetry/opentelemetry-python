@@ -1,25 +1,25 @@
 import time
 
 from opentelemetry import trace
+from opentelemetry.ext import jaeger
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
-from opentelemetry.ext import jaeger
 
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
 
 # create a JaegerSpanExporter
 jaeger_exporter = jaeger.JaegerSpanExporter(
-    service_name='my-helloworld-service',
+    service_name="my-helloworld-service",
     # configure agent
-    agent_host_name='localhost',
+    agent_host_name="localhost",
     agent_port=6831,
     # optional: configure also collector
-    #collector_host_name='localhost',
-    #collector_port=14268,
-    #collector_endpoint='/api/traces?format=jaeger.thrift',
-    #username=xxxx, # optional
-    #password=xxxx, # optional
+    # collector_host_name="localhost",
+    # collector_port=14268,
+    # collector_endpoint="/api/traces?format=jaeger.thrift",
+    # username=xxxx, # optional
+    # password=xxxx, # optional
 )
 
 # create a BatchExportSpanProcessor and add the exporter to it
