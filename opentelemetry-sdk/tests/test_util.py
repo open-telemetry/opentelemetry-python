@@ -21,18 +21,39 @@ from opentelemetry.sdk.util import BoundedDict, BoundedList
 class TestBoundedList(unittest.TestCase):
     base = [52, 36, 53, 29, 54, 99, 56, 48, 22, 35, 21, 65, 10, 95, 42, 60]
 
-    def test_negative_maxlen(self):
+    def test_raises(self):
         with self.assertRaises(ValueError):
             BoundedList(-1)
 
+        blist = BoundedList(4)
+        blist.append(37)
+        blist.append(13)
+
+        with self.assertRaises(IndexError):
+            blist[2]
+
+        with self.assertRaises(IndexError):
+            blist[4]
+
+        with self.assertRaises(IndexError):
+            blist[-3]
+
     def test_from_seq(self):
         list_len = len(TestBoundedList.base)
-        blist = BoundedList.from_seq(list_len, TestBoundedList.base)
+        base_copy = list(TestBoundedList.base)
+        blist = BoundedList.from_seq(list_len, base_copy)
 
         self.assertEqual(len(blist), list_len)
 
+        # modify base_copy and test that blist is not changed
+        for idx in range(list_len):
+            base_copy[idx] = idx * base_copy[idx]
+
         for idx in range(list_len):
             self.assertEqual(blist[idx], TestBoundedList.base[idx])
+
+        # test that iter yields the correct number of elements
+        self.assertEqual(len(tuple(blist)), list_len)
 
         # sequence too big
         with self.assertRaises(ValueError):
@@ -45,8 +66,8 @@ class TestBoundedList(unittest.TestCase):
         self.assertEqual(len(blist), 0)
 
         # fill list
-        for idx in TestBoundedList.base:
-            blist.append(idx)
+        for item in TestBoundedList.base:
+            blist.append(item)
 
         self.assertEqual(len(blist), list_len)
         self.assertEqual(blist.dropped, 0)
@@ -66,12 +87,16 @@ class TestBoundedList(unittest.TestCase):
         blist = BoundedList.from_seq(list_len, TestBoundedList.base)
 
         # try to append more items
-        for idx in range(8):
+        for idx in range(list_len):
             # should drop the element without raising exceptions
-            blist.append(idx)
+            blist.append(2 * TestBoundedList.base[idx])
 
         self.assertEqual(len(blist), list_len)
-        self.assertEqual(blist.dropped, 8)
+        self.assertEqual(blist.dropped, list_len)
+
+        # test that new elements are in the list
+        for idx in range(list_len):
+            self.assertEqual(blist[idx], 2 * TestBoundedList.base[idx])
 
     def test_extend_no_drop(self):
         # create empty list
@@ -123,12 +148,20 @@ class TestBoundedDict(unittest.TestCase):
 
     def test_from_map(self):
         dic_len = len(TestBoundedDict.base)
-        bdict = BoundedDict.from_map(dic_len, TestBoundedDict.base)
+        base_copy = collections.OrderedDict(TestBoundedDict.base)
+        bdict = BoundedDict.from_map(dic_len, base_copy)
 
         self.assertEqual(len(bdict), dic_len)
 
+        # modify base_copy and test that bdict is not changed
+        base_copy["name"] = "Bruno"
+        base_copy["age"] = 3
+
         for key in TestBoundedDict.base:
             self.assertEqual(bdict[key], TestBoundedDict.base[key])
+
+        # test that iter yields the correct number of elements
+        self.assertEqual(len(tuple(bdict)), dic_len)
 
         # map too big
         with self.assertRaises(ValueError):
@@ -140,7 +173,7 @@ class TestBoundedDict(unittest.TestCase):
         bdict = BoundedDict(dic_len)
         self.assertEqual(len(bdict), 0)
 
-        # fill list
+        # fill dict
         for key in TestBoundedDict.base:
             bdict[key] = TestBoundedDict.base[key]
 
@@ -150,13 +183,28 @@ class TestBoundedDict(unittest.TestCase):
         for key in TestBoundedDict.base:
             self.assertEqual(bdict[key], TestBoundedDict.base[key])
 
-        # test __iter__ in BoundedList
+        # test __iter__ in BoundedDict
         for key in bdict:
             self.assertEqual(bdict[key], TestBoundedDict.base[key])
 
+        # updating an existing element should not drop
+        bdict["name"] = "Bruno"
+        self.assertEqual(bdict.dropped, 0)
+
         # try to append more elements
         for key in TestBoundedDict.base:
-            bdict["new-key" + key] = TestBoundedDict.base[key]
+            bdict["new-" + key] = TestBoundedDict.base[key]
 
         self.assertEqual(len(bdict), dic_len)
         self.assertEqual(bdict.dropped, dic_len)
+
+        # test that elements in the dict are the new ones
+        for key in TestBoundedDict.base:
+            self.assertEqual(bdict["new-" + key], TestBoundedDict.base[key])
+
+        # delete an element
+        del bdict["new-name"]
+        self.assertEqual(len(bdict), dic_len - 1)
+
+        with self.assertRaises(KeyError):
+            bdict["new-name"]
