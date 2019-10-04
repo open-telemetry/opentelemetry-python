@@ -28,8 +28,9 @@ class SpanContextWrapper(opentracing.SpanContext):
     def __init__(self, otel_context: SpanContext):
         self._otel_context = otel_context
 
-    @property
-    def otel_context(self):
+    def unwrap(self):
+        """Returns the wrapped OpenTelemetry `SpanContext` object."""
+
         return self._otel_context
 
     @property
@@ -43,9 +44,9 @@ class SpanWrapper(opentracing.Span):
         self._otel_span = span
         opentracing.Span.__init__(self, tracer, context)
 
-    @property
-    def otel_span(self):
-        """Returns the OpenTelemetry span embedded in the SpanWrapper."""
+    def unwrap(self):
+        """Returns the wrapped OpenTelemetry `Span` object."""
+
         return self._otel_span
 
     @property
@@ -115,14 +116,14 @@ class ScopeWrapper(opentracing.Scope):
 
 
 class ScopeManagerWrapper(opentracing.ScopeManager):
-    def __init__(self, tracer: Tracer):
+    def __init__(self, tracer: "TracerWrapper"):
         # pylint: disable=super-init-not-called
         self._tracer = tracer
 
     @contextmanager
     def activate(self, span, finish_on_close):
-        with self._tracer.use_span(
-            span.otel_span, end_on_exit=finish_on_close
+        with self._tracer.unwrap().use_span(
+            span.unwrap(), end_on_exit=finish_on_close
         ) as otel_span:
             wrapped_span = SpanWrapper(
                 self._tracer, otel_span.get_context(), otel_span
@@ -145,7 +146,12 @@ class TracerWrapper(opentracing.Tracer):
         if scope_manager is not None:
             self._scope_manager = scope_manager
         else:
-            self._scope_manager = ScopeManagerWrapper(tracer)
+            self._scope_manager = ScopeManagerWrapper(self)
+
+    def unwrap(self):
+        """Returns the wrapped OpenTelemetry `Tracer` object."""
+
+        return self._otel_tracer
 
     @property
     def scope_manager(self):
@@ -192,9 +198,9 @@ class TracerWrapper(opentracing.Tracer):
         parent = child_of
         if parent is not None:
             if isinstance(parent, SpanWrapper):
-                parent = child_of.otel_span
+                parent = child_of.unwrap()
             elif isinstance(parent, SpanContextWrapper):
-                parent = child_of.otel_context
+                parent = child_of.unwrap()
             else:
                 raise RuntimeError(
                     "Invalid parent type when calling start_span()."
@@ -208,7 +214,7 @@ class TracerWrapper(opentracing.Tracer):
             and not ignore_active_span
             and not parent
         ):
-            parent = self.active_span.otel_span
+            parent = self.active_span.unwrap()
 
         span = self._otel_tracer.create_span(operation_name, parent)
 
@@ -216,7 +222,7 @@ class TracerWrapper(opentracing.Tracer):
             if not isinstance(references, list):
                 references = [references]
             for ref in references:
-                span.add_link(ref.referenced_context.otel_context)
+                span.add_link(ref.referenced_context.unwrap())
 
         if tags:
             for key, value in tags.items():
