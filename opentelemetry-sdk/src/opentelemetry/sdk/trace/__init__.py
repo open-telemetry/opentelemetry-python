@@ -73,10 +73,10 @@ class MultiSpanProcessor(SpanProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors = ()
+        self._span_processors = ()  # type: typing.Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
 
-    def add_span_processor(self, span_processor: SpanProcessor):
+    def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
         with self._lock:
             self._span_processors = self._span_processors + (span_processor,)
@@ -122,11 +122,11 @@ class Span(trace_api.Span):
     def __init__(
         self,
         name: str,
-        context: "trace_api.SpanContext",
+        context: trace_api.SpanContext,
         parent: trace_api.ParentSpan = None,
-        sampler=None,  # TODO
-        trace_config=None,  # TODO
-        resource=None,  # TODO
+        sampler: None = None,  # TODO
+        trace_config: None = None,  # TODO
+        resource: None = None,  # TODO
         attributes: types.Attributes = None,  # TODO
         events: typing.Sequence[trace_api.Event] = None,  # TODO
         links: typing.Sequence[trace_api.Link] = None,  # TODO
@@ -140,9 +140,6 @@ class Span(trace_api.Span):
         self.sampler = sampler
         self.trace_config = trace_config
         self.resource = resource
-        self.attributes = attributes
-        self.events = events
-        self.links = links
         self.kind = kind
 
         self.span_processor = span_processor
@@ -165,8 +162,8 @@ class Span(trace_api.Span):
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
-        self.end_time = None
-        self.start_time = None
+        self.end_time = None  # type: typing.Optional[int]
+        self.start_time = None  # type: typing.Optional[int]
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -203,9 +200,13 @@ class Span(trace_api.Span):
     def add_event(
         self, name: str, attributes: types.Attributes = None
     ) -> None:
-        if attributes is None:
-            attributes = Span.empty_attributes
-        self.add_lazy_event(trace_api.Event(name, util.time_ns(), attributes))
+        self.add_lazy_event(
+            trace_api.Event(
+                name,
+                util.time_ns(),
+                Span.empty_attributes if attributes is None else attributes,
+            )
+        )
 
     def add_lazy_event(self, event: trace_api.Event) -> None:
         with self._lock:
@@ -226,7 +227,9 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,
     ) -> None:
         if attributes is None:
-            attributes = Span.empty_attributes
+            attributes = (
+                Span.empty_attributes
+            )  # TODO: empty_attributes is not a Dict. Use Mapping?
         self.add_lazy_link(trace_api.Link(link_target_context, attributes))
 
     def add_lazy_link(self, link: "trace_api.Link") -> None:
@@ -242,7 +245,7 @@ class Span(trace_api.Span):
             return
         self.links.append(link)
 
-    def start(self, start_time: int = None):
+    def start(self, start_time: typing.Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -256,7 +259,7 @@ class Span(trace_api.Span):
             return
         self.span_processor.on_start(self)
 
-    def end(self, end_time: int = None):
+    def end(self, end_time: int = None) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -285,7 +288,7 @@ class Span(trace_api.Span):
         return True
 
 
-def generate_span_id():
+def generate_span_id() -> int:
     """Get a new random span ID.
 
     Returns:
@@ -294,7 +297,7 @@ def generate_span_id():
     return random.getrandbits(64)
 
 
-def generate_trace_id():
+def generate_trace_id() -> int:
     """Get a new random trace ID.
 
     Returns:
@@ -327,7 +330,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> typing.Iterator["Span"]:
+    ) -> typing.Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_span`."""
 
         span = self.create_span(name, parent, kind)
@@ -370,8 +373,8 @@ class Tracer(trace_api.Tracer):
 
     @contextmanager
     def use_span(
-        self, span: Span, end_on_exit: bool = False
-    ) -> typing.Iterator[Span]:
+        self, span: trace_api.Span, end_on_exit: bool = False
+    ) -> typing.Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self._current_span_slot.get()
