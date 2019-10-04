@@ -94,6 +94,16 @@ class TestShim(unittest.TestCase):
 
         span.finish()
 
+    def test_explicit_span_finish(self):
+        """Test `finish()` method on `Span` objects."""
+
+        span = self.shim.start_span("TestSpan")
+
+        # Verify span hasn't ended.
+        self.assertIsNone(span.unwrap().end_time)
+
+        span.finish()
+
         # Verify the span has ended.
         self.assertIsNotNone(span.unwrap().end_time)
 
@@ -147,9 +157,6 @@ class TestShim(unittest.TestCase):
         self.assertIsNone(span.unwrap().end_time)
 
         span.finish()
-
-        # Verify span has ended.
-        self.assertIsNotNone(span.unwrap().end_time)
 
     def test_explicit_scope_close(self):
         """Test `close()` method on `ScopeWrapper`."""
