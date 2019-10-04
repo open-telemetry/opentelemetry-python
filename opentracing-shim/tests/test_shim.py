@@ -131,8 +131,31 @@ class TestShim(unittest.TestCase):
         # Verify no span is active.
         self.assertIsNone(self.shim.active_span)
 
-    def test_finish_on_close(self):
-        """Test `finish_on_close` argument."""
+    def test_start_active_span_finish_on_close(self):
+        """Test `finish_on_close` argument of `start_active_span()`."""
+
+        with self.shim.start_active_span(
+            "TestSpan", finish_on_close=True
+        ) as scope:
+            # Verify span hasn't ended.
+            self.assertIsNone(scope.span.unwrap().end_time)
+
+        # Verify span has ended.
+        self.assertIsNotNone(scope.span.unwrap().end_time)
+
+        with self.shim.start_active_span(
+            "TestSpan", finish_on_close=False
+        ) as scope:
+            # Verify span hasn't ended.
+            self.assertIsNone(scope.span.unwrap().end_time)
+
+        # Verify span hasn't ended after scope had been closed.
+        self.assertIsNone(scope.span.unwrap().end_time)
+
+        scope.span.finish()
+
+    def test_activate_finish_on_close(self):
+        """Test `finish_on_close` argument of `activate()`."""
 
         span = self.shim.start_span("TestSpan")
 
@@ -340,5 +363,3 @@ class TestShim(unittest.TestCase):
         self.assertIsInstance(context, opentracing.SpanContext)
         self.assertEqual(context.unwrap().trace_id, 1234)
         self.assertEqual(context.unwrap().span_id, 5678)
-
-    # TODO: Test `finish_on_close` on `start_active_span()``.
