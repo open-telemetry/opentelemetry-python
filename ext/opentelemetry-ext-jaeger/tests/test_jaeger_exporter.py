@@ -15,6 +15,8 @@
 
 import unittest
 
+# pylint:disable=no-name-in-module
+# pylint:disable=import-error
 import opentelemetry.ext.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.jaeger.gen.jaeger import ttypes as jaeger
@@ -75,13 +77,16 @@ class TestJaegerSpanExporter(unittest.TestCase):
         collector = exporter.collector
         self.assertEqual(exporter.collector, collector)
         # property should construct new object
+        # pylint: disable=protected-access
         exporter._collector = None
         exporter.username = None
         exporter.password = None
         self.assertNotEqual(exporter.collector, collector)
         self.assertTrue(exporter.collector.auth is None)
 
+    # pylint: disable=too-many-locals
     def test_translate_to_jaeger(self):
+        # pylint: disable=invalid-name
         self.maxDiff = None
 
         span_names = ("test1", "test2", "test3")
@@ -151,8 +156,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[2].start_time = start_times[2]
         otel_spans[2].end_time = end_times[2]
 
-        exporter = jaeger_exporter.JaegerSpanExporter()
-        spans = exporter.translate_to_jaeger(otel_spans)
+        # pylint: disable=protected-access
+        spans = jaeger_exporter._translate_to_jaeger(otel_spans)
 
         expected_spans = [
             jaeger.Span(

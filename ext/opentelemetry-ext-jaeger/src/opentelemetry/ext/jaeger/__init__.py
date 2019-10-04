@@ -15,6 +15,7 @@
 
 """Jaeger Span Exporter for OpenTelemetry."""
 
+import base64
 import logging
 import socket
 import typing
@@ -22,6 +23,8 @@ import typing
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
+# pylint:disable=no-name-in-module
+# pylint:disable=import-error
 import opentelemetry.trace as trace_api
 from opentelemetry.ext.jaeger.gen.agent import Agent as agent
 from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
@@ -42,18 +45,16 @@ class JaegerSpanExporter(SpanExporter):
     Args:
         service_name: Service that logged an annotation in a trace.Classifier
             when query for spans.
-        agent_host_name: (Optional) The host name of the Jaeger-Agent.
-        agent_port: (Optional) The port of the Jaeger-Agent.
-        collector_host_name: (Optional) The host name of the Jaeger-Collector
-            HTTP Thrift.
-        collector_port: (Optional) The port of the Jaeger-Collector HTTP
+        agent_host_name: The host name of the Jaeger-Agent.
+        agent_port: The port of the Jaeger-Agent.
+        collector_host_name: The host name of the Jaeger-Collector HTTP
             Thrift.
-        collector_endpoint: (Optional) The endpoint of the Jaeger-Collector
-            HTTP Thrift.
-        username: (Optional) The user name of the Basic Auth if authentication
-            is required.
-        password: (Optional) The password of the Basic Auth if authentication
-            is required.
+        collector_port: The port of the Jaeger-Collector HTTP Thrift.
+        collector_endpoint: The endpoint of the Jaeger-Collector HTTP Thrift.
+        username: The user name of the Basic Auth if authentication is
+            required.
+        password: The password of the Basic Auth if authentication is
+            required.
     """
 
     def __init__(
@@ -61,11 +62,11 @@ class JaegerSpanExporter(SpanExporter):
         service_name: str = "my_service",
         agent_host_name: str = DEFAULT_AGENT_HOST_NAME,
         agent_port: int = DEFAULT_AGENT_PORT,
-        collector_host_name: str = None,
-        collector_port: int = None,
+        collector_host_name: typing.Optional[str] = None,
+        collector_port: typing.Optional[int] = None,
         collector_endpoint: str = DEFAULT_COLLECTOR_ENDPOINT,
-        username: str = None,
-        password: str = None,
+        username: typing.Optional[str] = None,
+        password: typing.Optional[str] = None,
     ):
         self.service_name = service_name
         self.agent_host_name = agent_host_name
@@ -97,7 +98,7 @@ class JaegerSpanExporter(SpanExporter):
         thrift_url = "http://{}:{}{}".format(
             self.collector_host_name,
             self.collector_port,
-            self.collector_endpoint or DEFAULT_COLLECTOR_ENDPOINT,
+            self.collector_endpoint,
         )
 
         auth = None
@@ -108,7 +109,7 @@ class JaegerSpanExporter(SpanExporter):
         return self._collector
 
     def export(self, spans: typing.Sequence[Span]):
-        jaeger_spans = self.translate_to_jaeger(spans)
+        jaeger_spans = _translate_to_jaeger(spans)
 
         batch = jaeger.Batch(
             spans=jaeger_spans,
@@ -124,57 +125,58 @@ class JaegerSpanExporter(SpanExporter):
     def shutdown(self):
         pass
 
-    def translate_to_jaeger(self, spans: typing.Sequence[Span]):
-        """Translate the spans to Jaeger format.
 
-        Args:
-            spans: Tuple of spans to convert
-        """
+def _translate_to_jaeger(spans: typing.Sequence[Span]):
+    """Translate the spans to Jaeger format.
 
-        jaeger_spans = []
+    Args:
+        spans: Tuple of spans to convert
+    """
 
-        for span in spans:
-            trace_id = span.get_context().trace_id
-            span_id = span.get_context().span_id
+    jaeger_spans = []
 
-            start_time_us = span.start_time / 1e3
-            end_time_us = span.end_time / 1e3
-            duration_us = end_time_us - start_time_us
+    for span in spans:
+        ctx = span.get_context()
+        trace_id = ctx.trace_id
+        span_id = ctx.span_id
 
-            parent_id = 0
-            if isinstance(span.parent, trace_api.Span):
-                parent_id = span.parent.get_context().span_id
-            elif isinstance(span.parent, trace_api.SpanContext):
-                parent_id = span.parent.span_id
+        start_time_us = span.start_time / 1e3
+        duration_us = (span.end_time - span.start_time) / 1e3
 
-            tags = _extract_tags(span.attributes)
+        parent_id = 0
+        if isinstance(span.parent, trace_api.Span):
+            parent_id = span.parent.get_context().span_id
+        elif isinstance(span.parent, trace_api.SpanContext):
+            parent_id = span.parent.span_id
 
-            # TODO: status is missing:
-            # https://github.com/open-telemetry/opentelemetry-python/issues/98
+        tags = _extract_tags(span.attributes)
 
-            refs = _extract_refs_from_span(span)
-            logs = _extract_logs_from_span(span)
+        # TODO: status is missing:
+        # https://github.com/open-telemetry/opentelemetry-python/issues/98
 
-            flags = int(span.get_context().trace_options)
+        refs = _extract_refs_from_span(span)
+        logs = _extract_logs_from_span(span)
 
-            jaeger_span = jaeger.Span(
-                traceIdHigh=_get_trace_id_high(trace_id),
-                traceIdLow=_get_trace_id_low(trace_id),
-                # generated code expects i64
-                spanId=_convert_int_to_i64(span_id),
-                operationName=span.name,
-                startTime=int(start_time_us),
-                duration=int(duration_us),
-                tags=tags,
-                logs=logs,
-                references=refs,
-                flags=flags,
-                parentSpanId=_convert_int_to_i64(parent_id),
-            )
+        flags = int(ctx.trace_options)
 
-            jaeger_spans.append(jaeger_span)
+        jaeger_span = jaeger.Span(
+            traceIdHigh=_get_trace_id_high(trace_id),
+            traceIdLow=_get_trace_id_low(trace_id),
+            # generated code expects i64
+            spanId=_convert_int_to_i64(span_id),
+            operationName=span.name,
+            startTime=int(start_time_us),
+            duration=int(duration_us),
+            tags=tags,
+            logs=logs,
+            references=refs,
+            flags=flags,
+            parentSpanId=_convert_int_to_i64(parent_id),
+        )
 
-        return jaeger_spans
+        jaeger_spans.append(jaeger_span)
+
+    return jaeger_spans
 
 
 def _extract_refs_from_span(span):
@@ -267,11 +269,8 @@ class AgentClientUDP:
     Args:
         host_name: The host name of the Jaeger server.
         port: The port of the Jaeger server.
-        max_packet_size: (Optional) Maximum size of UDP packet.
-        client: Class for creating new client objects for agencies. It should
-            extend from the agent :class: `.AgentIface` type and implement
-            :meth:`.AgentIface.emitBatch`. Default and only option to
-            :class:`.AgentClient`.
+        max_packet_size: Maximum size of UDP packet.
+        client: Class for creating new client objects for agencies.
     """
 
     def __init__(
@@ -294,6 +293,7 @@ class AgentClientUDP:
             batch: Object to emit Jaeger spans.
         """
 
+        # pylint: disable=protected-access
         self.client._seqid = 0
         #  truncate and reset the position of BytesIO object
         self.buffer._buffer.truncate(0)
@@ -317,15 +317,15 @@ class Collector:
 
     Args:
         thrift_url: URL of the Jaeger HTTP Thrift.
-        auth: (Optional) Auth tuple that contains username and password for
-            Basic Auth.
+        auth: Auth tuple that contains username and password for Basic Auth.
+        client: Class for creating a Jaeger collector client.
         http_transport: Class for creating new client for Thrift HTTP server.
     """
 
     def __init__(
         self,
         thrift_url: str = "",
-        auth: typing.Tuple[str, str] = None,
+        auth: typing.Optional[typing.Tuple[str, str]] = None,
         client=jaeger.Client,
         http_transport=THttpClient.THttpClient,
     ):
@@ -338,8 +338,6 @@ class Collector:
 
         # set basic auth header
         if auth is not None:
-            import base64
-
             auth_header = "{}:{}".format(*auth)
             decoded = base64.b64encode(auth_header.encode()).decode("ascii")
             basic_auth = dict(Authorization="Basic {}".format(decoded))
@@ -359,10 +357,9 @@ class Collector:
             msg = self.http_transport.message
             if code >= 300 or code < 200:
                 logger.error(
-                    "Traces cannot be uploaded;\
-                        HTTP status code: {}, message {}".format(
-                        code, msg
-                    )
+                    "Traces cannot be uploaded; HTTP status code: %s, message %s",
+                    code,
+                    msg,
                 )
         finally:
             if self.http_transport.isOpen():
