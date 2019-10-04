@@ -238,77 +238,69 @@ class TestShim(unittest.TestCase):
         object as a parent upon creation.
         """
 
-        parent = self.shim.start_span("ParentSpan")
-        with self.shim.start_active_span(
-            "ChildSpan", child_of=parent
-        ) as child:
+        with self.shim.start_span("ParentSpan") as parent:
+            with self.shim.start_active_span(
+                "ChildSpan", child_of=parent
+            ) as child:
+                parent_trace_id = parent.unwrap().get_context().trace_id
+                child_trace_id = child.span.unwrap().get_context().trace_id
+
+                self.assertEqual(child_trace_id, parent_trace_id)
+                self.assertEqual(child.span.unwrap().parent, parent.unwrap())
+
+        with self.shim.start_span("ParentSpan") as parent:
+            child = self.shim.start_span("ChildSpan", child_of=parent)
+
             parent_trace_id = parent.unwrap().get_context().trace_id
-            child_trace_id = child.span.unwrap().get_context().trace_id
+            child_trace_id = child.unwrap().get_context().trace_id
 
             self.assertEqual(child_trace_id, parent_trace_id)
-            self.assertEqual(child.span.unwrap().parent, parent.unwrap())
+            self.assertEqual(child.unwrap().parent, parent.unwrap())
 
-        parent.finish()
-
-        parent = self.shim.start_span("ParentSpan")
-        child = self.shim.start_span("ChildSpan", child_of=parent)
-
-        parent_trace_id = parent.unwrap().get_context().trace_id
-        child_trace_id = child.unwrap().get_context().trace_id
-
-        self.assertEqual(child_trace_id, parent_trace_id)
-        self.assertEqual(child.unwrap().parent, parent.unwrap())
-
-        child.finish()
-        parent.finish()
+            child.finish()
 
     def test_parent_child_explicit_span_context(self):
         """Test parent-child relationship of spans when specifying a
         `SpanContext` object as a parent upon creation.
         """
 
-        parent = self.shim.start_span("ParentSpan")
-        with self.shim.start_active_span(
-            "ChildSpan", child_of=parent.context
-        ) as child:
-            parent_trace_id = parent.unwrap().get_context().trace_id
-            child_trace_id = child.span.unwrap().get_context().trace_id
+        with self.shim.start_span("ParentSpan") as parent:
+            with self.shim.start_active_span(
+                "ChildSpan", child_of=parent.context
+            ) as child:
+                parent_trace_id = parent.unwrap().get_context().trace_id
+                child_trace_id = child.span.unwrap().get_context().trace_id
 
-            self.assertEqual(child_trace_id, parent_trace_id)
-            self.assertEqual(
-                child.span.unwrap().parent, parent.context.unwrap()
-            )
+                self.assertEqual(child_trace_id, parent_trace_id)
+                self.assertEqual(
+                    child.span.unwrap().parent, parent.context.unwrap()
+                )
 
-        parent.finish()
+        with self.shim.start_span("ParentSpan") as parent:
+            with self.shim.start_span(
+                "SpanWithContextParent", child_of=parent.context
+            ) as child:
+                parent_trace_id = parent.unwrap().get_context().trace_id
+                child_trace_id = child.unwrap().get_context().trace_id
 
-        parent = self.shim.start_span("ParentSpan")
-        child = self.shim.start_span(
-            "SpanWithContextParent", child_of=parent.context
-        )
-
-        parent_trace_id = parent.unwrap().get_context().trace_id
-        child_trace_id = child.unwrap().get_context().trace_id
-
-        self.assertEqual(child_trace_id, parent_trace_id)
-        self.assertEqual(child.unwrap().parent, parent.context.unwrap())
-
-        child.finish()
-        parent.finish()
+                self.assertEqual(child_trace_id, parent_trace_id)
+                self.assertEqual(
+                    child.unwrap().parent, parent.context.unwrap()
+                )
 
     def test_references(self):
         """Test span creation using the `references` argument."""
 
-        parent = self.shim.start_span("ParentSpan")
-        ref = opentracing.child_of(parent.context)
+        with self.shim.start_span("ParentSpan") as parent:
+            ref = opentracing.child_of(parent.context)
 
-        with self.shim.start_active_span(
-            "ChildSpan", references=[ref]
-        ) as child:
-            self.assertEqual(
-                child.span.unwrap().links[0].context, parent.context.unwrap()
-            )
-
-        parent.finish()
+            with self.shim.start_active_span(
+                "ChildSpan", references=[ref]
+            ) as child:
+                self.assertEqual(
+                    child.span.unwrap().links[0].context,
+                    parent.context.unwrap(),
+                )
 
     def test_set_operation_name(self):
         """Test `set_operation_name()` method."""
@@ -340,19 +332,16 @@ class TestShim(unittest.TestCase):
     def test_log_kv(self):
         """Test the `log_kv()` method on `Span` objects."""
 
-        span = self.shim.start_span("TestSpan")
+        with self.shim.start_span("TestSpan") as span:
+            span.log_kv({"foo": "bar"})
+            self.assertEqual(span.unwrap().events[0].attributes["foo"], "bar")
+            # Verify timestamp was generated automatically.
+            self.assertIsNotNone(span.unwrap().events[0].timestamp)
 
-        span.log_kv({"foo": "bar"})
-        self.assertEqual(span.unwrap().events[0].attributes["foo"], "bar")
-        # Verify timestamp was generated automatically.
-        self.assertIsNotNone(span.unwrap().events[0].timestamp)
-
-        # Test explicit timestamp.
-        now = opentracingshim.util.time_ns()
-        span.log_kv({"foo": "bar"}, now)
-        self.assertEqual(span.unwrap().events[1].timestamp, now)
-
-        span.finish()
+            # Test explicit timestamp.
+            now = opentracingshim.util.time_ns()
+            span.log_kv({"foo": "bar"}, now)
+            self.assertEqual(span.unwrap().events[1].timestamp, now)
 
     def test_span_context(self):
         """Test construction of `SpanContextWrapper` objects."""
