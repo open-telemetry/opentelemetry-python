@@ -1,10 +1,10 @@
-OpenTelemetry Python API
+OpenTracing Shim for OpenTelemetry
 ============================================================================
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-api.svg
-   :target: https://pypi.org/project/opentelemetry-api/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ot-shim.svg
+   :target: https://pypi.org/project/opentelemetry-ot-shim/
 
 Installation
 ------------
