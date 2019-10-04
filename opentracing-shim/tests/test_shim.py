@@ -22,6 +22,8 @@ from opentelemetry.sdk.trace import Tracer
 
 
 class TestShim(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         self.tracer = trace.tracer()
         self.shim = opentracingshim.create_tracer(self.tracer)
