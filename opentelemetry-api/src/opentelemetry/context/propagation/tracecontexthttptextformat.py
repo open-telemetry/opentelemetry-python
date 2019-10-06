@@ -44,6 +44,8 @@ _MEMBER_FORMAT = "({})(=)({})".format(_KEY_FORMAT, _VALUE_FORMAT)
 _DELIMITER_FORMAT_RE = re.compile(_DELIMITER_FORMAT)
 _MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
 
+_TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
+
 
 class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     """Extracts and injects using w3c TraceContext's headers.
@@ -95,6 +97,8 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             tracestate.update(  # pylint:disable=E1101
                 _parse_tracestate(tracestate_header)
             )
+        if len(tracestate) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+            tracestate = trace.TraceState()
 
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
