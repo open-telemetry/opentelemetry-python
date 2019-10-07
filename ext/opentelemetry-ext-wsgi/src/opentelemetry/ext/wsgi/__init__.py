@@ -49,6 +49,24 @@ class OpenTelemetryMiddleware:
     def __init__(self, wsgi):
         self.wsgi = wsgi
 
+    class _Context:
+        def __init__(self):
+            self.tracer = trace.tracer()
+            self.start_time = time_ns()
+            self.span = None
+            self.activation = None
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            if self.span:
+                self.span.end()
+                self.span = None
+            if self.activation:
+                self.activation.__exit__(*args)
+
+
     @staticmethod
     def _add_request_attributes(span, environ):
         span.set_attribute("component", "http")
@@ -98,11 +116,15 @@ class OpenTelemetryMiddleware:
         else:
             span.set_attribute("http.status_code", status_code)
 
-    def _create_start_response(self, environ, start_response):
+    @classmethod
+    def _create_start_response(cls, span, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args, **kwargs):
-            span = self._get_env_span(environ)
-            self._add_response_attributes(span, status)
+            if flask_request:
+                if flask_request.endpoint:
+                    span.update_name(flask_request.endpoint)
+                span.set_attribute("http.route", flask_request.url_rule.rule)
+            cls._add_response_attributes(span, status)
             return start_response(status, response_headers, *args, **kwargs)
 
         return _start_response
@@ -125,38 +147,19 @@ class OpenTelemetryMiddleware:
         span = tracer.create_span(
             span_name, parent_span, kind=trace.SpanKind.SERVER
         )
-        environ[self] = dict(span=span)
         span.start(start_timestamp)
         try:
             with tracer.use_span(span):
                 self._add_request_attributes(span, environ)
                 start_response = self._create_start_response(
-                    environ, start_response
+                    span, start_response
                 )
 
                 iterable = self.wsgi(environ, start_response)
-                return self._end_span_after_iterating(iterable, environ, tracer)
+                return _end_span_after_iterating(iterable, span, tracer)
         except:  # noqa
             span.end()
             raise
-
-    def _get_env_span(self, environ):
-        return environ[self]["span"]
-
-    # Put this in a subfunction to not delay the call to the wrapped
-    # WSGI application (instrumentation should change the application
-    # behavior as little as possible).
-    def _end_span_after_iterating(self, iterable, environ, tracer):
-        span = self._get_env_span(environ)
-        try:
-            with tracer.use_span():
-                for yielded in iterable:
-                    yield yielded
-        finally:
-            close = getattr(iterable, "close", None)
-            if close:
-                close()
-            span.end()
 
 
 def _get_header_from_environ(
@@ -174,23 +177,28 @@ def _get_header_from_environ(
     return []
 
 
+# Put this in a subfunction to not delay the call to the wrapped
+# WSGI application (instrumentation should change the application
+# behavior as little as possible).
+def _end_span_after_iterating(iterable, span, tracer):
+    try:
+        with tracer.use_span(span):
+            for yielded in iterable:
+                yield yielded
+    finally:
+        close = getattr(iterable, "close", None)
+        if close:
+            close()
+        span.end()
+
 class _OpenTelemetryFlaskMiddleware(OpenTelemetryMiddleware):
+
     def __init__(self, wsgi, flask):
         super().__init__(wsgi)
         self.flask = flask
 
     def __call__(self, environ, start_response):
-
-        self.flask.before_request(self._before_flask_request)
-        self.flask.teardown_request(self._teardown_flask_request)
-
-        
-        start_timestamp = time_ns()
-        environ[self] = dict(span=None, start_timestamp=start_timestamp)
-
-        start_response = self._create_start_response(
-            environ, start_response
-        )
-
-        iterable = self.wsgi(environ, start_response)
-        return self._end_span_after_iterating(iterable, environ, tracer())
+        with self._Context() as ctx:
+            self.flask.before_request(before_request)
+            self.flask.teardown_request()
+    
