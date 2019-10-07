@@ -22,6 +22,7 @@ from contextlib import contextmanager
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
+from opentelemetry.util import time_ns
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.util import types
 
@@ -205,7 +206,7 @@ class Span(trace_api.Span):
     ) -> None:
         if attributes is None:
             attributes = Span.empty_attributes
-        self.add_lazy_event(trace_api.Event(name, util.time_ns(), attributes))
+        self.add_lazy_event(trace_api.Event(name, time_ns(), attributes))
 
     def add_lazy_event(self, event: trace_api.Event) -> None:
         with self._lock:
@@ -249,7 +250,7 @@ class Span(trace_api.Span):
             has_started = self.start_time is not None
             if not has_started:
                 self.start_time = (
-                    start_time if start_time is not None else util.time_ns()
+                    start_time if start_time is not None else time_ns()
                 )
         if has_started:
             logger.warning("Calling start() on a started span.")
@@ -265,7 +266,7 @@ class Span(trace_api.Span):
             has_ended = self.end_time is not None
             if not has_ended:
                 self.end_time = (
-                    end_time if end_time is not None else util.time_ns()
+                    end_time if end_time is not None else time_ns()
                 )
         if has_ended:
             logger.warning("Calling end() on an ended span.")

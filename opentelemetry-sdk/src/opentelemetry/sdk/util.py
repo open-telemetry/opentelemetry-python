@@ -14,7 +14,6 @@
 
 import datetime
 import threading
-import time
 from collections import OrderedDict, deque
 
 try:
@@ -25,15 +24,6 @@ except ImportError:
     # pylint: disable=no-name-in-module,ungrouped-imports
     from collections import MutableMapping
     from collections import Sequence
-
-try:
-    time_ns = time.time_ns
-# Python versions < 3.7
-except AttributeError:
-
-    def time_ns():
-        return int(time.time() * 1e9)
-
 
 def ns_to_iso_str(nanoseconds):
     """Get an ISO 8601 string from time_ns value."""
