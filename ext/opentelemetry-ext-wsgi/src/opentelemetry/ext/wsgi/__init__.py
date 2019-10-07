@@ -22,14 +22,19 @@ import functools
 import typing
 import wsgiref.util as wsgiref_util
 
+from opentelemetry.util import time_ns
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 
 try:
-    from flask import request as flask_request
+    from flask import request as flask_request, Flask
 except ImportError:
     flask_request = None
+    Flask = None
 
+def add_middleware_to_flask(flask):
+    flask.wsgi_app = _OpenTelemetryFlaskMiddleware(flask.wsgi_app, flask)
+    return flask    
 
 class OpenTelemetryMiddleware:
     """The WSGI application middleware.
@@ -41,30 +46,8 @@ class OpenTelemetryMiddleware:
         wsgi: The WSGI application callable.
     """
 
-    @classmethod
-    def wrap_flask(cls, flask):
-        middleware = cls(flask)
-        flask.wsgi_app = middleware
-        return flask
-
-
-    def _get_flask(self):
-        if not Flask:
-            return None
-        if isinstance(self.wsgi, Flask):
-            return self.wsgi
-          
-        flask_app = getattr(self.wsgi, "__self__")
-        if isinstance(flask_app, Flask):
-            return flask_app
-
-        return None
-
     def __init__(self, wsgi):
         self.wsgi = wsgi
-
-    def _add_flask_attributes(self):
-        print("REQUEST:", flask_request)
 
     @staticmethod
     def _add_request_attributes(span, environ):
@@ -115,15 +98,11 @@ class OpenTelemetryMiddleware:
         else:
             span.set_attribute("http.status_code", status_code)
 
-    @classmethod
-    def _create_start_response(cls, span, start_response):
+    def _create_start_response(self, environ, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args, **kwargs):
-            if flask_request:
-                if flask_request.endpoint:
-                    span.update_name(flask_request.endpoint)
-                span.set_attribute("http.route", flask_request.url_rule.rule)
-            cls._add_response_attributes(span, status)
+            span = self._get_env_span(environ)
+            self._add_response_attributes(span, status)
             return start_response(status, response_headers, *args, **kwargs)
 
         return _start_response
@@ -136,6 +115,8 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
+        start_timestamp = time_ns()
+
         tracer = trace.tracer()
         parent_span = propagators.extract(_get_header_from_environ, environ)
         span_name = environ.get("PATH_INFO", "/")
@@ -144,19 +125,38 @@ class OpenTelemetryMiddleware:
         span = tracer.create_span(
             span_name, parent_span, kind=trace.SpanKind.SERVER
         )
-        span.start()
+        environ[self] = dict(span=span)
+        span.start(start_timestamp)
         try:
             with tracer.use_span(span):
                 self._add_request_attributes(span, environ)
                 start_response = self._create_start_response(
-                    span, start_response
+                    environ, start_response
                 )
 
                 iterable = self.wsgi(environ, start_response)
-                return _end_span_after_iterating(iterable, span, tracer)
+                return self._end_span_after_iterating(iterable, environ, tracer)
         except:  # noqa
             span.end()
             raise
+
+    def _get_env_span(self, environ):
+        return environ[self]["span"]
+
+    # Put this in a subfunction to not delay the call to the wrapped
+    # WSGI application (instrumentation should change the application
+    # behavior as little as possible).
+    def _end_span_after_iterating(self, iterable, environ, tracer):
+        span = self._get_env_span(environ)
+        try:
+            with tracer.use_span():
+                for yielded in iterable:
+                    yield yielded
+        finally:
+            close = getattr(iterable, "close", None)
+            if close:
+                close()
+            span.end()
 
 
 def _get_header_from_environ(
@@ -174,16 +174,23 @@ def _get_header_from_environ(
     return []
 
 
-# Put this in a subfunction to not delay the call to the wrapped
-# WSGI application (instrumentation should change the application
-# behavior as little as possible).
-def _end_span_after_iterating(iterable, span, tracer):
-    try:
-        with tracer.use_span(span):
-            for yielded in iterable:
-                yield yielded
-    finally:
-        close = getattr(iterable, "close", None)
-        if close:
-            close()
-        span.end()
+class _OpenTelemetryFlaskMiddleware(OpenTelemetryMiddleware):
+    def __init__(self, wsgi, flask):
+        super().__init__(wsgi)
+        self.flask = flask
+
+    def __call__(self, environ, start_response):
+
+        self.flask.before_request(self._before_flask_request)
+        self.flask.teardown_request(self._teardown_flask_request)
+
+        
+        start_timestamp = time_ns()
+        environ[self] = dict(span=None, start_timestamp=start_timestamp)
+
+        start_response = self._create_start_response(
+            environ, start_response
+        )
+
+        iterable = self.wsgi(environ, start_response)
+        return self._end_span_after_iterating(iterable, environ, tracer())
