@@ -42,7 +42,7 @@ class SpanContextWrapper(opentracing.SpanContext):
 class SpanWrapper(opentracing.Span):
     def __init__(self, tracer, context, span):
         self._otel_span = span
-        opentracing.Span.__init__(self, tracer, context)
+        super().__init__(tracer, context)
 
     def unwrap(self):
         """Returns the wrapped OpenTelemetry `Span` object."""
