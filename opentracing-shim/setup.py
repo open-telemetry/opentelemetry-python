@@ -43,7 +43,11 @@ setuptools.setup(
     description="OpenTracing shim for OpenTelemetry",
     include_package_data=True,
     long_description=open("README.rst").read(),
-    install_requires=["typing; python_version<'3.5'"],
+    install_requires=[
+        "typing; python_version<'3.5'",
+        "opentracing",
+        "opentelemetry-api",
+    ],
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
