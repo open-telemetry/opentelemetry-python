@@ -27,6 +27,7 @@ class TestShim(unittest.TestCase):
     # pylint: disable=too-many-public-methods
 
     def setUp(self):
+        # TODO: Review setup.
         self.tracer = trace.tracer()
         self.shim = opentracingshim.create_tracer(self.tracer)
 
