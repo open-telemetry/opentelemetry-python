@@ -59,7 +59,7 @@ class JaegerSpanExporter(SpanExporter):
 
     def __init__(
         self,
-        service_name: str = "my_service",
+        service_name: str,
         agent_host_name: str = DEFAULT_AGENT_HOST_NAME,
         agent_port: int = DEFAULT_AGENT_PORT,
         collector_host_name: typing.Optional[str] = None,

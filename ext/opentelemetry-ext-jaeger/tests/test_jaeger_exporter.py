@@ -25,12 +25,12 @@ from opentelemetry.sdk import trace
 
 class TestJaegerSpanExporter(unittest.TestCase):
     def test_constructor_default(self):
-        service_name = "my_service"
+        service_name = "my-service-name"
         host_name = "localhost"
         thrift_port = None
         agent_port = 6831
         collector_endpoint = "/api/traces?format=jaeger.thrift"
-        exporter = jaeger_exporter.JaegerSpanExporter()
+        exporter = jaeger_exporter.JaegerSpanExporter(service_name)
 
         self.assertEqual(exporter.service_name, service_name)
         self.assertEqual(exporter.collector_host_name, None)
