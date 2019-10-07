@@ -25,6 +25,11 @@ import wsgiref.util as wsgiref_util
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 
+try:
+    from flask import request as flask_request
+except ImportError:
+    flask_request = None
+
 
 class OpenTelemetryMiddleware:
     """The WSGI application middleware.
@@ -36,8 +41,30 @@ class OpenTelemetryMiddleware:
         wsgi: The WSGI application callable.
     """
 
+    @classmethod
+    def wrap_flask(cls, flask):
+        middleware = cls(flask)
+        flask.wsgi_app = middleware
+        return flask
+
+
+    def _get_flask(self):
+        if not Flask:
+            return None
+        if isinstance(self.wsgi, Flask):
+            return self.wsgi
+          
+        flask_app = getattr(self.wsgi, "__self__")
+        if isinstance(flask_app, Flask):
+            return flask_app
+
+        return None
+
     def __init__(self, wsgi):
         self.wsgi = wsgi
+
+    def _add_flask_attributes(self):
+        print("REQUEST:", flask_request)
 
     @staticmethod
     def _add_request_attributes(span, environ):
@@ -92,6 +119,10 @@ class OpenTelemetryMiddleware:
     def _create_start_response(cls, span, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args, **kwargs):
+            if flask_request:
+                if flask_request.endpoint:
+                    span.update_name(flask_request.endpoint)
+                span.set_attribute("http.route", flask_request.url_rule.rule)
             cls._add_response_attributes(span, status)
             return start_response(status, response_headers, *args, **kwargs)
 
@@ -106,11 +137,12 @@ class OpenTelemetryMiddleware:
         """
 
         tracer = trace.tracer()
-        path_info = environ["PATH_INFO"] or "/"
         parent_span = propagators.extract(_get_header_from_environ, environ)
+        span_name = environ.get("PATH_INFO", "/")
+
 
         span = tracer.create_span(
-            path_info, parent_span, kind=trace.SpanKind.SERVER
+            span_name, parent_span, kind=trace.SpanKind.SERVER
         )
         span.start()
         try:
