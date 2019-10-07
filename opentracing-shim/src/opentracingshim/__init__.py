@@ -35,7 +35,7 @@ class SpanContextWrapper(opentracing.SpanContext):
 
     @property
     def baggage(self):
-        return {}
+        raise NotImplementedError
         # TODO: Implement.
 
 
@@ -87,12 +87,11 @@ class SpanWrapper(opentracing.Span):
         return self
 
     def set_baggage_item(self, key, value):
-        # Return self for call chaining.
-        return self
+        raise NotImplementedError
         # TODO: Implement.
 
     def get_baggage_item(self, key):
-        return None
+        raise NotImplementedError
         # TODO: Implement.
 
     # TODO: Verify calls to deprecated methods `log_event()` and `log()` on
@@ -244,10 +243,10 @@ class TracerWrapper(opentracing.Tracer):
 
     def inject(self, span_context, format, carrier):
         # pylint: disable=redefined-builtin
-        pass
+        raise NotImplementedError
         # TODO: Implement.
 
     def extract(self, format, carrier):
         # pylint: disable=redefined-builtin
-        pass
+        raise NotImplementedError
         # TODO: Implement.
