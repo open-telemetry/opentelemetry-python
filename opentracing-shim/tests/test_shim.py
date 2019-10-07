@@ -53,10 +53,10 @@ class TestShim(unittest.TestCase):
             self.assertIsInstance(scope, opentracing.Scope)
             self.assertIsInstance(scope.span, opentracing.Span)
 
-            # Verify the span is started.
+            # Verify span is started.
             self.assertIsNotNone(scope.span.unwrap().start_time)
 
-            # Verify the span is active.
+            # Verify span is active.
             self.assertEqual(self.shim.active_span.context, scope.span.context)
             # TODO: We can't check for equality of self.shim.active_span and
             # scope.span because the same OpenTelemetry span is returned inside
@@ -64,7 +64,7 @@ class TestShim(unittest.TestCase):
             # here:
             # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
 
-        # Verify the span has ended.
+        # Verify span has ended.
         self.assertIsNotNone(scope.span.unwrap().end_time)
 
         # Verify no span is active.
@@ -77,13 +77,13 @@ class TestShim(unittest.TestCase):
             # Verify correct type of Span object.
             self.assertIsInstance(span, opentracing.Span)
 
-            # Verify the span is started.
+            # Verify span is started.
             self.assertIsNotNone(span.unwrap().start_time)
 
             # Verify `start_span()` does NOT make the span active.
             self.assertIsNone(self.shim.active_span)
 
-        # Verify the span has ended.
+        # Verify span has ended.
         self.assertIsNotNone(span.unwrap().end_time)
 
     def test_start_span_no_contextmanager(self):
@@ -91,7 +91,7 @@ class TestShim(unittest.TestCase):
 
         span = self.shim.start_span("TestSpan")
 
-        # Verify the span is started.
+        # Verify span is started.
         self.assertIsNotNone(span.unwrap().start_time)
 
         # Verify `start_span()` does NOT make the span active.
@@ -109,7 +109,7 @@ class TestShim(unittest.TestCase):
 
         span.finish()
 
-        # Verify the span has ended.
+        # Verify span has ended.
         self.assertIsNotNone(span.unwrap().end_time)
 
     def test_explicit_start_time(self):
