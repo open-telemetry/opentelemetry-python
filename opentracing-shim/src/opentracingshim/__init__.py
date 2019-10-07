@@ -228,7 +228,14 @@ class TracerWrapper(opentracing.Tracer):
             for key, value in tags.items():
                 span.set_attribute(key, value)
 
-        span.start(start_time=start_time)
+        # The OpenTracing API expects time values to be `float` values which
+        # represent the number of seconds since the epoch. OpenTelemetry
+        # represents time values as nanoseconds since the epoch.
+        start_time_ns = start_time
+        if start_time_ns is not None:
+            start_time_ns = util.time_seconds_to_ns(start_time)
+
+        span.start(start_time=start_time_ns)
         context = SpanContextWrapper(span.get_context())
         return SpanWrapper(self, context, span)
 

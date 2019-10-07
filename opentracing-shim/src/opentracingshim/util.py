@@ -28,6 +28,32 @@ except AttributeError:
 DEFAULT_EVENT_NAME = "log"
 
 
+def time_seconds_to_ns(time_seconds: float) -> int:
+    """Converts a time value in seconds to a time value in nanoseconds.
+
+    `time_seconds` is a `float` as returned by `time.time()` which represents
+    the number of seconds since the epoch.
+
+    The returned value is an `int` representing the number of nanoseconds since
+    the epoch.
+    """
+
+    return int(time_seconds * 1e9)
+
+
+def time_seconds_from_ns(time_nanoseconds: int) -> float:
+    """Converts a time value in nanoseconds to a time value in seconds.
+
+    `time_nanoseconds` is an `int` representing the number of nanoseconds since
+    the epoch.
+
+    The returned value is a `float` representing the number of seconds since
+    the epoch.
+    """
+
+    return time_nanoseconds / 1e9
+
+
 def event_name_from_kv(key_values: dict) -> str:
     """A helper function which returns an event name from the given dict, or a
     default event name.

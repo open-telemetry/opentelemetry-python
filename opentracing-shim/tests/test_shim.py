@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import unittest
 
 import opentracing
@@ -19,6 +20,7 @@ import opentracing
 import opentracingshim
 from opentelemetry import trace
 from opentelemetry.sdk.trace import Tracer
+from opentracingshim import util
 
 
 class TestShim(unittest.TestCase):
@@ -112,9 +114,10 @@ class TestShim(unittest.TestCase):
     def test_explicit_start_time(self):
         """Test `start_time` argument."""
 
-        now = opentracingshim.util.time_ns()
+        now = time.time()
         with self.shim.start_active_span("TestSpan", start_time=now) as scope:
-            self.assertEqual(scope.span.unwrap().start_time, now)
+            result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
+            self.assertEqual(result, now)
 
     def test_explicit_span_activation(self):
         """Test manual activation and deactivation of a span."""

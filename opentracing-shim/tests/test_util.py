@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import unittest
 
 from opentracingshim import util
@@ -35,3 +36,15 @@ class TestUtil(unittest.TestCase):
         # Test missing `event` field.
         res = util.event_name_from_kv({"foo": "bar"})
         self.assertEqual(res, util.DEFAULT_EVENT_NAME)
+
+    def test_time_seconds_to_ns(self):
+        time_seconds = time.time()
+        result = util.time_seconds_to_ns(time_seconds)
+
+        self.assertEqual(result, int(time_seconds * 1e9))
+
+    def test_time_seconds_from_ns(self):
+        time_nanoseconds = util.time_ns()
+        result = util.time_seconds_from_ns(time_nanoseconds)
+
+        self.assertEqual(result, time_nanoseconds / 1e9)
