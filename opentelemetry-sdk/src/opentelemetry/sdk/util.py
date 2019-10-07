@@ -42,7 +42,11 @@ def ns_to_iso_str(nanoseconds):
 
 
 class BoundedList(Sequence):
-    """An append only list with a fixed max size."""
+    """An append only list with a fixed max size.
+
+    Calls to `append` and `extend` will drop the oldest elements if there is
+    not enough room.
+    """
 
     def __init__(self, maxlen):
         self.dropped = 0
@@ -62,7 +66,7 @@ class BoundedList(Sequence):
 
     def __iter__(self):
         with self._lock:
-            return iter(self._dq.copy())
+            return iter(deque(self._dq))
 
     def append(self, item):
         with self._lock:
@@ -89,7 +93,11 @@ class BoundedList(Sequence):
 
 
 class BoundedDict(MutableMapping):
-    """A dict with a fixed max capacity."""
+    """An ordered dict with a fixed max capacity.
+
+    Oldest elements are dropped when the dict is full and a new element is
+    added.
+    """
 
     def __init__(self, maxlen):
         if not isinstance(maxlen, int):
