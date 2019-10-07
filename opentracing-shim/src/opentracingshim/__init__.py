@@ -20,8 +20,8 @@ from opentelemetry.trace import Event
 from opentracingshim import util
 
 
-def create_tracer(tracer):
-    return TracerWrapper(tracer)
+def create_tracer(tracer, scope_manager=None):
+    return TracerWrapper(tracer, scope_manager)
 
 
 class SpanContextWrapper(opentracing.SpanContext):
@@ -48,14 +48,6 @@ class SpanWrapper(opentracing.Span):
         """Returns the wrapped OpenTelemetry `Span` object."""
 
         return self._otel_span
-
-    @property
-    def context(self):
-        return self._context
-
-    @property
-    def tracer(self):
-        return self._tracer
 
     def set_operation_name(self, operation_name):
         self._otel_span.update_name(operation_name)
@@ -100,19 +92,6 @@ class SpanWrapper(opentracing.Span):
 
 
 class ScopeWrapper(opentracing.Scope):
-    def __init__(self, manager, span):
-        # pylint: disable=super-init-not-called
-        self._manager = manager
-        self._span = span
-
-    @property
-    def span(self):
-        return self._span
-
-    @property
-    def manager(self):
-        return self._manager
-
     def close(self):
         self._span.finish()
         # TODO: Set active span on OpenTelemetry tracer.
@@ -121,6 +100,9 @@ class ScopeWrapper(opentracing.Scope):
 
 class ScopeManagerWrapper(opentracing.ScopeManager):
     def __init__(self, tracer):
+        # The only thing the `__init__()` method on the base class does is
+        # initialize `self._noop_span` and `self._noop_scope` with no-op
+        # objects. Therefore, it doesn't seem useful to call it.
         # pylint: disable=super-init-not-called
         self._tracer = tracer
 
@@ -143,21 +125,20 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
 
 class TracerWrapper(opentracing.Tracer):
     def __init__(self, tracer, scope_manager=None):
-        # pylint: disable=super-init-not-called
         self._otel_tracer = tracer
-        if scope_manager is not None:
-            self._scope_manager = scope_manager
-        else:
-            self._scope_manager = ScopeManagerWrapper(self)
+
+        # If a scope manager isn't provided by the user, create a
+        # `ScopeManagerWrapper` instance and use it to initialize the
+        # `TracerWrapper`.
+        if scope_manager is None:
+            scope_manager = ScopeManagerWrapper(self)
+
+        super().__init__(scope_manager=scope_manager)
 
     def unwrap(self):
         """Returns the wrapped OpenTelemetry `Tracer` object."""
 
         return self._otel_tracer
-
-    @property
-    def scope_manager(self):
-        return self._scope_manager
 
     @property
     def active_span(self):
