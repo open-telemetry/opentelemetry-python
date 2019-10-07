@@ -25,6 +25,7 @@ except ImportError:
     from collections import MutableMapping
     from collections import Sequence
 
+
 def ns_to_iso_str(nanoseconds):
     """Get an ISO 8601 string from time_ns value."""
     ts = datetime.datetime.utcfromtimestamp(nanoseconds / 1e9)

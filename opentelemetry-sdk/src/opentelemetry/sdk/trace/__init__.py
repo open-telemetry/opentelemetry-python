@@ -22,9 +22,8 @@ from contextlib import contextmanager
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
-from opentelemetry.util import time_ns
 from opentelemetry.sdk.util import BoundedDict, BoundedList
-from opentelemetry.util import types
+from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
 
@@ -265,9 +264,7 @@ class Span(trace_api.Span):
                 raise RuntimeError("Calling end() on a not started span.")
             has_ended = self.end_time is not None
             if not has_ended:
-                self.end_time = (
-                    end_time if end_time is not None else time_ns()
-                )
+                self.end_time = end_time if end_time is not None else time_ns()
         if has_ended:
             logger.warning("Calling end() on an ended span.")
             return
