@@ -119,6 +119,16 @@ class TestShim(unittest.TestCase):
             result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
             self.assertEqual(result, now)
 
+    def test_explicit_end_time(self):
+        """Test `end_time` argument of `finish()` method."""
+
+        span = self.shim.start_span("TestSpan")
+        now = time.time()
+        span.finish(now)
+
+        end_time = util.time_seconds_from_ns(span.unwrap().end_time)
+        self.assertEqual(end_time, now)
+
     def test_explicit_span_activation(self):
         """Test manual activation and deactivation of a span."""
 
