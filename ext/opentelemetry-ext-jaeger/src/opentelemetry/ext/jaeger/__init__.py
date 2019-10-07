@@ -23,8 +23,6 @@ import typing
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
-# pylint:disable=no-name-in-module
-# pylint:disable=import-error
 import opentelemetry.trace as trace_api
 from opentelemetry.ext.jaeger.gen.agent import Agent as agent
 from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
