@@ -16,16 +16,16 @@ from contextlib import contextmanager
 
 import opentracing
 
-from opentelemetry.trace import Event, Span, SpanContext, Tracer
+from opentelemetry.trace import Event
 from opentracingshim import util
 
 
-def create_tracer(tracer: Tracer) -> opentracing.Tracer:
+def create_tracer(tracer):
     return TracerWrapper(tracer)
 
 
 class SpanContextWrapper(opentracing.SpanContext):
-    def __init__(self, otel_context: SpanContext):
+    def __init__(self, otel_context):
         self._otel_context = otel_context
 
     def unwrap(self):
@@ -40,7 +40,7 @@ class SpanContextWrapper(opentracing.SpanContext):
 
 
 class SpanWrapper(opentracing.Span):
-    def __init__(self, tracer, context, span: Span):
+    def __init__(self, tracer, context, span):
         self._otel_span = span
         opentracing.Span.__init__(self, tracer, context)
 
@@ -63,7 +63,7 @@ class SpanWrapper(opentracing.Span):
         # Return self for call chaining.
         return self
 
-    def finish(self, finish_time: float = None):
+    def finish(self, finish_time=None):
         end_time = finish_time
         if end_time is not None:
             end_time = util.time_seconds_to_ns(finish_time)
@@ -121,7 +121,7 @@ class ScopeWrapper(opentracing.Scope):
 
 
 class ScopeManagerWrapper(opentracing.ScopeManager):
-    def __init__(self, tracer: "TracerWrapper"):
+    def __init__(self, tracer):
         # pylint: disable=super-init-not-called
         self._tracer = tracer
 
@@ -143,9 +143,7 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
 
 
 class TracerWrapper(opentracing.Tracer):
-    def __init__(
-        self, tracer: Tracer, scope_manager: ScopeManagerWrapper = None
-    ):
+    def __init__(self, tracer, scope_manager=None):
         # pylint: disable=super-init-not-called
         self._otel_tracer = tracer
         if scope_manager is not None:
@@ -179,7 +177,7 @@ class TracerWrapper(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
         finish_on_close=True,
-    ) -> ScopeWrapper:
+    ):
         span = self.start_span(
             operation_name=operation_name,
             child_of=child_of,
@@ -199,7 +197,7 @@ class TracerWrapper(opentracing.Tracer):
         tags=None,
         start_time=None,
         ignore_active_span=False,
-    ) -> SpanWrapper:
+    ):
         parent = child_of
         if parent is not None:
             if isinstance(parent, SpanWrapper):
