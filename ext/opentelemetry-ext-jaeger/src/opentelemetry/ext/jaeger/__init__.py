@@ -18,7 +18,6 @@
 import base64
 import logging
 import socket
-import typing
 
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
@@ -57,14 +56,14 @@ class JaegerSpanExporter(SpanExporter):
 
     def __init__(
         self,
-        service_name: str,
-        agent_host_name: str = DEFAULT_AGENT_HOST_NAME,
-        agent_port: int = DEFAULT_AGENT_PORT,
-        collector_host_name: typing.Optional[str] = None,
-        collector_port: typing.Optional[int] = None,
-        collector_endpoint: str = DEFAULT_COLLECTOR_ENDPOINT,
-        username: typing.Optional[str] = None,
-        password: typing.Optional[str] = None,
+        service_name,
+        agent_host_name=DEFAULT_AGENT_HOST_NAME,
+        agent_port=DEFAULT_AGENT_PORT,
+        collector_host_name=None,
+        collector_port=None,
+        collector_endpoint=DEFAULT_COLLECTOR_ENDPOINT,
+        username=None,
+        password=None,
     ):
         self.service_name = service_name
         self.agent_host_name = agent_host_name
@@ -106,7 +105,7 @@ class JaegerSpanExporter(SpanExporter):
         self._collector = Collector(thrift_url=thrift_url, auth=auth)
         return self._collector
 
-    def export(self, spans: typing.Sequence[Span]):
+    def export(self, spans):
         jaeger_spans = _translate_to_jaeger(spans)
 
         batch = jaeger.Batch(
@@ -124,7 +123,7 @@ class JaegerSpanExporter(SpanExporter):
         pass
 
 
-def _translate_to_jaeger(spans: typing.Sequence[Span]):
+def _translate_to_jaeger(spans: Span):
     """Translate the spans to Jaeger format.
 
     Args:
@@ -138,8 +137,8 @@ def _translate_to_jaeger(spans: typing.Sequence[Span]):
         trace_id = ctx.trace_id
         span_id = ctx.span_id
 
-        start_time_us = span.start_time / 1e3
-        duration_us = (span.end_time - span.start_time) / 1e3
+        start_time_us = span.start_time // 1e3
+        duration_us = (span.end_time - span.start_time) // 1e3
 
         parent_id = 0
         if isinstance(span.parent, trace_api.Span):
@@ -163,8 +162,8 @@ def _translate_to_jaeger(spans: typing.Sequence[Span]):
             # generated code expects i64
             spanId=_convert_int_to_i64(span_id),
             operationName=span.name,
-            startTime=int(start_time_us),
-            duration=int(duration_us),
+            startTime=start_time_us,
+            duration=duration_us,
             tags=tags,
             logs=logs,
             references=refs,
@@ -228,7 +227,7 @@ def _extract_logs_from_span(span):
             )
         )
 
-        event_timestamp_us = event.timestamp / 1e3
+        event_timestamp_us = event.timestamp // 1e3
         logs.append(
             jaeger.Log(timestamp=int(event_timestamp_us), fields=fields)
         )
@@ -273,9 +272,9 @@ class AgentClientUDP:
 
     def __init__(
         self,
-        host_name: str,
-        port: int,
-        max_packet_size: int = UDP_PACKET_MAX_LENGTH,
+        host_name,
+        port,
+        max_packet_size=UDP_PACKET_MAX_LENGTH,
         client=agent.Client,
     ):
         self.address = (host_name, port)
@@ -322,8 +321,8 @@ class Collector:
 
     def __init__(
         self,
-        thrift_url: str = "",
-        auth: typing.Optional[typing.Tuple[str, str]] = None,
+        thrift_url="",
+        auth=None,
         client=jaeger.Client,
         http_transport=THttpClient.THttpClient,
     ):
