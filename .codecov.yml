@@ -1,0 +1,5 @@
+fixes:
+  - "^.*/site-packages/opentelemetry/sdk/::opentelemetry-sdk/src/opentelemetry/sdk/"
+  - "^.*/site-packages/opentelemetry/ext/wsgi/::ext/opentelemetry-ext-wsgi/src/opentelemetry/ext/wsgi/"
+  - "^.*/site-packages/opentelemetry/ext/http_requests/::ext/opentelemetry-ext-http-requests/src/opentelemetry/ext/http_requests/"
+  - "^.*/site-packages/opentelemetry/::opentelemetry-api/src/opentelemetry/"

@@ -19,3 +19,11 @@ install:
 
 script:
   - tox
+
+after_success:
+  - pip install codecov
+  - codecov -v --file
+      opentelemetry-api/tests/coverage.xml
+      opentelemetry-sdk/tests/coverage.xml
+      ext/opentelemetry-ext-wsgi/tests/coverage.xml
+      ext/opentelemetry-ext-http-requests/tests/coverage.xml
