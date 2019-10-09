@@ -23,7 +23,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
-from opentelemetry.util import types
+from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +203,7 @@ class Span(trace_api.Span):
         self.add_lazy_event(
             trace_api.Event(
                 name,
-                util.time_ns(),
+                time_ns(),
                 Span.empty_attributes if attributes is None else attributes,
             )
         )
@@ -252,7 +252,7 @@ class Span(trace_api.Span):
             has_started = self.start_time is not None
             if not has_started:
                 self.start_time = (
-                    start_time if start_time is not None else util.time_ns()
+                    start_time if start_time is not None else time_ns()
                 )
         if has_started:
             logger.warning("Calling start() on a started span.")
@@ -267,9 +267,7 @@ class Span(trace_api.Span):
                 raise RuntimeError("Calling end() on a not started span.")
             has_ended = self.end_time is not None
             if not has_ended:
-                self.end_time = (
-                    end_time if end_time is not None else util.time_ns()
-                )
+                self.end_time = end_time if end_time is not None else time_ns()
         if has_ended:
             logger.warning("Calling end() on an ended span.")
             return

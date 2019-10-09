@@ -19,7 +19,7 @@ import typing
 from enum import Enum
 
 from opentelemetry.context import Context
-from opentelemetry.sdk import util
+from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
 
@@ -167,9 +167,9 @@ class BatchExportSpanProcessor(SpanProcessor):
                         break
 
             # substract the duration of this export call to the next timeout
-            start = util.time_ns()
+            start = time_ns()
             self.export()
-            end = util.time_ns()
+            end = time_ns()
             duration = (end - start) / 1e9
             timeout = self.schedule_delay_millis / 1e3 - duration
 
