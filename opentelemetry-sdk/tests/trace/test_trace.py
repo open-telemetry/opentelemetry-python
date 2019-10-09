@@ -223,16 +223,6 @@ class TestSpan(unittest.TestCase):
             root.update_name("toor")
             self.assertEqual(root.name, "toor")
 
-            # default status
-            self.assertEqual(root.status.get_is_ok(), True)
-            self.assertEqual(root.status.get_canonical_code(), 0)
-            self.assertEqual(root.status.get_description(), None)
-
-            # status
-            newStatus = trace.SpanStatus(2, "Test description", False)
-            root.set_status(newStatus)
-            self.assertEqual(root.status, newStatus)
-
     def test_start_span(self):
         """Start twice, end a not started"""
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
@@ -244,6 +234,16 @@ class TestSpan(unittest.TestCase):
         start_time = span.start_time
         span.start()
         self.assertEqual(start_time, span.start_time)
+
+        # default status
+        self.assertEqual(span.status.get_is_ok(), True)
+        self.assertEqual(span.status.get_canonical_code(), 0)
+        self.assertEqual(span.status.get_description(), None)
+
+        # status
+        new_status = trace.SpanStatus(2, "Test description", False)
+        span.set_status(new_status)
+        self.assertEqual(span.status, new_status)
 
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""

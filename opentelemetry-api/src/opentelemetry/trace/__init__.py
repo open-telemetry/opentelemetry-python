@@ -160,7 +160,7 @@ class SpanStatus:
 
     def get_is_ok(self) -> bool:
         """Gets the status is ok flag.
-        
+
         Returns:
            Returns false if this Status represents an error, else returns true.
         """
