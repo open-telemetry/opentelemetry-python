@@ -223,6 +223,16 @@ class TestSpan(unittest.TestCase):
             root.update_name("toor")
             self.assertEqual(root.name, "toor")
 
+            # default status
+            self.assertEqual(root.status.get_is_ok(), True)
+            self.assertEqual(root.status.get_canonical_code(), 0)
+            self.assertEqual(root.status.get_description(), None)
+
+            # status
+            newStatus = trace.SpanStatus(2, "Test description", False)
+            root.set_status(newStatus)
+            self.assertEqual(root.status, newStatus)
+
     def test_start_span(self):
         """Start twice, end a not started"""
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))

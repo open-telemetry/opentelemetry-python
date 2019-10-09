@@ -139,6 +139,33 @@ class SpanKind(enum.Enum):
     CONSUMER = 4
 
 
+class SpanStatus:
+    """Represents the status of a finished Span """
+
+    def get_canonical_code(self) -> int:
+        """Gets the status CanonicalCode.
+        StatusCanonicalCode represents the canonical set of status codes of a finished Span, following the Standard GRPC codes
+        https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
+
+        Returns:
+            A number representing the CanonicalCode
+        """
+
+    def get_description(self) -> str:
+        """Gets the status description.
+
+        Returns:
+           Returns the description of the Status.
+        """
+
+    def get_is_ok(self) -> bool:
+        """Gets the status is ok flag.
+        
+        Returns:
+           Returns false if this Status represents an error, else returns true.
+        """
+
+
 class Span:
     """A span represents a single operation within a trace."""
 
@@ -224,6 +251,10 @@ class Span:
 
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
+        """
+
+    def set_status(self, status: SpanStatus) -> None:
+        """Sets the Status of the Span. If used, this will override the default Span status, which is OK.
         """
 
 
