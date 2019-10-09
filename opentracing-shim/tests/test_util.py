@@ -48,3 +48,18 @@ class TestUtil(unittest.TestCase):
         result = util.time_seconds_from_ns(time_nanoseconds)
 
         self.assertEqual(result, time_nanoseconds / 1e9)
+
+    def test_time_conversion_precision(self):
+        """Verify time conversion from seconds to nanoseconds and vice versa is
+        accurate enough.
+        """
+
+        time_seconds = 1570484241.9501917
+        time_nanoseconds = util.time_seconds_to_ns(time_seconds)
+        result = util.time_seconds_from_ns(time_nanoseconds)
+
+        # Tolerate inaccuracies of less than a microsecond.
+        # TODO: Put a link to an explanation in the docs.
+        # TODO: This seems to work consistently, but we should find out the
+        # biggest possible loss of precision.
+        self.assertAlmostEqual(result, time_seconds, places=6)

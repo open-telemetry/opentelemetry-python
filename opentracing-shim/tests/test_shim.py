@@ -118,7 +118,11 @@ class TestShim(unittest.TestCase):
         now = time.time()
         with self.shim.start_active_span("TestSpan", start_time=now) as scope:
             result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
-            self.assertEqual(result, now)
+            # Tolerate inaccuracies of less than a microsecond.
+            # TODO: Put a link to an explanation in the docs.
+            # TODO: This seems to work consistently, but we should find out the
+            # biggest possible loss of precision.
+            self.assertAlmostEqual(result, now, places=6)
 
     def test_explicit_end_time(self):
         """Test `end_time` argument of `finish()` method."""
@@ -128,7 +132,11 @@ class TestShim(unittest.TestCase):
         span.finish(now)
 
         end_time = util.time_seconds_from_ns(span.unwrap().end_time)
-        self.assertEqual(end_time, now)
+        # Tolerate inaccuracies of less than a microsecond.
+        # TODO: Put a link to an explanation in the docs.
+        # TODO: This seems to work consistently, but we should find out the
+        # biggest possible loss of precision.
+        self.assertAlmostEqual(end_time, now, places=6)
 
     def test_explicit_span_activation(self):
         """Test manual activation and deactivation of a span."""
@@ -355,9 +363,17 @@ class TestShim(unittest.TestCase):
             self.assertIsNotNone(span.unwrap().events[0].timestamp)
 
             # Test explicit timestamp.
-            now = opentracingshim.util.time_ns()
+            now = time.time()
             span.log_kv({"foo": "bar"}, now)
-            self.assertEqual(span.unwrap().events[1].timestamp, now)
+            result = util.time_seconds_from_ns(
+                span.unwrap().events[1].timestamp
+            )
+            self.assertEqual(span.unwrap().events[1].attributes["foo"], "bar")
+            # Tolerate inaccuracies of less than a microsecond.
+            # TODO: Put a link to an explanation in the docs.
+            # TODO: This seems to work consistently, but we should find out the
+            # biggest possible loss of precision.
+            self.assertAlmostEqual(result, now, places=6)
 
     def test_span_context(self):
         """Test construction of `SpanContextWrapper` objects."""

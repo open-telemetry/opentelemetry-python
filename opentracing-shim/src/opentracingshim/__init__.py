@@ -68,11 +68,13 @@ class SpanWrapper(opentracing.Span):
         return self
 
     def log_kv(self, key_values, timestamp=None):
-        if timestamp is None:
-            timestamp = util.time_ns()
+        if timestamp is not None:
+            event_timestamp = util.time_seconds_to_ns(timestamp)
+        else:
+            event_timestamp = util.time_ns()
 
         event_name = util.event_name_from_kv(key_values)
-        event = Event(event_name, timestamp, key_values)
+        event = Event(event_name, event_timestamp, key_values)
         self._otel_span.add_lazy_event(event)
 
         # Return self for call chaining.
