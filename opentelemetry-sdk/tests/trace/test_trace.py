@@ -221,16 +221,16 @@ class TestSpan(unittest.TestCase):
         tracer = trace.Tracer("test_span_members")
 
         other_context1 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
+            trace_id=trace_api.generate_trace_id(),
+            span_id=trace_api.generate_span_id(),
         )
         other_context2 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
+            trace_id=trace_api.generate_trace_id(),
+            span_id=trace_api.generate_span_id(),
         )
         other_context3 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
+            trace_id=trace_api.generate_trace_id(),
+            span_id=trace_api.generate_span_id(),
         )
 
         self.assertIsNone(tracer.get_current_span())
@@ -362,8 +362,8 @@ class TestSpan(unittest.TestCase):
         tracer = trace.Tracer("test_ended_span")
 
         other_context1 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
+            trace_id=trace_api.generate_trace_id(),
+            span_id=trace_api.generate_span_id(),
         )
 
         with tracer.start_as_current_span("root") as root:

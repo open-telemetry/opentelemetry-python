@@ -16,7 +16,7 @@ import unittest
 
 import opentelemetry.sdk.context.propagation.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
-import opentelemetry.trace as api_trace
+import opentelemetry.trace as trace_api
 
 FORMAT = b3_format.B3Format()
 
@@ -30,10 +30,10 @@ class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.serialized_trace_id = b3_format.format_trace_id(
-            trace.generate_trace_id()
+            trace_api.generate_trace_id()
         )
         cls.serialized_span_id = b3_format.format_span_id(
-            trace.generate_span_id()
+            trace_api.generate_span_id()
         )
 
     def test_extract_multi_header(self):
@@ -163,8 +163,8 @@ class TestB3Format(unittest.TestCase):
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         span_context = FORMAT.extract(get_as_list, carrier)
-        self.assertEqual(span_context.trace_id, api_trace.INVALID_TRACE_ID)
-        self.assertEqual(span_context.span_id, api_trace.INVALID_SPAN_ID)
+        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
     def test_missing_trace_id(self):
         """If a trace id is missing, populate an invalid trace id."""
@@ -173,7 +173,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
         span_context = FORMAT.extract(get_as_list, carrier)
-        self.assertEqual(span_context.trace_id, api_trace.INVALID_TRACE_ID)
+        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     def test_missing_span_id(self):
         """If a trace id is missing, populate an invalid trace id."""
@@ -182,4 +182,4 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
         span_context = FORMAT.extract(get_as_list, carrier)
-        self.assertEqual(span_context.span_id, api_trace.INVALID_SPAN_ID)
+        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)

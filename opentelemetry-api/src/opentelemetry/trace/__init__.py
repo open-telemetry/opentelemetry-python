@@ -63,6 +63,7 @@ implicit or explicit context propagation consistently throughout.
 
 import enum
 import types as python_types
+import random
 import typing
 from contextlib import contextmanager
 
@@ -306,6 +307,24 @@ def format_trace_id(trace_id: int) -> str:
 
 def format_span_id(span_id: int) -> str:
     return "0x{:016x}".format(span_id)
+
+
+def generate_span_id():
+    """Get a new random span ID.
+
+    Returns:
+        A random 64-bit int for use as a span ID
+    """
+    return random.getrandbits(64)
+
+
+def generate_trace_id():
+    """Get a new random trace ID.
+
+    Returns:
+        A random 128-bit int for use as a trace ID
+    """
+    return random.getrandbits(128)
 
 
 class SpanContext:

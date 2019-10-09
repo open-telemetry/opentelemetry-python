@@ -44,33 +44,6 @@ class TestTraceContextFormat(unittest.TestCase):
         span_context = FORMAT.extract(get_as_list, output)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
-    def test_from_headers_tracestate_entry_limit(self):
-        """If more than 33 entries are passed, allow them.
-
-        We are explicitly choosing not to limit the list members
-        as outlined in RFC 3.3.1.1
-
-        RFC 3.3.1.1
-
-        There can be a maximum of 32 list-members in a list.
-        """
-
-        span_context = FORMAT.extract(
-            get_as_list,
-            {
-                "traceparent": "00-12345678901234567890123456789012-1234567890123456-00",
-                "tracestate": ",".join(
-                    [
-                        "a00=0,a01=1,a02=2,a03=3,a04=4,a05=5,a06=6,a07=7,a08=8,a09=9",
-                        "b00=0,b01=1,b02=2,b03=3,b04=4,b05=5,b06=6,b07=7,b08=8,b09=9",
-                        "c00=0,c01=1,c02=2,c03=3,c04=4,c05=5,c06=6,c07=7,c08=8,c09=9",
-                        "d00=0,d01=1,d02=2",
-                    ]
-                ),
-            },
-        )
-        self.assertEqual(len(span_context.trace_state), 33)
-
     def test_from_headers_tracestate_duplicated_keys(self):
         """If a duplicate tracestate header is present, the most recent entry
         is used.
