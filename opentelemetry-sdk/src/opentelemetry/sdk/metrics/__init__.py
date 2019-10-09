@@ -27,12 +27,12 @@ class BaseHandle:
         enabled: bool,
         monotonic: bool,
     ):
-        self.data = 0
+        self.data = value_type()
         self.value_type = value_type
         self.enabled = enabled
         self.monotonic = monotonic
 
-    def _validate_update(self, value: metrics_api.ValueT):
+    def _validate_update(self, value: metrics_api.ValueT) -> bool:
         if not self.enabled:
             return False
         if not isinstance(value, self.value_type):
@@ -232,7 +232,8 @@ class Meter(metrics_api.Meter):
         monotonic: bool = False,
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
-        return metric_type(
+        # Ignore type b/c of mypy bug in addition to missing annotations
+        return metric_type(  # type: ignore
             name,
             description,
             unit,
