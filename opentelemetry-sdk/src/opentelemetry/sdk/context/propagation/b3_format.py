@@ -125,4 +125,6 @@ _T = typing.TypeVar("_T")
 
 
 def _extract_first_element(items: typing.Iterable[_T]) -> typing.Optional[_T]:
+    if items is None:
+        return None
     return next(iter(items), None)
