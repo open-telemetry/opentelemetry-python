@@ -15,7 +15,7 @@
 import time
 import unittest
 
-from opentracingshim import util
+from opentelemetry.ext.opentracingshim import util
 
 
 class TestUtil(unittest.TestCase):

@@ -16,8 +16,8 @@ from contextlib import contextmanager
 
 import opentracing
 
+from opentelemetry.ext.opentracingshim import util
 from opentelemetry.trace import Event
-from opentracingshim import util
 
 
 def create_tracer(tracer, scope_manager=None):
