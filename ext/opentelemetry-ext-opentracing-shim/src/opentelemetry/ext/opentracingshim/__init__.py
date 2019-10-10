@@ -41,8 +41,8 @@ class SpanContextWrapper(opentracing.SpanContext):
 
 class SpanWrapper(opentracing.Span):
     def __init__(self, tracer, context, span):
-        self._otel_span = span
         super().__init__(tracer, context)
+        self._otel_span = span
 
     def unwrap(self):
         """Returns the wrapped OpenTelemetry `Span` object."""
@@ -127,15 +127,13 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
 
 class TracerWrapper(opentracing.Tracer):
     def __init__(self, tracer, scope_manager=None):
-        self._otel_tracer = tracer
-
         # If a scope manager isn't provided by the user, create a
         # `ScopeManagerWrapper` instance and use it to initialize the
         # `TracerWrapper`.
         if scope_manager is None:
             scope_manager = ScopeManagerWrapper(self)
-
         super().__init__(scope_manager=scope_manager)
+        self._otel_tracer = tracer
 
     def unwrap(self):
         """Returns the wrapped OpenTelemetry `Tracer` object."""
