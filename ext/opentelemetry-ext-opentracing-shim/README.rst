@@ -3,15 +3,15 @@ OpenTracing Shim for OpenTelemetry
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ot-shim.svg
-   :target: https://pypi.org/project/opentelemetry-ot-shim/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-opentracing-shim.svg
+   :target: https://pypi.org/project/opentelemetry-opentracing-shim/
 
 Installation
 ------------
 
 ::
 
-    pip install opentelemetry-ot-shim
+    pip install opentelemetry-opentracing-shim
 
 References
 ----------
