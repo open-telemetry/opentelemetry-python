@@ -239,8 +239,8 @@ class Span:
         exc_type: typing.Optional[typing.Type[BaseException]],
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[python_types.TracebackType],
-    ) -> bool:
-        """Ends context manager and calls ``end()`` on the `Span`.
+    ) -> typing.Optional[bool]:
+        """Ends context manager and calls end() on the `Span`.
 
         Returns False.
         """
@@ -412,13 +412,14 @@ class Tracer:
         parent can also be specified, either a `Span` or a `SpanContext`. If
         the specified value is `None`, the created span will be a root span.
 
-        On exiting the context manager ends the span.
+        The span can be used as context manager. On exiting, the span will be
+        ended.
 
         Example::
 
             # tracer.get_current_span() will be used as the implicit parent.
             # If none is found, the created span will be a root instance.
-            with tracer.start_span("two") as child:
+            with tracer.start_span("one") as child:
                 child.add_event("child's event")
 
         Applications that need to set the newly created span as the current
@@ -436,7 +437,6 @@ class Tracer:
         # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
-    @contextmanager  # type: ignore
     def start_as_current_span(
         self,
         name: str,
@@ -483,7 +483,7 @@ class Tracer:
         """
 
         # pylint: disable=unused-argument,no-self-use
-        yield INVALID_SPAN
+        return INVALID_SPAN
 
     def create_span(
         self,
