@@ -16,7 +16,8 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk import trace, util
+from opentelemetry.sdk import trace
+from opentelemetry.util import time_ns
 
 
 class TestTracer(unittest.TestCase):
@@ -227,7 +228,7 @@ class TestSpan(unittest.TestCase):
             # events
             root.add_event("event0")
             root.add_event("event1", {"name": "birthday"})
-            now = util.time_ns()
+            now = time_ns()
             root.add_lazy_event(
                 trace_api.Event("event2", now, {"name": "hello"})
             )

@@ -143,7 +143,7 @@ class SpanKind(enum.Enum):
 class Span:
     """A span represents a single operation within a trace."""
 
-    def start(self, start_time: int = None) -> None:
+    def start(self, start_time: typing.Optional[int] = None) -> None:
         """Sets the current time as the span's start time.
 
         Each span represents a single operation. The span's start time is the
