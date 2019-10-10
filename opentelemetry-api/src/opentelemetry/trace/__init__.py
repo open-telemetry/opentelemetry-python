@@ -209,18 +209,18 @@ class StatusCanonicalCode(enum.Enum):
 
 
 class Status:
-    """Represents the status of a finished Span 
+    """Represents the status of a finished Span. 
 
     Args:
         canonical_code: Represents the canonical set of status codes of a finished Span
-        description: Description of the Status
+        description: Description of the Status.
     """
 
     def __init__(
-        self, canonical_code=StatusCanonicalCode.OK, description=None
+        self, canonical_code: "StatusCanonicalCode" = StatusCanonicalCode.OK, description: typing.Optional[str] = None
     ):
-        self.code = canonical_code
-        self.desc = description
+        self.code: "StatusCanonicalCode" = canonical_code
+        self.desc: typing.Optional[str] = description
 
     @property
     def canonical_code(self) -> StatusCanonicalCode:
@@ -230,7 +230,7 @@ class Status:
         return self.code
 
     @property
-    def description(self) -> str:
+    def description(self) -> typing.Optional[str]:
         """Status description"""
         return self.desc
 
