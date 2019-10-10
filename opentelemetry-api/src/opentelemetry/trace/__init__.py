@@ -209,7 +209,7 @@ class StatusCanonicalCode(enum.Enum):
 
 
 class Status:
-    """Represents the status of a finished Span. 
+    """Represents the status of a finished Span
 
     Args:
         canonical_code: Represents the canonical set of status codes of a finished Span
