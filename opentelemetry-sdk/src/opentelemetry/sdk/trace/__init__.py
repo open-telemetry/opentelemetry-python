@@ -334,7 +334,6 @@ class Tracer(trace_api.Tracer):
         span.start()
         return span
 
-    @contextmanager
     def start_as_current_span(
         self,
         name: str,
@@ -344,8 +343,7 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
         span = self.start_span(name, parent, kind)
-        with self.use_span(span, True):
-            yield span
+        return self.use_span(span, end_on_exit=True)
 
     def create_span(
         self,
