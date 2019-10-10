@@ -219,8 +219,8 @@ class Status:
     def __init__(
         self, canonical_code: "StatusCanonicalCode" = StatusCanonicalCode.OK, description: typing.Optional[str] = None
     ):
-        self.code: "StatusCanonicalCode" = canonical_code
-        self.desc: typing.Optional[str] = description
+        self.code = canonical_code
+        self.desc = description
 
     @property
     def canonical_code(self) -> StatusCanonicalCode:
