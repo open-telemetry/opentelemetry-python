@@ -94,32 +94,6 @@ class MultiSpanProcessor(SpanProcessor):
             sp.shutdown()
 
 
-class SpanStatus(trace_api.SpanStatus):
-    """See `opentelemetry.trace.SpanStatus`.
-
-    Represents the status of a finished Span
-
-    Args:
-        canonical_code: Represents the canonical set of status codes of a finished Span, following the Standard GRPC codes
-        description: Description of this Status
-        is_ok: Use to determine if the span was an error or not
-    """
-
-    def __init__(self, canonical_code=0, description=None, is_ok=True):
-        self.canonical_code = canonical_code
-        self.description = description
-        self.is_ok = is_ok
-
-    def get_canonical_code(self) -> bool:
-        return self.canonical_code
-
-    def get_description(self) -> bool:
-        return self.description
-
-    def get_is_ok(self) -> bool:
-        return self.is_ok
-
-
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -158,7 +132,6 @@ class Span(trace_api.Span):
         links: typing.Sequence[trace_api.Link] = None,  # TODO
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
-        status: SpanStatus = SpanStatus(),
     ) -> None:
 
         self.name = name
@@ -168,9 +141,9 @@ class Span(trace_api.Span):
         self.trace_config = trace_config
         self.resource = resource
         self.kind = kind
-        self.status = status
 
         self.span_processor = span_processor
+        self.status = trace_api.Status()
         self._lock = threading.Lock()
 
         if attributes is None:
@@ -313,7 +286,7 @@ class Span(trace_api.Span):
     def is_recording_events(self) -> bool:
         return True
 
-    def set_status(self, status: trace_api.SpanStatus) -> None:
+    def set_status(self, status: trace_api.Status) -> None:
         self.status = status
 
 

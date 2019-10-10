@@ -236,12 +236,16 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(start_time, span.start_time)
 
         # default status
-        self.assertEqual(span.status.get_is_ok(), True)
-        self.assertEqual(span.status.get_canonical_code(), 0)
-        self.assertEqual(span.status.get_description(), None)
+        self.assertTrue(span.status.is_ok)
+        self.assertEqual(
+            span.status.canonical_code, trace_api.StatusCanonicalCode.OK
+        )
+        self.assertIs(span.status.description, None)
 
         # status
-        new_status = trace.SpanStatus(2, "Test description", False)
+        new_status = trace_api.Status(
+            trace_api.StatusCanonicalCode.CANCELLED, "Test description"
+        )
         span.set_status(new_status)
         self.assertEqual(span.status, new_status)
 
