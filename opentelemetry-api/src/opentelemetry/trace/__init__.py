@@ -437,6 +437,7 @@ class Tracer:
         # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
+    @contextmanager  # type: ignore
     def start_as_current_span(
         self,
         name: str,
@@ -483,7 +484,7 @@ class Tracer:
         """
 
         # pylint: disable=unused-argument,no-self-use
-        return INVALID_SPAN
+        yield INVALID_SPAN
 
     def create_span(
         self,
