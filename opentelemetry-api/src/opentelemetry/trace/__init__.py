@@ -65,8 +65,8 @@ import enum
 import typing
 from contextlib import contextmanager
 
-from opentelemetry.util import loader, types
 from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.util import loader, types
 
 __all__ = ["Status", "StatusCanonicalCode"]
 

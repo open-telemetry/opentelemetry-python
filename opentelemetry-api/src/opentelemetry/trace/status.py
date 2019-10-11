@@ -17,11 +17,11 @@ import typing
 
 
 class StatusCanonicalCode(enum.Enum):
-    """Represents the canonical set of status codes of a finished Span.
-    
-    Not an error, returned on success.
-    """
+    """Represents the canonical set of status codes of a finished Span."""
 
+    # pylint: disable=pointless-string-statement
+    """Not an error, returned on success.
+    """
     OK = 0
 
     """The operation was cancelled, typically by the caller. """
