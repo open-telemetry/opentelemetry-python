@@ -16,6 +16,7 @@ import time
 import unittest
 
 from opentelemetry.ext.opentracingshim import util
+from opentelemetry.util import time_ns
 
 
 class TestUtil(unittest.TestCase):
@@ -44,7 +45,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(result, int(time_seconds * 1e9))
 
     def test_time_seconds_from_ns(self):
-        time_nanoseconds = util.time_ns()
+        time_nanoseconds = time_ns()
         result = util.time_seconds_from_ns(time_nanoseconds)
 
         self.assertEqual(result, time_nanoseconds / 1e9)

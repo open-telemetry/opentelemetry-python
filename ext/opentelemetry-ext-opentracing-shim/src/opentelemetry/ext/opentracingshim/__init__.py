@@ -18,7 +18,6 @@ from contextlib import contextmanager
 import opentracing
 
 from opentelemetry.ext.opentracingshim import util
-from opentelemetry.trace import Event
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +76,10 @@ class SpanWrapper(opentracing.Span):
         if timestamp is not None:
             event_timestamp = util.time_seconds_to_ns(timestamp)
         else:
-            event_timestamp = util.time_ns()
+            event_timestamp = None
 
         event_name = util.event_name_from_kv(key_values)
-        event = Event(event_name, event_timestamp, key_values)
-        self._otel_span.add_lazy_event(event)
+        self._otel_span.add_event(event_name, event_timestamp, key_values)
 
         # Return self for call chaining.
         return self
