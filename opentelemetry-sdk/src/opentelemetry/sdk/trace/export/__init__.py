@@ -73,15 +73,12 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        suppress_instrumentation = Context.suppress_instrumentation
-        try:
-            Context.suppress_instrumentation = True
-            self.span_exporter.export((span,))
-        # pylint: disable=broad-except
-        except Exception as exc:
-            logger.warning("Exception while exporting data: %s", exc)
-        finally:
-            Context.suppress_instrumentation = suppress_instrumentation
+        with Context(suppress_instrumentation=True):
+            try:
+                self.span_exporter.export((span,))
+            # pylint: disable=broad-except
+            except Exception as exc:
+                logger.warning("Exception while exporting data: %s", exc)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -185,16 +182,13 @@ class BatchExportSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
-        suppress_instrumentation = Context.suppress_instrumentation
-        try:
-            Context.suppress_instrumentation = True
-            # Ignore type b/c the Optional[None]+slicing is too "clever" for mypy
-            self.span_exporter.export(self.spans_list[:idx])  # type: ignore
-        # pylint: disable=broad-except
-        except Exception:
-            logger.exception("Exception while exporting data.")
-        finally:
-            Context.suppress_instrumentation = suppress_instrumentation
+        with Context(suppress_instrumentation=True):
+            try:
+                # Ignore type b/c the Optional[None]+slicing is too "clever" for mypy
+                self.span_exporter.export(self.spans_list[:idx])  # type: ignore
+            # pylint: disable=broad-except
+            except Exception:
+                logger.exception("Exception while exporting data.")
 
         # clean up list
         for index in range(idx):

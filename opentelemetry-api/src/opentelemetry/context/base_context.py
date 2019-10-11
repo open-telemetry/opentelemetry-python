@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import contextmanager
 import threading
 import typing
 
@@ -98,6 +99,15 @@ class BaseRuntimeContext:
 
     def __setitem__(self, name: str, value: "object") -> None:
         self.__setattr__(name, value)
+
+    @contextmanager
+    def __call__(self, **kwargs):
+        snapshot = {key: self[key] for key in kwargs}
+        for key in kwargs:
+            self[key] = kwargs[key]
+        yield
+        for key in kwargs:
+            self[key] = snapshot[key]
 
     def with_current_context(
         self, func: typing.Callable[..., "object"]
