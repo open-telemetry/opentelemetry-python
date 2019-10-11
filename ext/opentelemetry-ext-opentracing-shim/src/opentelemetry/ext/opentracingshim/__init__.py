@@ -38,7 +38,10 @@ class SpanContextWrapper(opentracing.SpanContext):
 
     @property
     def baggage(self):
-        raise NotImplementedError
+        logger.warning(
+            "Using unimplemented property baggage on class %s.",
+            self.__class__.__name__,
+        )
         # TODO: Implement.
 
 
@@ -84,11 +87,17 @@ class SpanWrapper(opentracing.Span):
         return self
 
     def set_baggage_item(self, key, value):
-        raise NotImplementedError
+        logger.warning(
+            "Calling unimplemented method set_baggage_item() on class %s",
+            self.__class__.__name__,
+        )
         # TODO: Implement.
 
     def get_baggage_item(self, key):
-        raise NotImplementedError
+        logger.warning(
+            "Calling unimplemented method get_baggage_item() on class %s",
+            self.__class__.__name__,
+        )
         # TODO: Implement.
 
     # TODO: Verify calls to deprecated methods `log_event()` and `log()` on
@@ -232,10 +241,16 @@ class TracerWrapper(opentracing.Tracer):
 
     def inject(self, span_context, format, carrier):
         # pylint: disable=redefined-builtin
-        raise NotImplementedError
+        logger.warning(
+            "Calling unimplemented method inject() on class %s",
+            self.__class__.__name__,
+        )
         # TODO: Implement.
 
     def extract(self, format, carrier):
         # pylint: disable=redefined-builtin
-        raise NotImplementedError
+        logger.warning(
+            "Calling unimplemented method extract() on class %s",
+            self.__class__.__name__,
+        )
         # TODO: Implement.
