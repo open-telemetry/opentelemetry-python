@@ -100,7 +100,7 @@ class BaseRuntimeContext:
     def __setitem__(self, name: str, value: "object") -> None:
         self.__setattr__(name, value)
 
-    @contextmanager
+    @contextmanager  # type: ignore
     def __call__(self, **kwargs) -> typing.Iterator[None]:
         snapshot = {key: self[key] for key in kwargs}
         for key in kwargs:
