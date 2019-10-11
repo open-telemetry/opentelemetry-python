@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from contextlib import contextmanager
 
 import opentracing
 
 from opentelemetry.ext.opentracingshim import util
 from opentelemetry.trace import Event
+
+logger = logging.getLogger(__name__)
 
 
 def create_tracer(tracer, scope_manager=None):
@@ -174,18 +177,27 @@ class TracerWrapper(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ):
-        parent = child_of
-        if parent is not None:
-            if isinstance(parent, SpanWrapper):
-                parent = child_of.unwrap()
-            elif isinstance(parent, SpanContextWrapper):
-                parent = child_of.unwrap()
-            else:
-                raise RuntimeError(
-                    "Invalid parent type when calling start_span()."
-                )
+        if child_of is None:
+            parent = None
+        else:
             # TODO: Should we use the OpenTracing base classes for the type
             # check?
+            if isinstance(child_of, (SpanWrapper, SpanContextWrapper)):
+                # The parent specified in `child_of` is valid and is either a
+                # `SpanWrapper` or a `SpanContextWrapper`. Unwrap the `Span` or
+                # `SpanContext` to extract the OpenTracing object and use this
+                # object as the parent of the created span.
+                parent = child_of.unwrap()
+            else:
+                logger.warning(
+                    "Unknown class %s passed in child_of argument to start_span() method.",
+                    type(child_of),
+                )
+                parent = None
+                # TODO: Refuse to create a span and return `None` instead of
+                # proceeding with a `None` parent? This would cause the created
+                # span to become a child of the active span, if any, or create
+                # a new trace and make the span the root span of that trace.
 
         # Use active span as parent when no explicit parent is specified.
         if (

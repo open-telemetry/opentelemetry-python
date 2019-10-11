@@ -312,6 +312,18 @@ class TestShim(unittest.TestCase):
                     child.unwrap().parent, parent.context.unwrap()
                 )
 
+    def test_parent_child_explicit_invalid(self):
+        """Test span creation with an explicit parent of an invalid type."""
+
+        with self.shim.start_active_span("ParentSpan") as parent:
+            with self.shim.start_active_span(
+                "ChildSpan", child_of=object
+            ) as child:
+                # Verify span was created as a child of the active span.
+                self.assertEqual(
+                    child.span.unwrap().parent, parent.span.unwrap()
+                )
+
     def test_references(self):
         """Test span creation using the `references` argument."""
 
