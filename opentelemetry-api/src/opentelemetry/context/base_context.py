@@ -101,7 +101,7 @@ class BaseRuntimeContext:
         self.__setattr__(name, value)
 
     @contextmanager
-    def __call__(self, **kwargs):
+    def __call__(self, **kwargs) -> None:
         snapshot = {key: self[key] for key in kwargs}
         for key in kwargs:
             self[key] = kwargs[key]
