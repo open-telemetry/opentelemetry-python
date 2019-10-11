@@ -21,6 +21,7 @@ class StatusCanonicalCode(enum.Enum):
     
     Not an error, returned on success.
     """
+
     OK = 0
 
     """The operation was cancelled, typically by the caller. """
@@ -129,6 +130,7 @@ class StatusCanonicalCode(enum.Enum):
     operation.
     """
     UNAUTHENTICATED = 16
+
 
 class Status:
     """Represents the status of a finished Span
