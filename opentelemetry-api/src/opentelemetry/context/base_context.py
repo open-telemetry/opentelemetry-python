@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import contextmanager
 import threading
 import typing
+from contextlib import contextmanager
 
 
 def wrap_callable(target: "object") -> typing.Callable[[], object]:
@@ -101,7 +101,7 @@ class BaseRuntimeContext:
         self.__setattr__(name, value)
 
     @contextmanager
-    def __call__(self, **kwargs) -> None:
+    def __call__(self, **kwargs) -> typing.Iterator[None]:
         snapshot = {key: self[key] for key in kwargs}
         for key in kwargs:
             self[key] = kwargs[key]
