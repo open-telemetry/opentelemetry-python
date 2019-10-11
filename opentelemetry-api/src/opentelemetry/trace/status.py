@@ -18,9 +18,9 @@ import typing
 
 class StatusCanonicalCode(enum.Enum):
     """Represents the canonical set of status codes of a finished Span.
+    
+    Not an error, returned on success.
     """
-
-    """Not an error, returned on success. """
     OK = 0
 
     """The operation was cancelled, typically by the caller. """
@@ -68,15 +68,10 @@ class StatusCanonicalCode(enum.Enum):
     """
     PERMISSION_DENIED = 7
 
-    """The request does not have valid authentication credentials for the
-    operation.
-    """
-    UNAUTHENTICATED = 8
-
     """Some resource has been exhausted, perhaps a per-user quota, or perhaps
     the entire file system is out of space.
     """
-    RESOURCE_EXHAUSTED = 9
+    RESOURCE_EXHAUSTED = 8
 
     """The operation was rejected because the system is not in a state required
     for the operation's execution. For example, the directory to be deleted is
@@ -91,12 +86,12 @@ class StatusCanonicalCode(enum.Enum):
     non-empty, FAILED_PRECONDITION should be returned since the client should not
     retry unless the files are deleted from the directory.
     """
-    FAILED_PRECONDITION = 10
+    FAILED_PRECONDITION = 9
 
     """The operation was aborted, typically due to a concurrency issue such as a
     sequencer check failure or transaction abort. See the guidelines above for
     deciding between FAILED_PRECONDITION, ABORTED, and UNAVAILABLE."""
-    ABORTED = 11
+    ABORTED = 10
 
     """The operation was attempted past the valid range. E.g., seeking or reading
     past end-of-file. Unlike INVALID_ARGUMENT, this error indicates a problem that
@@ -109,27 +104,31 @@ class StatusCanonicalCode(enum.Enum):
     through a space can easily look for an OUT_OF_RANGE error to detect when they
     are done.
     """
-    OUT_OF_RANGE = 12
+    OUT_OF_RANGE = 11
 
     """The operation is not implemented or is not supported/enabled in this
     service."""
-    UNIMPLEMENTED = 13
+    UNIMPLEMENTED = 12
 
     """Internal errors. This means that some invariants expected by the
     underlying system have been broken. This error code is reserved for
     serious errors.
     """
-    INTERNAL = 14
+    INTERNAL = 13
 
     """The service is currently unavailable. This is most likely a transient
-    condition, which can be corrected by retrying with a backoff. 
+    condition, which can be corrected by retrying with a backoff.
     Note that it is not always safe to retry non-idempotent operations.
     """
-    UNAVAILABLE = 15
+    UNAVAILABLE = 14
 
     """Unrecoverable data loss or corruption."""
-    DATA_LOSS = 16
+    DATA_LOSS = 15
 
+    """The request does not have valid authentication credentials for the
+    operation.
+    """
+    UNAUTHENTICATED = 16
 
 class Status:
     """Represents the status of a finished Span
