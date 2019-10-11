@@ -180,12 +180,16 @@ class Span:
         """
 
     def add_event(
-        self, name: str, attributes: types.Attributes = None
+        self,
+        name: str,
+        timestamp: int = None,
+        attributes: types.Attributes = None,
     ) -> None:
         """Adds an `Event`.
 
-        Adds a single `Event` with the name and, optionally, attributes passed
-        as arguments.
+        Adds a single `Event` with the name and, optionally, a timestamp and
+        attributes passed as arguments. Implementations should generate a
+        timestamp if the `timestamp` argument is omitted.
         """
 
     def add_lazy_event(self, event: Event) -> None:

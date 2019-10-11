@@ -227,8 +227,10 @@ class TestSpan(unittest.TestCase):
 
             # events
             root.add_event("event0")
-            root.add_event("event1", {"name": "birthday"})
             now = time_ns()
+            root.add_event(
+                "event1", timestamp=now, attributes={"name": "birthday"}
+            )
             root.add_lazy_event(
                 trace_api.Event("event2", now, {"name": "hello"})
             )
@@ -240,6 +242,7 @@ class TestSpan(unittest.TestCase):
 
             self.assertEqual(root.events[1].name, "event1")
             self.assertEqual(root.events[1].attributes, {"name": "birthday"})
+            self.assertEqual(root.events[1].timestamp, now)
 
             self.assertEqual(root.events[2].name, "event2")
             self.assertEqual(root.events[2].attributes, {"name": "hello"})
