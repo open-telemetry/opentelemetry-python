@@ -82,24 +82,43 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 OpenTelemetry Python is under active development.
 
 The library is not yet _generally available_, and releases aren't guaranteed to
-conform to a specific version of the specification.  Future releases will not
-attempt to maintain backwards compatibility with current releases.
+conform to a specific version of the specification. Future releases will not
+attempt to maintain backwards compatibility with previous releases.
 
-The _alpha_ release includes:
+The [v0.1 alpha
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.1.0)
+includes:
 
 - Tracing API
 - Tracing SDK
 - Metrics API
 - Metrics SDK
-- W3C Context Propagation
+- W3C Trace Context Propagation
 - B3 Context Propagation
+- HTTP Integrations
 
-Future release targets include:
+See the [project
+milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
+for details on upcoming releases. The dates and features described here are
+estimates, and subject to change.
 
-| Component                   | Version | Target Date     |
-| --------------------------- | ------- | --------------- |
-| Zipkin Trace Exporter       | Beta    | October 14 2019 |
-| Jaeger Trace Exporter       | Beta    | October 14 2019 |
-| Prometheus Metrics Exporter | Beta    | October 14 2019 |
-| OpenTracing Bridge          | Beta    | October 14 2019 |
-| OpenCensus Bridge           | Beta    | October 14 2019 |
+Future releases targets include:
+
+| Component                   | Version    | Target Date     |
+| --------------------------- | ---------- | --------------- |
+| Jaeger Trace Exporter       | Alpha v0.2 | October 28 2019 |
+| Metrics SDK                 | Alpha v0.2 | October 28 2019 |
+| Prometheus Metrics Exporter | Alpha v0.2 | October 28 2019 |
+| OpenTracing Bridge          | Alpha v0.2 | October 28 2019 |
+
+| Component                           | Version    | Target Date      |
+| ----------------------------------- | ---------- | ---------------- |
+| Zipkin Trace Exporter               | Alpha v0.3 | November 15 2019 |
+| W3C Correlation Context Propagation | Alpha v0.3 | November 15 2019 |
+| Support for Tags/Baggage            | Alpha v0.3 | November 15 2019 |
+| Metrics Aggregation                 | Alpha v0.3 | November 15 2019 |
+| gRPC Integrations                   | Alpha v0.3 | November 15 2019 |
+
+| Component         | Version    | Target Date      |
+| ----------------- | ---------- | ---------------- |
+| OpenCensus Bridge | Alpha v0.4 | December 31 2019 |
