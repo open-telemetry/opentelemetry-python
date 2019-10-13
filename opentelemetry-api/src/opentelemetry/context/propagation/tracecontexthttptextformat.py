@@ -68,11 +68,11 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         header = get_from_carrier(carrier, cls._TRACEPARENT_HEADER_NAME)
 
         if not header:
-            return trace.INVALID_SPAN_CONTEXT
+            return trace.generate_span_context()
 
         match = re.search(cls._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
-            return trace.INVALID_SPAN_CONTEXT
+            return trace.generate_span_context()
 
         version = match.group(1)
         trace_id = match.group(2)
@@ -80,13 +80,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         trace_options = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
-            return trace.INVALID_SPAN_CONTEXT
+            return trace.generate_span_context()
 
         if version == "00":
             if match.group(5):
-                return trace.INVALID_SPAN_CONTEXT
+                return trace.generate_span_context()
         if version == "ff":
-            return trace.INVALID_SPAN_CONTEXT
+            return trace.generate_span_context()
 
         tracestate = trace.TraceState()
         for tracestate_header in get_from_carrier(

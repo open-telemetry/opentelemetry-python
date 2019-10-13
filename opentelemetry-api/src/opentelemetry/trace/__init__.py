@@ -309,7 +309,7 @@ def format_span_id(span_id: int) -> str:
     return "0x{:016x}".format(span_id)
 
 
-def generate_span_id():
+def generate_span_id() -> int:
     """Get a new random span ID.
 
     Returns:
@@ -318,13 +318,20 @@ def generate_span_id():
     return random.getrandbits(64)
 
 
-def generate_trace_id():
+def generate_trace_id() -> int:
     """Get a new random trace ID.
 
     Returns:
         A random 128-bit int for use as a trace ID
     """
     return random.getrandbits(128)
+
+
+def generate_span_context() -> "SpanContext":
+    """Generate a valid SpanContext."""
+    return SpanContext(
+        trace_id=generate_trace_id(), span_id=generate_span_id()
+    )
 
 
 class SpanContext:
