@@ -92,7 +92,7 @@ includes:
 - Tracing API
 - Tracing SDK
 - Metrics API
-- Metrics SDK
+- Metrics SDK (Partial)
 - W3C Trace Context Propagation
 - B3 Context Propagation
 - HTTP Integrations
@@ -107,7 +107,7 @@ Future releases targets include:
 | Component                   | Version    | Target Date     |
 | --------------------------- | ---------- | --------------- |
 | Jaeger Trace Exporter       | Alpha v0.2 | October 28 2019 |
-| Metrics SDK                 | Alpha v0.2 | October 28 2019 |
+| Metrics SDK (Complete)      | Alpha v0.2 | October 28 2019 |
 | Prometheus Metrics Exporter | Alpha v0.2 | October 28 2019 |
 | OpenTracing Bridge          | Alpha v0.2 | October 28 2019 |
 
