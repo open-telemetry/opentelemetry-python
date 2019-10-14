@@ -55,8 +55,6 @@ class SpanWrapper(opentracing.Span):
 
     def set_operation_name(self, operation_name):
         self._otel_span.update_name(operation_name)
-
-        # Return self for call chaining.
         return self
 
     def finish(self, finish_time=None):
@@ -67,8 +65,6 @@ class SpanWrapper(opentracing.Span):
 
     def set_tag(self, key, value):
         self._otel_span.set_attribute(key, value)
-
-        # Return self for call chaining.
         return self
 
     def log_kv(self, key_values, timestamp=None):
@@ -79,8 +75,6 @@ class SpanWrapper(opentracing.Span):
 
         event_name = util.event_name_from_kv(key_values)
         self._otel_span.add_event(event_name, event_timestamp, key_values)
-
-        # Return self for call chaining.
         return self
 
     def set_baggage_item(self, key, value):
