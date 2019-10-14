@@ -16,7 +16,7 @@ import logging
 
 import opentracing
 
-from opentelemetry.ext.opentracingshim import util
+from opentelemetry.ext.opentracing_shim import util
 
 logger = logging.getLogger(__name__)
 

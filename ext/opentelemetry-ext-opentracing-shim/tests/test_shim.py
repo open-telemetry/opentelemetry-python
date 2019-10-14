@@ -17,9 +17,9 @@ import unittest
 
 import opentracing
 
-import opentelemetry.ext.opentracingshim as opentracingshim
+import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import trace
-from opentelemetry.ext.opentracingshim import util
+from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import Tracer
 
 

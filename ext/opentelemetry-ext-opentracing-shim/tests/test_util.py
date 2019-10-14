@@ -15,7 +15,7 @@
 import time
 import unittest
 
-from opentelemetry.ext.opentracingshim import util
+from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.util import time_ns
 
 

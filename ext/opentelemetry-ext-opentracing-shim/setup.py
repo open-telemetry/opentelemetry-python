@@ -17,7 +17,7 @@ import setuptools
 
 BASE_DIR = os.path.dirname(__file__)
 VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "ext", "opentracingshim", "version.py"
+    BASE_DIR, "src", "opentelemetry", "ext", "opentracing_shim", "version.py"
 )
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
