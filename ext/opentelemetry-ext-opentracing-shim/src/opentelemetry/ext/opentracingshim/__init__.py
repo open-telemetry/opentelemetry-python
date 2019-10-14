@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-from contextlib import contextmanager
 
 import opentracing
 
@@ -104,10 +103,54 @@ class SpanWrapper(opentracing.Span):
 
 
 class ScopeWrapper(opentracing.Scope):
+    """A `ScopeWrapper` wraps the OpenTelemetry functionality related to span
+    activation/deactivation while using OpenTracing `Scope` objects for
+    presentation.
+
+    There are two ways to construct a `ScopeWrapper` object: using the `span`
+    argument and using the `span_cm` argument. One and only one of `span` or
+    `span_cm` must be specified.
+
+    When calling the initializer while passing a `SpanWrapper` object in the
+    `span` argument, the `ScopeWrapper` is initialized as a regular `Scope`
+    object.
+
+    When calling the initializer while passing a context manager *generator* in
+    the `span_cm` argument (as returned by the `use_span()` method of
+    OpenTelemetry `Tracer` objects,  the resulting `ScopeWrapper` becomes
+    usable as a context manager (using `with` statements).
+
+    It is necessary to have both ways for constructing `ScopeWrapper`
+    objects because in some cases we need to create the object from a context
+    manager, in which case our only way of retrieving a `Span` object is by
+    calling the `__enter__()` method on the context manager, which makes the
+    span active in the OpenTelemetry tracer; whereas in other cases we need to
+    accept a `SpanWrapper` object and wrap it in a `ScopeWrapper`.
+    """
+
+    def __init__(self, manager, span=None, span_cm=None):
+        super().__init__(manager, span)
+        self._span_cm = span_cm
+
     def close(self):
-        self._span.finish()
+        self._span.unwrap().end()
         # TODO: Set active span on OpenTelemetry tracer.
         # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
+
+    def __enter__(self):
+        if self._span_cm is not None:
+            otel_span = self._span_cm.__enter__()
+            self._span = SpanWrapper(
+                self._manager.tracer, otel_span.get_context(), otel_span
+            )
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Span._on_error(self.span, exc_type, exc_val, exc_tb)
+        # TODO: Do we want this ^ ? It exists in the overridden method on the
+        # base class in the OpenTracing API.
+        if self._span_cm is not None:
+            self._span_cm.__exit__(exc_type, exc_val, exc_tb)
 
 
 class ScopeManagerWrapper(opentracing.ScopeManager):
@@ -118,15 +161,11 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
         # pylint: disable=super-init-not-called
         self._tracer = tracer
 
-    @contextmanager
     def activate(self, span, finish_on_close):
-        with self._tracer.unwrap().use_span(
+        span_cm = self._tracer.unwrap().use_span(
             span.unwrap(), end_on_exit=finish_on_close
-        ) as otel_span:
-            wrapped_span = SpanWrapper(
-                self._tracer, otel_span.get_context(), otel_span
-            )
-            yield ScopeWrapper(self, wrapped_span)
+        )
+        return ScopeWrapper(self, span_cm=span_cm)
 
     @property
     def active(self):
@@ -135,7 +174,11 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
             return None
 
         wrapped_span = SpanWrapper(self._tracer, span.get_context(), span)
-        return ScopeWrapper(self, wrapped_span)
+        return ScopeWrapper(self, span=wrapped_span)
+
+    @property
+    def tracer(self):
+        return self._tracer
 
 
 class TracerWrapper(opentracing.Tracer):
@@ -153,7 +196,6 @@ class TracerWrapper(opentracing.Tracer):
 
         return self._otel_tracer
 
-    @contextmanager
     def start_active_span(
         self,
         operation_name,
@@ -172,8 +214,7 @@ class TracerWrapper(opentracing.Tracer):
             start_time=start_time,
             ignore_active_span=ignore_active_span,
         )
-        with self._scope_manager.activate(span, finish_on_close) as scope:
-            yield scope
+        return self._scope_manager.activate(span, finish_on_close)
 
     def start_span(
         self,
