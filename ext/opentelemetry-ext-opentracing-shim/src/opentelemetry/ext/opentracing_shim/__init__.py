@@ -21,8 +21,8 @@ from opentelemetry.ext.opentracing_shim import util
 logger = logging.getLogger(__name__)
 
 
-def create_tracer(tracer, scope_manager=None):
-    return TracerWrapper(tracer, scope_manager)
+def create_tracer(tracer):
+    return TracerWrapper(tracer)
 
 
 class SpanContextWrapper(opentracing.SpanContext):
@@ -182,13 +182,8 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
 
 
 class TracerWrapper(opentracing.Tracer):
-    def __init__(self, tracer, scope_manager=None):
-        # If a scope manager isn't provided by the user, create a
-        # `ScopeManagerWrapper` instance and use it to initialize the
-        # `TracerWrapper`.
-        if scope_manager is None:
-            scope_manager = ScopeManagerWrapper(self)
-        super().__init__(scope_manager=scope_manager)
+    def __init__(self, tracer):
+        super().__init__(scope_manager=ScopeManagerWrapper(self))
         self._otel_tracer = tracer
 
     def unwrap(self):
