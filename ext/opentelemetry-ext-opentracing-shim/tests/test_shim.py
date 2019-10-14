@@ -27,7 +27,8 @@ class TestShim(unittest.TestCase):
     # pylint: disable=too-many-public-methods
 
     def setUp(self):
-        # TODO: Review setup.
+        """Create an OpenTelemetry tracer and a shim before every test case."""
+
         self.tracer = trace.tracer()
         self.shim = opentracingshim.create_tracer(self.tracer)
 
@@ -36,9 +37,7 @@ class TestShim(unittest.TestCase):
         """Set preferred tracer implementation only once rather than before
         every test method.
         """
-        # TODO: Do we need to call setUpClass() on super()?
-        # Seems to work fine without it.
-        super(TestShim, cls).setUpClass()
+
         trace.set_preferred_tracer_implementation(lambda T: Tracer())
 
     def test_shim_type(self):
