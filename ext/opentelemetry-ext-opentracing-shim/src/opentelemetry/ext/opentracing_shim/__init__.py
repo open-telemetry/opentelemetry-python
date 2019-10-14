@@ -217,8 +217,6 @@ class TracerWrapper(opentracing.Tracer):
         if child_of is None:
             parent = None
         else:
-            # TODO: Should we use the OpenTracing base classes for the type
-            # check?
             if isinstance(child_of, (SpanWrapper, SpanContextWrapper)):
                 # The parent specified in `child_of` is valid and is either a
                 # `SpanWrapper` or a `SpanContextWrapper`. Unwrap the `Span` or
