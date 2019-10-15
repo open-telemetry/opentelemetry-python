@@ -136,8 +136,7 @@ class Status:
     """Represents the status of a finished Span
 
     Args:
-        canonical_code: Represents the canonical set of status codes of a
-        finished Span
+        canonical_code: Represents the canonical status code.
         description: Description of the Status.
     """
 
@@ -150,8 +149,8 @@ class Status:
         self.desc = description
 
     @property
-    def canonical_code(self) -> StatusCanonicalCode:
-        """StatusCanonicalCode represents the canonical set of status codes
+    def canonical_code(self) -> "StatusCanonicalCode":
+        """Represents the canonical status code.
         of a finished Span.
         """
         return self.code

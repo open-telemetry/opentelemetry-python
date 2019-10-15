@@ -68,20 +68,6 @@ from contextlib import contextmanager
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import loader, types
 
-__all__ = [
-    "Status",
-    "StatusCanonicalCode",
-    "Link",
-    "Event",
-    "SpanKind",
-    "Span",
-    "SpanContext",
-    "TraceOptions",
-    "TraceState",
-    "DefaultSpan",
-    "Tracer",
-]
-
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
