@@ -245,8 +245,6 @@ class TracerWrapper(opentracing.Tracer):
         span = self._otel_tracer.create_span(operation_name, parent)
 
         if references:
-            if not isinstance(references, list):
-                references = [references]
             for ref in references:
                 span.add_link(ref.referenced_context.unwrap())
 
