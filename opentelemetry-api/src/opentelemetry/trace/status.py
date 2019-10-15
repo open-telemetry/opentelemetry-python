@@ -170,9 +170,7 @@ class Status:
 
     @property
     def canonical_code(self) -> "StatusCanonicalCode":
-        """Represents the canonical status code.
-        of a finished Span.
-        """
+        """Represents the canonical status code of a finished Span."""
         return self.code
 
     @property
@@ -182,6 +180,5 @@ class Status:
 
     @property
     def is_ok(self) -> bool:
-        """Returns false if this Status represents an error, else
-        returns true"""
+        """Returns false if this represents an error, true otherwise."""
         return self.canonical_code == StatusCanonicalCode.OK
