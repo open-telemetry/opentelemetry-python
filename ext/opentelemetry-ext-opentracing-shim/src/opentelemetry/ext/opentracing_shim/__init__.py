@@ -140,9 +140,7 @@ class ScopeShim(opentracing.Scope):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Span._on_error(self.span, exc_type, exc_val, exc_tb)
-        # TODO: Do we want this ^ ? It exists in the overridden method on the
-        # base class in the OpenTracing API.
+        opentracing.Span._on_error(self.span, exc_type, exc_val, exc_tb)
         if self._span_cm is not None:
             self._span_cm.__exit__(exc_type, exc_val, exc_tb)
 

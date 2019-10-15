@@ -395,3 +395,19 @@ class TestShim(unittest.TestCase):
         self.assertIsInstance(context, opentracing.SpanContext)
         self.assertEqual(context.unwrap().trace_id, 1234)
         self.assertEqual(context.unwrap().span_id, 5678)
+
+    def test_span_on_error(self):
+        """Verify error tag and logs are created on span when an exception is
+        raised.
+        """
+
+        # Raise an exception while a span is active.
+        with self.assertRaises(Exception):
+            with self.shim.start_active_span("TestName") as scope:
+                raise Exception
+
+        # Verify exception details have been added to span.
+        self.assertEqual(scope.span.unwrap().attributes["error"], True)
+        self.assertEqual(
+            scope.span.unwrap().events[0].attributes["error.kind"], Exception
+        )
