@@ -236,9 +236,9 @@ class TracerShim(opentracing.Tracer):
 
         # Use active span as parent when no explicit parent is specified.
         if (
-            self.active_span is not None
+            not parent
             and not ignore_active_span
-            and not parent
+            and self.active_span is not None
         ):
             parent = self.active_span.unwrap()
 
