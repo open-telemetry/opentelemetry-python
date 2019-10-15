@@ -227,7 +227,7 @@ class Span:
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
         """
-        
+
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status, which is OK.
@@ -252,6 +252,7 @@ class Span:
         """
         self.end()
         return False
+
 
 class TraceOptions(int):
     """A bitmask that represents options specific to the trace.
