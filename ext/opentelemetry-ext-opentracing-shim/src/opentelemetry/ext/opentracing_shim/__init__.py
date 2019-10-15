@@ -126,23 +126,26 @@ class ScopeShim(opentracing.Scope):
         super().__init__(manager, span)
         self._span_cm = span_cm
 
-    def close(self):
-        self._span.unwrap().end()
-        # TODO: Set active span on OpenTelemetry tracer.
-        # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
-
-    def __enter__(self):
+        # If a span context manager is provided, extract the `Span` object from
+        # it, wrap the extracted span and save it as an attribute.
         if self._span_cm is not None:
             otel_span = self._span_cm.__enter__()
             self._span = SpanShim(
                 self._manager.tracer, otel_span.get_context(), otel_span
             )
-        return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        opentracing.Span._on_error(self.span, exc_type, exc_val, exc_tb)
+    def close(self):
         if self._span_cm is not None:
-            self._span_cm.__exit__(exc_type, exc_val, exc_tb)
+            # We don't have error information to pass to `__exit__()` so we
+            # pass `None` in all arguments. If the OpenTelemetry tracer
+            # implementation requires this information, the `__exit__()` method
+            # on `opentracing.Scope` should be overridden and modified to pass
+            # the relevant values to this `close()` method.
+            self._span_cm.__exit__(None, None, None)
+        else:
+            self._span.unwrap().end()
+        # TODO: Set active span on OpenTelemetry tracer.
+        # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
 
 
 class ScopeManagerShim(opentracing.ScopeManager):
