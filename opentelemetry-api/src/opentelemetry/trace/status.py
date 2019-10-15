@@ -105,8 +105,8 @@ class StatusCanonicalCode(enum.Enum):
     """The operation was aborted, typically due to a concurrency issue such as a
     sequencer check failure or transaction abort.
 
-    See the guidelines above for
-    deciding between FAILED_PRECONDITION, ABORTED, and UNAVAILABLE.
+    See the guidelines above for deciding between FAILED_PRECONDITION, ABORTED,
+    and UNAVAILABLE.
     """
 
     OUT_OF_RANGE = 11
