@@ -16,7 +16,12 @@ _ENVIRON_SPAN_KEY = object()
 _ENVIRON_ACTIVATION_KEY = object()
 
 
-def wrap_flask(flask):
+def instrument_app(flask):
+    """Makes the passed-in Flask object traced by OpenTelemetry.
+
+    You must not call this function multiple times on the same Flask object.
+    """
+
     wsgi = flask.wsgi_app
 
     def wrapped_app(environ, start_response):

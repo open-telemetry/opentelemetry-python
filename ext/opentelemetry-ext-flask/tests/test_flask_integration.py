@@ -44,7 +44,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.app.route("/hello/<int:helloid>")(hello_endpoint)
 
-        otel_flask.wrap_flask(self.app)
+        otel_flask.instrument_app(self.app)
         self.client = Client(self.app, BaseResponse)
 
     def test_simple(self):

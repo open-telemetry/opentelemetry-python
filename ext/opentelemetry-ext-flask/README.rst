@@ -1,20 +1,23 @@
-OpenTelemetry WSGI Middleware
-=============================
+OpenTelemetry Flask tracing
+===========================
 
-This library provides a WSGI middleware that can be used on any WSGI framework
-(such as Django / Flask) to track requests timing through OpenTelemetry.
+This library builds on the OpenTelemetry WSGI middleware to track web requests
+in Flask applications. In addition to opentelemetry-ext-wsgi, it supports
+flask-specific features such as:
 
+* The Flask endpoint name is used as the Span name.
+* The ``http.route`` Span attribute is set so that one can see which URL rule matched a request.
 
-Usage (Flask)
--------------
+Usage
+-----
 
 .. code-block:: python
 
     from flask import Flask
-    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+    from opentelemetry.ext.flask_util import instrument_app
 
     app = Flask(__name__)
-    app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
+    instrument_app(app)  # This is where the magic happens. ✨
 
     @app.route("/")
     def hello():
@@ -24,24 +27,8 @@ Usage (Flask)
         app.run(debug=True)
 
 
-Usage (Django)
---------------
-
-Modify the application's ``wsgi.py`` file as shown below.
-
-.. code-block:: python
-
-    import os
-    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
-    from django.core.wsgi import get_wsgi_application
-
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'application.settings')
-
-    application = get_wsgi_application()
-    application = OpenTelemetryMiddleware(application)
-
 References
 ----------
 
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `WSGI <https://www.python.org/dev/peps/pep-3333>`_
+* `OpenTelemetry WSGI extension <https://github.com/open-telemetry/opentelemetry-python/tree/master/ext/opentelemetry-ext-wsgi>`_
