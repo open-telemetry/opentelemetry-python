@@ -66,7 +66,7 @@ import types as python_types
 import typing
 from contextlib import contextmanager
 
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status
 from opentelemetry.util import loader, types
 
 # TODO: quarantine
