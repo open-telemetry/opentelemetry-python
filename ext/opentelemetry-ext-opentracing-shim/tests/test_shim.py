@@ -59,7 +59,7 @@ class TestShim(unittest.TestCase):
             self.assertEqual(self.shim.active_span.context, scope.span.context)
             # TODO: We can't check for equality of self.shim.active_span and
             # scope.span because the same OpenTelemetry span is returned inside
-            # different SpanWrapper objects. A possible solution is described
+            # different SpanShim objects. A possible solution is described
             # here:
             # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
 
@@ -205,10 +205,10 @@ class TestShim(unittest.TestCase):
         span.finish()
 
     def test_explicit_scope_close(self):
-        """Test `close()` method on `ScopeWrapper`."""
+        """Test `close()` method on `ScopeShim`."""
 
         span = self.shim.start_span("TestSpan")
-        scope = opentracingshim.ScopeWrapper(self.shim.scope_manager, span)
+        scope = opentracingshim.ScopeShim(self.shim.scope_manager, span)
 
         # Verify span hasn't ended.
         self.assertIsNone(span.unwrap().end_time)
@@ -249,8 +249,8 @@ class TestShim(unittest.TestCase):
                 self.shim.active_span.context,
                 parent.span.context
                 # TODO: Check equality of the spans themselves rather than
-                # their context once the SpanWrapper reconstruction problem
-                # has been addressed (see previous TODO).
+                # their context once the SpanShim reconstruction problem has
+                # been addressed (see previous TODO).
             )
 
         # Verify there is no active span.
@@ -387,10 +387,10 @@ class TestShim(unittest.TestCase):
             self.assertAlmostEqual(result, now, places=6)
 
     def test_span_context(self):
-        """Test construction of `SpanContextWrapper` objects."""
+        """Test construction of `SpanContextShim` objects."""
 
         otel_context = trace.SpanContext(1234, 5678)
-        context = opentracingshim.SpanContextWrapper(otel_context)
+        context = opentracingshim.SpanContextShim(otel_context)
 
         self.assertIsInstance(context, opentracing.SpanContext)
         self.assertEqual(context.unwrap().trace_id, 1234)

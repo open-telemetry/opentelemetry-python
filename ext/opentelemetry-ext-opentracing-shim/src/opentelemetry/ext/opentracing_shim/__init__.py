@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 
 
 def create_tracer(tracer):
-    return TracerWrapper(tracer)
+    return TracerShim(tracer)
 
 
-class SpanContextWrapper(opentracing.SpanContext):
+class SpanContextShim(opentracing.SpanContext):
     def __init__(self, otel_context):
         self._otel_context = otel_context
 
@@ -43,7 +43,7 @@ class SpanContextWrapper(opentracing.SpanContext):
         # TODO: Implement.
 
 
-class SpanWrapper(opentracing.Span):
+class SpanShim(opentracing.Span):
     def __init__(self, tracer, context, span):
         super().__init__(tracer, context)
         self._otel_span = span
@@ -96,30 +96,30 @@ class SpanWrapper(opentracing.Span):
     # `log_kv()`).
 
 
-class ScopeWrapper(opentracing.Scope):
-    """A `ScopeWrapper` wraps the OpenTelemetry functionality related to span
+class ScopeShim(opentracing.Scope):
+    """A `ScopeShim` wraps the OpenTelemetry functionality related to span
     activation/deactivation while using OpenTracing `Scope` objects for
     presentation.
 
-    There are two ways to construct a `ScopeWrapper` object: using the `span`
+    There are two ways to construct a `ScopeShim` object: using the `span`
     argument and using the `span_cm` argument. One and only one of `span` or
     `span_cm` must be specified.
 
-    When calling the initializer while passing a `SpanWrapper` object in the
-    `span` argument, the `ScopeWrapper` is initialized as a regular `Scope`
+    When calling the initializer while passing a `SpanShim` object in the
+    `span` argument, the `ScopeShim` is initialized as a regular `Scope`
     object.
 
     When calling the initializer while passing a context manager *generator* in
     the `span_cm` argument (as returned by the `use_span()` method of
-    OpenTelemetry `Tracer` objects,  the resulting `ScopeWrapper` becomes
+    OpenTelemetry `Tracer` objects,  the resulting `ScopeShim` becomes
     usable as a context manager (using `with` statements).
 
-    It is necessary to have both ways for constructing `ScopeWrapper`
+    It is necessary to have both ways for constructing `ScopeShim`
     objects because in some cases we need to create the object from a context
     manager, in which case our only way of retrieving a `Span` object is by
     calling the `__enter__()` method on the context manager, which makes the
     span active in the OpenTelemetry tracer; whereas in other cases we need to
-    accept a `SpanWrapper` object and wrap it in a `ScopeWrapper`.
+    accept a `SpanShim` object and wrap it in a `ScopeShim`.
     """
 
     def __init__(self, manager, span=None, span_cm=None):
@@ -134,7 +134,7 @@ class ScopeWrapper(opentracing.Scope):
     def __enter__(self):
         if self._span_cm is not None:
             otel_span = self._span_cm.__enter__()
-            self._span = SpanWrapper(
+            self._span = SpanShim(
                 self._manager.tracer, otel_span.get_context(), otel_span
             )
         return self
@@ -147,7 +147,7 @@ class ScopeWrapper(opentracing.Scope):
             self._span_cm.__exit__(exc_type, exc_val, exc_tb)
 
 
-class ScopeManagerWrapper(opentracing.ScopeManager):
+class ScopeManagerShim(opentracing.ScopeManager):
     def __init__(self, tracer):
         # The only thing the `__init__()` method on the base class does is
         # initialize `self._noop_span` and `self._noop_scope` with no-op
@@ -159,7 +159,7 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
         span_cm = self._tracer.unwrap().use_span(
             span.unwrap(), end_on_exit=finish_on_close
         )
-        return ScopeWrapper(self, span_cm=span_cm)
+        return ScopeShim(self, span_cm=span_cm)
 
     @property
     def active(self):
@@ -167,17 +167,17 @@ class ScopeManagerWrapper(opentracing.ScopeManager):
         if span is None:
             return None
 
-        wrapped_span = SpanWrapper(self._tracer, span.get_context(), span)
-        return ScopeWrapper(self, span=wrapped_span)
+        wrapped_span = SpanShim(self._tracer, span.get_context(), span)
+        return ScopeShim(self, span=wrapped_span)
 
     @property
     def tracer(self):
         return self._tracer
 
 
-class TracerWrapper(opentracing.Tracer):
+class TracerShim(opentracing.Tracer):
     def __init__(self, tracer):
-        super().__init__(scope_manager=ScopeManagerWrapper(self))
+        super().__init__(scope_manager=ScopeManagerShim(self))
         self._otel_tracer = tracer
 
     def unwrap(self):
@@ -217,9 +217,9 @@ class TracerWrapper(opentracing.Tracer):
         if child_of is None:
             parent = None
         else:
-            if isinstance(child_of, (SpanWrapper, SpanContextWrapper)):
+            if isinstance(child_of, (SpanShim, SpanContextShim)):
                 # The parent specified in `child_of` is valid and is either a
-                # `SpanWrapper` or a `SpanContextWrapper`. Unwrap the `Span` or
+                # `SpanShim` or a `SpanContextShim`. Unwrap the `Span` or
                 # `SpanContext` to extract the OpenTracing object and use this
                 # object as the parent of the created span.
                 parent = child_of.unwrap()
@@ -260,8 +260,8 @@ class TracerWrapper(opentracing.Tracer):
             start_time_ns = util.time_seconds_to_ns(start_time)
 
         span.start(start_time=start_time_ns)
-        context = SpanContextWrapper(span.get_context())
-        return SpanWrapper(self, context, span)
+        context = SpanContextShim(span.get_context())
+        return SpanShim(self, context, span)
 
     def inject(self, span_context, format, carrier):
         # pylint: disable=redefined-builtin
