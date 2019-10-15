@@ -38,7 +38,7 @@ setuptools.setup(
         "opentelemetry-api",
         "opentelemetry-sdk",
         "opentelemetry-ext-http-requests",
-        "opentelemetry-ext-wsgi",
+        "opentelemetry-ext-flask",
         "flask",
         "requests",
     ],

@@ -33,7 +33,7 @@ def wrap_flask(flask):
                 )
             else:
                 logger.warning(
-                    "Flask environ's OTel span missing at _start_response(%s)",
+                    "Flask environ's OpenTelemetry span missing at _start_response(%s)",
                     status,
                 )
             return start_response(status, response_headers, *args, **kwargs)
@@ -75,7 +75,7 @@ def _teardown_flask_request(exc):
     activation = flask_request.environ.get(_ENVIRON_ACTIVATION_KEY)
     if not activation:
         logger.warning(
-            "Flask environ's OTel activation missing at _teardown_flask_request(%s)",
+            "Flask environ's OpenTelemetry activation missing at _teardown_flask_request(%s)",
             exc,
         )
         return

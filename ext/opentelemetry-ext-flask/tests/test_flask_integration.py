@@ -18,10 +18,9 @@ from flask import Flask
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
-import opentelemetry.ext.wsgi.flask_util as otel_flask
+import opentelemetry.ext.flask_util as otel_flask
 from opentelemetry import trace as trace_api
-
-from .test_wsgi_middleware import WsgiTestBase
+from wsgitestutil import WsgiTestBase
 
 
 class TestFlaskIntegration(WsgiTestBase):
