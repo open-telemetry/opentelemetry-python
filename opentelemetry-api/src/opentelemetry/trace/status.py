@@ -145,23 +145,23 @@ class Status:
         canonical_code: "StatusCanonicalCode" = StatusCanonicalCode.OK,
         description: typing.Optional[str] = None,
     ):
-        self.code = canonical_code
-        self.desc = description
+        self._canonical_code = canonical_code
+        self._description = description
 
     @property
     def canonical_code(self) -> "StatusCanonicalCode":
         """Represents the canonical status code.
         of a finished Span.
         """
-        return self.code
+        return self._canonical_code
 
     @property
     def description(self) -> typing.Optional[str]:
         """Status description"""
-        return self.desc
+        return self._description
 
     @property
     def is_ok(self) -> bool:
         """Returns false if this Status represents an error, else
         returns true"""
-        return self.canonical_code == StatusCanonicalCode.OK
+        return self._canonical_code == StatusCanonicalCode.OK
