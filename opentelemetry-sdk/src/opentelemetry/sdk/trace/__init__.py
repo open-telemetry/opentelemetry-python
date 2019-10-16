@@ -144,6 +144,7 @@ class Span(trace_api.Span):
         self.kind = kind
 
         self.span_processor = span_processor
+        self.status = trace_api.Status()
         self._lock = threading.Lock()
 
         if attributes is None:
@@ -285,6 +286,14 @@ class Span(trace_api.Span):
 
     def is_recording_events(self) -> bool:
         return True
+
+    def set_status(self, status: trace_api.Status) -> None:
+        with self._lock:
+            has_ended = self.end_time is not None
+        if has_ended:
+            logger.warning("Calling set_status() on an ended span.")
+            return
+        self.status = status
 
 
 def generate_span_id() -> int:

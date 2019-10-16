@@ -66,6 +66,7 @@ import types as python_types
 import typing
 from contextlib import contextmanager
 
+from opentelemetry.trace.status import Status
 from opentelemetry.util import loader, types
 
 # TODO: quarantine
@@ -225,6 +226,11 @@ class Span:
 
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
+        """
+
+    def set_status(self, status: Status) -> None:
+        """Sets the Status of the Span. If used, this will override the default
+        Span status, which is OK.
         """
 
     def __enter__(self) -> "Span":
