@@ -307,8 +307,8 @@ class SpanContext:
     Args:
         trace_id: The ID of the trace that this span belongs to.
         span_id: This span's ID.
-        options: Trace options to propagate.
-        state: Tracing-system-specific info to propagate.
+        trace_options: Trace options to propagate.
+        trace_state: Tracing-system-specific info to propagate.
     """
 
     def __init__(
