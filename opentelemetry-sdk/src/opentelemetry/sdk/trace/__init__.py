@@ -19,6 +19,7 @@ import threading
 import typing
 from contextlib import contextmanager
 
+import opentelemetry.trace.sampling as sampling
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
@@ -104,7 +105,7 @@ class Span(trace_api.Span):
         context: The immutable span context
         parent: This span's parent, may be a `SpanContext` if the parent is
             remote, null if this is a root span
-        sampler: TODO
+        sampler: The sampler used to create this span
         trace_config: TODO
         resource: TODO
         attributes: The span's attributes to be exported
@@ -124,7 +125,7 @@ class Span(trace_api.Span):
         name: str,
         context: trace_api.SpanContext,
         parent: trace_api.ParentSpan = None,
-        sampler: None = None,  # TODO
+        sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
         resource: None = None,  # TODO
         attributes: types.Attributes = None,  # TODO
@@ -311,12 +312,17 @@ class Tracer(trace_api.Tracer):
         name: The name of the tracer.
     """
 
-    def __init__(self, name: str = "") -> None:
+    def __init__(
+        self,
+        name: str = "",
+        sampler: "sampling.Sampler" = trace_api.sampling.ALWAYS_ON,
+    ) -> None:
         slot_name = "current_span"
         if name:
             slot_name = "{}.current_span".format(name)
         self._current_span_slot = Context.register_slot(slot_name)
         self._active_span_processor = MultiSpanProcessor()
+        self.sampler = sampler
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
@@ -350,33 +356,63 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> "Span":
-        """See `opentelemetry.trace.Tracer.create_span`."""
-        span_id = generate_span_id()
+    ) -> "trace_api.Span":
+        """See `opentelemetry.trace.Tracer.create_span`.
+
+        If `parent` is null the new span will be created as a root span, i.e. a
+        span with no parent context. By default, the new span will be created
+        as a child of the current span in this tracer's context, or as a root
+        span if no current span exists.
+        """
+
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
+
         if parent is None:
-            context = trace_api.SpanContext(generate_trace_id(), span_id)
+            parent_context = None
+            new_span_context = trace_api.SpanContext(
+                generate_trace_id(), generate_span_id()
+            )
         else:
             if isinstance(parent, trace_api.Span):
                 parent_context = parent.get_context()
             elif isinstance(parent, trace_api.SpanContext):
                 parent_context = parent
             else:
+                # But don't...
                 raise TypeError
-            context = trace_api.SpanContext(
+
+            new_span_context = trace_api.SpanContext(
                 parent_context.trace_id,
-                span_id,
+                generate_span_id(),
                 parent_context.trace_options,
                 parent_context.trace_state,
             )
-        return Span(
-            name=name,
-            context=context,
-            parent=parent,
-            span_processor=self._active_span_processor,
-            kind=kind,
+
+        # The sampler decides whether to create a real or no-op span at the
+        # time of span creation. No-op spans do not record events, and are not
+        # exported.
+        # The sampler may also add attributes to the newly-created span, e.g.
+        # to include information about the sampling decision.
+        sampling_decision = self.sampler.should_sample(
+            parent_context,
+            new_span_context.trace_id,
+            new_span_context.span_id,
+            name,
+            {},  # TODO: links
         )
+
+        if sampling_decision.sampled:
+            return Span(
+                name=name,
+                context=new_span_context,
+                parent=parent,
+                sampler=self.sampler,
+                attributes=sampling_decision.attributes,
+                span_processor=self._active_span_processor,
+                kind=kind,
+            )
+        return trace_api.DefaultSpan(context=new_span_context)
 
     @contextmanager
     def use_span(
