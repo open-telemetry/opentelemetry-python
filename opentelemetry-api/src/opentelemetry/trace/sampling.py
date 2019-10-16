@@ -80,5 +80,46 @@ class StaticSampler(Sampler):
         return self.decision
 
 
+class ProbabilitySampler(Sampler):
+    def __init__(self, rate: float):
+        self._rate = rate
+        self._bound = self.get_bound_for_rate(self._rate)
+
+    @classmethod
+    def get_bound_for_rate(cls, rate: float) -> int:
+        return int(rate * 0xffffffffffffffff)
+
+    @property
+    def rate(self) -> float:
+        return self._rate
+
+    @rate.setter
+    def rate(self, new_rate: float) -> None:
+        self._rate = new_rate
+        self._bound = self.get_bound_for_rate(self._rate)
+
+    @property
+    def bound(self) -> int:
+        return self._bound
+
+    def should_sample(
+        self,
+        parent_context: Optional["SpanContext"],
+        trace_id: int,
+        span_id: int,
+        name: str,
+        links: Optional[Sequence["Link"]] = None,
+    ) -> "Decision":
+        if parent_context is not None:
+            return Decision(parent_context.trace_options.recorded, {})
+
+        return Decision(trace_id & 0xffffffffffffffff <= self.bound, {})
+
+# Samplers that ignore the parent sampling decision and never/always sample.
 ALWAYS_OFF = StaticSampler(Decision(False))
 ALWAYS_ON = StaticSampler(Decision(True))
+
+# Samplers that respect the parent sampling decision, but otherwise
+# never/always sample.
+DEFAULT_OFF = ProbabilitySampler(0.0)
+DEFAULT_ON = ProbabilitySampler(1.0)

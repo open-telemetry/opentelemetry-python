@@ -267,6 +267,10 @@ class TraceOptions(int):
     def get_default(cls) -> "TraceOptions":
         return cls(cls.DEFAULT)
 
+    @property
+    def recorded(self) -> bool:
+        return bool(self & TraceOptions.RECORDED)
+
 
 DEFAULT_TRACE_OPTIONS = TraceOptions.get_default()
 
