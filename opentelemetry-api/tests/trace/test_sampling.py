@@ -17,58 +17,115 @@ import unittest
 from opentelemetry import trace
 from opentelemetry.trace import sampling
 
+TO_DEFAULT = trace.TraceOptions(trace.TraceOptions.DEFAULT)
+TO_RECORDED = trace.TraceOptions(trace.TraceOptions.RECORDED)
+
 
 class TestSampler(unittest.TestCase):
     def test_always_on(self):
-        unrecorded_on = sampling.ALWAYS_ON.should_sample(
+        no_record_always_on = sampling.ALWAYS_ON.should_sample(
             trace.SpanContext(
                 0x000000000000000000000000DEADBEEF,
                 0x00000000DEADBEF0,
-                trace_options=trace.TraceOptions.DEFAULT,
+                trace_options=TO_DEFAULT,
             ),
             0x000000000000000000000000DEADBEF1,
             0x00000000DEADBEF2,
             "unrecorded parent, sampling on",
         )
-        self.assertTrue(unrecorded_on.sampled)
-        self.assertEqual(unrecorded_on.attributes, {})
+        self.assertTrue(no_record_always_on.sampled)
+        self.assertEqual(no_record_always_on.attributes, {})
 
-        recorded_on = sampling.ALWAYS_ON.should_sample(
+        recorded_always_on = sampling.ALWAYS_ON.should_sample(
             trace.SpanContext(
                 0x000000000000000000000000DEADBEF3,
                 0x00000000DEADBEF4,
-                trace_options=trace.TraceOptions.DEFAULT,
+                trace_options=TO_RECORDED,
             ),
             0x000000000000000000000000DEADBEF5,
             0x00000000DEADBEF6,
             "recorded parent, sampling on",
         )
-        self.assertTrue(recorded_on.sampled)
-        self.assertEqual(recorded_on.attributes, {})
+        self.assertTrue(recorded_always_on.sampled)
+        self.assertEqual(recorded_always_on.attributes, {})
 
     def test_always_off(self):
-        unrecorded_off = sampling.ALWAYS_ON.should_sample(
+        no_record_always_off = sampling.ALWAYS_OFF.should_sample(
             trace.SpanContext(
                 0x000000000000000000000000DEADBEF7,
                 0x00000000DEADBEF8,
-                trace_options=trace.TraceOptions.DEFAULT,
-            ),
-            0x000000000000000000000000DEADBEF9,
-            0x00000000DEADBEFA,
-            "recorded parent, sampling off",
-        )
-        self.assertTrue(unrecorded_off.sampled)
-        self.assertEqual(unrecorded_off.attributes, {})
-
-        recorded_off = sampling.ALWAYS_ON.should_sample(
-            trace.SpanContext(
-                0x000000000000000000000000DEADBEF7,
-                0x00000000DEADBEF8,
-                trace_options=trace.TraceOptions.RECORDED,
+                trace_options=TO_DEFAULT,
             ),
             0x000000000000000000000000DEADBEF9,
             0x00000000DEADBEFA,
             "unrecorded parent, sampling off",
         )
-        self.assertTrue(recorded_off.sampled)
-        self.assertEqual(recorded_off.attributes, {})
+        self.assertFalse(no_record_always_off.sampled)
+        self.assertEqual(no_record_always_off.attributes, {})
+
+        recorded_always_on = sampling.ALWAYS_OFF.should_sample(
+            trace.SpanContext(
+                0x000000000000000000000000DEADBEF7,
+                0x00000000DEADBEF8,
+                trace_options=TO_RECORDED,
+            ),
+            0x000000000000000000000000DEADBEF9,
+            0x00000000DEADBEFA,
+            "recorded parent, sampling off",
+        )
+        self.assertFalse(recorded_always_on.sampled)
+        self.assertEqual(recorded_always_on.attributes, {})
+
+    def test_default_on(self):
+        no_record_default_on = sampling.DEFAULT_ON.should_sample(
+            trace.SpanContext(
+                0x000000000000000000000000DEADBEEF,
+                0x00000000DEADBEF0,
+                trace_options=TO_DEFAULT,
+            ),
+            0x000000000000000000000000DEADBEF1,
+            0x00000000DEADBEF2,
+            "unrecorded parent, sampling on",
+        )
+        self.assertFalse(no_record_default_on.sampled)
+        self.assertEqual(no_record_default_on.attributes, {})
+
+        recorded_default_on = sampling.DEFAULT_ON.should_sample(
+            trace.SpanContext(
+                0x000000000000000000000000DEADBEF3,
+                0x00000000DEADBEF4,
+                trace_options=TO_RECORDED,
+            ),
+            0x000000000000000000000000DEADBEF5,
+            0x00000000DEADBEF6,
+            "recorded parent, sampling on",
+        )
+        self.assertTrue(recorded_default_on.sampled)
+        self.assertEqual(recorded_default_on.attributes, {})
+
+    def test_default_off(self):
+        no_record_default_off = sampling.DEFAULT_OFF.should_sample(
+            trace.SpanContext(
+                0x000000000000000000000000DEADBEF7,
+                0x00000000DEADBEF8,
+                trace_options=TO_DEFAULT,
+            ),
+            0x000000000000000000000000DEADBEF9,
+            0x00000000DEADBEFA,
+            "unrecorded parent, sampling off",
+        )
+        self.assertFalse(no_record_default_off.sampled)
+        self.assertEqual(no_record_default_off.attributes, {})
+
+        recorded_default_off = sampling.DEFAULT_OFF.should_sample(
+            trace.SpanContext(
+                0x000000000000000000000000DEADBEF7,
+                0x00000000DEADBEF8,
+                trace_options=TO_RECORDED,
+            ),
+            0x000000000000000000000000DEADBEF9,
+            0x00000000DEADBEFA,
+            "recorded parent, sampling off",
+        )
+        self.assertTrue(recorded_default_off.sampled)
+        self.assertEqual(recorded_default_off.attributes, {})
