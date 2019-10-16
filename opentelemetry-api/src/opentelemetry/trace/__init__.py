@@ -361,6 +361,9 @@ class DefaultSpan(Span):
     def get_context(self) -> "SpanContext":
         return self._context
 
+    def is_recording_events(self) -> bool:
+        return False
+
 
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
