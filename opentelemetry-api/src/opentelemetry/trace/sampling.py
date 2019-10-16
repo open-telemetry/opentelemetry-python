@@ -28,9 +28,11 @@ class Decision:
         attributes: Attributes to add to the `Span`.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{}({}, attributes={})".format(
-            type(self).__name__, self.sampled, self.attributes
+            type(self).__name__,
+            str(self.sampled),
+            str(self.attributes)
         )
 
     def __init__(
@@ -38,15 +40,17 @@ class Decision:
         sampled: bool = False,
         attributes: Mapping[str, "AttributeValue"] = None,
     ) -> None:
+        self.sampled: bool
+        self.attributes: Dict[str, "AttributeValue"]
+
         self.sampled = sampled
         if attributes is None:
-            self.attributes = {}  # type:Dict[str, "AttributeValue"]
+            self.attributes = {}
         else:
             self.attributes = dict(attributes)
 
 
 class Sampler(abc.ABC):
-
     @abc.abstractmethod
     def should_sample(
         self,
