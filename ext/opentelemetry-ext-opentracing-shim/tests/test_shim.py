@@ -207,16 +207,29 @@ class TestShim(unittest.TestCase):
     def test_explicit_scope_close(self):
         """Test `close()` method on `ScopeShim`."""
 
-        span = self.shim.start_span("TestSpan")
-        scope = opentracingshim.ScopeShim(self.shim.scope_manager, span)
+        with self.shim.start_active_span("ParentSpan") as parent:
+            # Verify parent span is active.
+            self.assertEqual(
+                self.shim.active_span.context, parent.span.context
+            )
 
-        # Verify span hasn't ended.
-        self.assertIsNone(span.unwrap().end_time)
+            child = self.shim.start_active_span("ChildSpan")
 
-        scope.close()
+            # Verify child span is active.
+            self.assertEqual(self.shim.active_span.context, child.span.context)
 
-        # Verify span has ended.
-        self.assertIsNotNone(span.unwrap().end_time)
+            # Verify child span hasn't ended.
+            self.assertIsNone(child.span.unwrap().end_time)
+
+            child.close()
+
+            # Verify child span has ended.
+            self.assertIsNotNone(child.span.unwrap().end_time)
+
+            # Verify parent span becomes active again.
+            self.assertEqual(
+                self.shim.active_span.context, parent.span.context
+            )
 
     def test_parent_child_implicit(self):
         """Test parent-child relationship and activation/deactivation of spans

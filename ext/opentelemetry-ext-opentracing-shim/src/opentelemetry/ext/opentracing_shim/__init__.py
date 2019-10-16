@@ -144,8 +144,6 @@ class ScopeShim(opentracing.Scope):
             self._span_cm.__exit__(None, None, None)
         else:
             self._span.unwrap().end()
-        # TODO: Set active span on OpenTelemetry tracer.
-        # https://github.com/open-telemetry/opentelemetry-python/issues/161#issuecomment-534136274
 
 
 class ScopeManagerShim(opentracing.ScopeManager):
