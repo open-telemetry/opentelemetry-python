@@ -290,7 +290,7 @@ class TestSpan(unittest.TestCase):
 
         # default status
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(
+        self.assertIs(
             span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
         )
         self.assertIs(span.status.description, None)
@@ -300,7 +300,11 @@ class TestSpan(unittest.TestCase):
             trace_api.status.StatusCanonicalCode.CANCELLED, "Test description"
         )
         span.set_status(new_status)
-        self.assertEqual(span.status, new_status)
+        self.assertIs(
+            span.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.CANCELLED,
+        )
+        self.assertIs(span.status.description, "Test description")
 
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""
@@ -347,6 +351,19 @@ class TestSpan(unittest.TestCase):
 
             root.update_name("xxx")
             self.assertEqual(root.name, "root")
+
+            new_status = trace_api.status.Status(
+                trace_api.status.StatusCanonicalCode.CANCELLED,
+                "Test description",
+            )
+            root.set_status(new_status)
+            # default status
+            self.assertTrue(root.status.is_ok)
+            self.assertEqual(
+                root.status.canonical_code,
+                trace_api.status.StatusCanonicalCode.OK,
+            )
+            self.assertIs(root.status.description, None)
 
 
 def span_event_start_fmt(span_processor_name, span_name):

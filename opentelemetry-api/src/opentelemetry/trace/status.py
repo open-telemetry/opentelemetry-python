@@ -153,11 +153,11 @@ class StatusCanonicalCode(enum.Enum):
 
 
 class Status:
-    """Represents the status of a finished Span
+    """Represents the status of a finished Span.
 
     Args:
-        canonical_code: Represents the canonical status code.
-        description: Description of the Status.
+        canonical_code: The canonical status code that describes the result status of the operation.
+        description: An optional description of the status.
     """
 
     def __init__(
@@ -181,4 +181,4 @@ class Status:
     @property
     def is_ok(self) -> bool:
         """Returns false if this represents an error, true otherwise."""
-        return self._canonical_code == StatusCanonicalCode.OK
+        return self._canonical_code is StatusCanonicalCode.OK

@@ -287,6 +287,11 @@ class Span(trace_api.Span):
         return True
 
     def set_status(self, status: trace_api.Status) -> None:
+        with self._lock:
+            has_ended = self.end_time is not None
+        if has_ended:
+            logger.warning("Calling set_status() on an ended span.")
+            return
         self.status = status
 
 

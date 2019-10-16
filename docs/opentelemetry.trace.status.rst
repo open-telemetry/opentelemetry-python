@@ -1,5 +1,5 @@
 opentelemetry.trace.status
-==========================================
+==========================
 
 .. automodule:: opentelemetry.trace.status
     :members:
