@@ -101,8 +101,8 @@ class BaseRuntimeContext:
         self.__setattr__(name, value)
 
     @contextmanager  # type: ignore
-    def __call__(
-        self, **kwargs: typing.Dict[str, "object"]
+    def use(
+        self, **kwargs: typing.Dict[str, object]
     ) -> typing.Iterator[None]:
         snapshot = {key: self[key] for key in kwargs}
         for key in kwargs:
