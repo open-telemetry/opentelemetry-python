@@ -156,7 +156,8 @@ class Status:
     """Represents the status of a finished Span.
 
     Args:
-        canonical_code: The canonical status code that describes the result status of the operation.
+        canonical_code: The canonical status code that describes the result
+            status of the operation.
         description: An optional description of the status.
     """
 
