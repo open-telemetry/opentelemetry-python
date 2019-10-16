@@ -315,7 +315,7 @@ class Tracer(trace_api.Tracer):
     def __init__(
         self,
         name: str = "",
-        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        sampler: sampling.Sampler = trace_api.sampling.DEFAULT_ON,
     ) -> None:
         slot_name = "current_span"
         if name:
