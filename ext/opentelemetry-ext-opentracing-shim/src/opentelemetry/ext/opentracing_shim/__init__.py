@@ -215,34 +215,13 @@ class TracerShim(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ):
-        if child_of is None:
-            parent = None
-        else:
-            if isinstance(child_of, (SpanShim, SpanContextShim)):
-                # The parent specified in `child_of` is valid and is either a
-                # `SpanShim` or a `SpanContextShim`. Unwrap the `Span` or
-                # `SpanContext` to extract the OpenTracing object and use this
-                # object as the parent of the created span.
-                parent = child_of.unwrap()
-            else:
-                logger.warning(
-                    "Unknown class %s passed in child_of argument to start_span() method.",
-                    type(child_of),
-                )
-                parent = None
-                # TODO: Refuse to create a span and return `None` instead of
-                # proceeding with a `None` parent? This would cause the created
-                # span to become a child of the active span, if any, or create
-                # a new trace and make the span the root span of that trace.
-
         # Use active span as parent when no explicit parent is specified.
-        if (
-            not parent
-            and not ignore_active_span
-            and self.active_span is not None
-        ):
-            parent = self.active_span.unwrap()
+        if not ignore_active_span and not child_of:
+            child_of = self.active_span
 
+        # Use the specified parent or the active span if possible. Otherwise,
+        # use a `None` parent, which triggers the creation of a new trace.
+        parent = child_of.unwrap() if child_of else None
         span = self._otel_tracer.create_span(operation_name, parent)
 
         if references:
