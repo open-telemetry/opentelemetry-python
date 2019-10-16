@@ -16,8 +16,8 @@
 import logging
 import random
 import threading
-import typing
 from contextlib import contextmanager
+from typing import Iterator, Optional, Sequence, Tuple
 
 import opentelemetry.trace.sampling as sampling
 from opentelemetry import trace as trace_api
@@ -74,7 +74,7 @@ class MultiSpanProcessor(SpanProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors = ()  # type: typing.Tuple[SpanProcessor, ...]
+        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
@@ -129,8 +129,8 @@ class Span(trace_api.Span):
         trace_config: None = None,  # TODO
         resource: None = None,  # TODO
         attributes: types.Attributes = None,  # TODO
-        events: typing.Sequence[trace_api.Event] = None,  # TODO
-        links: typing.Sequence[trace_api.Link] = None,  # TODO
+        events: Sequence[trace_api.Event] = None,  # TODO
+        links: Sequence[trace_api.Link] = None,  # TODO
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
@@ -163,8 +163,8 @@ class Span(trace_api.Span):
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
-        self.end_time = None  # type: typing.Optional[int]
-        self.start_time = None  # type: typing.Optional[int]
+        self.end_time = None  # type: Optional[int]
+        self.start_time = None  # type: Optional[int]
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -246,7 +246,7 @@ class Span(trace_api.Span):
             return
         self.links.append(link)
 
-    def start(self, start_time: typing.Optional[int] = None) -> None:
+    def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -315,7 +315,7 @@ class Tracer(trace_api.Tracer):
     def __init__(
         self,
         name: str = "",
-        sampler: "sampling.Sampler" = trace_api.sampling.ALWAYS_ON,
+        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
     ) -> None:
         slot_name = "current_span"
         if name:
@@ -345,7 +345,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> typing.Iterator[trace_api.Span]:
+    ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
         span = self.start_span(name, parent, kind)
@@ -417,7 +417,7 @@ class Tracer(trace_api.Tracer):
     @contextmanager
     def use_span(
         self, span: trace_api.Span, end_on_exit: bool = False
-    ) -> typing.Iterator[trace_api.Span]:
+    ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self._current_span_slot.get()
