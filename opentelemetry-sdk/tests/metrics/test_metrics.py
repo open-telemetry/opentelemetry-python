@@ -51,8 +51,8 @@ class TestMeter(unittest.TestCase):
         label_keys = ("key1",)
         label_values = ("value1",)
         counter = metrics.Counter("name", "desc", "unit", float, label_keys)
+        counter.add(label_values, 1.0)
         handle = counter.get_handle(label_values)
-        handle.update(1.0)
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_values, record_tuples)
         self.assertEqual(counter.get_handle(label_values), handle)
@@ -96,12 +96,31 @@ class TestMetric(unittest.TestCase):
             self.assertEqual(metric.handles.get(label_values), handle)
 
 
-class TestCounterHandle(unittest.TestCase):
-    def test_update(self):
-        handle = metrics.CounterHandle(float, True, False)
-        handle.update(2.0)
-        self.assertEqual(handle.data, 2.0)
+class TestCounter(unittest.TestCase):
+    def test_add(self):
+        metric = metrics.Counter("name", "desc", "unit", int, ("key",))
+        handle = metric.get_handle(("value",))
+        metric.add(("value",), 3)
+        self.assertEqual(handle.data, 3)
 
+
+class TestGauge(unittest.TestCase):
+    def test_set(self):
+        metric = metrics.Gauge("name", "desc", "unit", int, ("key",))
+        handle = metric.get_handle(("value",))
+        metric.set(("value",), 3)
+        self.assertEqual(handle.data, 3)
+
+
+class TestMeasure(unittest.TestCase):
+    def test_record(self):
+        metric = metrics.Measure("name", "desc", "unit", int, ("key",))
+        handle = metric.get_handle(("value",))
+        metric.record(("value",), 3)
+        self.assertEqual(handle.data, 0)
+
+
+class TestCounterHandle(unittest.TestCase):
     def test_add(self):
         handle = metrics.CounterHandle(int, True, False)
         handle.add(3)
@@ -128,11 +147,6 @@ class TestCounterHandle(unittest.TestCase):
 
 
 class TestGaugeHandle(unittest.TestCase):
-    def test_update(self):
-        handle = metrics.GaugeHandle(float, True, False)
-        handle.update(2.0)
-        self.assertEqual(handle.data, 2.0)
-
     def test_set(self):
         handle = metrics.GaugeHandle(int, True, False)
         handle.set(3)
@@ -159,11 +173,6 @@ class TestGaugeHandle(unittest.TestCase):
 
 
 class TestMeasureHandle(unittest.TestCase):
-    def test_update(self):
-        handle = metrics.MeasureHandle(float, False, False)
-        handle.update(2.0)
-        self.assertEqual(handle.data, 0)
-
     def test_record(self):
         handle = metrics.MeasureHandle(int, False, False)
         handle.record(3)
