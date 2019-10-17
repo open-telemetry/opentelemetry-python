@@ -130,8 +130,9 @@ class ScopeShim(opentracing.Scope):
         # it, wrap the extracted span and save it as an attribute.
         if self._span_cm is not None:
             otel_span = self._span_cm.__enter__()
+            span_context = SpanContextShim(otel_span.get_context())
             self._span = SpanShim(
-                self._manager.tracer, otel_span.get_context(), otel_span
+                self._manager.tracer, span_context, otel_span
             )
 
     def close(self):
@@ -166,7 +167,8 @@ class ScopeManagerShim(opentracing.ScopeManager):
         if span is None:
             return None
 
-        wrapped_span = SpanShim(self._tracer, span.get_context(), span)
+        span_context = SpanContextShim(span.get_context())
+        wrapped_span = SpanShim(self._tracer, span_context, span)
         return ScopeShim(self, span=wrapped_span)
 
     @property

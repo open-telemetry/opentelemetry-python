@@ -56,7 +56,10 @@ class TestShim(unittest.TestCase):
             self.assertIsNotNone(scope.span.unwrap().start_time)
 
             # Verify span is active.
-            self.assertEqual(self.shim.active_span.context, scope.span.context)
+            self.assertEqual(
+                self.shim.active_span.context.unwrap(),
+                scope.span.context.unwrap(),
+            )
             # TODO: We can't check for equality of self.shim.active_span and
             # scope.span because the same OpenTelemetry span is returned inside
             # different SpanShim objects. A possible solution is described
@@ -149,7 +152,10 @@ class TestShim(unittest.TestCase):
             span, finish_on_close=True
         ) as scope:
             # Verify span is active.
-            self.assertEqual(self.shim.active_span.context, scope.span.context)
+            self.assertEqual(
+                self.shim.active_span.context.unwrap(),
+                scope.span.context.unwrap(),
+            )
 
         # Verify no span is active.
         self.assertIsNone(self.shim.active_span)
@@ -186,7 +192,10 @@ class TestShim(unittest.TestCase):
             span, finish_on_close=True
         ) as scope:
             # Verify span is active.
-            self.assertEqual(self.shim.active_span.context, scope.span.context)
+            self.assertEqual(
+                self.shim.active_span.context.unwrap(),
+                scope.span.context.unwrap(),
+            )
 
         # Verify span has ended.
         self.assertIsNotNone(span.unwrap().end_time)
@@ -197,7 +206,10 @@ class TestShim(unittest.TestCase):
             span, finish_on_close=False
         ) as scope:
             # Verify span is active.
-            self.assertEqual(self.shim.active_span.context, scope.span.context)
+            self.assertEqual(
+                self.shim.active_span.context.unwrap(),
+                scope.span.context.unwrap(),
+            )
 
         # Verify span hasn't ended.
         self.assertIsNone(span.unwrap().end_time)
@@ -210,13 +222,17 @@ class TestShim(unittest.TestCase):
         with self.shim.start_active_span("ParentSpan") as parent:
             # Verify parent span is active.
             self.assertEqual(
-                self.shim.active_span.context, parent.span.context
+                self.shim.active_span.context.unwrap(),
+                parent.span.context.unwrap(),
             )
 
             child = self.shim.start_active_span("ChildSpan")
 
             # Verify child span is active.
-            self.assertEqual(self.shim.active_span.context, child.span.context)
+            self.assertEqual(
+                self.shim.active_span.context.unwrap(),
+                child.span.context.unwrap(),
+            )
 
             # Verify child span hasn't ended.
             self.assertIsNone(child.span.unwrap().end_time)
@@ -228,7 +244,8 @@ class TestShim(unittest.TestCase):
 
             # Verify parent span becomes active again.
             self.assertEqual(
-                self.shim.active_span.context, parent.span.context
+                self.shim.active_span.context.unwrap(),
+                parent.span.context.unwrap(),
             )
 
     def test_parent_child_implicit(self):
@@ -239,13 +256,15 @@ class TestShim(unittest.TestCase):
         with self.shim.start_active_span("ParentSpan") as parent:
             # Verify parent span is the active span.
             self.assertEqual(
-                self.shim.active_span.context, parent.span.context
+                self.shim.active_span.context.unwrap(),
+                parent.span.context.unwrap(),
             )
 
             with self.shim.start_active_span("ChildSpan") as child:
                 # Verify child span is the active span.
                 self.assertEqual(
-                    self.shim.active_span.context, child.span.context
+                    self.shim.active_span.context.unwrap(),
+                    child.span.context.unwrap(),
                 )
 
                 # Verify parent-child relationship.
@@ -259,8 +278,8 @@ class TestShim(unittest.TestCase):
 
             # Verify parent span becomes the active span again.
             self.assertEqual(
-                self.shim.active_span.context,
-                parent.span.context
+                self.shim.active_span.context.unwrap(),
+                parent.span.context.unwrap()
                 # TODO: Check equality of the spans themselves rather than
                 # their context once the SpanShim reconstruction problem has
                 # been addressed (see previous TODO).
