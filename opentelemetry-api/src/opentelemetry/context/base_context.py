@@ -14,6 +14,7 @@
 
 import threading
 import typing
+from contextlib import contextmanager
 
 
 def wrap_callable(target: "object") -> typing.Callable[[], object]:
@@ -98,6 +99,15 @@ class BaseRuntimeContext:
 
     def __setitem__(self, name: str, value: "object") -> None:
         self.__setattr__(name, value)
+
+    @contextmanager  # type: ignore
+    def use(self, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
+        snapshot = {key: self[key] for key in kwargs}
+        for key in kwargs:
+            self[key] = kwargs[key]
+        yield
+        for key in kwargs:
+            self[key] = snapshot[key]
 
     def with_current_context(
         self, func: typing.Callable[..., "object"]
