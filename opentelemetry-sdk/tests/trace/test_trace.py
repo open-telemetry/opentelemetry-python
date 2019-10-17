@@ -15,9 +15,9 @@
 import unittest
 from unittest import mock
 
-import opentelemetry.trace.sampling as sampling
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
+from opentelemetry.trace import sampling
 from opentelemetry.util import time_ns
 
 
