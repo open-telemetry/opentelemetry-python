@@ -30,9 +30,7 @@ class Decision:
 
     def __repr__(self) -> str:
         return "{}({}, attributes={})".format(
-            type(self).__name__,
-            str(self.sampled),
-            str(self.attributes)
+            type(self).__name__, str(self.sampled), str(self.attributes)
         )
 
     def __init__(
@@ -85,9 +83,13 @@ class ProbabilitySampler(Sampler):
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
 
+    # The sampler checks the last 8 bytes of the trace ID to decide whether to
+    # sample a given trace.
+    CHECK_BYTES = 0xFFFFFFFFFFFFFFFF
+
     @classmethod
     def get_bound_for_rate(cls, rate: float) -> int:
-        return int(rate * 0xffffffffffffffff)
+        return round(rate * (cls.CHECK_BYTES + 1))
 
     @property
     def rate(self) -> float:
@@ -113,7 +115,8 @@ class ProbabilitySampler(Sampler):
         if parent_context is not None:
             return Decision(parent_context.trace_options.recorded, {})
 
-        return Decision(trace_id & 0xffffffffffffffff <= self.bound, {})
+        return Decision(trace_id & self.CHECK_BYTES < self.bound, {})
+
 
 # Samplers that ignore the parent sampling decision and never/always sample.
 ALWAYS_OFF = StaticSampler(Decision(False))
