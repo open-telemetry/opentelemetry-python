@@ -379,7 +379,7 @@ class Tracer(trace_api.Tracer):
             elif isinstance(parent, trace_api.SpanContext):
                 parent_context = parent
             else:
-                # But don't...
+                # TODO: error handling
                 raise TypeError
 
             new_span_context = trace_api.SpanContext(
