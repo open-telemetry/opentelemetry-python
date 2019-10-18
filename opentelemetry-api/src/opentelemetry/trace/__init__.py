@@ -245,13 +245,12 @@ class Span:
         exc_type: typing.Optional[typing.Type[BaseException]],
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[python_types.TracebackType],
-    ) -> typing.Optional[bool]:
+    ) -> None:
         """Ends context manager and calls `end` on the `Span`.
 
         Returns False.
         """
         self.end()
-        return False
 
 
 class TraceOptions(int):

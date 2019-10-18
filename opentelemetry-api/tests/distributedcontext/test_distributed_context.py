@@ -100,5 +100,5 @@ class TestDistributedContextManager(unittest.TestCase):
 
     def test_use_context(self):
         expected = object()
-        with self.manager.use_context(expected) as output:
+        with self.manager.use_context(expected) as output:  # type: ignore
             self.assertIs(output, expected)
