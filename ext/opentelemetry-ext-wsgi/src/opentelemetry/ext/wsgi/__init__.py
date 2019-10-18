@@ -108,6 +108,9 @@ class OpenTelemetryMiddleware:
         tracer = trace.tracer()
         path_info = environ["PATH_INFO"] or "/"
         parent_span = propagators.extract(_get_header_from_environ, environ)
+        # if extracing fails then use current span as parent
+        if parent_span is trace.INVALID_SPAN_CONTEXT:
+            parent_span = tracer.CURRENT_SPAN
 
         span = tracer.create_span(
             path_info, parent_span, kind=trace.SpanKind.SERVER

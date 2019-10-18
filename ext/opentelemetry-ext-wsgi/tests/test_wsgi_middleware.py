@@ -75,10 +75,10 @@ def error_wsgi(environ, start_response):
 
 class TestWsgiApplication(unittest.TestCase):
     def setUp(self):
-        tracer = trace_api.tracer()
+        self.tracer = trace_api.tracer()
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
         self.create_span_patcher = mock.patch.object(
-            tracer,
+            self.tracer,
             "create_span",
             autospec=True,
             spec_set=True,
@@ -131,7 +131,7 @@ class TestWsgiApplication(unittest.TestCase):
 
         # Verify that start_span has been called
         self.create_span.assert_called_with(
-            "/", trace_api.INVALID_SPAN_CONTEXT, kind=trace_api.SpanKind.SERVER
+            "/", self.tracer.CURRENT_SPAN, kind=trace_api.SpanKind.SERVER
         )
         self.span.start.assert_called_with()
 
