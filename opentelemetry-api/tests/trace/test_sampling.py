@@ -174,7 +174,7 @@ class TestSampler(unittest.TestCase):
         # Sample one of every 2^64 (= 5e-20) traces. This is the lowest
         # possible meaningful sampling rate, only traces with trace ID 0x0
         # should get sampled.
-        almost_always_off = sampling.ProbabilitySampler(1 / 2 ** 64)
+        almost_always_off = sampling.ProbabilitySampler(2 ** -64)
         self.assertTrue(
             almost_always_off.should_sample(
                 None, 0x0, 0xDEADBEEF, "span name"

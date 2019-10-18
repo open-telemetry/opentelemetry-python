@@ -65,7 +65,7 @@ class StaticSampler(Sampler):
     """Sampler that always returns the same decision."""
 
     def __init__(self, decision: "Decision"):
-        self.decision = decision
+        self._decision = decision
 
     def should_sample(
         self,
@@ -113,7 +113,7 @@ class ProbabilitySampler(Sampler):
         links: Optional[Sequence["Link"]] = None,
     ) -> "Decision":
         if parent_context is not None:
-            return Decision(parent_context.trace_options.recorded, {})
+            return Decision(parent_context.trace_options.recorded)
 
         return Decision(trace_id & self.CHECK_BYTES < self.bound, {})
 
