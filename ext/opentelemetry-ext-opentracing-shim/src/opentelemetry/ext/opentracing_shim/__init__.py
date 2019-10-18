@@ -101,39 +101,33 @@ class ScopeShim(opentracing.Scope):
     activation/deactivation while using OpenTracing `Scope` objects for
     presentation.
 
-    There are two ways to construct a `ScopeShim` object: using the `span`
-    argument and using the `span_cm` argument. One and only one of `span` or
-    `span_cm` must be specified.
+    There are two ways to construct a `ScopeShim` object: using the default
+    initializer and using the `from_context_manager()` class method.
 
-    When calling the initializer while passing a `SpanShim` object in the
-    `span` argument, the `ScopeShim` is initialized as a regular `Scope`
-    object.
-
-    When calling the initializer while passing a context manager *generator* in
-    the `span_cm` argument (as returned by the `use_span()` method of
-    OpenTelemetry `Tracer` objects,  the resulting `ScopeShim` becomes
-    usable as a context manager (using `with` statements).
-
-    It is necessary to have both ways for constructing `ScopeShim`
-    objects because in some cases we need to create the object from a context
-    manager, in which case our only way of retrieving a `Span` object is by
-    calling the `__enter__()` method on the context manager, which makes the
-    span active in the OpenTelemetry tracer; whereas in other cases we need to
-    accept a `SpanShim` object and wrap it in a `ScopeShim`.
+    It is necessary to have both ways for constructing `ScopeShim` objects
+    because in some cases we need to create the object from a context manager,
+    in which case our only way of retrieving a `Span` object is by calling the
+    `__enter__()` method on the context manager, which makes the span active in
+    the OpenTelemetry tracer; whereas in other cases we need to accept a
+    `SpanShim` object and wrap it in a `ScopeShim`.
     """
 
-    def __init__(self, manager, span=None, span_cm=None):
+    def __init__(self, manager, span, span_cm=None):
         super().__init__(manager, span)
         self._span_cm = span_cm
 
-        # If a span context manager is provided, extract the `Span` object from
-        # it, wrap the extracted span and save it as an attribute.
-        if self._span_cm is not None:
-            otel_span = self._span_cm.__enter__()
-            span_context = SpanContextShim(otel_span.get_context())
-            self._span = SpanShim(
-                self._manager.tracer, span_context, otel_span
-            )
+    # TODO: Change type of `manager` argument to `opentracing.ScopeManager`? We
+    # need to get rid of `manager.tracer` for this.
+    @classmethod
+    def from_context_manager(cls, manager, span_cm):
+        """Constructs a `ScopeShim` from an OpenTelemetry `Span` context
+        manager (as returned by `Tracer.use_span()`).
+        """
+
+        otel_span = span_cm.__enter__()
+        span_context = SpanContextShim(otel_span.get_context())
+        span = SpanShim(manager.tracer, span_context, otel_span)
+        return cls(manager, span, span_cm)
 
     def close(self):
         if self._span_cm is not None:
@@ -159,7 +153,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
         span_cm = self._tracer.unwrap().use_span(
             span.unwrap(), end_on_exit=finish_on_close
         )
-        return ScopeShim(self, span_cm=span_cm)
+        return ScopeShim.from_context_manager(self, span_cm=span_cm)
 
     @property
     def active(self):
