@@ -75,7 +75,7 @@ class StaticSampler(Sampler):
         name: str,
         links: Optional[Sequence["Link"]] = None,
     ) -> "Decision":
-        return self.decision
+        return self._decision
 
 
 class ProbabilitySampler(Sampler):

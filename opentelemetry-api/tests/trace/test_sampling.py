@@ -186,7 +186,7 @@ class TestSampler(unittest.TestCase):
             ).sampled
         )
         self.assertEqual(
-            sampling.ProbabilitySampler.get_bound_for_rate(1 / 2 ** 64), 0x1
+            sampling.ProbabilitySampler.get_bound_for_rate(2 ** -64), 0x1
         )
 
         # Sample every trace with (last 8 bytes of) trace ID less than
@@ -198,7 +198,7 @@ class TestSampler(unittest.TestCase):
         #
         #     round(sys.float_info.epsilon * 2 ** 64)
 
-        almost_always_on = sampling.ProbabilitySampler(1 - (1 / 2 ** 64))
+        almost_always_on = sampling.ProbabilitySampler(1 - 2 ** -64)
         self.assertTrue(
             almost_always_on.should_sample(
                 None, 0xFFFFFFFFFFFFFFFE, 0xDEADBEEF, "span name"
@@ -218,6 +218,6 @@ class TestSampler(unittest.TestCase):
         #     ).sampled
         # )
         # self.assertEqual(
-        #     sampling.ProbabilitySampler.get_bound_for_rate(1 - (1 / 2 ** 64)),
+        #     sampling.ProbabilitySampler.get_bound_for_rate(1 - 2 ** -64)),
         #     0xffffffffffffffff,
         # )
