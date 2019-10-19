@@ -35,7 +35,7 @@ _KEY_WITH_VENDOR_FORMAT = (
 
 _KEY_FORMAT = _KEY_WITHOUT_VENDOR_FORMAT + "|" + _KEY_WITH_VENDOR_FORMAT
 _VALUE_FORMAT = (
-    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
+    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]?"
 )
 
 _DELIMITER_FORMAT = "[ \t]*,[ \t]*"
@@ -140,12 +140,16 @@ def _parse_tracestate(string: str) -> trace.TraceState:
     Returns:
         A valid TraceState that contains values extracted from
         the tracestate header.
+
+        If the format of the TraceState is illegal, all values will
+        be discarded and an empty tracestate will be returned.
     """
     tracestate = trace.TraceState()
     for member in re.split(_DELIMITER_FORMAT_RE, string):
-        match = _MEMBER_FORMAT_RE.match(member)
+        match = _MEMBER_FORMAT_RE.fullmatch(member)
         if not match:
-            raise ValueError("illegal key-value format %r" % (member))
+            # TODO: log this?
+            return trace.TraceState()
         key, _eq, value = match.groups()
         # typing.Dict's update is not recognized by pylint:
         # https://github.com/PyCQA/pylint/issues/2420
