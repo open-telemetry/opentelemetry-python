@@ -99,6 +99,14 @@ class TestDistributedContextManager(unittest.TestCase):
         self.assertIsNone(self.manager.get_current_context())
 
     def test_use_context(self):
-        expected = object()
+        expected = distributedcontext.DistributedContext(
+            (
+                distributedcontext.Entry(
+                    distributedcontext.EntryMetadata(0),
+                    distributedcontext.EntryKey("0"),
+                    distributedcontext.EntryValue(""),
+                ),
+            )
+        )
         with self.manager.use_context(expected) as output:
             self.assertIs(output, expected)
