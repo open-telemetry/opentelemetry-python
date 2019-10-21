@@ -18,57 +18,63 @@ pymongo library.
 """
 
 from pymongo import monitoring
-
 from opentelemetry.trace import SpanKind, Span
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-MODULE_NAME = 'pymongo'
-DATA_BASE_TYPE = 'mongodb'
-
-COMMAND_ATTRIBUTES = ['filter', 'sort', 'skip', 'limit', 'pipeline']
+DATA_BASE_TYPE = "mongodb"
+COMMAND_ATTRIBUTES = ["filter", "sort", "skip", "limit", "pipeline"]
 
 
 def trace_integration(tracer=None):
     """Integrate with pymongo to trace it using event listener.
        https://api.mongodb.com/python/current/api/pymongo/monitoring.html
     """
-    monitoring.register(CommandTracer(tracer=tracer))
+    monitoring.register(CommandTracer(tracer))
 
 
 class CommandTracer(monitoring.CommandListener):
-    def __init__(self, tracer=None):
+    def __init__(self, tracer):
         self._tracer = tracer
 
-    def started(self, event):
-        name: MODULE_NAME + "."+ event.command.get(event.command_name)
-
+    def started(self, event: monitoring.CommandStartedEvent):
+        name = (
+            DATA_BASE_TYPE
+            + "."
+            + event.command_name
+            + "."
+            + event.command.get(event.command_name)
+        )
         with self._tracer.start_span(name, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", DATA_BASE_TYPE)
             span.set_attribute("db.type", DATA_BASE_TYPE)
             span.set_attribute("db.instance", event.database_name)
-            span.set_attribute("db.statement", event.command.get(event.command_name))
-            span.set_attribute("peer.address", str(event.connection_id))
-            span.set_attribute("peer.hostname", str(event.connection_id)) #TODO: calculate this
-            span.set_attribute("peer.port", str(event.connection_id)) #TODO: calculate this
+            span.set_attribute(
+                "db.statement",
+                event.command_name
+                + " "
+                + event.command.get(event.command_name),
+            )
+            if event.connection_id is not None:
+                span.set_attribute("peer.address", str(event.connection_id))
+                span.set_attribute("peer.hostname", event.connection_id[0])
+                span.set_attribute("peer.port", event.connection_id[1])
+
             span.set_attribute("operation_id", event.operation_id)
+            span.set_attribute("request_id", event.request_id)
 
             for attr in COMMAND_ATTRIBUTES:
                 _attr = event.command.get(attr)
                 if _attr is not None:
                     span.set_attribute(attr, str(_attr))
-                    
-    def succeeded(self, event):
-        self._endSpan(event, True)
 
-    def failed(self, event):
-        self._endSpan(event, False)
-
-    def _endSpan(self, event, succeeded):
-        span = self._tracer.current_span()
-        span.set_attribute("request_id", event.request_id)
+    def succeeded(self, event: monitoring.CommandSucceededEvent):
+        span = self._tracer.get_current_span()
         span.set_attribute("duration_micros", event.duration_micros)
-        if succeeded:
-            span.set_status(Status(StatusCanonicalCode.OK, event.reply))
-        else:
-            span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
-        self._tracer.end_span()
+        span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+        span.end()
+
+    def failed(self, event: monitoring.CommandFailedEvent):
+        span = self._tracer.get_current_span()
+        span.set_attribute("duration_micros", event.duration_micros)
+        span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
+        span.end()

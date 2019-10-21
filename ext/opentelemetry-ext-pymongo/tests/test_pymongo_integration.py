@@ -15,99 +15,76 @@
 import unittest
 from unittest import mock
 
+from opentelemetry import trace as trace_api
 from opentelemetry.ext.pymongo import trace_integration, CommandTracer
+from opentelemetry.util import time_ns
 
 
 class TestPymongoIntegration(unittest.TestCase):
-
     def test_trace_integration(self):
         mock_register = mock.Mock()
-
         patch = mock.patch(
-            'pymongo.monitoring.register',
-            side_effect=mock_register)
-
+            "pymongo.monitoring.register", side_effect=mock_register
+        )
         with patch:
             trace_integration()
 
         self.assertTrue(mock_register.called)
 
     def test_started(self):
-        mock_tracer = MockTracer()
-
-        patch = mock.patch(
-            'opencensus.trace.execution_context.get_opencensus_tracer',
-            return_value=mock_tracer)
-
         command_attrs = {
-            'filter': 'filter',
-            'sort': 'sort',
-            'limit': 'limit',
-            'pipeline': 'pipeline',
-            'command_name': 'find'
+            "filter": "filter",
+            "sort": "sort",
+            "limit": "limit",
+            "pipeline": "pipeline",
+            "command_name": "find",
         }
-
-        expected_attrs = {
-            'component': 'mongodb',
-            'db.type': 'mongodb',
-            'db.instance': 'database_name',
-            'db.statement': 'find',
-            'filter': 'filter',
-            'sort': 'sort',
-            'limit': 'limit',
-            'pipeline': 'pipeline',
-            'request_id': 'request_id',
-            'connection_id': 'connection_id'
-        }
-
-        expected_name = 'pymongo.database_name.find.command_name'
-
-        with patch:
-            CommandTracer().started(
-                event=MockEvent(command_attrs))
-
-        self.assertEqual(mock_tracer.span.attributes, expected_attrs)
-        self.assertEqual(mock_tracer.span.name, expected_name)
-
-    def test_succeed(self):
         mock_tracer = MockTracer()
-        mock_tracer.start_span()
+        CommandTracer(mock_tracer).started(
+            event=MockEvent(command_attrs, ("test.com","1234"))
+        )
+        span = mock_tracer.get_current_span()
+        self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
+        self.assertEqual(span.name, "mongodb.command_name.find")
+        self.assertEqual(span.attributes["component"], "mongodb")
+        self.assertEqual(span.attributes["db.type"], "mongodb")
+        self.assertEqual(span.attributes["db.instance"], "database_name")
+        self.assertEqual(span.attributes["db.statement"], "command_name find")
+        self.assertEqual(
+            span.attributes["peer.address"], "('test.com', '1234')"
+        )
+        self.assertEqual(span.attributes["peer.hostname"], "test.com")
+        self.assertEqual(span.attributes["peer.port"], "1234")
+        self.assertEqual(span.attributes["operation_id"], "operation_id")
+        self.assertEqual(span.attributes["request_id"], "request_id")
 
-        patch = mock.patch(
-            'opencensus.trace.execution_context.get_opencensus_tracer',
-            return_value=mock_tracer)
+        self.assertEqual(span.attributes["filter"], "filter")
+        self.assertEqual(span.attributes["sort"], "sort")
+        self.assertEqual(span.attributes["limit"], "limit")
+        self.assertEqual(span.attributes["pipeline"], "pipeline")
 
-        expected_status = {
-            'code': 0,
-            'message': '',
-            'details': None
-        }
-
-        with patch:
-            CommandTracer().succeeded(event=MockEvent(None))
-
-        self.assertEqual(mock_tracer.span.status, expected_status)
-        mock_tracer.end_span.assert_called_with()
+    def test_succeeded(self):
+        mock_tracer = MockTracer()
+        CommandTracer(mock_tracer).succeeded(event=MockEvent(None))
+        span = mock_tracer.get_current_span()
+        self.assertEqual(span.attributes["duration_micros"], "duration_micros")
+        self.assertIs(
+            span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
+        )
+        self.assertEqual(span.status.description, "reply")
+        self.assertIsNotNone(span.end_time)
 
     def test_failed(self):
         mock_tracer = MockTracer()
-        mock_tracer.start_span()
-
-        patch = mock.patch(
-            'opencensus.trace.execution_context.get_opencensus_tracer',
-            return_value=mock_tracer)
-
-        expected_status = {
-            'code': 2,
-            'message': 'MongoDB error',
-            'details': 'failure'
-        }
-
-        with patch:
-            CommandTracer().failed(event=MockEvent(None))
-
-        self.assertEqual(mock_tracer.span.status, expected_status)
-        mock_tracer.end_span.assert_called_with()
+        CommandTracer(mock_tracer).failed(event=MockEvent(None))
+        span = mock_tracer.get_current_span()
+        self.assertEqual(span.attributes["duration_micros"], "duration_micros")
+        self.assertIs(
+            span.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.UNKNOWN,
+        )
+        self.assertEqual(span.status.description, "failure")
+        self.assertIsNotNone(span.end_time)
 
 
 class MockCommand(object):
@@ -119,38 +96,49 @@ class MockCommand(object):
 
 
 class MockEvent(object):
-    def __init__(self, command_attrs):
+    def __init__(self, command_attrs, connection_id=""):
         self.command = MockCommand(command_attrs)
+        self.connection_id = connection_id
 
     def __getattr__(self, item):
         return item
 
 
 class MockSpan(object):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
     def __init__(self):
         self.status = None
+        self.name = ""
+        self.kind = trace_api.SpanKind.INTERNAL
+        self.attributes = None
+        self.end_time = None
+
+    def set_attribute(self, key, value):
+        self.attributes[key] = value
 
     def set_status(self, status):
-        self.status = {
-            'code': status.canonical_code,
-            'message': status.description,
-            'details': status.details,
-        }
+        self.status = status
+
+    def end(self, end_time=None):
+        self.end_time = end_time if end_time is not None else time_ns()
 
 
 class MockTracer(object):
     def __init__(self):
         self.span = MockSpan()
         self.end_span = mock.Mock()
-
-    def start_span(self, name=None):
-        self.span.name = name
         self.span.attributes = {}
-        self.span.status = {}
-        return self.span
+        self.span.status = None
 
-    def add_attribute_to_current_span(self, key, value):
-        self.span.attributes[key] = value
+    def start_span(self, name, kind):
+        self.span.name = name
+        self.span.kind = kind
+        return self.span
 
     def get_current_span(self):
         return self.span
