@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import unittest
+from unittest import mock
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
@@ -24,7 +25,19 @@ from opentelemetry.sdk import trace
 
 
 class TestJaegerSpanExporter(unittest.TestCase):
+    def setUp(self):
+        # create and save span to be used in tests
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+        )
+
+        self._test_span = trace.Span("test_span", context=context)
+        self._test_span.start()
+        self._test_span.end()
+
     def test_constructor_default(self):
+        """Test the default values assigned by constructor."""
         service_name = "my-service-name"
         host_name = "localhost"
         thrift_port = None
@@ -44,13 +57,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertTrue(exporter.agent_client is not None)
 
     def test_constructor_explicit(self):
+        """Test the constructor passing all the options."""
         service = "my-opentelemetry-jaeger"
         collector_host_name = "opentelemetry.io"
         collector_port = 15875
         collector_endpoint = "/myapi/traces?format=jaeger.thrift"
 
         agent_port = 14268
-        agent_host_name = "opentelemetry.com"
+        agent_host_name = "opentelemetry.io"
 
         username = "username"
         password = "password"
@@ -97,9 +111,13 @@ class TestJaegerSpanExporter(unittest.TestCase):
         parent_id = 0x1111111111111111
         other_id = 0x2222222222222222
 
-        base_time = 683647322 * 1e9  # in ns
-        start_times = (base_time, base_time + 150 * 1e6, base_time + 300 * 1e6)
-        durations = (50 * 1e6, 100 * 1e6, 200 * 1e6)
+        base_time = 683647322 * 10 ** 9  # in ns
+        start_times = (
+            base_time,
+            base_time + 150 * 10 ** 6,
+            base_time + 300 * 10 ** 6,
+        )
+        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
         end_times = (
             start_times[0] + durations[0],
             start_times[1] + durations[1],
@@ -116,7 +134,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             "key_float": 0.3,
         }
 
-        event_timestamp = base_time + 50e6
+        event_timestamp = base_time + 50 * 10 ** 6
         event = trace_api.Event(
             name="event0",
             timestamp=event_timestamp,
@@ -166,8 +184,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 traceIdLow=trace_id_low,
                 spanId=span_id,
                 parentSpanId=parent_id,
-                startTime=start_times[0] / 1e3,
-                duration=durations[0] / 1e3,
+                startTime=start_times[0] // 10 ** 3,
+                duration=durations[0] // 10 ** 3,
                 flags=0,
                 tags=[
                     jaeger.Tag(
@@ -194,7 +212,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 ],
                 logs=[
                     jaeger.Log(
-                        timestamp=event_timestamp / 1e3,
+                        timestamp=event_timestamp // 10 ** 3,
                         fields=[
                             jaeger.Tag(
                                 key="annotation_bool",
@@ -226,8 +244,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 traceIdLow=trace_id_low,
                 spanId=parent_id,
                 parentSpanId=0,
-                startTime=int(start_times[1] // 1e3),
-                duration=int(durations[1] // 1e3),
+                startTime=start_times[1] // 10 ** 3,
+                duration=durations[1] // 10 ** 3,
                 flags=0,
             ),
             jaeger.Span(
@@ -236,14 +254,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 traceIdLow=trace_id_low,
                 spanId=other_id,
                 parentSpanId=0,
-                startTime=int(start_times[2] // 1e3),
-                duration=int(durations[2] // 1e3),
+                startTime=start_times[2] // 10 ** 3,
+                duration=durations[2] // 10 ** 3,
                 flags=0,
             ),
         ]
 
         # events are complicated to compare because order of fields
-        # (attributes) is otel is not important but in jeager it is
+        # (attributes) in otel is not important but in jeager it is
         self.assertCountEqual(
             spans[0].logs[0].fields, expected_spans[0].logs[0].fields
         )
@@ -252,3 +270,39 @@ class TestJaegerSpanExporter(unittest.TestCase):
         expected_spans[0].logs[0].fields = None
 
         self.assertEqual(spans, expected_spans)
+
+    def test_export(self):
+        """Test that agent and/or collector are invoked"""
+        exporter = jaeger_exporter.JaegerSpanExporter(
+            "test_export", agent_host_name="localhost", agent_port=6318
+        )
+
+        # just agent is configured now
+        agent_client_mock = mock.Mock(spec=jaeger_exporter.AgentClientUDP)
+        # pylint: disable=protected-access
+        exporter._agent_client = agent_client_mock
+
+        exporter.export((self._test_span,))
+        self.assertEqual(agent_client_mock.emit.call_count, 1)
+
+        # add also a collector and test that both are called
+        collector_mock = mock.Mock(spec=jaeger_exporter.Collector)
+        # pylint: disable=protected-access
+        exporter._collector = collector_mock
+
+        exporter.export((self._test_span,))
+        self.assertEqual(agent_client_mock.emit.call_count, 2)
+        self.assertEqual(collector_mock.submit.call_count, 1)
+
+    def test_agent_client(self):
+        agent_client = jaeger_exporter.AgentClientUDP(
+            host_name="localhost", port=6354
+        )
+
+        batch = jaeger.Batch(
+            # pylint: disable=protected-access
+            spans=jaeger_exporter._translate_to_jaeger((self._test_span,)),
+            process=jaeger.Process(serviceName="xxx"),
+        )
+
+        agent_client.emit(batch)

@@ -137,8 +137,8 @@ def _translate_to_jaeger(spans: Span):
         trace_id = ctx.trace_id
         span_id = ctx.span_id
 
-        start_time_us = span.start_time // 1e3
-        duration_us = (span.end_time - span.start_time) // 1e3
+        start_time_us = span.start_time // 10 ** 3
+        duration_us = (span.end_time - span.start_time) // 10 ** 3
 
         parent_id = 0
         if isinstance(span.parent, trace_api.Span):
@@ -227,7 +227,7 @@ def _extract_logs_from_span(span):
             )
         )
 
-        event_timestamp_us = event.timestamp // 1e3
+        event_timestamp_us = event.timestamp // 10 ** 3
         logs.append(
             jaeger.Log(timestamp=int(event_timestamp_us), fields=fields)
         )
