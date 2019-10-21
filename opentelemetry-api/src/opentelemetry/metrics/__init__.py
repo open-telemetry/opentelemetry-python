@@ -153,8 +153,7 @@ class Meter:
         match the key-value pairs in the label tuples.
 
         Args:
-            label_values: The values that will be matched against to record for
-                the handles under each metric that has those labels.
+            label_values: The values that will be matched against to record for.
             record_tuples: A sequence of pairs of `Metric` s and the
                 corresponding value to record for that metric.
         """

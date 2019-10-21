@@ -101,7 +101,15 @@ class TestCounter(unittest.TestCase):
         metric = metrics.Counter("name", "desc", "unit", int, ("key",))
         handle = metric.get_handle(("value",))
         metric.add(("value",), 3)
-        self.assertEqual(handle.data, 3)
+        metric.add(("value",), 2)
+        self.assertEqual(handle.data, 5)
+
+    def test_update(self):
+        metric = metrics.Counter("name", "desc", "unit", int, ("key",))
+        handle = metric.get_handle(("value",))
+        metric.update(("value",), 3)
+        metric.update(("value",), 2)
+        self.assertEqual(handle.data, 5)
 
 
 class TestGauge(unittest.TestCase):
@@ -110,6 +118,16 @@ class TestGauge(unittest.TestCase):
         handle = metric.get_handle(("value",))
         metric.set(("value",), 3)
         self.assertEqual(handle.data, 3)
+        metric.set(("value",), 2)
+        self.assertEqual(handle.data, 2)
+
+    def test_update(self):
+        metric = metrics.Gauge("name", "desc", "unit", int, ("key",))
+        handle = metric.get_handle(("value",))
+        metric.update(("value",), 3)
+        self.assertEqual(handle.data, 3)
+        metric.update(("value",), 2)
+        self.assertEqual(handle.data, 2)
 
 
 class TestMeasure(unittest.TestCase):
@@ -117,6 +135,13 @@ class TestMeasure(unittest.TestCase):
         metric = metrics.Measure("name", "desc", "unit", int, ("key",))
         handle = metric.get_handle(("value",))
         metric.record(("value",), 3)
+        # Record not implemented yet
+        self.assertEqual(handle.data, 0)
+
+    def test_update(self):
+        metric = metrics.Measure("name", "desc", "unit", int, ("key",))
+        handle = metric.get_handle(("value",))
+        metric.update(("value",), 3)
         self.assertEqual(handle.data, 0)
 
 
@@ -176,6 +201,7 @@ class TestMeasureHandle(unittest.TestCase):
     def test_record(self):
         handle = metrics.MeasureHandle(int, False, False)
         handle.record(3)
+        # Record not implemented yet
         self.assertEqual(handle.data, 0)
 
     def test_record_disabled(self):

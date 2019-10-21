@@ -107,6 +107,21 @@ class Metric(metrics_api.Metric):
         self.handles[label_values] = handle
         return handle
 
+    def update(self,
+               label_values: Sequence[str],
+               value: metrics_api.ValueT) -> None:
+        """ Generic method used to update the metric value.
+        
+        Used primarily for batch operations. Implementations
+        should call the appropriate methods corresponding to the standard
+        interpretation of the metric type.
+
+        Args:
+            label_values: The values used to match which handle for the given
+                metric to update.
+            value: The value to update the metric with.
+        """
+
 
 class Counter(Metric):
     """See `opentelemetry.metrics.Counter`.
@@ -144,6 +159,11 @@ class Counter(Metric):
         """See `opentelemetry.metrics.Counter.add`."""
         self.get_handle(label_values).add(value)
 
+    def update(self,
+               label_values: Sequence[str],
+               value: metrics_api.ValueT) -> None:
+        self.add(label_values, value)
+
 
 class Gauge(Metric):
     """See `opentelemetry.metrics.Gauge`.
@@ -179,6 +199,11 @@ class Gauge(Metric):
             value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.Gauge.set`."""
         self.get_handle(label_values).set(value)
+
+    def update(self,
+               label_values: Sequence[str],
+               value: metrics_api.ValueT) -> None:
+        self.set(label_values, value)
 
 
 class Measure(Metric):
@@ -216,6 +241,11 @@ class Measure(Metric):
         """See `opentelemetry.metrics.Measure.record`."""
         self.get_handle(label_values).record(value)
 
+    def update(self,
+               label_values: Sequence[str],
+               value: metrics_api.ValueT) -> None:
+        self.record(label_values, value)
+
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`."""
@@ -227,12 +257,7 @@ class Meter(metrics_api.Meter):
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
-            if isinstance(metric, Counter):
-                metric.add(label_values, value)
-            elif isinstance(metric, Gauge):
-                metric.set(label_values, value)
-            elif isinstance(metric, Measure):
-                metric.record(label_values, value)
+            metric.update(label_values, value)
 
     def create_metric(
         self,
