@@ -38,12 +38,9 @@ class Decision:
         sampled: bool = False,
         attributes: Mapping[str, "AttributeValue"] = None,
     ) -> None:
-        self.sampled: bool
-        self.attributes: Dict[str, "AttributeValue"]
-
-        self.sampled = sampled
+        self.sampled = sampled  # type: bool
         if attributes is None:
-            self.attributes = {}
+            self.attributes = {}  # type: Dict[str, "AttributeValue"]
         else:
             self.attributes = dict(attributes)
 
