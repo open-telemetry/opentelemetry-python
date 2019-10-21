@@ -18,7 +18,7 @@ from opentelemetry import trace
 from opentelemetry.trace import sampling
 
 TO_DEFAULT = trace.TraceOptions(trace.TraceOptions.DEFAULT)
-TO_RECORDED = trace.TraceOptions(trace.TraceOptions.RECORDED)
+TO_SAMPLED = trace.TraceOptions(trace.TraceOptions.SAMPLED)
 
 
 class TestSampler(unittest.TestCase):
@@ -29,21 +29,21 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "unrecorded parent, sampling on",
+            "unsampled parent, sampling on",
         )
         self.assertTrue(no_record_always_on.sampled)
         self.assertEqual(no_record_always_on.attributes, {})
 
-        recorded_always_on = sampling.ALWAYS_ON.should_sample(
+        sampled_always_on = sampling.ALWAYS_ON.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_RECORDED
+                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "recorded parent, sampling on",
+            "sampled parent, sampling on",
         )
-        self.assertTrue(recorded_always_on.sampled)
-        self.assertEqual(recorded_always_on.attributes, {})
+        self.assertTrue(sampled_always_on.sampled)
+        self.assertEqual(sampled_always_on.attributes, {})
 
     def test_always_off(self):
         no_record_always_off = sampling.ALWAYS_OFF.should_sample(
@@ -52,21 +52,21 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "unrecorded parent, sampling off",
+            "unsampled parent, sampling off",
         )
         self.assertFalse(no_record_always_off.sampled)
         self.assertEqual(no_record_always_off.attributes, {})
 
-        recorded_always_on = sampling.ALWAYS_OFF.should_sample(
+        sampled_always_on = sampling.ALWAYS_OFF.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_RECORDED
+                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "recorded parent, sampling off",
+            "sampled parent, sampling off",
         )
-        self.assertFalse(recorded_always_on.sampled)
-        self.assertEqual(recorded_always_on.attributes, {})
+        self.assertFalse(sampled_always_on.sampled)
+        self.assertEqual(sampled_always_on.attributes, {})
 
     def test_default_on(self):
         no_record_default_on = sampling.DEFAULT_ON.should_sample(
@@ -75,21 +75,21 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "unrecorded parent, sampling on",
+            "unsampled parent, sampling on",
         )
         self.assertFalse(no_record_default_on.sampled)
         self.assertEqual(no_record_default_on.attributes, {})
 
-        recorded_default_on = sampling.DEFAULT_ON.should_sample(
+        sampled_default_on = sampling.DEFAULT_ON.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_RECORDED
+                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "recorded parent, sampling on",
+            "sampled parent, sampling on",
         )
-        self.assertTrue(recorded_default_on.sampled)
-        self.assertEqual(recorded_default_on.attributes, {})
+        self.assertTrue(sampled_default_on.sampled)
+        self.assertEqual(sampled_default_on.attributes, {})
 
     def test_default_off(self):
         no_record_default_off = sampling.DEFAULT_OFF.should_sample(
@@ -98,21 +98,21 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "unrecorded parent, sampling off",
+            "unsampled parent, sampling off",
         )
         self.assertFalse(no_record_default_off.sampled)
         self.assertEqual(no_record_default_off.attributes, {})
 
-        recorded_default_off = sampling.DEFAULT_OFF.should_sample(
+        sampled_default_off = sampling.DEFAULT_OFF.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_RECORDED
+                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            "recorded parent, sampling off",
+            "sampled parent, sampling off",
         )
-        self.assertTrue(recorded_default_off.sampled)
-        self.assertEqual(recorded_default_off.attributes, {})
+        self.assertTrue(sampled_default_off.sampled)
+        self.assertEqual(sampled_default_off.attributes, {})
 
     def test_probability_sampler(self):
         sampler = sampling.ProbabilitySampler(0.5)
@@ -145,7 +145,7 @@ class TestSampler(unittest.TestCase):
         self.assertTrue(
             sampler.should_sample(
                 trace.SpanContext(
-                    0xDEADBEF0, 0xDEADBEF1, trace_options=TO_RECORDED
+                    0xDEADBEF0, 0xDEADBEF1, trace_options=TO_SAMPLED
                 ),
                 0x8000000000000001,
                 0xDEADBEEF,

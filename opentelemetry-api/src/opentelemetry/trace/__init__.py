@@ -251,8 +251,8 @@ class Span:
 class TraceOptions(int):
     """A bitmask that represents options specific to the trace.
 
-    The only supported option is the "recorded" flag (``0x01``). If set, this
-    flag indicates that the trace may have been recorded upstream.
+    The only supported option is the "sampled" flag (``0x01``). If set, this
+    flag indicates that the trace may have been sampled upstream.
 
     See the `W3C Trace Context - Traceparent`_ spec for details.
 
@@ -261,15 +261,15 @@ class TraceOptions(int):
     """
 
     DEFAULT = 0x00
-    RECORDED = 0x01
+    SAMPLED = 0x01
 
     @classmethod
     def get_default(cls) -> "TraceOptions":
         return cls(cls.DEFAULT)
 
     @property
-    def recorded(self) -> bool:
-        return bool(self & TraceOptions.RECORDED)
+    def sampled(self) -> bool:
+        return bool(self & TraceOptions.SAMPLED)
 
 
 DEFAULT_TRACE_OPTIONS = TraceOptions.get_default()
