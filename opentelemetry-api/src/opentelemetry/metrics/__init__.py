@@ -93,7 +93,7 @@ class Counter(Metric):
         """Gets a `CounterHandle`."""
         return CounterHandle()
 
-    def add(self, label_values: Sequence[str], value) -> None:
+    def add(self, label_values: Sequence[str], value: ValueT) -> None:
         """Increases the value of the counter by ``value``"""
 
 
@@ -110,7 +110,7 @@ class Gauge(Metric):
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
 
-    def set(self, label_values: Sequence[str], value) -> None:
+    def set(self, label_values: Sequence[str], value: ValueT) -> None:
         """Sets the value of the gauge to ``value``"""
 
 
@@ -126,8 +126,9 @@ class Measure(Metric):
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
-    def record(self, label_values, value) -> None:
+    def record(self, label_values, value: ValueT) -> None:
         """Records the ``value`` to the measure"""
+
 
 MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 

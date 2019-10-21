@@ -107,9 +107,9 @@ class Metric(metrics_api.Metric):
         self.handles[label_values] = handle
         return handle
 
-    def update(self,
-               label_values: Sequence[str],
-               value: metrics_api.ValueT) -> None:
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
         """ Generic method used to update the metric value.
         
         Used primarily for batch operations. Implementations
@@ -153,15 +153,15 @@ class Counter(Metric):
             monotonic=monotonic,
         )
 
-    def add(self,
-            label_values: Sequence[str],
-            value: metrics_api.ValueT) -> None:
+    def add(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
         self.get_handle(label_values).add(value)
 
-    def update(self,
-               label_values: Sequence[str],
-               value: metrics_api.ValueT) -> None:
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
         self.add(label_values, value)
 
 
@@ -194,15 +194,15 @@ class Gauge(Metric):
             monotonic=monotonic,
         )
 
-    def set(self,
-            label_values: Sequence[str],
-            value: metrics_api.ValueT) -> None:
+    def set(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
         """See `opentelemetry.metrics.Gauge.set`."""
         self.get_handle(label_values).set(value)
 
-    def update(self,
-               label_values: Sequence[str],
-               value: metrics_api.ValueT) -> None:
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
         self.set(label_values, value)
 
 
@@ -235,15 +235,15 @@ class Measure(Metric):
             monotonic=monotonic,
         )
 
-    def record(self,
-            label_values: Sequence[str],
-            value: metrics_api.ValueT) -> None:
+    def record(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
         self.get_handle(label_values).record(value)
 
-    def update(self,
-               label_values: Sequence[str],
-               value: metrics_api.ValueT) -> None:
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
         self.record(label_values, value)
 
 
