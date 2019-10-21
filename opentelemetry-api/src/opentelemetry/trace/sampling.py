@@ -56,7 +56,7 @@ class Sampler(abc.ABC):
         trace_id: int,
         span_id: int,
         name: str,
-        links: Optional[Sequence["Link"]] = None,
+        links: Sequence["Link"] = (),
     ) -> "Decision":
         pass
 
@@ -73,7 +73,7 @@ class StaticSampler(Sampler):
         trace_id: int,
         span_id: int,
         name: str,
-        links: Optional[Sequence["Link"]] = None,
+        links: Sequence["Link"] = (),
     ) -> "Decision":
         return self._decision
 
@@ -110,12 +110,12 @@ class ProbabilitySampler(Sampler):
         trace_id: int,
         span_id: int,
         name: str,
-        links: Optional[Sequence["Link"]] = None,
+        links: Sequence["Link"] = (),
     ) -> "Decision":
         if parent_context is not None:
             return Decision(parent_context.trace_options.sampled)
 
-        return Decision(trace_id & self.CHECK_BYTES < self.bound, {})
+        return Decision(trace_id & self.CHECK_BYTES < self.bound)
 
 
 # Samplers that ignore the parent sampling decision and never/always sample.
