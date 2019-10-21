@@ -16,6 +16,7 @@ import os
 import sys
 import unittest
 from importlib import reload
+from typing import Any, Callable
 
 from opentelemetry import trace
 from opentelemetry.util import loader
@@ -59,7 +60,7 @@ class TestLoader(unittest.TestCase):
 
     # NOTE: We use do_* + *_<arg> methods because subtest wouldn't run setUp,
     # which we require here.
-    def do_test_preferred_impl(self, setter):
+    def do_test_preferred_impl(self, setter: Callable[[Any], Any]) -> None:
         setter(get_opentelemetry_implementation)
         tracer = trace.tracer()
         self.assertIs(tracer, DUMMY_TRACER)
@@ -81,7 +82,7 @@ class TestLoader(unittest.TestCase):
             )
         self.assertIn("already loaded", str(einfo.exception))
 
-    def do_test_get_envvar(self, envvar_suffix):
+    def do_test_get_envvar(self, envvar_suffix: str) -> None:
         global DUMMY_TRACER  # pylint:disable=global-statement
 
         # Test is not runnable with this!

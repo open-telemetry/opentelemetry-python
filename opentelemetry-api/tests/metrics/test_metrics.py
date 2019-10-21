@@ -24,7 +24,7 @@ class TestMeter(unittest.TestCase):
 
     def test_record_batch(self):
         counter = metrics.Counter()
-        self.meter.record_batch(("values"), ((counter, 1)))
+        self.meter.record_batch(("values"), ((counter, 1),))
 
     def test_create_metric(self):
         metric = self.meter.create_metric("", "", "", float, metrics.Counter)
