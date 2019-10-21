@@ -22,6 +22,10 @@ from urllib.parse import urlparse
 
 from requests.sessions import Session
 
+from opentelemetry import propagators
+from opentelemetry.context import Context
+from opentelemetry.trace import SpanKind
+
 
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user
 # to configure a SDK before enabling this integration. In turn, this means that
@@ -47,8 +51,8 @@ def enable(tracer):
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
-        # TODO: Check if we are in an exporter, cf. OpenCensus
-        # execution_context.is_exporter()
+        if Context.suppress_instrumentation:
+            return wrapped(self, method, url, *args, **kwargs)
 
         # See
         # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/data-semantic-conventions.md#http-client
@@ -61,17 +65,16 @@ def enable(tracer):
                 path = "<URL parses to None>"
             path = parsed_url.path
 
-        with tracer.start_span(path) as span:
+        with tracer.start_span(path, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", "http")
-            # TODO: The OTel spec says "SpanKind" MUST be "Client" but that
-            #  seems to be a leftover, as Spans have no explicit field for
-            #  kind.
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
             # TODO: Propagate the trace context via headers once we have a way
             # to access propagators.
 
+            headers = kwargs.setdefault("headers", {})
+            propagators.inject(tracer, type(headers).__setitem__, headers)
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)

@@ -26,16 +26,16 @@ tracing, and a concrete no-op :class:`.DefaultSpan` that allows applications
 to use the API package alone without a supporting implementation.
 
 The tracer supports creating spans that are "attached" or "detached" from the
-context. By default, new spans are "attached" to the context in that they are
+context. New spans are "attached" to the context in that they are
 created as children of the currently active span, and the newly-created span
-becomes the new active span::
+can optionally become the new active span::
 
     from opentelemetry.trace import tracer
 
     # Create a new root span, set it as the current span in context
-    with tracer.start_span("parent"):
+    with tracer.start_as_current_span("parent"):
         # Attach a new child and update the current span
-        with tracer.start_span("child"):
+        with tracer.start_as_current_span("child"):
             do_work():
         # Close child span, set parent as current
     # Close parent span, set default span as current
@@ -61,10 +61,13 @@ implicit or explicit context propagation consistently throughout.
 .. versionadded:: 0.1.0
 """
 
+import enum
+import types as python_types
 import typing
 from contextlib import contextmanager
 
-from opentelemetry import loader, types
+from opentelemetry.trace.status import Status
+from opentelemetry.util import loader, types
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -111,10 +114,37 @@ class Event:
         return self._timestamp
 
 
+class SpanKind(enum.Enum):
+    """Specifies additional details on how this span relates to its parent span.
+
+    Note that this enumeration is experimental and likely to change. See
+    https://github.com/open-telemetry/opentelemetry-specification/pull/226.
+    """
+
+    #: Default value. Indicates that the span is used internally in the application.
+    INTERNAL = 0
+
+    #: Indicates that the span describes an operation that handles a remote request.
+    SERVER = 1
+
+    #: Indicates that the span describes a request to some remote service.
+    CLIENT = 2
+
+    #: Indicates that the span describes a producer sending a message to a
+    #: broker. Unlike client and server, there is usually no direct critical
+    #: path latency relationship between producer and consumer spans.
+    PRODUCER = 3
+
+    #: Indicates that the span describes consumer receiving a message from a
+    #: broker. Unlike client and server, there is usually no direct critical
+    #: path latency relationship between producer and consumer spans.
+    CONSUMER = 4
+
+
 class Span:
     """A span represents a single operation within a trace."""
 
-    def start(self) -> None:
+    def start(self, start_time: typing.Optional[int] = None) -> None:
         """Sets the current time as the span's start time.
 
         Each span represents a single operation. The span's start time is the
@@ -124,7 +154,7 @@ class Span:
         implementations are free to ignore or raise on further calls.
         """
 
-    def end(self) -> None:
+    def end(self, end_time: int = None) -> None:
         """Sets the current time as the span's end time.
 
         The span's end time is the wall time at which the operation finished.
@@ -190,6 +220,34 @@ class Span:
         Upon this update, any sampling behavior based on Span name will depend
         on the implementation.
         """
+
+    def is_recording_events(self) -> bool:
+        """Returns whether this span will be recorded.
+
+        Returns true if this Span is active and recording information like
+        events with the add_event operation and attributes using set_attribute.
+        """
+
+    def set_status(self, status: Status) -> None:
+        """Sets the Status of the Span. If used, this will override the default
+        Span status, which is OK.
+        """
+
+    def __enter__(self) -> "Span":
+        """Invoked when `Span` is used as a context manager.
+
+        Returns the `Span` itself.
+        """
+        return self
+
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[python_types.TracebackType],
+    ) -> None:
+        """Ends context manager and calls `end` on the `Span`."""
+        self.end()
 
 
 class TraceOptions(int):
@@ -341,27 +399,64 @@ class Tracer:
         # pylint: disable=no-self-use
         return INVALID_SPAN
 
-    @contextmanager  # type: ignore
     def start_span(
-        self, name: str, parent: ParentSpan = CURRENT_SPAN
-    ) -> typing.Iterator["Span"]:
-        """Context manager for span creation.
+        self,
+        name: str,
+        parent: ParentSpan = CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
+    ) -> "Span":
+        """Starts a span.
 
-        Create a new span. Start the span and set it as the current span in
-        this tracer's context.
+        Create a new span. Start the span without setting it as the current
+        span in this tracer's context.
 
         By default the current span will be used as parent, but an explicit
         parent can also be specified, either a `Span` or a `SpanContext`. If
         the specified value is `None`, the created span will be a root span.
 
-        On exiting the context manager stop the span and set its parent as the
+        The span can be used as context manager. On exiting, the span will be
+        ended.
+
+        Example::
+
+            # tracer.get_current_span() will be used as the implicit parent.
+            # If none is found, the created span will be a root instance.
+            with tracer.start_span("one") as child:
+                child.add_event("child's event")
+
+        Applications that need to set the newly created span as the current
+        instance should use :meth:`start_as_current_span` instead.
+
+        Args:
+            name: The name of the span to be created.
+            parent: The span's parent. Defaults to the current span.
+            kind: The span's kind (relationship to parent). Note that is
+                meaningful even if there is no parent.
+
+        Returns:
+            The newly-created span.
+        """
+        # pylint: disable=unused-argument,no-self-use
+        return INVALID_SPAN
+
+    @contextmanager  # type: ignore
+    def start_as_current_span(
+        self,
+        name: str,
+        parent: ParentSpan = CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
+    ) -> typing.Iterator["Span"]:
+        """Context manager for creating a new span and set it
+        as the current span in this tracer's context.
+
+        On exiting the context manager stops the span and set its parent as the
         current span.
 
         Example::
 
-            with tracer.start_span("one") as parent:
+            with tracer.start_as_current_span("one") as parent:
                 parent.add_event("parent's event")
-                with tracer.start_span("two") as child:
+                with tracer.start_as_current_span("two") as child:
                     child.add_event("child's event")
                     tracer.get_current_span()  # returns child
                 tracer.get_current_span()      # returns parent
@@ -369,29 +464,35 @@ class Tracer:
 
         This is a convenience method for creating spans attached to the
         tracer's context. Applications that need more control over the span
-        lifetime should use :meth:`create_span` instead. For example::
+        lifetime should use :meth:`start_span` instead. For example::
 
-            with tracer.start_span(name) as span:
+            with tracer.start_as_current_span(name) as span:
                 do_work()
 
         is equivalent to::
 
-            span = tracer.create_span(name)
-            with tracer.use_span(span):
+            span = tracer.start_span(name)
+            with tracer.use_span(span, end_on_exit=True):
                 do_work()
 
         Args:
             name: The name of the span to be created.
             parent: The span's parent. Defaults to the current span.
+            kind: The span's kind (relationship to parent). Note that is
+                meaningful even if there is no parent.
 
         Yields:
             The newly-created span.
         """
+
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
     def create_span(
-        self, name: str, parent: ParentSpan = CURRENT_SPAN
+        self,
+        name: str,
+        parent: ParentSpan = CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
     ) -> "Span":
         """Creates a span.
 
@@ -407,7 +508,7 @@ class Tracer:
         Applications that need to create spans detached from the tracer's
         context should use this method.
 
-            with tracer.start_span(name) as span:
+            with tracer.start_as_current_span(name) as span:
                 do_work()
 
         This is equivalent to::
@@ -419,6 +520,8 @@ class Tracer:
         Args:
             name: The name of the span to be created.
             parent: The span's parent. Defaults to the current span.
+            kind: The span's kind (relationship to parent). Note that is
+                meaningful even if there is no parent.
 
         Returns:
             The newly-created span.
@@ -427,17 +530,22 @@ class Tracer:
         return INVALID_SPAN
 
     @contextmanager  # type: ignore
-    def use_span(self, span: "Span") -> typing.Iterator[None]:
+    def use_span(
+        self, span: "Span", end_on_exit: bool = False
+    ) -> typing.Iterator[None]:
         """Context manager for controlling a span's lifetime.
 
-        Start the given span and set it as the current span in this tracer's
-        context.
+        Set the given span as the current span in this tracer's context.
 
-        On exiting the context manager stop the span and set its parent as the
-        current span.
+        On exiting the context manager set the span that was previously active
+        as the current span (this is usually but not necessarily the parent of
+        the given span). If ``end_on_exit`` is ``True``, then the span is also
+        ended when exiting the context manager.
 
         Args:
             span: The span to start and make current.
+            end_on_exit: Whether to end the span automatically when leaving the
+                context manager.
         """
         # pylint: disable=unused-argument,no-self-use
         yield
@@ -445,7 +553,7 @@ class Tracer:
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
-# from opentelemetry.loader import ImplementationFactory
+# from opentelemetry.util.loader import ImplementationFactory
 ImplementationFactory = typing.Callable[
     [typing.Type[Tracer]], typing.Optional[Tracer]
 ]
@@ -474,7 +582,7 @@ def set_preferred_tracer_implementation(
 ) -> None:
     """Set the factory to be used to create the tracer.
 
-    See :mod:`opentelemetry.loader` for details.
+    See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 
