@@ -22,10 +22,10 @@ FORMAT = tracecontexthttptextformat.TraceContextHTTPTextFormat()
 
 
 def get_as_list(
-    dict_object: typing.Dict[str, str], key: str
+    dict_object: typing.Dict[str, typing.List[str]], key: str
 ) -> typing.List[str]:
     value = dict_object.get(key)
-    return [value] if value is not None else []
+    return value if value is not None else []
 
 
 class TestTraceContextFormat(unittest.TestCase):
@@ -44,33 +44,6 @@ class TestTraceContextFormat(unittest.TestCase):
         span_context = FORMAT.extract(get_as_list, output)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
-    def test_from_headers_tracestate_duplicated_keys(self):
-        """If a duplicate tracestate header is present, the most recent entry
-        is used.
-
-        RFC 3.3.1.4
-
-        Only one entry per key is allowed because the entry represents that last position in the trace.
-        Hence vendors must overwrite their entry upon reentry to their tracing system.
-
-        For example, if a vendor name is Congo and a trace started in their system and then went through
-        a system named Rojo and later returned to Congo, the tracestate value would not be:
-
-        congo=congosFirstPosition,rojo=rojosFirstPosition,congo=congosSecondPosition
-
-        Instead, the entry would be rewritten to only include the most recent position:
-
-        congo=congosSecondPosition,rojo=rojosFirstPosition
-        """
-        span_context = FORMAT.extract(
-            get_as_list,
-            {
-                "traceparent": "00-12345678901234567890123456789012-1234567890123456-00",
-                "tracestate": "foo=1,bar=2,foo=3",
-            },
-        )
-        self.assertEqual(span_context.trace_state, {"foo": "3", "bar": "2"})
-
     def test_headers_with_tracestate(self):
         """When there is a traceparent and tracestate header, data from
         both should be addded to the SpanContext.
@@ -82,7 +55,10 @@ class TestTraceContextFormat(unittest.TestCase):
         tracestate_value = "foo=1,bar=2,baz=3"
         span_context = FORMAT.extract(
             get_as_list,
-            {"traceparent": traceparent_value, "tracestate": tracestate_value},
+            {
+                "traceparent": [traceparent_value],
+                "tracestate": [tracestate_value],
+            },
         )
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
@@ -98,7 +74,8 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(output["tracestate"].count(","), 2)
 
     def test_invalid_trace_id(self):
-        """If the trace id is invalid, we must ignore the full traceparent header.
+        """If the trace id is invalid, we must ignore the full traceparent header,
+        and return a random, valid trace.
 
         Also ignore any tracestate.
 
@@ -115,11 +92,19 @@ class TestTraceContextFormat(unittest.TestCase):
         span_context = FORMAT.extract(
             get_as_list,
             {
-                "traceparent": "00-00000000000000000000000000000000-1234567890123456-00",
-                "tracestate": "foo=1,bar=2,foo=3",
+                "traceparent": [
+                    "00-00000000000000000000000000000000-1234567890123456-00"
+                ],
+                "tracestate": ["foo=1,bar=2,foo=3"],
             },
         )
-        self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
+        self.assertNotEqual(
+            span_context.span_id, trace.INVALID_SPAN_CONTEXT.span_id
+        )
+        self.assertNotEqual(
+            span_context.trace_id, trace.INVALID_SPAN_CONTEXT.trace_id
+        )
+        self.assertNotEqual(span_context.span_id, "1234567890123456")
 
     def test_invalid_parent_id(self):
         """If the parent id is invalid, we must ignore the full traceparent header.
@@ -139,11 +124,14 @@ class TestTraceContextFormat(unittest.TestCase):
         span_context = FORMAT.extract(
             get_as_list,
             {
-                "traceparent": "00-00000000000000000000000000000000-0000000000000000-00",
-                "tracestate": "foo=1,bar=2,foo=3",
+                "traceparent": [
+                    "00-00000000000000000000000000000000-0000000000000000-00"
+                ],
+                "tracestate": ["foo=1,bar=2,foo=3"],
             },
         )
-        self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
+        self.assertNotEqual(span_context, trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span_context.trace_state, trace.TraceState())
 
     def test_no_send_empty_tracestate(self):
         """If the tracestate is empty, do not set the header.
@@ -174,11 +162,14 @@ class TestTraceContextFormat(unittest.TestCase):
         span_context = FORMAT.extract(
             get_as_list,
             {
-                "traceparent": "00-12345678901234567890123456789012-1234567890123456-00-residue",
-                "tracestate": "foo=1,bar=2,foo=3",
+                "traceparent": [
+                    "00-12345678901234567890123456789012-1234567890123456-00-residue"
+                ],
+                "tracestate": ["foo=1,bar=2,foo=3"],
             },
         )
-        self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
+        self.assertNotEqual(span_context, trace.INVALID_SPAN_CONTEXT)
+        self.assertNotEqual(span_context.trace_id, self.TRACE_ID)
 
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context.
@@ -186,3 +177,31 @@ class TestTraceContextFormat(unittest.TestCase):
         output = {}  # type:typing.Dict[str, str]
         FORMAT.inject(trace.INVALID_SPAN_CONTEXT, dict.__setitem__, output)
         self.assertFalse("traceparent" in output)
+
+    def test_tracestate_empty_header(self):
+        """Do not propagate invalid trace context.
+        """
+        span_context = FORMAT.extract(
+            get_as_list,
+            {
+                "traceparent": [
+                    "00-12345678901234567890123456789012-1234567890123456-00"
+                ],
+                "tracestate": ["foo=1", ""],
+            },
+        )
+        self.assertEqual(span_context.trace_state["foo"], "1")
+
+    def test_tracestate_header_with_trailing_comma(self):
+        """Do not propagate invalid trace context.
+        """
+        span_context = FORMAT.extract(
+            get_as_list,
+            {
+                "traceparent": [
+                    "00-12345678901234567890123456789012-1234567890123456-00"
+                ],
+                "tracestate": ["foo=1,"],
+            },
+        )
+        self.assertEqual(span_context.trace_state["foo"], "1")

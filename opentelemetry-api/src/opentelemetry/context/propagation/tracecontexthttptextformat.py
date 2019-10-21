@@ -35,7 +35,7 @@ _KEY_WITH_VENDOR_FORMAT = (
 
 _KEY_FORMAT = _KEY_WITHOUT_VENDOR_FORMAT + "|" + _KEY_WITH_VENDOR_FORMAT
 _VALUE_FORMAT = (
-    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]?"
+    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{1,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]?"
 )
 
 _DELIMITER_FORMAT = "[ \t]*,[ \t]*"
@@ -88,17 +88,10 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         if version == "ff":
             return trace.generate_span_context()
 
-        tracestate = trace.TraceState()
-        for tracestate_header in get_from_carrier(
+        tracestate_headers = get_from_carrier(
             carrier, cls._TRACESTATE_HEADER_NAME
-        ):
-            # typing.Dict's update is not recognized by pylint:
-            # https://github.com/PyCQA/pylint/issues/2420
-            tracestate.update(  # pylint:disable=E1101
-                _parse_tracestate(tracestate_header)
-            )
-        if len(tracestate) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
-            tracestate = trace.TraceState()
+        )
+        tracestate = _parse_tracestate(tracestate_headers)
 
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
@@ -131,8 +124,8 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             )
 
 
-def _parse_tracestate(string: str) -> trace.TraceState:
-    """Parse a w3c tracestate header into a TraceState.
+def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
+    """Parse one or more w3c tracestate header into a TraceState.
 
     Args:
         string: the value of the tracestate header.
@@ -141,19 +134,32 @@ def _parse_tracestate(string: str) -> trace.TraceState:
         A valid TraceState that contains values extracted from
         the tracestate header.
 
-        If the format of the TraceState is illegal, all values will
+        If the format of one headers is illegal, all values will
         be discarded and an empty tracestate will be returned.
+
+        If the number of keys is beyond the maximum, all values
+        will be discarded and an empty tracestate will be returned.
     """
     tracestate = trace.TraceState()
-    for member in re.split(_DELIMITER_FORMAT_RE, string):
-        match = _MEMBER_FORMAT_RE.fullmatch(member)
-        if not match:
-            # TODO: log this?
-            return trace.TraceState()
-        key, _eq, value = match.groups()
-        # typing.Dict's update is not recognized by pylint:
-        # https://github.com/PyCQA/pylint/issues/2420
-        tracestate[key] = value  # pylint:disable=E1137
+    for header in header_list:
+        for member in re.split(_DELIMITER_FORMAT_RE, header):
+            # empty members are valid, but no need to process further.
+            if not member:
+                continue
+            match = _MEMBER_FORMAT_RE.fullmatch(member)
+            if not match:
+                # TODO: log this?
+                return trace.TraceState()
+            key, _eq, value = match.groups()
+            if key in tracestate:
+                # duplicate keys are not legal in
+                # the header, so we will remove
+                return trace.TraceState()
+            # typing.Dict's update is not recognized by pylint:
+            # https://github.com/PyCQA/pylint/issues/2420
+            tracestate[key] = value  # pylint:disable=E1137
+    if len(tracestate) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+        tracestate = trace.TraceState()
     return tracestate
 
 

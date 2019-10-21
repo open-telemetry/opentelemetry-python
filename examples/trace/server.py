@@ -46,12 +46,43 @@ app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
 
 @app.route("/")
+<<<<<<< HEAD
 def hello():
     with trace.tracer().start_as_current_span("parent"):
+=======
+def index():
+    """An example which starts a span within the span created for
+    the request."""
+    with trace.tracer().start_span("parent"):
+>>>>>>> tracecontexthttptestformat now works with integration test
         requests.get("https://www.wikipedia.org/wiki/Rabbit")
     return "hello"
 
 
+<<<<<<< HEAD
+=======
+@app.route("/verify-tracecontext", methods=["POST"])
+def verify_tracecontext():
+    """Upon reception of some payload, sends a request back to the designated url.
+
+    This route is designed to be testable with the w3c tracecontext server / client test.
+    """
+    for action in flask.request.json:
+        requests.post(
+            url=action["url"],
+            data=json.dumps(action["arguments"]),
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            timeout=5.0,
+        )
+    return "hello"
+
+
+>>>>>>> tracecontexthttptestformat now works with integration test
 if __name__ == "__main__":
-    app.run(debug=True)
-    span_processor.shutdown()
+    try:
+        app.run(debug=True)
+    finally:
+        span_processor.shutdown()

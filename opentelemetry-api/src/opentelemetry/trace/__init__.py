@@ -364,10 +364,11 @@ class SpanContext:
         self.trace_state = trace_state
 
     def __repr__(self) -> str:
-        return "{}(trace_id={}, span_id={})".format(
+        return "{}(trace_id={}, span_id={}, trace_state={})".format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
+            repr(self.trace_state),
         )
 
     def is_valid(self) -> bool:
