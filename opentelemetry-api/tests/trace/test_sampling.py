@@ -121,12 +121,12 @@ class TestSampler(unittest.TestCase):
         # null
         self.assertTrue(
             sampler.should_sample(
-                None, 0x7FFFFFFFFFFFFFFF, 0xDEADBEEF, "span name"
+                None, 0x7FFFFFFFFFFFFFFF0000000000000000, 0xDEADBEEF, "span name"
             ).sampled
         )
         self.assertFalse(
             sampler.should_sample(
-                None, 0x8000000000000000, 0xDEADBEEF, "span name"
+                None, 0x80000000000000000000000000000000, 0xDEADBEEF, "span name"
             ).sampled
         )
 
@@ -137,7 +137,7 @@ class TestSampler(unittest.TestCase):
                 trace.SpanContext(
                     0xDEADBEF0, 0xDEADBEF1, trace_options=TO_DEFAULT
                 ),
-                0x8000000000000000,
+                0x7FFFFFFFFFFFFFFF0000000000000000,
                 0xDEADBEEF,
                 "span name",
             ).sampled
@@ -147,7 +147,7 @@ class TestSampler(unittest.TestCase):
                 trace.SpanContext(
                     0xDEADBEF0, 0xDEADBEF1, trace_options=TO_SAMPLED
                 ),
-                0x8000000000000001,
+                0x80000000000000000000000000000000,
                 0xDEADBEEF,
                 "span name",
             ).sampled
@@ -165,7 +165,10 @@ class TestSampler(unittest.TestCase):
         default_off = sampling.ProbabilitySampler(1.0)
         self.assertTrue(
             default_off.should_sample(
-                None, 0xFFFFFFFFFFFFFFFF, 0xDEADBEEF, "span name"
+                None,
+                0xFFFFFFFFFFFFFFFF0000000000000000,
+                0xDEADBEEF,
+                "span name",
             ).sampled
         )
 
@@ -182,26 +185,29 @@ class TestSampler(unittest.TestCase):
         )
         self.assertFalse(
             almost_always_off.should_sample(
-                None, 0x1, 0xDEADBEEF, "span name"
+                None, 0x10000000000000000, 0xDEADBEEF, "span name"
             ).sampled
         )
         self.assertEqual(
             sampling.ProbabilitySampler.get_bound_for_rate(2 ** -64), 0x1
         )
 
-        # Sample every trace with (last 8 bytes of) trace ID less than
-        # 0xffffffffffffffff. In principle this is the highest possible
-        # sampling rate less than 1, but we can't actually express this rate as
-        # a float!
+        # Sample every trace with trace ID less than
+        # 0xffffffffffffffff0000000000000000. In principle this is the highest
+        # possible sampling rate less than 1, but we can't actually express
+        # this rate as a float!
         #
         # In practice, the highest possible sampling rate is:
         #
-        #     round(sys.float_info.epsilon * 2 ** 64)
+        #     1 - sys.float_info.epsilon
 
         almost_always_on = sampling.ProbabilitySampler(1 - 2 ** -64)
         self.assertTrue(
             almost_always_on.should_sample(
-                None, 0xFFFFFFFFFFFFFFFE, 0xDEADBEEF, "span name"
+                None,
+                0xFFFFFFFFFFFFFFFE0000000000000000,
+                0xDEADBEEF,
+                "span name",
             ).sampled
         )
 
@@ -212,12 +218,12 @@ class TestSampler(unittest.TestCase):
         # self.assertFalse(
         #     almost_always_on.should_sample(
         #         None,
-        #         0xffffffffffffffff,
-        #         0xdeadbeef,
+        #         0xFFFFFFFFFFFFFFFF0000000000000000,
+        #         0xDEADBEEF,
         #         "span name",
         #     ).sampled
         # )
         # self.assertEqual(
         #     sampling.ProbabilitySampler.get_bound_for_rate(1 - 2 ** -64)),
-        #     0xffffffffffffffff,
+        #     0xFFFFFFFFFFFFFFFF0000000000000000,
         # )
