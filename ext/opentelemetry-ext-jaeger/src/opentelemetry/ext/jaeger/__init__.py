@@ -122,9 +122,11 @@ class JaegerSpanExporter(SpanExporter):
     def shutdown(self):
         pass
 
+
 def _nsec_to_usec_round(nsec):
     """Round nanoseconds to microseconds"""
     return (nsec + 500) // 10 ** 3
+
 
 def _translate_to_jaeger(spans: Span):
     """Translate the spans to Jaeger format.
