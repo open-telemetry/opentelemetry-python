@@ -55,19 +55,23 @@ class TestPymongoIntegration(unittest.TestCase):
         )
         self.assertEqual(span.attributes["peer.hostname"], "test.com")
         self.assertEqual(span.attributes["peer.port"], "1234")
-        self.assertEqual(span.attributes["operation_id"], "operation_id")
-        self.assertEqual(span.attributes["request_id"], "request_id")
+        self.assertEqual(
+            span.attributes["db.mongo.operation_id"], "operation_id"
+        )
+        self.assertEqual(span.attributes["db.mongo.request_id"], "request_id")
 
-        self.assertEqual(span.attributes["filter"], "filter")
-        self.assertEqual(span.attributes["sort"], "sort")
-        self.assertEqual(span.attributes["limit"], "limit")
-        self.assertEqual(span.attributes["pipeline"], "pipeline")
+        self.assertEqual(span.attributes["db.mongo.filter"], "filter")
+        self.assertEqual(span.attributes["db.mongo.sort"], "sort")
+        self.assertEqual(span.attributes["db.mongo.limit"], "limit")
+        self.assertEqual(span.attributes["db.mongo.pipeline"], "pipeline")
 
     def test_succeeded(self):
         mock_tracer = MockTracer()
         CommandTracer(mock_tracer).succeeded(event=MockEvent(None))
         span = mock_tracer.get_current_span()
-        self.assertEqual(span.attributes["duration_micros"], "duration_micros")
+        self.assertEqual(
+            span.attributes["db.mongo.duration_micros"], "duration_micros"
+        )
         self.assertIs(
             span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
         )
@@ -78,7 +82,9 @@ class TestPymongoIntegration(unittest.TestCase):
         mock_tracer = MockTracer()
         CommandTracer(mock_tracer).failed(event=MockEvent(None))
         span = mock_tracer.get_current_span()
-        self.assertEqual(span.attributes["duration_micros"], "duration_micros")
+        self.assertEqual(
+            span.attributes["db.mongo.duration_micros"], "duration_micros"
+        )
         self.assertIs(
             span.status.canonical_code,
             trace_api.status.StatusCanonicalCode.UNKNOWN,
@@ -87,7 +93,7 @@ class TestPymongoIntegration(unittest.TestCase):
         self.assertIsNotNone(span.end_time)
 
 
-class MockCommand(object):
+class MockCommand():
     def __init__(self, command_attrs):
         self.command_attrs = command_attrs
 
@@ -95,7 +101,7 @@ class MockCommand(object):
         return self.command_attrs.get(key)
 
 
-class MockEvent(object):
+class MockEvent():
     def __init__(self, command_attrs, connection_id=""):
         self.command = MockCommand(command_attrs)
         self.connection_id = connection_id
@@ -104,7 +110,7 @@ class MockEvent(object):
         return item
 
 
-class MockSpan(object):
+class MockSpan():
     def __enter__(self):
         return self
 
@@ -128,7 +134,7 @@ class MockSpan(object):
         self.end_time = end_time if end_time is not None else time_ns()
 
 
-class MockTracer(object):
+class MockTracer():
     def __init__(self):
         self.span = MockSpan()
         self.end_span = mock.Mock()
