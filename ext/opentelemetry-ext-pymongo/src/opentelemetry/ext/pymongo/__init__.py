@@ -44,28 +44,26 @@ class CommandTracer(monitoring.CommandListener):
             + "."
             + event.command.get(event.command_name)
         )
-        with self._tracer.start_span(name, kind=SpanKind.CLIENT) as span:
-            span.set_attribute("component", DATA_BASE_TYPE)
-            span.set_attribute("db.type", DATA_BASE_TYPE)
-            span.set_attribute("db.instance", event.database_name)
-            span.set_attribute(
-                "db.statement",
-                event.command_name
-                + " "
-                + event.command.get(event.command_name),
-            )
-            if event.connection_id is not None:
-                span.set_attribute("peer.address", str(event.connection_id))
-                span.set_attribute("peer.hostname", event.connection_id[0])
-                span.set_attribute("peer.port", event.connection_id[1])
+        span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
+        span.set_attribute("component", DATA_BASE_TYPE)
+        span.set_attribute("db.type", DATA_BASE_TYPE)
+        span.set_attribute("db.instance", event.database_name)
+        span.set_attribute(
+            "db.statement",
+            event.command_name + " " + event.command.get(event.command_name),
+        )
+        if event.connection_id is not None:
+            span.set_attribute("peer.address", str(event.connection_id))
+            span.set_attribute("peer.hostname", event.connection_id[0])
+            span.set_attribute("peer.port", event.connection_id[1])
 
-            span.set_attribute("operation_id", event.operation_id)
-            span.set_attribute("request_id", event.request_id)
+        span.set_attribute("operation_id", event.operation_id)
+        span.set_attribute("request_id", event.request_id)
 
-            for attr in COMMAND_ATTRIBUTES:
-                _attr = event.command.get(attr)
-                if _attr is not None:
-                    span.set_attribute(attr, str(_attr))
+        for attr in COMMAND_ATTRIBUTES:
+            _attr = event.command.get(attr)
+            if _attr is not None:
+                span.set_attribute(attr, str(_attr))
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
         span = self._tracer.get_current_span()
