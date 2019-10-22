@@ -98,6 +98,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertNotEqual(exporter.collector, collector)
         self.assertTrue(exporter.collector.auth is None)
 
+    def test_nsec_to_usec_round(self):
+        # pylint: disable=protected-access
+        nsec_to_usec_round = jaeger_exporter._nsec_to_usec_round
+
+        self.assertEqual(nsec_to_usec_round(5000), 5)
+        self.assertEqual(nsec_to_usec_round(5499), 5)
+        self.assertEqual(nsec_to_usec_round(5500), 6)
+
     # pylint: disable=too-many-locals
     def test_translate_to_jaeger(self):
         # pylint: disable=invalid-name
