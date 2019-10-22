@@ -41,7 +41,7 @@ class TestPymongoIntegration(unittest.TestCase):
         }
         mock_tracer = MockTracer()
         CommandTracer(mock_tracer).started(
-            event=MockEvent(command_attrs, ("test.com","1234"))
+            event=MockEvent(command_attrs, ("test.com", "1234"))
         )
         span = mock_tracer.get_current_span()
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
