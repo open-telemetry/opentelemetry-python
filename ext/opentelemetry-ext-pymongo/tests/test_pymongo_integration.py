@@ -93,7 +93,7 @@ class TestPymongoIntegration(unittest.TestCase):
         self.assertIsNotNone(span.end_time)
 
 
-class MockCommand():
+class MockCommand:
     def __init__(self, command_attrs):
         self.command_attrs = command_attrs
 
@@ -101,7 +101,7 @@ class MockCommand():
         return self.command_attrs.get(key)
 
 
-class MockEvent():
+class MockEvent:
     def __init__(self, command_attrs, connection_id=""):
         self.command = MockCommand(command_attrs)
         self.connection_id = connection_id
@@ -110,7 +110,7 @@ class MockEvent():
         return item
 
 
-class MockSpan():
+class MockSpan:
     def __enter__(self):
         return self
 
@@ -134,7 +134,7 @@ class MockSpan():
         self.end_time = end_time if end_time is not None else time_ns()
 
 
-class MockTracer():
+class MockTracer:
     def __init__(self):
         self.span = MockSpan()
         self.end_span = mock.Mock()
