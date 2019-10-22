@@ -111,7 +111,7 @@ class Metric(metrics_api.Metric):
         self, label_values: Sequence[str], value: metrics_api.ValueT
     ) -> None:
         """ Generic method used to update the metric value.
-        
+
         Used primarily for batch operations. Implementations
         should call the appropriate methods corresponding to the standard
         interpretation of the metric type.

@@ -126,7 +126,7 @@ class Measure(Metric):
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
-    def record(self, label_values, value: ValueT) -> None:
+    def record(self, label_values: Sequence[str], value: ValueT) -> None:
         """Records the ``value`` to the measure"""
 
 
