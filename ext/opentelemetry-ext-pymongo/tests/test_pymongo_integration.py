@@ -13,17 +13,16 @@
 # limitations under the License.
 
 import unittest
-from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymongo import trace_integration, CommandTracer
+from opentelemetry.ext.pymongo import CommandTracer, trace_integration
 from opentelemetry.util import time_ns
 
 
 class TestPymongoIntegration(unittest.TestCase):
     def test_trace_integration(self):
-        mock_register = mock.Mock()
-        patch = mock.patch(
+        mock_register = unittest.mock.Mock()
+        patch = unittest.mock.patch(
             "pymongo.monitoring.register", side_effect=mock_register
         )
         with patch:
@@ -137,7 +136,7 @@ class MockSpan:
 class MockTracer:
     def __init__(self):
         self.span = MockSpan()
-        self.end_span = mock.Mock()
+        self.end_span = unittest.mock.Mock()
         self.span.attributes = {}
         self.span.status = None
 

@@ -18,7 +18,8 @@ pymongo library.
 """
 
 from pymongo import monitoring
-from opentelemetry.trace import SpanKind, Span
+
+from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 DATABASE_TYPE = "mongodb"
