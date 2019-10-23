@@ -164,6 +164,11 @@ class ScopeManagerShim(opentracing.ScopeManager):
         span_context = SpanContextShim(span.get_context())
         wrapped_span = SpanShim(self._tracer, span_context, span)
         return ScopeShim(self, span=wrapped_span)
+        # TODO: The returned `ScopeShim` instance here always ends the
+        # corresponding span, regardless of the `finish_on_close` value used
+        # when activating the span. This is because here we return a *new*
+        # `ScopeShim` rather than returning a saved instance of `ScopeShim`.
+        # https://github.com/open-telemetry/opentelemetry-python/pull/211/files#r335398792
 
     @property
     def tracer(self):
