@@ -21,8 +21,8 @@ from opentelemetry.ext.opentracing_shim import util
 logger = logging.getLogger(__name__)
 
 
-def create_tracer(tracer):
-    return TracerShim(tracer)
+def create_tracer(otel_tracer):
+    return TracerShim(otel_tracer)
 
 
 class SpanContextShim(opentracing.SpanContext):
