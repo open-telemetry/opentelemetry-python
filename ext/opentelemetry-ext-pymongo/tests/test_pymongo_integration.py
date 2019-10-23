@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.pymongo import CommandTracer, trace_integration
@@ -21,8 +22,8 @@ from opentelemetry.util import time_ns
 
 class TestPymongoIntegration(unittest.TestCase):
     def test_trace_integration(self):
-        mock_register = unittest.mock.Mock()
-        patch = unittest.mock.patch(
+        mock_register = mock.Mock()
+        patch = mock.patch(
             "pymongo.monitoring.register", side_effect=mock_register
         )
         with patch:
@@ -49,9 +50,6 @@ class TestPymongoIntegration(unittest.TestCase):
         self.assertEqual(span.attributes["db.type"], "mongodb")
         self.assertEqual(span.attributes["db.instance"], "database_name")
         self.assertEqual(span.attributes["db.statement"], "command_name find")
-        self.assertEqual(
-            span.attributes["peer.address"], "('test.com', '1234')"
-        )
         self.assertEqual(span.attributes["peer.hostname"], "test.com")
         self.assertEqual(span.attributes["peer.port"], "1234")
         self.assertEqual(
@@ -136,7 +134,7 @@ class MockSpan:
 class MockTracer:
     def __init__(self):
         self.span = MockSpan()
-        self.end_span = unittest.mock.Mock()
+        self.end_span = mock.Mock()
         self.span.attributes = {}
         self.span.status = None
 
