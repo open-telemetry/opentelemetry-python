@@ -48,6 +48,7 @@ class CounterHandle:
             value: The value to record to the handle.
         """
 
+
 class GaugeHandle:
     def set(self, value: ValueT) -> None:
         """Sets the current value of the handle to ``value``.
@@ -55,6 +56,7 @@ class GaugeHandle:
         Args:
             value: The value to record to the handle.
         """
+
 
 class MeasureHandle:
     def record(self, value: ValueT) -> None:

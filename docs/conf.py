@@ -55,7 +55,7 @@ nitpicky = True
 # Sphinx does not recognize generic type TypeVars
 # Container supposedly were fixed, but does not work
 # https://github.com/sphinx-doc/sphinx/pull/3744
-nitpick_ignore = [('py:class', 'ValueT'), ('py:class', 'typing.Tuple')]
+nitpick_ignore = [("py:class", "ValueT"), ("py:class", "typing.Tuple")]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
