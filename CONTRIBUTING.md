@@ -13,6 +13,17 @@ on how to become a [**Member**](https://github.com/open-telemetry/community/blob
 [**Approver**](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver)
 and [**Maintainer**](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).
 
+## Find an OTel Buddy and Get Started Quickly!
+
+If you're looking for someone to help you find a starting point and be a resource
+for your first contribution, join our Gitter and find a buddy!
+
+1. Join [Gitter.im](https://gitter.im) and join our [chat room](https://gitter.im/open-telemetry/opentelemetry-python).
+2. Post in the room with an introduction to yourself, what area you are interested in, and say you are looking for a buddy. We will match you with 
+someone who has experience in that area.
+
+Your OTel buddy is your resource to talk to directly on all aspects of contributing to OpenTelemetry: providing context, reviewing PRs, and helping those get merged. Buddies will not be available 24/7, but is committed to responding during their normal contribution hours.
+
 ## Development
 
 This project uses [`tox`](https://tox.readthedocs.io) to automate some aspects
