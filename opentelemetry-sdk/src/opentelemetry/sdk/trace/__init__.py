@@ -199,12 +199,15 @@ class Span(trace_api.Span):
         self.attributes[key] = value
 
     def add_event(
-        self, name: str, attributes: types.Attributes = None
+        self,
+        name: str,
+        timestamp: int = None,
+        attributes: types.Attributes = None,
     ) -> None:
         self.add_lazy_event(
             trace_api.Event(
                 name,
-                time_ns(),
+                time_ns() if timestamp is None else timestamp,
                 Span.empty_attributes if attributes is None else attributes,
             )
         )
