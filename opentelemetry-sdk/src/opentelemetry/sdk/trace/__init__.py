@@ -376,30 +376,33 @@ class Tracer(trace_api.Tracer):
         as a child of the current span in this tracer's context, or as a root
         span if no current span exists.
         """
+        span_id = generate_span_id()
 
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
 
-        if parent is None:
-            parent_context = None
-            new_span_context = trace_api.SpanContext(
-                generate_trace_id(), generate_span_id()
-            )
-        else:
-            if isinstance(parent, trace_api.Span):
-                parent_context = parent.get_context()
-            elif isinstance(parent, trace_api.SpanContext):
-                parent_context = parent
-            else:
-                # TODO: error handling
-                raise TypeError
+        parent_context = parent
+        if isinstance(parent_context, trace_api.Span):
+            parent_context = parent.get_context()
 
-            new_span_context = trace_api.SpanContext(
-                parent_context.trace_id,
-                generate_span_id(),
-                parent_context.trace_options,
-                parent_context.trace_state,
-            )
+        if parent_context is not None and not isinstance(
+            parent_context, trace_api.SpanContext
+        ):
+            raise TypeError
+
+        if parent_context is None or not parent_context.is_valid():
+            parent = parent_context = None
+            trace_id = generate_trace_id()
+            trace_options = None
+            trace_state = None
+        else:
+            trace_id = parent_context.trace_id
+            trace_options = parent_context.trace_options
+            trace_state = parent_context.trace_state
+
+        context = trace_api.SpanContext(
+            trace_id, span_id, trace_options, trace_state
+        )
 
         # The sampler decides whether to create a real or no-op span at the
         # time of span creation. No-op spans do not record events, and are not
@@ -408,8 +411,8 @@ class Tracer(trace_api.Tracer):
         # to include information about the sampling decision.
         sampling_decision = self.sampler.should_sample(
             parent_context,
-            new_span_context.trace_id,
-            new_span_context.span_id,
+            context.trace_id,
+            context.span_id,
             name,
             {},  # TODO: links
         )
@@ -417,14 +420,15 @@ class Tracer(trace_api.Tracer):
         if sampling_decision.sampled:
             return Span(
                 name=name,
-                context=new_span_context,
+                context=context,
                 parent=parent,
                 sampler=self.sampler,
                 attributes=sampling_decision.attributes,
                 span_processor=self._active_span_processor,
                 kind=kind,
             )
-        return trace_api.DefaultSpan(context=new_span_context)
+
+        return trace_api.DefaultSpan(context=context)
 
     @contextmanager
     def use_span(

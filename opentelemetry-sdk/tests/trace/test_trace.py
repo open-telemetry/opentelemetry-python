@@ -54,14 +54,16 @@ class TestSpanCreation(unittest.TestCase):
     def test_create_span_invalid_spancontext(self):
         """If an invalid span context is passed as the parent, the created
         span should use a new span id.
+
+        Invalid span contexts should also not be added as a parent. This
+        eliminates redundant error handling logic in exporters.
         """
         tracer = trace.Tracer("test_create_span_invalid_spancontext")
         new_span = tracer.create_span(
             "root", parent=trace_api.INVALID_SPAN_CONTEXT
         )
-        self.assertNotEqual(
-            new_span.context.span_id, trace_api.INVALID_SPAN_ID
-        )
+        self.assertTrue(new_span.context.is_valid())
+        self.assertIsNone(new_span.parent)
 
     def test_start_span_implicit(self):
         tracer = trace.Tracer("test_start_span_implicit")
