@@ -45,7 +45,7 @@ class BaseHandle:
 
 class CounterHandle(metrics_api.CounterHandle, BaseHandle):
     def add(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.CounterHandle._add`."""
+        """See `opentelemetry.metrics.CounterHandle.add`."""
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
@@ -55,7 +55,7 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
 
 class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
     def set(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.GaugeHandle._set`."""
+        """See `opentelemetry.metrics.GaugeHandle.set`."""
         if self._validate_update(value):
             if self.monotonic and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
@@ -65,7 +65,7 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
 
 class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
     def record(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.MeasureHandle._record`."""
+        """See `opentelemetry.metrics.MeasureHandle.record`."""
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic measure cannot accept negatives.")
@@ -110,11 +110,11 @@ class Metric(metrics_api.Metric):
     def update(
         self, label_values: Sequence[str], value: metrics_api.ValueT
     ) -> None:
-        """ Generic method used to update the metric value.
+        """Generic method used to update the metric value.
 
-        Used primarily for batch operations. Implementations
-        should call the appropriate methods corresponding to the standard
-        interpretation of the metric type.
+        Used primarily for batch operations. Implementations should call the
+        appropriate methods corresponding to the standard interpretation of
+        the metric type.
 
         Args:
             label_values: The values used to match which handle for the given
