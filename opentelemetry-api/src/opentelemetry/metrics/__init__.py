@@ -61,7 +61,7 @@ class GaugeHandle:
 class MeasureHandle:
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this handle.
-        
+
         Args:
             value: The value to record to the handle.
         """
@@ -110,7 +110,7 @@ class Counter(Metric):
 
     def add(self, label_values: Sequence[str], value: ValueT) -> None:
         """Increases the value of the counter by ``value``.
-        
+
         Args:
             label_values: The label values associated with the metric.
             value: The value to add to the counter metric.
