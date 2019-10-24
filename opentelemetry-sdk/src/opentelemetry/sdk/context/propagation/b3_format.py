@@ -90,7 +90,7 @@ class B3Format(HTTPTextFormat):
         # the desire for some form of sampling, propagate if either
         # header is set to allow.
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
-            options |= trace.TraceOptions.RECORDED
+            options |= trace.TraceOptions.SAMPLED
         return trace.SpanContext(
             # trace an span ids are encoded in hex, so must be converted
             trace_id=int(trace_id, 16),
@@ -101,7 +101,7 @@ class B3Format(HTTPTextFormat):
 
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
-        sampled = (trace.TraceOptions.RECORDED & context.trace_options) != 0
+        sampled = (trace.TraceOptions.SAMPLED & context.trace_options) != 0
         set_in_carrier(
             carrier, cls.TRACE_ID_KEY, format_trace_id(context.trace_id)
         )
