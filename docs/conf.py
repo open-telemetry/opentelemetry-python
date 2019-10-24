@@ -52,7 +52,10 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
 # Sphinx will warn about all references where the target cannot be found.
 nitpicky = True
-nitpick_ignore = []
+# Sphinx does not recognize generic type TypeVars
+# Container supposedly were fixed, but does not work
+# https://github.com/sphinx-doc/sphinx/pull/3744
+nitpick_ignore = [('py:class', 'ValueT'), ('py:class', 'typing.Tuple')]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
