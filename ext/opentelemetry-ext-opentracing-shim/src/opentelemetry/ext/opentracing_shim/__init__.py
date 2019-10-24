@@ -554,7 +554,7 @@ class TracerShim(opentracing.Tracer):
                 :obj:`int`, :obj:`float`. Defaults to `None`.
             start_time(:obj:`float`, optional): An explicit start time
                 expressed as the number of seconds since the epoch as returned
-                by :meth:`time.time()`. Defaults to `None`.
+                by :func:`time.time()`. Defaults to `None`.
             ignore_active_span(optional): Ignore the currently-active span in
                 the OpenTelemetry tracer and make the created span the root
                 span of a new trace. Defaults to `False`.
@@ -595,22 +595,23 @@ class TracerShim(opentracing.Tracer):
         Args:
             operation_name(:obj:`str`): Name of the operation represented by
                 the new span from the perspective of the current service.
-            child_of(optional): A :class:`SpanShim` or :class:`SpanContextShim`
-                representing the parent in a "child of" reference. If
-                specified, the `references` parameter must be omitted. Defaults
-                to `None`.
-            references(optional): A list of :class:`opentracing.Reference`
-                objects that identify one or more parents of type
-                :class:`SpanContextShim`. Defaults to `None`.
-            tags(optional): A dictionary of tags. The keys must be of type
-                :obj:`str`. The values may be one of :obj:`str`, :obj:`bool`,
-                :obj:`int`, :obj:`float`. Defaults to `None`.
+            child_of(:class:`SpanShim` or :class:`SpanContextShim`, optional):
+                A :class:`SpanShim` or :class:`SpanContextShim` representing
+                the parent in a "child of" reference. If specified, the
+                *references* parameter must be omitted. Defaults to `None`.
+            references(:obj:`list`, optional): A list of
+                :class:`opentracing.Reference` objects that identify one or
+                more parents of type :class:`SpanContextShim`. Defaults to
+                `None`.
+            tags(:obj:`dict`, optional): A dictionary of tags. The keys must be
+                of type :obj:`str`. The values may be one of :obj:`str`,
+                :obj:`bool`, :obj:`int`, :obj:`float`. Defaults to `None`.
             start_time(:obj:`float`, optional): An explicit start time
                 expressed as the number of seconds since the epoch as returned
-                by :meth:`time.time()`. Defaults to `None`.
-            ignore_active_span(optional): Ignore the currently-active span in
-                the OpenTelemetry tracer and make the created span the root
-                span of a new trace. Defaults to `False`.
+                by :func:`time.time()`. Defaults to `None`.
+            ignore_active_span(:obj:`bool`, optional): Ignore the
+                currently-active span in the OpenTelemetry tracer and make the
+                created span the root span of a new trace. Defaults to `False`.
 
         Returns:
             An already-started :class:`SpanShim` instance.
