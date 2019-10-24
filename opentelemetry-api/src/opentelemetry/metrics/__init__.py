@@ -102,6 +102,10 @@ class DefaultMetric(Metric):
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
+    def get_handle(self, label_values: Sequence[str]) -> "CounterHandle":
+        """Gets a `CounterHandle`."""
+        return CounterHandle()
+
     def add(self, label_values: Sequence[str], value: ValueT) -> None:
         """Increases the value of the counter by ``value``.
         
@@ -120,6 +124,10 @@ class Gauge(Metric):
     the measurement interval is arbitrary.
     """
 
+    def get_handle(self, label_values: Sequence[str]) -> "GaugeHandle":
+        """Gets a `GaugeHandle`."""
+        return GaugeHandle()
+
     def set(self, label_values: Sequence[str], value: ValueT) -> None:
         """Sets the value of the gauge to ``value``.
 
@@ -136,6 +144,10 @@ class Measure(Metric):
     default, measure metrics can accept both positive and negatives.
     Negative inputs will be discarded when monotonic is True.
     """
+
+    def get_handle(self, label_values: Sequence[str]) -> "MeasureHandle":
+        """Gets a `MeasureHandle` with a float value."""
+        return MeasureHandle()
 
     def record(self, label_values: Sequence[str], value: ValueT) -> None:
         """Records the ``value`` to the measure.
