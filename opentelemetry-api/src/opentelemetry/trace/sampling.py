@@ -83,10 +83,11 @@ class ProbabilitySampler(Sampler):
     # The sampler checks the 8 high-order bytes of the trace ID to decide
     # whether to sample a given trace.
     CHECK_HIGH_BITS = 64
+    TRACE_ID_LIMIT = 2 ** CHECK_HIGH_BITS  # type: int
 
     @classmethod
     def get_bound_for_rate(cls, rate: float) -> int:
-        return round(rate * 2 ** cls.CHECK_HIGH_BITS)
+        return round(rate * cls.TRACE_ID_LIMIT)
 
     @property
     def rate(self) -> float:
