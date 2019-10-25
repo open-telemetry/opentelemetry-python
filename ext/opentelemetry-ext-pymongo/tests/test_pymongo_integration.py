@@ -26,8 +26,9 @@ class TestPymongoIntegration(unittest.TestCase):
         patch = mock.patch(
             "pymongo.monitoring.register", side_effect=mock_register
         )
+        mock_tracer = MockTracer()
         with patch:
-            trace_integration()
+            trace_integration(mock_tracer)
 
         self.assertTrue(mock_register.called)
 
@@ -40,10 +41,12 @@ class TestPymongoIntegration(unittest.TestCase):
             "command_name": "find",
         }
         mock_tracer = MockTracer()
-        CommandTracer(mock_tracer).started(
+        command_tracer = CommandTracer(mock_tracer)
+        command_tracer.started(
             event=MockEvent(command_attrs, ("test.com", "1234"))
         )
-        span = mock_tracer.get_current_span()
+        # pylint: disable=protected-access
+        span = command_tracer._span
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(span.name, "mongodb.command_name.find")
         self.assertEqual(span.attributes["component"], "mongodb")
@@ -64,8 +67,12 @@ class TestPymongoIntegration(unittest.TestCase):
 
     def test_succeeded(self):
         mock_tracer = MockTracer()
-        CommandTracer(mock_tracer).succeeded(event=MockEvent(None))
-        span = mock_tracer.get_current_span()
+        mock_event = MockEvent({})
+        command_tracer = CommandTracer(mock_tracer)
+        command_tracer.started(event=mock_event)
+        command_tracer.succeeded(event=mock_event)
+        # pylint: disable=protected-access
+        span = command_tracer._span
         self.assertEqual(
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
@@ -77,8 +84,12 @@ class TestPymongoIntegration(unittest.TestCase):
 
     def test_failed(self):
         mock_tracer = MockTracer()
-        CommandTracer(mock_tracer).failed(event=MockEvent(None))
-        span = mock_tracer.get_current_span()
+        mock_event = MockEvent({})
+        command_tracer = CommandTracer(mock_tracer)
+        command_tracer.started(event=mock_event)
+        command_tracer.failed(event=mock_event)
+        # pylint: disable=protected-access
+        span = command_tracer._span
         self.assertEqual(
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
@@ -141,7 +152,4 @@ class MockTracer:
     def start_span(self, name, kind):
         self.span.name = name
         self.span.kind = kind
-        return self.span
-
-    def get_current_span(self):
         return self.span

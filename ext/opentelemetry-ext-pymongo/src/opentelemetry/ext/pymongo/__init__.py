@@ -36,46 +36,60 @@ def trace_integration(tracer=None):
 
 class CommandTracer(monitoring.CommandListener):
     def __init__(self, tracer):
+        if tracer is None:
+            raise ValueError("The tracer is not provided.")
         self._tracer = tracer
+        self._span = None
 
     def started(self, event: monitoring.CommandStartedEvent):
         command = event.command.get(event.command_name)
         if command is None:
             command = ""
         name = DATABASE_TYPE + "." + event.command_name + "." + command
+        self._span = None
         try:
-            span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
-            span.set_attribute("component", DATABASE_TYPE)
-            span.set_attribute("db.type", DATABASE_TYPE)
-            span.set_attribute("db.instance", event.database_name)
-            span.set_attribute(
+            self._span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
+            self._span.set_attribute("component", DATABASE_TYPE)
+            self._span.set_attribute("db.type", DATABASE_TYPE)
+            self._span.set_attribute("db.instance", event.database_name)
+            self._span.set_attribute(
                 "db.statement", event.command_name + " " + command
             )
             if event.connection_id is not None:
-                span.set_attribute("peer.hostname", event.connection_id[0])
-                span.set_attribute("peer.port", event.connection_id[1])
+                self._span.set_attribute(
+                    "peer.hostname", event.connection_id[0]
+                )
+                self._span.set_attribute("peer.port", event.connection_id[1])
 
             # pymongo specific, not specified by spec
-            span.set_attribute("db.mongo.operation_id", event.operation_id)
-            span.set_attribute("db.mongo.request_id", event.request_id)
+            self._span.set_attribute(
+                "db.mongo.operation_id", event.operation_id
+            )
+            self._span.set_attribute("db.mongo.request_id", event.request_id)
 
             for attr in COMMAND_ATTRIBUTES:
                 _attr = event.command.get(attr)
                 if _attr is not None:
-                    span.set_attribute("db.mongo." + attr, str(_attr))
+                    self._span.set_attribute("db.mongo." + attr, str(_attr))
         except Exception as ex:  # noqa pylint: disable=broad-except
-            if span is not None:
-                span.set_status(Status(StatusCanonicalCode.INTERNAL, ex))
-                span.end()
+            if self._span is not None:
+                self._span.set_status(Status(StatusCanonicalCode.INTERNAL, ex))
+                self._span.end()
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
-        span = self._tracer.get_current_span()
-        span.set_attribute("db.mongo.duration_micros", event.duration_micros)
-        span.set_status(Status(StatusCanonicalCode.OK, event.reply))
-        span.end()
+        if self._span is not None:
+            self._span.set_attribute(
+                "db.mongo.duration_micros", event.duration_micros
+            )
+            self._span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+            self._span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):
-        span = self._tracer.get_current_span()
-        span.set_attribute("db.mongo.duration_micros", event.duration_micros)
-        span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
-        span.end()
+        if self._span is not None:
+            self._span.set_attribute(
+                "db.mongo.duration_micros", event.duration_micros
+            )
+            self._span.set_status(
+                Status(StatusCanonicalCode.UNKNOWN, event.failure)
+            )
+            self._span.end()
