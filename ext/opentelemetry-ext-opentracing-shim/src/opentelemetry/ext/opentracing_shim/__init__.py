@@ -322,6 +322,8 @@ class ScopeShim(opentracing.Scope):
             its ``__enter__()`` method. Used by :meth:`from_context_manager` to
             store the context manager as an attribute so that it can later be
             closed by calling its ``__exit__()`` method. Defaults to `None`.
+
+    TODO: Is :class:`contextlib.AbstractContextManager` the correct type for *span_cm*?
     """
 
     def __init__(self, manager, span, span_cm=None):
