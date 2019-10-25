@@ -190,10 +190,10 @@ class SpanShim(opentracing.Span):
 
         Ends the OpenTelemetry span wrapped by this :class:`SpanShim`.
 
-        If `finish_time` is provided, the time value is converted to the
+        If *finish_time* is provided, the time value is converted to the
         OpenTelemetry time format (number of nanoseconds since the epoch,
         expressed as an integer) and passed on to the OpenTelemetry tracer when
-        ending the OpenTelemetry span. If `finish_time` isn't provided, it is
+        ending the OpenTelemetry span. If *finish_time* isn't provided, it is
         up to the OpenTelemetry tracer implementation to generate a timestamp
         when ending the span.
 
@@ -211,7 +211,7 @@ class SpanShim(opentracing.Span):
     def set_tag(self, key, value):
         """Implements the `set_tag()` method from the base class.
 
-        Sets an OpenTelemetry `Attribute` on the wrapped OpenTelemetry span.
+        Sets an OpenTelemetry attribute on the wrapped OpenTelemetry span.
 
         Args:
             key(:obj:`str`): A tag key.
@@ -232,7 +232,7 @@ class SpanShim(opentracing.Span):
         OpenTelemetry span.
 
         Note:
-            The OpenTracing API defines the values of `key_values` to be of any
+            The OpenTracing API defines the values of *key_values* to be of any
             type. However, the OpenTelemetry API requires that the values be
             one of :obj:`str`, :obj:`bool`, :obj:`float`. Therefore, only these
             types are supported as values.
@@ -305,7 +305,7 @@ class ScopeShim(opentracing.Scope):
     because in some cases we need to create the object from an OpenTelemetry
     `Span` context manager (as returned by
     :meth:`opentelemetry.trace.Tracer.use_span`), in which case our only way of
-    retrieving a `Span` object is by calling the `__enter__()` method on the
+    retrieving a `Span` object is by calling the ``__enter__()`` method on the
     context manager, which makes the span active in the OpenTelemetry tracer;
     whereas in other cases we need to accept a `SpanShim` object and wrap it in
     a `ScopeShim`. The former is used mainly when the instrumentation code
@@ -317,11 +317,11 @@ class ScopeShim(opentracing.Scope):
         manager: The :class:`ScopeManagerShim` that created this
             :class:`ScopeShim`.
         span: The :class:`SpanShim` this :class:`ScopeShim` controls.
-        span_cm(optional): A Python context manager which yields an
-            OpenTelemetry `Span` from its `__enter__()` method. Used by
-            :meth:`from_context_manager` to store the context manager as an
-            attribute so that it can later be closed by calling its
-            `__exit__()` method. Defaults to `None`.
+        span_cm(:class:`contextlib.AbstractContextManager`, optional): A
+            Python context manager which yields an OpenTelemetry `Span` from
+            its ``__enter__()`` method. Used by :meth:`from_context_manager` to
+            store the context manager as an attribute so that it can later be
+            closed by calling its ``__exit__()`` method. Defaults to `None`.
     """
 
     def __init__(self, manager, span, span_cm=None):
@@ -336,7 +336,7 @@ class ScopeShim(opentracing.Scope):
         manager.
 
         The method extracts a `Span` object from the context manager by calling
-        the context manager's `__enter__()` method. This causes the span to
+        the context manager's ``__enter__()`` method. This causes the span to
         start in the OpenTelemetry tracer.
 
         Example usage::
@@ -367,7 +367,7 @@ class ScopeShim(opentracing.Scope):
         manager, calling this method sets the active span in the
         OpenTelemetry tracer back to the span which was active before this
         `ScopeShim` was created. In addition, if the span represented by this
-        `ScopeShim` was activated with the `finish_on_close` argument set to
+        `ScopeShim` was activated with the *finish_on_close* argument set to
         `True`, calling this method will end the span.
 
         Warning:
@@ -378,7 +378,7 @@ class ScopeShim(opentracing.Scope):
             Please note that closing a `ScopeShim` created this way (for
             example as returned by :meth:`ScopeManagerShim.active`) **always
             ends the associated span**, regardless of the value passed in
-            `finish_on_close` when activating the span.
+            *finish_on_close* when activating the span.
         """
 
         if self._span_cm is not None:
@@ -450,7 +450,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
         Warning:
             Calling :meth:`ScopeShim.close` on the :class:`ScopeShim` returned
             by this property **always ends the corresponding span**, regardless
-            of the `finish_on_close` value used when activating the span. This
+            of the *finish_on_close* value used when activating the span. This
             is a limitation of the current implementation of the OpenTracing
             shim and is likely to be handled in future versions.
         """
