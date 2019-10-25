@@ -16,13 +16,14 @@
 import logging
 import random
 import threading
-import typing
 from contextlib import contextmanager
+from typing import Iterator, Optional, Sequence, Tuple
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.trace import sampling
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class MultiSpanProcessor(SpanProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors = ()  # type: typing.Tuple[SpanProcessor, ...]
+        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
@@ -104,7 +105,7 @@ class Span(trace_api.Span):
         context: The immutable span context
         parent: This span's parent, may be a `SpanContext` if the parent is
             remote, null if this is a root span
-        sampler: TODO
+        sampler: The sampler used to create this span
         trace_config: TODO
         resource: TODO
         attributes: The span's attributes to be exported
@@ -124,12 +125,12 @@ class Span(trace_api.Span):
         name: str,
         context: trace_api.SpanContext,
         parent: trace_api.ParentSpan = None,
-        sampler: None = None,  # TODO
+        sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
         resource: None = None,  # TODO
         attributes: types.Attributes = None,  # TODO
-        events: typing.Sequence[trace_api.Event] = None,  # TODO
-        links: typing.Sequence[trace_api.Link] = None,  # TODO
+        events: Sequence[trace_api.Event] = None,  # TODO
+        links: Sequence[trace_api.Link] = None,  # TODO
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
@@ -163,8 +164,8 @@ class Span(trace_api.Span):
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
-        self.end_time = None  # type: typing.Optional[int]
-        self.start_time = None  # type: typing.Optional[int]
+        self.end_time = None  # type: Optional[int]
+        self.start_time = None  # type: Optional[int]
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -199,12 +200,15 @@ class Span(trace_api.Span):
         self.attributes[key] = value
 
     def add_event(
-        self, name: str, attributes: types.Attributes = None
+        self,
+        name: str,
+        timestamp: int = None,
+        attributes: types.Attributes = None,
     ) -> None:
         self.add_lazy_event(
             trace_api.Event(
                 name,
-                time_ns(),
+                time_ns() if timestamp is None else timestamp,
                 Span.empty_attributes if attributes is None else attributes,
             )
         )
@@ -246,7 +250,7 @@ class Span(trace_api.Span):
             return
         self.links.append(link)
 
-    def start(self, start_time: typing.Optional[int] = None) -> None:
+    def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -320,12 +324,17 @@ class Tracer(trace_api.Tracer):
         name: The name of the tracer.
     """
 
-    def __init__(self, name: str = "") -> None:
+    def __init__(
+        self,
+        name: str = "",
+        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+    ) -> None:
         slot_name = "current_span"
         if name:
             slot_name = "{}.current_span".format(name)
         self._current_span_slot = Context.register_slot(slot_name)
         self._active_span_processor = MultiSpanProcessor()
+        self.sampler = sampler
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
@@ -348,7 +357,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> typing.Iterator[trace_api.Span]:
+    ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
         span = self.start_span(name, parent, kind)
@@ -359,38 +368,72 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> "Span":
-        """See `opentelemetry.trace.Tracer.create_span`."""
+    ) -> "trace_api.Span":
+        """See `opentelemetry.trace.Tracer.create_span`.
+
+        If `parent` is null the new span will be created as a root span, i.e. a
+        span with no parent context. By default, the new span will be created
+        as a child of the current span in this tracer's context, or as a root
+        span if no current span exists.
+        """
         span_id = generate_span_id()
+
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
-        if parent is None:
-            context = trace_api.SpanContext(generate_trace_id(), span_id)
+
+        parent_context = parent
+        if isinstance(parent_context, trace_api.Span):
+            parent_context = parent.get_context()
+
+        if parent_context is not None and not isinstance(
+            parent_context, trace_api.SpanContext
+        ):
+            raise TypeError
+
+        if parent_context is None or not parent_context.is_valid():
+            parent = parent_context = None
+            trace_id = generate_trace_id()
+            trace_options = None
+            trace_state = None
         else:
-            if isinstance(parent, trace_api.Span):
-                parent_context = parent.get_context()
-            elif isinstance(parent, trace_api.SpanContext):
-                parent_context = parent
-            else:
-                raise TypeError
-            context = trace_api.SpanContext(
-                parent_context.trace_id,
-                span_id,
-                parent_context.trace_options,
-                parent_context.trace_state,
-            )
-        return Span(
-            name=name,
-            context=context,
-            parent=parent,
-            span_processor=self._active_span_processor,
-            kind=kind,
+            trace_id = parent_context.trace_id
+            trace_options = parent_context.trace_options
+            trace_state = parent_context.trace_state
+
+        context = trace_api.SpanContext(
+            trace_id, span_id, trace_options, trace_state
         )
+
+        # The sampler decides whether to create a real or no-op span at the
+        # time of span creation. No-op spans do not record events, and are not
+        # exported.
+        # The sampler may also add attributes to the newly-created span, e.g.
+        # to include information about the sampling decision.
+        sampling_decision = self.sampler.should_sample(
+            parent_context,
+            context.trace_id,
+            context.span_id,
+            name,
+            {},  # TODO: links
+        )
+
+        if sampling_decision.sampled:
+            return Span(
+                name=name,
+                context=context,
+                parent=parent,
+                sampler=self.sampler,
+                attributes=sampling_decision.attributes,
+                span_processor=self._active_span_processor,
+                kind=kind,
+            )
+
+        return trace_api.DefaultSpan(context=context)
 
     @contextmanager
     def use_span(
         self, span: trace_api.Span, end_on_exit: bool = False
-    ) -> typing.Iterator[trace_api.Span]:
+    ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self._current_span_slot.get()

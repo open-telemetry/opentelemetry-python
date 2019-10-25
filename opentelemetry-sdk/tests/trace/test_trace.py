@@ -17,6 +17,7 @@ from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
+from opentelemetry.trace import sampling
 from opentelemetry.util import time_ns
 
 
@@ -26,7 +27,44 @@ class TestTracer(unittest.TestCase):
         self.assertIsInstance(tracer, trace_api.Tracer)
 
 
+class TestTracerSampling(unittest.TestCase):
+    def test_default_sampler(self):
+        tracer = trace.Tracer()
+
+        # Check that the default tracer creates real spans via the default
+        # sampler
+        root_span = tracer.create_span(name="root span", parent=None)
+        self.assertIsInstance(root_span, trace.Span)
+        child_span = tracer.create_span(name="child span", parent=root_span)
+        self.assertIsInstance(child_span, trace.Span)
+
+    def test_sampler_no_sampling(self):
+        tracer = trace.Tracer()
+        tracer.sampler = sampling.ALWAYS_OFF
+
+        # Check that the default tracer creates no-op spans if the sampler
+        # decides not to sampler
+        root_span = tracer.create_span(name="root span", parent=None)
+        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        child_span = tracer.create_span(name="child span", parent=root_span)
+        self.assertIsInstance(child_span, trace_api.DefaultSpan)
+
+
 class TestSpanCreation(unittest.TestCase):
+    def test_create_span_invalid_spancontext(self):
+        """If an invalid span context is passed as the parent, the created
+        span should use a new span id.
+
+        Invalid span contexts should also not be added as a parent. This
+        eliminates redundant error handling logic in exporters.
+        """
+        tracer = trace.Tracer("test_create_span_invalid_spancontext")
+        new_span = tracer.create_span(
+            "root", parent=trace_api.INVALID_SPAN_CONTEXT
+        )
+        self.assertTrue(new_span.context.is_valid())
+        self.assertIsNone(new_span.parent)
+
     def test_start_span_implicit(self):
         tracer = trace.Tracer("test_start_span_implicit")
 
@@ -227,8 +265,10 @@ class TestSpan(unittest.TestCase):
 
             # events
             root.add_event("event0")
-            root.add_event("event1", {"name": "birthday"})
             now = time_ns()
+            root.add_event(
+                "event1", timestamp=now, attributes={"name": "birthday"}
+            )
             root.add_lazy_event(
                 trace_api.Event("event2", now, {"name": "hello"})
             )
@@ -240,6 +280,7 @@ class TestSpan(unittest.TestCase):
 
             self.assertEqual(root.events[1].name, "event1")
             self.assertEqual(root.events[1].attributes, {"name": "birthday"})
+            self.assertEqual(root.events[1].timestamp, now)
 
             self.assertEqual(root.events[2].name, "event2")
             self.assertEqual(root.events[2].attributes, {"name": "hello"})
