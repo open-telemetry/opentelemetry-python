@@ -121,12 +121,18 @@ class TestSampler(unittest.TestCase):
         # null
         self.assertTrue(
             sampler.should_sample(
-                None, 0x7FFFFFFFFFFFFFFF0000000000000000, 0xDEADBEEF, "span name"
+                None,
+                0x7FFFFFFFFFFFFFFF0000000000000000,
+                0xDEADBEEF,
+                "span name",
             ).sampled
         )
         self.assertFalse(
             sampler.should_sample(
-                None, 0x80000000000000000000000000000000, 0xDEADBEEF, "span name"
+                None,
+                0x80000000000000000000000000000000,
+                0xDEADBEEF,
+                "span name",
             ).sampled
         )
 
