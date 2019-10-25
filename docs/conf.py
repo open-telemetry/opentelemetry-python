@@ -14,7 +14,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../opentelemetry-api/src/"))
-sys.path.insert(1, os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/"))
+sys.path.insert(
+    1, os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/")
+)
 
 
 # -- Project information -----------------------------------------------------
@@ -50,7 +52,10 @@ extensions = [
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "opentracing": ("https://opentracing-python.readthedocs.io/en/latest/", None),
+    "opentracing": (
+        "https://opentracing-python.readthedocs.io/en/latest/",
+        None,
+    ),
 }
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
