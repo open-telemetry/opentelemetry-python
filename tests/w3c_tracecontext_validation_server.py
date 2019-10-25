@@ -13,6 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+This server is intended to be used with the W3C tracecontext validation
+Service. It implements the APIs needed to be exercised by the test bed.
+"""
 
 import json
 
@@ -45,13 +49,27 @@ app = flask.Flask(__name__)
 app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
 
-@app.route("/")
-def hello():
-    with trace.tracer().start_as_current_span("parent"):
-        requests.get("https://www.wikipedia.org/wiki/Rabbit")
+@app.route("/verify-tracecontext", methods=["POST"])
+def verify_tracecontext():
+    """Upon reception of some payload, sends a request back to the designated url.
+
+    This route is designed to be testable with the w3c tracecontext server / client test.
+    """
+    for action in flask.request.json:
+        requests.post(
+            url=action["url"],
+            data=json.dumps(action["arguments"]),
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            timeout=5.0,
+        )
     return "hello"
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    span_processor.shutdown()
+    try:
+        app.run(debug=True)
+    finally:
+        span_processor.shutdown()

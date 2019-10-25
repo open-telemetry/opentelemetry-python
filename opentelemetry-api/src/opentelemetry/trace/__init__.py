@@ -309,31 +309,6 @@ def format_span_id(span_id: int) -> str:
     return "0x{:016x}".format(span_id)
 
 
-def generate_span_id() -> int:
-    """Get a new random span ID.
-
-    Returns:
-        A random 64-bit int for use as a span ID
-    """
-    return random.getrandbits(64)
-
-
-def generate_trace_id() -> int:
-    """Get a new random trace ID.
-
-    Returns:
-        A random 128-bit int for use as a trace ID
-    """
-    return random.getrandbits(128)
-
-
-def generate_span_context() -> "SpanContext":
-    """Generate a valid SpanContext."""
-    return SpanContext(
-        trace_id=generate_trace_id(), span_id=generate_span_id()
-    )
-
-
 class SpanContext:
     """The state of a Span to propagate between processes.
 
@@ -364,11 +339,11 @@ class SpanContext:
         self.trace_state = trace_state
 
     def __repr__(self) -> str:
-        return "{}(trace_id={}, span_id={}, trace_state={})".format(
+        return "{}(trace_id={}, span_id={}, trace_state={!r})".format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
-            repr(self.trace_state),
+            self.trace_state,
         )
 
     def is_valid(self) -> bool:

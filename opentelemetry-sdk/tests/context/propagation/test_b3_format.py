@@ -30,10 +30,10 @@ class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.serialized_trace_id = b3_format.format_trace_id(
-            trace_api.generate_trace_id()
+            trace.generate_trace_id()
         )
         cls.serialized_span_id = b3_format.format_span_id(
-            trace_api.generate_span_id()
+            trace.generate_span_id()
         )
 
     def test_extract_multi_header(self):

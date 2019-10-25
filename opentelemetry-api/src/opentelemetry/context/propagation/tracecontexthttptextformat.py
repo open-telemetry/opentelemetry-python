@@ -35,11 +35,11 @@ _KEY_WITH_VENDOR_FORMAT = (
 
 _KEY_FORMAT = _KEY_WITHOUT_VENDOR_FORMAT + "|" + _KEY_WITH_VENDOR_FORMAT
 _VALUE_FORMAT = (
-    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{1,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]?"
+    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
 )
 
 _DELIMITER_FORMAT = "[ \t]*,[ \t]*"
-_MEMBER_FORMAT = "({})(=)({})".format(_KEY_FORMAT, _VALUE_FORMAT)
+_MEMBER_FORMAT = "({})(=)({})[ \t]*".format(_KEY_FORMAT, _VALUE_FORMAT)
 
 _DELIMITER_FORMAT_RE = re.compile(_DELIMITER_FORMAT)
 _MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
@@ -68,11 +68,11 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         header = get_from_carrier(carrier, cls._TRACEPARENT_HEADER_NAME)
 
         if not header:
-            return trace.generate_span_context()
+            return trace.INVALID_SPAN_CONTEXT
 
         match = re.search(cls._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
-            return trace.generate_span_context()
+            return trace.INVALID_SPAN_CONTEXT
 
         version = match.group(1)
         trace_id = match.group(2)
@@ -80,13 +80,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         trace_options = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
-            return trace.generate_span_context()
+            return trace.INVALID_SPAN_CONTEXT
 
         if version == "00":
             if match.group(5):
-                return trace.generate_span_context()
+                return trace.INVALID_SPAN_CONTEXT
         if version == "ff":
-            return trace.generate_span_context()
+            return trace.INVALID_SPAN_CONTEXT
 
         tracestate_headers = get_from_carrier(
             carrier, cls._TRACESTATE_HEADER_NAME
