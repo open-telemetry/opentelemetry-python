@@ -62,8 +62,8 @@ implicit or explicit context propagation consistently throughout.
 """
 
 import enum
-import types as python_types
 import random
+import types as python_types
 import typing
 from contextlib import contextmanager
 

@@ -40,7 +40,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
         If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
         """
-        output = {}  # type:typing.Dict[str, str]
+        output = {}  # type:typing.Dict[str, typing.List[str]]
         span_context = FORMAT.extract(get_as_list, output)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
@@ -98,12 +98,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
         )
-        self.assertNotEqual(
-            span_context.span_id, trace.INVALID_SPAN_CONTEXT.span_id
-        )
-        self.assertNotEqual(
-            span_context.trace_id, trace.INVALID_SPAN_CONTEXT.trace_id
-        )
+        self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
         self.assertNotEqual(span_context.span_id, "1234567890123456")
 
     def test_invalid_parent_id(self):
@@ -130,8 +125,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
         )
-        self.assertNotEqual(span_context, trace.INVALID_SPAN_CONTEXT)
-        self.assertEqual(span_context.trace_state, trace.TraceState())
+        self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
     def test_no_send_empty_tracestate(self):
         """If the tracestate is empty, do not set the header.
@@ -156,8 +150,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
         RFC 4.3
 
-        If the version cannot be parsed, the vendor creates a new traceparent header and
-        deletes tracestate.
+        If the version cannot be parsed, return an invalid trace header.
         """
         span_context = FORMAT.extract(
             get_as_list,
@@ -168,8 +161,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
         )
-        self.assertNotEqual(span_context, trace.INVALID_SPAN_CONTEXT)
-        self.assertNotEqual(span_context.trace_id, self.TRACE_ID)
+        self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context.

@@ -151,7 +151,7 @@ def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
                 # TODO: log this?
                 return trace.TraceState()
             key, _eq, value = match.groups()
-            if key in tracestate:
+            if key in tracestate:  # pylint:disable=E1135
                 # duplicate keys are not legal in
                 # the header, so we will remove
                 return trace.TraceState()
