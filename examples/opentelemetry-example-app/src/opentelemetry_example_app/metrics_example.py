@@ -31,8 +31,15 @@ counter = meter.create_metric(
 )
 
 label_values = ("staging",)
+
+# Direct metric usage
+counter.add(label_values, 25)
+
+# Handle usage
 counter_handle = counter.get_handle(label_values)
 counter_handle.add(100)
+
+# Record batch usage
 meter.record_batch(label_values, [(counter, 50)])
 print(counter_handle.data)
 

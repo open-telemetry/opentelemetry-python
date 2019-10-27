@@ -44,42 +44,33 @@ class BaseHandle:
 
 
 class CounterHandle(metrics_api.CounterHandle, BaseHandle):
-    def update(self, value: metrics_api.ValueT) -> None:
+    def add(self, value: metrics_api.ValueT) -> None:
+        """See `opentelemetry.metrics.CounterHandle.add`."""
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
                 return
             self.data += value
 
-    def add(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.CounterHandle._add`."""
-        self.update(value)
-
 
 class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
-    def update(self, value: metrics_api.ValueT) -> None:
+    def set(self, value: metrics_api.ValueT) -> None:
+        """See `opentelemetry.metrics.GaugeHandle.set`."""
         if self._validate_update(value):
             if self.monotonic and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
             self.data = value
 
-    def set(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.GaugeHandle._set`."""
-        self.update(value)
-
 
 class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
-    def update(self, value: metrics_api.ValueT) -> None:
+    def record(self, value: metrics_api.ValueT) -> None:
+        """See `opentelemetry.metrics.MeasureHandle.record`."""
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic measure cannot accept negatives.")
                 return
             # TODO: record
-
-    def record(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.MeasureHandle._record`."""
-        self.update(value)
 
 
 class Metric(metrics_api.Metric):
@@ -116,6 +107,21 @@ class Metric(metrics_api.Metric):
         self.handles[label_values] = handle
         return handle
 
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        """Generic method used to update the metric value.
+
+        Used primarily for batch operations. Implementations should call the
+        appropriate methods corresponding to the standard interpretation of
+        the metric type.
+
+        Args:
+            label_values: The values used to match which handle for the given
+                metric to update.
+            value: The value to update the metric with.
+        """
+
 
 class Counter(Metric):
     """See `opentelemetry.metrics.Counter`.
@@ -147,6 +153,17 @@ class Counter(Metric):
             monotonic=monotonic,
         )
 
+    def add(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        """See `opentelemetry.metrics.Counter.add`."""
+        self.get_handle(label_values).add(value)
+
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        self.add(label_values, value)
+
 
 class Gauge(Metric):
     """See `opentelemetry.metrics.Gauge`.
@@ -176,6 +193,17 @@ class Gauge(Metric):
             enabled=enabled,
             monotonic=monotonic,
         )
+
+    def set(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        """See `opentelemetry.metrics.Gauge.set`."""
+        self.get_handle(label_values).set(value)
+
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        self.set(label_values, value)
 
 
 class Measure(Metric):
@@ -207,6 +235,17 @@ class Measure(Metric):
             monotonic=monotonic,
         )
 
+    def record(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        """See `opentelemetry.metrics.Measure.record`."""
+        self.get_handle(label_values).record(value)
+
+    def update(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        self.record(label_values, value)
+
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`."""
@@ -218,7 +257,7 @@ class Meter(metrics_api.Meter):
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
-            metric.get_handle(label_values).update(value)
+            metric.update(label_values, value)
 
     def create_metric(
         self,
