@@ -141,6 +141,7 @@ def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
         will be discarded and an empty tracestate will be returned.
     """
     tracestate = trace.TraceState()
+    value_count = 0
     for header in header_list:
         for member in re.split(_DELIMITER_FORMAT_RE, header):
             # empty members are valid, but no need to process further.
@@ -158,8 +159,9 @@ def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
             # typing.Dict's update is not recognized by pylint:
             # https://github.com/PyCQA/pylint/issues/2420
             tracestate[key] = value  # pylint:disable=E1137
-    if len(tracestate) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
-        tracestate = trace.TraceState()
+            value_count += 1
+            if value_count > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+                return trace.TraceState()
     return tracestate
 
 
