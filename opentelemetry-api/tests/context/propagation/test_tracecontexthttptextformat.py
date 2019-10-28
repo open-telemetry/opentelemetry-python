@@ -99,7 +99,6 @@ class TestTraceContextFormat(unittest.TestCase):
             },
         )
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
-        self.assertNotEqual(span_context.span_id, "1234567890123456")
 
     def test_invalid_parent_id(self):
         """If the parent id is invalid, we must ignore the full traceparent header.
@@ -171,8 +170,7 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertFalse("traceparent" in output)
 
     def test_tracestate_empty_header(self):
-        """Do not propagate invalid trace context.
-        """
+        """Test tracestate with an additional empty header (should be ignored)"""
         span_context = FORMAT.extract(
             get_as_list,
             {
