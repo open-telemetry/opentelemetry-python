@@ -65,7 +65,7 @@ def enable(tracer):
                 path = "<URL parses to None>"
             path = parsed_url.path
 
-        with tracer.start_span(path, kind=SpanKind.CLIENT) as span:
+        with tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", "http")
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)

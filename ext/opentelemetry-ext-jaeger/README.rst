@@ -51,7 +51,7 @@ gRPC is still not supported by this implementation.
     # add to the tracer
     tracer.add_span_processor(span_processor)
 
-    with tracer.start_span('foo'):
+    with tracer.start_as_current_span('foo'):
         print('Hello world!')
 
     # shutdown the span processor

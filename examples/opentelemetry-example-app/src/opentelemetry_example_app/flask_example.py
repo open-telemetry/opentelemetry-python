@@ -67,7 +67,7 @@ app = flask.Flask(__name__)
 def hello():
     # emit a trace that measures how long the
     # sleep takes
-    with trace.tracer().start_span("example-request"):
+    with trace.tracer().start_as_current_span("example-request"):
         requests.get("http://www.example.com")
     return "hello"
 
