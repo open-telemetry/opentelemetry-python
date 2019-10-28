@@ -45,7 +45,7 @@ app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
 @app.route("/")
 def hello():
-    with trace.tracer().start_span("parent"):
+    with trace.tracer().start_as_current_span("parent"):
         requests.get("https://www.wikipedia.org/wiki/Rabbit")
     return "hello"
 
