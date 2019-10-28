@@ -10,6 +10,8 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
+      with:
+        python-version: '3.7'
     - name: Build wheels
       run: ./scripts/build.sh
     - name: Publish to PyPI
