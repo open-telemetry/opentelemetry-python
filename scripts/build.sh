@@ -5,9 +5,8 @@
 
 # set -ev
 
-# Ensure that we have the latest versions of Twine, Wheel, and Setuptools.
-python3 -m pip install --upgrade pip
-python3 -m pip install --upgrade twine wheel setuptools
+# Get the latest versions of packaging tools
+python3 -m pip install --upgrade pip setuptools wheel
 
 BASEDIR=$(dirname $(readlink -f $(dirname $0)))
 
