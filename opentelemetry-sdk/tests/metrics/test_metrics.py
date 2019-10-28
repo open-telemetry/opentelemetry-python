@@ -104,13 +104,6 @@ class TestCounter(unittest.TestCase):
         metric.add(("value",), 2)
         self.assertEqual(handle.data, 5)
 
-    def test_update(self):
-        metric = metrics.Counter("name", "desc", "unit", int, ("key",))
-        handle = metric.get_handle(("value",))
-        metric.update(("value",), 3)
-        metric.update(("value",), 2)
-        self.assertEqual(handle.data, 5)
-
 
 class TestGauge(unittest.TestCase):
     def test_set(self):
@@ -121,14 +114,6 @@ class TestGauge(unittest.TestCase):
         metric.set(("value",), 2)
         self.assertEqual(handle.data, 2)
 
-    def test_update(self):
-        metric = metrics.Gauge("name", "desc", "unit", int, ("key",))
-        handle = metric.get_handle(("value",))
-        metric.update(("value",), 3)
-        self.assertEqual(handle.data, 3)
-        metric.update(("value",), 2)
-        self.assertEqual(handle.data, 2)
-
 
 class TestMeasure(unittest.TestCase):
     def test_record(self):
@@ -136,12 +121,6 @@ class TestMeasure(unittest.TestCase):
         handle = metric.get_handle(("value",))
         metric.record(("value",), 3)
         # Record not implemented yet
-        self.assertEqual(handle.data, 0)
-
-    def test_update(self):
-        metric = metrics.Measure("name", "desc", "unit", int, ("key",))
-        handle = metric.get_handle(("value",))
-        metric.update(("value",), 3)
         self.assertEqual(handle.data, 0)
 
 

@@ -107,23 +107,10 @@ class Metric(metrics_api.Metric):
         self.handles[label_values] = handle
         return handle
 
-    def update(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
-        """Generic method used to update the metric value.
-
-        Used primarily for batch operations. Implementations should call the
-        appropriate methods corresponding to the standard interpretation of
-        the metric type.
-
-        Args:
-            label_values: The values used to match which handle for the given
-                metric to update.
-            value: The value to update the metric with.
-        """
+    UPDATE_FUNCTION = lambda x, y: None
 
 
-class Counter(Metric):
+class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
 
     By default, counter values can only go up (monotonic). Negative inputs
@@ -159,13 +146,10 @@ class Counter(Metric):
         """See `opentelemetry.metrics.Counter.add`."""
         self.get_handle(label_values).add(value)
 
-    def update(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
-        self.add(label_values, value)
+    UPDATE_FUNCTION = add
 
 
-class Gauge(Metric):
+class Gauge(Metric, metrics_api.Gauge):
     """See `opentelemetry.metrics.Gauge`.
 
     By default, gauge values can go both up and down (non-monotonic).
@@ -200,13 +184,10 @@ class Gauge(Metric):
         """See `opentelemetry.metrics.Gauge.set`."""
         self.get_handle(label_values).set(value)
 
-    def update(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
-        self.set(label_values, value)
+    UPDATE_FUNCTION = set
 
 
-class Measure(Metric):
+class Measure(Metric, metrics_api.Measure):
     """See `opentelemetry.metrics.Measure`.
 
     By default, measure metrics can accept both positive and negatives.
@@ -241,10 +222,7 @@ class Measure(Metric):
         """See `opentelemetry.metrics.Measure.record`."""
         self.get_handle(label_values).record(value)
 
-    def update(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
-        self.record(label_values, value)
+    UPDATE_FUNCTION = record
 
 
 class Meter(metrics_api.Meter):
@@ -257,7 +235,7 @@ class Meter(metrics_api.Meter):
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
-            metric.update(label_values, value)
+            metric.UPDATE_FUNCTION(label_values, value)
 
     def create_metric(
         self,
