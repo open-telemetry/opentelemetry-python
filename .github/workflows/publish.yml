@@ -1,8 +1,6 @@
-name: Publish
+name: Publish (Testing)
 
-on:
-  release:
-    types: [published]
+on: [push, pull_request]
 
 jobs:
   publish:
@@ -15,7 +13,9 @@ jobs:
     - name: Build wheels
       run: ./scripts/build.sh
     - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@66f4ba7
-      with:
-        user: __token__
-        ACCESS_TOKEN: ${{ secrets.pypy_password }}
+      env:
+        TWINE_USERNAME: '__token__'
+        TWINE_PASSWORD: ${{ secrets.pypi_password }}
+      run: |
+        pip install twine
+        twine check dist/*
