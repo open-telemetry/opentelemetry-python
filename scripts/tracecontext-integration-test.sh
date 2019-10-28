@@ -15,7 +15,8 @@ EXAMPLE_SERVER_PID=$!
 # of delay would cause many of the tracecontext tests to fail being
 # unable to connect.
 sleep 1
-function onshutdown {
+onshutdown() 
+{
     # send a sigint, to ensure
     # it is caught as a KeyboardInterrupt in the
     # example service.
