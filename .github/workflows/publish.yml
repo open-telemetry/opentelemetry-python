@@ -1,0 +1,19 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+    - name: Build wheels
+      run: ./scripts/build.sh
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@66f4ba7
+      with:
+        user: __token__
+        ACCESS_TOKEN: ${{ secrets.pypy_password }}
