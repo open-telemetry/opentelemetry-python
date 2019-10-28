@@ -107,7 +107,7 @@ class Metric(metrics_api.Metric):
         self.handles[label_values] = handle
         return handle
 
-    UPDATE_FUNCTION = lambda x, y: None
+    UPDATE_FUNCTION = lambda x, y: None # noqa: E731
 
 
 class Counter(Metric, metrics_api.Counter):
