@@ -38,7 +38,7 @@ class TestRequestsIntegration(unittest.TestCase):
             self.span_attrs[key] = value
 
         self.span.set_attribute = setspanattr
-        self.start_as_current_span_patcher = mock.patch.object(
+        self.start_span_patcher = mock.patch.object(
             self.tracer,
             "start_as_current_span",
             autospec=True,
@@ -64,7 +64,7 @@ class TestRequestsIntegration(unittest.TestCase):
     def tearDown(self):
         opentelemetry.ext.http_requests.disable()
         self.send_patcher.stop()
-        self.start_as_current_span_patcher.stop()
+        self.start_span_patcher.stop()
 
     def test_basic(self):
         url = "https://www.example.org/foo/bar?x=y#top"
