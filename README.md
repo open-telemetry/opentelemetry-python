@@ -61,9 +61,9 @@ tracer = trace.tracer()
 tracer.add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
-with tracer.start_span('foo'):
-    with tracer.start_span('bar'):
-        with tracer.start_span('baz'):
+with tracer.start_as_current_span('foo'):
+    with tracer.start_as_current_span('bar'):
+        with tracer.start_as_current_span('baz'):
             print(Context)
 ```
 
