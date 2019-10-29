@@ -9,8 +9,10 @@ exclude = '''
     | \.mypy_cache
     | \.tox
     | \.venv
+    | \.vscode
     | _build
     | buck-out
+    | target
     | build
     | dist
     | ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen     # generated files
