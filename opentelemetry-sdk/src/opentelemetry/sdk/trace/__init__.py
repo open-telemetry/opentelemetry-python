@@ -301,7 +301,6 @@ class Span(trace_api.Span):
 
 def generate_span_id() -> int:
     """Get a new random span ID.
-
     Returns:
         A random 64-bit int for use as a span ID
     """
@@ -310,7 +309,6 @@ def generate_span_id() -> int:
 
 def generate_trace_id() -> int:
     """Get a new random trace ID.
-
     Returns:
         A random 128-bit int for use as a trace ID
     """

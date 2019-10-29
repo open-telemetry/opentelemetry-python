@@ -173,7 +173,7 @@ def _load_impl(
 
 
 def set_preferred_default_implementation(
-    implementation_factory: _UntrustedImplFactory[_T]
+    implementation_factory: _UntrustedImplFactory[_T],
 ) -> None:
     """Sets a factory function that may be called for any implementation
     object. See the :ref:`module docs <loader-factory>` for more details."""
