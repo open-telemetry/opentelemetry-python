@@ -16,7 +16,7 @@ import setuptools
 
 setuptools.setup(
     name="opentelemetry-example-app",
-    version="0.2a.0",
+    version="0.2a0",
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
     classifiers=[
@@ -35,10 +35,10 @@ setuptools.setup(
     long_description=open("README.rst").read(),
     install_requires=[
         "typing; python_version<'3.5'",
-        "opentelemetry-api>=0.2a.0",
-        "opentelemetry-sdk>=0.2a.0",
-        "opentelemetry-ext-http-requests>=0.2a.0",
-        "opentelemetry-ext-wsgi>=0.2a.0",
+        "opentelemetry-api>=0.2a0",
+        "opentelemetry-sdk>=0.2a0",
+        "opentelemetry-ext-http-requests>=0.2a0",
+        "opentelemetry-ext-wsgi>=0.2a0",
         "flask",
         "requests",
     ],
