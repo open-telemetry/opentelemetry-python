@@ -44,42 +44,33 @@ class BaseHandle:
 
 
 class CounterHandle(metrics_api.CounterHandle, BaseHandle):
-    def update(self, value: metrics_api.ValueT) -> None:
+    def add(self, value: metrics_api.ValueT) -> None:
+        """See `opentelemetry.metrics.CounterHandle.add`."""
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
                 return
             self.data += value
 
-    def add(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.CounterHandle._add`."""
-        self.update(value)
-
 
 class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
-    def update(self, value: metrics_api.ValueT) -> None:
+    def set(self, value: metrics_api.ValueT) -> None:
+        """See `opentelemetry.metrics.GaugeHandle.set`."""
         if self._validate_update(value):
             if self.monotonic and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
             self.data = value
 
-    def set(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.GaugeHandle._set`."""
-        self.update(value)
-
 
 class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
-    def update(self, value: metrics_api.ValueT) -> None:
+    def record(self, value: metrics_api.ValueT) -> None:
+        """See `opentelemetry.metrics.MeasureHandle.record`."""
         if self._validate_update(value):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic measure cannot accept negatives.")
                 return
             # TODO: record
-
-    def record(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.MeasureHandle._record`."""
-        self.update(value)
 
 
 class Metric(metrics_api.Metric):
@@ -116,8 +107,10 @@ class Metric(metrics_api.Metric):
         self.handles[label_values] = handle
         return handle
 
+    UPDATE_FUNCTION = lambda x, y: None  # noqa: E731
 
-class Counter(Metric):
+
+class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
 
     By default, counter values can only go up (monotonic). Negative inputs
@@ -147,8 +140,16 @@ class Counter(Metric):
             monotonic=monotonic,
         )
 
+    def add(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        """See `opentelemetry.metrics.Counter.add`."""
+        self.get_handle(label_values).add(value)
 
-class Gauge(Metric):
+    UPDATE_FUNCTION = add
+
+
+class Gauge(Metric, metrics_api.Gauge):
     """See `opentelemetry.metrics.Gauge`.
 
     By default, gauge values can go both up and down (non-monotonic).
@@ -177,8 +178,16 @@ class Gauge(Metric):
             monotonic=monotonic,
         )
 
+    def set(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        """See `opentelemetry.metrics.Gauge.set`."""
+        self.get_handle(label_values).set(value)
 
-class Measure(Metric):
+    UPDATE_FUNCTION = set
+
+
+class Measure(Metric, metrics_api.Measure):
     """See `opentelemetry.metrics.Measure`.
 
     By default, measure metrics can accept both positive and negatives.
@@ -207,6 +216,14 @@ class Measure(Metric):
             monotonic=monotonic,
         )
 
+    def record(
+        self, label_values: Sequence[str], value: metrics_api.ValueT
+    ) -> None:
+        """See `opentelemetry.metrics.Measure.record`."""
+        self.get_handle(label_values).record(value)
+
+    UPDATE_FUNCTION = record
+
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`."""
@@ -218,7 +235,7 @@ class Meter(metrics_api.Meter):
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
-            metric.get_handle(label_values).update(value)
+            metric.UPDATE_FUNCTION(label_values, value)
 
     def create_metric(
         self,

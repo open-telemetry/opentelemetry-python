@@ -26,7 +26,6 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 
 """
-from abc import ABC, abstractmethod
 from typing import Callable, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
@@ -43,27 +42,38 @@ class DefaultMetricHandle:
 
 class CounterHandle:
     def add(self, value: ValueT) -> None:
-        """Increases the value of the handle by ``value``"""
+        """Increases the value of the handle by ``value``.
+
+        Args:
+            value: The value to record to the handle.
+        """
 
 
 class GaugeHandle:
     def set(self, value: ValueT) -> None:
-        """Sets the current value of the handle to ``value``."""
+        """Sets the current value of the handle to ``value``.
+
+        Args:
+            value: The value to record to the handle.
+        """
 
 
 class MeasureHandle:
     def record(self, value: ValueT) -> None:
-        """Records the given ``value`` to this handle."""
+        """Records the given ``value`` to this handle.
+
+        Args:
+            value: The value to record to the handle.
+        """
 
 
-class Metric(ABC):
+class Metric:
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
     handle that the metric holds.
     """
 
-    @abstractmethod
     def get_handle(self, label_values: Sequence[str]) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
@@ -83,6 +93,11 @@ class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
     def get_handle(self, label_values: Sequence[str]) -> "DefaultMetricHandle":
+        """Gets a `DefaultMetricHandle`.
+
+        Args:
+            label_values: The label values associated with the handle.
+        """
         return DefaultMetricHandle()
 
 
@@ -92,6 +107,14 @@ class Counter(Metric):
     def get_handle(self, label_values: Sequence[str]) -> "CounterHandle":
         """Gets a `CounterHandle`."""
         return CounterHandle()
+
+    def add(self, label_values: Sequence[str], value: ValueT) -> None:
+        """Increases the value of the counter by ``value``.
+
+        Args:
+            label_values: The label values associated with the metric.
+            value: The value to add to the counter metric.
+        """
 
 
 class Gauge(Metric):
@@ -107,6 +130,14 @@ class Gauge(Metric):
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
 
+    def set(self, label_values: Sequence[str], value: ValueT) -> None:
+        """Sets the value of the gauge to ``value``.
+
+        Args:
+            label_values: The label values associated with the metric.
+            value: The value to set the gauge metric to.
+        """
+
 
 class Measure(Metric):
     """A measure type metric that represent raw stats that are recorded.
@@ -119,6 +150,14 @@ class Measure(Metric):
     def get_handle(self, label_values: Sequence[str]) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
+
+    def record(self, label_values: Sequence[str], value: ValueT) -> None:
+        """Records the ``value`` to the measure.
+
+        Args:
+            label_values: The label values associated with the metric.
+            value: The value to record to this measure metric.
+        """
 
 
 MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
@@ -145,8 +184,9 @@ class Meter:
         match the key-value pairs in the label tuples.
 
         Args:
-            label_values: The values that will be matched against to record for
-                the handles under each metric that has those labels.
+            label_values: The label values associated with all measurements in
+                the batch. A measurement is a tuple, representing the `Metric`
+                being recorded and the corresponding value to record.
             record_tuples: A sequence of pairs of `Metric` s and the
                 corresponding value to record for that metric.
         """
