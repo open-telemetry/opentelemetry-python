@@ -3,7 +3,7 @@
 # This script builds wheels for the API, SDK, and extension packages in the
 # dist/ dir, to be uploaded to PyPI.
 
-# set -ev
+set -ev
 
 # Get the latest versions of packaging tools
 python3 -m pip install --upgrade pip setuptools wheel
