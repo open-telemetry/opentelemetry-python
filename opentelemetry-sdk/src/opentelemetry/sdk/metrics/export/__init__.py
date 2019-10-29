@@ -68,10 +68,7 @@ class ConsoleMetricsExporter(MetricsExporter):
             handle = metric.get_handle(label_values)
             print(
                 '{}(data="{}", label_values="{}", metric_data={})'.format(
-                    type(self).__name__,
-                    metric,
-                    label_values,
-                    handle,
+                    type(self).__name__, metric, label_values, handle
                 )
             )
         return MetricsExportResult.SUCCESS

@@ -19,23 +19,21 @@ import unittest
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
+
 class TestConsoleMetricsExporter(unittest.TestCase):
     def test_export(self):
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
-                    "available memory",
-                    "available memory",
-                    "bytes",
-                    int,
-                    ("environment",),
-                )
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            ("environment",),
+        )
         label_values = ("staging",)
         handle = metric.get_handle(label_values)
         result = '{}(data="{}", label_values="{}", metric_data={})\n'.format(
-            ConsoleMetricsExporter.__name__,
-            metric,
-            label_values,
-            handle,
+            ConsoleMetricsExporter.__name__, metric, label_values, handle
         )
         output = io.StringIO()
         sys.stdout = output
