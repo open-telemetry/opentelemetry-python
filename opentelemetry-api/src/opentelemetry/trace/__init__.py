@@ -589,7 +589,7 @@ def tracer() -> Tracer:
 
 
 def set_preferred_tracer_implementation(
-    factory: ImplementationFactory
+    factory: ImplementationFactory,
 ) -> None:
     """Set the factory to be used to create the tracer.
 
