@@ -40,7 +40,7 @@ class MetricsExporter:
             metric_tuples: A sequence of metric pairs. A metric pair consists
                 of a `Metric` and a sequence of strings. The sequence of
                 strings will be used to get the corresponding `MetricHandle`
-                from the `Metric` to import.
+                from the `Metric` to export.
 
         Returns:
             The result of the export
@@ -64,13 +64,13 @@ class ConsoleMetricsExporter(MetricsExporter):
     def export(
         self, metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
     ) -> "MetricsExportResult":
-        for metric_tuple in metric_tuples:
-            handle = metric_tuple[0].get_handle(metric_tuple[1])
+        for metric, label_values in metric_tuples:
+            handle = metric.get_handle(label_values)
             print(
                 '{}(data="{}", label_values="{}", metric_data={})'.format(
                     type(self).__name__,
-                    metric_tuple[0],
-                    metric_tuple[1],
+                    metric,
+                    label_values,
                     handle,
                 )
             )
