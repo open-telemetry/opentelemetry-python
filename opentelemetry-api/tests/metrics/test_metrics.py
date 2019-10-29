@@ -24,7 +24,7 @@ class TestMeter(unittest.TestCase):
 
     def test_record_batch(self):
         counter = metrics.Counter()
-        self.meter.record_batch(("values"), ((counter, 1)))
+        self.meter.record_batch(("values"), ((counter, 1),))
 
     def test_create_metric(self):
         metric = self.meter.create_metric("", "", "", float, metrics.Counter)
@@ -42,15 +42,27 @@ class TestMetrics(unittest.TestCase):
         handle = counter.get_handle(("test", "test1"))
         self.assertIsInstance(handle, metrics.CounterHandle)
 
+    def test_counter_add(self):
+        counter = metrics.Counter()
+        counter.add(("value",), 1)
+
     def test_gauge(self):
         gauge = metrics.Gauge()
         handle = gauge.get_handle(("test", "test1"))
         self.assertIsInstance(handle, metrics.GaugeHandle)
 
+    def test_gauge_set(self):
+        gauge = metrics.Gauge()
+        gauge.set(("value",), 1)
+
     def test_measure(self):
         measure = metrics.Measure()
         handle = measure.get_handle(("test", "test1"))
         self.assertIsInstance(handle, metrics.MeasureHandle)
+
+    def test_measure_record(self):
+        measure = metrics.Measure()
+        measure.record(("value",), 1)
 
     def test_default_handle(self):
         metrics.DefaultMetricHandle()

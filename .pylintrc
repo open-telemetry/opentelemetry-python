@@ -7,7 +7,7 @@ extension-pkg-whitelist=
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS
+ignore=CVS,gen
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
@@ -68,7 +68,8 @@ disable=missing-docstring,
       ungrouped-imports, # Leave this up to isort
       wrong-import-order, # Leave this up to isort
       bad-continuation, # Leave this up to black
-      line-too-long # Leave this up to black
+      line-too-long, # Leave this up to black
+      exec-used
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

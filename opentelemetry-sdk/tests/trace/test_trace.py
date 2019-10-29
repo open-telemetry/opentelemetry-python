@@ -16,7 +16,9 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk import trace, util
+from opentelemetry.sdk import trace
+from opentelemetry.trace import sampling
+from opentelemetry.util import time_ns
 
 
 class TestTracer(unittest.TestCase):
@@ -25,23 +27,60 @@ class TestTracer(unittest.TestCase):
         self.assertIsInstance(tracer, trace_api.Tracer)
 
 
+class TestTracerSampling(unittest.TestCase):
+    def test_default_sampler(self):
+        tracer = trace.Tracer()
+
+        # Check that the default tracer creates real spans via the default
+        # sampler
+        root_span = tracer.create_span(name="root span", parent=None)
+        self.assertIsInstance(root_span, trace.Span)
+        child_span = tracer.create_span(name="child span", parent=root_span)
+        self.assertIsInstance(child_span, trace.Span)
+
+    def test_sampler_no_sampling(self):
+        tracer = trace.Tracer()
+        tracer.sampler = sampling.ALWAYS_OFF
+
+        # Check that the default tracer creates no-op spans if the sampler
+        # decides not to sampler
+        root_span = tracer.create_span(name="root span", parent=None)
+        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        child_span = tracer.create_span(name="child span", parent=root_span)
+        self.assertIsInstance(child_span, trace_api.DefaultSpan)
+
+
 class TestSpanCreation(unittest.TestCase):
+    def test_create_span_invalid_spancontext(self):
+        """If an invalid span context is passed as the parent, the created
+        span should use a new span id.
+
+        Invalid span contexts should also not be added as a parent. This
+        eliminates redundant error handling logic in exporters.
+        """
+        tracer = trace.Tracer("test_create_span_invalid_spancontext")
+        new_span = tracer.create_span(
+            "root", parent=trace_api.INVALID_SPAN_CONTEXT
+        )
+        self.assertTrue(new_span.context.is_valid())
+        self.assertIsNone(new_span.parent)
+
     def test_start_span_implicit(self):
         tracer = trace.Tracer("test_start_span_implicit")
 
         self.assertIsNone(tracer.get_current_span())
 
-        with tracer.start_span("root") as root:
-            self.assertIs(tracer.get_current_span(), root)
+        root = tracer.start_span("root")
+        self.assertIsNotNone(root.start_time)
+        self.assertIsNone(root.end_time)
+        self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
-            self.assertIsNotNone(root.start_time)
-            self.assertIsNone(root.end_time)
-            self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
+        with tracer.use_span(root, True):
+            self.assertIs(tracer.get_current_span(), root)
 
             with tracer.start_span(
                 "child", kind=trace_api.SpanKind.CLIENT
             ) as child:
-                self.assertIs(tracer.get_current_span(), child)
                 self.assertIs(child.parent, root)
                 self.assertEqual(child.kind, trace_api.SpanKind.CLIENT)
 
@@ -63,9 +102,9 @@ class TestSpanCreation(unittest.TestCase):
                     root_context.trace_options, child_context.trace_options
                 )
 
-            # After exiting the child's scope the parent should become the
-            # current span again.
-            self.assertIs(tracer.get_current_span(), root)
+                # Verify start_span() did not set the current span.
+                self.assertIs(tracer.get_current_span(), root)
+
             self.assertIsNotNone(child.end_time)
 
         self.assertIsNone(tracer.get_current_span())
@@ -81,26 +120,25 @@ class TestSpanCreation(unittest.TestCase):
 
         self.assertIsNone(tracer.get_current_span())
 
+        root = tracer.start_span("root")
+        self.assertIsNotNone(root.start_time)
+        self.assertIsNone(root.end_time)
+
         # Test with the implicit root span
-        with tracer.start_span("root") as root:
+        with tracer.use_span(root, True):
             self.assertIs(tracer.get_current_span(), root)
 
-            self.assertIsNotNone(root.start_time)
-            self.assertIsNone(root.end_time)
-
             with tracer.start_span("stepchild", other_parent) as child:
-                # The child should become the current span as usual, but its
-                # parent should be the one passed in, not the
-                # previously-current span.
-                self.assertIs(tracer.get_current_span(), child)
+                # The child's parent should be the one passed in,
+                # not the current span.
                 self.assertNotEqual(child.parent, root)
                 self.assertIs(child.parent, other_parent)
 
                 self.assertIsNotNone(child.start_time)
                 self.assertIsNone(child.end_time)
 
-                # The child should inherit its context fromr the explicit
-                # parent, not the previously-current span.
+                # The child should inherit its context from the explicit
+                # parent, not the current span.
                 child_context = child.get_context()
                 self.assertEqual(other_parent.trace_id, child_context.trace_id)
                 self.assertNotEqual(
@@ -112,6 +150,60 @@ class TestSpanCreation(unittest.TestCase):
                 self.assertEqual(
                     other_parent.trace_options, child_context.trace_options
                 )
+
+                # Verify start_span() did not set the current span.
+                self.assertIs(tracer.get_current_span(), root)
+
+            # Verify ending the child did not set the current span.
+            self.assertIs(tracer.get_current_span(), root)
+            self.assertIsNotNone(child.end_time)
+
+    def test_start_as_current_span_implicit(self):
+        tracer = trace.Tracer("test_start_as_current_span_implicit")
+
+        self.assertIsNone(tracer.get_current_span())
+
+        with tracer.start_as_current_span("root") as root:
+            self.assertIs(tracer.get_current_span(), root)
+
+            with tracer.start_as_current_span("child") as child:
+                self.assertIs(tracer.get_current_span(), child)
+                self.assertIs(child.parent, root)
+
+            # After exiting the child's scope the parent should become the
+            # current span again.
+            self.assertIs(tracer.get_current_span(), root)
+            self.assertIsNotNone(child.end_time)
+
+        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNotNone(root.end_time)
+
+    def test_start_as_current_span_explicit(self):
+        tracer = trace.Tracer("test_start_as_current_span_explicit")
+
+        other_parent = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+        )
+
+        self.assertIsNone(tracer.get_current_span())
+
+        # Test with the implicit root span
+        with tracer.start_as_current_span("root") as root:
+            self.assertIs(tracer.get_current_span(), root)
+
+            self.assertIsNotNone(root.start_time)
+            self.assertIsNone(root.end_time)
+
+            with tracer.start_as_current_span(
+                "stepchild", other_parent
+            ) as child:
+                # The child should become the current span as usual, but its
+                # parent should be the one passed in, not the
+                # previously-current span.
+                self.assertIs(tracer.get_current_span(), child)
+                self.assertNotEqual(child.parent, root)
+                self.assertIs(child.parent, other_parent)
 
             # After exiting the child's scope the last span on the stack should
             # become current, not the child's parent.
@@ -143,7 +235,7 @@ class TestSpan(unittest.TestCase):
 
         self.assertIsNone(tracer.get_current_span())
 
-        with tracer.start_span("root") as root:
+        with tracer.start_as_current_span("root") as root:
             # attributes
             root.set_attribute("component", "http")
             root.set_attribute("http.method", "GET")
@@ -173,8 +265,10 @@ class TestSpan(unittest.TestCase):
 
             # events
             root.add_event("event0")
-            root.add_event("event1", {"name": "birthday"})
-            now = util.time_ns()
+            now = time_ns()
+            root.add_event(
+                "event1", timestamp=now, attributes={"name": "birthday"}
+            )
             root.add_lazy_event(
                 trace_api.Event("event2", now, {"name": "hello"})
             )
@@ -186,6 +280,7 @@ class TestSpan(unittest.TestCase):
 
             self.assertEqual(root.events[1].name, "event1")
             self.assertEqual(root.events[1].attributes, {"name": "birthday"})
+            self.assertEqual(root.events[1].timestamp, now)
 
             self.assertEqual(root.events[2].name, "event2")
             self.assertEqual(root.events[2].attributes, {"name": "hello"})
@@ -234,6 +329,34 @@ class TestSpan(unittest.TestCase):
         span.start()
         self.assertEqual(start_time, span.start_time)
 
+        # default status
+        self.assertTrue(span.status.is_ok)
+        self.assertIs(
+            span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
+        )
+        self.assertIs(span.status.description, None)
+
+        # status
+        new_status = trace_api.status.Status(
+            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description"
+        )
+        span.set_status(new_status)
+        self.assertIs(
+            span.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.CANCELLED,
+        )
+        self.assertIs(span.status.description, "Test description")
+
+    def test_span_override_start_and_end_time(self):
+        """Span sending custom start_time and end_time values"""
+        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        start_time = 123
+        span.start(start_time)
+        self.assertEqual(start_time, span.start_time)
+        end_time = 456
+        span.end(end_time)
+        self.assertEqual(end_time, span.end_time)
+
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
         tracer = trace.Tracer("test_ended_span")
@@ -243,7 +366,7 @@ class TestSpan(unittest.TestCase):
             span_id=trace.generate_span_id(),
         )
 
-        with tracer.start_span("root") as root:
+        with tracer.start_as_current_span("root") as root:
             # everything should be empty at the beginning
             self.assertEqual(len(root.attributes), 0)
             self.assertEqual(len(root.events), 0)
@@ -269,6 +392,19 @@ class TestSpan(unittest.TestCase):
 
             root.update_name("xxx")
             self.assertEqual(root.name, "root")
+
+            new_status = trace_api.status.Status(
+                trace_api.status.StatusCanonicalCode.CANCELLED,
+                "Test description",
+            )
+            root.set_status(new_status)
+            # default status
+            self.assertTrue(root.status.is_ok)
+            self.assertEqual(
+                root.status.canonical_code,
+                trace_api.status.StatusCanonicalCode.OK,
+            )
+            self.assertIs(root.status.description, None)
 
 
 def span_event_start_fmt(span_processor_name, span_name):
@@ -302,9 +438,9 @@ class TestSpanProcessor(unittest.TestCase):
         sp1 = MySpanProcessor("SP1", spans_calls_list)
         sp2 = MySpanProcessor("SP2", spans_calls_list)
 
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("baz"):
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("baz"):
                     pass
 
         # at this point lists must be empty
@@ -313,13 +449,13 @@ class TestSpanProcessor(unittest.TestCase):
         # add single span processor
         tracer.add_span_processor(sp1)
 
-        with tracer.start_span("foo"):
+        with tracer.start_as_current_span("foo"):
             expected_list.append(span_event_start_fmt("SP1", "foo"))
 
-            with tracer.start_span("bar"):
+            with tracer.start_as_current_span("bar"):
                 expected_list.append(span_event_start_fmt("SP1", "bar"))
 
-                with tracer.start_span("baz"):
+                with tracer.start_as_current_span("baz"):
                     expected_list.append(span_event_start_fmt("SP1", "baz"))
 
                 expected_list.append(span_event_end_fmt("SP1", "baz"))
@@ -336,15 +472,15 @@ class TestSpanProcessor(unittest.TestCase):
         # go for multiple span processors
         tracer.add_span_processor(sp2)
 
-        with tracer.start_span("foo"):
+        with tracer.start_as_current_span("foo"):
             expected_list.append(span_event_start_fmt("SP1", "foo"))
             expected_list.append(span_event_start_fmt("SP2", "foo"))
 
-            with tracer.start_span("bar"):
+            with tracer.start_as_current_span("bar"):
                 expected_list.append(span_event_start_fmt("SP1", "bar"))
                 expected_list.append(span_event_start_fmt("SP2", "bar"))
 
-                with tracer.start_span("baz"):
+                with tracer.start_as_current_span("baz"):
                     expected_list.append(span_event_start_fmt("SP1", "baz"))
                     expected_list.append(span_event_start_fmt("SP2", "baz"))
 
@@ -369,9 +505,9 @@ class TestSpanProcessor(unittest.TestCase):
         # Span processors are created but not added to the tracer yet
         sp = MySpanProcessor("SP1", spans_calls_list)
 
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("baz"):
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("baz"):
                     # add span processor after spans have been created
                     tracer.add_span_processor(sp)
 

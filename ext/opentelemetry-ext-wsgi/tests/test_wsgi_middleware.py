@@ -210,7 +210,7 @@ class TestWsgiAttributes(unittest.TestCase):
         self.validate_url("http://127.0.0.1/#top")
 
     def test_request_attributes_with_partial_raw_uri_and_nonstandard_port(
-        self
+        self,
     ):
         self.environ["RAW_URI"] = "/?"
         del self.environ["HTTP_HOST"]
