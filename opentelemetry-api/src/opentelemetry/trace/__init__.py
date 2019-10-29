@@ -338,10 +338,11 @@ class SpanContext:
         self.trace_state = trace_state
 
     def __repr__(self) -> str:
-        return "{}(trace_id={}, span_id={})".format(
+        return "{}(trace_id={}, span_id={}, trace_state={!r})".format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
+            self.trace_state,
         )
 
     def is_valid(self) -> bool:
@@ -589,7 +590,7 @@ def tracer() -> Tracer:
 
 
 def set_preferred_tracer_implementation(
-    factory: ImplementationFactory
+    factory: ImplementationFactory,
 ) -> None:
     """Set the factory to be used to create the tracer.
 
