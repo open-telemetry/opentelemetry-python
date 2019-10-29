@@ -51,9 +51,11 @@ app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
 @app.route("/verify-tracecontext", methods=["POST"])
 def verify_tracecontext():
-    """Upon reception of some payload, sends a request back to the designated url.
+    """Upon reception of some payload, sends a request back to the designated
+    url.
 
-    This route is designed to be testable with the w3c tracecontext server / client test.
+    This route is designed to be testable with the w3c tracecontext server /
+    client test.
     """
     for action in flask.request.json:
         requests.post(
