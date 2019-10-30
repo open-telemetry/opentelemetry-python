@@ -42,11 +42,12 @@ class TestPymongoIntegration(unittest.TestCase):
         }
         mock_tracer = MockTracer()
         command_tracer = CommandTracer(mock_tracer)
-        command_tracer.started(
-            event=MockEvent(command_attrs, ("test.com", "1234"))
+        mock_event = MockEvent(
+            command_attrs, ("test.com", "1234"), "test_request_id"
         )
+        command_tracer.started(event=mock_event)
         # pylint: disable=protected-access
-        span = command_tracer._span
+        span = command_tracer._get_span(mock_event)
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(span.name, "mongodb.command_name.find")
         self.assertEqual(span.attributes["component"], "mongodb")
@@ -58,7 +59,9 @@ class TestPymongoIntegration(unittest.TestCase):
         self.assertEqual(
             span.attributes["db.mongo.operation_id"], "operation_id"
         )
-        self.assertEqual(span.attributes["db.mongo.request_id"], "request_id")
+        self.assertEqual(
+            span.attributes["db.mongo.request_id"], "test_request_id"
+        )
 
         self.assertEqual(span.attributes["db.mongo.filter"], "filter")
         self.assertEqual(span.attributes["db.mongo.sort"], "sort")
@@ -70,9 +73,9 @@ class TestPymongoIntegration(unittest.TestCase):
         mock_event = MockEvent({})
         command_tracer = CommandTracer(mock_tracer)
         command_tracer.started(event=mock_event)
-        command_tracer.succeeded(event=mock_event)
         # pylint: disable=protected-access
-        span = command_tracer._span
+        span = command_tracer._get_span(mock_event)
+        command_tracer.succeeded(event=mock_event)
         self.assertEqual(
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
@@ -87,9 +90,9 @@ class TestPymongoIntegration(unittest.TestCase):
         mock_event = MockEvent({})
         command_tracer = CommandTracer(mock_tracer)
         command_tracer.started(event=mock_event)
-        command_tracer.failed(event=mock_event)
         # pylint: disable=protected-access
-        span = command_tracer._span
+        span = command_tracer._get_span(mock_event)
+        command_tracer.failed(event=mock_event)
         self.assertEqual(
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
@@ -99,6 +102,33 @@ class TestPymongoIntegration(unittest.TestCase):
         )
         self.assertEqual(span.status.description, "failure")
         self.assertIsNotNone(span.end_time)
+
+    def test_multiple_commands(self):
+        mock_tracer = MockTracer()
+        first_mock_event = MockEvent({}, ("firstUrl", "123"), "first")
+        second_mock_event = MockEvent({}, ("secondUrl", "456"), "second")
+        command_tracer = CommandTracer(mock_tracer)
+        command_tracer.started(event=first_mock_event)
+        # pylint: disable=protected-access
+        first_span = command_tracer._get_span(first_mock_event)
+        command_tracer.started(event=second_mock_event)
+        # pylint: disable=protected-access
+        second_span = command_tracer._get_span(second_mock_event)
+        command_tracer.succeeded(event=first_mock_event)
+        command_tracer.failed(event=second_mock_event)
+
+        self.assertEqual(first_span.attributes["db.mongo.request_id"], "first")
+        self.assertIs(
+            first_span.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.OK,
+        )
+        self.assertEqual(
+            second_span.attributes["db.mongo.request_id"], "second"
+        )
+        self.assertIs(
+            second_span.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.UNKNOWN,
+        )
 
 
 class MockCommand:
@@ -110,9 +140,10 @@ class MockCommand:
 
 
 class MockEvent:
-    def __init__(self, command_attrs, connection_id=""):
+    def __init__(self, command_attrs, connection_id=None, request_id=""):
         self.command = MockCommand(command_attrs)
         self.connection_id = connection_id
+        self.request_id = request_id
 
     def __getattr__(self, item):
         return item
@@ -144,12 +175,13 @@ class MockSpan:
 
 class MockTracer:
     def __init__(self):
-        self.span = MockSpan()
         self.end_span = mock.Mock()
-        self.span.attributes = {}
-        self.span.status = None
 
+    # pylint: disable=no-self-use
     def start_span(self, name, kind):
-        self.span.name = name
-        self.span.kind = kind
-        return self.span
+        span = MockSpan()
+        span.attributes = {}
+        span.status = None
+        span.name = name
+        span.kind = kind
+        return span

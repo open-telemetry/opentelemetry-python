@@ -39,57 +39,70 @@ class CommandTracer(monitoring.CommandListener):
         if tracer is None:
             raise ValueError("The tracer is not provided.")
         self._tracer = tracer
-        self._span = None
+        self._span_dict = {}
 
     def started(self, event: monitoring.CommandStartedEvent):
         command = event.command.get(event.command_name)
         if command is None:
             command = ""
         name = DATABASE_TYPE + "." + event.command_name + "." + command
-        self._span = None
         try:
-            self._span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
-            self._span.set_attribute("component", DATABASE_TYPE)
-            self._span.set_attribute("db.type", DATABASE_TYPE)
-            self._span.set_attribute("db.instance", event.database_name)
-            self._span.set_attribute(
+            span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
+            span.set_attribute("component", DATABASE_TYPE)
+            span.set_attribute("db.type", DATABASE_TYPE)
+            span.set_attribute("db.instance", event.database_name)
+            span.set_attribute(
                 "db.statement", event.command_name + " " + command
             )
             if event.connection_id is not None:
-                self._span.set_attribute(
-                    "peer.hostname", event.connection_id[0]
-                )
-                self._span.set_attribute("peer.port", event.connection_id[1])
+                span.set_attribute("peer.hostname", event.connection_id[0])
+                span.set_attribute("peer.port", event.connection_id[1])
 
             # pymongo specific, not specified by spec
-            self._span.set_attribute(
-                "db.mongo.operation_id", event.operation_id
-            )
-            self._span.set_attribute("db.mongo.request_id", event.request_id)
+            span.set_attribute("db.mongo.operation_id", event.operation_id)
+            span.set_attribute("db.mongo.request_id", event.request_id)
 
             for attr in COMMAND_ATTRIBUTES:
                 _attr = event.command.get(attr)
                 if _attr is not None:
-                    self._span.set_attribute("db.mongo." + attr, str(_attr))
+                    span.set_attribute("db.mongo." + attr, str(_attr))
+
+            # Add Span to dictionary
+            self._span_dict[_get_span_dict_key(event)] = span
         except Exception as ex:  # noqa pylint: disable=broad-except
-            if self._span is not None:
-                self._span.set_status(Status(StatusCanonicalCode.INTERNAL, ex))
-                self._span.end()
+            if span is not None:
+                span.set_status(Status(StatusCanonicalCode.INTERNAL, ex))
+                span.end()
+                self._remove_span(event)
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
-        if self._span is not None:
-            self._span.set_attribute(
+        span = self._span_dict[_get_span_dict_key(event)]
+        if span is not None:
+            span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            self._span.set_status(Status(StatusCanonicalCode.OK, event.reply))
-            self._span.end()
+            span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+            span.end()
+            self._remove_span(event)
 
     def failed(self, event: monitoring.CommandFailedEvent):
-        if self._span is not None:
-            self._span.set_attribute(
+        span = self._span_dict[_get_span_dict_key(event)]
+        if span is not None:
+            span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            self._span.set_status(
-                Status(StatusCanonicalCode.UNKNOWN, event.failure)
-            )
-            self._span.end()
+            span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
+            span.end()
+            self._remove_span(event)
+
+    def _get_span(self, event):
+        return self._span_dict[_get_span_dict_key(event)]
+
+    def _remove_span(self, event):
+        self._span_dict.pop(_get_span_dict_key(event))
+
+
+def _get_span_dict_key(event):
+    if event.connection_id is not None:
+        return (event.request_id, str(event.connection_id))
+    return event.request_id
