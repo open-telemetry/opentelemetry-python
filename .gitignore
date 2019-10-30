@@ -25,6 +25,7 @@ venv*/
 pip-log.txt
 
 # Unit test / coverage reports
+coverage.xml
 .coverage
 .nox
 .tox
