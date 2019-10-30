@@ -43,6 +43,7 @@ setuptools.setup(
     description="OpenTelemetry Python SDK",
     include_package_data=True,
     long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
     install_requires=["opentelemetry-api==0.1.dev0"],
     extras_require={},
     license="Apache-2.0",
