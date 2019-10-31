@@ -1,3 +1,17 @@
+# Copyright 2019, OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import sys
 import unittest
 from unittest import mock
@@ -26,12 +40,12 @@ class TestRequestsIntegration(unittest.TestCase):
         self.span.set_attribute = setspanattr
         self.start_span_patcher = mock.patch.object(
             self.tracer,
-            "start_span",
+            "start_as_current_span",
             autospec=True,
             spec_set=True,
             return_value=self.span_context_manager,
         )
-        self.start_span = self.start_span_patcher.start()
+        self.start_as_current_span = self.start_span_patcher.start()
 
         mocked_response = requests.models.Response()
         mocked_response.status_code = 200
@@ -56,7 +70,9 @@ class TestRequestsIntegration(unittest.TestCase):
         url = "https://www.example.org/foo/bar?x=y#top"
         requests.get(url=url)
         self.assertEqual(1, len(self.send.call_args_list))
-        self.tracer.start_span.assert_called_with("/foo/bar")
+        self.tracer.start_as_current_span.assert_called_with(
+            "/foo/bar", kind=trace.SpanKind.CLIENT
+        )
         self.span_context_manager.__enter__.assert_called_with()
         self.span_context_manager.__exit__.assert_called_with(None, None, None)
         self.assertEqual(
@@ -81,10 +97,10 @@ class TestRequestsIntegration(unittest.TestCase):
         with self.assertRaises(exception_type):
             requests.post(url=url)
         self.assertTrue(
-            self.tracer.start_span.call_args[0][0].startswith(
+            self.tracer.start_as_current_span.call_args[0][0].startswith(
                 "<Unparsable URL"
             ),
-            msg=self.tracer.start_span.call_args,
+            msg=self.tracer.start_as_current_span.call_args,
         )
         self.span_context_manager.__enter__.assert_called_with()
         exitspan = self.span_context_manager.__exit__

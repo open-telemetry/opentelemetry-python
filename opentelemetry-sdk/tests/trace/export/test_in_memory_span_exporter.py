@@ -31,9 +31,9 @@ class TestInMemorySpanExporter(unittest.TestCase):
         span_processor = export.SimpleExportSpanProcessor(memory_exporter)
         tracer.add_span_processor(span_processor)
 
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("xxx"):
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("xxx"):
                     pass
 
         span_list = memory_exporter.get_finished_spans()
@@ -47,9 +47,9 @@ class TestInMemorySpanExporter(unittest.TestCase):
         span_processor = export.SimpleExportSpanProcessor(memory_exporter)
         tracer.add_span_processor(span_processor)
 
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("xxx"):
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("xxx"):
                     pass
 
         memory_exporter.clear()
@@ -63,9 +63,9 @@ class TestInMemorySpanExporter(unittest.TestCase):
         span_processor = export.SimpleExportSpanProcessor(memory_exporter)
         tracer.add_span_processor(span_processor)
 
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("xxx"):
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("xxx"):
                     pass
 
         span_list = memory_exporter.get_finished_spans()
@@ -74,9 +74,9 @@ class TestInMemorySpanExporter(unittest.TestCase):
         memory_exporter.shutdown()
 
         # after shutdown no new spans are accepted
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("xxx"):
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("xxx"):
                     pass
 
         span_list = memory_exporter.get_finished_spans()

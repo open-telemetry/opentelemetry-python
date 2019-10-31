@@ -12,9 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import logging
+import threading
 import typing
 from enum import Enum
+
+from opentelemetry.context import Context
+from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
 
@@ -68,11 +73,153 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        try:
-            self.span_exporter.export((span,))
-        # pylint: disable=broad-except
-        except Exception as exc:
-            logger.warning("Exception while exporting data: %s", exc)
+        with Context.use(suppress_instrumentation=True):
+            try:
+                self.span_exporter.export((span,))
+            # pylint: disable=broad-except
+            except Exception as exc:
+                logger.warning("Exception while exporting data: %s", exc)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
+
+
+class BatchExportSpanProcessor(SpanProcessor):
+    """Batch span processor implementation.
+
+    BatchExportSpanProcessor is an implementation of `SpanProcessor` that
+    batches ended spans and pushes them to the configured `SpanExporter`.
+    """
+
+    def __init__(
+        self,
+        span_exporter: SpanExporter,
+        max_queue_size: int = 2048,
+        schedule_delay_millis: float = 5000,
+        max_export_batch_size: int = 512,
+    ):
+        if max_queue_size <= 0:
+            raise ValueError("max_queue_size must be a positive integer.")
+
+        if schedule_delay_millis <= 0:
+            raise ValueError("schedule_delay_millis must be positive.")
+
+        if max_export_batch_size <= 0:
+            raise ValueError(
+                "max_export_batch_size must be a positive integer."
+            )
+
+        if max_export_batch_size > max_queue_size:
+            raise ValueError(
+                "max_export_batch_size must be less than and equal to max_export_batch_size."
+            )
+
+        self.span_exporter = span_exporter
+        self.queue = collections.deque(
+            [], max_queue_size
+        )  # type: typing.Deque[Span]
+        self.worker_thread = threading.Thread(target=self.worker, daemon=True)
+        self.condition = threading.Condition(threading.Lock())
+        self.schedule_delay_millis = schedule_delay_millis
+        self.max_export_batch_size = max_export_batch_size
+        self.max_queue_size = max_queue_size
+        self.done = False
+        # flag that indicates that spans are being dropped
+        self._spans_dropped = False
+        # precallocated list to send spans to exporter
+        self.spans_list = [
+            None
+        ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
+        self.worker_thread.start()
+
+    def on_start(self, span: Span) -> None:
+        pass
+
+    def on_end(self, span: Span) -> None:
+        if self.done:
+            logging.warning("Already shutdown, dropping span.")
+            return
+        if len(self.queue) == self.max_queue_size:
+            if not self._spans_dropped:
+                logging.warning("Queue is full, likely spans will be dropped.")
+                self._spans_dropped = True
+
+        self.queue.appendleft(span)
+
+        if len(self.queue) >= self.max_queue_size // 2:
+            with self.condition:
+                self.condition.notify()
+
+    def worker(self):
+        timeout = self.schedule_delay_millis / 1e3
+        while not self.done:
+            if len(self.queue) < self.max_export_batch_size:
+                with self.condition:
+                    self.condition.wait(timeout)
+                    if not self.queue:
+                        # spurious notification, let's wait again
+                        continue
+                    if self.done:
+                        # missing spans will be sent when calling flush
+                        break
+
+            # substract the duration of this export call to the next timeout
+            start = time_ns()
+            self.export()
+            end = time_ns()
+            duration = (end - start) / 1e9
+            timeout = self.schedule_delay_millis / 1e3 - duration
+
+        # be sure that all spans are sent
+        self._flush()
+
+    def export(self) -> None:
+        """Exports at most max_export_batch_size spans."""
+        idx = 0
+
+        # currently only a single thread acts as consumer, so queue.pop() will
+        # not raise an exception
+        while idx < self.max_export_batch_size and self.queue:
+            self.spans_list[idx] = self.queue.pop()
+            idx += 1
+        with Context.use(suppress_instrumentation=True):
+            try:
+                # Ignore type b/c the Optional[None]+slicing is too "clever"
+                # for mypy
+                self.span_exporter.export(
+                    self.spans_list[:idx]
+                )  # type: ignore
+            # pylint: disable=broad-except
+            except Exception:
+                logger.exception("Exception while exporting data.")
+
+        # clean up list
+        for index in range(idx):
+            self.spans_list[index] = None
+
+    def _flush(self):
+        # export all elements until queue is empty
+        while self.queue:
+            self.export()
+
+    def shutdown(self) -> None:
+        # signal the worker thread to finish and then wait for it
+        self.done = True
+        with self.condition:
+            self.condition.notify_all()
+        self.worker_thread.join()
+        self.span_exporter.shutdown()
+
+
+class ConsoleSpanExporter(SpanExporter):
+    """Implementation of :class:`SpanExporter` that prints spans to the
+    console.
+
+    This class can be used for diagnostic purposes. It prints the exported
+    spans to the console STDOUT.
+    """
+
+    def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
+        for span in spans:
+            print(span)
+        return SpanExportResult.SUCCESS

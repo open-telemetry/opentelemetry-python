@@ -35,7 +35,7 @@ class B3Format(HTTPTextFormat):
     def extract(cls, get_from_carrier, carrier):
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
         span_id = format_span_id(trace.INVALID_SPAN_ID)
-        sampled = 0
+        sampled = "0"
         flags = None
 
         single_header = _extract_first_element(
@@ -90,19 +90,18 @@ class B3Format(HTTPTextFormat):
         # the desire for some form of sampling, propagate if either
         # header is set to allow.
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
-            options |= trace.TraceOptions.RECORDED
-
+            options |= trace.TraceOptions.SAMPLED
         return trace.SpanContext(
             # trace an span ids are encoded in hex, so must be converted
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),
-            trace_options=options,
-            trace_state={},
+            trace_options=trace.TraceOptions(options),
+            trace_state=trace.TraceState(),
         )
 
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
-        sampled = (trace.TraceOptions.RECORDED & context.trace_options) != 0
+        sampled = (trace.TraceOptions.SAMPLED & context.trace_options) != 0
         set_in_carrier(
             carrier, cls.TRACE_ID_KEY, format_trace_id(context.trace_id)
         )
@@ -112,17 +111,20 @@ class B3Format(HTTPTextFormat):
         set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
 
 
-def format_trace_id(trace_id: int):
+def format_trace_id(trace_id: int) -> str:
     """Format the trace id according to b3 specification."""
     return format(trace_id, "032x")
 
 
-def format_span_id(span_id: int):
+def format_span_id(span_id: int) -> str:
     """Format the span id according to b3 specification."""
     return format(span_id, "016x")
 
 
-def _extract_first_element(list_object: list) -> typing.Optional[object]:
-    if list_object:
-        return list_object[0]
-    return None
+_T = typing.TypeVar("_T")
+
+
+def _extract_first_element(items: typing.Iterable[_T]) -> typing.Optional[_T]:
+    if items is None:
+        return None
+    return next(iter(items), None)
