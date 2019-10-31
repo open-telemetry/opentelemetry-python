@@ -42,18 +42,19 @@ class CommandTracer(monitoring.CommandListener):
         self._span_dict = {}
 
     def started(self, event: monitoring.CommandStartedEvent):
-        command = event.command.get(event.command_name)
-        if command is None:
-            command = ""
-        name = DATABASE_TYPE + "." + event.command_name + "." + command
+        command = event.command.get(event.command_name, "")
+        name = DATABASE_TYPE + "." + event.command_name
+        statement = event.command_name
+        if command:
+            name += "." + command
+            statement += " " + command
+
         try:
             span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
             span.set_attribute("component", DATABASE_TYPE)
             span.set_attribute("db.type", DATABASE_TYPE)
             span.set_attribute("db.instance", event.database_name)
-            span.set_attribute(
-                "db.statement", event.command_name + " " + command
-            )
+            span.set_attribute("db.statement", statement)
             if event.connection_id is not None:
                 span.set_attribute("peer.hostname", event.connection_id[0])
                 span.set_attribute("peer.port", event.connection_id[1])
@@ -71,12 +72,12 @@ class CommandTracer(monitoring.CommandListener):
             self._span_dict[_get_span_dict_key(event)] = span
         except Exception as ex:  # noqa pylint: disable=broad-except
             if span is not None:
-                span.set_status(Status(StatusCanonicalCode.INTERNAL, ex))
+                span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
                 span.end()
                 self._remove_span(event)
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
-        span = self._span_dict[_get_span_dict_key(event)]
+        span = self._get_span(event)
         if span is not None:
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
@@ -86,7 +87,7 @@ class CommandTracer(monitoring.CommandListener):
             self._remove_span(event)
 
     def failed(self, event: monitoring.CommandFailedEvent):
-        span = self._span_dict[_get_span_dict_key(event)]
+        span = self._get_span(event)
         if span is not None:
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
@@ -96,7 +97,7 @@ class CommandTracer(monitoring.CommandListener):
             self._remove_span(event)
 
     def _get_span(self, event):
-        return self._span_dict[_get_span_dict_key(event)]
+        return self._span_dict.get(_get_span_dict_key(event))
 
     def _remove_span(self, event):
         self._span_dict.pop(_get_span_dict_key(event))
@@ -104,5 +105,5 @@ class CommandTracer(monitoring.CommandListener):
 
 def _get_span_dict_key(event):
     if event.connection_id is not None:
-        return (event.request_id, str(event.connection_id))
+        return (event.request_id, event.connection_id)
     return event.request_id

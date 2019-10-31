@@ -135,8 +135,8 @@ class MockCommand:
     def __init__(self, command_attrs):
         self.command_attrs = command_attrs
 
-    def get(self, key):
-        return self.command_attrs.get(key)
+    def get(self, key, default=""):
+        return self.command_attrs.get(key, default)
 
 
 class MockEvent:
