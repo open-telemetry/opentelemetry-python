@@ -407,7 +407,7 @@ class TestShim(unittest.TestCase):
             self.assertAlmostEqual(result, now, places=6)
 
     def test_log(self):
-        """Test the `log` method on `Span` objects."""
+        """Test the deprecated `log` method on `Span` objects."""
 
         with self.shim.start_span("TestSpan") as span:
             with self.assertWarns(DeprecationWarning):
@@ -418,7 +418,7 @@ class TestShim(unittest.TestCase):
         self.assertIsNotNone(span.unwrap().events[0].timestamp)
 
     def test_log_event(self):
-        """Test the `log_event` method on `Span` objects."""
+        """Test the deprecated `log_event` method on `Span` objects."""
 
         with self.shim.start_span("TestSpan") as span:
             with self.assertWarns(DeprecationWarning):
