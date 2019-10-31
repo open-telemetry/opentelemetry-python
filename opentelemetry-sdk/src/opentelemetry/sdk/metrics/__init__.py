@@ -13,11 +13,24 @@
 # limitations under the License.
 
 import logging
-from typing import Sequence, Tuple, Type
+from collections import OrderedDict
+from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
 
 logger = logging.getLogger(__name__)
+
+
+class LabelSet(metrics_api.LabelSet):
+    """See `opentelemetry.metrics.LabelSet."""
+
+    def __init__(
+        self,
+        labels: Dict[str, str] = None,
+        encoded: str = ""
+    ):
+        self.labels = labels
+        self.encoded = encoded
 
 
 class BaseHandle:
@@ -97,14 +110,14 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(self, label_values: Sequence[str]) -> BaseHandle:
+    def get_handle(self, label_set: LabelSet) -> BaseHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
-        handle = self.handles.get(label_values)
+        handle = self.handles.get(label_set.encoded)
         if not handle:
             handle = self.HANDLE_TYPE(
                 self.value_type, self.enabled, self.monotonic
             )
-        self.handles[label_values] = handle
+        self.handles[label_set.encoded] = handle
         return handle
 
     UPDATE_FUNCTION = lambda x, y: None  # noqa: E731
@@ -141,10 +154,10 @@ class Counter(Metric, metrics_api.Counter):
         )
 
     def add(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
+        self, label_set: LabelSet, value: metrics_api.ValueT
     ) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
-        self.get_handle(label_values).add(value)
+        self.get_handle(label_set).add(value)
 
     UPDATE_FUNCTION = add
 
@@ -179,10 +192,10 @@ class Gauge(Metric, metrics_api.Gauge):
         )
 
     def set(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
+        self, label_set: LabelSet, value: metrics_api.ValueT
     ) -> None:
         """See `opentelemetry.metrics.Gauge.set`."""
-        self.get_handle(label_values).set(value)
+        self.get_handle(label_set).set(value)
 
     UPDATE_FUNCTION = set
 
@@ -217,25 +230,30 @@ class Measure(Metric, metrics_api.Measure):
         )
 
     def record(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
+        self, label_set: LabelSet, value: metrics_api.ValueT
     ) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
-        self.get_handle(label_values).record(value)
+        self.get_handle(label_set).record(value)
 
     UPDATE_FUNCTION = record
 
+# Singleton of meter.get_label_set() with zero arguments
+EMPTY_LABEL_SET = LabelSet()
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`."""
 
+    def __init__(self):
+        self.labels = {}
+
     def record_batch(
         self,
-        label_values: Sequence[str],
+        label_set: LabelSet,
         record_tuples: Sequence[Tuple[metrics_api.Metric, metrics_api.ValueT]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
-            metric.UPDATE_FUNCTION(label_values, value)
+            metric.UPDATE_FUNCTION(label_set, value)
 
     def create_metric(
         self,
@@ -260,5 +278,26 @@ class Meter(metrics_api.Meter):
             monotonic=monotonic,
         )
 
+    def get_label_set(self, labels: Dict[str, str]):
+        """See `opentelemetry.metrics.Meter.create_metric`.
+        
+        This implementation encodes the labels to use as a map key.
+
+        Args:
+            labels: The dictionary of label keys to label values.
+        """
+        if not len(labels):
+            return EMPTY_LABEL_SET
+        sorted_labels = OrderedDict(sorted(labels.items()))
+        # Uses statsd encoding for labels
+        encoded = '|#' + ','.join('%s:%s' % (key,value) \
+            for (key, value) in sorted_labels.items())
+        # If LabelSet exists for this meter in memory, use existing one
+        if not self.labels.get(encoded):
+            self.labels[encoded] = \
+                LabelSet(labels=sorted_labels, encoded=encoded)
+        return self.labels[encoded]
+
 
 meter = Meter()
+
