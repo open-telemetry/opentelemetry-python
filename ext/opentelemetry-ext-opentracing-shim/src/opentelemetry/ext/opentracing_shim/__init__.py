@@ -15,6 +15,7 @@
 import logging
 
 import opentracing
+from deprecated import deprecated
 
 from opentelemetry.ext.opentracing_shim import util
 
@@ -77,6 +78,14 @@ class SpanShim(opentracing.Span):
         self._otel_span.add_event(event_name, event_timestamp, key_values)
         return self
 
+    @deprecated(reason="This method is deprecated in favor of log_kv")
+    def log(self, **kwargs):
+        super().log(**kwargs)
+
+    @deprecated(reason="This method is deprecated in favor of log_kv")
+    def log_event(self, event, payload=None):
+        super().log_event(event, payload=payload)
+
     def set_baggage_item(self, key, value):
         logger.warning(
             "Calling unimplemented method set_baggage_item() on class %s",
@@ -90,10 +99,6 @@ class SpanShim(opentracing.Span):
             self.__class__.__name__,
         )
         # TODO: Implement.
-
-    # TODO: Verify calls to deprecated methods `log_event()` and `log()` on
-    # base class work properly (it's probably fine because both methods call
-    # `log_kv()`).
 
 
 class ScopeShim(opentracing.Scope):
