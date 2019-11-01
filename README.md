@@ -3,6 +3,7 @@
 
 [gitter-image]: https://badges.gitter.im/open-telemetry/opentelemetry-python.svg
 [gitter-url]: https://gitter.im/open-telemetry/opentelemetry-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+[![Build Status](https://travis-ci.org/open-telemetry/opentelemetry-python.svg?branch=master)](https://travis-ci.org/open-telemetry/opentelemetry-python)
 
 The Python [OpenTelemetry](https://opentelemetry.io/) client.
 
