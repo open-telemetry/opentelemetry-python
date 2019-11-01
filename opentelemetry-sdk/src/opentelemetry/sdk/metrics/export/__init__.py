@@ -54,8 +54,7 @@ class MetricsExporter:
 
 
 class ConsoleMetricsExporter(MetricsExporter):
-    """Implementation of :class:`MetricsExporter` that prints metric handles
-    to the console.
+    """Implementation of `MetricsExporter` that prints metrics to the console.
 
     This class can be used for diagnostic purposes. It prints the exported
     metric handles to the console STDOUT.

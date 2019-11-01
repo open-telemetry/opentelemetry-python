@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
-import sys
+import mock
 import unittest
 
 from opentelemetry.sdk import metrics
@@ -32,11 +31,9 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         )
         label_values = ("staging",)
         handle = metric.get_handle(label_values)
-        result = '{}(data="{}", label_values="{}", metric_data={})\n'.format(
+        result = '{}(data="{}", label_values="{}", metric_data={})'.format(
             ConsoleMetricsExporter.__name__, metric, label_values, handle
         )
-        output = io.StringIO()
-        sys.stdout = output
-        exporter.export([(metric, label_values)])
-        sys.stdout = sys.__stdout__
-        self.assertEqual(len(output.getvalue()), len(result))
+        with mock.patch("sys.stdout") as mock_stdout:
+            exporter.export([(metric, label_values)])
+            mock_stdout.write.assert_any_call(result)
