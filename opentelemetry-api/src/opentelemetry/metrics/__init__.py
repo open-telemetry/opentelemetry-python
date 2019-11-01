@@ -66,6 +66,7 @@ class MeasureHandle:
             value: The value to record to the handle.
         """
 
+
 class LabelSet:
     """A canonicalized set of labels useful for preaggregation
 
@@ -237,9 +238,7 @@ class Meter:
         # pylint: disable=no-self-use
         return DefaultMetric()
 
-    def get_label_set(self,
-                      labels: Dict[str, str]
-                      ) -> "LabelSet":
+    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given `labels`.
 
         Args:
@@ -249,6 +248,7 @@ class Meter:
         """
         # pylint: disable=no-self-use
         return DefaultLabelSet()
+
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with

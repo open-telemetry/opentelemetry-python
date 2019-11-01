@@ -24,11 +24,7 @@ logger = logging.getLogger(__name__)
 class LabelSet(metrics_api.LabelSet):
     """See `opentelemetry.metrics.LabelSet."""
 
-    def __init__(
-        self,
-        labels: Dict[str, str] = None,
-        encoded: str = ""
-    ):
+    def __init__(self, labels: Dict[str, str] = None, encoded: str = ""):
         self.labels = labels
         self.encoded = encoded
 
@@ -153,9 +149,7 @@ class Counter(Metric, metrics_api.Counter):
             monotonic=monotonic,
         )
 
-    def add(
-        self, label_set: LabelSet, value: metrics_api.ValueT
-    ) -> None:
+    def add(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
         self.get_handle(label_set).add(value)
 
@@ -191,9 +185,7 @@ class Gauge(Metric, metrics_api.Gauge):
             monotonic=monotonic,
         )
 
-    def set(
-        self, label_set: LabelSet, value: metrics_api.ValueT
-    ) -> None:
+    def set(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.Gauge.set`."""
         self.get_handle(label_set).set(value)
 
@@ -229,16 +221,16 @@ class Measure(Metric, metrics_api.Measure):
             monotonic=monotonic,
         )
 
-    def record(
-        self, label_set: LabelSet, value: metrics_api.ValueT
-    ) -> None:
+    def record(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
         self.get_handle(label_set).record(value)
 
     UPDATE_FUNCTION = record
 
+
 # Singleton of meter.get_label_set() with zero arguments
 EMPTY_LABEL_SET = LabelSet()
+
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`."""
@@ -290,14 +282,15 @@ class Meter(metrics_api.Meter):
             return EMPTY_LABEL_SET
         sorted_labels = OrderedDict(sorted(labels.items()))
         # Uses statsd encoding for labels
-        encoded = '|#' + ','.join('%s:%s' % (key,value) \
-            for (key, value) in sorted_labels.items())
+        encoded = "|#" + ",".join(
+            "%s:%s" % (key, value) for (key, value) in sorted_labels.items()
+        )
         # If LabelSet exists for this meter in memory, use existing one
         if not self.labels.get(encoded):
-            self.labels[encoded] = \
-                LabelSet(labels=sorted_labels, encoded=encoded)
+            self.labels[encoded] = LabelSet(
+                labels=sorted_labels, encoded=encoded
+            )
         return self.labels[encoded]
 
 
 meter = Meter()
-

@@ -30,7 +30,7 @@ counter = meter.create_metric(
     ("environment",),
 )
 
-label_set = meter.get_label_set({"environment":"staging"})
+label_set = meter.get_label_set({"environment": "staging"})
 
 # Direct metric usage
 counter.add(label_set, 25)
