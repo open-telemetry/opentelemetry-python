@@ -20,6 +20,7 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
 
 class TestConsoleMetricsExporter(unittest.TestCase):
+    # pylint: disable=no-self-use
     def test_export(self):
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
