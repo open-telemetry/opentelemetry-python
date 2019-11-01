@@ -130,7 +130,7 @@ class Span(trace_api.Span):
         resource: None = None,  # TODO
         attributes: types.Attributes = None,  # TODO
         events: Sequence[trace_api.Event] = None,  # TODO
-        links: Sequence[trace_api.Link] = None,  # TODO
+        links: Sequence[trace_api.Link] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
@@ -226,30 +226,6 @@ class Span(trace_api.Span):
             return
         self.events.append(event)
 
-    def add_link(
-        self,
-        link_target_context: "trace_api.SpanContext",
-        attributes: types.Attributes = None,
-    ) -> None:
-        if attributes is None:
-            attributes = (
-                Span.empty_attributes
-            )  # TODO: empty_attributes is not a Dict. Use Mapping?
-        self.add_lazy_link(trace_api.Link(link_target_context, attributes))
-
-    def add_lazy_link(self, link: "trace_api.Link") -> None:
-        with self._lock:
-            if not self.is_recording_events():
-                return
-            has_ended = self.end_time is not None
-            if not has_ended:
-                if self.links is Span.empty_links:
-                    self.links = BoundedList(MAX_NUM_LINKS)
-        if has_ended:
-            logger.warning("Calling add_link() on an ended span.")
-            return
-        self.links.append(link)
-
     def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
@@ -343,10 +319,11 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        links: Sequence[trace_api.Link] = (),
     ) -> "Span":
         """See `opentelemetry.trace.Tracer.start_span`."""
 
-        span = self.create_span(name, parent, kind)
+        span = self.create_span(name, parent, kind, links)
         span.start()
         return span
 
@@ -355,10 +332,11 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
-        span = self.start_span(name, parent, kind)
+        span = self.start_span(name, parent, kind, links)
         return self.use_span(span, end_on_exit=True)
 
     def create_span(
@@ -366,6 +344,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        links: Sequence[trace_api.Link] = (),
     ) -> "trace_api.Span":
         """See `opentelemetry.trace.Tracer.create_span`.
 
@@ -424,6 +403,7 @@ class Tracer(trace_api.Tracer):
                 attributes=sampling_decision.attributes,
                 span_processor=self._active_span_processor,
                 kind=kind,
+                links=links,
             )
 
         return trace_api.DefaultSpan(context=context)

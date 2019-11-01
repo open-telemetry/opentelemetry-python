@@ -75,12 +75,15 @@ ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 class Link:
     """A link to a `Span`."""
+    empty_attributes: typing.Dict[str, types.AttributeValue] = dict()
 
     def __init__(
         self, context: "SpanContext", attributes: types.Attributes = None
     ) -> None:
         self._context = context
         self._attributes = attributes
+        if attributes is None:
+            self._attributes = Link.empty_attributes
 
     @property
     def context(self) -> "SpanContext":
@@ -196,23 +199,6 @@ class Span:
         """Adds an `Event`.
 
         Adds an `Event` that has previously been created.
-        """
-
-    def add_link(
-        self,
-        link_target_context: "SpanContext",
-        attributes: types.Attributes = None,
-    ) -> None:
-        """Adds a `Link` to another span.
-
-        Adds a single `Link` from this Span to another Span identified by the
-        `SpanContext` passed as argument.
-        """
-
-    def add_lazy_link(self, link: "Link") -> None:
-        """Adds a `Link` to another span.
-
-        Adds a `Link` that has previously been created.
         """
 
     def update_name(self, name: str) -> None:
@@ -416,6 +402,7 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        links: typing.Sequence[Link] = (),
     ) -> "Span":
         """Starts a span.
 
@@ -457,6 +444,7 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -505,6 +493,7 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        links: typing.Sequence[Link] = (),
     ) -> "Span":
         """Creates a span.
 

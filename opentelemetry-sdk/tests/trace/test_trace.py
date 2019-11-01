@@ -233,9 +233,15 @@ class TestSpan(unittest.TestCase):
             span_id=trace.generate_span_id(),
         )
 
+        links = [
+            trace_api.Link(other_context1),
+            trace_api.Link(other_context2, {"name": "neighbor"}),
+            trace_api.Link(other_context3, {"component": "http"}),
+        ]
+
         self.assertIsNone(tracer.get_current_span())
 
-        with tracer.start_as_current_span("root") as root:
+        with tracer.start_as_current_span("root", links=links) as root:
             # attributes
             root.set_attribute("component", "http")
             root.set_attribute("http.method", "GET")
@@ -287,12 +293,6 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[2].timestamp, now)
 
             # links
-            root.add_link(other_context1)
-            root.add_link(other_context2, {"name": "neighbor"})
-            root.add_lazy_link(
-                trace_api.Link(other_context3, {"component": "http"})
-            )
-
             self.assertEqual(len(root.links), 3)
             self.assertEqual(
                 root.links[0].context.trace_id, other_context1.trace_id
@@ -386,9 +386,6 @@ class TestSpan(unittest.TestCase):
 
             root.add_event("event1")
             self.assertEqual(len(root.events), 0)
-
-            root.add_link(other_context1)
-            self.assertEqual(len(root.links), 0)
 
             root.update_name("xxx")
             self.assertEqual(root.name, "root")
