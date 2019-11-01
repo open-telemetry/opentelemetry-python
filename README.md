@@ -97,19 +97,20 @@ includes:
 - B3 Context Propagation
 - HTTP Integrations
 
+The [v0.2 alpha
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.2.0)
+includes:
+
+- OpenTracing Bridge
+- Jaeger Trace Exporter
+- Trace Sampling
+
 See the [project
 milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
 for details on upcoming releases. The dates and features described here are
 estimates, and subject to change.
 
 Future releases targets include:
-
-| Component                   | Version    | Target Date     |
-| --------------------------- | ---------- | --------------- |
-| Jaeger Trace Exporter       | Alpha v0.2 | October 28 2019 |
-| Metrics SDK (Complete)      | Alpha v0.2 | October 28 2019 |
-| Prometheus Metrics Exporter | Alpha v0.2 | October 28 2019 |
-| OpenTracing Bridge          | Alpha v0.2 | October 28 2019 |
 
 | Component                           | Version    | Target Date      |
 | ----------------------------------- | ---------- | ---------------- |
@@ -118,7 +119,9 @@ Future releases targets include:
 | Support for Tags/Baggage            | Alpha v0.3 | November 15 2019 |
 | Metrics Aggregation                 | Alpha v0.3 | November 15 2019 |
 | gRPC Integrations                   | Alpha v0.3 | November 15 2019 |
+| Prometheus Metrics Exporter         | Alpha v0.3 | November 15 2019 |
 
-| Component         | Version    | Target Date      |
-| ----------------- | ---------- | ---------------- |
-| OpenCensus Bridge | Alpha v0.4 | December 31 2019 |
+| Component              | Version    | Target Date      |
+| ---------------------- | ---------- | ---------------- |
+| OpenCensus Bridge      | Alpha v0.4 | December 31 2019 |
+| Metrics SDK (Complete) | Alpha v0.4 | October 28 2019  |
