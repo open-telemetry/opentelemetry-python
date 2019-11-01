@@ -40,6 +40,9 @@ def extract(
             used to construct a SpanContext. This object
             must be paired with an appropriate get_from_carrier
             which understands how to extract a value from it.
+
+    Returns:
+        The extracted span context.
     """
     return get_global_httptextformat().extract(get_from_carrier, carrier)
 
@@ -57,6 +60,7 @@ def inject(
     carrier.
 
     Args:
+        tracer: The tracer into which to inject.
         set_in_carrier: A setter function that can set values
             on the carrier.
         carrier: An object that contains a representation of HTTP

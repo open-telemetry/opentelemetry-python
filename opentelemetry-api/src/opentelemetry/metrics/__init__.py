@@ -97,6 +97,9 @@ class DefaultMetric(Metric):
 
         Args:
             label_values: The label values associated with the handle.
+
+        Returns:
+            A no-op `DefaultMetricHandle`.
         """
         return DefaultMetricHandle()
 
@@ -216,7 +219,8 @@ class Meter:
             enabled: Whether to report the metric by default.
             monotonic: Whether to only allow non-negative values.
 
-        Returns: A new ``metric_type`` metric with values of ``value_type``.
+        Returns:
+            A new ``metric_type`` metric with values of ``value_type``.
         """
         # pylint: disable=no-self-use
         return DefaultMetric()
@@ -255,6 +259,9 @@ def set_preferred_meter_implementation(factory: ImplementationFactory) -> None:
 
     Args:
         factory: Callback that should create a new :class:`Meter` instance.
+
+    Raises:
+        RuntimeError: if another meter implementation is already loaded.
     """
     global _METER, _METER_FACTORY  # pylint:disable=global-statement
 

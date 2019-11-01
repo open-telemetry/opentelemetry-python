@@ -111,6 +111,7 @@ class Span(trace_api.Span):
         attributes: The span's attributes to be exported
         events: Timestamped events to be exported
         links: Links to other spans to be exported
+        kind: The kind of span to be created
         span_processor: `SpanProcessor` to invoke when starting and ending
             this `Span`.
     """
@@ -312,6 +313,7 @@ class Tracer(trace_api.Tracer):
 
     Args:
         name: The name of the tracer.
+        sampler: The sampler used to create new spans.
     """
 
     def __init__(

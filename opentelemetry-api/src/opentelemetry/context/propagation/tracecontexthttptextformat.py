@@ -128,7 +128,7 @@ def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
     """Parse one or more w3c tracestate header into a TraceState.
 
     Args:
-        string: the value of the tracestate header.
+        header_list: A list of tracestate headers to parse.
 
     Returns:
         A valid TraceState that contains values extracted from
