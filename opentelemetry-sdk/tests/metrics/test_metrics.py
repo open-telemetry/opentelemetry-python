@@ -27,35 +27,38 @@ class TestMeter(unittest.TestCase):
     def test_record_batch(self):
         meter = metrics.Meter()
         label_keys = ("key1",)
-        label_values = ("value1",)
         counter = metrics.Counter("name", "desc", "unit", float, label_keys)
+        kvp = {"key1":"value1"}
+        label_set = meter.get_label_set(kvp)
         record_tuples = [(counter, 1.0)]
-        meter.record_batch(label_values, record_tuples)
-        self.assertEqual(counter.get_handle(label_values).data, 1.0)
+        meter.record_batch(label_set, record_tuples)
+        self.assertEqual(counter.get_handle(label_set).data, 1.0)
 
     def test_record_batch_multiple(self):
         meter = metrics.Meter()
         label_keys = ("key1", "key2", "key3")
-        label_values = ("value1", "value2", "value3")
+        kvp = {"key1":"value1", "key2":"value2", "key3":"value3"}
+        label_set = meter.get_label_set(kvp)
         counter = metrics.Counter("name", "desc", "unit", float, label_keys)
         gauge = metrics.Gauge("name", "desc", "unit", int, label_keys)
         measure = metrics.Measure("name", "desc", "unit", float, label_keys)
         record_tuples = [(counter, 1.0), (gauge, 5), (measure, 3.0)]
-        meter.record_batch(label_values, record_tuples)
-        self.assertEqual(counter.get_handle(label_values).data, 1.0)
-        self.assertEqual(gauge.get_handle(label_values).data, 5)
-        self.assertEqual(measure.get_handle(label_values).data, 0)
+        meter.record_batch(label_set, record_tuples)
+        self.assertEqual(counter.get_handle(label_set).data, 1.0)
+        self.assertEqual(gauge.get_handle(label_set).data, 5)
+        self.assertEqual(measure.get_handle(label_set).data, 0)
 
     def test_record_batch_exists(self):
         meter = metrics.Meter()
         label_keys = ("key1",)
-        label_values = ("value1",)
+        kvp = {"key1":"value1"}
+        label_set = meter.get_label_set(kvp)
         counter = metrics.Counter("name", "desc", "unit", float, label_keys)
-        counter.add(label_values, 1.0)
-        handle = counter.get_handle(label_values)
+        counter.add(label_set, 1.0)
+        handle = counter.get_handle(label_set)
         record_tuples = [(counter, 1.0)]
-        meter.record_batch(label_values, record_tuples)
-        self.assertEqual(counter.get_handle(label_values), handle)
+        meter.record_batch(label_set, record_tuples)
+        self.assertEqual(counter.get_handle(label_set), handle)
         self.assertEqual(handle.data, 2.0)
 
     def test_create_metric(self):
@@ -85,41 +88,72 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(measure.value_type, float)
         self.assertEqual(measure.name, "name")
 
+    def test_get_label_set(self):
+        meter = metrics.Meter()
+        kvp = {"environment":"staging", "a":"z"}
+        label_set = meter.get_label_set(kvp)
+        encoding = '|#a:z,environment:staging'
+        self.assertEqual(label_set.encoded, encoding)
+
+    def test_get_label_set_empty(self):
+        meter = metrics.Meter()
+        kvp = {}
+        label_set = meter.get_label_set(kvp)
+        self.assertEqual(label_set, metrics.EMPTY_LABEL_SET)
+
+    def test_get_label_set_exists(self):
+        meter = metrics.Meter()
+        kvp = {"environment":"staging", "a":"z"}
+        label_set = meter.get_label_set(kvp)
+        label_set2 = meter.get_label_set(kvp)
+        self.assertEqual(label_set, label_set2)
+
 
 class TestMetric(unittest.TestCase):
     def test_get_handle(self):
+        meter = metrics.Meter()
         metric_types = [metrics.Counter, metrics.Gauge, metrics.Measure]
         for _type in metric_types:
             metric = _type("name", "desc", "unit", int, ("key",))
-            label_values = ("value",)
-            handle = metric.get_handle(label_values)
-            self.assertEqual(metric.handles.get(label_values), handle)
+            kvp = {"key":"value"}
+            label_set = meter.get_label_set(kvp)
+            handle = metric.get_handle(label_set)
+            self.assertEqual(metric.handles.get(label_set.encoded), handle)
 
 
 class TestCounter(unittest.TestCase):
     def test_add(self):
+        meter = metrics.Meter()
         metric = metrics.Counter("name", "desc", "unit", int, ("key",))
-        handle = metric.get_handle(("value",))
-        metric.add(("value",), 3)
-        metric.add(("value",), 2)
+        kvp = {"key":"value"}
+        label_set = meter.get_label_set(kvp)
+        handle = metric.get_handle(label_set)
+        metric.add(label_set, 3)
+        metric.add(label_set, 2)
         self.assertEqual(handle.data, 5)
 
 
 class TestGauge(unittest.TestCase):
     def test_set(self):
+        meter = metrics.Meter()
         metric = metrics.Gauge("name", "desc", "unit", int, ("key",))
-        handle = metric.get_handle(("value",))
-        metric.set(("value",), 3)
+        kvp = {"key":"value"}
+        label_set = meter.get_label_set(kvp)
+        handle = metric.get_handle(label_set)
+        metric.set(label_set, 3)
         self.assertEqual(handle.data, 3)
-        metric.set(("value",), 2)
+        metric.set(label_set, 2)
         self.assertEqual(handle.data, 2)
 
 
 class TestMeasure(unittest.TestCase):
     def test_record(self):
+        meter = metrics.Meter()
         metric = metrics.Measure("name", "desc", "unit", int, ("key",))
-        handle = metric.get_handle(("value",))
-        metric.record(("value",), 3)
+        kvp = {"key":"value"}
+        label_set = meter.get_label_set(kvp)
+        handle = metric.get_handle(label_set)
+        metric.record(label_set, 3)
         # Record not implemented yet
         self.assertEqual(handle.data, 0)
 

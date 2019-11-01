@@ -29,6 +29,10 @@ class TestMeter(unittest.TestCase):
     def test_create_metric(self):
         metric = self.meter.create_metric("", "", "", float, metrics.Counter)
         self.assertIsInstance(metric, metrics.DefaultMetric)
+    
+    def test_get_label_set(self):
+        metric = self.meter.get_label_set({})
+        self.assertIsInstance(metric, metrics.DefaultLabelSet)
 
 
 class TestMetrics(unittest.TestCase):

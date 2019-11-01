@@ -238,13 +238,12 @@ class Meter:
         return DefaultMetric()
 
     def get_label_set(self,
-                      labels: Dict[str, str],
-                      encoded: str) -> "LabelSet":
+                      labels: Dict[str, str]
+                      ) -> "LabelSet":
         """Gets a `LabelSet` with the given `labels`.
 
         Args:
             labels: A dictionary representing label key to label value pairs.
-            encoded: A unique encoding to represent this `LabelSet`.
 
         Returns: A `LabelSet` object canonicalized using the given input.
         """
