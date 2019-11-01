@@ -272,13 +272,13 @@ class Meter(metrics_api.Meter):
 
     def get_label_set(self, labels: Dict[str, str]):
         """See `opentelemetry.metrics.Meter.create_metric`.
-        
+
         This implementation encodes the labels to use as a map key.
 
         Args:
             labels: The dictionary of label keys to label values.
         """
-        if not len(labels):
+        if len(labels) == 0:
             return EMPTY_LABEL_SET
         sorted_labels = OrderedDict(sorted(labels.items()))
         # Uses statsd encoding for labels

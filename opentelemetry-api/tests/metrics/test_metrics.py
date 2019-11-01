@@ -46,7 +46,7 @@ class TestMetrics(unittest.TestCase):
     def test_counter(self):
         counter = metrics.Counter()
         label_set = metrics.LabelSet()
-        handle = counter.get_handle(("test", "test1"))
+        handle = counter.get_handle(label_set)
         self.assertIsInstance(handle, metrics.CounterHandle)
 
     def test_counter_add(self):
