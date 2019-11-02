@@ -31,8 +31,8 @@ tracer.add_span_processor(span_processor)
 # create some spans for testing
 with tracer.start_as_current_span("foo") as foo:
     time.sleep(0.1)
-    foo.set_attribute("my_atribbute", True)
-    foo.add_event("event in foo", {"name": "foo1"})
+    foo.set_attribute("my_attribute", True)
+    foo.add_event("event in foo", attributes={"name": "foo1"})
     with tracer.start_as_current_span("bar") as bar:
         time.sleep(0.2)
         bar.set_attribute("speed", 100.0)
