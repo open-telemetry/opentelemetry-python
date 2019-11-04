@@ -124,4 +124,4 @@ Future releases targets include:
 | Component              | Version    | Target Date      |
 | ---------------------- | ---------- | ---------------- |
 | OpenCensus Bridge      | Alpha v0.4 | December 31 2019 |
-| Metrics SDK (Complete) | Alpha v0.4 | October 28 2019  |
+| Metrics SDK (Complete) | Alpha v0.4 | December 31 2019  |
