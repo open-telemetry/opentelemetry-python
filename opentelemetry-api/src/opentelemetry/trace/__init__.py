@@ -75,7 +75,8 @@ ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 class Link:
     """A link to a `Span`."""
-    empty_attributes = {}
+
+    empty_attributes = {} # type: typing.Dict[str, typing.Union[str, bool, float]]
 
     def __init__(
         self, context: "SpanContext", attributes: types.Attributes = None
