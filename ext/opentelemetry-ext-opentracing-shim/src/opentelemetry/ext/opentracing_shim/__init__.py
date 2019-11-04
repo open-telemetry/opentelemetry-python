@@ -15,7 +15,6 @@
 import logging
 
 import opentracing
-
 from deprecated import deprecated
 
 import opentelemetry.trace as trace_api

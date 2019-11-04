@@ -361,11 +361,6 @@ class TestSpan(unittest.TestCase):
         """"Events, attributes are not allowed after span is ended"""
         tracer = trace.Tracer("test_ended_span")
 
-        other_context1 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
-        )
-
         with tracer.start_as_current_span("root") as root:
             # everything should be empty at the beginning
             self.assertEqual(len(root.attributes), 0)

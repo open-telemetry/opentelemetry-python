@@ -387,11 +387,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling decision.
         sampling_decision = self.sampler.should_sample(
-            parent_context,
-            context.trace_id,
-            context.span_id,
-            name,
-            {},  # TODO: links
+            parent_context, context.trace_id, context.span_id, name, links,
         )
 
         if sampling_decision.sampled:
