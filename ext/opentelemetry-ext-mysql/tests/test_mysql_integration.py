@@ -71,6 +71,7 @@ class TestMysqlIntegration(unittest.TestCase):
         self.assertEqual(span.status.description, "Test Exception")
 
 
+# pylint: disable=unused-argument
 def mock_connect(*args, **kwargs):
     database = kwargs.get("database")
     server_host = kwargs.get("server_host")
@@ -86,11 +87,13 @@ class MockMySqlConnection:
         self.server_host = server_host
         self.user = user
 
+    # pylint: disable=no-self-use
     def cursor(self):
         return MockMySqlCursor()
 
 
 class MockMySqlCursor:
+    # pylint: disable=unused-argument, no-self-use
     def execute(self, query, params=None, throw_exception=False):
         if throw_exception:
             raise Exception("Test Exception")
