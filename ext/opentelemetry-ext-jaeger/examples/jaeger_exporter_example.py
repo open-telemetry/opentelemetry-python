@@ -1,6 +1,6 @@
 import time
 
-from opentelemetry import trace, trace_api
+from opentelemetry import trace
 from opentelemetry.ext import jaeger
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
@@ -34,7 +34,7 @@ with tracer.start_as_current_span("foo") as foo:
     foo.set_attribute("my_atribbute", True)
     foo.add_event("event in foo", {"name": "foo1"})
     with tracer.start_as_current_span(
-        "bar", links=[trace_api.Link(foo.get_context())]
+        "bar", links=[trace.Link(foo.get_context())]
     ) as bar:
         time.sleep(0.2)
         bar.set_attribute("speed", 100.0)
