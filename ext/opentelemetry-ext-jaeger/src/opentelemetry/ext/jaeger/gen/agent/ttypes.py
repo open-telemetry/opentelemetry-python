@@ -6,11 +6,10 @@
 #  options string: py
 #
 
-import sys
-
 from thrift.Thrift import TType, TMessageType, TFrozenDict, TException, TApplicationException
 from thrift.protocol.TProtocol import TProtocolException
-from thrift.transport import TTransport
+import sys
+import jaeger.ttypes
+import zipkincore.ttypes
 
-from ..jaeger import ttypes as jaeger_ttypes
-from ..zipkincore import ttypes as zipkincore_ttypes
+from thrift.transport import TTransport
