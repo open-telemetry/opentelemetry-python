@@ -213,30 +213,15 @@ class TestSpanCreation(unittest.TestCase):
 
 
 class TestSpan(unittest.TestCase):
+    def setUp(self):
+        self.tracer = trace.Tracer("test_span")
+
     def test_basic_span(self):
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
         self.assertEqual(span.name, "name")
 
-    def test_span_members(self):
-        tracer = trace.Tracer("test_span_members")
-
-        other_context1 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
-        )
-        other_context2 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
-        )
-        other_context3 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
-        )
-
-        self.assertIsNone(tracer.get_current_span())
-
-        with tracer.start_as_current_span("root") as root:
-            # attributes
+    def test_attributes(self):
+        with self.tracer.start_as_current_span("root") as root:
             root.set_attribute("component", "http")
             root.set_attribute("http.method", "GET")
             root.set_attribute(
@@ -263,7 +248,10 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
-            # events
+    def test_events(self):
+        self.assertIsNone(self.tracer.get_current_span())
+
+        with self.tracer.start_as_current_span("root") as root:
             # only event name
             root.add_event("event0")
 
@@ -296,7 +284,21 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[3].attributes, {"name": "hello"})
             self.assertEqual(root.events[3].timestamp, now)
 
-            # links
+    def test_links(self):
+        other_context1 = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id(),
+        )
+        other_context2 = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id(),
+        )
+        other_context3 = trace_api.SpanContext(
+            trace_id=trace.generate_trace_id(),
+            span_id=trace.generate_span_id(),
+        )
+
+        with self.tracer.start_as_current_span("root") as root:
             root.add_link(other_context1)
             root.add_link(other_context2, {"name": "neighbor"})
             root.add_lazy_link(
@@ -323,6 +325,8 @@ class TestSpan(unittest.TestCase):
             )
             self.assertEqual(root.links[2].attributes, {"component": "http"})
 
+    def test_update_name(self):
+        with self.tracer.start_as_current_span("root") as root:
             # name
             root.update_name("toor")
             self.assertEqual(root.name, "toor")
@@ -369,14 +373,13 @@ class TestSpan(unittest.TestCase):
 
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
-        tracer = trace.Tracer("test_ended_span")
 
         other_context1 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
         )
 
-        with tracer.start_as_current_span("root") as root:
+        with self.tracer.start_as_current_span("root") as root:
             # everything should be empty at the beginning
             self.assertEqual(len(root.attributes), 0)
             self.assertEqual(len(root.events), 0)
