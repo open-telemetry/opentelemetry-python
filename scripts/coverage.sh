@@ -3,16 +3,14 @@
 set -e
 
 function cov {
-    pytest ${1} \
+    pytest \
         -c pytest-cov.ini \
         --ignore-glob=*/setup.py \
-        --cov opentelemetry-api \
-        --cov opentelemetry-sdk \
-        --cov ext \
-        --cov examples \
+        --cov ${1} \
         --cov-append \
         --cov-branch \
-        --cov-report=
+        --cov-report='' \
+        ${1}
 }
 
 
