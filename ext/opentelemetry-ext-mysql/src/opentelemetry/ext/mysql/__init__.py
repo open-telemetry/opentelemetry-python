@@ -17,24 +17,31 @@ The opentelemetry-ext-mysql package allows tracing MySQL queries made by the
 MySQL Connector/Python library.
 """
 
+import typing
+
 import mysql.connector
 import wrapt
 
 from opentelemetry.context import Context
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import SpanKind, Tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 DATABASE_COMPONENT = "mysql"
 DATABASE_TYPE = "sql"
 
 
-def trace_integration(tracer):
+def trace_integration(tracer: Tracer):
     """Integrate with MySQL Connector/Python library.
        https://dev.mysql.com/doc/connector-python/en/
     """
 
     # pylint: disable=unused-argument
-    def wrap(wrapped, instance, args, kwargs):
+    def wrap(
+        wrapped: typing.Callable(any),
+        instance: typing.Any,
+        args: typing.Tuple(any),
+        kwargs: typing.Dict(any),
+    ):
         """Patch MySQL Connector connect method to add tracing.
         """
         mysql_tracer = MySqlTracer(tracer)
@@ -44,13 +51,18 @@ def trace_integration(tracer):
 
 
 class MySqlTracer:
-    def __init__(self, tracer):
+    def __init__(self, tracer: Tracer):
         if tracer is None:
             raise ValueError("The tracer is not provided.")
         self._tracer = tracer
         self._connection_props = {}
 
-    def wrap_connect(self, wrapped, args, kwargs):
+    def wrap_connect(
+        self,
+        wrapped: typing.Callable(any),
+        args: typing.Tuple(any),
+        kwargs: typing.Dict(any),
+    ):
         """Patch connect method to add tracing.
         """
         connection = wrapped(*args, **kwargs)
@@ -65,7 +77,13 @@ class MySqlTracer:
         return connection
 
     # pylint: disable=unused-argument
-    def wrap_cursor(self, wrapped, instance, args, kwargs):
+    def wrap_cursor(
+        self,
+        wrapped: typing.Callable(any),
+        instance: typing.Any,
+        args: typing.Tuple(any),
+        kwargs: typing.Dict(any),
+    ):
         """Patch cursor instance in a specific connection.
         """
         cursor = wrapped(*args, **kwargs)
@@ -73,7 +91,13 @@ class MySqlTracer:
         return cursor
 
     # pylint: disable=unused-argument
-    def wrap_execute(self, wrapped, instance, args, kwargs):
+    def wrap_execute(
+        self,
+        wrapped: typing.Callable(any),
+        instance: typing.Any,
+        args: typing.Tuple(any),
+        kwargs: typing.Dict(any),
+    ):
         """Patch execute method in cursor and create span.
         """
         name = DATABASE_COMPONENT
