@@ -37,10 +37,10 @@ def trace_integration(tracer: Tracer):
 
     # pylint: disable=unused-argument
     def wrap(
-        wrapped: typing.Callable(any),
+        wrapped: typing.Callable[..., any],
         instance: typing.Any,
-        args: typing.Tuple(any),
-        kwargs: typing.Dict(any),
+        args: typing.Tuple[any, any],
+        kwargs: typing.Dict[any, any],
     ):
         """Patch MySQL Connector connect method to add tracing.
         """
@@ -59,9 +59,9 @@ class MySqlTracer:
 
     def wrap_connect(
         self,
-        wrapped: typing.Callable(any),
-        args: typing.Tuple(any),
-        kwargs: typing.Dict(any),
+        wrapped: typing.Callable[..., any],
+        args: typing.Tuple[any, any],
+        kwargs: typing.Dict[any, any],
     ):
         """Patch connect method to add tracing.
         """
@@ -79,10 +79,10 @@ class MySqlTracer:
     # pylint: disable=unused-argument
     def wrap_cursor(
         self,
-        wrapped: typing.Callable(any),
+        wrapped: typing.Callable[..., any],
         instance: typing.Any,
-        args: typing.Tuple(any),
-        kwargs: typing.Dict(any),
+        args: typing.Tuple[any, any],
+        kwargs: typing.Dict[any, any],
     ):
         """Patch cursor instance in a specific connection.
         """
@@ -93,10 +93,10 @@ class MySqlTracer:
     # pylint: disable=unused-argument
     def wrap_execute(
         self,
-        wrapped: typing.Callable(any),
+        wrapped: typing.Callable[..., any],
         instance: typing.Any,
-        args: typing.Tuple(any),
-        kwargs: typing.Dict(any),
+        args: typing.Tuple[any, any],
+        kwargs: typing.Dict[any, any],
     ):
         """Patch execute method in cursor and create span.
         """
