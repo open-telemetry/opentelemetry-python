@@ -264,27 +264,37 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
             # events
+            # only event name
             root.add_event("event0")
+
+            # event name and attributes
             now = time_ns()
-            root.add_event(
-                "event1", timestamp=now, attributes={"name": "birthday"}
-            )
+            root.add_event("event1", {"name": "pluto"})
+
+            # event name, attributes and timestamp
+            now = time_ns()
+            root.add_event("event2", {"name": "birthday"}, now)
+
+            # lazy event
             root.add_lazy_event(
-                trace_api.Event("event2", now, {"name": "hello"})
+                trace_api.Event("event3", {"name": "hello"}, now)
             )
 
-            self.assertEqual(len(root.events), 3)
+            self.assertEqual(len(root.events), 4)
 
             self.assertEqual(root.events[0].name, "event0")
             self.assertEqual(root.events[0].attributes, {})
 
             self.assertEqual(root.events[1].name, "event1")
-            self.assertEqual(root.events[1].attributes, {"name": "birthday"})
-            self.assertEqual(root.events[1].timestamp, now)
+            self.assertEqual(root.events[1].attributes, {"name": "pluto"})
 
             self.assertEqual(root.events[2].name, "event2")
-            self.assertEqual(root.events[2].attributes, {"name": "hello"})
+            self.assertEqual(root.events[2].attributes, {"name": "birthday"})
             self.assertEqual(root.events[2].timestamp, now)
+
+            self.assertEqual(root.events[3].name, "event3")
+            self.assertEqual(root.events[3].attributes, {"name": "hello"})
+            self.assertEqual(root.events[3].timestamp, now)
 
             # links
             root.add_link(other_context1)
