@@ -4,7 +4,6 @@ set -e
 
 function cov {
     pytest \
-        -c pytest-cov.ini \
         --ignore-glob=*/setup.py \
         --cov ${1} \
         --cov-append \
