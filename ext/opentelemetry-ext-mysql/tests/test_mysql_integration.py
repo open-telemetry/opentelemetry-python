@@ -34,9 +34,7 @@ class TestMysqlIntegration(unittest.TestCase):
             mock_connect, {}, connection_props
         )
         cursor = mock_connection.cursor()
-        cursor.execute(
-            "Test query", ("param1Value", False)
-        )
+        cursor.execute("Test query", ("param1Value", False))
         span = mock_tracer.get_current_span()
 
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
