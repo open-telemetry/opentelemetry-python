@@ -80,11 +80,12 @@ class Link:
         self, context: "SpanContext", attributes: types.Attributes = None
     ) -> None:
         self._context = context
-        self._attributes = attributes
         if attributes is None:
             self._attributes = (
                 {}
             )  # type: typing.Dict[str, types.AttributeValue]
+        else:
+            self._attributes = attributes
 
     @property
     def context(self) -> "SpanContext":
