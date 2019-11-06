@@ -17,7 +17,6 @@ The opentelemetry-ext-mysql package allows tracing MySQL queries made by the
 MySQL Connector/Python library.
 """
 
-import json
 import typing
 
 import mysql.connector
@@ -108,7 +107,7 @@ class MySqlTracer:
         query = args[0] if args else ""
         # Query with parameters
         if len(args) > 1:
-            query += " params=" + json.dumps(args[1])
+            query += " params=" + str(args[1])
 
         with self._tracer.start_current_span(
             name, kind=SpanKind.CLIENT
