@@ -46,7 +46,7 @@ class TestMysqlIntegration(unittest.TestCase):
         self.assertEqual(span.attributes["db.instance"], "testdatabase")
         self.assertEqual(
             span.attributes["db.statement"],
-            "Test query params={'param1': 'param1Value', 'param2': 'param2Value'}",
+            'Test query params={"param1": "param1Value", "param2": "param2Value"}',
         )
         self.assertEqual(span.attributes["db.user"], "testuser")
         self.assertEqual(span.attributes["peer.hostname"], "testhost")
