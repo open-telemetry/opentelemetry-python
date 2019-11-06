@@ -3,6 +3,7 @@
 
 [gitter-image]: https://badges.gitter.im/open-telemetry/opentelemetry-python.svg
 [gitter-url]: https://gitter.im/open-telemetry/opentelemetry-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+[![Build Status](https://travis-ci.org/open-telemetry/opentelemetry-python.svg?branch=master)](https://travis-ci.org/open-telemetry/opentelemetry-python)
 
 The Python [OpenTelemetry](https://opentelemetry.io/) client.
 
@@ -49,6 +50,8 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 
 ## Quick Start
 
+### Tracing
+
 ```python
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -65,6 +68,34 @@ with tracer.start_as_current_span('foo'):
     with tracer.start_as_current_span('bar'):
         with tracer.start_as_current_span('baz'):
             print(Context)
+```
+
+### Metrics
+
+```python
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import Counter, Meter
+from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
+
+metrics.set_preferred_meter_implementation(lambda T: Meter())
+meter = metrics.meter()
+exporter = ConsoleMetricsExporter()
+
+counter = meter.create_metric(
+    "available memory",
+    "available memory",
+    "bytes",
+    int,
+    Counter,
+    ("environment",),
+)
+
+label_values = ("staging",)
+counter_handle = counter.get_handle(label_values)
+counter_handle.add(100)
+
+exporter.export([(counter, label_values)])
+exporter.shutdown()
 ```
 
 See the [API
@@ -97,19 +128,20 @@ includes:
 - B3 Context Propagation
 - HTTP Integrations
 
+The [v0.2 alpha
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.2.0)
+includes:
+
+- OpenTracing Bridge
+- Jaeger Trace Exporter
+- Trace Sampling
+
 See the [project
 milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
 for details on upcoming releases. The dates and features described here are
 estimates, and subject to change.
 
 Future releases targets include:
-
-| Component                   | Version    | Target Date     |
-| --------------------------- | ---------- | --------------- |
-| Jaeger Trace Exporter       | Alpha v0.2 | October 28 2019 |
-| Metrics SDK (Complete)      | Alpha v0.2 | October 28 2019 |
-| Prometheus Metrics Exporter | Alpha v0.2 | October 28 2019 |
-| OpenTracing Bridge          | Alpha v0.2 | October 28 2019 |
 
 | Component                           | Version    | Target Date      |
 | ----------------------------------- | ---------- | ---------------- |
@@ -118,7 +150,9 @@ Future releases targets include:
 | Support for Tags/Baggage            | Alpha v0.3 | November 15 2019 |
 | Metrics Aggregation                 | Alpha v0.3 | November 15 2019 |
 | gRPC Integrations                   | Alpha v0.3 | November 15 2019 |
+| Prometheus Metrics Exporter         | Alpha v0.3 | November 15 2019 |
 
-| Component         | Version    | Target Date      |
-| ----------------- | ---------- | ---------------- |
-| OpenCensus Bridge | Alpha v0.4 | December 31 2019 |
+| Component              | Version    | Target Date      |
+| ---------------------- | ---------- | ---------------- |
+| OpenCensus Bridge      | Alpha v0.4 | December 31 2019 |
+| Metrics SDK (Complete) | Alpha v0.4 | December 31 2019  |

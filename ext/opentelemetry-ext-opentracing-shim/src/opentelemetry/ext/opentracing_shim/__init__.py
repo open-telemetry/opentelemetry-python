@@ -76,7 +76,7 @@ class SpanShim(opentracing.Span):
             event_timestamp = None
 
         event_name = util.event_name_from_kv(key_values)
-        self._otel_span.add_event(event_name, event_timestamp, key_values)
+        self._otel_span.add_event(event_name, key_values, event_timestamp)
         return self
 
     @deprecated(reason="This method is deprecated in favor of log_kv")

@@ -99,7 +99,7 @@ class Event:
     """A text annotation with a set of attributes."""
 
     def __init__(
-        self, name: str, timestamp: int, attributes: types.Attributes = None
+        self, name: str, attributes: types.Attributes, timestamp: int
     ) -> None:
         self._name = name
         self._attributes = attributes
@@ -186,8 +186,8 @@ class Span:
     def add_event(
         self,
         name: str,
-        timestamp: int = None,
         attributes: types.Attributes = None,
+        timestamp: int = None,
     ) -> None:
         """Adds an `Event`.
 
