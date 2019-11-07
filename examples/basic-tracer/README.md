@@ -18,7 +18,7 @@ Setup [Jaeger Tracing](https://www.jaegertracing.io/docs/latest/getting-started/
 * Run the sample
 
 ```bash
-$ # from this director
+$ # from this directory
 $ python tracer.py
 ```
 
@@ -32,28 +32,27 @@ Span(name="foo", context=SpanContext(trace_id=0xf906f80f64d57c71ea8da4dfbbd2ddf2
 ```
 
 
-
 ### Jaeger
 
- - Run the sample
+* Run the sample
 
-   ```sh
-   $ pip install opentelemetry-ext-jaeger
-   $ # from this directory
-   $ EXPORTER=jaeger python tracer.py
-   ```
+```sh
+$ pip install opentelemetry-ext-jaeger
+$ # from this directory
+$ EXPORTER=jaeger python tracer.py
+```
 
 #### Jaeger UI
 
 Open the Jaeger UI in your browser [http://localhost:16686](http://localhost:16686)
 
 <p align="center"><img src="images/jaeger-ui.png?raw=true"/></p>
-
 Select `basic-service` under *Service Name* and click on *Find Traces*.
 
 Click on the trace to view its details.
 
 <p align="center"><img src="./images/jaeger-ui-detail.png?raw=true"/></p>
+
 ## Useful links
 - For more information on OpenTelemetry, visit: <https://opentelemetry.io/>
 - For more information on tracing in Python, visit: <https://github.com/open-telemetry/opentelemetry-python>
