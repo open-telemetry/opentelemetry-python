@@ -1,12 +1,14 @@
 import os
-import requests
 
+import requests
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.jaeger import JaegerSpanExporter
 from opentelemetry.sdk.trace import Tracer
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+from opentelemetry.sdk.trace.export import (
+    BatchExportSpanProcessor,
+    ConsoleSpanExporter,
+)
 
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
