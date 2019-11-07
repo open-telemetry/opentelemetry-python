@@ -81,9 +81,7 @@ class Link:
     ) -> None:
         self._context = context
         if attributes is None:
-            self._attributes = (
-                {}
-            )  # type: typing.Dict[str, types.AttributeValue]
+            self._attributes = {}  # type: types.Attributes
         else:
             self._attributes = attributes
 
