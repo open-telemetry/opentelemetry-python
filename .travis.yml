@@ -19,3 +19,7 @@ install:
 
 script:
   - tox
+
+after_success:
+  - pip install codecov
+  - codecov -v
