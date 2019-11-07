@@ -1,6 +1,7 @@
 import os
 
 import requests
+
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.jaeger import JaegerSpanExporter
