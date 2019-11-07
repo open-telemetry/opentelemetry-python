@@ -19,13 +19,14 @@ import opentelemetry.trace as trace
 from opentelemetry.context.propagation.tracecontexthttptextformat import (
     TraceContextHTTPTextFormat,
 )
+from opentelemetry.context import BaseRuntimeContext
 
 _T = typing.TypeVar("_T")
 
 
 def extract(
     get_from_carrier: httptextformat.Getter[_T], carrier: _T
-) -> trace.SpanContext:
+) -> BaseRuntimeContext:
     """Load the parent SpanContext from values in the carrier.
 
     Using the specified HTTPTextFormatter, the propagator will
@@ -45,7 +46,7 @@ def extract(
 
 
 def inject(
-    tracer: trace.Tracer,
+    context: BaseRuntimeContext
     set_in_carrier: httptextformat.Setter[_T],
     carrier: _T,
 ) -> None:
@@ -67,18 +68,19 @@ def inject(
         tracer.get_current_span().get_context(), set_in_carrier, carrier
     )
 
-
-_HTTP_TEXT_FORMAT = (
+_HTTP_TEXT_INJECTORS = [
     TraceContextHTTPTextFormat()
-)  # type: httptextformat.HTTPTextFormat
+]  # typing.List[httptextformat.HTTPTextFormat]
+
+_HTTP_TEXT_EXTRACTORS = [
+    TraceContextHTTPTextFormat()
+]  # typing.List[httptextformat.HTTPTextFormat]
 
 
-def get_global_httptextformat() -> httptextformat.HTTPTextFormat:
-    return _HTTP_TEXT_FORMAT
+def set_http_extractors(extractor_list: typing.List[httptextformat.HTTPTextFormat]) -> None:
+    global _HTTP_TEXT_EXTRACTORS  # pylint:disable=global-statement
+    _HTTP_TEXT_EXTRACTORS = extractor_list
 
-
-def set_global_httptextformat(
-    http_text_format: httptextformat.HTTPTextFormat,
-) -> None:
-    global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format
+def set_http_injectors(extractor_list: typing.List[httptextformat.HTTPTextFormat]) -> None:
+    global _HTTP_TEXT_INJECTORS # pylint:disable=global-statement
+    _HTTP_TEXT_INJECTORS = injector_list

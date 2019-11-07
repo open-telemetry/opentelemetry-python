@@ -15,7 +15,7 @@
 import itertools
 import string
 import typing
-from contextlib import contextmanager
+from opentelemetry.context import BaseRuntimeContext
 
 PRINTABLE = frozenset(
     itertools.chain(
@@ -81,45 +81,35 @@ class Entry:
 class DistributedContext:
     """A container for distributed context entries"""
 
+    KEY = "DistributedContext"
+
     def __init__(self, entries: typing.Iterable[Entry]) -> None:
         self._container = {entry.key: entry for entry in entries}
 
-    def get_entries(self) -> typing.Iterable[Entry]:
-        """Returns an immutable iterator to entries."""
-        return self._container.values()
+    @classmethod
+    def set_value(
+        cls, context: BaseRuntimeContext, entry_list: typing.Iterable[Entry]
+    ):
+        distributed_context = getattr(context, cls.KEY, {})
+        for entry in entry_list:
+            distributed_context[entry.key] = entry
 
-    def get_entry_value(self, key: EntryKey) -> typing.Optional[EntryValue]:
+    @classmethod
+    def get_entries(
+        cls, context: BaseRuntimeContext
+    ) -> typing.Iterable[Entry]:
+        """Returns an immutable iterator to entries."""
+        return getattr(context, cls.KEY, {}).values()
+
+    @classmethod
+    def get_entry_value(
+        cls, context: BaseRuntimeContext, key: EntryKey
+    ) -> typing.Optional[EntryValue]:
         """Returns the entry associated with a key or None
 
         Args:
             key: the key with which to perform a lookup
         """
-        if key in self._container:
-            return self._container[key].value
-        return None
-
-
-class DistributedContextManager:
-    def get_current_context(self) -> typing.Optional[DistributedContext]:
-        """Gets the current DistributedContext.
-
-        Returns:
-            A DistributedContext instance representing the current context.
-        """
-
-    @contextmanager  # type: ignore
-    def use_context(
-        self, context: DistributedContext
-    ) -> typing.Iterator[DistributedContext]:
-        """Context manager for controlling a DistributedContext lifetime.
-
-        Set the context as the active DistributedContext.
-
-        On exiting, the context manager will restore the parent
-        DistributedContext.
-
-        Args:
-            context: A DistributedContext instance to make current.
-        """
-        # pylint: disable=no-self-use
-        yield context
+        container = getattr(context, cls.KEY, {})
+        if key in container:
+            return container[key].value
