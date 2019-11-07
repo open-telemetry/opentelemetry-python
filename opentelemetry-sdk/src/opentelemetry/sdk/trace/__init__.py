@@ -202,14 +202,14 @@ class Span(trace_api.Span):
     def add_event(
         self,
         name: str,
-        timestamp: int = None,
         attributes: types.Attributes = None,
+        timestamp: int = None,
     ) -> None:
         self.add_lazy_event(
             trace_api.Event(
                 name,
-                time_ns() if timestamp is None else timestamp,
                 Span.empty_attributes if attributes is None else attributes,
+                time_ns() if timestamp is None else timestamp,
             )
         )
 
@@ -301,7 +301,6 @@ class Span(trace_api.Span):
 
 def generate_span_id() -> int:
     """Get a new random span ID.
-
     Returns:
         A random 64-bit int for use as a span ID
     """
@@ -310,7 +309,6 @@ def generate_span_id() -> int:
 
 def generate_trace_id() -> int:
     """Get a new random trace ID.
-
     Returns:
         A random 128-bit int for use as a trace ID
     """

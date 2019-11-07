@@ -48,6 +48,27 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         span_processor = export.SimpleExportSpanProcessor(my_exporter)
         tracer.add_span_processor(span_processor)
 
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("xxx"):
+                    pass
+
+        self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
+
+    def test_simple_span_processor_no_context(self):
+        """Check that we process spans that are never made active.
+
+        SpanProcessors should act on a span's start and end events whether or
+        not it is ever the active span.
+        """
+        tracer = trace.Tracer()
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.SimpleExportSpanProcessor(my_exporter)
+        tracer.add_span_processor(span_processor)
+
         with tracer.start_span("foo"):
             with tracer.start_span("bar"):
                 with tracer.start_span("xxx"):
