@@ -70,6 +70,7 @@ Select `http-server` under *Service Name* and click on *Find Traces*.
 Click on the trace to view its details.
 
 <p align="center"><img src="./images/jaeger-ui-detail.png?raw=true"/></p>
+
 ## Useful links
 - For more information on OpenTelemetry, visit: <https://opentelemetry.io/>
 - For more information on tracing in Python, visit: <https://github.com/open-telemetry/opentelemetry-python>
