@@ -104,6 +104,14 @@ detail, and the
 [opentelemetry-example-app](./examples/opentelemetry-example-app/README.rst)
 for a complete example.
 
+## Extensions
+
+### Third-party exporters
+
+OpenTelemetry supports integration with the following third-party exporters.
+
+-  [Azure Monitor](https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor)
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
