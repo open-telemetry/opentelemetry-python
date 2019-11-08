@@ -39,4 +39,3 @@ span_processor = SimpleExportSpanProcessor(ConsoleSpanExporter())
 tracer.add_span_processor(span_processor)
 
 response = requests.get(url="http://127.0.0.1:5000/")
-span_processor.shutdown()

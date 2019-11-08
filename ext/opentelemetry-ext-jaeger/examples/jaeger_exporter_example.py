@@ -45,7 +45,3 @@ with tracer.start_as_current_span("foo") as foo:
         time.sleep(0.2)
 
     time.sleep(0.1)
-
-# shutdown the span processor
-# TODO: this has to be improved so user doesn't need to call it manually
-span_processor.shutdown()

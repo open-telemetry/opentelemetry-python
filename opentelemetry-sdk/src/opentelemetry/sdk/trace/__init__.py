@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import atexit
 import logging
 import random
 import threading
@@ -333,6 +334,13 @@ class Tracer(trace_api.Tracer):
         self._current_span_slot = Context.register_slot(slot_name)
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
+        self._atexit_hanlder = atexit.register(
+            self._active_span_processor.shutdown
+        )
+
+    def __del__(self):
+        atexit.unregister(self._atexit_hanlder)
+        self._active_span_processor.shutdown()
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
