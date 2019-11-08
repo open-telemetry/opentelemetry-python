@@ -257,7 +257,7 @@ class TracerShim(opentracing.Tracer):
             raise opentracing.UnsupportedFormatException
 
         propagator = propagators.get_global_httptextformat()
-        propagator.inject(span_context.unwrap(), dict.__setitem__, carrier)
+        propagator.inject(span_context.unwrap(), type(carrier).__setitem__, carrier)
 
     def extract(self, format, carrier):
         # pylint: disable=redefined-builtin
