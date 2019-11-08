@@ -228,7 +228,7 @@ class TracerShim(opentracing.Tracer):
         # use a `None` parent, which triggers the creation of a new trace.
         parent = child_of.unwrap() if child_of else None
 
-        links = None
+        links = ()
         if references:
             links = []
             for ref in references:

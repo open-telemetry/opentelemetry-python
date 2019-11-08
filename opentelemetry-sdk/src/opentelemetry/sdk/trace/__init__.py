@@ -130,7 +130,7 @@ class Span(trace_api.Span):
         resource: None = None,  # TODO
         attributes: types.Attributes = None,  # TODO
         events: Sequence[trace_api.Event] = None,  # TODO
-        links: Sequence[trace_api.Link] = None,
+        links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
