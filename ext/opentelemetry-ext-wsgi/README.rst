@@ -3,7 +3,7 @@ OpenTelemetry WSGI Middleware
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-opentracing-wsgi.svg
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-wsgi.svg
    :target: https://pypi.org/project/opentelemetry-opentracing-wsgi/
 
 
