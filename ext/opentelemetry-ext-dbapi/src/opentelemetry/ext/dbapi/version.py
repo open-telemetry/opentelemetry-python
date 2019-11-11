@@ -12,14 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-
-from opentelemetry import trace as trace_api
-from opentelemetry.ext.mysql import trace_integration
-
-
-class TestMysqlIntegration(unittest.TestCase):
-    def test_trace_integration(self):
-        tracer = trace_api.tracer()
-        trace_integration(tracer)
-        self.assertEqual("", "")
+__version__ = "0.3.dev0"

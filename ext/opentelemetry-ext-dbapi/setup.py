@@ -11,15 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-import unittest
+import setuptools
 
-from opentelemetry import trace as trace_api
-from opentelemetry.ext.mysql import trace_integration
+BASE_DIR = os.path.dirname(__file__)
+VERSION_FILENAME = os.path.join(
+    BASE_DIR, "src", "opentelemetry", "ext", "dbapi", "version.py"
+)
+PACKAGE_INFO = {}
+with open(VERSION_FILENAME) as f:
+    exec(f.read(), PACKAGE_INFO)
 
-
-class TestMysqlIntegration(unittest.TestCase):
-    def test_trace_integration(self):
-        tracer = trace_api.tracer()
-        trace_integration(tracer)
-        self.assertEqual("", "")
+setuptools.setup(version=PACKAGE_INFO["__version__"])
