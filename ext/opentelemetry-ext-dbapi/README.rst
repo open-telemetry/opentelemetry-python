@@ -1,26 +1,32 @@
-OpenTelemetry MySQL integration
+OpenTelemetry Database API integration
 =================================
 
-The integration with MySQL supports the `mysql-connector`_ library and is specified
-to ``trace_integration`` using ``'MySQL'``.
+The trace integration with Database API supports libraries following the specification.
 
-.. mysql-connector: https://pypi.org/project/mysql-connector/
+.. PEP 249 -- Python Database API Specification v2.0: https://www.python.org/dev/peps/pep-0249/
 
 Usage
 -----
 
 .. code:: python
 
-    import mysql.connector
+    import wrapt
     from opentelemetry.trace import tracer
-    from opentelemetry.trace.ext.mysql import trace_integration
+    from opentelemetry.trace.ext.dbapi import DatabaseApiTracer
 
-    trace_integration(tracer())
-    cnx = mysql.connector.connect(database='MySQL_Database')
-    cursor = cnx.cursor()
-    cursor.execute("INSERT INTO test (testField) VALUES (123)"
-    cursor.close()
-    cnx.close()
+    def wrap(
+        wrapped: typing.Callable[..., any],
+        instance: typing.Any,
+        args: typing.Tuple[any, any],
+        kwargs: typing.Dict[any, any],
+    ):
+        """Patch MySQL Connector connect method to add tracing.
+        """
+        mysql_tracer = DatabaseApiTracer(tracer, "mysql")
+        return mysql_tracer.wrap_connect(wrapped, args, kwargs)
+
+    # Ex: mysql.connector
+    wrapt.wrap_function_wrapper(mysql.connector, "connect", wrap)
 
 
 References
