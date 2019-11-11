@@ -1,0 +1,4 @@
+opentelemetry-api
+opentelemetry-opentracing-shim
+redis
+redis_opentracing
