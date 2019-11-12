@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import requests
+from azure_monitor import AzureMonitorSpanExporter
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
-from opentelemetry.ext.azure_monitor import AzureMonitorSpanExporter
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
