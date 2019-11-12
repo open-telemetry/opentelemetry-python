@@ -400,16 +400,17 @@ class Tracer(trace_api.Tracer):
 
         if sampling_decision.sampled:
             if attributes is None:
-                attributes = sampling_decision.attributes
+                span_attributes = sampling_decision.attributes
             else:
                 # apply sampling decision attributes after initial attributes
-                attributes = {**attributes, **sampling_decision.attributes}
+                span_attributes = attributes.copy()
+                span_attributes.update(sampling_decision.attributes)
             return Span(
                 name=name,
                 context=context,
                 parent=parent,
                 sampler=self.sampler,
-                attributes=attributes,
+                attributes=span_attributes,
                 span_processor=self._active_span_processor,
                 kind=kind,
                 links=links,
