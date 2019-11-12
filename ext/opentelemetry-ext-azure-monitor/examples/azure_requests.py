@@ -22,9 +22,11 @@ from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 trace.set_preferred_tracer_implementation(Tracer)
 
 http_requests.enable(trace.tracer())
-span_processor = SimpleExportSpanProcessor(AzureMonitorSpanExporter(instrumentation_key='INSTRUMENTATION KEY HERE>'))
+span_processor = SimpleExportSpanProcessor(
+        AzureMonitorSpanExporter(instrumentation_key="<INSTRUMENTATION KEY HERE>")
+)
 trace.tracer().add_span_processor(span_processor)
 
 with trace.tracer().start_as_current_span("parent"):
-    response = requests.get('<URL HERE>', timeout=5)
+    response = requests.get("<URL HERE>", timeout=5)
 
