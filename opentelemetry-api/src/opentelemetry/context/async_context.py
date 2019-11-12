@@ -12,32 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import typing  # pylint: disable=unused-import
-from contextvars import ContextVar
+try:
+    from contextvars import ContextVar
+except ImportError:
+    pass
+else:
+    import typing  # pylint: disable=unused-import
+    from . import base_context
 
-from . import base_context
+    class AsyncRuntimeContext(base_context.BaseRuntimeContext):
+        class Slot(base_context.BaseRuntimeContext.Slot):
+            def __init__(self, name: str, default: object):
+                # pylint: disable=super-init-not-called
+                self.name = name
+                self.contextvar = ContextVar(name)  # type: ContextVar[object]
+                self.default = base_context.wrap_callable(
+                    default
+                )  # type: typing.Callable[..., object]
 
+            def clear(self) -> None:
+                self.contextvar.set(self.default())
 
-class AsyncRuntimeContext(base_context.BaseRuntimeContext):
-    class Slot(base_context.BaseRuntimeContext.Slot):
-        def __init__(self, name: str, default: "object"):
-            # pylint: disable=super-init-not-called
-            self.name = name
-            self.contextvar = ContextVar(name)  # type: ContextVar[object]
-            self.default = base_context.wrap_callable(
-                default
-            )  # type: typing.Callable[..., object]
+            def get(self) -> object:
+                try:
+                    return self.contextvar.get()
+                except LookupError:
+                    value = self.default()
+                    self.set(value)
+                    return value
 
-        def clear(self) -> None:
-            self.contextvar.set(self.default())
-
-        def get(self) -> "object":
-            try:
-                return self.contextvar.get()
-            except LookupError:
-                value = self.default()
-                self.set(value)
-                return value
-
-        def set(self, value: "object") -> None:
-            self.contextvar.set(value)
+            def set(self, value: object) -> None:
+                self.contextvar.set(value)

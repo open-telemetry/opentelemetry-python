@@ -418,6 +418,28 @@ class TestShim(unittest.TestCase):
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
 
+    def test_log(self):
+        """Test the deprecated `log` method on `Span` objects."""
+
+        with self.shim.start_span("TestSpan") as span:
+            with self.assertWarns(DeprecationWarning):
+                span.log(event="foo", payload="bar")
+
+        self.assertEqual(span.unwrap().events[0].attributes["event"], "foo")
+        self.assertEqual(span.unwrap().events[0].attributes["payload"], "bar")
+        self.assertIsNotNone(span.unwrap().events[0].timestamp)
+
+    def test_log_event(self):
+        """Test the deprecated `log_event` method on `Span` objects."""
+
+        with self.shim.start_span("TestSpan") as span:
+            with self.assertWarns(DeprecationWarning):
+                span.log_event("foo", "bar")
+
+        self.assertEqual(span.unwrap().events[0].attributes["event"], "foo")
+        self.assertEqual(span.unwrap().events[0].attributes["payload"], "bar")
+        self.assertIsNotNone(span.unwrap().events[0].timestamp)
+
     def test_span_context(self):
         """Test construction of `SpanContextShim` objects."""
 
