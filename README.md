@@ -1,9 +1,6 @@
 # OpenTelemetry Python
-[![Gitter chat][gitter-image]][gitter-url]
-
-[gitter-image]: https://badges.gitter.im/open-telemetry/opentelemetry-python.svg
-[gitter-url]: https://gitter.im/open-telemetry/opentelemetry-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-[![Build Status](https://travis-ci.org/open-telemetry/opentelemetry-python.svg?branch=master)](https://travis-ci.org/open-telemetry/opentelemetry-python)
+[![Gitter chat](https://img.shields.io/gitter/room/opentelemetry/opentelemetry-python)](https://gitter.im/open-telemetry/opentelemetry-python)
+[![Build status](https://travis-ci.org/open-telemetry/opentelemetry-python.svg?branch=master)](https://travis-ci.org/open-telemetry/opentelemetry-python)
 
 The Python [OpenTelemetry](https://opentelemetry.io/) client.
 
@@ -107,6 +104,28 @@ for a complete example.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+We meet weekly on Thursday at 8AM PT. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
+
+Meetings take place via [Zoom video conference](https://zoom.us/j/6729396170).
+
+Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit). For edit access, get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
+
+Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
+
+- [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
+- [Christian Neumüller](https://github.com/Oberon00), Dynatrace
+- [Leighton Chen](https://github.com/lzchen), Microsoft
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
+
+*Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
+
+Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
+
+- [Chris Kleinknecht](https://github.com/c24t), Google
+- [Reiley Yang](https://github.com/reyang), Microsoft
+
+*Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 
 ## Release Schedule
 
