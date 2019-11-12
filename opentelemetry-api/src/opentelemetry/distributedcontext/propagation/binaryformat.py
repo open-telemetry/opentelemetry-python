@@ -44,7 +44,7 @@ class BinaryFormat(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def from_bytes(
-        byte_representation: bytes
+        byte_representation: bytes,
     ) -> typing.Optional[DistributedContext]:
         """Return a DistributedContext that was represented by bytes.
 

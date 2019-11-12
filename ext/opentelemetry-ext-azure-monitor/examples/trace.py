@@ -23,5 +23,5 @@ tracer.add_span_processor(
     SimpleExportSpanProcessor(AzureMonitorSpanExporter())
 )
 
-with tracer.start_span("hello") as span:
+with tracer.start_as_current_span("hello") as span:
     print("Hello, World!")
