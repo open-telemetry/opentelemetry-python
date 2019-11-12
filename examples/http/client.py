@@ -29,12 +29,6 @@ from opentelemetry.sdk.trace.export import (
 if os.getenv("EXPORTER") == "jaeger":
     from opentelemetry.ext.jaeger import JaegerSpanExporter
 
-# The preferred tracer implementation must be set, as the opentelemetry-api
-# defines the interface with a no-op implementation.
-trace.set_preferred_tracer_implementation(lambda T: Tracer())
-tracer = trace.tracer()
-
-if os.getenv("EXPORTER") == "jaeger":
     exporter = JaegerSpanExporter(
         service_name="http-client",
         agent_host_name="localhost",
@@ -42,6 +36,11 @@ if os.getenv("EXPORTER") == "jaeger":
     )
 else:
     exporter = ConsoleSpanExporter()
+
+# The preferred tracer implementation must be set, as the opentelemetry-api
+# defines the interface with a no-op implementation.
+trace.set_preferred_tracer_implementation(lambda T: Tracer())
+tracer = trace.tracer()
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
