@@ -1,8 +1,21 @@
 OpenTelemetry WSGI Middleware
 =============================
 
+|pypi|
+
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-wsgi.svg
+   :target: https://pypi.org/project/opentelemetry-opentracing-wsgi/
+
+
 This library provides a WSGI middleware that can be used on any WSGI framework
 (such as Django / Flask) to track requests timing through OpenTelemetry.
+
+Installation
+------------
+
+::
+
+    pip install opentelemetry-opentracing-wsgi
 
 
 Usage (Flask)
