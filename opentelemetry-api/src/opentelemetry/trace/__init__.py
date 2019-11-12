@@ -402,6 +402,7 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
     ) -> "Span":
         """Starts a span.
@@ -431,6 +432,7 @@ class Tracer:
             parent: The span's parent. Defaults to the current span.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
+            attributes: The span's attributes.
             links: Links span to other spans
 
         Returns:
@@ -445,6 +447,7 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
@@ -481,6 +484,7 @@ class Tracer:
             parent: The span's parent. Defaults to the current span.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
+            attributes: The span's attributes.
             links: Links span to other spans
 
         Yields:
@@ -495,6 +499,7 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
     ) -> "Span":
         """Creates a span.
@@ -525,6 +530,7 @@ class Tracer:
             parent: The span's parent. Defaults to the current span.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
+            attributes: The span's attributes.
             links: Links span to other spans
 
         Returns:

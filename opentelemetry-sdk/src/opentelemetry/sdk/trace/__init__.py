@@ -319,11 +319,12 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
     ) -> "Span":
         """See `opentelemetry.trace.Tracer.start_span`."""
 
-        span = self.create_span(name, parent, kind, links)
+        span = self.create_span(name, parent, kind, attributes, links)
         span.start()
         return span
 
@@ -332,11 +333,12 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
-        span = self.start_span(name, parent, kind, links)
+        span = self.start_span(name, parent, kind, attributes, links)
         return self.use_span(span, end_on_exit=True)
 
     def create_span(
@@ -344,6 +346,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
     ) -> "trace_api.Span":
         """See `opentelemetry.trace.Tracer.create_span`.
@@ -387,16 +390,26 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling decision.
         sampling_decision = self.sampler.should_sample(
-            parent_context, context.trace_id, context.span_id, name, links,
+            parent_context,
+            context.trace_id,
+            context.span_id,
+            name,
+            attributes,
+            links,
         )
 
         if sampling_decision.sampled:
+            if attributes is None:
+                attributes = sampling_decision.attributes
+            else:
+                # apply sampling decision attributes after initial attributes
+                attributes = {**attributes, **sampling_decision.attributes}
             return Span(
                 name=name,
                 context=context,
                 parent=parent,
                 sampler=self.sampler,
-                attributes=sampling_decision.attributes,
+                attributes=attributes,
                 span_processor=self._active_span_processor,
                 kind=kind,
                 links=links,

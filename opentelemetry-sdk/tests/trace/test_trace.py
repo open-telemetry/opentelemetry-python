@@ -248,6 +248,46 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
+        attributes = {
+            "attr-key": "val",
+            "attr-key2": "val2",
+            "attr-in-both": "span-attr",
+        }
+        with self.tracer.start_as_current_span(
+            "root2", attributes=attributes
+        ) as root:
+            self.assertEqual(len(root.attributes), 3)
+            self.assertEqual(root.attributes["attr-key"], "val")
+            self.assertEqual(root.attributes["attr-key2"], "val2")
+            self.assertEqual(root.attributes["attr-in-both"], "span-attr")
+
+        decision_attributes = {
+            "sampler-attr": "sample-val",
+            "attr-in-both": "decision-attr",
+        }
+        self.tracer.sampler = sampling.StaticSampler(
+            sampling.Decision(sampled=True, attributes=decision_attributes)
+        )
+
+        with self.tracer.start_as_current_span("root2") as root:
+            self.assertEqual(len(root.attributes), 2)
+            self.assertEqual(root.attributes["sampler-attr"], "sample-val")
+            self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
+
+        attributes = {
+            "attr-key": "val",
+            "attr-key2": "val2",
+            "attr-in-both": "span-attr",
+        }
+        with self.tracer.start_as_current_span(
+            "root2", attributes=attributes
+        ) as root:
+            self.assertEqual(len(root.attributes), 4)
+            self.assertEqual(root.attributes["attr-key"], "val")
+            self.assertEqual(root.attributes["attr-key2"], "val2")
+            self.assertEqual(root.attributes["sampler-attr"], "sample-val")
+            self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
+
     def test_events(self):
         self.assertIsNone(self.tracer.get_current_span())
 
