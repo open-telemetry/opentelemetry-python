@@ -38,8 +38,8 @@ class TestTracer(unittest.TestCase):
 
         tracer.shutdown()
 
-        mock_processor1.shutdown.assert_called_once()
-        mock_processor2.shutdown.assert_called_once()
+        self.assertEqual(mock_processor1.shutdown.call_count, 1)
+        self.assertEqual(mock_processor2.shutdown.call_count, 1)
 
         shutdown_python_code = """
 import atexit
