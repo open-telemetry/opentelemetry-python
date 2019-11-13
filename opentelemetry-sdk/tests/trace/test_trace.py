@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import subprocess
 import unittest
 from unittest import mock
 
@@ -25,6 +26,75 @@ class TestTracer(unittest.TestCase):
     def test_extends_api(self):
         tracer = trace.Tracer()
         self.assertIsInstance(tracer, trace_api.Tracer)
+
+    def test_shutdown(self):
+        tracer = trace.Tracer()
+
+        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
+        tracer.add_span_processor(mock_processor1)
+
+        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
+        tracer.add_span_processor(mock_processor2)
+
+        tracer.shutdown()
+
+        mock_processor1.shutdown.assert_called_once()
+        mock_processor2.shutdown.assert_called_once()
+
+        shutdown_python_code = """
+import atexit
+from unittest import mock
+
+from opentelemetry.sdk import trace
+
+mock_processor = mock.Mock(spec=trace.SpanProcessor)
+
+def print_shutdown_count():
+    print(mock_processor.shutdown.call_count)
+
+# atexit hooks are called in inverse order they are added, so do this before
+# creating the tracer
+atexit.register(print_shutdown_count)
+
+tracer = trace.Tracer({tracer_parameters})
+tracer.add_span_processor(mock_processor)
+
+{tracer_shutdown}
+"""
+
+        def run_general_code(shutdown_on_exit, explicit_shutdown):
+            tracer_parameters = ""
+            tracer_shutdown = ""
+
+            if not shutdown_on_exit:
+                tracer_parameters = "shutdown_on_exit=False"
+
+            if explicit_shutdown:
+                tracer_shutdown = "tracer.shutdown()"
+
+            return subprocess.check_output(
+                [
+                    "python",
+                    "-c",
+                    shutdown_python_code.format(
+                        tracer_parameters=tracer_parameters,
+                        tracer_shutdown=tracer_shutdown,
+                    ),
+                ]
+            )
+
+        # test default shutdown_on_exit (True)
+        out = run_general_code(True, False)
+        self.assertTrue(out.startswith(b"1"))
+
+        # test that shutdown is called only once even if Tracer.shutdown is
+        # called explicitely
+        out = run_general_code(True, True)
+        self.assertTrue(out.startswith(b"1"))
+
+        # test shutdown_on_exit=False
+        out = run_general_code(False, False)
+        self.assertTrue(out.startswith(b"0"))
 
 
 class TestTracerSampling(unittest.TestCase):
