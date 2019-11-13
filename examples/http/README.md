@@ -26,7 +26,7 @@ $ python server.py
 
 ```bash
 $ # from this directory
-$ python client.py
+$ python tracer_client.py
 ```
 
 The output will be displayed at the console on the client side
@@ -57,7 +57,7 @@ $ EXPORTER=jaeger python server.py
 * Run the client from a different terminal
 
 ```bash
-$ EXPORTER=jaeger python client.py
+$ EXPORTER=jaeger python tracer_client.py
 ```
 
 #### Jaeger UI

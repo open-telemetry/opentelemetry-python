@@ -1,7 +1,7 @@
 # Examples
 This folder contains various examples to demonstrate using OpenTelemetry.
 
-##### basic-tracer
+##### basic_tracer
 This example shows how to use OpenTelemetry to instrument an application - e.g. a batch job.
 
 ##### http
