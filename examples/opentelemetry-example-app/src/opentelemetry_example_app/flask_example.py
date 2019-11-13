@@ -21,7 +21,7 @@ import requests
 
 import opentelemetry.ext.http_requests
 from opentelemetry import propagators, trace
-from opentelemetry.ext.flask_util import instrument_app
+from opentelemetry.ext.flask import instrument_app
 from opentelemetry.sdk.context.propagation.b3_format import B3Format
 from opentelemetry.sdk.trace import Tracer
 
