@@ -6,7 +6,8 @@ in Flask applications. In addition to opentelemetry-ext-wsgi, it supports
 flask-specific features such as:
 
 * The Flask endpoint name is used as the Span name.
-* The ``http.route`` Span attribute is set so that one can see which URL rule matched a request.
+* The ``http.route`` Span attribute is set so that one can see which URL rule
+  matched a request.
 
 Usage
 -----
