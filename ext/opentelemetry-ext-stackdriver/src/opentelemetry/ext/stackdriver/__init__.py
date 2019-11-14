@@ -116,9 +116,11 @@ class StackdriverSpanExporter(SpanExporter):
                 "status": extract_status(span.status),
             }
             sd_span["parentSpanId"] = parent_id
-            sd_span["timeEvents"] = {
-                "timeEvent": formatted_time_events
-            } if formatted_time_events else None
+            sd_span["timeEvents"] = (
+                {"timeEvent": formatted_time_events}
+                if formatted_time_events
+                else None
+            )
             sd_span["startTime"] = (
                 ns_to_iso_str(span.start_time) if span.start_time else None
             )
