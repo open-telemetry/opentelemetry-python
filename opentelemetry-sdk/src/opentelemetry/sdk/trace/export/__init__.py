@@ -77,8 +77,8 @@ class SimpleExportSpanProcessor(SpanProcessor):
             try:
                 self.span_exporter.export((span,))
             # pylint: disable=broad-except
-            except Exception as exc:
-                logger.warning("Exception while exporting data: %s", exc)
+            except Exception:
+                logger.exception("Exception while exporting Span.")
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -191,7 +191,7 @@ class BatchExportSpanProcessor(SpanProcessor):
                 )  # type: ignore
             # pylint: disable=broad-except
             except Exception:
-                logger.exception("Exception while exporting data.")
+                logger.exception("Exception while exporting Span batch.")
 
         # clean up list
         for index in range(idx):
