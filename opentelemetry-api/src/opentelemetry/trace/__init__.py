@@ -30,10 +30,10 @@ context. New spans are "attached" to the context in that they are
 created as children of the currently active span, and the newly-created span
 can optionally become the new active span::
 
-    from opentelemetry.trace import tracer
+    from opentelemetry import trace
 
     # Create a new root span, set it as the current span in context
-    with tracer.start_as_current_span("parent"):
+    with trace.tracer().start_as_current_span("parent"):
         # Attach a new child and update the current span
         with tracer.start_as_current_span("child"):
             do_work():
@@ -43,10 +43,10 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    from opentelemetry.api.trace import tracer
+    from opentelemetry import trace
 
     # Explicit parent span assignment
-    child = tracer.start_span("child", parent=parent)
+    child = trace.tracer().start_span("child", parent=parent)
 
     try:
         do_work(span=child)
