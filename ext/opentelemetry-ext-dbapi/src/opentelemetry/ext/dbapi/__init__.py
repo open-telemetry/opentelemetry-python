@@ -25,6 +25,8 @@ import wrapt
 from opentelemetry.trace import SpanKind, Tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
+QUERY_WRAP_METHODS = ["execute", "executemany", "callproc"]
+
 
 class DatabaseApiTracer:
     def __init__(
@@ -67,18 +69,19 @@ class DatabaseApiTracer:
         """Patch cursor instance in a specific connection.
         """
         cursor = wrapped(*args, **kwargs)
-        wrapt.wrap_function_wrapper(cursor, "execute", self.wrap_execute)
+        for func in QUERY_WRAP_METHODS:
+            wrapt.wrap_function_wrapper(cursor, func, self.add_span)
         return cursor
 
     # pylint: disable=unused-argument
-    def wrap_execute(
+    def add_span(
         self,
         wrapped: typing.Callable[..., any],
         instance: typing.Any,
         args: typing.Tuple[any, any],
         kwargs: typing.Dict[any, any],
     ):
-        """Patch execute method in cursor and create span.
+        """Patch execute, executeMany and callproc methods in cursor and create span.
         """
         name = self._database_component
         database = self._connection_props.get("database", "")
@@ -89,7 +92,7 @@ class DatabaseApiTracer:
         if len(args) > 1:
             query += " params=" + str(args[1])
 
-        with self._tracer.start_current_span(
+        with self._tracer.start_as_current_span(
             name, kind=SpanKind.CLIENT
         ) as span:
             span.set_attribute("component", self._database_component)
