@@ -367,7 +367,18 @@ class Tracer(trace_api.Tracer):
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
     ) -> "trace_api.Span":
-        """See `opentelemetry.trace.Tracer.create_span`.
+        """
+        Creating the span does not start it, and should not affect the tracer's
+        context. To start the span and update the tracer's context to make it
+        the currently active span, see :meth:`use_span`.
+
+        By default the current span will be used as parent, but an explicit
+        parent can also be specified, either a Span or a SpanContext.
+        If the specified value is `None`, the created span will be a root
+        span.
+
+        Applications that need to create spans detached from the tracer's
+        context should use this method.
 
         If `parent` is null the new span will be created as a root span, i.e. a
         span with no parent context. By default, the new span will be created

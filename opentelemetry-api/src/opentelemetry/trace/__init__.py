@@ -46,14 +46,12 @@ change, and the caller is responsible for managing the span's lifetime::
     from opentelemetry.api.trace import tracer
 
     # Explicit parent span assignment
-    span = tracer.create_span("child", parent=parent) as child:
+    child = tracer.start_span("child", parent=parent)
 
-    # The caller is responsible for starting and ending the span
-    span.start()
     try:
         do_work(span=child)
     finally:
-        span.end()
+        child.end()
 
 Applications should generally use a single global tracer, and use either
 implicit or explicit context propagation consistently throughout.
@@ -499,47 +497,6 @@ class Tracer:
 
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
-
-    def create_span(
-        self,
-        name: str,
-        parent: ParentSpan = CURRENT_SPAN,
-        kind: SpanKind = SpanKind.INTERNAL,
-    ) -> "Span":
-        """Creates a span.
-
-        Creating the span does not start it, and should not affect the tracer's
-        context. To start the span and update the tracer's context to make it
-        the currently active span, see :meth:`use_span`.
-
-        By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a Span or a SpanContext.
-        If the specified value is `None`, the created span will be a root
-        span.
-
-        Applications that need to create spans detached from the tracer's
-        context should use this method.
-
-            with tracer.start_as_current_span(name) as span:
-                do_work()
-
-        This is equivalent to::
-
-            span = tracer.create_span(name)
-            with tracer.use_span(span):
-                do_work()
-
-        Args:
-            name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
-            kind: The span's kind (relationship to parent). Note that is
-                meaningful even if there is no parent.
-
-        Returns:
-            The newly-created span.
-        """
-        # pylint: disable=unused-argument,no-self-use
-        return INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(

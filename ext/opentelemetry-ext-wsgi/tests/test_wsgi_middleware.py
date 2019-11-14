@@ -77,14 +77,14 @@ class TestWsgiApplication(unittest.TestCase):
     def setUp(self):
         tracer = trace_api.tracer()
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
-        self.create_span_patcher = mock.patch.object(
+        self.start_span_patcher = mock.patch.object(
             tracer,
-            "create_span",
+            "start_span",
             autospec=True,
             spec_set=True,
             return_value=self.span,
         )
-        self.create_span = self.create_span_patcher.start()
+        self.start_span = self.start_span_patcher.start()
 
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
@@ -97,11 +97,10 @@ class TestWsgiApplication(unittest.TestCase):
         self.exc_info = None
 
     def tearDown(self):
-        self.create_span_patcher.stop()
+        self.start_span_patcher.stop()
 
     def start_response(self, status, response_headers, exc_info=None):
         # The span should have started already
-        self.span.start.assert_called_once_with()
 
         self.status = status
         self.response_headers = response_headers
@@ -130,10 +129,9 @@ class TestWsgiApplication(unittest.TestCase):
             self.assertIsNone(self.exc_info)
 
         # Verify that start_span has been called
-        self.create_span.assert_called_with(
+        self.start_span.assert_called_with(
             "/", trace_api.INVALID_SPAN_CONTEXT, kind=trace_api.SpanKind.SERVER
         )
-        self.span.start.assert_called_with()
 
     def test_basic_wsgi_call(self):
         app = OpenTelemetryMiddleware(simple_wsgi)

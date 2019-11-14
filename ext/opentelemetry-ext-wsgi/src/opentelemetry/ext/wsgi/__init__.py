@@ -109,10 +109,10 @@ class OpenTelemetryMiddleware:
         path_info = environ["PATH_INFO"] or "/"
         parent_span = propagators.extract(_get_header_from_environ, environ)
 
-        span = tracer.create_span(
+        span = tracer.start_span(
             path_info, parent_span, kind=trace.SpanKind.SERVER
         )
-        span.start()
+
         try:
             with tracer.use_span(span):
                 self._add_request_attributes(span, environ)
