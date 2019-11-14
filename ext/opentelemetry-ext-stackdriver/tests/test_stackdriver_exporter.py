@@ -98,6 +98,7 @@ class TestStackdriverSpanExporter(unittest.TestCase):
                     },
                     "links": None,
                     "status": {"details": None, "code": 0},
+                    "timeEvents": None,
                     "startTime": None,
                     "endTime": None,
                 }
