@@ -3,8 +3,8 @@ OpenTelemetry WSGI Middleware
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-wsgi.svg
-   :target: https://pypi.org/project/opentelemetry-opentracing-wsgi/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-wsgi.svg
+   :target: https://pypi.org/project/opentelemetry-ext-wsgi/
 
 
 This library provides a WSGI middleware that can be used on any WSGI framework
@@ -15,7 +15,7 @@ Installation
 
 ::
 
-    pip install opentelemetry-opentracing-wsgi
+    pip install opentelemetry-ext-wsgi
 
 
 Usage (Flask)

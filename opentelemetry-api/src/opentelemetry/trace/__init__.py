@@ -285,7 +285,7 @@ class TraceState(typing.Dict[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
-    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+    Implementations should conform to the `W3C Trace Context - Tracestate`_
     spec, which describes additional restrictions on valid field values.
 
     .. _W3C Trace Context - Tracestate:
