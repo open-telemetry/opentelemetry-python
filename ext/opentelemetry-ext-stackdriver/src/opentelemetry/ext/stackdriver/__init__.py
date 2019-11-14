@@ -115,7 +115,7 @@ class StackdriverSpanExporter(SpanExporter):
                 "links": extract_links(span.links),
                 "status": extract_status(span.status),
             }
-            sd_span["parentSpanId"]: parent_id
+            sd_span["parentSpanId"] = parent_id
             sd_span["timeEvents"]: {
                 "timeEvent": formatted_time_events
             } if formatted_time_events else None
