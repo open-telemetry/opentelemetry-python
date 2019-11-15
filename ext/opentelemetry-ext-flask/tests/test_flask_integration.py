@@ -59,8 +59,6 @@ class TestFlaskIntegration(WsgiTestBase):
         )
         self.assertEqual(1, self.span.start.call_count)
 
-        # Nope, this uses Tracer.use_span(end_on_exit)
-        #  self.assertEqual(1, self.span.end.call_count)
         # TODO: Change this test to use the SDK, as mocking becomes painful
 
         self.assertEqual(
