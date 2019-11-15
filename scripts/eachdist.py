@@ -5,12 +5,28 @@ import shlex
 import shutil
 import subprocess
 import sys
+from collections import namedtuple
 from configparser import ConfigParser
 from itertools import chain
-from pathlib import Path
+from pathlib import Path, PurePath
 
 DEFAULT_ALLSEP = " "
 DEFAULT_ALLFMT = "{rel}"
+
+try:
+    subprocess_run = subprocess.run
+except AttributeError: # Py < 3.5 compat
+    CompletedProcess = namedtuple("CompletedProcess", "returncode")
+
+    def subprocess_run(*args, **kwargs):
+        check = kwargs.pop("check", False)
+        if check:
+            subprocess.check_call(*args, **kwargs)
+            return CompletedProcess(returncode=0)
+        else:
+            return CompletedProcess(
+                returncode=subprocess.call(*args, **kwargs)
+            )
 
 
 def parse_args(args=None):
@@ -151,6 +167,11 @@ def runsubprocess(dry_run, params, *args, **kwargs):
         print(cmdstr)
         return None
 
+    # Py < 3.6 compat.
+    cwd = kwargs.get("cwd")
+    if cwd and isinstance(cwd, PurePath):
+        kwargs["cwd"] = str(cwd)
+
     print(">>>", cmdstr, file=sys.stderr)
 
     # This is a workaround for subprocess.run(['python']) leaving the virtualenv on Win32.
@@ -168,7 +189,7 @@ def runsubprocess(dry_run, params, *args, **kwargs):
     if executable:
         params[0] = executable
     try:
-        return subprocess.run(params, *args, **kwargs)
+        return subprocess_run(params, *args, **kwargs)
     except OSError as exc:
         raise ValueError(
             "Failed executing " + repr(params) + ": " + str(exc)
