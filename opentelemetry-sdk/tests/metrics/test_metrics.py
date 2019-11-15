@@ -133,6 +133,7 @@ class TestMetric(unittest.TestCase):
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
+        # pylint: disable=protected-access
         self.assertEqual(metric._label_set_for(label_set), label_set)
 
     def test_label_set_for_different(self):
@@ -141,6 +142,7 @@ class TestMetric(unittest.TestCase):
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter2.get_label_set(kvp)
+        # pylint: disable=protected-access
         self.assertEqual(
             metric._label_set_for(label_set), metrics.EMPTY_LABEL_SET
         )
