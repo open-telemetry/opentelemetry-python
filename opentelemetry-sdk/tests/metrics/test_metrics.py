@@ -27,7 +27,9 @@ class TestMeter(unittest.TestCase):
     def test_record_batch(self):
         meter = metrics.Meter()
         label_keys = ("key1",)
-        counter = metrics.Counter("name", "desc", "unit", float, meter,label_keys)
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
         record_tuples = [(counter, 1.0)]
@@ -39,9 +41,13 @@ class TestMeter(unittest.TestCase):
         label_keys = ("key1", "key2", "key3")
         kvp = {"key1": "value1", "key2": "value2", "key3": "value3"}
         label_set = meter.get_label_set(kvp)
-        counter = metrics.Counter("name", "desc", "unit", float, meter, label_keys)
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
         gauge = metrics.Gauge("name", "desc", "unit", int, label_keys)
-        measure = metrics.Measure("name", "desc", "unit", float, meter, label_keys)
+        measure = metrics.Measure(
+            "name", "desc", "unit", float, meter, label_keys
+        )
         record_tuples = [(counter, 1.0), (gauge, 5), (measure, 3.0)]
         meter.record_batch(label_set, record_tuples)
         self.assertEqual(counter.get_handle(label_set).data, 1.0)
@@ -53,7 +59,9 @@ class TestMeter(unittest.TestCase):
         label_keys = ("key1",)
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
-        counter = metrics.Counter("name", "desc", "unit", float, meter, label_keys)
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
         counter.add(label_set, 1.0)
         handle = counter.get_handle(label_set)
         record_tuples = [(counter, 1.0)]
@@ -133,7 +141,9 @@ class TestMetric(unittest.TestCase):
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter2.get_label_set(kvp)
-        self.assertEqual(metric._label_set_for(label_set), metrics.EMPTY_LABEL_SET)
+        self.assertEqual(
+            metric._label_set_for(label_set), metrics.EMPTY_LABEL_SET
+        )
 
 
 class TestCounter(unittest.TestCase):

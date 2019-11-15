@@ -25,10 +25,12 @@ logger = logging.getLogger(__name__)
 class LabelSet(metrics_api.LabelSet):
     """See `opentelemetry.metrics.LabelSet."""
 
-    def __init__(self,
-                 meter: "Meter" = None,
-                 labels: Dict[str, str] = None,
-                 encoded: str = ""):
+    def __init__(
+        self,
+        meter: "Meter" = None,
+        labels: Dict[str, str] = None,
+        encoded: str = "",
+    ):
         self.meter = meter
         self.labels = labels
         self.encoded = encoded
