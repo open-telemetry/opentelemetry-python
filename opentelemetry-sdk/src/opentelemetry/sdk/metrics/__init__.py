@@ -21,6 +21,7 @@ from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 
+
 # pylint: disable=redefined-outer-name
 class LabelSet(metrics_api.LabelSet):
     """See `opentelemetry.metrics.LabelSet."""
