@@ -135,7 +135,7 @@ class SpanKind(enum.Enum):
     #: path latency relationship between producer and consumer spans.
     PRODUCER = 3
 
-    #: Indicates that the span describes consumer receiving a message from a
+    #: Indicates that the span describes a consumer receiving a message from a
     #: broker. Unlike client and server, there is usually no direct critical
     #: path latency relationship between producer and consumer spans.
     CONSUMER = 4
@@ -285,7 +285,7 @@ class TraceState(typing.Dict[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
-    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+    Implementations should conform to the `W3C Trace Context - Tracestate`_
     spec, which describes additional restrictions on valid field values.
 
     .. _W3C Trace Context - Tracestate:
