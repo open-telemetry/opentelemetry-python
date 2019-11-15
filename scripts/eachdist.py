@@ -23,10 +23,7 @@ except AttributeError:  # Py < 3.5 compat
         if check:
             subprocess.check_call(*args, **kwargs)
             return CompletedProcess(returncode=0)
-        else:
-            return CompletedProcess(
-                returncode=subprocess.call(*args, **kwargs)
-            )
+        return CompletedProcess(returncode=subprocess.call(*args, **kwargs))
 
 
 def parse_args(args=None):
@@ -135,9 +132,9 @@ def find_targets(mode, rootpath):
 
         def keyfunc(path):
             path = path.relative_to(rootpath)
-            for i, pattern in enumerate(sortfirst):
+            for idx, pattern in enumerate(sortfirst):
                 if path.match(pattern):
-                    return i
+                    return idx
             return float("inf")
 
         targets.sort(key=keyfunc)
@@ -172,6 +169,8 @@ def runsubprocess(dry_run, params, *args, **kwargs):
     if cwd and isinstance(cwd, PurePath):
         kwargs["cwd"] = str(cwd)
 
+    check = kwargs.pop("check")  # Enforce specifying check
+
     print(">>>", cmdstr, file=sys.stderr)
 
     # This is a workaround for subprocess.run(['python']) leaving the virtualenv on Win32.
@@ -189,7 +188,7 @@ def runsubprocess(dry_run, params, *args, **kwargs):
     if executable:
         params[0] = executable
     try:
-        return subprocess_run(params, *args, **kwargs)
+        return subprocess_run(params, *args, check=check, **kwargs)
     except OSError as exc:
         raise ValueError(
             "Failed executing " + repr(params) + ": " + str(exc)
@@ -322,7 +321,8 @@ def lint_args(args):
     runsubprocess(args.dry_run, ("flake8", rootdir), check=True)
     execute_args(
         parse_subargs(
-            args, ("exec", "pylint {}", "--all", "--mode", "lintroots",),
+            args,
+            ("exec", "pylint scripts/ {}", "--all", "--mode", "lintroots",),
         )
     )
 

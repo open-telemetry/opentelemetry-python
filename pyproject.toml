@@ -11,8 +11,6 @@ exclude = '''
     | \.venv.*
     | venv.*
     | \.vscode
-    | _build
-    | build
     | dist
     | ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen     # generated files
   )/
