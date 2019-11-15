@@ -308,14 +308,15 @@ def lint_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", rootdir)
-        + (("--diff", "--check") if args.check_only else ()),
+        ("black", ".") + (("--diff", "--check") if args.check_only else ()),
+        cwd=rootdir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--recursive", rootdir)
+        ("isort", "--recursive", ".")
         + (("--diff", "--check-only") if args.check_only else ()),
+        cwd=rootdir,
         check=True,
     )
     runsubprocess(args.dry_run, ("flake8", rootdir), check=True)

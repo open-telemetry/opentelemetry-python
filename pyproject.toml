@@ -3,16 +3,7 @@ line-length = 79
 exclude = '''
 (
   /(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv.*
-    | venv.*
-    | \.vscode
-    | dist
-    | ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen     # generated files
+    ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen     # generated files
   )/
 )
 '''
