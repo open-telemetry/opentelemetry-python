@@ -15,7 +15,7 @@ Usage
 .. code-block:: python
 
     from flask import Flask
-    from opentelemetry.ext.flask_util import instrument_app
+    from opentelemetry.ext.flask import instrument_app
 
     app = Flask(__name__)
     instrument_app(app)  # This is where the magic happens. ✨
