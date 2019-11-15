@@ -8,16 +8,13 @@ exclude = '''
     | \.hg
     | \.mypy_cache
     | \.tox
-    | \.venv
+    | \.venv.*
+    | venv.*
     | \.vscode
     | _build
-    | buck-out
-    | target
     | build
     | dist
     | ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen     # generated files
   )/
-  | foo.py           # also separately exclude a file named foo.py in
-                     # the root of the project
 )
 '''
