@@ -135,7 +135,7 @@ class SpanKind(enum.Enum):
     #: path latency relationship between producer and consumer spans.
     PRODUCER = 3
 
-    #: Indicates that the span describes consumer receiving a message from a
+    #: Indicates that the span describes a consumer receiving a message from a
     #: broker. Unlike client and server, there is usually no direct critical
     #: path latency relationship between producer and consumer spans.
     CONSUMER = 4
