@@ -17,6 +17,7 @@ from collections import OrderedDict
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
+from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class BaseHandle:
         self.value_type = value_type
         self.enabled = enabled
         self.monotonic = monotonic
+        self.last_update_timestamp = time_ns()
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
         if not self.enabled:
@@ -55,6 +57,11 @@ class BaseHandle:
             return False
         return True
 
+    def __repr__(self):
+        return '{}(data="{}", last_update_timestamp={})'.format(
+            type(self).__name__, self.data, self.last_update_timestamp
+        )
+
 
 class CounterHandle(metrics_api.CounterHandle, BaseHandle):
     def add(self, value: metrics_api.ValueT) -> None:
@@ -63,6 +70,7 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
                 return
+            self.last_update_timestamp = time_ns()
             self.data += value
 
 
@@ -73,6 +81,7 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
             if self.monotonic and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
+            self.last_update_timestamp = time_ns()
             self.data = value
 
 
@@ -83,6 +92,7 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic measure cannot accept negatives.")
                 return
+            self.last_update_timestamp = time_ns()
             # TODO: record
 
 
@@ -139,6 +149,10 @@ class Metric(metrics_api.Metric):
             return label_set
         return EMPTY_LABEL_SET
 
+    def __repr__(self):
+        return '{}(name="{}", description={})'.format(
+            type(self).__name__, self.name, self.description
+        )
 
     UPDATE_FUNCTION = lambda x, y: None  # noqa: E731
 

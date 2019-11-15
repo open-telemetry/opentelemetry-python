@@ -15,7 +15,9 @@
 import logging
 
 import opentracing
+from deprecated import deprecated
 
+from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 
 logger = logging.getLogger(__name__)
@@ -74,8 +76,16 @@ class SpanShim(opentracing.Span):
             event_timestamp = None
 
         event_name = util.event_name_from_kv(key_values)
-        self._otel_span.add_event(event_name, event_timestamp, key_values)
+        self._otel_span.add_event(event_name, key_values, event_timestamp)
         return self
+
+    @deprecated(reason="This method is deprecated in favor of log_kv")
+    def log(self, **kwargs):
+        super().log(**kwargs)
+
+    @deprecated(reason="This method is deprecated in favor of log_kv")
+    def log_event(self, event, payload=None):
+        super().log_event(event, payload=payload)
 
     def set_baggage_item(self, key, value):
         logger.warning(
@@ -90,10 +100,6 @@ class SpanShim(opentracing.Span):
             self.__class__.__name__,
         )
         # TODO: Implement.
-
-    # TODO: Verify calls to deprecated methods `log_event()` and `log()` on
-    # base class work properly (it's probably fine because both methods call
-    # `log_kv()`).
 
 
 class ScopeShim(opentracing.Scope):
@@ -179,6 +185,10 @@ class TracerShim(opentracing.Tracer):
     def __init__(self, tracer):
         super().__init__(scope_manager=ScopeManagerShim(self))
         self._otel_tracer = tracer
+        self._supported_formats = (
+            opentracing.Format.TEXT_MAP,
+            opentracing.Format.HTTP_HEADERS,
+        )
 
     def unwrap(self):
         """Returns the wrapped OpenTelemetry `Tracer` object."""
@@ -244,16 +254,32 @@ class TracerShim(opentracing.Tracer):
 
     def inject(self, span_context, format, carrier):
         # pylint: disable=redefined-builtin
-        logger.warning(
-            "Calling unimplemented method inject() on class %s",
-            self.__class__.__name__,
+        # This implementation does not perform the injecting by itself but
+        # uses the configured propagators in opentelemetry.propagators.
+        # TODO: Support Format.BINARY once it is supported in
+        # opentelemetry-python.
+        if format not in self._supported_formats:
+            raise opentracing.UnsupportedFormatException
+
+        propagator = propagators.get_global_httptextformat()
+        propagator.inject(
+            span_context.unwrap(), type(carrier).__setitem__, carrier
         )
-        # TODO: Implement.
 
     def extract(self, format, carrier):
         # pylint: disable=redefined-builtin
-        logger.warning(
-            "Calling unimplemented method extract() on class %s",
-            self.__class__.__name__,
-        )
-        # TODO: Implement.
+        # This implementation does not perform the extracing by itself but
+        # uses the configured propagators in opentelemetry.propagators.
+        # TODO: Support Format.BINARY once it is supported in
+        # opentelemetry-python.
+        if format not in self._supported_formats:
+            raise opentracing.UnsupportedFormatException
+
+        def get_as_list(dict_object, key):
+            value = dict_object.get(key)
+            return [value] if value is not None else []
+
+        propagator = propagators.get_global_httptextformat()
+        otel_context = propagator.extract(get_as_list, carrier)
+
+        return SpanContextShim(otel_context)
