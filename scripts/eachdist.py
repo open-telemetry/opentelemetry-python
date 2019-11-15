@@ -15,7 +15,7 @@ DEFAULT_ALLFMT = "{rel}"
 
 try:
     subprocess_run = subprocess.run
-except AttributeError: # Py < 3.5 compat
+except AttributeError:  # Py < 3.5 compat
     CompletedProcess = namedtuple("CompletedProcess", "returncode")
 
     def subprocess_run(*args, **kwargs):
