@@ -95,11 +95,7 @@ exporter.export([(counter, label_values)])
 exporter.shutdown()
 ```
 
-See the [API
-documentation](https://open-telemetry.github.io/opentelemetry-python/) for more
-detail, and the
-[opentelemetry-example-app](./examples/opentelemetry-example-app/README.rst)
-for a complete example.
+See the [API documentation](https://open-telemetry.github.io/opentelemetry-python/) for more detail, and the [examples folder](./examples) for a more sample code.
 
 ## Contributing
 

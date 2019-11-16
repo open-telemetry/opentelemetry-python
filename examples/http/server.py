@@ -14,29 +14,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+import flask
 import requests
 
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
+from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import (
+    BatchExportSpanProcessor,
     ConsoleSpanExporter,
-    SimpleExportSpanProcessor,
 )
+
+if os.getenv("EXPORTER") == "jaeger":
+    from opentelemetry.ext.jaeger import JaegerSpanExporter
+
+    exporter = JaegerSpanExporter(
+        service_name="http-server",
+        agent_host_name="localhost",
+        agent_port=6831,
+    )
+else:
+    exporter = ConsoleSpanExporter()
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
 
+# SpanExporter receives the spans and send them to the target location.
+span_processor = BatchExportSpanProcessor(exporter)
+tracer.add_span_processor(span_processor)
+
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
 http_requests.enable(tracer)
+app = flask.Flask(__name__)
+app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
-# SpanExporter receives the spans and send them to the target location.
-span_processor = SimpleExportSpanProcessor(ConsoleSpanExporter())
-tracer.add_span_processor(span_processor)
 
-response = requests.get(url="http://127.0.0.1:5000/")
-span_processor.shutdown()
+@app.route("/")
+def hello():
+    with tracer.start_as_current_span("parent"):
+        requests.get("https://www.wikipedia.org/wiki/Rabbit")
+    return "hello"
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+    span_processor.shutdown()
