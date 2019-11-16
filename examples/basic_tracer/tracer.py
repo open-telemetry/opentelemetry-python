@@ -14,28 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
+import os
 
 from opentelemetry import trace
-from opentelemetry.ext import http_requests
+from opentelemetry.context import Context
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import (
+    BatchExportSpanProcessor,
     ConsoleSpanExporter,
-    SimpleExportSpanProcessor,
 )
+
+if os.getenv("EXPORTER") == "jaeger":
+    from opentelemetry.ext.jaeger import JaegerSpanExporter
+
+    exporter = JaegerSpanExporter(
+        service_name="basic-service",
+        agent_host_name="localhost",
+        agent_port=6831,
+    )
+else:
+    exporter = ConsoleSpanExporter()
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
 
-# Integrations are the glue that binds the OpenTelemetry API and the
-# frameworks and libraries that are used together, automatically creating
-# Spans and propagating context as appropriate.
-http_requests.enable(tracer)
-
 # SpanExporter receives the spans and send them to the target location.
-span_processor = SimpleExportSpanProcessor(ConsoleSpanExporter())
-tracer.add_span_processor(span_processor)
+span_processor = BatchExportSpanProcessor(exporter)
 
-response = requests.get(url="http://127.0.0.1:5000/")
+tracer.add_span_processor(span_processor)
+with tracer.start_as_current_span("foo"):
+    with tracer.start_as_current_span("bar"):
+        with tracer.start_as_current_span("baz"):
+            print(Context)
+
+span_processor.shutdown()

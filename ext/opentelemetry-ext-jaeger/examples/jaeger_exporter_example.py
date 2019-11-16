@@ -33,10 +33,11 @@ with tracer.start_as_current_span("foo") as foo:
     time.sleep(0.1)
     foo.set_attribute("my_atribbute", True)
     foo.add_event("event in foo", {"name": "foo1"})
-    with tracer.start_as_current_span("bar") as bar:
+    with tracer.start_as_current_span(
+        "bar", links=[trace.Link(foo.get_context())]
+    ) as bar:
         time.sleep(0.2)
         bar.set_attribute("speed", 100.0)
-        bar.add_link(foo.get_context())
 
         with tracer.start_as_current_span("baz") as baz:
             time.sleep(0.3)
