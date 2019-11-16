@@ -248,6 +248,46 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
+        attributes = {
+            "attr-key": "val",
+            "attr-key2": "val2",
+            "attr-in-both": "span-attr",
+        }
+        with self.tracer.start_as_current_span(
+            "root2", attributes=attributes
+        ) as root:
+            self.assertEqual(len(root.attributes), 3)
+            self.assertEqual(root.attributes["attr-key"], "val")
+            self.assertEqual(root.attributes["attr-key2"], "val2")
+            self.assertEqual(root.attributes["attr-in-both"], "span-attr")
+
+        decision_attributes = {
+            "sampler-attr": "sample-val",
+            "attr-in-both": "decision-attr",
+        }
+        self.tracer.sampler = sampling.StaticSampler(
+            sampling.Decision(sampled=True, attributes=decision_attributes)
+        )
+
+        with self.tracer.start_as_current_span("root2") as root:
+            self.assertEqual(len(root.attributes), 2)
+            self.assertEqual(root.attributes["sampler-attr"], "sample-val")
+            self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
+
+        attributes = {
+            "attr-key": "val",
+            "attr-key2": "val2",
+            "attr-in-both": "span-attr",
+        }
+        with self.tracer.start_as_current_span(
+            "root2", attributes=attributes
+        ) as root:
+            self.assertEqual(len(root.attributes), 4)
+            self.assertEqual(root.attributes["attr-key"], "val")
+            self.assertEqual(root.attributes["attr-key2"], "val2")
+            self.assertEqual(root.attributes["sampler-attr"], "sample-val")
+            self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
+
     def test_events(self):
         self.assertIsNone(self.tracer.get_current_span())
 
@@ -297,13 +337,12 @@ class TestSpan(unittest.TestCase):
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
         )
-
-        with self.tracer.start_as_current_span("root") as root:
-            root.add_link(other_context1)
-            root.add_link(other_context2, {"name": "neighbor"})
-            root.add_lazy_link(
-                trace_api.Link(other_context3, {"component": "http"})
-            )
+        links = [
+            trace_api.Link(other_context1),
+            trace_api.Link(other_context2, {"name": "neighbor"}),
+            trace_api.Link(other_context3, {"component": "http"}),
+        ]
+        with self.tracer.start_as_current_span("root", links=links) as root:
 
             self.assertEqual(len(root.links), 3)
             self.assertEqual(
@@ -374,11 +413,6 @@ class TestSpan(unittest.TestCase):
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
 
-        other_context1 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
-        )
-
         with self.tracer.start_as_current_span("root") as root:
             # everything should be empty at the beginning
             self.assertEqual(len(root.attributes), 0)
@@ -399,9 +433,6 @@ class TestSpan(unittest.TestCase):
 
             root.add_event("event1")
             self.assertEqual(len(root.events), 0)
-
-            root.add_link(other_context1)
-            self.assertEqual(len(root.links), 0)
 
             root.update_name("xxx")
             self.assertEqual(root.name, "root")
