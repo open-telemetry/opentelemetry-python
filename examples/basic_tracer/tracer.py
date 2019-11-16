@@ -49,4 +49,3 @@ with tracer.start_as_current_span("foo"):
         with tracer.start_as_current_span("baz"):
             print(Context)
 
-span_processor.shutdown()
