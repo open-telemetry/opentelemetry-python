@@ -135,7 +135,7 @@ class SpanContextShim(opentracing.SpanContext):
 
     @property
     def baggage(self):
-        """Implements the `baggage` property from the base class.
+        """Implements the ``baggage`` property from the base class.
 
         Warning:
             Not implemented yet.
@@ -174,7 +174,7 @@ class SpanShim(opentracing.Span):
         return self._otel_span
 
     def set_operation_name(self, operation_name):
-        """Implements the `set_operation_name()` method from the base class.
+        """Implements the ``set_operation_name()`` method from the base class.
 
         Updates the name of the wrapped OpenTelemetry span.
 
@@ -186,7 +186,7 @@ class SpanShim(opentracing.Span):
         return self
 
     def finish(self, finish_time=None):
-        """Implements the `finish()` method from the base class.
+        """Implements the ``finish()`` method from the base class.
 
         Ends the OpenTelemetry span wrapped by this :class:`SpanShim`.
 
@@ -209,7 +209,7 @@ class SpanShim(opentracing.Span):
         self._otel_span.end(end_time=end_time)
 
     def set_tag(self, key, value):
-        """Implements the `set_tag()` method from the base class.
+        """Implements the ``set_tag()`` method from the base class.
 
         Sets an OpenTelemetry attribute on the wrapped OpenTelemetry span.
 
@@ -226,7 +226,7 @@ class SpanShim(opentracing.Span):
         return self
 
     def log_kv(self, key_values, timestamp=None):
-        """Implements the `log_kv()` method from the base class.
+        """Implements the ``log_kv()`` method from the base class.
 
         Logs an :class:`opentelemetry.trace.Event` for the wrapped
         OpenTelemetry span.
@@ -263,7 +263,7 @@ class SpanShim(opentracing.Span):
         super().log_event(event, payload=payload)
 
     def set_baggage_item(self, key, value):
-        """Implements the `set_baggage_item()` method from the base class.
+        """Implements the ``set_baggage_item()`` method from the base class.
 
         Warning:
             Not implemented yet.
@@ -276,7 +276,7 @@ class SpanShim(opentracing.Span):
         # TODO: Implement.
 
     def get_baggage_item(self, key):
-        """Implements the `get_baggage_item()` method from the base class.
+        """Implements the ``get_baggage_item()`` method from the base class.
 
         Warning:
             Not implemented yet.
@@ -411,14 +411,14 @@ class ScopeManagerShim(opentracing.ScopeManager):
     """
 
     def __init__(self, tracer):
-        # The only thing the `__init__()` method on the base class does is
+        # The only thing the ``__init__()``` method on the base class does is
         # initialize `self._noop_span` and `self._noop_scope` with no-op
         # objects. Therefore, it doesn't seem useful to call it.
         # pylint: disable=super-init-not-called
         self._tracer = tracer
 
     def activate(self, span, finish_on_close):
-        """Implements the `activate()` method from the base class.
+        """Implements the ``activate()`` method from the base class.
 
         Activates a :class:`SpanShim` and returns a :class:`ScopeShim` which
         represents the active span.
@@ -440,7 +440,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
 
     @property
     def active(self):
-        """Implements the `active` property from the base class.
+        """Implements the ``active`` property from the base class.
 
         Returns a :class:`ScopeShim` object representing the currently-active
         span in the OpenTelemetry tracer.
@@ -535,7 +535,7 @@ class TracerShim(opentracing.Tracer):
         ignore_active_span=False,
         finish_on_close=True,
     ):
-        """Implements the `start_active_span()` method from the base class.
+        """Implements the ``start_active_span()`` method from the base class.
 
         Starts and activates a span. In terms of functionality, this method
         behaves exactly like the same method on a "regular" OpenTracing tracer.
@@ -589,7 +589,7 @@ class TracerShim(opentracing.Tracer):
         start_time=None,
         ignore_active_span=False,
     ):
-        """Implements the `start_span()` method from the base class.
+        """Implements the ``start_span()`` method from the base class.
 
         Starts a span. In terms of functionality, this method behaves exactly
         like the same method on a "regular" OpenTracing tracer. See
@@ -653,7 +653,7 @@ class TracerShim(opentracing.Tracer):
         return SpanShim(self, context, span)
 
     def inject(self, span_context, format, carrier):
-        """Implements the `inject` method from the base class."""
+        """Implements the ``inject`` method from the base class."""
 
         # TODO: Finish documentation.
         # pylint: disable=redefined-builtin
@@ -670,7 +670,7 @@ class TracerShim(opentracing.Tracer):
         )
 
     def extract(self, format, carrier):
-        """Implements the `extract` method from the base class."""
+        """Implements the ``extract`` method from the base class."""
 
         # TODO: Finish documentation.
         # pylint: disable=redefined-builtin
