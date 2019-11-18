@@ -39,8 +39,8 @@ class TestMeter(unittest.TestCase):
 class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
-        label_set = metrics.LabelSet()
-        handle = default.get_handle(label_set)
+        default_ls = metrics.DefaultLabelSet()
+        handle = default.get_handle(default_ls)
         self.assertIsInstance(handle, metrics.DefaultMetricHandle)
 
     def test_counter(self):

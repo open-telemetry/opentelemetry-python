@@ -330,8 +330,8 @@ class Meter(metrics_api.Meter):
             return EMPTY_LABEL_SET
         sorted_labels = OrderedDict(sorted(labels.items()))
         # Uses statsd encoding for labels
-        encoded = "|#" + ",".join(
-            "%s:%s" % (key, value) for (key, value) in sorted_labels.items()
+        encoded = "," + ",".join(
+            "%s=%s" % (key, value) for (key, value) in sorted_labels.items()
         )
         # If LabelSet exists for this meter in memory, use existing one
         if not self.labels.get(encoded):

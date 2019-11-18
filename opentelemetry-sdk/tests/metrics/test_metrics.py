@@ -100,7 +100,7 @@ class TestMeter(unittest.TestCase):
         meter = metrics.Meter()
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
-        encoding = "|#a:z,environment:staging"
+        encoding = ",a=z,environment=staging"
         self.assertEqual(label_set.encoded, encoding)
 
     def test_get_label_set_empty(self):
