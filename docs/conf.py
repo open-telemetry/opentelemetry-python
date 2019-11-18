@@ -13,10 +13,10 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../opentelemetry-api/src/"))
-sys.path.insert(
-    1, os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/")
-)
+sys.path[:0] = [
+    os.path.abspath("../opentelemetry-api/src/"),
+    os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/"),
+]
 
 
 # -- Project information -----------------------------------------------------
