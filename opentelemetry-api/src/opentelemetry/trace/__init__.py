@@ -145,16 +145,6 @@ class SpanKind(enum.Enum):
 class Span:
     """A span represents a single operation within a trace."""
 
-    def start(self, start_time: typing.Optional[int] = None) -> None:
-        """Sets the current time as the span's start time.
-
-        Each span represents a single operation. The span's start time is the
-        wall time at which the operation started.
-
-        Only the first call to `start` should modify the span, and
-        implementations are free to ignore or raise on further calls.
-        """
-
     def end(self, end_time: int = None) -> None:
         """Sets the current time as the span's end time.
 
@@ -401,6 +391,7 @@ class Tracer:
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
     ) -> "Span":
         """Starts a span.
 
@@ -431,6 +422,7 @@ class Tracer:
                 meaningful even if there is no parent.
             attributes: The span's attributes.
             links: Links span to other spans
+            start_time: Sets the start time of a span
 
         Returns:
             The newly-created span.

@@ -238,14 +238,6 @@ class TracerShim(opentracing.Tracer):
             for ref in references:
                 links.append(trace_api.Link(ref.referenced_context.unwrap()))
 
-        span = self._otel_tracer.create_span(
-            operation_name, parent, links=links
-        )
-
-        if tags:
-            for key, value in tags.items():
-                span.set_attribute(key, value)
-
         # The OpenTracing API expects time values to be `float` values which
         # represent the number of seconds since the epoch. OpenTelemetry
         # represents time values as nanoseconds since the epoch.
@@ -253,7 +245,13 @@ class TracerShim(opentracing.Tracer):
         if start_time_ns is not None:
             start_time_ns = util.time_seconds_to_ns(start_time)
 
-        span.start(start_time=start_time_ns)
+        span = self._otel_tracer.start_span(
+            operation_name, parent,
+            links=links,
+            attributes=tags,
+            start_time=start_time_ns,
+        )
+        
         context = SpanContextShim(span.get_context())
         return SpanShim(self, context, span)
 

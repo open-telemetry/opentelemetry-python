@@ -321,11 +321,12 @@ class Tracer(trace_api.Tracer):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
+        start_time: Optional[int] = None,
     ) -> "Span":
         """See `opentelemetry.trace.Tracer.start_span`."""
 
         span = self.create_span(name, parent, kind, attributes, links)
-        span.start()
+        span.start(start_time=start_time)
         return span
 
     def start_as_current_span(
