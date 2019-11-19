@@ -246,12 +246,13 @@ class TracerShim(opentracing.Tracer):
             start_time_ns = util.time_seconds_to_ns(start_time)
 
         span = self._otel_tracer.start_span(
-            operation_name, parent,
+            operation_name,
+            parent,
             links=links,
             attributes=tags,
             start_time=start_time_ns,
         )
-        
+
         context = SpanContextShim(span.get_context())
         return SpanShim(self, context, span)
 

@@ -33,9 +33,9 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates real spans via the default
         # sampler
-        root_span = tracer.create_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", parent=None)
         self.assertIsInstance(root_span, trace.Span)
-        child_span = tracer.create_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace.Span)
 
     def test_sampler_no_sampling(self):
@@ -44,9 +44,9 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
-        root_span = tracer.create_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", parent=None)
         self.assertIsInstance(root_span, trace_api.DefaultSpan)
-        child_span = tracer.create_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
 
 
@@ -59,7 +59,7 @@ class TestSpanCreation(unittest.TestCase):
         eliminates redundant error handling logic in exporters.
         """
         tracer = trace.Tracer("test_create_span_invalid_spancontext")
-        new_span = tracer.create_span(
+        new_span = tracer.start_span(
             "root", parent=trace_api.INVALID_SPAN_CONTEXT
         )
         self.assertTrue(new_span.context.is_valid())
