@@ -26,7 +26,7 @@ gRPC is still not supported by this implementation.
 
 
 .. _Jaeger: https://www.jaegertracing.io/
-.. _OpenTelemetry: https://github.com/opentelemetry/opentelemetry-python/
+.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 
 .. code:: python
 

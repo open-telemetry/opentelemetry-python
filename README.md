@@ -95,11 +95,7 @@ exporter.export([(counter, label_values)])
 exporter.shutdown()
 ```
 
-See the [API
-documentation](https://open-telemetry.github.io/opentelemetry-python/) for more
-detail, and the
-[opentelemetry-example-app](./examples/opentelemetry-example-app/README.rst)
-for a complete example.
+See the [API documentation](https://open-telemetry.github.io/opentelemetry-python/) for more detail, and the [examples folder](./examples) for a more sample code.
 
 ## Contributing
 
@@ -162,16 +158,16 @@ estimates, and subject to change.
 
 Future releases targets include:
 
-| Component                           | Version    | Target Date      |
-| ----------------------------------- | ---------- | ---------------- |
-| Zipkin Trace Exporter               | Alpha v0.3 | November 15 2019 |
-| W3C Correlation Context Propagation | Alpha v0.3 | November 15 2019 |
-| Support for Tags/Baggage            | Alpha v0.3 | November 15 2019 |
-| Metrics Aggregation                 | Alpha v0.3 | November 15 2019 |
-| gRPC Integrations                   | Alpha v0.3 | November 15 2019 |
-| Prometheus Metrics Exporter         | Alpha v0.3 | November 15 2019 |
+| Component                           | Version    | Target Date     |
+| ----------------------------------- | ---------- | --------------- |
+| Zipkin Trace Exporter               | Alpha v0.3 | December 6 2019 |
+| W3C Correlation Context Propagation | Alpha v0.3 | December 6 2019 |
+| Support for Tags/Baggage            | Alpha v0.3 | December 6 2019 |
+| Metrics Aggregation                 | Alpha v0.3 | December 6 2019 |
+| gRPC Integrations                   | Alpha v0.3 | December 6 2019 |
+| Prometheus Metrics Exporter         | Alpha v0.3 | December 6 2019 |
 
 | Component              | Version    | Target Date      |
 | ---------------------- | ---------- | ---------------- |
 | OpenCensus Bridge      | Alpha v0.4 | December 31 2019 |
-| Metrics SDK (Complete) | Alpha v0.4 | December 31 2019  |
+| Metrics SDK (Complete) | Alpha v0.4 | December 31 2019 |

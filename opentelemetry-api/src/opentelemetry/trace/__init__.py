@@ -78,7 +78,10 @@ class Link:
         self, context: "SpanContext", attributes: types.Attributes = None
     ) -> None:
         self._context = context
-        self._attributes = attributes
+        if attributes is None:
+            self._attributes = {}  # type: types.Attributes
+        else:
+            self._attributes = attributes
 
     @property
     def context(self) -> "SpanContext":
@@ -133,7 +136,7 @@ class SpanKind(enum.Enum):
     #: path latency relationship between producer and consumer spans.
     PRODUCER = 3
 
-    #: Indicates that the span describes consumer receiving a message from a
+    #: Indicates that the span describes a consumer receiving a message from a
     #: broker. Unlike client and server, there is usually no direct critical
     #: path latency relationship between producer and consumer spans.
     CONSUMER = 4
@@ -194,23 +197,6 @@ class Span:
         """Adds an `Event`.
 
         Adds an `Event` that has previously been created.
-        """
-
-    def add_link(
-        self,
-        link_target_context: "SpanContext",
-        attributes: types.Attributes = None,
-    ) -> None:
-        """Adds a `Link` to another span.
-
-        Adds a single `Link` from this Span to another Span identified by the
-        `SpanContext` passed as argument.
-        """
-
-    def add_lazy_link(self, link: "Link") -> None:
-        """Adds a `Link` to another span.
-
-        Adds a `Link` that has previously been created.
         """
 
     def update_name(self, name: str) -> None:
@@ -282,7 +268,7 @@ class TraceState(typing.Dict[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
-    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+    Implementations should conform to the `W3C Trace Context - Tracestate`_
     spec, which describes additional restrictions on valid field values.
 
     .. _W3C Trace Context - Tracestate:
@@ -413,6 +399,8 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
     ) -> "Span":
         """Starts a span.
 
@@ -441,6 +429,8 @@ class Tracer:
             parent: The span's parent. Defaults to the current span.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
+            attributes: The span's attributes.
+            links: Links span to other spans
 
         Returns:
             The newly-created span.
@@ -454,6 +444,8 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -489,6 +481,8 @@ class Tracer:
             parent: The span's parent. Defaults to the current span.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
+            attributes: The span's attributes.
+            links: Links span to other spans
 
         Yields:
             The newly-created span.

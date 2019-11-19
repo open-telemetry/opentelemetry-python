@@ -17,6 +17,7 @@ import logging
 import opentracing
 from deprecated import deprecated
 
+import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 
@@ -231,11 +232,15 @@ class TracerShim(opentracing.Tracer):
         # Use the specified parent or the active span if possible. Otherwise,
         # use a `None` parent, which triggers the creation of a new trace.
         parent = child_of.unwrap() if child_of else None
-        span = self._otel_tracer.create_span(operation_name, parent)
 
+        links = []
         if references:
             for ref in references:
-                span.add_link(ref.referenced_context.unwrap())
+                links.append(trace_api.Link(ref.referenced_context.unwrap()))
+
+        span = self._otel_tracer.create_span(
+            operation_name, parent, links=links
+        )
 
         if tags:
             for key, value in tags.items():
