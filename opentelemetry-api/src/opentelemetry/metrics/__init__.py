@@ -26,6 +26,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 
 """
+import abc
 from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
@@ -67,7 +68,7 @@ class MeasureHandle:
         """
 
 
-class LabelSet:
+class LabelSet(abc.ABC):
     """A canonicalized set of labels useful for preaggregation
 
     Re-usable LabelSet objects provide a potential optimization for scenarios
