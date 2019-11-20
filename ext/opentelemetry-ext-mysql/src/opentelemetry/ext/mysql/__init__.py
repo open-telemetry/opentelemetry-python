@@ -17,12 +17,9 @@ The opentelemetry-ext-mysql package allows tracing MySQL queries made by the
 MySQL Connector/Python library.
 """
 
-import typing
-
 import mysql.connector
-import wrapt
 
-from opentelemetry.ext.dbapi import DatabaseApiTracer
+from opentelemetry.ext.dbapi import trace_integration as db_integration
 from opentelemetry.trace import Tracer
 
 
@@ -30,17 +27,4 @@ def trace_integration(tracer: Tracer):
     """Integrate with MySQL Connector/Python library.
        https://dev.mysql.com/doc/connector-python/en/
     """
-
-    # pylint: disable=unused-argument
-    def wrap(
-        wrapped: typing.Callable[..., any],
-        instance: typing.Any,
-        args: typing.Tuple[any, any],
-        kwargs: typing.Dict[any, any],
-    ):
-        """Patch MySQL Connector connect method to add tracing.
-        """
-        mysql_tracer = DatabaseApiTracer(tracer, "mysql")
-        return mysql_tracer.wrap_connect(wrapped, args, kwargs)
-
-    wrapt.wrap_function_wrapper(mysql.connector, "connect", wrap)
+    db_integration(tracer, mysql.connector, "connect", "mysql")

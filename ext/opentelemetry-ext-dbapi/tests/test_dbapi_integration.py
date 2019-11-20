@@ -16,10 +16,10 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.dbapi import DatabaseApiTracer
+from opentelemetry.ext.dbapi import DatabaseApiIntegration
 
 
-class TestMysqlIntegration(unittest.TestCase):
+class TestDBApiIntegration(unittest.TestCase):
     def setUp(self):
         self.tracer = trace_api.tracer()
         self.span = MockSpan()
@@ -43,10 +43,10 @@ class TestMysqlIntegration(unittest.TestCase):
             "server_port": 123,
             "user": "testuser",
         }
-        mysql_tracer = DatabaseApiTracer(
+        db_integration = DatabaseApiIntegration(
             self.tracer, "testcomponent", "testtype"
         )
-        mock_connection = mysql_tracer.wrap_connect(
+        mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, connection_props
         )
         cursor = mock_connection.cursor()
@@ -76,29 +76,38 @@ class TestMysqlIntegration(unittest.TestCase):
         )
 
     def test_span_failed(self):
-        mysql_tracer = DatabaseApiTracer(self.tracer, "testcomponent")
-        mock_connection = mysql_tracer.wrap_connect(mock_connect, {}, {})
-        cursor = mock_connection.cursor()
-        cursor.execute("Test query", throw_exception=True)
-
-        self.assertEqual(self.span.attributes["db.statement"], "Test query")
-        self.assertIs(
-            self.span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.UNKNOWN,
+        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        mock_connection = db_integration.wrapped_connection(
+            mock_connect, {}, {}
         )
-        self.assertEqual(self.span.status.description, "Test Exception")
+        cursor = mock_connection.cursor()
+        try:
+            cursor.execute("Test query", throw_exception=True)
+        except Exception:  # pylint: disable=broad-except
+            self.assertEqual(
+                self.span.attributes["db.statement"], "Test query"
+            )
+            self.assertIs(
+                self.span.status.canonical_code,
+                trace_api.status.StatusCanonicalCode.UNKNOWN,
+            )
+            self.assertEqual(self.span.status.description, "Test Exception")
 
     def test_executemany(self):
-        mysql_tracer = DatabaseApiTracer(self.tracer, "testcomponent")
-        mock_connection = mysql_tracer.wrap_connect(mock_connect, {}, {})
+        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        mock_connection = db_integration.wrapped_connection(
+            mock_connect, {}, {}
+        )
         cursor = mock_connection.cursor()
         cursor.executemany("Test query")
         self.assertTrue(self.start_as_current_span.called)
         self.assertEqual(self.span.attributes["db.statement"], "Test query")
 
     def test_callproc(self):
-        mysql_tracer = DatabaseApiTracer(self.tracer, "testcomponent")
-        mock_connection = mysql_tracer.wrap_connect(mock_connect, {}, {})
+        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        mock_connection = db_integration.wrapped_connection(
+            mock_connect, {}, {}
+        )
         cursor = mock_connection.cursor()
         cursor.callproc("Test stored procedure")
         self.assertTrue(self.start_as_current_span.called)
@@ -113,10 +122,10 @@ def mock_connect(*args, **kwargs):
     server_host = kwargs.get("server_host")
     server_port = kwargs.get("server_port")
     user = kwargs.get("user")
-    return MockMySqlConnection(database, server_port, server_host, user)
+    return MockConnection(database, server_port, server_host, user)
 
 
-class MockMySqlConnection:
+class MockConnection:
     def __init__(self, database, server_port, server_host, user):
         self.database = database
         self.server_port = server_port
@@ -125,10 +134,10 @@ class MockMySqlConnection:
 
     # pylint: disable=no-self-use
     def cursor(self):
-        return MockMySqlCursor()
+        return MockCursor()
 
 
-class MockMySqlCursor:
+class MockCursor:
     # pylint: disable=unused-argument, no-self-use
     def execute(self, query, params=None, throw_exception=False):
         if throw_exception:

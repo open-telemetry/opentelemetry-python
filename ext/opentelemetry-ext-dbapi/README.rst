@@ -11,22 +11,13 @@ Usage
 .. code:: python
 
     import wrapt
+    import mysql.connector
     from opentelemetry.trace import tracer
-    from opentelemetry.trace.ext.dbapi import DatabaseApiTracer
+    from opentelemetry.ext.dbapi import trace_integration
 
-    def wrap(
-        wrapped: typing.Callable[..., any],
-        instance: typing.Any,
-        args: typing.Tuple[any, any],
-        kwargs: typing.Dict[any, any],
-    ):
-        """Patch MySQL Connector connect method to add tracing.
-        """
-        mysql_tracer = DatabaseApiTracer(tracer, "mysql")
-        return mysql_tracer.wrap_connect(wrapped, args, kwargs)
 
     # Ex: mysql.connector
-    wrapt.wrap_function_wrapper(mysql.connector, "connect", wrap)
+    trace_integration(tracer(), mysql.connector, "connect", "mysql")
 
 
 References

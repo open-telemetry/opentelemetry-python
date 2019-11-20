@@ -13,7 +13,7 @@ Usage
 
     import mysql.connector
     from opentelemetry.trace import tracer
-    from opentelemetry.trace.ext.mysql import trace_integration
+    from opentelemetry.ext.mysql import trace_integration
 
     trace_integration(tracer())
     cnx = mysql.connector.connect(database='MySQL_Database')

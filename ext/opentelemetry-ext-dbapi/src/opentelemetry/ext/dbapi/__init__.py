@@ -28,7 +28,31 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 QUERY_WRAP_METHODS = ["execute", "executemany", "callproc"]
 
 
-class DatabaseApiTracer:
+def trace_integration(
+    tracer: Tracer,
+    connect_module: typing.Callable[..., any],
+    connect_method_name: str,
+    database_component: str,
+):
+    """Integrate with DB API library.
+       https://www.python.org/dev/peps/pep-0249/
+    """
+    # pylint: disable=unused-argument
+    def wrap_connect(
+        wrapped: typing.Callable[..., any],
+        instance: typing.Any,
+        args: typing.Tuple[any, any],
+        kwargs: typing.Dict[any, any],
+    ):
+        db_integration = DatabaseApiIntegration(tracer, database_component)
+        return db_integration.wrapped_connection(wrapped, args, kwargs)
+
+    wrapt.wrap_function_wrapper(
+        connect_module, connect_method_name, wrap_connect
+    )
+
+
+class DatabaseApiIntegration:
     def __init__(
         self, tracer: Tracer, database_component: str, database_type="sql"
     ):
@@ -39,13 +63,13 @@ class DatabaseApiTracer:
         self._database_type = database_type
         self._connection_props = {}
 
-    def wrap_connect(
+    def wrapped_connection(
         self,
         wrapped: typing.Callable[..., any],
         args: typing.Tuple[any, any],
         kwargs: typing.Dict[any, any],
     ):
-        """Patch connect method to add tracing.
+        """Patch connection cursor to add tracing.
         """
         connection = wrapped(*args, **kwargs)
         self._connection_props = {
@@ -55,18 +79,18 @@ class DatabaseApiTracer:
             "user": connection.user,
         }
 
-        wrapt.wrap_function_wrapper(connection, "cursor", self.wrap_cursor)
+        wrapt.wrap_function_wrapper(connection, "cursor", self.wrapped_cursor)
         return connection
 
     # pylint: disable=unused-argument
-    def wrap_cursor(
+    def wrapped_cursor(
         self,
         wrapped: typing.Callable[..., any],
         instance: typing.Any,
         args: typing.Tuple[any, any],
         kwargs: typing.Dict[any, any],
     ):
-        """Patch cursor instance in a specific connection.
+        """Patch cursor execute, executemany and callproc methods.
         """
         cursor = wrapped(*args, **kwargs)
         for func in QUERY_WRAP_METHODS:
@@ -81,8 +105,6 @@ class DatabaseApiTracer:
         args: typing.Tuple[any, any],
         kwargs: typing.Dict[any, any],
     ):
-        """Patch execute, executeMany and callproc methods in cursor and create span.
-        """
         name = self._database_component
         database = self._connection_props.get("database", "")
         if database:
@@ -115,3 +137,4 @@ class DatabaseApiTracer:
                 return result
             except Exception as ex:  # pylint: disable=broad-except
                 span.set_status(Status(StatusCanonicalCode.UNKNOWN, str(ex)))
+                raise ex
