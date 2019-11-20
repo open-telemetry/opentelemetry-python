@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import shutil
 import subprocess
 import unittest
 from unittest import mock
@@ -74,7 +75,9 @@ tracer.add_span_processor(mock_processor)
 
             return subprocess.check_output(
                 [
-                    "python",
+                    # use shutil to avoid calling python outside the
+                    # virtualenv on windows.
+                    shutil.which("python"),
                     "-c",
                     shutdown_python_code.format(
                         tracer_parameters=tracer_parameters,

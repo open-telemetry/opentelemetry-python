@@ -313,6 +313,7 @@ class Tracer(trace_api.Tracer):
         self._current_span_slot = Context.register_slot(slot_name)
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
+        self._atexit_handler = None
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
 
@@ -453,8 +454,9 @@ class Tracer(trace_api.Tracer):
     def shutdown(self):
         """Shutdown the span processors added to the tracer."""
         self._active_span_processor.shutdown()
-        if hasattr(self, "_atexit_handler"):
+        if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None
 
 
 tracer = Tracer()
