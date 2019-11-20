@@ -94,7 +94,8 @@ class DatabaseApiIntegration:
         """
         cursor = wrapped(*args, **kwargs)
         for func in QUERY_WRAP_METHODS:
-            wrapt.wrap_function_wrapper(cursor, func, self.add_span)
+            if getattr(cursor, func, None):
+                wrapt.wrap_function_wrapper(cursor, func, self.add_span)
         return cursor
 
     # pylint: disable=unused-argument
