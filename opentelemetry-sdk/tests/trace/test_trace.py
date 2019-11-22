@@ -21,15 +21,20 @@ from opentelemetry.trace import sampling
 from opentelemetry.util import time_ns
 
 
+def new_tracer() -> trace_api.Tracer:
+    return trace.TracerSource().get_tracer("opentelemetry-sdk")
+
+
 class TestTracer(unittest.TestCase):
     def test_extends_api(self):
-        tracer = trace.Tracer()
+        tracer = new_tracer()
+        self.assertIsInstance(tracer, trace.Tracer)
         self.assertIsInstance(tracer, trace_api.Tracer)
 
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):
-        tracer = trace.Tracer()
+        tracer = new_tracer()
 
         # Check that the default tracer creates real spans via the default
         # sampler
@@ -39,7 +44,7 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(child_span, trace.Span)
 
     def test_sampler_no_sampling(self):
-        tracer = trace.Tracer()
+        tracer = new_tracer()
         tracer.sampler = sampling.ALWAYS_OFF
 
         # Check that the default tracer creates no-op spans if the sampler
@@ -58,7 +63,7 @@ class TestSpanCreation(unittest.TestCase):
         Invalid span contexts should also not be added as a parent. This
         eliminates redundant error handling logic in exporters.
         """
-        tracer = trace.Tracer("test_create_span_invalid_spancontext")
+        tracer = new_tracer()
         new_span = tracer.create_span(
             "root", parent=trace_api.INVALID_SPAN_CONTEXT
         )
@@ -66,7 +71,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNone(new_span.parent)
 
     def test_start_span_implicit(self):
-        tracer = trace.Tracer("test_start_span_implicit")
+        tracer = new_tracer()
 
         self.assertIsNone(tracer.get_current_span())
 
@@ -111,7 +116,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNotNone(root.end_time)
 
     def test_start_span_explicit(self):
-        tracer = trace.Tracer("test_start_span_explicit")
+        tracer = new_tracer()
 
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
@@ -159,7 +164,7 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIsNotNone(child.end_time)
 
     def test_start_as_current_span_implicit(self):
-        tracer = trace.Tracer("test_start_as_current_span_implicit")
+        tracer = new_tracer()
 
         self.assertIsNone(tracer.get_current_span())
 
@@ -179,7 +184,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNotNone(root.end_time)
 
     def test_start_as_current_span_explicit(self):
-        tracer = trace.Tracer("test_start_as_current_span_explicit")
+        tracer = new_tracer()
 
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
@@ -214,7 +219,7 @@ class TestSpanCreation(unittest.TestCase):
 
 class TestSpan(unittest.TestCase):
     def setUp(self):
-        self.tracer = trace.Tracer("test_span")
+        self.tracer = new_tracer()
 
     def test_basic_span(self):
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
@@ -473,7 +478,7 @@ class MySpanProcessor(trace.SpanProcessor):
 
 class TestSpanProcessor(unittest.TestCase):
     def test_span_processor(self):
-        tracer = trace.Tracer()
+        tracer = new_tracer()
 
         spans_calls_list = []  # filled by MySpanProcessor
         expected_list = []  # filled by hand
@@ -541,7 +546,7 @@ class TestSpanProcessor(unittest.TestCase):
         self.assertListEqual(spans_calls_list, expected_list)
 
     def test_add_span_processor_after_span_creation(self):
-        tracer = trace.Tracer()
+        tracer = new_tracer()
 
         spans_calls_list = []  # filled by MySpanProcessor
         expected_list = []  # filled by hand

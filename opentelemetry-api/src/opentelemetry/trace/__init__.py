@@ -373,6 +373,35 @@ INVALID_SPAN_CONTEXT = SpanContext(
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
+class TracerSource:
+    def get_tracer(
+        self,
+        instrumenting_library_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "Tracer":
+        """Returns a `Tracer` for use by the given instrumentation library.
+
+        For any two calls it is undefined whether the same or
+        different `Tracer` instances are returned, even for different library names.
+
+        This function may return different `Tracer` types (e.g. a no-op tracer vs.
+        a functional tracer).
+
+        Args:
+            instrumenting_library_name: The name of the instrumenting library.
+                This should *not* be the name of the library that is
+                instrumented but the name of the instrumentation library.
+                E.g., instead of ``"requests"``, `"opentelemetry-ext-http-requests"`.
+
+                This should be the `pip install`-able name of the library rather than the
+                module name (see also the next argument).
+
+            instrumenting_library_version: Optional. The version string of the instrumenting library.
+                Usually this should be the same as
+                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+        """
+
+
 class Tracer:
     """Handles span creation and in-process context propagation.
 
@@ -565,29 +594,31 @@ class Tracer:
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
 ImplementationFactory = typing.Callable[
-    [typing.Type[Tracer]], typing.Optional[Tracer]
+    [typing.Type[TracerSource]], typing.Optional[TracerSource]
 ]
 
-_TRACER = None  # type: typing.Optional[Tracer]
-_TRACER_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+_TRACER_SOURCE = None  # type: typing.Optional[TracerSource]
+_TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
-def tracer() -> Tracer:
+def tracer_source() -> TracerSource:
     """Gets the current global :class:`~.Tracer` object.
 
     If there isn't one set yet, a default will be loaded.
     """
-    global _TRACER, _TRACER_FACTORY  # pylint:disable=global-statement
+    global _TRACER_SOURCE, _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
 
-    if _TRACER is None:
+    if _TRACER_SOURCE is None:
         # pylint:disable=protected-access
-        _TRACER = loader._load_impl(Tracer, _TRACER_FACTORY)
-        del _TRACER_FACTORY
+        _TRACER_SOURCE = loader._load_impl(
+            TracerSource, _TRACER_SOURCE_FACTORY
+        )
+        del _TRACER_SOURCE_FACTORY
 
-    return _TRACER
+    return _TRACER_SOURCE
 
 
-def set_preferred_tracer_implementation(
+def set_preferred_tracer_source_implementation(
     factory: ImplementationFactory,
 ) -> None:
     """Set the factory to be used to create the tracer.
@@ -599,9 +630,9 @@ def set_preferred_tracer_implementation(
     Args:
         factory: Callback that should create a new :class:`Tracer` instance.
     """
-    global _TRACER_FACTORY  # pylint:disable=global-statement
+    global _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
 
-    if _TRACER:
-        raise RuntimeError("Tracer already loaded.")
+    if _TRACER_SOURCE:
+        raise RuntimeError("TracerSource already loaded.")
 
-    _TRACER_FACTORY = factory
+    _TRACER_SOURCE_FACTORY = factory

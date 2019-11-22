@@ -20,12 +20,17 @@ from deprecated import deprecated
 import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.ext.opentracing_shim.version import __version__
 
 logger = logging.getLogger(__name__)
 
 
-def create_tracer(otel_tracer):
-    return TracerShim(otel_tracer)
+def create_tracer(otel_tracer_source):
+    return TracerShim(
+        otel_tracer_source.get_tracer(
+            "opentelemetry-ext-opentracing-shim", __version__
+        )
+    )
 
 
 class SpanContextShim(opentracing.SpanContext):

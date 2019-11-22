@@ -23,7 +23,7 @@ import typing
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagators, trace
-from opentelemetry.ext.wsgi.version import __version__  # noqa
+from opentelemetry.ext.wsgi.version import __version__
 
 
 class OpenTelemetryMiddleware:
@@ -38,6 +38,8 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
+        self.tracer = trace.tracer_source().get_tracer("opentelemetry-ext-wsgi", __version__)
+
 
     @staticmethod
     def _add_request_attributes(span, environ):
@@ -105,11 +107,10 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        tracer = trace.tracer()
         path_info = environ["PATH_INFO"] or "/"
         parent_span = propagators.extract(_get_header_from_environ, environ)
 
-        span = tracer.create_span(
+        span = self.tracer.create_span(
             path_info, parent_span, kind=trace.SpanKind.SERVER
         )
         span.start()

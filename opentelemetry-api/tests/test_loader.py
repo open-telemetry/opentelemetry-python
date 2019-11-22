@@ -52,7 +52,7 @@ class TestLoader(unittest.TestCase):
         self.assertIs(type(tracer), trace.Tracer)
 
     def test_preferred_impl(self):
-        trace.set_preferred_tracer_implementation(
+        trace.set_preferred_tracer_source_implementation(
             get_opentelemetry_implementation
         )
         tracer = trace.tracer()
@@ -66,7 +66,9 @@ class TestLoader(unittest.TestCase):
         self.assertIs(tracer, DUMMY_TRACER)
 
     def test_preferred_impl_with_tracer(self):
-        self.do_test_preferred_impl(trace.set_preferred_tracer_implementation)
+        self.do_test_preferred_impl(
+            trace.set_preferred_tracer_source_implementation
+        )
 
     def test_preferred_impl_with_default(self):
         self.do_test_preferred_impl(
@@ -77,7 +79,7 @@ class TestLoader(unittest.TestCase):
         self.assertTrue(trace.tracer())
         # Try setting after the tracer has already been created:
         with self.assertRaises(RuntimeError) as einfo:
-            trace.set_preferred_tracer_implementation(
+            trace.set_preferred_tracer_source_implementation(
                 get_opentelemetry_implementation
             )
         self.assertIn("already loaded", str(einfo.exception))

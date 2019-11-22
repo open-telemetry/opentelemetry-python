@@ -25,7 +25,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 class TestInMemorySpanExporter(unittest.TestCase):
     def test_get_finished_spans(self):
-        tracer = trace.Tracer()
+        tracer = trace.TracerSource().get_tracer("opentelemetry-sdk")
 
         memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(memory_exporter)
@@ -41,7 +41,7 @@ class TestInMemorySpanExporter(unittest.TestCase):
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
 
     def test_clear(self):
-        tracer = trace.Tracer()
+        tracer = trace.TracerSource().get_tracer("opentelemetry-sdk")
 
         memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(memory_exporter)
@@ -57,7 +57,7 @@ class TestInMemorySpanExporter(unittest.TestCase):
         self.assertEqual(len(span_list), 0)
 
     def test_shutdown(self):
-        tracer = trace.Tracer()
+        tracer = trace.TracerSource().get_tracer("opentelemetry-sdk")
 
         memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(memory_exporter)

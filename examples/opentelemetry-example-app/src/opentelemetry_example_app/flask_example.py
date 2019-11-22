@@ -23,7 +23,7 @@ import opentelemetry.ext.http_requests
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.context.propagation.b3_format import B3Format
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 
 
 def configure_opentelemetry(flask_app: flask.Flask):
@@ -45,7 +45,7 @@ def configure_opentelemetry(flask_app: flask.Flask):
     # the preferred implementation of these objects must be set,
     # as the opentelemetry-api defines the interface with a no-op
     # implementation.
-    trace.set_preferred_tracer_implementation(lambda _: Tracer())
+    trace.set_preferred_tracer_source_implementation(lambda _: TracerSource())
     # Next, we need to configure how the values that are used by
     # traces and metrics are propagated (such as what specific headers
     # carry this value).
