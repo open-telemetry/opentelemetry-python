@@ -51,7 +51,7 @@ trace.tracer_source().add_span_processor(span_processor)
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
-http_requests.enable(tracer)
+http_requests.enable(trace.tracer_source())
 app = flask.Flask(__name__)
 app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
