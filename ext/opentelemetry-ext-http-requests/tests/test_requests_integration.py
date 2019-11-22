@@ -16,6 +16,7 @@ import sys
 import unittest
 from unittest import mock
 
+import pkg_resources
 import requests
 import urllib3
 
@@ -29,9 +30,15 @@ class TestRequestsIntegration(unittest.TestCase):
     def setUp(self):
         self.span_attrs = {}
         self.tracer_source = trace.TracerSource()
-        self.tracer_source.get_tracer = lambda _name, _version: self.tracer
-
         self.tracer = trace.Tracer()
+        self.get_tracer_patcher = mock.patch.object(
+            self.tracer_source,
+            "get_tracer",
+            autospec=True,
+            spec_set=True,
+            return_value=self.tracer,
+        )
+        self.get_tracer = self.get_tracer_patcher.start()
         self.span_context_manager = mock.MagicMock()
         self.span = mock.create_autospec(trace.Span, spec_set=True)
         self.span_context_manager.__enter__.return_value = self.span
@@ -63,9 +70,12 @@ class TestRequestsIntegration(unittest.TestCase):
         self.send = self.send_patcher.start()
 
         opentelemetry.ext.http_requests.enable(self.tracer_source)
+        distver = pkg_resources.get_distribution("opentelemetry-ext-http-requests").version
+        self.get_tracer.assert_called_with("opentelemetry-ext-http-requests", distver)
 
     def tearDown(self):
         opentelemetry.ext.http_requests.disable()
+        self.get_tracer_patcher.stop()
         self.send_patcher.stop()
         self.start_span_patcher.stop()
 

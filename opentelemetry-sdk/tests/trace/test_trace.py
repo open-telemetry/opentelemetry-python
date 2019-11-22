@@ -70,6 +70,24 @@ class TestSpanCreation(unittest.TestCase):
         self.assertTrue(new_span.context.is_valid())
         self.assertIsNone(new_span.parent)
 
+    def test_creator_info(self):
+        tracer_source = trace.TracerSource()
+        tracer1 = tracer_source.get_tracer("instr1")
+        tracer2 = tracer_source.get_tracer("instr2", "1.3b3")
+        span1 = tracer1.start_span("s1")
+        span2 = tracer2.start_span("s2")
+        self.assertEqual(span1.creator_info, trace.InstrumentationInfo("instr1", ""))
+        self.assertEqual(span2.creator_info, trace.InstrumentationInfo("instr2", "1.3b3"))
+
+    def test_span_processor(self):
+        tracer_source = trace.TracerSource()
+        tracer1 = tracer_source.get_tracer("instr1")
+        tracer2 = tracer_source.get_tracer("instr2", "1.3b3")
+        span1 = tracer1.start_span("s1")
+        span2 = tracer2.start_span("s2")
+        self.assertIs(span1.span_processor, tracer_source._active_span_processor)
+        self.assertIs(span2.span_processor, tracer_source._active_span_processor)
+
     def test_start_span_implicit(self):
         tracer = new_tracer()
 
