@@ -13,6 +13,15 @@ from pathlib import Path, PurePath
 DEFAULT_ALLSEP = " "
 DEFAULT_ALLFMT = "{rel}"
 
+
+def unique(elems):
+    seen = set()
+    for elem in elems:
+        if elem not in seen:
+            yield elem
+            seen.add(elem)
+
+
 try:
     subprocess_run = subprocess.run
 except AttributeError:  # Py < 3.5 compat
@@ -127,6 +136,12 @@ def find_targets(mode, rootpath):
     mcfg = cfg[mode]
 
     targets = list(find_targets_unordered(rootpath))
+    if "extraroots" in mcfg:
+        targets += [
+            path
+            for extraglob in getlistcfg(mcfg["extraroots"])
+            for path in rootpath.glob(extraglob)
+        ]
     if "sortfirst" in mcfg:
         sortfirst = getlistcfg(mcfg["sortfirst"])
 
@@ -155,7 +170,7 @@ def find_targets(mode, rootpath):
             if ".egg-info" not in str(newentry) and newentry.exists()
         ]
 
-    return targets
+    return list(unique(targets))
 
 
 def runsubprocess(dry_run, params, *args, **kwargs):
@@ -322,8 +337,7 @@ def lint_args(args):
     runsubprocess(args.dry_run, ("flake8", rootdir), check=True)
     execute_args(
         parse_subargs(
-            args,
-            ("exec", "pylint scripts/ {}", "--all", "--mode", "lintroots",),
+            args, ("exec", "pylint {}", "--all", "--mode", "lintroots",),
         )
     )
 
