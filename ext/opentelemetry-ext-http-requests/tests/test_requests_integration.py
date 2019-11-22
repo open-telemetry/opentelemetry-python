@@ -70,8 +70,12 @@ class TestRequestsIntegration(unittest.TestCase):
         self.send = self.send_patcher.start()
 
         opentelemetry.ext.http_requests.enable(self.tracer_source)
-        distver = pkg_resources.get_distribution("opentelemetry-ext-http-requests").version
-        self.get_tracer.assert_called_with("opentelemetry-ext-http-requests", distver)
+        distver = pkg_resources.get_distribution(
+            "opentelemetry-ext-http-requests"
+        ).version
+        self.get_tracer.assert_called_with(
+            "opentelemetry-ext-http-requests", distver
+        )
 
     def tearDown(self):
         opentelemetry.ext.http_requests.disable()

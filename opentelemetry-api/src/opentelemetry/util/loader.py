@@ -15,7 +15,7 @@
 
 """
 The OpenTelemetry loader module is mainly used internally to load the
-implementation for global objects like :func:`opentelemetry.trace.tracer`.
+implementation for global objects like :func:`opentelemetry.trace.tracer_source`.
 
 .. _loader-factory:
 
@@ -27,7 +27,7 @@ function with the following signature::
 
 That function is called with e.g., the type of the global object it should
 create as an argument (e.g. the type object
-:class:`opentelemetry.trace.Tracer`) and should return an instance of that type
+:class:`opentelemetry.trace.TracerSource`) and should return an instance of that type
 (such that ``instanceof(my_factory_for_t(T), T)`` is true). Alternatively, it
 may return ``None`` to indicate that the no-op default should be used.
 
@@ -36,14 +36,14 @@ factory function or other means to create the global object:
 
     1. If the environment variable
        :samp:`OPENTELEMETRY_PYTHON_IMPLEMENTATION_{getter-name}` (e.g.,
-       ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_TRACER``) is set to an nonempty
+       ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_TRACERSOURCE``) is set to an nonempty
        value, an attempt is made to import a module with that name and use a
        factory function named ``get_opentelemetry_implementation`` in it.
     2. Otherwise, the same is tried with the environment
        variable ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT``.
     3. Otherwise, if a :samp:`set_preferred_{<type>}_implementation` was
        called (e.g.
-       :func:`opentelemetry.trace.set_preferred_tracer_implementation`), the
+       :func:`opentelemetry.trace.set_preferred_tracer_source_implementation`), the
        callback set there is used (that is, the environment variables override
        the callback set in code).
     4. Otherwise, if :func:`set_preferred_default_implementation` was called,

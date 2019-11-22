@@ -392,9 +392,9 @@ class TracerSource:
             instrumenting_library_name: The name of the instrumenting library.
                 This should *not* be the name of the library that is
                 instrumented but the name of the instrumentation library.
-                E.g., instead of ``"requests"``, `"opentelemetry-ext-http-requests"`.
+                E.g., instead of ``"requests"``, ``"opentelemetry-ext-http-requests"``.
 
-                This should be the `pip install`-able name of the library rather than the
+                This should be the ``pip install``-able name of the library rather than the
                 module name (see also the next argument).
 
             instrumenting_library_version: Optional. The version string of the instrumenting library.
