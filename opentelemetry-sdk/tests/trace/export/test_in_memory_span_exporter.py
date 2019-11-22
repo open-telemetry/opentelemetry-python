@@ -24,62 +24,40 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 
 class TestInMemorySpanExporter(unittest.TestCase):
-    def test_get_finished_spans(self):
-        tracer = trace.TracerSource().get_tracer("opentelemetry-sdk")
+    def setUp(self):
+        self.tracer_source = trace.TracerSource()
+        self.tracer = self.tracer_source.get_tracer("opentelemetry-sdk")
+        self.memory_exporter = InMemorySpanExporter()
+        span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
+        self.tracer_source.add_span_processor(span_processor)
+        self.exec_scenario()
 
-        memory_exporter = InMemorySpanExporter()
-        span_processor = export.SimpleExportSpanProcessor(memory_exporter)
-        tracer.add_span_processor(span_processor)
-
-        with tracer.start_as_current_span("foo"):
-            with tracer.start_as_current_span("bar"):
-                with tracer.start_as_current_span("xxx"):
+    def exec_scenario(self):
+        with self.tracer.start_as_current_span("foo"):
+            with self.tracer.start_as_current_span("bar"):
+                with self.tracer.start_as_current_span("xxx"):
                     pass
 
-        span_list = memory_exporter.get_finished_spans()
+    def test_get_finished_spans(self):
+        span_list = self.memory_exporter.get_finished_spans()
         spans_names_list = [span.name for span in span_list]
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
 
     def test_clear(self):
-        tracer = trace.TracerSource().get_tracer("opentelemetry-sdk")
-
-        memory_exporter = InMemorySpanExporter()
-        span_processor = export.SimpleExportSpanProcessor(memory_exporter)
-        tracer.add_span_processor(span_processor)
-
-        with tracer.start_as_current_span("foo"):
-            with tracer.start_as_current_span("bar"):
-                with tracer.start_as_current_span("xxx"):
-                    pass
-
-        memory_exporter.clear()
-        span_list = memory_exporter.get_finished_spans()
+        self.memory_exporter.clear()
+        span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 0)
 
     def test_shutdown(self):
-        tracer = trace.TracerSource().get_tracer("opentelemetry-sdk")
-
-        memory_exporter = InMemorySpanExporter()
-        span_processor = export.SimpleExportSpanProcessor(memory_exporter)
-        tracer.add_span_processor(span_processor)
-
-        with tracer.start_as_current_span("foo"):
-            with tracer.start_as_current_span("bar"):
-                with tracer.start_as_current_span("xxx"):
-                    pass
-
-        span_list = memory_exporter.get_finished_spans()
+        span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 3)
 
-        memory_exporter.shutdown()
+        self.memory_exporter.shutdown()
 
         # after shutdown no new spans are accepted
-        with tracer.start_as_current_span("foo"):
-            with tracer.start_as_current_span("bar"):
-                with tracer.start_as_current_span("xxx"):
-                    pass
+        self.exec_scenario()
 
-        span_list = memory_exporter.get_finished_spans()
+        span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 3)
 
     def test_return_code(self):

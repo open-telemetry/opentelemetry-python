@@ -15,9 +15,7 @@
 
 import logging
 import random
-import sys
 import threading
-from collections import namedtuple
 from contextlib import contextmanager
 from typing import Iterator, Optional, Sequence, Tuple
 
@@ -479,18 +477,6 @@ class Tracer(trace_api.Tracer):
             if end_on_exit:
                 span.end()
 
-    def add_span_processor(self, span_processor: SpanProcessor) -> None:
-        """Registers a new :class:`SpanProcessor` for this `Tracer`.
-
-        The span processors are invoked in the same order they are registered.
-        """
-
-        # no lock here because MultiSpanProcessor.add_span_processor is
-        # thread safe
-        self.source._active_span_processor.add_span_processor(  # pylint:disable=protected-access
-            span_processor
-        )
-
 
 class TracerSource(trace_api.TracerSource):
     def __init__(
@@ -519,3 +505,13 @@ class TracerSource(trace_api.TracerSource):
 
     def get_current_span(self) -> Span:
         return self._current_span_slot.get()
+
+    def add_span_processor(self, span_processor: SpanProcessor) -> None:
+        """Registers a new :class:`SpanProcessor` for this `TracerSource`.
+
+        The span processors are invoked in the same order they are registered.
+        """
+
+        # no lock here because MultiSpanProcessor.add_span_processor is
+        # thread safe
+        self._active_span_processor.add_span_processor(span_processor)
