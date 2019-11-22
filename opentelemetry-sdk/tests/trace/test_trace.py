@@ -83,6 +83,30 @@ class TestSpanCreation(unittest.TestCase):
             span2.creator_info, trace.InstrumentationInfo("instr2", "1.3b3")
         )
 
+        self.assertEqual(span2.creator_info.version, "1.3b3")
+        self.assertEqual(span2.creator_info.name, "instr2")
+
+        self.assertLess(
+            span1.creator_info, span2.creator_info
+        )  # Check sortability.
+
+    def test_invalid_creator_info(self):
+        tracer_source = trace.TracerSource()
+        tracer1 = tracer_source.get_tracer("")
+        tracer2 = tracer_source.get_tracer(None)
+        self.assertEqual(
+            tracer1.instrumentation_info, tracer2.instrumentation_info
+        )
+        self.assertIsInstance(
+            tracer1.instrumentation_info, trace.InstrumentationInfo
+        )
+        span1 = tracer1.start_span("foo")
+        self.assertTrue(span1.is_recording_events())
+        self.assertEqual(tracer1.instrumentation_info.version, "")
+        self.assertEqual(
+            tracer1.instrumentation_info.name, "ERROR:MISSING LIB NAME"
+        )
+
     def test_span_processor_for_source(self):
         tracer_source = trace.TracerSource()
         tracer1 = tracer_source.get_tracer("instr1")
