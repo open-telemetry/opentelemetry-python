@@ -49,7 +49,7 @@ tracer = trace.tracer_source().get_tracer(
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
 
-tracer.add_span_processor(span_processor)
+trace.tracer_source().add_span_processor(span_processor)
 with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
         with tracer.start_as_current_span("baz"):

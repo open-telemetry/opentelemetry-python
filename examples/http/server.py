@@ -46,7 +46,7 @@ tracer = trace.tracer_source().get_tracer("opentelemetry-example-http")
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
-tracer.add_span_processor(span_processor)
+trace.tracer_source().add_span_processor(span_processor)
 
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
