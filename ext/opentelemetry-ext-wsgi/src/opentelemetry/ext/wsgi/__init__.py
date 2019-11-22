@@ -21,7 +21,6 @@ OpenTelemetry.
 import functools
 import typing
 import wsgiref.util as wsgiref_util
-from http import HTTPStatus
 
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
@@ -62,21 +61,21 @@ def http_status_to_canonical_code(code: int, allow_redirect: bool = True):
             return StatusCanonicalCode.OK
         return StatusCanonicalCode.DEADLINE_EXCEEDED
     if code <= 499:
-        if code == HTTPStatus.UNAUTHORIZED:
+        if code == 401:  # HTTPStatus.UNAUTHORIZED:
             return StatusCanonicalCode.UNAUTHENTICATED
-        if code == HTTPStatus.FORBIDDEN:
+        if code == 403:  # HTTPStatus.FORBIDDEN:
             return StatusCanonicalCode.PERMISSION_DENIED
-        if code == HTTPStatus.NOT_FOUND:
+        if code == 404:  # HTTPStatus.NOT_FOUND:
             return StatusCanonicalCode.NOT_FOUND
-        if code == HTTPStatus.TOO_MANY_REQUESTS:
+        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
             return StatusCanonicalCode.RESOURCE_EXHAUSTED
         return StatusCanonicalCode.INVALID_ARGUMENT
     if code <= 599:
-        if code == HTTPStatus.NOT_IMPLEMENTED:
+        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
             return StatusCanonicalCode.UNIMPLEMENTED
-        if code == HTTPStatus.SERVICE_UNAVAILABLE:
+        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
             return StatusCanonicalCode.UNAVAILABLE
-        if code == HTTPStatus.GATEWAY_TIMEOUT:
+        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
             return StatusCanonicalCode.DEADLINE_EXCEEDED
         return StatusCanonicalCode.INTERNAL
     return StatusCanonicalCode.UNKNOWN
