@@ -71,13 +71,14 @@ def parse_args(args=None):
     setup_instparser(instparser)
     instparser.add_argument("--editable", "-e", action="store_true")
     instparser.add_argument("--with-dev-deps", action="store_true")
+    instparser.add_argument("--eager-upgrades", action="store_true")
 
     devparser = subparsers.add_parser(
         "develop",
         help="Install all distributions editable + dev dependencies.",
     )
     setup_instparser(devparser)
-    devparser.set_defaults(editable=True, with_dev_deps=True)
+    devparser.set_defaults(editable=True, with_dev_deps=True, eager_upgrades=True)
 
     lintparser = subparsers.add_parser(
         "lint", help="Lint everything, autofixing if possible."
@@ -264,6 +265,8 @@ def join_args(arglist):
 
 def install_args(args):
     clean_remainder_args(args.pipargs)
+    if args.eager_upgrades:
+        args.pipargs += ["--upgrade-strategy=eager"]
 
     if args.with_dev_deps:
         runsubprocess(
