@@ -78,7 +78,9 @@ def parse_args(args=None):
         help="Install all distributions editable + dev dependencies.",
     )
     setup_instparser(devparser)
-    devparser.set_defaults(editable=True, with_dev_deps=True, eager_upgrades=True)
+    devparser.set_defaults(
+        editable=True, with_dev_deps=True, eager_upgrades=True
+    )
 
     lintparser = subparsers.add_parser(
         "lint", help="Lint everything, autofixing if possible."
