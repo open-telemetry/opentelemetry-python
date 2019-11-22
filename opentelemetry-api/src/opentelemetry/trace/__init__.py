@@ -374,6 +374,7 @@ INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
 class TracerSource:
+    # pylint:disable=no-self-use,unused-argument
     def get_tracer(
         self,
         instrumenting_library_name: str,
@@ -400,6 +401,7 @@ class TracerSource:
                 Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
         """
+        return Tracer()
 
 
 class Tracer:

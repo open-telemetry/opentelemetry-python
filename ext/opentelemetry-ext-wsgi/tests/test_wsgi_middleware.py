@@ -75,8 +75,17 @@ def error_wsgi(environ, start_response):
 
 class TestWsgiApplication(unittest.TestCase):
     def setUp(self):
-        tracer = trace_api.tracer()
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
+        tracer = trace_api.Tracer()
+        self.get_tracer_patcher = mock.patch.object(
+            trace_api.TracerSource,
+            "get_tracer",
+            autospec=True,
+            spec_set=True,
+            return_value=tracer,
+        )
+        self.get_tracer_patcher.start()
+
         self.create_span_patcher = mock.patch.object(
             tracer,
             "create_span",
@@ -97,6 +106,7 @@ class TestWsgiApplication(unittest.TestCase):
         self.exc_info = None
 
     def tearDown(self):
+        self.get_tracer_patcher.stop()
         self.create_span_patcher.stop()
 
     def start_response(self, status, response_headers, exc_info=None):

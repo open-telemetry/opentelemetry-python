@@ -73,7 +73,7 @@ class TestRequestsIntegration(unittest.TestCase):
         url = "https://www.example.org/foo/bar?x=y#top"
         requests.get(url=url)
         self.assertEqual(1, len(self.send.call_args_list))
-        self.tracer.start_as_current_span.assert_called_with(
+        self.tracer.start_as_current_span.assert_called_with(  # pylint:disable=no-member
             "/foo/bar", kind=trace.SpanKind.CLIENT
         )
         self.span_context_manager.__enter__.assert_called_with()
@@ -99,11 +99,12 @@ class TestRequestsIntegration(unittest.TestCase):
 
         with self.assertRaises(exception_type):
             requests.post(url=url)
+        call_args = (
+            self.tracer.start_as_current_span.call_args  # pylint:disable=no-member
+        )
         self.assertTrue(
-            self.tracer.start_as_current_span.call_args[0][0].startswith(
-                "<Unparsable URL"
-            ),
-            msg=self.tracer.start_as_current_span.call_args,
+            call_args[0][0].startswith("<Unparsable URL"),
+            msg=self.tracer.start_as_current_span.call_args,  # pylint:disable=no-member
         )
         self.span_context_manager.__enter__.assert_called_with()
         exitspan = self.span_context_manager.__exit__

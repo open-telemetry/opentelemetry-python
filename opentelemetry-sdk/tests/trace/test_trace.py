@@ -44,8 +44,8 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(child_span, trace.Span)
 
     def test_sampler_no_sampling(self):
-        tracer = new_tracer()
-        tracer.sampler = sampling.ALWAYS_OFF
+        tracer_source = trace.TracerSource(sampling.ALWAYS_OFF)
+        tracer = tracer_source.get_tracer("opentelemetry-sdk")
 
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
@@ -266,13 +266,18 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-key2"], "val2")
             self.assertEqual(root.attributes["attr-in-both"], "span-attr")
 
+    def test_sampling_attributes(self):
         decision_attributes = {
             "sampler-attr": "sample-val",
             "attr-in-both": "decision-attr",
         }
-        self.tracer.sampler = sampling.StaticSampler(
-            sampling.Decision(sampled=True, attributes=decision_attributes)
+        tracer_source = trace.TracerSource(
+            sampling.StaticSampler(
+                sampling.Decision(sampled=True, attributes=decision_attributes)
+            )
         )
+
+        self.tracer = tracer_source.get_tracer("opentelemetry-sdk")
 
         with self.tracer.start_as_current_span("root2") as root:
             self.assertEqual(len(root.attributes), 2)

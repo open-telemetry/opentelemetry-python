@@ -38,8 +38,9 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
-        self.tracer = trace.tracer_source().get_tracer("opentelemetry-ext-wsgi", __version__)
-
+        self.tracer = trace.tracer_source().get_tracer(
+            "opentelemetry-ext-wsgi", __version__
+        )
 
     @staticmethod
     def _add_request_attributes(span, environ):
@@ -115,14 +116,14 @@ class OpenTelemetryMiddleware:
         )
         span.start()
         try:
-            with tracer.use_span(span):
+            with self.tracer.use_span(span):
                 self._add_request_attributes(span, environ)
                 start_response = self._create_start_response(
                     span, start_response
                 )
 
                 iterable = self.wsgi(environ, start_response)
-                return _end_span_after_iterating(iterable, span, tracer)
+                return _end_span_after_iterating(iterable, span, self.tracer)
         except:  # noqa
             span.end()
             raise
