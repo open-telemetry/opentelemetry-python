@@ -19,7 +19,7 @@ If you are looking for someone to help you find a starting point and be a resour
 Gitter and find a buddy!
 
 1. Join [Gitter.im](https://gitter.im) and join our [chat room](https://gitter.im/open-telemetry/opentelemetry-python).
-2. Post in the room with an introduction to yourself, what area you are interested in (checks issues marked "Help Wanted"),
+2. Post in the room with an introduction to yourself, what area you are interested in (check issues marked "Help Wanted"),
 and say you are looking for a buddy. We will match you with someone who has experience in that area.
 
 Your OpenTelemetry buddy is your resource to talk to directly on all aspects of contributing to OpenTelemetry: providing
@@ -37,7 +37,7 @@ You can run:
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
 - `tox -e test-api` and `tox -e test-sdk` to run the API and SDK unit tests
-- `tox -e py37-test-api` to e.g. run the the API unit tests under a specific
+- `tox -e py37-test-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e lint` to run lint checks on all code
 
@@ -115,7 +115,7 @@ It's especially valuable to read through the [library guidelines](https://github
 OpenTelemetry is an evolving specification, one where the desires and
 use cases are clear, but the method to satisfy those uses cases are not.
 
-As such, Contributions should provide functionality and behavior that 
+As such, contributions should provide functionality and behavior that
 conforms to the specification, but the interface and structure is flexible.
 
 It is preferable to have contributions follow the idioms of the language 

@@ -11,5 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+import subprocess
+import unittest
 
-__version__ = "0.3.dev0"
+
+class TestBasicTracerExample(unittest.TestCase):
+    def test_basic_tracer(self):
+        dirpath = os.path.dirname(os.path.realpath(__file__))
+        test_script = "{}/../tracer.py".format(dirpath)
+        output = subprocess.check_output(test_script).decode()
+
+        self.assertIn('name="foo"', output)
+        self.assertIn('name="bar"', output)
+        self.assertIn('name="baz"', output)

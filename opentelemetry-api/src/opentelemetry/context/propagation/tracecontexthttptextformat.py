@@ -21,7 +21,7 @@ from opentelemetry.context.propagation import httptextformat
 _T = typing.TypeVar("_T")
 
 #    Keys and values are strings of up to 256 printable US-ASCII characters.
-#    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+#    Implementations should conform to the `W3C Trace Context - Tracestate`_
 #    spec, which describes additional restrictions on valid field values.
 #
 #    .. _W3C Trace Context - Tracestate:
