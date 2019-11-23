@@ -21,7 +21,7 @@ import requests
 
 import opentelemetry.ext.http_requests
 from opentelemetry import propagators, trace
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.ext.flask import instrument_app
 from opentelemetry.sdk.context.propagation.b3_format import B3Format
 from opentelemetry.sdk.trace import Tracer
 
@@ -57,7 +57,7 @@ def configure_opentelemetry(flask_app: flask.Flask):
     # and the frameworks and libraries that are used together, automatically
     # creating Spans and propagating context as appropriate.
     opentelemetry.ext.http_requests.enable(trace.tracer())
-    flask_app.wsgi_app = OpenTelemetryMiddleware(flask_app.wsgi_app)
+    instrument_app(flask_app)
 
 
 app = flask.Flask(__name__)

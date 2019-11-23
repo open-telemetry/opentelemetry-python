@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import sys
 import unittest
 import unittest.mock as mock
 import wsgiref.util as wsgiref_util
 from urllib.parse import urlparse
 
+import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
 
 
 class Response:
@@ -73,40 +73,7 @@ def error_wsgi(environ, start_response):
     return [b"*"]
 
 
-class TestWsgiApplication(unittest.TestCase):
-    def setUp(self):
-        tracer = trace_api.tracer()
-        self.span = mock.create_autospec(trace_api.Span, spec_set=True)
-        self.start_span_patcher = mock.patch.object(
-            tracer,
-            "start_span",
-            autospec=True,
-            spec_set=True,
-            return_value=self.span,
-        )
-        self.start_span = self.start_span_patcher.start()
-
-        self.write_buffer = io.BytesIO()
-        self.write = self.write_buffer.write
-
-        self.environ = {}
-        wsgiref_util.setup_testing_defaults(self.environ)
-
-        self.status = None
-        self.response_headers = None
-        self.exc_info = None
-
-    def tearDown(self):
-        self.start_span_patcher.stop()
-
-    def start_response(self, status, response_headers, exc_info=None):
-        # The span should have started already
-
-        self.status = status
-        self.response_headers = response_headers
-        self.exc_info = exc_info
-        return self.write
-
+class TestWsgiApplication(WsgiTestBase):
     def validate_response(self, response, error=None):
         while True:
             try:
@@ -132,28 +99,29 @@ class TestWsgiApplication(unittest.TestCase):
         self.start_span.assert_called_with(
             "/", trace_api.INVALID_SPAN_CONTEXT, kind=trace_api.SpanKind.SERVER
         )
+        self.assertEqual(1, self.span.start.call_count)
 
     def test_basic_wsgi_call(self):
-        app = OpenTelemetryMiddleware(simple_wsgi)
+        app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
         response = app(self.environ, self.start_response)
         self.validate_response(response)
 
     def test_wsgi_iterable(self):
         original_response = Response()
         iter_wsgi = create_iter_wsgi(original_response)
-        app = OpenTelemetryMiddleware(iter_wsgi)
+        app = otel_wsgi.OpenTelemetryMiddleware(iter_wsgi)
         response = app(self.environ, self.start_response)
         # Verify that start_response has been called
         self.assertTrue(self.status)
         self.validate_response(response)
 
         # Verify that close has been called exactly once
-        self.assertEqual(original_response.close_calls, 1)
+        self.assertEqual(1, original_response.close_calls)
 
     def test_wsgi_generator(self):
         original_response = Response()
         gen_wsgi = create_gen_wsgi(original_response)
-        app = OpenTelemetryMiddleware(gen_wsgi)
+        app = otel_wsgi.OpenTelemetryMiddleware(gen_wsgi)
         response = app(self.environ, self.start_response)
         # Verify that start_response has not been called
         self.assertIsNone(self.status)
@@ -163,7 +131,7 @@ class TestWsgiApplication(unittest.TestCase):
         self.assertEqual(original_response.close_calls, 1)
 
     def test_wsgi_exc_info(self):
-        app = OpenTelemetryMiddleware(error_wsgi)
+        app = otel_wsgi.OpenTelemetryMiddleware(error_wsgi)
         response = app(self.environ, self.start_response)
         self.validate_response(response, error=ValueError)
 
@@ -177,9 +145,7 @@ class TestWsgiAttributes(unittest.TestCase):
     def test_request_attributes(self):
         self.environ["QUERY_STRING"] = "foo=bar"
 
-        OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
-            self.span, self.environ
-        )
+        otel_wsgi.add_request_attributes(self.span, self.environ)
 
         expected = (
             mock.call("component", "http"),
@@ -191,9 +157,7 @@ class TestWsgiAttributes(unittest.TestCase):
         self.span.set_attribute.assert_has_calls(expected, any_order=True)
 
     def validate_url(self, expected_url):
-        OpenTelemetryMiddleware._add_request_attributes(  # noqa pylint: disable=protected-access
-            self.span, self.environ
-        )
+        otel_wsgi.add_request_attributes(self.span, self.environ)
         attrs = {
             args[0][0]: args[0][1]
             for args in self.span.set_attribute.call_args_list
@@ -267,9 +231,7 @@ class TestWsgiAttributes(unittest.TestCase):
         self.validate_url("http://127.0.0.1:8080/?foo=bar#top")
 
     def test_response_attributes(self):
-        OpenTelemetryMiddleware._add_response_attributes(  # noqa pylint: disable=protected-access
-            self.span, "404 Not Found"
-        )
+        otel_wsgi.add_response_attributes(self.span, "404 Not Found", {})
         expected = (
             mock.call("http.status_code", 404),
             mock.call("http.status_text", "Not Found"),
@@ -278,9 +240,7 @@ class TestWsgiAttributes(unittest.TestCase):
         self.span.set_attribute.assert_has_calls(expected, any_order=True)
 
     def test_response_attributes_invalid_status_code(self):
-        OpenTelemetryMiddleware._add_response_attributes(  # noqa pylint: disable=protected-access
-            self.span, "Invalid Status Code"
-        )
+        otel_wsgi.add_response_attributes(self.span, "Invalid Status Code", {})
         self.assertEqual(self.span.set_attribute.call_count, 1)
         self.span.set_attribute.assert_called_with(
             "http.status_text", "Status Code"
