@@ -23,7 +23,7 @@ from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 tracer = trace.tracer()
 span_processor = SimpleExportSpanProcessor(
-    StackdriverSpanExporter(project_id="alansandbox")
+    StackdriverSpanExporter(project_id="my-helloworld-project")
 )
 tracer.add_span_processor(span_processor)
 

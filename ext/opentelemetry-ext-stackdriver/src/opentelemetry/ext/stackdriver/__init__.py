@@ -19,6 +19,7 @@ import base64
 import datetime
 import logging
 import socket
+import typing
 
 from google.cloud.trace import trace_service_client
 from google.cloud.trace.client import Client
@@ -64,7 +65,7 @@ class StackdriverSpanExporter(SpanExporter):
         self.client = client
         self.project_id = self.client.project
 
-    def export(self, spans: Span):
+    def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         """Export the spans to Stackdriver.
 
         Args:
@@ -78,7 +79,9 @@ class StackdriverSpanExporter(SpanExporter):
 
         return SpanExportResult.SUCCESS
 
-    def translate_to_stackdriver(self, spans: Span):
+    def translate_to_stackdriver(
+        self, spans: typing.Sequence[Span]
+    ) -> typing.List[typing.Dict[str, Any]]:
         """Translate the spans to Stackdriver format.
 
         Args:

@@ -37,9 +37,6 @@ Usage
     with tracer.start_as_current_span('foo'):
         print('Hello world!')
 
-    # shutdown the span processor
-    span_processor.shutdown()
-
 References
 ----------
 
