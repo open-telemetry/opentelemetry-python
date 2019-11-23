@@ -16,32 +16,25 @@
 import unittest
 from unittest import mock
 
-import opentelemetry.ext.stackdriver as sd_exporter
+import opentelemetry.ext.stackdriver.trace as sd_exporter
 from opentelemetry.sdk.trace import Span
 from opentelemetry.trace import SpanContext, SpanKind
 from opentelemetry.util.version import __version__
 
 
-class _Client(object):
-    def __init__(self, project=None):
-        if project is None:
-            project = "PROJECT"
-
-        self.project = project
-
-    def batch_write_spans(self, name, spans):
-        pass
-
-
 class TestStackdriverSpanExporter(unittest.TestCase):
+    def setUp(self):
+        self.client_patcher = mock.patch(
+            "opentelemetry.ext.stackdriver.trace.Client"
+        )
+        self.client_patcher.start()
+
+    def tearDown(self):
+        self.client_patcher.stop()
+
     def test_constructor_default(self):
-        patch = mock.patch("opentelemetry.ext.stackdriver.Client", new=_Client)
-
-        with patch:
-            exporter = sd_exporter.StackdriverSpanExporter()
-
-        project_id = "PROJECT"
-        self.assertEqual(exporter.project_id, project_id)
+        exporter = sd_exporter.StackdriverSpanExporter()
+        self.assertEqual(exporter.project_id, exporter.client.project)
 
     def test_constructor_explicit(self):
         client = mock.Mock()
