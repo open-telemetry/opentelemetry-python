@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.ext.stackdriver import StackdriverSpanExporter
+from opentelemetry.ext.stackdriver.trace import StackdriverSpanExporter
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 

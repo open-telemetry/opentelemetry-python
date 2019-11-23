@@ -69,7 +69,8 @@ class StackdriverSpanExporter(SpanExporter):
 
         try:
             self.client.batch_write_spans(
-                "projects/{}".format(self.project_id), {"spans": stackdriver_spans}
+                "projects/{}".format(self.project_id),
+                {"spans": stackdriver_spans},
             )
         except Exception as ex:
             logger.warning("Error while writing to stackdriver: %s", ex)
@@ -108,8 +109,6 @@ class StackdriverSpanExporter(SpanExporter):
             end_time = None
             if span.end_time:
                 end_time = ns_to_iso_str(span.end_time)
-
-            time_events = None
 
             span.attributes["g.co/agent"] = AGENT
             attr_map = extract_attributes(span.attributes)
