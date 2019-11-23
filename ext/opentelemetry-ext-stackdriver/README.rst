@@ -24,7 +24,7 @@ Usage
     tracer = trace.tracer()
 
     # create a StackdriverSpanExporter
-    stackdriver_exporter = stackdriver.StackdriverSpanExporter(
+    stackdriver_exporter = stackdriver.trace.StackdriverSpanExporter(
         project_id='my-helloworld-project',
     )
 
