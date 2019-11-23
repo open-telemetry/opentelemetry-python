@@ -49,10 +49,6 @@ class StackdriverSpanExporter(SpanExporter):
     ):
         if client is None:
             client = Client(project=project_id)
-            # initialize a authed client to prevent recorded in span
-            client.batch_write_spans(
-                "projects/{}".format(project_id), {"spans": []}
-            )
         self.client = client
         self.project_id = self.client.project
 
