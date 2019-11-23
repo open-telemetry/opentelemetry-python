@@ -1,4 +1,3 @@
-# Copyright 2018, OpenCensus Authors
 # Copyright 2019, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +14,7 @@
 
 """Stackdriver Span Exporter for OpenTelemetry."""
 
-import base64
-import datetime
 import logging
-import socket
 import typing
 
 from google.cloud.trace import trace_service_client
@@ -68,14 +64,21 @@ class StackdriverSpanExporter(SpanExporter):
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         """Export the spans to Stackdriver.
 
+        See: https://cloud.google.com/trace/docs/reference/v2/rest/v2/
+             projects.traces/batchWrite
+
         Args:
             spans: Tuple of spans to export
         """
         stackdriver_spans = self.translate_to_stackdriver(spans)
 
-        self.client.batch_write_spans(
-            "projects/{}".format(self.project_id), {"spans": stackdriver_spans}
-        )
+        try:
+            self.client.batch_write_spans(
+                "projects/{}".format(self.project_id), {"spans": stackdriver_spans}
+            )
+        except Exception as ex:
+            logger.warning("Error while writing to stackdriver: %s", ex)
+            return SpanExportResult.FAILED_RETRYABLE
 
         return SpanExportResult.SUCCESS
 
@@ -118,7 +121,6 @@ class StackdriverSpanExporter(SpanExporter):
                 "links": extract_links(span.links),
                 "status": extract_status(span.status),
             }
-            sd_span["parentSpanId"] = parent_id
             sd_span["timeEvents"] = (
                 {"timeEvent": formatted_time_events}
                 if formatted_time_events
