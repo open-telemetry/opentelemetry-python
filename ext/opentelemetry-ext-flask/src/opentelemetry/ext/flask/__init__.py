@@ -7,6 +7,7 @@ from flask import request as flask_request
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import propagators, trace
+from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,9 @@ def _before_flask_request():
         otel_wsgi.get_header_from_environ, environ
     )
 
-    tracer = trace.tracer()
+    tracer = trace.tracer_source().get_tracer(
+        "opentelemetry-ext-flask", __version__
+    )
 
     span = tracer.create_span(
         span_name, parent_span, kind=trace.SpanKind.SERVER
