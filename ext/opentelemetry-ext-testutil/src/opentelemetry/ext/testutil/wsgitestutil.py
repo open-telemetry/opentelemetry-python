@@ -44,7 +44,7 @@ class WsgiTestBase(unittest.TestCase):
 
     def start_response(self, status, response_headers, exc_info=None):
         # The span should have started already
-        self.span.start.assert_called_once_with()
+        self.assertEqual(self.span.start.call_count, 1)
 
         self.status = status
         self.response_headers = response_headers
