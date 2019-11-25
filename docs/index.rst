@@ -19,6 +19,7 @@ abstract types for OpenTelemetry implementations.
    opentelemetry.metrics
    opentelemetry.trace
    opentelemetry.util.loader
+   opentelemetry.ext.opentracing_shim
 
 
 Indices and tables
