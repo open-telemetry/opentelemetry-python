@@ -33,10 +33,6 @@ class TestTracer(unittest.TestCase):
         with self.tracer.start_as_current_span("") as span:
             self.assertIsInstance(span, trace.Span)
 
-    def test_create_span(self):
-        span = self.tracer.create_span("")
-        self.assertIsInstance(span, trace.Span)
-
     def test_use_span(self):
         span = trace.Span()
         with self.tracer.use_span(span):

@@ -62,10 +62,12 @@ def _before_flask_request():
 
     tracer = trace.tracer()
 
-    span = tracer.create_span(
-        span_name, parent_span, kind=trace.SpanKind.SERVER
+    span = tracer.start_span(
+        span_name,
+        parent_span,
+        kind=trace.SpanKind.SERVER,
+        start_time=environ.get(_ENVIRON_STARTTIME_KEY),
     )
-    span.start(environ.get(_ENVIRON_STARTTIME_KEY))
     activation = tracer.use_span(span, end_on_exit=True)
     activation.__enter__()
     environ[_ENVIRON_ACTIVATION_KEY] = activation
