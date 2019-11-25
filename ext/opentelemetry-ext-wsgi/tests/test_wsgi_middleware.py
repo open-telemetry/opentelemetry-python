@@ -96,10 +96,9 @@ class TestWsgiApplication(WsgiTestBase):
             self.assertIsNone(self.exc_info)
 
         # Verify that start_span has been called
-        self.create_span.assert_called_with(
+        self.start_span.assert_called_with(
             "/", trace_api.INVALID_SPAN_CONTEXT, kind=trace_api.SpanKind.SERVER
         )
-        self.assertEqual(1, self.span.start.call_count)
 
     def test_basic_wsgi_call(self):
         app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
