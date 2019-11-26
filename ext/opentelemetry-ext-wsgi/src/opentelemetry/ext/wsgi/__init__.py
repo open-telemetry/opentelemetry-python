@@ -26,73 +26,105 @@ from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 
 
+def get_header_from_environ(
+    environ: dict, header_name: str
+) -> typing.List[str]:
+    """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
+
+    Returns:
+        A list with a single string with the header value if it exists, else an empty list.
+    """
+    environ_key = "HTTP_" + header_name.upper().replace("-", "_")
+    value = environ.get(environ_key)
+    if value is not None:
+        return [value]
+    return []
+
+
+def add_request_attributes(span, environ):
+    """Adds HTTP request attributes from the PEP3333-conforming WSGI environ to span."""
+
+    span.set_attribute("component", "http")
+    span.set_attribute("http.method", environ["REQUEST_METHOD"])
+
+    host = environ.get("HTTP_HOST")
+    if not host:
+        host = environ["SERVER_NAME"]
+        port = environ["SERVER_PORT"]
+        scheme = environ["wsgi.url_scheme"]
+        if (
+            scheme == "http"
+            and port != "80"
+            or scheme == "https"
+            and port != "443"
+        ):
+            host += ":" + port
+
+    # NOTE: Nonstandard (but see
+    # https://github.com/open-telemetry/opentelemetry-specification/pull/263)
+    span.set_attribute("http.host", host)
+
+    url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
+
+    if url:
+        if url[0] == "/":
+            # We assume that no scheme-relative URLs will be in url here.
+            # After all, if a request is made to http://myserver//foo, we may get
+            # //foo which looks like scheme-relative but isn't.
+            url = environ["wsgi.url_scheme"] + "://" + host + url
+        elif not url.startswith(environ["wsgi.url_scheme"] + ":"):
+            # Something fishy is in RAW_URL. Let's fall back to request_uri()
+            url = wsgiref_util.request_uri(environ)
+    else:
+        url = wsgiref_util.request_uri(environ)
+
+    span.set_attribute("http.url", url)
+
+
+def add_response_attributes(
+    span, start_response_status, response_headers
+):  # pylint: disable=unused-argument
+    """Adds HTTP response attributes to span using the arguments
+    passed to a PEP3333-conforming start_response callable."""
+
+    status_code, status_text = start_response_status.split(" ", 1)
+    span.set_attribute("http.status_text", status_text)
+
+    try:
+        status_code = int(status_code)
+    except ValueError:
+        pass
+    else:
+        span.set_attribute("http.status_code", status_code)
+
+
+def get_default_span_name(environ):
+    """Calculates a (generic) span name for an incoming HTTP request based on the PEP3333 conforming WSGI environ."""
+
+    # TODO: Update once
+    #  https://github.com/open-telemetry/opentelemetry-specification/issues/270
+    #  is resolved
+    return environ.get("PATH_INFO", "/")
+
+
 class OpenTelemetryMiddleware:
     """The WSGI application middleware.
 
-    This class is used to create and annotate spans for requests to a WSGI
-    application.
+    This class is a PEP 3333 conforming WSGI middleware that starts and
+    annotates spans for any requests it is invoked with.
 
     Args:
-        wsgi: The WSGI application callable.
+        wsgi: The WSGI application callable to forward requests to.
     """
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
 
     @staticmethod
-    def _add_request_attributes(span, environ):
-        span.set_attribute("component", "http")
-        span.set_attribute("http.method", environ["REQUEST_METHOD"])
-
-        host = environ.get("HTTP_HOST")
-        if not host:
-            host = environ["SERVER_NAME"]
-            port = environ["SERVER_PORT"]
-            scheme = environ["wsgi.url_scheme"]
-            if (
-                scheme == "http"
-                and port != "80"
-                or scheme == "https"
-                and port != "443"
-            ):
-                host += ":" + port
-
-        # NOTE: Nonstandard
-        span.set_attribute("http.host", host)
-
-        url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
-
-        if url:
-            if url[0] == "/":
-                # We assume that no scheme-relative URLs will be in url here.
-                # After all, if a request is made to http://myserver//foo, we may get
-                # //foo which looks like scheme-relative but isn't.
-                url = environ["wsgi.url_scheme"] + "://" + host + url
-            elif not url.startswith(environ["wsgi.url_scheme"] + ":"):
-                # Something fishy is in RAW_URL. Let's fall back to request_uri()
-                url = wsgiref_util.request_uri(environ)
-        else:
-            url = wsgiref_util.request_uri(environ)
-
-        span.set_attribute("http.url", url)
-
-    @staticmethod
-    def _add_response_attributes(span, status):
-        status_code, status_text = status.split(" ", 1)
-        span.set_attribute("http.status_text", status_text)
-
-        try:
-            status_code = int(status_code)
-        except ValueError:
-            pass
-        else:
-            span.set_attribute("http.status_code", status_code)
-
-    @classmethod
-    def _create_start_response(cls, span, start_response):
+    def _create_start_response(span, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args, **kwargs):
-            cls._add_response_attributes(span, status)
+            add_response_attributes(span, status, response_headers)
             return start_response(status, response_headers, *args, **kwargs)
 
         return _start_response
@@ -106,16 +138,16 @@ class OpenTelemetryMiddleware:
         """
 
         tracer = trace.tracer()
-        path_info = environ["PATH_INFO"] or "/"
-        parent_span = propagators.extract(_get_header_from_environ, environ)
+        parent_span = propagators.extract(get_header_from_environ, environ)
+        span_name = get_default_span_name(environ)
 
-        span = tracer.create_span(
-            path_info, parent_span, kind=trace.SpanKind.SERVER
+        span = tracer.start_span(
+            span_name, parent_span, kind=trace.SpanKind.SERVER
         )
-        span.start()
+
         try:
             with tracer.use_span(span):
-                self._add_request_attributes(span, environ)
+                add_request_attributes(span, environ)
                 start_response = self._create_start_response(
                     span, start_response
                 )
@@ -125,21 +157,6 @@ class OpenTelemetryMiddleware:
         except:  # noqa
             span.end()
             raise
-
-
-def _get_header_from_environ(
-    environ: dict, header_name: str
-) -> typing.List[str]:
-    """Retrieve the header value from the wsgi environ dictionary.
-
-    Returns:
-        A string with the header value if it exists, else None.
-    """
-    environ_key = "HTTP_" + header_name.upper().replace("-", "_")
-    value = environ.get(environ_key)
-    if value:
-        return [value]
-    return []
 
 
 # Put this in a subfunction to not delay the call to the wrapped

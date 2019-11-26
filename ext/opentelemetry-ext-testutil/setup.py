@@ -1,4 +1,4 @@
-# Copyright 2019, OpenCensus Authors
+# Copyright 2019, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,17 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-from opentelemetry import trace
-from opentelemetry.ext.azure_monitor import AzureMonitorSpanExporter
-from opentelemetry.sdk.trace import Tracer
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+import setuptools
 
-trace.set_preferred_tracer_implementation(lambda T: Tracer())
-tracer = trace.tracer()
-tracer.add_span_processor(
-    SimpleExportSpanProcessor(AzureMonitorSpanExporter())
+BASE_DIR = os.path.dirname(__file__)
+VERSION_FILENAME = os.path.join(
+    BASE_DIR, "src", "opentelemetry", "ext", "testutil", "version.py"
 )
+PACKAGE_INFO = {}
+with open(VERSION_FILENAME) as f:
+    exec(f.read(), PACKAGE_INFO)
 
-with tracer.start_as_current_span("hello") as span:
-    print("Hello, World!")
+setuptools.setup(version=PACKAGE_INFO["__version__"])
