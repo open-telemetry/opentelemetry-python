@@ -25,7 +25,6 @@ import wsgiref.util as wsgiref_util
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 from opentelemetry.trace.status import Status, StatusCanonicalCode
-from opentelemetry.util import time_ns
 
 _HTTP_VERSION_PREFIX = "HTTP/"
 
@@ -183,19 +182,16 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        start_timestamp = time_ns()
-
         tracer = trace.tracer()
         parent_span = propagators.extract(get_header_from_environ, environ)
         span_name = get_default_span_name(environ)
 
-        span = tracer.create_span(
+        span = tracer.start_span(
             span_name,
             parent_span,
             kind=trace.SpanKind.SERVER,
             attributes=collect_request_attributes(environ),
         )
-        span.start(start_timestamp)
 
         try:
             with tracer.use_span(span):

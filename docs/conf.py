@@ -13,7 +13,10 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../opentelemetry-api/src/"))
+sys.path[:0] = [
+    os.path.abspath("../opentelemetry-api/src/"),
+    os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/"),
+]
 
 
 # -- Project information -----------------------------------------------------
@@ -47,7 +50,13 @@ extensions = [
     "sphinx.ext.githubpages",
 ]
 
-intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "opentracing": (
+        "https://opentracing-python.readthedocs.io/en/latest/",
+        None,
+    ),
+}
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
 # Sphinx will warn about all references where the target cannot be found.

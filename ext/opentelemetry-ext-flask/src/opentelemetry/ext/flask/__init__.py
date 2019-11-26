@@ -66,13 +66,13 @@ def _before_flask_request():
     if flask_request.url_rule:
         # For 404 that result from no route found, etc, we don't have a url_rule.
         attributes["http.route"] = flask_request.url_rule.rule
-    span = tracer.create_span(
+    span = tracer.start_span(
         span_name,
         parent_span,
         kind=trace.SpanKind.SERVER,
         attributes=attributes,
+        start_time=environ.get(_ENVIRON_STARTTIME_KEY),
     )
-    span.start(environ.get(_ENVIRON_STARTTIME_KEY))
     activation = tracer.use_span(span, end_on_exit=True)
     activation.__enter__()
     environ[_ENVIRON_ACTIVATION_KEY] = activation
