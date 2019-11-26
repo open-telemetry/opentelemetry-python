@@ -297,8 +297,8 @@ class Tracer(trace_api.Tracer):
 
     Args:
         name: The name of the tracer.
-        shutdown_on_exit: Register an atexit hook to shutdown the tracer when
-        the application exits.
+        shutdown_on_exit: Register an atexit hook to shut down the tracer when
+            the application exits.
     """
 
     def __init__(
@@ -452,7 +452,7 @@ class Tracer(trace_api.Tracer):
         self._active_span_processor.add_span_processor(span_processor)
 
     def shutdown(self):
-        """Shutdown the span processors added to the tracer."""
+        """Shut down the span processors added to the tracer."""
         self._active_span_processor.shutdown()
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)
