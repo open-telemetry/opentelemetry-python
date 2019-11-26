@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from unittest import mock
 
 from flask import Flask
 from werkzeug.test import Client
@@ -52,12 +53,12 @@ class TestFlaskIntegration(WsgiTestBase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual([b"Hello: 123"], list(resp.response))
 
-        self.create_span.assert_called_with(
+        self.start_span.assert_called_with(
             "hello_endpoint",
             trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
+            start_time=mock.ANY,
         )
-        self.assertEqual(1, self.span.start.call_count)
 
         # TODO: Change this test to use the SDK, as mocking becomes painful
 
@@ -79,12 +80,12 @@ class TestFlaskIntegration(WsgiTestBase):
         self.assertEqual(404, resp.status_code)
         resp.close()
 
-        self.create_span.assert_called_with(
+        self.start_span.assert_called_with(
             "/bye",
             trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
+            start_time=mock.ANY,
         )
-        self.assertEqual(1, self.span.start.call_count)
 
         # Nope, this uses Tracer.use_span(end_on_exit)
         #  self.assertEqual(1, self.span.end.call_count)
@@ -107,12 +108,12 @@ class TestFlaskIntegration(WsgiTestBase):
         self.assertEqual(500, resp.status_code)
         resp.close()
 
-        self.create_span.assert_called_with(
+        self.start_span.assert_called_with(
             "hello_endpoint",
             trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
+            start_time=mock.ANY,
         )
-        self.assertEqual(1, self.span.start.call_count)
 
         # Nope, this uses Tracer.use_span(end_on_exit)
         #  self.assertEqual(1, self.span.end.call_count)
