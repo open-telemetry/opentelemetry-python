@@ -1,23 +1,26 @@
 import io
 import unittest
-import unittest.mock as mock
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import trace as trace_api
+from opentelemetry.sdk.trace import Tracer, export
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
 
 
 class WsgiTestBase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        trace_api.set_preferred_tracer_implementation(lambda T: Tracer())
+
     def setUp(self):
         tracer = trace_api.tracer()
-        self.span = mock.create_autospec(trace_api.Span, spec_set=True)
-        self.start_span_patcher = mock.patch.object(
-            tracer,
-            "start_span",
-            autospec=True,
-            spec_set=True,
-            return_value=self.span,
-        )
-        self.start_span = self.start_span_patcher.start()
+
+        self.memory_exporter = InMemorySpanExporter()
+        span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
+        tracer.add_span_processor(span_processor)
+
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
 
@@ -27,9 +30,6 @@ class WsgiTestBase(unittest.TestCase):
         self.status = None
         self.response_headers = None
         self.exc_info = None
-
-    def tearDown(self):
-        self.start_span_patcher.stop()
 
     def start_response(self, status, response_headers, exc_info=None):
         self.status = status
