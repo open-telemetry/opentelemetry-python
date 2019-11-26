@@ -352,20 +352,6 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
         return self.source.get_current_span()
 
-    def start_span(
-        self,
-        name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
-        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: Optional[types.Attributes] = None,
-        links: Sequence[trace_api.Link] = (),
-    ) -> "Span":
-        """See `opentelemetry.trace.Tracer.start_span`."""
-
-        span = self.create_span(name, parent, kind, attributes, links)
-        span.start()
-        return span
-
     def start_as_current_span(
         self,
         name: str,
@@ -379,22 +365,16 @@ class Tracer(trace_api.Tracer):
         span = self.start_span(name, parent, kind, attributes, links)
         return self.use_span(span, end_on_exit=True)
 
-    def create_span(
+    def start_span(
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
-    ) -> "trace_api.Span":
-        """See `opentelemetry.trace.Tracer.create_span`.
-
-        If `parent` is null the new span will be created as a root span, i.e. a
-        span with no parent context. By default, the new span will be created
-        as a child of the current span in this tracer's context, or as a root
-        span if no current span exists.
-        """
-        span_id = generate_span_id()
+        start_time: Optional[int] = None,
+    ) -> "Span":
+        """See `opentelemetry.trace.Tracer.start_span`."""
 
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
@@ -419,7 +399,7 @@ class Tracer(trace_api.Tracer):
             trace_state = parent_context.trace_state
 
         context = trace_api.SpanContext(
-            trace_id, span_id, trace_options, trace_state
+            trace_id, generate_span_id(), trace_options, trace_state
         )
 
         # The sampler decides whether to create a real or no-op span at the
@@ -443,7 +423,7 @@ class Tracer(trace_api.Tracer):
                 # apply sampling decision attributes after initial attributes
                 span_attributes = attributes.copy()
                 span_attributes.update(sampling_decision.attributes)
-            return Span(
+            span = Span(
                 name=name,
                 context=context,
                 parent=parent,
@@ -454,8 +434,10 @@ class Tracer(trace_api.Tracer):
                 links=links,
                 creator_info=self.instrumentation_info,
             )
-
-        return trace_api.DefaultSpan(context=context)
+            span.start(start_time=start_time)
+        else:
+            span = trace_api.DefaultSpan(context=context)
+        return span
 
     @contextmanager
     def use_span(

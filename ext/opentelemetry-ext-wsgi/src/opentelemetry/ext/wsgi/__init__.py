@@ -24,7 +24,6 @@ import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__
-from opentelemetry.util import time_ns
 
 
 def get_header_from_environ(
@@ -141,15 +140,12 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        start_timestamp = time_ns()
-
         parent_span = propagators.extract(get_header_from_environ, environ)
         span_name = get_default_span_name(environ)
 
-        span = self.tracer.create_span(
+        span = self.tracer.start_span(
             span_name, parent_span, kind=trace.SpanKind.SERVER
         )
-        span.start(start_timestamp)
 
         try:
             with self.tracer.use_span(span):

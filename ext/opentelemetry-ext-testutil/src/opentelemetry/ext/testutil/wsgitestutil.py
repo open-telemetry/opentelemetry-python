@@ -19,15 +19,14 @@ class WsgiTestBase(unittest.TestCase):
         )
         self.get_tracer_patcher.start()
 
-        self.create_span_patcher = mock.patch.object(
+        self.start_span_patcher = mock.patch.object(
             tracer,
-            "create_span",
+            "start_span",
             autospec=True,
             spec_set=True,
             return_value=self.span,
         )
-        self.create_span = self.create_span_patcher.start()
-
+        self.start_span = self.start_span_patcher.start()
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
 
@@ -40,12 +39,9 @@ class WsgiTestBase(unittest.TestCase):
 
     def tearDown(self):
         self.get_tracer_patcher.stop()
-        self.create_span_patcher.stop()
+        self.start_span_patcher.stop()
 
     def start_response(self, status, response_headers, exc_info=None):
-        # The span should have started already
-        self.assertEqual(self.span.start.call_count, 1)
-
         self.status = status
         self.response_headers = response_headers
         self.exc_info = exc_info
