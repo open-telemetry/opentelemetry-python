@@ -17,9 +17,10 @@ The opentelemetry-ext-pymongo package allows tracing commands made by the
 pymongo library.
 """
 
+from pymongo import monitoring
+
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
-from pymongo import monitoring
 
 DATABASE_TYPE = "mongodb"
 COMMAND_ATTRIBUTES = ["filter", "sort", "skip", "limit", "pipeline"]
