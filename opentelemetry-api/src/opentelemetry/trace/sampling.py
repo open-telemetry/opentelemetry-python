@@ -36,7 +36,7 @@ class Decision:
     def __init__(
         self,
         sampled: bool = False,
-        attributes: Mapping[str, "AttributeValue"] = None,
+        attributes: Mapping[str, "AttributeValue"] = {},
     ) -> None:
         self.sampled = sampled  # type: bool
         if attributes is None:

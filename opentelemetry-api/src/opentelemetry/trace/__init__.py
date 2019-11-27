@@ -145,7 +145,7 @@ class SpanKind(enum.Enum):
 class Span:
     """A span represents a single operation within a trace."""
 
-    def end(self, end_time: int = None) -> None:
+    def end(self, end_time: int = 0) -> None:
         """Sets the current time as the span's end time.
 
         The span's end time is the wall time at which the operation finished.
@@ -174,7 +174,7 @@ class Span:
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: int = None,
+        timestamp: int = 0,
     ) -> None:
         """Adds an `Event`.
 
@@ -298,8 +298,8 @@ class SpanContext:
         self,
         trace_id: int,
         span_id: int,
-        trace_options: "TraceOptions" = None,
-        trace_state: "TraceState" = None,
+        trace_options: "TraceOptions" = DEFAULT_TRACE_OPTIONS,
+        trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
         if trace_options is None:
             trace_options = DEFAULT_TRACE_OPTIONS
