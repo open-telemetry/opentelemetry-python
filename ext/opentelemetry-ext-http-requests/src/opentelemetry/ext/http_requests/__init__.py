@@ -20,11 +20,10 @@ popular requests library.
 import functools
 from urllib.parse import urlparse
 
-from requests.sessions import Session
-
 from opentelemetry import propagators
 from opentelemetry.context import Context
 from opentelemetry.trace import SpanKind
+from requests.sessions import Session
 
 
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user

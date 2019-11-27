@@ -17,9 +17,8 @@ This module serves as an example to integrate with flask, using
 the requests library to perform downstream requests
 """
 import flask
-import requests
-
 import opentelemetry.ext.http_requests
+import requests
 from opentelemetry import propagators, trace
 from opentelemetry.ext.flask import instrument_app
 from opentelemetry.sdk.context.propagation.b3_format import B3Format

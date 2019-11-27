@@ -18,7 +18,6 @@ import os
 
 import flask
 import requests
-
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware

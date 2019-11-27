@@ -15,13 +15,12 @@
 import unittest
 from unittest import mock
 
-from flask import Flask
-from werkzeug.test import Client
-from werkzeug.wrappers import BaseResponse
-
 import opentelemetry.ext.flask as otel_flask
+from flask import Flask
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
+from werkzeug.test import Client
+from werkzeug.wrappers import BaseResponse
 
 
 class TestFlaskIntegration(WsgiTestBase):

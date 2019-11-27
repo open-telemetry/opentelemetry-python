@@ -19,13 +19,12 @@ import base64
 import logging
 import socket
 
-from thrift.protocol import TBinaryProtocol, TCompactProtocol
-from thrift.transport import THttpClient, TTransport
-
 import opentelemetry.trace as trace_api
 from opentelemetry.ext.jaeger.gen.agent import Agent as agent
 from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
+from thrift.protocol import TBinaryProtocol, TCompactProtocol
+from thrift.transport import THttpClient, TTransport
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831

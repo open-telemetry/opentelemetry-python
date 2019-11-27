@@ -16,10 +16,9 @@ import sys
 import unittest
 from unittest import mock
 
+import opentelemetry.ext.http_requests
 import requests
 import urllib3
-
-import opentelemetry.ext.http_requests
 from opentelemetry import trace
 
 
