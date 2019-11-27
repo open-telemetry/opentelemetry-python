@@ -80,9 +80,10 @@ Note:
 
 import logging
 
-import opentelemetry.trace as trace_api
 import opentracing
 from deprecated import deprecated
+
+import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 

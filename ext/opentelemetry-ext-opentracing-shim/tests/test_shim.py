@@ -15,8 +15,9 @@
 import time
 import unittest
 
-import opentelemetry.ext.opentracing_shim as opentracingshim
 import opentracing
+
+import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
 from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 from opentelemetry.ext.opentracing_shim import util
