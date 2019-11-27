@@ -7,20 +7,17 @@
 #  options string: py
 #
 
-import pprint
 import sys
-
-from thrift.protocol.TBinaryProtocol import TBinaryProtocol
-from thrift.transport import THttpClient, TSocket, TSSLSocket, TTransport
-
-from agent import Agent
-from agent.ttypes import *
-
+import pprint
 if sys.version_info[0] > 2:
     from urllib.parse import urlparse
 else:
     from urlparse import urlparse
+from thrift.transport import TTransport, TSocket, TSSLSocket, THttpClient
+from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 
+from agent import Agent
+from agent.ttypes import *
 
 if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('')

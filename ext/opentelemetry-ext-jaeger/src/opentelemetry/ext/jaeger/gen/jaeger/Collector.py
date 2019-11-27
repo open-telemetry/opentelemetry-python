@@ -6,21 +6,13 @@
 #  options string: py
 #
 
-import logging
-import sys
-
+from thrift.Thrift import TType, TMessageType, TFrozenDict, TException, TApplicationException
 from thrift.protocol.TProtocol import TProtocolException
-from thrift.Thrift import (
-    TApplicationException,
-    TException,
-    TFrozenDict,
-    TMessageType,
-    TProcessor,
-    TType,
-)
-from thrift.transport import TTransport
-
+import sys
+import logging
 from .ttypes import *
+from thrift.Thrift import TProcessor
+from thrift.transport import TTransport
 
 
 class Iface(object):
