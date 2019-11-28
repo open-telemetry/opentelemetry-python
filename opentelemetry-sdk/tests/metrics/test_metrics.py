@@ -72,7 +72,7 @@ class TestMeter(unittest.TestCase):
     def test_create_metric(self):
         meter = metrics.Meter()
         counter = meter.create_metric(
-            "name", "desc", "unit", int, metrics.Counter, meter, ()
+            "name", "desc", "unit", int, metrics.Counter, ()
         )
         self.assertTrue(isinstance(counter, metrics.Counter))
         self.assertEqual(counter.value_type, int)
@@ -81,7 +81,7 @@ class TestMeter(unittest.TestCase):
     def test_create_gauge(self):
         meter = metrics.Meter()
         gauge = meter.create_metric(
-            "name", "desc", "unit", float, metrics.Gauge, meter, ()
+            "name", "desc", "unit", float, metrics.Gauge, ()
         )
         self.assertTrue(isinstance(gauge, metrics.Gauge))
         self.assertEqual(gauge.value_type, float)
@@ -90,7 +90,7 @@ class TestMeter(unittest.TestCase):
     def test_create_measure(self):
         meter = metrics.Meter()
         measure = meter.create_metric(
-            "name", "desc", "unit", float, metrics.Measure, meter, ()
+            "name", "desc", "unit", float, metrics.Measure, ()
         )
         self.assertTrue(isinstance(measure, metrics.Measure))
         self.assertEqual(measure.value_type, float)
@@ -100,8 +100,8 @@ class TestMeter(unittest.TestCase):
         meter = metrics.Meter()
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
-        encoding = ",a=z,environment=staging"
-        self.assertEqual(label_set.encoded, encoding)
+        encoded = tuple(sorted(kvp.items()))
+        self.assertIs(meter.labels[encoded], label_set)
 
     def test_get_label_set_empty(self):
         meter = metrics.Meter()
@@ -114,7 +114,7 @@ class TestMeter(unittest.TestCase):
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
         label_set2 = meter.get_label_set(kvp)
-        self.assertEqual(label_set, label_set2)
+        self.assertIs(label_set, label_set2)
 
 
 class TestMetric(unittest.TestCase):
@@ -126,32 +126,13 @@ class TestMetric(unittest.TestCase):
             kvp = {"key": "value"}
             label_set = meter.get_label_set(kvp)
             handle = metric.get_handle(label_set)
-            self.assertEqual(metric.handles.get(label_set.encoded), handle)
-
-    def test_label_set_for(self):
-        meter = metrics.Meter()
-        metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
-        kvp = {"environment": "staging", "a": "z"}
-        label_set = meter.get_label_set(kvp)
-        # pylint: disable=protected-access
-        self.assertEqual(metric._label_set_for(label_set), label_set)
-
-    def test_label_set_for_different(self):
-        meter = metrics.Meter()
-        meter2 = metrics.Meter()
-        metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
-        kvp = {"environment": "staging", "a": "z"}
-        label_set = meter2.get_label_set(kvp)
-        # pylint: disable=protected-access
-        self.assertEqual(
-            metric._label_set_for(label_set), metrics.EMPTY_LABEL_SET
-        )
+            self.assertEqual(metric.handles.get(label_set), handle)
 
 
 class TestCounter(unittest.TestCase):
     def test_add(self):
         meter = metrics.Meter()
-        metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
+        metric = metrics.Counter("name", "desc", "unit", int, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)
@@ -163,7 +144,7 @@ class TestCounter(unittest.TestCase):
 class TestGauge(unittest.TestCase):
     def test_set(self):
         meter = metrics.Meter()
-        metric = metrics.Gauge("name", "desc", "unit", int, meter, ("key",))
+        metric = metrics.Gauge("name", "desc", "unit", int, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)
@@ -176,7 +157,7 @@ class TestGauge(unittest.TestCase):
 class TestMeasure(unittest.TestCase):
     def test_record(self):
         meter = metrics.Meter()
-        metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
+        metric = metrics.Measure("name", "desc", "unit", int, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)
