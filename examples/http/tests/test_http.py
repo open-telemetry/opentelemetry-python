@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import subprocess
+import sys
 import unittest
 from time import sleep
 
@@ -22,13 +23,15 @@ class TestHttpExample(unittest.TestCase):
     def setup_class(cls):
         dirpath = os.path.dirname(os.path.realpath(__file__))
         server_script = "{}/../server.py".format(dirpath)
-        cls.server = subprocess.Popen([server_script])
+        cls.server = subprocess.Popen([sys.executable, server_script])
         sleep(1)
 
     def test_http(self):
         dirpath = os.path.dirname(os.path.realpath(__file__))
         test_script = "{}/../tracer_client.py".format(dirpath)
-        output = subprocess.check_output(test_script).decode()
+        output = subprocess.check_output(
+            (sys.executable, test_script)
+        ).decode()
         self.assertIn('name="/"', output)
 
     @classmethod
