@@ -163,6 +163,8 @@ class Span:
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
+        # pylint: disable=no-self-use
+        return INVALID_SPAN_CONTEXT
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
@@ -204,6 +206,8 @@ class Span:
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
         """
+        # pylint: disable=no-self-use
+        return False
 
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
