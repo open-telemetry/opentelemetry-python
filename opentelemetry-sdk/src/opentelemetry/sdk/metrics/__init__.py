@@ -298,7 +298,7 @@ class Meter(metrics_api.Meter):
         # Use simple encoding for now until encoding API is implemented
         encoded = tuple(sorted(labels.items()))
         # If LabelSet exists for this meter in memory, use existing one
-        if not encoded in self.labels:
+        if encoded not in self.labels:
             self.labels[encoded] = LabelSet(labels=labels)
         return self.labels[encoded]
 
