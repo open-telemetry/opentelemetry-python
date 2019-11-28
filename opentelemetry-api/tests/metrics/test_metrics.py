@@ -20,7 +20,7 @@ from opentelemetry import metrics
 # pylint: disable=no-self-use
 class TestMeter(unittest.TestCase):
     def setUp(self):
-        self.meter = metrics.Meter()
+        self.meter = metrics.DefaultMeter()
 
     def test_record_batch(self):
         counter = metrics.Counter()

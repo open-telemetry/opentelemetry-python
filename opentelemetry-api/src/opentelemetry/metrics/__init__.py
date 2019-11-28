@@ -26,6 +26,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 
 """
+import abc
 from typing import Callable, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
@@ -164,7 +165,7 @@ MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 
 
 # pylint: disable=unused-argument
-class Meter:
+class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
 
     `Metric` s are used for recording pre-defined aggregation (gauge and
@@ -172,6 +173,7 @@ class Meter:
     for the exported metric are deferred.
     """
 
+    @abc.abstractmethod
     def record_batch(
         self,
         label_values: Sequence[str],
@@ -191,6 +193,7 @@ class Meter:
                 corresponding value to record for that metric.
         """
 
+    @abc.abstractmethod
     def create_metric(
         self,
         name: str,
@@ -222,6 +225,31 @@ class Meter:
         return DefaultMetric()
 
 
+class DefaultMeter(Meter):
+    """The default Meter used when no Meter implementation is available."""
+
+    def record_batch(
+        self,
+        label_values: Sequence[str],
+        record_tuples: Sequence[Tuple["Metric", ValueT]],
+    ) -> None:
+        pass
+
+    def create_metric(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        metric_type: Type[MetricT],
+        label_keys: Sequence[str] = None,
+        enabled: bool = True,
+        monotonic: bool = False,
+    ) -> "Metric":
+        # pylint: disable=no-self-use
+        return DefaultMetric()
+
+
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
@@ -240,7 +268,7 @@ def meter() -> Meter:
 
     if _METER is None:
         # pylint:disable=protected-access
-        _METER = loader._load_impl(Meter, _METER_FACTORY)
+        _METER = loader._load_impl(DefaultMeter, _METER_FACTORY)
         del _METER_FACTORY
 
     return _METER
