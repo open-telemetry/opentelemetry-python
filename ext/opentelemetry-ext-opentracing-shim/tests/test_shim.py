@@ -133,7 +133,7 @@ class TestShim(unittest.TestCase):
         with self.shim.start_active_span("TestSpan", start_time=now) as scope:
             result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
             # Tolerate inaccuracies of less than a microsecond.
-            # TODO: Put a link to an explanation in the docs.
+            # See Note: https://git.io/Je1IX
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
@@ -147,7 +147,7 @@ class TestShim(unittest.TestCase):
 
         end_time = util.time_seconds_from_ns(span.unwrap().end_time)
         # Tolerate inaccuracies of less than a microsecond.
-        # TODO: Put a link to an explanation in the docs.
+        # See Note: https://git.io/Je1IX
         # TODO: This seems to work consistently, but we should find out the
         # biggest possible loss of precision.
         self.assertAlmostEqual(end_time, now, places=6)
@@ -413,7 +413,7 @@ class TestShim(unittest.TestCase):
             )
             self.assertEqual(span.unwrap().events[1].attributes["foo"], "bar")
             # Tolerate inaccuracies of less than a microsecond.
-            # TODO: Put a link to an explanation in the docs.
+            # See Note: https://git.io/Je1IX
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
