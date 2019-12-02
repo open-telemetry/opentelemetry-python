@@ -59,6 +59,7 @@ implicit or explicit context propagation consistently throughout.
 .. versionadded:: 0.1.0
 """
 
+import abc
 import enum
 import types as python_types
 import typing
@@ -142,9 +143,10 @@ class SpanKind(enum.Enum):
     CONSUMER = 4
 
 
-class Span:
+class Span(abc.ABC):
     """A span represents a single operation within a trace."""
 
+    @abc.abstractmethod
     def end(self, end_time: int = None) -> None:
         """Sets the current time as the span's end time.
 
@@ -154,6 +156,7 @@ class Span:
         implementations are free to ignore or raise on further calls.
         """
 
+    @abc.abstractmethod
     def get_context(self) -> "SpanContext":
         """Gets the span's SpanContext.
 
@@ -164,12 +167,14 @@ class Span:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
 
+    @abc.abstractmethod
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
         """
 
+    @abc.abstractmethod
     def add_event(
         self,
         name: str,
@@ -183,12 +188,14 @@ class Span:
         timestamp if the `timestamp` argument is omitted.
         """
 
+    @abc.abstractmethod
     def add_lazy_event(self, event: Event) -> None:
         """Adds an `Event`.
 
         Adds an `Event` that has previously been created.
         """
 
+    @abc.abstractmethod
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
@@ -198,6 +205,7 @@ class Span:
         on the implementation.
         """
 
+    @abc.abstractmethod
     def is_recording_events(self) -> bool:
         """Returns whether this span will be recorded.
 
@@ -205,6 +213,7 @@ class Span:
         events with the add_event operation and attributes using set_attribute.
         """
 
+    @abc.abstractmethod
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status, which is OK.
@@ -348,6 +357,29 @@ class DefaultSpan(Span):
     def is_recording_events(self) -> bool:
         return False
 
+    def end(self, end_time: int = None) -> None:
+        pass
+
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+        pass
+
+    def add_event(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: int = None,
+    ) -> None:
+        pass
+
+    def add_lazy_event(self, event: Event) -> None:
+        pass
+
+    def update_name(self, name: str) -> None:
+        pass
+
+    def set_status(self, status: Status) -> None:
+        pass
+
 
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
@@ -369,7 +401,7 @@ class Tracer:
 
     # Constant used to represent the current span being used as a parent.
     # This is the default behavior when creating spans.
-    CURRENT_SPAN = Span()
+    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
     def get_current_span(self) -> "Span":
         """Gets the currently active span from the context.
