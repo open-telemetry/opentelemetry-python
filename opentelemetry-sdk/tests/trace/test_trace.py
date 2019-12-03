@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import shutil
+import subprocess
 import unittest
 from unittest import mock
 
@@ -26,6 +28,77 @@ class TestTracer(unittest.TestCase):
         tracer = trace.Tracer()
         self.assertIsInstance(tracer, trace_api.Tracer)
 
+    def test_shutdown(self):
+        tracer = trace.Tracer()
+
+        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
+        tracer.add_span_processor(mock_processor1)
+
+        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
+        tracer.add_span_processor(mock_processor2)
+
+        tracer.shutdown()
+
+        self.assertEqual(mock_processor1.shutdown.call_count, 1)
+        self.assertEqual(mock_processor2.shutdown.call_count, 1)
+
+        shutdown_python_code = """
+import atexit
+from unittest import mock
+
+from opentelemetry.sdk import trace
+
+mock_processor = mock.Mock(spec=trace.SpanProcessor)
+
+def print_shutdown_count():
+    print(mock_processor.shutdown.call_count)
+
+# atexit hooks are called in inverse order they are added, so do this before
+# creating the tracer
+atexit.register(print_shutdown_count)
+
+tracer = trace.Tracer({tracer_parameters})
+tracer.add_span_processor(mock_processor)
+
+{tracer_shutdown}
+"""
+
+        def run_general_code(shutdown_on_exit, explicit_shutdown):
+            tracer_parameters = ""
+            tracer_shutdown = ""
+
+            if not shutdown_on_exit:
+                tracer_parameters = "shutdown_on_exit=False"
+
+            if explicit_shutdown:
+                tracer_shutdown = "tracer.shutdown()"
+
+            return subprocess.check_output(
+                [
+                    # use shutil to avoid calling python outside the
+                    # virtualenv on windows.
+                    shutil.which("python"),
+                    "-c",
+                    shutdown_python_code.format(
+                        tracer_parameters=tracer_parameters,
+                        tracer_shutdown=tracer_shutdown,
+                    ),
+                ]
+            )
+
+        # test default shutdown_on_exit (True)
+        out = run_general_code(True, False)
+        self.assertTrue(out.startswith(b"1"))
+
+        # test that shutdown is called only once even if Tracer.shutdown is
+        # called explicitely
+        out = run_general_code(True, True)
+        self.assertTrue(out.startswith(b"1"))
+
+        # test shutdown_on_exit=False
+        out = run_general_code(False, False)
+        self.assertTrue(out.startswith(b"0"))
+
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):
@@ -33,9 +106,9 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates real spans via the default
         # sampler
-        root_span = tracer.create_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", parent=None)
         self.assertIsInstance(root_span, trace.Span)
-        child_span = tracer.create_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace.Span)
 
     def test_sampler_no_sampling(self):
@@ -44,22 +117,22 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
-        root_span = tracer.create_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", parent=None)
         self.assertIsInstance(root_span, trace_api.DefaultSpan)
-        child_span = tracer.create_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
 
 
 class TestSpanCreation(unittest.TestCase):
-    def test_create_span_invalid_spancontext(self):
+    def test_start_span_invalid_spancontext(self):
         """If an invalid span context is passed as the parent, the created
         span should use a new span id.
 
         Invalid span contexts should also not be added as a parent. This
         eliminates redundant error handling logic in exporters.
         """
-        tracer = trace.Tracer("test_create_span_invalid_spancontext")
-        new_span = tracer.create_span(
+        tracer = trace.Tracer("test_start_span_invalid_spancontext")
+        new_span = tracer.start_span(
             "root", parent=trace_api.INVALID_SPAN_CONTEXT
         )
         self.assertTrue(new_span.context.is_valid())
@@ -248,6 +321,46 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
 
+        attributes = {
+            "attr-key": "val",
+            "attr-key2": "val2",
+            "attr-in-both": "span-attr",
+        }
+        with self.tracer.start_as_current_span(
+            "root2", attributes=attributes
+        ) as root:
+            self.assertEqual(len(root.attributes), 3)
+            self.assertEqual(root.attributes["attr-key"], "val")
+            self.assertEqual(root.attributes["attr-key2"], "val2")
+            self.assertEqual(root.attributes["attr-in-both"], "span-attr")
+
+        decision_attributes = {
+            "sampler-attr": "sample-val",
+            "attr-in-both": "decision-attr",
+        }
+        self.tracer.sampler = sampling.StaticSampler(
+            sampling.Decision(sampled=True, attributes=decision_attributes)
+        )
+
+        with self.tracer.start_as_current_span("root2") as root:
+            self.assertEqual(len(root.attributes), 2)
+            self.assertEqual(root.attributes["sampler-attr"], "sample-val")
+            self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
+
+        attributes = {
+            "attr-key": "val",
+            "attr-key2": "val2",
+            "attr-in-both": "span-attr",
+        }
+        with self.tracer.start_as_current_span(
+            "root2", attributes=attributes
+        ) as root:
+            self.assertEqual(len(root.attributes), 4)
+            self.assertEqual(root.attributes["attr-key"], "val")
+            self.assertEqual(root.attributes["attr-key2"], "val2")
+            self.assertEqual(root.attributes["sampler-attr"], "sample-val")
+            self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
+
     def test_events(self):
         self.assertIsNone(self.tracer.get_current_span())
 
@@ -297,13 +410,12 @@ class TestSpan(unittest.TestCase):
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
         )
-
-        with self.tracer.start_as_current_span("root") as root:
-            root.add_link(other_context1)
-            root.add_link(other_context2, {"name": "neighbor"})
-            root.add_lazy_link(
-                trace_api.Link(other_context3, {"component": "http"})
-            )
+        links = [
+            trace_api.Link(other_context1),
+            trace_api.Link(other_context2, {"name": "neighbor"}),
+            trace_api.Link(other_context3, {"component": "http"}),
+        ]
+        with self.tracer.start_as_current_span("root", links=links) as root:
 
             self.assertEqual(len(root.links), 3)
             self.assertEqual(
@@ -374,11 +486,6 @@ class TestSpan(unittest.TestCase):
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
 
-        other_context1 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
-        )
-
         with self.tracer.start_as_current_span("root") as root:
             # everything should be empty at the beginning
             self.assertEqual(len(root.attributes), 0)
@@ -399,9 +506,6 @@ class TestSpan(unittest.TestCase):
 
             root.add_event("event1")
             self.assertEqual(len(root.events), 0)
-
-            root.add_link(other_context1)
-            self.assertEqual(len(root.links), 0)
 
             root.update_name("xxx")
             self.assertEqual(root.name, "root")

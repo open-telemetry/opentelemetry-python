@@ -30,10 +30,10 @@ context. New spans are "attached" to the context in that they are
 created as children of the currently active span, and the newly-created span
 can optionally become the new active span::
 
-    from opentelemetry.trace import tracer
+    from opentelemetry import trace
 
     # Create a new root span, set it as the current span in context
-    with tracer.start_as_current_span("parent"):
+    with trace.tracer().start_as_current_span("parent"):
         # Attach a new child and update the current span
         with tracer.start_as_current_span("child"):
             do_work():
@@ -43,17 +43,15 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    from opentelemetry.api.trace import tracer
+    from opentelemetry import trace
 
     # Explicit parent span assignment
-    span = tracer.create_span("child", parent=parent) as child:
+    child = trace.tracer().start_span("child", parent=parent)
 
-    # The caller is responsible for starting and ending the span
-    span.start()
     try:
         do_work(span=child)
     finally:
-        span.end()
+        child.end()
 
 Applications should generally use a single global tracer, and use either
 implicit or explicit context propagation consistently throughout.
@@ -80,7 +78,10 @@ class Link:
         self, context: "SpanContext", attributes: types.Attributes = None
     ) -> None:
         self._context = context
-        self._attributes = attributes
+        if attributes is None:
+            self._attributes = {}  # type: types.Attributes
+        else:
+            self._attributes = attributes
 
     @property
     def context(self) -> "SpanContext":
@@ -135,7 +136,7 @@ class SpanKind(enum.Enum):
     #: path latency relationship between producer and consumer spans.
     PRODUCER = 3
 
-    #: Indicates that the span describes consumer receiving a message from a
+    #: Indicates that the span describes a consumer receiving a message from a
     #: broker. Unlike client and server, there is usually no direct critical
     #: path latency relationship between producer and consumer spans.
     CONSUMER = 4
@@ -143,16 +144,6 @@ class SpanKind(enum.Enum):
 
 class Span:
     """A span represents a single operation within a trace."""
-
-    def start(self, start_time: typing.Optional[int] = None) -> None:
-        """Sets the current time as the span's start time.
-
-        Each span represents a single operation. The span's start time is the
-        wall time at which the operation started.
-
-        Only the first call to `start` should modify the span, and
-        implementations are free to ignore or raise on further calls.
-        """
 
     def end(self, end_time: int = None) -> None:
         """Sets the current time as the span's end time.
@@ -198,28 +189,10 @@ class Span:
         Adds an `Event` that has previously been created.
         """
 
-    def add_link(
-        self,
-        link_target_context: "SpanContext",
-        attributes: types.Attributes = None,
-    ) -> None:
-        """Adds a `Link` to another span.
-
-        Adds a single `Link` from this Span to another Span identified by the
-        `SpanContext` passed as argument.
-        """
-
-    def add_lazy_link(self, link: "Link") -> None:
-        """Adds a `Link` to another span.
-
-        Adds a `Link` that has previously been created.
-        """
-
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
-        This will override the name provided via :func:`Tracer.create_span`
-        or :func:`Tracer.start_span`.
+        This will override the name provided via :func:`Tracer.start_span`.
 
         Upon this update, any sampling behavior based on Span name will depend
         on the implementation.
@@ -285,7 +258,7 @@ class TraceState(typing.Dict[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
-    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+    Implementations should conform to the `W3C Trace Context - Tracestate`_
     spec, which describes additional restrictions on valid field values.
 
     .. _W3C Trace Context - Tracestate:
@@ -416,6 +389,9 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
     ) -> "Span":
         """Starts a span.
 
@@ -444,6 +420,9 @@ class Tracer:
             parent: The span's parent. Defaults to the current span.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
+            attributes: The span's attributes.
+            links: Links span to other spans
+            start_time: Sets the start time of a span
 
         Returns:
             The newly-created span.
@@ -457,6 +436,8 @@ class Tracer:
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -492,6 +473,8 @@ class Tracer:
             parent: The span's parent. Defaults to the current span.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
+            attributes: The span's attributes.
+            links: Links span to other spans
 
         Yields:
             The newly-created span.
@@ -499,47 +482,6 @@ class Tracer:
 
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
-
-    def create_span(
-        self,
-        name: str,
-        parent: ParentSpan = CURRENT_SPAN,
-        kind: SpanKind = SpanKind.INTERNAL,
-    ) -> "Span":
-        """Creates a span.
-
-        Creating the span does not start it, and should not affect the tracer's
-        context. To start the span and update the tracer's context to make it
-        the currently active span, see :meth:`use_span`.
-
-        By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a Span or a SpanContext.
-        If the specified value is `None`, the created span will be a root
-        span.
-
-        Applications that need to create spans detached from the tracer's
-        context should use this method.
-
-            with tracer.start_as_current_span(name) as span:
-                do_work()
-
-        This is equivalent to::
-
-            span = tracer.create_span(name)
-            with tracer.use_span(span):
-                do_work()
-
-        Args:
-            name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
-            kind: The span's kind (relationship to parent). Note that is
-                meaningful even if there is no parent.
-
-        Returns:
-            The newly-created span.
-        """
-        # pylint: disable=unused-argument,no-self-use
-        return INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(
