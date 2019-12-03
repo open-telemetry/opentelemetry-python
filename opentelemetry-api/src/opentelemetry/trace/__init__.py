@@ -533,7 +533,7 @@ class Tracer(abc.ABC):
 
 
 class DefaultTracer(Tracer):
-    """The default Tracer that is used when no Tracer implementation is available.
+    """The default Tracer, used when no Tracer implementation is available.
 
     All operations are no-op.
     """
