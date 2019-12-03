@@ -27,7 +27,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 import abc
-from typing import Callable, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
 
@@ -68,6 +68,25 @@ class MeasureHandle:
         """
 
 
+class LabelSet(abc.ABC):
+    """A canonicalized set of labels useful for preaggregation
+
+    Re-usable LabelSet objects provide a potential optimization for scenarios
+    where handles might not be effective. For example, if the LabelSet will be
+    re-used but only used once per metrics, handles do not offer any
+    optimization. It may best to pre-compute a canonicalized LabelSet once and
+    re-use it with the direct calling convention. LabelSets are immutable and
+    should be opaque in implementation.
+    """
+
+
+class DefaultLabelSet(LabelSet):
+    """The default LabelSet.
+
+    Used when no LabelSet implementation is available.
+    """
+
+
 class Metric:
     """Base class for various types of metrics.
 
@@ -75,7 +94,7 @@ class Metric:
     handle that the metric holds.
     """
 
-    def get_handle(self, label_values: Sequence[str]) -> "object":
+    def get_handle(self, label_set: LabelSet) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -86,18 +105,18 @@ class Metric:
         a value was not provided are permitted.
 
         Args:
-            label_values: Values to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def get_handle(self, label_values: Sequence[str]) -> "DefaultMetricHandle":
+    def get_handle(self, label_set: LabelSet) -> "DefaultMetricHandle":
         """Gets a `DefaultMetricHandle`.
 
         Args:
-            label_values: The label values associated with the handle.
+            label_set: `LabelSet` to associate with the returned handle.
         """
         return DefaultMetricHandle()
 
@@ -105,15 +124,15 @@ class DefaultMetric(Metric):
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def get_handle(self, label_values: Sequence[str]) -> "CounterHandle":
+    def get_handle(self, label_set: LabelSet) -> "CounterHandle":
         """Gets a `CounterHandle`."""
         return CounterHandle()
 
-    def add(self, label_values: Sequence[str], value: ValueT) -> None:
+    def add(self, label_set: LabelSet, value: ValueT) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
-            label_values: The label values associated with the metric.
+            label_set: `LabelSet` to associate with the returned handle.
             value: The value to add to the counter metric.
         """
 
@@ -127,15 +146,15 @@ class Gauge(Metric):
     the measurement interval is arbitrary.
     """
 
-    def get_handle(self, label_values: Sequence[str]) -> "GaugeHandle":
+    def get_handle(self, label_set: LabelSet) -> "GaugeHandle":
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
 
-    def set(self, label_values: Sequence[str], value: ValueT) -> None:
+    def set(self, label_set: LabelSet, value: ValueT) -> None:
         """Sets the value of the gauge to ``value``.
 
         Args:
-            label_values: The label values associated with the metric.
+            label_set: `LabelSet` to associate with the returned handle.
             value: The value to set the gauge metric to.
         """
 
@@ -148,15 +167,15 @@ class Measure(Metric):
     Negative inputs will be discarded when monotonic is True.
     """
 
-    def get_handle(self, label_values: Sequence[str]) -> "MeasureHandle":
+    def get_handle(self, label_set: LabelSet) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
-    def record(self, label_values: Sequence[str], value: ValueT) -> None:
+    def record(self, label_set: LabelSet, value: ValueT) -> None:
         """Records the ``value`` to the measure.
 
         Args:
-            label_values: The label values associated with the metric.
+            label_set: `LabelSet` to associate with the returned handle.
             value: The value to record to this measure metric.
         """
 
@@ -176,7 +195,7 @@ class Meter(abc.ABC):
     @abc.abstractmethod
     def record_batch(
         self,
-        label_values: Sequence[str],
+        label_set: LabelSet,
         record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
@@ -186,7 +205,7 @@ class Meter(abc.ABC):
         match the key-value pairs in the label tuples.
 
         Args:
-            label_values: The label values associated with all measurements in
+            label_set: The `LabelSet` associated with all measurements in
                 the batch. A measurement is a tuple, representing the `Metric`
                 being recorded and the corresponding value to record.
             record_tuples: A sequence of pairs of `Metric` s and the
@@ -214,8 +233,6 @@ class Meter(abc.ABC):
             value_type: The type of values being recorded by the metric.
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
-                Order of the sequence is important as the same order must be
-                used on recording when suppling values for these labels.
             enabled: Whether to report the metric by default.
             monotonic: Whether to only allow non-negative values.
 
@@ -223,6 +240,17 @@ class Meter(abc.ABC):
         """
         # pylint: disable=no-self-use
         return DefaultMetric()
+
+    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
+        """Gets a `LabelSet` with the given labels.
+
+        Args:
+            labels: A dictionary representing label key to label value pairs.
+
+        Returns: A `LabelSet` object canonicalized using the given input.
+        """
+        # pylint: disable=no-self-use
+        return DefaultLabelSet()
 
 
 class DefaultMeter(Meter):
