@@ -24,7 +24,7 @@ from opentelemetry.util import loader
 DUMMY_TRACER = None
 
 
-class DummyTracer(trace.Tracer):
+class DummyTracer(trace.DefaultTracer):
     pass
 
 
@@ -49,7 +49,7 @@ class TestLoader(unittest.TestCase):
 
     def test_get_default(self):
         tracer = trace.tracer()
-        self.assertIs(type(tracer), trace.Tracer)
+        self.assertIs(type(tracer), trace.DefaultTracer)
 
     def test_preferred_impl(self):
         trace.set_preferred_tracer_implementation(

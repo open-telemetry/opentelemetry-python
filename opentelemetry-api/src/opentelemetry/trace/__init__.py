@@ -392,7 +392,7 @@ INVALID_SPAN_CONTEXT = SpanContext(
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
-class Tracer:
+class Tracer(abc.ABC):
     """Handles span creation and in-process context propagation.
 
     This class provides methods for manipulating the context, creating spans,
@@ -403,6 +403,7 @@ class Tracer:
     # This is the default behavior when creating spans.
     CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
+    @abc.abstractmethod
     def get_current_span(self) -> "Span":
         """Gets the currently active span from the context.
 
@@ -413,9 +414,8 @@ class Tracer:
             The currently active :class:`.Span`, or a placeholder span with an
             invalid :class:`.SpanContext`.
         """
-        # pylint: disable=no-self-use
-        return INVALID_SPAN
 
+    @abc.abstractmethod
     def start_span(
         self,
         name: str,
@@ -459,10 +459,9 @@ class Tracer:
         Returns:
             The newly-created span.
         """
-        # pylint: disable=unused-argument,no-self-use
-        return INVALID_SPAN
 
     @contextmanager  # type: ignore
+    @abc.abstractmethod
     def start_as_current_span(
         self,
         name: str,
@@ -512,10 +511,8 @@ class Tracer:
             The newly-created span.
         """
 
-        # pylint: disable=unused-argument,no-self-use
-        yield INVALID_SPAN
-
     @contextmanager  # type: ignore
+    @abc.abstractmethod
     def use_span(
         self, span: "Span", end_on_exit: bool = False
     ) -> typing.Iterator[None]:
@@ -533,6 +530,50 @@ class Tracer:
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
         """
+
+
+class DefaultTracer(Tracer):
+    """The default Tracer that is used when no Tracer implementation is available.
+
+    All operations are no-op.
+    """
+
+    # Constant used to represent the current span being used as a parent.
+    # This is the default behavior when creating spans.
+    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
+
+    def get_current_span(self) -> "Span":
+        # pylint: disable=no-self-use
+        return INVALID_SPAN
+
+    def start_span(
+        self,
+        name: str,
+        parent: ParentSpan = CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
+    ) -> "Span":
+        # pylint: disable=unused-argument,no-self-use
+        return INVALID_SPAN
+
+    @contextmanager  # type: ignore
+    def start_as_current_span(
+        self,
+        name: str,
+        parent: ParentSpan = CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
+    ) -> typing.Iterator["Span"]:
+        # pylint: disable=unused-argument,no-self-use
+        yield INVALID_SPAN
+
+    @contextmanager  # type: ignore
+    def use_span(
+        self, span: "Span", end_on_exit: bool = False
+    ) -> typing.Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield
 
@@ -557,7 +598,12 @@ def tracer() -> Tracer:
 
     if _TRACER is None:
         # pylint:disable=protected-access
-        _TRACER = loader._load_impl(Tracer, _TRACER_FACTORY)
+        try:
+            _TRACER = loader._load_impl(Tracer, _TRACER_FACTORY)  # type: ignore
+        except TypeError:
+            # if we raised an excaption trying to instantiate an
+            # abstract class, default to no-op tracer impl
+            _TRACER = DefaultTracer()
         del _TRACER_FACTORY
 
     return _TRACER

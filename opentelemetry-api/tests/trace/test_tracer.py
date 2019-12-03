@@ -19,7 +19,7 @@ from opentelemetry import trace
 
 class TestTracer(unittest.TestCase):
     def setUp(self):
-        self.tracer = trace.Tracer()
+        self.tracer = trace.DefaultTracer()
 
     def test_get_current_span(self):
         span = self.tracer.get_current_span()
