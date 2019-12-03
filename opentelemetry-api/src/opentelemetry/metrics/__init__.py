@@ -258,7 +258,7 @@ class DefaultMeter(Meter):
 
     def record_batch(
         self,
-        label_values: Sequence[str],
+        label_set: LabelSet,
         record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         pass
