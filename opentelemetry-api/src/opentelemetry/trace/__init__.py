@@ -538,10 +538,6 @@ class DefaultTracer(Tracer):
     All operations are no-op.
     """
 
-    # Constant used to represent the current span being used as a parent.
-    # This is the default behavior when creating spans.
-    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
-
     def get_current_span(self) -> "Span":
         # pylint: disable=no-self-use
         return INVALID_SPAN
@@ -549,7 +545,7 @@ class DefaultTracer(Tracer):
     def start_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
@@ -562,7 +558,7 @@ class DefaultTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
