@@ -15,7 +15,13 @@ import sys
 
 sys.path[:0] = [
     os.path.abspath("../opentelemetry-api/src/"),
+    os.path.abspath("../opentelemetry-sdk/src/"),
+    os.path.abspath("../ext/opentelemetry-ext-flask/src/"),
+    os.path.abspath("../ext/opentelemetry-ext-http-requests/src/"),
+    os.path.abspath("../ext/opentelemetry-ext-jaeger/src/"),
     os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/"),
+    os.path.abspath("../ext/opentelemetry-ext-pymongo/src/"),
+    os.path.abspath("../ext/opentelemetry-ext-wsgi/src/"),
 ]
 
 

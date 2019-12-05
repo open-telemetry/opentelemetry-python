@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The OpenTelemetry SDK package is an implementation of the OpenTelemetry
+API
+"""
 from . import metrics, trace, util
 
 __all__ = ["metrics", "trace", "util"]
