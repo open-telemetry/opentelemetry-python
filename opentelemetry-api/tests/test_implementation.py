@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This test is in place to ensure the API is returning values that
-are valid. The same tests have been added to the SDK with
-different expected results. See issue for more details:
-https://github.com/open-telemetry/opentelemetry-python/issues/142
-"""
 import unittest
 
 from opentelemetry import metrics, trace
 
 
-class TestAppWithAPI(unittest.TestCase):
+class TestAPIOnlyImplementation(unittest.TestCase):
+    """
+    This test is in place to ensure the API is returning values that
+    are valid. The same tests have been added to the SDK with
+    different expected results. See issue for more details:
+    https://github.com/open-telemetry/opentelemetry-python/issues/142
+    """
+
     def test_tracer(self):
         tracer = trace.Tracer()
         with tracer.start_span("test") as span:
