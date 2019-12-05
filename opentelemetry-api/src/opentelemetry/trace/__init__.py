@@ -548,7 +548,7 @@ _TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
 def tracer_source() -> TracerSource:
-    """Gets the current global :class:`~.Tracer` object.
+     """Gets the current global :class:`~.TracerSource` object.
 
     If there isn't one set yet, a default will be loaded.
     """
