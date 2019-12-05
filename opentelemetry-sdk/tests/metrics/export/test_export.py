@@ -22,19 +22,22 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 class TestConsoleMetricsExporter(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_export(self):
+        meter = metrics.Meter()
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
             "available memory",
             "available memory",
             "bytes",
             int,
+            meter,
             ("environment",),
         )
-        label_values = ("staging",)
-        handle = metric.get_handle(label_values)
+        kvp = {"environment": "staging"}
+        label_set = meter.get_label_set(kvp)
+        handle = metric.get_handle(label_set)
         result = '{}(data="{}", label_values="{}", metric_data={})'.format(
-            ConsoleMetricsExporter.__name__, metric, label_values, handle
+            ConsoleMetricsExporter.__name__, metric, label_set, handle
         )
         with mock.patch("sys.stdout") as mock_stdout:
-            exporter.export([(metric, label_values)])
+            exporter.export([(metric, label_set)])
             mock_stdout.write.assert_any_call(result)
