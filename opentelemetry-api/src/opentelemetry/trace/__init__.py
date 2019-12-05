@@ -548,7 +548,7 @@ _TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
 def tracer_source() -> TracerSource:
-     """Gets the current global :class:`~.TracerSource` object.
+    """Gets the current global :class:`~.TracerSource` object.
 
     If there isn't one set yet, a default will be loaded.
     """
@@ -567,7 +567,7 @@ def tracer_source() -> TracerSource:
 def set_preferred_tracer_source_implementation(
     factory: ImplementationFactory,
 ) -> None:
-     """Set the factory to be used to create the tracer source.
+    """Set the factory to be used to create the tracer source.
 
     See :mod:`opentelemetry.util.loader` for details.
 

@@ -465,7 +465,9 @@ class Tracer(trace_api.Tracer):
 
 class TracerSource(trace_api.TracerSource):
     def __init__(
-        self, sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON, shutdown_on_exit: bool = True
+        self,
+        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        shutdown_on_exit: bool = True,
     ):
         # TODO: How should multiple TracerSources behave? Should they get their own contexts?
         # This could be done by adding `str(id(self))` to the slot name.
@@ -510,6 +512,3 @@ class TracerSource(trace_api.TracerSource):
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)
             self._atexit_handler = None
-
-
-tracer = Tracer()

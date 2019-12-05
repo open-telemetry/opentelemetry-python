@@ -34,15 +34,15 @@ class TestTracer(unittest.TestCase):
         self.assertIsInstance(tracer, trace_api.Tracer)
 
     def test_shutdown(self):
-        tracer = trace.Tracer()
+        tracer_source = trace.TracerSource()
 
         mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
-        tracer.add_span_processor(mock_processor1)
+        tracer_source.add_span_processor(mock_processor1)
 
         mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
-        tracer.add_span_processor(mock_processor2)
+        tracer_source.add_span_processor(mock_processor2)
 
-        tracer.shutdown()
+        tracer_source.shutdown()
 
         self.assertEqual(mock_processor1.shutdown.call_count, 1)
         self.assertEqual(mock_processor2.shutdown.call_count, 1)
@@ -62,8 +62,8 @@ def print_shutdown_count():
 # creating the tracer
 atexit.register(print_shutdown_count)
 
-tracer = trace.Tracer({tracer_parameters})
-tracer.add_span_processor(mock_processor)
+tracer_source = trace.TracerSource({tracer_parameters})
+tracer_source.add_span_processor(mock_processor)
 
 {tracer_shutdown}
 """
@@ -76,7 +76,7 @@ tracer.add_span_processor(mock_processor)
                 tracer_parameters = "shutdown_on_exit=False"
 
             if explicit_shutdown:
-                tracer_shutdown = "tracer.shutdown()"
+                tracer_shutdown = "tracer_source.shutdown()"
 
             return subprocess.check_output(
                 [
