@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This test is in place to ensure the SDK implementation of the API
+is returning values that are valid. The same tests have been added
+to the API with different expected results. See issue for more details:
+https://github.com/open-telemetry/opentelemetry-python/issues/142
+"""
 import unittest
 
 from opentelemetry.metrics import DefaultMetric
@@ -36,7 +42,7 @@ class TestAppWithSDK(unittest.TestCase):
             # pylint: disable=no-value-for-parameter
             span = trace.Span()
 
-        span = trace.Span("name", INVALID_SPAN_CONTEXT)
+        span = trace.Span("name", INVALISpanD_SPAN_CONTEXT)
         self.assertEqual(span.get_context(), INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording_events(), True)
 
