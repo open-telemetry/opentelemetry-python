@@ -27,6 +27,7 @@ class MySpanExporter(export.SpanExporter):
     def __init__(self, destination, max_export_batch_size=None):
         self.destination = destination
         self.max_export_batch_size = max_export_batch_size
+        self.is_shutdown = False
 
     def export(self, spans: trace.Span) -> export.SpanExportResult:
         if (
@@ -36,6 +37,9 @@ class MySpanExporter(export.SpanExporter):
             raise ValueError("Batch is too big")
         self.destination.extend(span.name for span in spans)
         return export.SpanExportResult.SUCCESS
+
+    def shutdown(self):
+        self.is_shutdown = True
 
 
 class TestSimpleExportSpanProcessor(unittest.TestCase):
@@ -55,6 +59,9 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
                     pass
 
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
+
+        span_processor.shutdown()
+        self.assertTrue(my_exporter.is_shutdown)
 
     def test_simple_span_processor_no_context(self):
         """Check that we process spans that are never made active.
@@ -103,6 +110,8 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         span_processor.shutdown()
         self.assertListEqual(span_names, spans_names_list)
+
+        self.assertTrue(my_exporter.is_shutdown)
 
     def test_batch_span_processor_lossless(self):
         """Test that no spans are lost when sending max_queue_size spans"""

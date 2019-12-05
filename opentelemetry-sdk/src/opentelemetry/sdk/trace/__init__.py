@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import atexit
 import logging
 import random
 import threading
@@ -338,6 +339,8 @@ class Tracer(trace_api.Tracer):
 
     Args:
         name: The name of the tracer.
+        shutdown_on_exit: Register an atexit hook to shut down the tracer when
+            the application exits.
     """
 
     def __init__(
@@ -462,13 +465,16 @@ class Tracer(trace_api.Tracer):
 
 class TracerSource(trace_api.TracerSource):
     def __init__(
-        self, sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        self, sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON, shutdown_on_exit: bool = True
     ):
         # TODO: How should multiple TracerSources behave? Should they get their own contexts?
         # This could be done by adding `str(id(self))` to the slot name.
         self._current_span_slot = Context.register_slot("current_span")
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
+        self._atexit_handler = None
+        if shutdown_on_exit:
+            self._atexit_handler = atexit.register(self.shutdown)
 
     def get_tracer(
         self,
@@ -497,3 +503,13 @@ class TracerSource(trace_api.TracerSource):
         # no lock here because MultiSpanProcessor.add_span_processor is
         # thread safe
         self._active_span_processor.add_span_processor(span_processor)
+
+    def shutdown(self):
+        """Shut down the span processors added to the tracer."""
+        self._active_span_processor.shutdown()
+        if self._atexit_handler is not None:
+            atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None
+
+
+tracer = Tracer()
