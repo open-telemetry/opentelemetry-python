@@ -567,14 +567,14 @@ def tracer_source() -> TracerSource:
 def set_preferred_tracer_source_implementation(
     factory: ImplementationFactory,
 ) -> None:
-    """Set the factory to be used to create the tracer.
+     """Set the factory to be used to create the tracer source.
 
     See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 
     Args:
-        factory: Callback that should create a new :class:`Tracer` instance.
+         factory: Callback that should create a new :class:`TracerSource` instance.
     """
     global _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
 
