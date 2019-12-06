@@ -41,7 +41,8 @@ def parse_args(args=None):
     )
     parser.set_defaults(parser=parser)
     parser.add_argument("--dry-run", action="store_true")
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(metavar="command")
+    subparsers.required = True
 
     excparser = subparsers.add_parser(
         "exec", help="Run an executable for each or all distributions."
