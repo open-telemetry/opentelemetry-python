@@ -29,13 +29,15 @@ following example::
     import time
 
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import Tracer
+    from opentelemetry.sdk.trace import TracerSource
     from opentelemetry.ext.opentracing_shim import create_tracer
 
     # Tell OpenTelemetry which Tracer implementation to use.
-    trace.set_preferred_tracer_implementation(lambda T: Tracer())
+    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+
     # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.tracer()
+    otel_tracer = trace.tracer_source().get_tracer("myapp")
+
     # Create an OpenTracing shim.
     shim = create_tracer(otel_tracer)
 
