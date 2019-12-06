@@ -220,7 +220,7 @@ class Meter(abc.ABC):
         unit: str,
         value_type: Type[ValueT],
         metric_type: Type[MetricT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
     ) -> "Metric":
