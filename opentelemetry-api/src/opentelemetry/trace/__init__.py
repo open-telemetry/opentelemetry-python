@@ -369,23 +369,24 @@ class TracerSource:
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
-        For any two calls it is undefined whether the same or
-        different `Tracer` instances are returned, even for different library names.
+        For any two calls it is undefined whether the same or different
+        `Tracer` instances are returned, even for different library names.
 
-        This function may return different `Tracer` types (e.g. a no-op tracer vs.
-        a functional tracer).
+        This function may return different `Tracer` types (e.g. a no-op tracer
+        vs.  a functional tracer).
 
         Args:
             instrumenting_library_name: The name of the instrumenting library.
                 This should *not* be the name of the library that is
                 instrumented but the name of the instrumentation library.
-                E.g., instead of ``"requests"``, ``"opentelemetry-ext-http-requests"``.
+                E.g., instead of ``"requests"``,
+                ``"opentelemetry-ext-http-requests"``.
 
-                This should be the ``pip install``-able name of the library rather than the
-                module name (see also the next argument).
+                This should be the ``pip install``-able name of the library
+                rather than the module name (see also the next argument).
 
-            instrumenting_library_version: Optional. The version string of the instrumenting library.
-                Usually this should be the same as
+            instrumenting_library_version: Optional. The version string of the
+                instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
         """
         return Tracer()
@@ -574,7 +575,8 @@ def set_preferred_tracer_source_implementation(
     This function may not be called after a tracer is already loaded.
 
     Args:
-         factory: Callback that should create a new :class:`TracerSource` instance.
+        factory: Callback that should create a new :class:`TracerSource`
+            instance.
     """
     global _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
 

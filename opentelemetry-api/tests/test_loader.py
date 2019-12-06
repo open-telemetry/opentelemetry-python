@@ -43,8 +43,8 @@ class TestLoader(unittest.TestCase):
         reload(loader)
         reload(trace)
 
-        # Need to reload self, otherwise DummyTracerSource will have the wrong base
-        # class after reloading `trace`.
+        # Need to reload self, otherwise DummyTracerSource will have the wrong
+        # base class after reloading `trace`.
         reload(sys.modules[__name__])
 
     def test_get_default(self):
