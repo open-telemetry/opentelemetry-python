@@ -361,7 +361,7 @@ class DefaultSpan(Span):
     def is_recording_events(self) -> bool:
         return False
 
-    def end(self, end_time: int = None) -> None:
+    def end(self, end_time: typing.Optional[int] = None) -> None:
         pass
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -371,7 +371,7 @@ class DefaultSpan(Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: int = None,
+        timestamp: typing.Optional[int] = None,
     ) -> None:
         pass
 
