@@ -129,7 +129,7 @@ def parse_args(args=None):
         - `{rel}`: like `{}` but relative to the project root.
         - `{raw}`: the absolute path to the current target in native format
           (thus exactly the same as `{}` on Unix but with backslashes on Windows).
-        - `{rawrel}`: like `{rel}` but relative to the project root.
+        - `{rawrel}`: like `{raw}` but relative to the project root.
 
         The resulting string is then split according to POSIX shell rules
         (so you can use quotation marks or backslashes to handle arguments
