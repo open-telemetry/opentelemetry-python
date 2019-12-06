@@ -204,7 +204,7 @@ class Span(trace_api.Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: int = None,
+        timestamp: Optional[int] = None,
     ) -> None:
         self.add_lazy_event(
             trace_api.Event(
@@ -241,7 +241,7 @@ class Span(trace_api.Span):
             return
         self.span_processor.on_start(self)
 
-    def end(self, end_time: int = None) -> None:
+    def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
