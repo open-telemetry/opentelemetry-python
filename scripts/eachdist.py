@@ -7,6 +7,7 @@ import subprocess
 import sys
 from collections import namedtuple
 from configparser import ConfigParser
+from inspect import cleandoc
 from itertools import chain
 from pathlib import Path, PurePath
 
@@ -35,30 +36,161 @@ except AttributeError:  # Py < 3.5 compat
         return CompletedProcess(returncode=subprocess.call(*args, **kwargs))
 
 
-def parse_args(args=None):
-    parser = argparse.ArgumentParser(
-        description="Do something for each or all distributions in the repository."
+def extraargs_help(calledcmd):
+    return cleandoc(
+        """
+        Additional arguments to pass on to  {}.
+
+        This is collected from any trailing arguments passed to `%(prog)s`.
+        Use an initial `--` to separate them from regular arguments.
+        """.format(
+            calledcmd
+        )
     )
+
+
+def parse_args(args=None):
+    parser = argparse.ArgumentParser(description="Development helper script.")
     parser.set_defaults(parser=parser)
-    parser.add_argument("--dry-run", action="store_true")
-    subparsers = parser.add_subparsers(metavar="command")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Only display what would be done, don't actually do anything.",
+    )
+    subparsers = parser.add_subparsers(metavar="COMMAND")
     subparsers.required = True
 
     excparser = subparsers.add_parser(
-        "exec", help="Run an executable for each or all distributions."
+        "exec",
+        help="Run a command for each or all targets.",
+        formatter_class=argparse.RawTextHelpFormatter,
+        description=cleandoc(
+            """Run a command according to the `format` argument for each or all targets.
+
+        This is an advanced command that is used internally by other commands.
+
+        For example, to install all distributions in this repository
+        editable, you could use:
+
+            scripts/eachdist.py exec "python -m pip install -e {}"
+
+        This will run pip for all distributions which is quite slow. It gets
+        a bit faster if we only invoke pip once but with all the paths
+        gathered together, which can be achieved by using `--all`:
+
+            scripts/eachdist.py exec "python -m pip install {}" --all "-e {}"
+
+        The sortfirst option in the DEFAULT section of eachdist.ini makes
+        sure that dependencies are installed before their dependents.
+
+        Search for usages of `parse_subargs` in the source code of this script
+        to see more examples.
+
+        This command first collects target paths and then executes
+        commands according to `format` and `--all`.
+
+        Target paths are initially all Python distribution root paths
+        (as determined by the existence of setup.py, etc. files).
+        They are then augmented according to the section of the
+        `PROJECT_ROOT/eachdist.ini` config file specified by the `--mode` option.
+
+        The following config options are available (and processed in that order):
+
+        - `extraroots`: List of project root-relative glob expressions.
+          The resulting paths will be added.
+        - `sortfirst`: List of glob expressions.
+          Any matching paths will be put to the front of the path list,
+          in the same order they appear in this option. If more than one
+          glob matches, ordering is according to the first.
+        - `subglob`: List of glob expressions. Each path added so far is removed
+          and replaced with the result of all glob expressions relative to it (in
+          order of the glob expressions).
+
+        After all this, any duplicate paths are removed (the first occurrence remains).
+        """
+        ),
     )
     excparser.set_defaults(func=execute_args)
-    excparser.add_argument("format")
-    excparser.add_argument("--all", nargs="?", const=DEFAULT_ALLFMT)
-    excparser.add_argument("--allsep")
     excparser.add_argument(
-        "--allowexitcode", type=int, action="append", default=[0]
+        "format",
+        help=cleandoc(
+            """Format string for the command to execute.
+
+        The available replacements depend on whether `--all` is specified.
+        If `--all` was specified, there is only a single replacement,
+        `{}`, that is replaced with the string that is generated from
+        joining all targets formatted with `--all` to a single string
+        with the value of `--allsep` as separator.
+
+        If `--all` was not specified, the following replacements are available:
+
+        - `{}`: the absolute path to the current target in POSIX format
+          (with forward slashes)
+        - `{rel}`: like `{}` but relative to the project root.
+        - `{raw}`: the absolute path to the current target in native format
+          (thus exactly the same as `{}` on Unix but with backslashes on Windows).
+        - `{rawrel}`: like `{rel}` but relative to the project root.
+
+        The resulting string is then split according to POSIX shell rules
+        (so you can use quotation marks or backslashes to handle arguments
+        containing spaces).
+
+        The first token is the name of the executable to run, the remaining
+        tokens are the arguments.
+
+        Note that a shell is *not* involved by default.
+        You can add bash/sh/cmd/powershell yourself to the format if you want.
+
+        If `--all` was specified, the resulting command is simply executed once.
+        Otherwise, the command is executed for each found target. In both cases,
+        the project root is the working directory.
+        """
+        ),
+    )
+    excparser.add_argument(
+        "--all",
+        nargs="?",
+        const=DEFAULT_ALLFMT,
+        metavar="ALLFORMAT",
+        help=cleandoc(
+            """Instead of running the command for each target, join all target
+        paths together to run a single command.
+
+        This option optionally takes a format string to apply to each path. The
+        available replacements are the ones that would be available for `format`
+        if `--all` was not specified.
+
+        Default ALLFORMAT if this flag is specified: `%(const)s`.
+        """
+        ),
+    )
+    excparser.add_argument(
+        "--allsep",
+        help=cleandoc(
+            """Separator string for the strings resulting from `--all`.
+        Only valid if `--all` is specified.
+        """
+        ),
+    )
+    excparser.add_argument(
+        "--allowexitcode",
+        type=int,
+        action="append",
+        default=[0],
+        help=cleandoc(
+            """The given command exit code is treated as success and does not abort execution.
+        Can be specified multiple times.
+        """
+        ),
     )
     excparser.add_argument(
         "--mode",
         "-m",
         default="DEFAULT",
-        help="Section of config file to use for target selection configuration.",
+        help=cleandoc(
+            """Section of config file to use for target selection configuration.
+        See description of exec for available options."""
+        ),
     )
 
     instparser = subparsers.add_parser(
@@ -67,7 +199,9 @@ def parse_args(args=None):
 
     def setup_instparser(instparser):
         instparser.set_defaults(func=install_args)
-        instparser.add_argument("pipargs", nargs=argparse.REMAINDER)
+        instparser.add_argument(
+            "pipargs", nargs=argparse.REMAINDER, help=extraargs_help("pip")
+        )
 
     setup_instparser(instparser)
     instparser.add_argument("--editable", "-e", action="store_true")
@@ -94,7 +228,9 @@ def parse_args(args=None):
         help="Test everything (run pytest yourself for more complex operations).",
     )
     testparser.set_defaults(func=test_args)
-    testparser.add_argument("pytestargs", nargs=argparse.REMAINDER)
+    testparser.add_argument(
+        "pytestargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest")
+    )
 
     return parser.parse_args(args)
 
