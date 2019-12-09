@@ -28,7 +28,7 @@ class TestSDKImplementation(unittest.TestCase):
     """
 
     def test_tracer(self):
-        tracer = trace.Tracer()
+        tracer = trace.TracerSource().get_tracer("opentelemetery-sdk")
         with tracer.start_span("test") as span:
             self.assertNotEqual(span.get_context(), INVALID_SPAN_CONTEXT)
             self.assertNotEqual(span, INVALID_SPAN)
