@@ -11,19 +11,22 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
+from os import listdir
+from os.path import isdir, join
 import sys
 
 sys.path[:0] = [
     os.path.abspath("../opentelemetry-api/src/"),
     os.path.abspath("../opentelemetry-sdk/src/"),
-    os.path.abspath("../ext/opentelemetry-ext-flask/src/"),
-    os.path.abspath("../ext/opentelemetry-ext-http-requests/src/"),
-    os.path.abspath("../ext/opentelemetry-ext-jaeger/src/"),
-    os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/"),
-    os.path.abspath("../ext/opentelemetry-ext-pymongo/src/"),
-    os.path.abspath("../ext/opentelemetry-ext-wsgi/src/"),
 ]
 
+ext = "../ext"
+extdirs = [
+    os.path.abspath("/".join([f, "src"]))
+    for f in listdir(ext)
+    if isdir(join(ext, f))
+]
+sys.path[:0].append(extdirs)
 
 # -- Project information -----------------------------------------------------
 
@@ -70,7 +73,11 @@ nitpicky = True
 # Sphinx does not recognize generic type TypeVars
 # Container supposedly were fixed, but does not work
 # https://github.com/sphinx-doc/sphinx/pull/3744
-nitpick_ignore = [("py:class", "ValueT"), ("py:class", "typing.Tuple")]
+nitpick_ignore = [
+    ("py:class", "ValueT"),
+    ("py:class", "MetricT"),
+    ("py:class", "typing.Tuple"),
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
