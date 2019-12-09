@@ -24,7 +24,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
-from opentelemetry.trace import sampling
+from opentelemetry.trace import SpanContext, sampling
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
