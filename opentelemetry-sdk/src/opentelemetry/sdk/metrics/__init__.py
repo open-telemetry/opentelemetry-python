@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=redefined-outer-name
 class LabelSet(metrics_api.LabelSet):
-    """See `opentelemetry.metrics.LabelSet."""
+    """See `opentelemetry.metrics.LabelSet`."""
 
     def __init__(self, labels: Dict[str, str] = None):
         self.labels = labels
