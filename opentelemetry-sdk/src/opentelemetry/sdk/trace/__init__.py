@@ -35,36 +35,36 @@ MAX_NUM_LINKS = 32
 
 
 class SpanProcessor:
-    """Interface which allows hooks for SDK's `Span`s start and end method
+    """Interface which allows hooks for SDK's `Span` start and end method
     invocations.
 
     Span processors can be registered directly using
-    :func:`~Tracer:add_span_processor` and they are invoked in the same order
+    :func:`Tracer.add_span_processor` and they are invoked in the same order
     as they were registered.
     """
 
     def on_start(self, span: "Span") -> None:
-        """Called when a :class:`Span` is started.
+        """Called when a :class:`opentelemetry.trace.Span` is started.
 
         This method is called synchronously on the thread that starts the
         span, therefore it should not block or throw an exception.
 
         Args:
-            span: The :class:`Span` that just started.
+            span: The :class:`opentelemetry.trace.Span` that just started.
         """
 
     def on_end(self, span: "Span") -> None:
-        """Called when a :class:`Span` is ended.
+        """Called when a :class:`opentelemetry.trace.Span` is ended.
 
         This method is called synchronously on the thread that ends the
         span, therefore it should not block or throw an exception.
 
         Args:
-            span: The :class:`Span` that just ended.
+            span: The :class:`opentelemetry.trace.Span` that just ended.
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`Tracer` is shutdown."""
+        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
 
 
 class MultiSpanProcessor(SpanProcessor):
@@ -99,7 +99,8 @@ class MultiSpanProcessor(SpanProcessor):
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
-    Users should create `Span`s via the `Tracer` instead of this constructor.
+    Users should create `Span` objects via the `Tracer` instead of this
+    constructor.
 
     Args:
         name: The name of the operation this span represents
@@ -342,7 +343,7 @@ class Tracer(trace_api.Tracer):
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
-    ) -> "Span":
+    ) -> trace_api.Span:
         """See `opentelemetry.trace.Tracer.start_span`."""
 
         if parent is Tracer.CURRENT_SPAN:
