@@ -15,18 +15,18 @@ from os import listdir
 from os.path import isdir, join
 import sys
 
-sys.path[:0] = [
+source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
     os.path.abspath("../opentelemetry-sdk/src/"),
 ]
 
 ext = "../ext"
-extdirs = [
-    os.path.abspath("/".join([f, "src"]))
+ext_dirs = [
+    os.path.abspath("/".join(["../ext", f, "src"]))
     for f in listdir(ext)
     if isdir(join(ext, f))
 ]
-sys.path[:0].append(extdirs)
+sys.path[:0] = source_dirs + ext_dirs
 
 # -- Project information -----------------------------------------------------
 
