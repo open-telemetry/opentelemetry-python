@@ -36,10 +36,10 @@ When loading an implementation, the following algorithm is used to find a
 factory function or other means to create the global object:
 
     1. If the environment variable
-      :samp:`OPENTELEMETRY_PYTHON_IMPLEMENTATION_{getter-name}` (e.g.,
-      ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_TRACERSOURCE``) is set to an
-      nonempty value, an attempt is made to import a module with that name and
-      use a factory function named ``get_opentelemetry_implementation`` in it.
+       :samp:`OPENTELEMETRY_PYTHON_IMPLEMENTATION_{getter-name}` (e.g.,
+       ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_TRACERSOURCE``) is set to an
+       nonempty value, an attempt is made to import a module with that name and
+       use a factory function named ``get_opentelemetry_implementation`` in it.
     2. Otherwise, the same is tried with the environment variable
        ``OPENTELEMETRY_PYTHON_IMPLEMENTATION_DEFAULT``.
     3. Otherwise, if a :samp:`set_preferred_{<type>}_implementation` was

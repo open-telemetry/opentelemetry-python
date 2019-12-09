@@ -25,6 +25,10 @@ This module provides abstract (i.e. unimplemented) classes required for
 tracing, and a concrete no-op :class:`.DefaultSpan` that allows applications
 to use the API package alone without a supporting implementation.
 
+To get a tracer, you need to provide the package name from which you are
+calling the tracer APIs to OpenTelemetry by calling `TracerSource.get_tracer`
+with the name and version of your package.
+
 The tracer supports creating spans that are "attached" or "detached" from the
 context. New spans are "attached" to the context in that they are
 created as children of the currently active span, and the newly-created span
@@ -32,8 +36,10 @@ can optionally become the new active span::
 
     from opentelemetry import trace
 
+    tracer = trace.tracer_source().get_tracer("my-instrumentation-library")
+
     # Create a new root span, set it as the current span in context
-    with trace.tracer().start_as_current_span("parent"):
+    with tracer.start_as_current_span("parent"):
         # Attach a new child and update the current span
         with tracer.start_as_current_span("child"):
             do_work():
@@ -43,20 +49,21 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    from opentelemetry import trace
-
     # Explicit parent span assignment
-    child = trace.tracer().start_span("child", parent=parent)
+    child = tracer.start_span("child", parent=parent)
 
     try:
         do_work(span=child)
     finally:
         child.end()
 
-Applications should generally use a single global tracer, and use either
+Applications should generally use a single global tracer source, and use either
 implicit or explicit context propagation consistently throughout.
 
 .. versionadded:: 0.1.0
+.. versionchanged:: 0.3.0
+    `TracerSource` was introduced and the global ``tracer`` getter was replaced
+    by `tracer_source`.
 """
 
 import enum
