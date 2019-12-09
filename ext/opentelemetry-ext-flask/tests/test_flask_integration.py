@@ -57,6 +57,17 @@ class TestFlaskIntegration(WsgiTestBase):
             "hello_endpoint",
             trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
+            attributes={
+                "component": "http",
+                "http.method": "GET",
+                "http.server_name": "localhost",
+                "http.scheme": "http",
+                "host.port": 80,
+                "http.host": "localhost",
+                "http.target": "/hello/123",
+                "http.flavor": "1.1",
+                "http.route": "/hello/<int:helloid>",
+            },
             start_time=mock.ANY,
         )
 
@@ -64,15 +75,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.assertEqual(
             self.span_attrs,
-            {
-                "component": "http",
-                "http.method": "GET",
-                "http.host": "localhost",
-                "http.url": "http://localhost/hello/123",
-                "http.route": "/hello/<int:helloid>",
-                "http.status_code": 200,
-                "http.status_text": "OK",
-            },
+            {"http.status_code": 200, "http.status_text": "OK"},
         )
 
     def test_404(self):
@@ -84,6 +87,16 @@ class TestFlaskIntegration(WsgiTestBase):
             "/bye",
             trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
+            attributes={
+                "component": "http",
+                "http.method": "POST",
+                "http.server_name": "localhost",
+                "http.scheme": "http",
+                "host.port": 80,
+                "http.host": "localhost",
+                "http.target": "/bye",
+                "http.flavor": "1.1",
+            },
             start_time=mock.ANY,
         )
 
@@ -93,14 +106,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.assertEqual(
             self.span_attrs,
-            {
-                "component": "http",
-                "http.method": "POST",
-                "http.host": "localhost",
-                "http.url": "http://localhost/bye",
-                "http.status_code": 404,
-                "http.status_text": "NOT FOUND",
-            },
+            {"http.status_code": 404, "http.status_text": "NOT FOUND"},
         )
 
     def test_internal_error(self):
@@ -112,6 +118,17 @@ class TestFlaskIntegration(WsgiTestBase):
             "hello_endpoint",
             trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
+            attributes={
+                "component": "http",
+                "http.method": "GET",
+                "http.server_name": "localhost",
+                "http.scheme": "http",
+                "host.port": 80,
+                "http.host": "localhost",
+                "http.target": "/hello/500",
+                "http.flavor": "1.1",
+                "http.route": "/hello/<int:helloid>",
+            },
             start_time=mock.ANY,
         )
 
@@ -122,11 +139,6 @@ class TestFlaskIntegration(WsgiTestBase):
         self.assertEqual(
             self.span_attrs,
             {
-                "component": "http",
-                "http.method": "GET",
-                "http.host": "localhost",
-                "http.url": "http://localhost/hello/500",
-                "http.route": "/hello/<int:helloid>",
                 "http.status_code": 500,
                 "http.status_text": "INTERNAL SERVER ERROR",
             },
