@@ -134,7 +134,7 @@ class Span(trace_api.Span):
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
-        creator_info: "InstrumentationInfo" = None,
+        instrumentation_info: "InstrumentationInfo" = None,
     ) -> None:
 
         self.name = name
@@ -168,7 +168,7 @@ class Span(trace_api.Span):
 
         self.end_time = None  # type: Optional[int]
         self.start_time = None  # type: Optional[int]
-        self.creator_info = creator_info
+        self.instrumentation_info = instrumentation_info
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -435,7 +435,7 @@ class Tracer(trace_api.Tracer):
                 span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
                 kind=kind,
                 links=links,
-                creator_info=self.instrumentation_info,
+                instrumentation_info=self.instrumentation_info,
             )
             span.start(start_time=start_time)
         else:
