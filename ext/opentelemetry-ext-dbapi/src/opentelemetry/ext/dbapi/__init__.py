@@ -18,6 +18,7 @@ ibraries following Ptyhon Database API specification:
 https://www.python.org/dev/peps/pep-0249/
 """
 
+import logging
 import typing
 
 import wrapt
@@ -47,9 +48,12 @@ def trace_integration(
         db_integration = DatabaseApiIntegration(tracer, database_component)
         return db_integration.wrapped_connection(wrapped, args, kwargs)
 
-    wrapt.wrap_function_wrapper(
-        connect_module, connect_method_name, wrap_connect
-    )
+    try:
+        wrapt.wrap_function_wrapper(
+            connect_module, connect_method_name, wrap_connect
+        )
+    except Exception as ex:  # pylint: disable=broad-except
+        logging.warning("Failed to integrate with DB API. %s", str(ex))
 
 
 class DatabaseApiIntegration:
@@ -110,10 +114,7 @@ class DatabaseApiIntegration:
         database = self._connection_props.get("database", "")
         if database:
             name += "." + database
-        query = args[0] if args else ""
-        # Query with parameters
-        if len(args) > 1:
-            query += " params=" + str(args[1])
+        statement = args[0] if args else ""
 
         with self._tracer.start_as_current_span(
             name, kind=SpanKind.CLIENT
@@ -121,7 +122,7 @@ class DatabaseApiIntegration:
             span.set_attribute("component", self._database_component)
             span.set_attribute("db.type", self._database_type)
             span.set_attribute("db.instance", database)
-            span.set_attribute("db.statement", query)
+            span.set_attribute("db.statement", statement)
             span.set_attribute(
                 "db.user", self._connection_props.get("user", "")
             )
@@ -131,6 +132,9 @@ class DatabaseApiIntegration:
             port = self._connection_props.get("port")
             if port is not None:
                 span.set_attribute("peer.port", port)
+
+            if len(args) > 1:
+                span.set_attribute("db.statement.parameters", str(args[1]))
 
             try:
                 result = wrapped(*args, **kwargs)
