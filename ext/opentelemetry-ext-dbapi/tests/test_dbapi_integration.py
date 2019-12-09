@@ -63,10 +63,7 @@ class TestDBApiIntegration(unittest.TestCase):
         self.assertEqual(self.span.attributes["component"], "testcomponent")
         self.assertEqual(self.span.attributes["db.type"], "testtype")
         self.assertEqual(self.span.attributes["db.instance"], "testdatabase")
-        self.assertEqual(
-            self.span.attributes["db.statement"],
-            "Test query",
-        )
+        self.assertEqual(self.span.attributes["db.statement"], "Test query")
         self.assertEqual(
             self.span.attributes["db.statement.parameters"],
             "('param1Value', False)",
