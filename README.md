@@ -97,6 +97,14 @@ exporter.shutdown()
 
 See the [API documentation](https://open-telemetry.github.io/opentelemetry-python/) for more detail, and the [examples folder](./examples) for a more sample code.
 
+## Extensions
+
+### Third-party exporters
+
+OpenTelemetry supports integration with the following third-party exporters.
+
+-  [Azure Monitor](https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor)
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)

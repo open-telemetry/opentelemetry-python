@@ -30,10 +30,10 @@ context. New spans are "attached" to the context in that they are
 created as children of the currently active span, and the newly-created span
 can optionally become the new active span::
 
-    from opentelemetry.trace import tracer
+    from opentelemetry import trace
 
     # Create a new root span, set it as the current span in context
-    with tracer.start_as_current_span("parent"):
+    with trace.tracer().start_as_current_span("parent"):
         # Attach a new child and update the current span
         with tracer.start_as_current_span("child"):
             do_work():
@@ -43,17 +43,15 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    from opentelemetry.api.trace import tracer
+    from opentelemetry import trace
 
     # Explicit parent span assignment
-    span = tracer.create_span("child", parent=parent) as child:
+    child = trace.tracer().start_span("child", parent=parent)
 
-    # The caller is responsible for starting and ending the span
-    span.start()
     try:
         do_work(span=child)
     finally:
-        span.end()
+        child.end()
 
 Applications should generally use a single global tracer, and use either
 implicit or explicit context propagation consistently throughout.
@@ -147,17 +145,7 @@ class SpanKind(enum.Enum):
 class Span:
     """A span represents a single operation within a trace."""
 
-    def start(self, start_time: typing.Optional[int] = None) -> None:
-        """Sets the current time as the span's start time.
-
-        Each span represents a single operation. The span's start time is the
-        wall time at which the operation started.
-
-        Only the first call to `start` should modify the span, and
-        implementations are free to ignore or raise on further calls.
-        """
-
-    def end(self, end_time: int = None) -> None:
+    def end(self, end_time: typing.Optional[int] = None) -> None:
         """Sets the current time as the span's end time.
 
         The span's end time is the wall time at which the operation finished.
@@ -175,6 +163,8 @@ class Span:
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
+        # pylint: disable=no-self-use
+        return INVALID_SPAN_CONTEXT
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
@@ -186,7 +176,7 @@ class Span:
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: int = None,
+        timestamp: typing.Optional[int] = None,
     ) -> None:
         """Adds an `Event`.
 
@@ -204,8 +194,7 @@ class Span:
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
-        This will override the name provided via :func:`Tracer.create_span`
-        or :func:`Tracer.start_span`.
+        This will override the name provided via :func:`Tracer.start_span`.
 
         Upon this update, any sampling behavior based on Span name will depend
         on the implementation.
@@ -217,6 +206,8 @@ class Span:
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
         """
+        # pylint: disable=no-self-use
+        return False
 
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
@@ -311,8 +302,8 @@ class SpanContext:
         self,
         trace_id: int,
         span_id: int,
-        trace_options: "TraceOptions" = None,
-        trace_state: "TraceState" = None,
+        trace_options: "TraceOptions" = DEFAULT_TRACE_OPTIONS,
+        trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
         if trace_options is None:
             trace_options = DEFAULT_TRACE_OPTIONS
@@ -404,6 +395,7 @@ class Tracer:
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
     ) -> "Span":
         """Starts a span.
 
@@ -434,6 +426,7 @@ class Tracer:
                 meaningful even if there is no parent.
             attributes: The span's attributes.
             links: Links span to other spans
+            start_time: Sets the start time of a span
 
         Returns:
             The newly-created span.
@@ -493,51 +486,6 @@ class Tracer:
 
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
-
-    def create_span(
-        self,
-        name: str,
-        parent: ParentSpan = CURRENT_SPAN,
-        kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
-        links: typing.Sequence[Link] = (),
-    ) -> "Span":
-        """Creates a span.
-
-        Creating the span does not start it, and should not affect the tracer's
-        context. To start the span and update the tracer's context to make it
-        the currently active span, see :meth:`use_span`.
-
-        By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a Span or a SpanContext.
-        If the specified value is `None`, the created span will be a root
-        span.
-
-        Applications that need to create spans detached from the tracer's
-        context should use this method.
-
-            with tracer.start_as_current_span(name) as span:
-                do_work()
-
-        This is equivalent to::
-
-            span = tracer.create_span(name)
-            with tracer.use_span(span):
-                do_work()
-
-        Args:
-            name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
-            kind: The span's kind (relationship to parent). Note that is
-                meaningful even if there is no parent.
-            attributes: The span's attributes.
-            links: Links span to other spans
-
-        Returns:
-            The newly-created span.
-        """
-        # pylint: disable=unused-argument,no-self-use
-        return INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(
