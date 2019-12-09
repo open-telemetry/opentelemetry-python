@@ -357,8 +357,7 @@ class ScopeShim(opentracing.Scope):
         Args:
             manager: The :class:`ScopeManagerShim` that created this
                 :class:`ScopeShim`.
-            span_cm: An OpenTelemetry `opentelemetry.trace.Span` context
-            manager as returned by
+            span_cm: A context manager as returned by
                 :meth:`opentelemetry.trace.Tracer.use_span`.
         """
 

@@ -11,9 +11,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
+import sys
 from os import listdir
 from os.path import isdir, join
-import sys
 
 source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
@@ -77,6 +77,7 @@ nitpick_ignore = [
     ("py:class", "ValueT"),
     ("py:class", "MetricT"),
     ("py:class", "typing.Tuple"),
+    ("py:class", "pymongo.monitoring.CommandListener"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
