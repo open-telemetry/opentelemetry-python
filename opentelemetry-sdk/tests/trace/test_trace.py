@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import shutil
+import subprocess
 import unittest
 from unittest import mock
 
@@ -26,6 +28,77 @@ class TestTracer(unittest.TestCase):
         tracer = trace.Tracer()
         self.assertIsInstance(tracer, trace_api.Tracer)
 
+    def test_shutdown(self):
+        tracer = trace.Tracer()
+
+        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
+        tracer.add_span_processor(mock_processor1)
+
+        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
+        tracer.add_span_processor(mock_processor2)
+
+        tracer.shutdown()
+
+        self.assertEqual(mock_processor1.shutdown.call_count, 1)
+        self.assertEqual(mock_processor2.shutdown.call_count, 1)
+
+        shutdown_python_code = """
+import atexit
+from unittest import mock
+
+from opentelemetry.sdk import trace
+
+mock_processor = mock.Mock(spec=trace.SpanProcessor)
+
+def print_shutdown_count():
+    print(mock_processor.shutdown.call_count)
+
+# atexit hooks are called in inverse order they are added, so do this before
+# creating the tracer
+atexit.register(print_shutdown_count)
+
+tracer = trace.Tracer({tracer_parameters})
+tracer.add_span_processor(mock_processor)
+
+{tracer_shutdown}
+"""
+
+        def run_general_code(shutdown_on_exit, explicit_shutdown):
+            tracer_parameters = ""
+            tracer_shutdown = ""
+
+            if not shutdown_on_exit:
+                tracer_parameters = "shutdown_on_exit=False"
+
+            if explicit_shutdown:
+                tracer_shutdown = "tracer.shutdown()"
+
+            return subprocess.check_output(
+                [
+                    # use shutil to avoid calling python outside the
+                    # virtualenv on windows.
+                    shutil.which("python"),
+                    "-c",
+                    shutdown_python_code.format(
+                        tracer_parameters=tracer_parameters,
+                        tracer_shutdown=tracer_shutdown,
+                    ),
+                ]
+            )
+
+        # test default shutdown_on_exit (True)
+        out = run_general_code(True, False)
+        self.assertTrue(out.startswith(b"1"))
+
+        # test that shutdown is called only once even if Tracer.shutdown is
+        # called explicitely
+        out = run_general_code(True, True)
+        self.assertTrue(out.startswith(b"1"))
+
+        # test shutdown_on_exit=False
+        out = run_general_code(False, False)
+        self.assertTrue(out.startswith(b"0"))
+
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):
@@ -33,9 +106,9 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates real spans via the default
         # sampler
-        root_span = tracer.create_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", parent=None)
         self.assertIsInstance(root_span, trace.Span)
-        child_span = tracer.create_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace.Span)
 
     def test_sampler_no_sampling(self):
@@ -44,22 +117,22 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
-        root_span = tracer.create_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", parent=None)
         self.assertIsInstance(root_span, trace_api.DefaultSpan)
-        child_span = tracer.create_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
 
 
 class TestSpanCreation(unittest.TestCase):
-    def test_create_span_invalid_spancontext(self):
+    def test_start_span_invalid_spancontext(self):
         """If an invalid span context is passed as the parent, the created
         span should use a new span id.
 
         Invalid span contexts should also not be added as a parent. This
         eliminates redundant error handling logic in exporters.
         """
-        tracer = trace.Tracer("test_create_span_invalid_spancontext")
-        new_span = tracer.create_span(
+        tracer = trace.Tracer("test_start_span_invalid_spancontext")
+        new_span = tracer.start_span(
             "root", parent=trace_api.INVALID_SPAN_CONTEXT
         )
         self.assertTrue(new_span.context.is_valid())

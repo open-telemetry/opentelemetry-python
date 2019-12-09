@@ -51,4 +51,3 @@ tracer.add_span_processor(span_processor)
 # Spans and propagating context as appropriate.
 http_requests.enable(tracer)
 response = requests.get(url="http://127.0.0.1:5000/")
-span_processor.shutdown()
