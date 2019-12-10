@@ -45,3 +45,17 @@ class BaggageInjector:
         """ TODO """
         # pylint: disable=unused-argument
         return ctx
+
+
+class DefaultBaggageExtractor(BaggageExtractor):
+    """The default BaggageExtractor.
+
+    Used when no BaggageExtractor implementation is available.
+    """
+
+
+class DefaultBaggageInjector(BaggageInjector):
+    """The default BaggageInjector.
+
+    Used when no BaggageInjector implementation is available.
+    """
