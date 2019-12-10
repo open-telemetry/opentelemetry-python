@@ -99,22 +99,40 @@ class DatabaseApiIntegration:
         cursor = wrapped(*args, **kwargs)
         for func in QUERY_WRAP_METHODS:
             if getattr(cursor, func, None):
-                wrapt.wrap_function_wrapper(cursor, func, self.add_span)
+                wrapt.wrap_function_wrapper(
+                    cursor, func, self.wrapped_query_methods
+                )
         return cursor
 
     # pylint: disable=unused-argument
-    def add_span(
+    def wrapped_query_methods(
         self,
         wrapped: typing.Callable[..., any],
         instance: typing.Any,
         args: typing.Tuple[any, any],
         kwargs: typing.Dict[any, any],
     ):
+        statement = args[0] if args else ""
+        parameters = str(args[1]) if len(args) > 1 else None
+        span = self.create_span(self._connection_props, statement, parameters)
+        try:
+            result = wrapped(*args, **kwargs)
+            span.set_status(Status(StatusCanonicalCode.OK))
+            return result
+        except Exception as ex:  # pylint: disable=broad-except
+            span.set_status(Status(StatusCanonicalCode.UNKNOWN, str(ex)))
+            raise ex
+
+    def create_span(
+        self,
+        connection_properties: typing.Dict,
+        statement: str,
+        parameters: str,
+    ):
         name = self._database_component
-        database = self._connection_props.get("database", "")
+        database = connection_properties.get("database", "")
         if database:
             name += "." + database
-        statement = args[0] if args else ""
 
         with self._tracer.start_as_current_span(
             name, kind=SpanKind.CLIENT
@@ -124,22 +142,15 @@ class DatabaseApiIntegration:
             span.set_attribute("db.instance", database)
             span.set_attribute("db.statement", statement)
             span.set_attribute(
-                "db.user", self._connection_props.get("user", "")
+                "db.user", connection_properties.get("user", "")
             )
             span.set_attribute(
-                "peer.hostname", self._connection_props.get("host", "")
+                "peer.hostname", connection_properties.get("host", "")
             )
-            port = self._connection_props.get("port")
+            port = connection_properties.get("port")
             if port is not None:
                 span.set_attribute("peer.port", port)
 
-            if len(args) > 1:
-                span.set_attribute("db.statement.parameters", str(args[1]))
-
-            try:
-                result = wrapped(*args, **kwargs)
-                span.set_status(Status(StatusCanonicalCode.OK))
-                return result
-            except Exception as ex:  # pylint: disable=broad-except
-                span.set_status(Status(StatusCanonicalCode.UNKNOWN, str(ex)))
-                raise ex
+            if parameters:
+                span.set_attribute("db.statement.parameters", parameters)
+            return span
