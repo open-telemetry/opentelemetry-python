@@ -89,7 +89,7 @@ class CommandTracer(monitoring.CommandListener):
             self._remove_span(event)
 
     def failed(self, event: monitoring.CommandFailedEvent):
-        """ TODO """
+        """ Method to handle a pymongo CommandFailedEvent """
         span = self._get_span(event)
         if span is not None:
             span.set_attribute(
