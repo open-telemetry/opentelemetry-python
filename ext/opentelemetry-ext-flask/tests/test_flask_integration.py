@@ -15,11 +15,11 @@
 import unittest
 from unittest import mock
 
-from flask import Flask
+import flask
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
-import opentelemetry.ext.flask as otel_flask
+from opentelemetry.ext.flask import patch
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
 
@@ -36,7 +36,9 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.span.set_attribute = setspanattr
 
-        self.app = Flask(__name__)
+        patch()
+
+        self.app = flask.Flask(__name__)
 
         def hello_endpoint(helloid):
             if helloid == 500:
@@ -45,7 +47,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.app.route("/hello/<int:helloid>")(hello_endpoint)
 
-        otel_flask.instrument_app(self.app)
+        # otel_flask.instrument_app(self.app)
         self.client = Client(self.app, BaseResponse)
 
     def test_simple(self):

@@ -40,6 +40,11 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
+    entry_points={
+        "console_scripts": [
+            "auto_agent = opentelemetry.commands.auto_agent:run"
+        ]
+    },
     description="OpenTelemetry Python API",
     include_package_data=True,
     long_description=open("README.rst").read(),
