@@ -145,7 +145,7 @@ class SpanKind(enum.Enum):
 class Span:
     """A span represents a single operation within a trace."""
 
-    def end(self, end_time: int = None) -> None:
+    def end(self, end_time: typing.Optional[int] = None) -> None:
         """Sets the current time as the span's end time.
 
         The span's end time is the wall time at which the operation finished.
@@ -163,6 +163,8 @@ class Span:
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
+        # pylint: disable=no-self-use
+        return INVALID_SPAN_CONTEXT
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
@@ -174,7 +176,7 @@ class Span:
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: int = None,
+        timestamp: typing.Optional[int] = None,
     ) -> None:
         """Adds an `Event`.
 
@@ -204,6 +206,8 @@ class Span:
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
         """
+        # pylint: disable=no-self-use
+        return False
 
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
@@ -298,8 +302,8 @@ class SpanContext:
         self,
         trace_id: int,
         span_id: int,
-        trace_options: "TraceOptions" = None,
-        trace_state: "TraceState" = None,
+        trace_options: "TraceOptions" = DEFAULT_TRACE_OPTIONS,
+        trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
         if trace_options is None:
             trace_options = DEFAULT_TRACE_OPTIONS

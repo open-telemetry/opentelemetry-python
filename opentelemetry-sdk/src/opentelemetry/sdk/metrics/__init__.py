@@ -13,12 +13,21 @@
 # limitations under the License.
 
 import logging
-from typing import Sequence, Tuple, Type
+from collections import OrderedDict
+from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
+
+
+# pylint: disable=redefined-outer-name
+class LabelSet(metrics_api.LabelSet):
+    """See `opentelemetry.metrics.LabelSet."""
+
+    def __init__(self, labels: Dict[str, str] = None):
+        self.labels = labels
 
 
 class BaseHandle:
@@ -94,7 +103,7 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
     ):
@@ -107,14 +116,14 @@ class Metric(metrics_api.Metric):
         self.monotonic = monotonic
         self.handles = {}
 
-    def get_handle(self, label_values: Sequence[str]) -> BaseHandle:
+    def get_handle(self, label_set: LabelSet) -> BaseHandle:
         """See `opentelemetry.metrics.Metric.get_handle`."""
-        handle = self.handles.get(label_values)
+        handle = self.handles.get(label_set)
         if not handle:
             handle = self.HANDLE_TYPE(
                 self.value_type, self.enabled, self.monotonic
             )
-        self.handles[label_values] = handle
+        self.handles[label_set] = handle
         return handle
 
     def __repr__(self):
@@ -141,7 +150,7 @@ class Counter(Metric, metrics_api.Counter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = True,
     ):
@@ -155,11 +164,9 @@ class Counter(Metric, metrics_api.Counter):
             monotonic=monotonic,
         )
 
-    def add(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
+    def add(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
-        self.get_handle(label_values).add(value)
+        self.get_handle(label_set).add(value)
 
     UPDATE_FUNCTION = add
 
@@ -179,7 +186,7 @@ class Gauge(Metric, metrics_api.Gauge):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
     ):
@@ -193,11 +200,9 @@ class Gauge(Metric, metrics_api.Gauge):
             monotonic=monotonic,
         )
 
-    def set(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
+    def set(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.Gauge.set`."""
-        self.get_handle(label_values).set(value)
+        self.get_handle(label_set).set(value)
 
     UPDATE_FUNCTION = set
 
@@ -217,7 +222,7 @@ class Measure(Metric, metrics_api.Measure):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = False,
         monotonic: bool = False,
     ):
@@ -231,26 +236,31 @@ class Measure(Metric, metrics_api.Measure):
             monotonic=monotonic,
         )
 
-    def record(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
+    def record(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
-        self.get_handle(label_values).record(value)
+        self.get_handle(label_set).record(value)
 
     UPDATE_FUNCTION = record
+
+
+# Used when getting a LabelSet with no key/values
+EMPTY_LABEL_SET = LabelSet()
 
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`."""
 
+    def __init__(self):
+        self.labels = {}
+
     def record_batch(
         self,
-        label_values: Sequence[str],
+        label_set: LabelSet,
         record_tuples: Sequence[Tuple[metrics_api.Metric, metrics_api.ValueT]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         for metric, value in record_tuples:
-            metric.UPDATE_FUNCTION(label_values, value)
+            metric.UPDATE_FUNCTION(label_set, value)
 
     def create_metric(
         self,
@@ -259,7 +269,7 @@ class Meter(metrics_api.Meter):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         metric_type: Type[metrics_api.MetricT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
     ) -> metrics_api.MetricT:
@@ -274,6 +284,23 @@ class Meter(metrics_api.Meter):
             enabled=enabled,
             monotonic=monotonic,
         )
+
+    def get_label_set(self, labels: Dict[str, str]):
+        """See `opentelemetry.metrics.Meter.create_metric`.
+
+        This implementation encodes the labels to use as a map key.
+
+        Args:
+            labels: The dictionary of label keys to label values.
+        """
+        if len(labels) == 0:
+            return EMPTY_LABEL_SET
+        # Use simple encoding for now until encoding API is implemented
+        encoded = tuple(sorted(labels.items()))
+        # If LabelSet exists for this meter in memory, use existing one
+        if encoded not in self.labels:
+            self.labels[encoded] = LabelSet(labels=labels)
+        return self.labels[encoded]
 
 
 meter = Meter()

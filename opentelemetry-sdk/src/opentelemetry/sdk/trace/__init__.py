@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import atexit
 import logging
 import random
 import threading
@@ -203,7 +204,7 @@ class Span(trace_api.Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: int = None,
+        timestamp: Optional[int] = None,
     ) -> None:
         self.add_lazy_event(
             trace_api.Event(
@@ -240,7 +241,7 @@ class Span(trace_api.Span):
             return
         self.span_processor.on_start(self)
 
-    def end(self, end_time: int = None) -> None:
+    def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -296,12 +297,15 @@ class Tracer(trace_api.Tracer):
 
     Args:
         name: The name of the tracer.
+        shutdown_on_exit: Register an atexit hook to shut down the tracer when
+            the application exits.
     """
 
     def __init__(
         self,
         name: str = "",
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        shutdown_on_exit: bool = True,
     ) -> None:
         slot_name = "current_span"
         if name:
@@ -309,6 +313,9 @@ class Tracer(trace_api.Tracer):
         self._current_span_slot = Context.register_slot(slot_name)
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
+        self._atexit_handler = None
+        if shutdown_on_exit:
+            self._atexit_handler = atexit.register(self.shutdown)
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
@@ -425,6 +432,13 @@ class Tracer(trace_api.Tracer):
         # no lock here because MultiSpanProcessor.add_span_processor is
         # thread safe
         self._active_span_processor.add_span_processor(span_processor)
+
+    def shutdown(self):
+        """Shut down the span processors added to the tracer."""
+        self._active_span_processor.shutdown()
+        if self._atexit_handler is not None:
+            atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None
 
 
 tracer = Tracer()
