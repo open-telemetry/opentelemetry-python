@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,23 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
+from opentelemetry.ext.flask import FlaskPatcher
 
-import setuptools
+_FLASK_PATCHER = FlaskPatcher()
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "ext", "flask", "version.py"
-)
-PACKAGE_INFO = {}
-with open(VERSION_FILENAME) as f:
-    exec(f.read(), PACKAGE_INFO)
 
-setuptools.setup(
-    version=PACKAGE_INFO["__version__"],
-    entry_points={
-        "opentelemetry_auto_instrumentation_patcher": [
-            "flask = opentelemetry.ext.flask:FlaskPatcher"
-        ]
-    },
-)
+def pytest_sessionstart(session):  # pylint: disable=unused-argument
+    _FLASK_PATCHER.patch()
+
+
+def pytest_sessionfinish(session):  # pylint: disable=unused-argument
+    _FLASK_PATCHER.unpatch()

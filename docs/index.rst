@@ -61,7 +61,6 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
     getting-started
 
-
 .. toctree::
     :maxdepth: 1
     :caption: OpenTelemetry Python Packages
@@ -83,6 +82,9 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     :caption: Examples
     :name: examples
     :glob:
+    :caption: OpenTelemetry Auto Instrumentation:
+
+    opentelemetry.auto_instrumentation.patcher
 
     examples/**
 
