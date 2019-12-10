@@ -3,6 +3,7 @@ ignore =
   E501  # line too long, defer to black
   F401  # unused import, defer to pylint
   W503  # allow line breaks after binary ops, not after
+  E203  # allow whitespace before ':' (https://github.com/psf/black#slices) 
 exclude =
   .bzr
   .git
@@ -10,6 +11,8 @@ exclude =
   .svn
   .tox
   CVS
+  .venv*/
+  venv*/
   target
   __pycache__
   ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen/
