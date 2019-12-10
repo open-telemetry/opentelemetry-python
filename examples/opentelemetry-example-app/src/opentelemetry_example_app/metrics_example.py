@@ -30,17 +30,17 @@ counter = meter.create_metric(
     ("environment",),
 )
 
-label_values = ("staging",)
+label_set = meter.get_label_set({"environment": "staging"})
 
 # Direct metric usage
-counter.add(label_values, 25)
+counter.add(label_set, 25)
 
 # Handle usage
-counter_handle = counter.get_handle(label_values)
+counter_handle = counter.get_handle(label_set)
 counter_handle.add(100)
 
 # Record batch usage
-meter.record_batch(label_values, [(counter, 50)])
+meter.record_batch(label_set, [(counter, 50)])
 print(counter_handle.data)
 
 # TODO: exporters

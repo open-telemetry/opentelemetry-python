@@ -18,7 +18,8 @@ import unittest
 import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
-from opentelemetry import trace
+from opentelemetry import propagators, trace
+from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import Tracer
 
@@ -39,6 +40,17 @@ class TestShim(unittest.TestCase):
         """
 
         trace.set_preferred_tracer_implementation(lambda T: Tracer())
+
+        # Save current propagator to be restored on teardown.
+        cls._previous_propagator = propagators.get_global_httptextformat()
+
+        # Set mock propagator for testing.
+        propagators.set_global_httptextformat(MockHTTPTextFormat)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore previous propagator.
+        propagators.set_global_httptextformat(cls._previous_propagator)
 
     def test_shim_type(self):
         # Verify shim is an OpenTracing tracer.
@@ -120,8 +132,8 @@ class TestShim(unittest.TestCase):
         now = time.time()
         with self.shim.start_active_span("TestSpan", start_time=now) as scope:
             result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
-            # Tolerate inaccuracies of less than a microsecond.
-            # TODO: Put a link to an explanation in the docs.
+            # Tolerate inaccuracies of less than a microsecond. See Note:
+            # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.ext.opentracing_shim.html
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
@@ -134,8 +146,8 @@ class TestShim(unittest.TestCase):
         span.finish(now)
 
         end_time = util.time_seconds_from_ns(span.unwrap().end_time)
-        # Tolerate inaccuracies of less than a microsecond.
-        # TODO: Put a link to an explanation in the docs.
+        # Tolerate inaccuracies of less than a microsecond. See Note:
+        # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.ext.opentracing_shim.html
         # TODO: This seems to work consistently, but we should find out the
         # biggest possible loss of precision.
         self.assertAlmostEqual(end_time, now, places=6)
@@ -400,8 +412,8 @@ class TestShim(unittest.TestCase):
                 span.unwrap().events[1].timestamp
             )
             self.assertEqual(span.unwrap().events[1].attributes["foo"], "bar")
-            # Tolerate inaccuracies of less than a microsecond.
-            # TODO: Put a link to an explanation in the docs.
+            # Tolerate inaccuracies of less than a microsecond. See Note:
+            # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.ext.opentracing_shim.html
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
@@ -453,3 +465,91 @@ class TestShim(unittest.TestCase):
         self.assertEqual(
             scope.span.unwrap().events[0].attributes["error.kind"], Exception
         )
+
+    def test_inject_http_headers(self):
+        """Test `inject()` method for Format.HTTP_HEADERS."""
+
+        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        context = opentracingshim.SpanContextShim(otel_context)
+
+        headers = {}
+        self.shim.inject(context, opentracing.Format.HTTP_HEADERS, headers)
+        self.assertEqual(headers[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
+        self.assertEqual(headers[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
+
+    def test_inject_text_map(self):
+        """Test `inject()` method for Format.TEXT_MAP."""
+
+        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        context = opentracingshim.SpanContextShim(otel_context)
+
+        # Verify Format.TEXT_MAP
+        text_map = {}
+        self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
+        self.assertEqual(text_map[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
+        self.assertEqual(text_map[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
+
+    def test_inject_binary(self):
+        """Test `inject()` method for Format.BINARY."""
+
+        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        context = opentracingshim.SpanContextShim(otel_context)
+
+        # Verify exception for non supported binary format.
+        with self.assertRaises(opentracing.UnsupportedFormatException):
+            self.shim.inject(context, opentracing.Format.BINARY, bytearray())
+
+    def test_extract_http_headers(self):
+        """Test `extract()` method for Format.HTTP_HEADERS."""
+
+        carrier = {
+            MockHTTPTextFormat.TRACE_ID_KEY: 1220,
+            MockHTTPTextFormat.SPAN_ID_KEY: 7478,
+        }
+
+        ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
+        self.assertEqual(ctx.unwrap().trace_id, 1220)
+        self.assertEqual(ctx.unwrap().span_id, 7478)
+
+    def test_extract_text_map(self):
+        """Test `extract()` method for Format.TEXT_MAP."""
+
+        carrier = {
+            MockHTTPTextFormat.TRACE_ID_KEY: 1220,
+            MockHTTPTextFormat.SPAN_ID_KEY: 7478,
+        }
+
+        ctx = self.shim.extract(opentracing.Format.TEXT_MAP, carrier)
+        self.assertEqual(ctx.unwrap().trace_id, 1220)
+        self.assertEqual(ctx.unwrap().span_id, 7478)
+
+    def test_extract_binary(self):
+        """Test `extract()` method for Format.BINARY."""
+
+        # Verify exception for non supported binary format.
+        with self.assertRaises(opentracing.UnsupportedFormatException):
+            self.shim.extract(opentracing.Format.BINARY, bytearray())
+
+
+class MockHTTPTextFormat(HTTPTextFormat):
+    """Mock propagator for testing purposes."""
+
+    TRACE_ID_KEY = "mock-traceid"
+    SPAN_ID_KEY = "mock-spanid"
+
+    @classmethod
+    def extract(cls, get_from_carrier, carrier):
+        trace_id_list = get_from_carrier(carrier, cls.TRACE_ID_KEY)
+        span_id_list = get_from_carrier(carrier, cls.SPAN_ID_KEY)
+
+        if not trace_id_list or not span_id_list:
+            return trace.INVALID_SPAN_CONTEXT
+
+        return trace.SpanContext(
+            trace_id=int(trace_id_list[0]), span_id=int(span_id_list[0])
+        )
+
+    @classmethod
+    def inject(cls, context, set_in_carrier, carrier):
+        set_in_carrier(carrier, cls.TRACE_ID_KEY, str(context.trace_id))
+        set_in_carrier(carrier, cls.SPAN_ID_KEY, str(context.span_id))

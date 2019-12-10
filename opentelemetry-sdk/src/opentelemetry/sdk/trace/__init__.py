@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import atexit
 import logging
 import random
 import threading
@@ -130,7 +131,7 @@ class Span(trace_api.Span):
         resource: None = None,  # TODO
         attributes: types.Attributes = None,  # TODO
         events: Sequence[trace_api.Event] = None,  # TODO
-        links: Sequence[trace_api.Link] = None,  # TODO
+        links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
     ) -> None:
@@ -203,7 +204,7 @@ class Span(trace_api.Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: int = None,
+        timestamp: Optional[int] = None,
     ) -> None:
         self.add_lazy_event(
             trace_api.Event(
@@ -226,30 +227,6 @@ class Span(trace_api.Span):
             return
         self.events.append(event)
 
-    def add_link(
-        self,
-        link_target_context: "trace_api.SpanContext",
-        attributes: types.Attributes = None,
-    ) -> None:
-        if attributes is None:
-            attributes = (
-                Span.empty_attributes
-            )  # TODO: empty_attributes is not a Dict. Use Mapping?
-        self.add_lazy_link(trace_api.Link(link_target_context, attributes))
-
-    def add_lazy_link(self, link: "trace_api.Link") -> None:
-        with self._lock:
-            if not self.is_recording_events():
-                return
-            has_ended = self.end_time is not None
-            if not has_ended:
-                if self.links is Span.empty_links:
-                    self.links = BoundedList(MAX_NUM_LINKS)
-        if has_ended:
-            logger.warning("Calling add_link() on an ended span.")
-            return
-        self.links.append(link)
-
     def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
@@ -264,7 +241,7 @@ class Span(trace_api.Span):
             return
         self.span_processor.on_start(self)
 
-    def end(self, end_time: int = None) -> None:
+    def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -320,12 +297,15 @@ class Tracer(trace_api.Tracer):
 
     Args:
         name: The name of the tracer.
+        shutdown_on_exit: Register an atexit hook to shut down the tracer when
+            the application exits.
     """
 
     def __init__(
         self,
         name: str = "",
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        shutdown_on_exit: bool = True,
     ) -> None:
         slot_name = "current_span"
         if name:
@@ -333,48 +313,37 @@ class Tracer(trace_api.Tracer):
         self._current_span_slot = Context.register_slot(slot_name)
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
+        self._atexit_handler = None
+        if shutdown_on_exit:
+            self._atexit_handler = atexit.register(self.shutdown)
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
         return self._current_span_slot.get()
-
-    def start_span(
-        self,
-        name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
-        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> "Span":
-        """See `opentelemetry.trace.Tracer.start_span`."""
-
-        span = self.create_span(name, parent, kind)
-        span.start()
-        return span
 
     def start_as_current_span(
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        attributes: Optional[types.Attributes] = None,
+        links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
-        span = self.start_span(name, parent, kind)
+        span = self.start_span(name, parent, kind, attributes, links)
         return self.use_span(span, end_on_exit=True)
 
-    def create_span(
+    def start_span(
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-    ) -> "trace_api.Span":
-        """See `opentelemetry.trace.Tracer.create_span`.
-
-        If `parent` is null the new span will be created as a root span, i.e. a
-        span with no parent context. By default, the new span will be created
-        as a child of the current span in this tracer's context, or as a root
-        span if no current span exists.
-        """
-        span_id = generate_span_id()
+        attributes: Optional[types.Attributes] = None,
+        links: Sequence[trace_api.Link] = (),
+        start_time: Optional[int] = None,
+    ) -> "Span":
+        """See `opentelemetry.trace.Tracer.start_span`."""
 
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
@@ -399,7 +368,7 @@ class Tracer(trace_api.Tracer):
             trace_state = parent_context.trace_state
 
         context = trace_api.SpanContext(
-            trace_id, span_id, trace_options, trace_state
+            trace_id, generate_span_id(), trace_options, trace_state
         )
 
         # The sampler decides whether to create a real or no-op span at the
@@ -412,21 +381,31 @@ class Tracer(trace_api.Tracer):
             context.trace_id,
             context.span_id,
             name,
-            {},  # TODO: links
+            attributes,
+            links,
         )
 
         if sampling_decision.sampled:
-            return Span(
+            if attributes is None:
+                span_attributes = sampling_decision.attributes
+            else:
+                # apply sampling decision attributes after initial attributes
+                span_attributes = attributes.copy()
+                span_attributes.update(sampling_decision.attributes)
+            span = Span(
                 name=name,
                 context=context,
                 parent=parent,
                 sampler=self.sampler,
-                attributes=sampling_decision.attributes,
+                attributes=span_attributes,
                 span_processor=self._active_span_processor,
                 kind=kind,
+                links=links,
             )
-
-        return trace_api.DefaultSpan(context=context)
+            span.start(start_time=start_time)
+        else:
+            span = trace_api.DefaultSpan(context=context)
+        return span
 
     @contextmanager
     def use_span(
@@ -453,6 +432,13 @@ class Tracer(trace_api.Tracer):
         # no lock here because MultiSpanProcessor.add_span_processor is
         # thread safe
         self._active_span_processor.add_span_processor(span_processor)
+
+    def shutdown(self):
+        """Shut down the span processors added to the tracer."""
+        self._active_span_processor.shutdown()
+        if self._atexit_handler is not None:
+            atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None
 
 
 tracer = Tracer()

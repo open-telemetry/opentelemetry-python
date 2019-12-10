@@ -1,6 +1,13 @@
 OpenTelemetry Jaeger Exporter
 =============================
 
+|pypi|
+
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-jaeger.svg
+   :target: https://pypi.org/project/opentelemetry-ext-jaeger/
+
+This library allows to export tracing data to `Jaeger <https://www.jaegertracing.io/>`_.
+
 Installation
 ------------
 
@@ -19,7 +26,7 @@ gRPC is still not supported by this implementation.
 
 
 .. _Jaeger: https://www.jaegertracing.io/
-.. _OpenTelemetry: https://github.com/opentelemetry/opentelemetry-python/
+.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 
 .. code:: python
 
@@ -53,10 +60,6 @@ gRPC is still not supported by this implementation.
 
     with tracer.start_as_current_span('foo'):
         print('Hello world!')
-
-    # shutdown the span processor
-    # TODO: this has to be improved so user doesn't need to call it manually
-    span_processor.shutdown()
 
 The `examples <./examples>`_ folder contains more elaborated examples.
 

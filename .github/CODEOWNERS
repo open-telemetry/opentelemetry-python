@@ -2,4 +2,4 @@
 # This file controls who is tagged for review for any given pull request.
 
 # For anything not explicitly taken by someone else:
-*               @a-feld @c24t @carlosalberto @lzchen @Oberon00 @reyang @toumorokoshi
+*               @open-telemetry/python-approvers

@@ -17,7 +17,7 @@ from typing import Dict, Mapping, Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.trace import Link, SpanContext
-from opentelemetry.util.types import AttributeValue
+from opentelemetry.util.types import Attributes, AttributeValue
 
 
 class Decision:
@@ -36,7 +36,7 @@ class Decision:
     def __init__(
         self,
         sampled: bool = False,
-        attributes: Mapping[str, "AttributeValue"] = None,
+        attributes: Optional[Mapping[str, "AttributeValue"]] = None,
     ) -> None:
         self.sampled = sampled  # type: bool
         if attributes is None:
@@ -53,6 +53,7 @@ class Sampler(abc.ABC):
         trace_id: int,
         span_id: int,
         name: str,
+        attributes: Optional[Attributes] = None,
         links: Sequence["Link"] = (),
     ) -> "Decision":
         pass
@@ -70,6 +71,7 @@ class StaticSampler(Sampler):
         trace_id: int,
         span_id: int,
         name: str,
+        attributes: Optional[Attributes] = None,
         links: Sequence["Link"] = (),
     ) -> "Decision":
         return self._decision
@@ -107,6 +109,7 @@ class ProbabilitySampler(Sampler):
         trace_id: int,
         span_id: int,
         name: str,
+        attributes: Optional[Attributes] = None,  # TODO
         links: Sequence["Link"] = (),
     ) -> "Decision":
         if parent_context is not None:
