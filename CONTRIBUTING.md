@@ -28,7 +28,14 @@ during their normal contribution hours.
 
 ## Development
 
-This project uses [`tox`](https://tox.readthedocs.io) to automate some aspects
+To quickly get up and running, you can use the `scripts/eachdist.py` tool that
+ships with this project. First create a virtualenv and activate it.
+Then run `python scripts/eachdist.py develop` to install all required packages
+as well as the project's packages themselves (in `--editable` mode).
+You can then run `scripts/eachdist.py test` to test everything or
+`scripts/eachdist.py lint` to lint everything (fixing anything that is auto-fixable).
+
+Additionally, this project uses [`tox`](https://tox.readthedocs.io) to automate some aspects
 of development, including testing against multiple Python versions.
 
 You can run:
