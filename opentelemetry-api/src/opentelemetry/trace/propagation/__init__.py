@@ -12,16 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .binaryformat import BinaryFormat
-from .httptextformat import HTTPTextFormat
-
-__all__ = ["BinaryFormat", "HTTPTextFormat"]
-
 
 class ContextKeys:
     """ TODO """
 
-    KEY = "correlation-context"
+    KEY = "span-context"
 
     @classmethod
     def span_context_key(cls):
