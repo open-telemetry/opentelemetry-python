@@ -18,7 +18,7 @@ import unittest
 import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
-from opentelemetry import propagators, trace
+from opentelemetry import propagation, trace
 from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import Tracer
@@ -42,15 +42,18 @@ class TestShim(unittest.TestCase):
         trace.set_preferred_tracer_implementation(lambda T: Tracer())
 
         # Save current propagator to be restored on teardown.
-        cls._previous_propagator = propagators.get_global_httptextformat()
+        cls._previous_injectors = propagation.get_http_injectors()
+        cls._previous_extractors = propagation.get_http_extractors()
 
         # Set mock propagator for testing.
-        propagators.set_global_httptextformat(MockHTTPTextFormat)
+        propagation.set_http_extractors([MockHTTPTextFormat])
+        propagation.set_http_injectors([MockHTTPTextFormat])
 
     @classmethod
     def tearDownClass(cls):
         # Restore previous propagator.
-        propagators.set_global_httptextformat(cls._previous_propagator)
+        propagation.set_http_extractors(cls._previous_extractors)
+        propagation.set_http_injectors(cls._previous_injectors)
 
     def test_shim_type(self):
         # Verify shim is an OpenTracing tracer.
@@ -538,7 +541,7 @@ class MockHTTPTextFormat(HTTPTextFormat):
     SPAN_ID_KEY = "mock-spanid"
 
     @classmethod
-    def extract(cls, get_from_carrier, carrier):
+    def extract(cls, context, get_from_carrier, carrier):
         trace_id_list = get_from_carrier(carrier, cls.TRACE_ID_KEY)
         span_id_list = get_from_carrier(carrier, cls.SPAN_ID_KEY)
 

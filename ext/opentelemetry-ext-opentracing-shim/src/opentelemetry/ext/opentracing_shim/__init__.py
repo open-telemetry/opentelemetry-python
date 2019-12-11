@@ -84,8 +84,11 @@ import opentracing
 from deprecated import deprecated
 
 import opentelemetry.trace as trace_api
-from opentelemetry import propagators
+from opentelemetry import propagation
+from opentelemetry.context import Context
+from opentelemetry.context.base_context import BaseRuntimeContext
 from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.trace.propagation import ContextKeys
 
 logger = logging.getLogger(__name__)
 
@@ -657,15 +660,19 @@ class TracerShim(opentracing.Tracer):
         # TODO: Finish documentation.
         # pylint: disable=redefined-builtin
         # This implementation does not perform the injecting by itself but
-        # uses the configured propagators in opentelemetry.propagators.
+        # uses the configured propagation in opentelemetry.propagation.
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
-        propagator = propagators.get_global_httptextformat()
-        propagator.inject(
-            span_context.unwrap(), type(carrier).__setitem__, carrier
+        BaseRuntimeContext.set_value(
+            BaseRuntimeContext.current(),
+            ContextKeys.span_context_key(),
+            span_context.unwrap(),
+        )
+        propagation.inject(
+            BaseRuntimeContext.current(), type(carrier).__setitem__, carrier
         )
 
     def extract(self, format, carrier):
@@ -674,7 +681,7 @@ class TracerShim(opentracing.Tracer):
         # TODO: Finish documentation.
         # pylint: disable=redefined-builtin
         # This implementation does not perform the extracing by itself but
-        # uses the configured propagators in opentelemetry.propagators.
+        # uses the configured propagation in opentelemetry.propagation.
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
         if format not in self._supported_formats:
@@ -684,7 +691,13 @@ class TracerShim(opentracing.Tracer):
             value = dict_object.get(key)
             return [value] if value is not None else []
 
-        propagator = propagators.get_global_httptextformat()
-        otel_context = propagator.extract(get_as_list, carrier)
+        # propagator = propagation.get_global_httptextformat()
+
+        otel_context = BaseRuntimeContext.value(
+            propagation.extract(
+                BaseRuntimeContext.current(), get_as_list, carrier
+            ),
+            ContextKeys.span_context_key(),
+        )
 
         return SpanContextShim(otel_context)

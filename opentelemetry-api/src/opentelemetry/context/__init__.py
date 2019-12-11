@@ -140,7 +140,7 @@ Here goes a simple demo of how async could work in Python 3.7+::
 
 from .base_context import BaseRuntimeContext
 
-__all__ = ["Context"]
+__all__ = ["BaseRuntimeContext", "Context"]
 
 try:
     from .async_context import AsyncRuntimeContext

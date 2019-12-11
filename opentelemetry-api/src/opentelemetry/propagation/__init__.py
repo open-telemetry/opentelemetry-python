@@ -25,8 +25,10 @@ _T = typing.TypeVar("_T")
 
 
 def extract(
-    get_from_carrier: httptextformat.Getter[_T], carrier: _T
-) -> BaseRuntimeContext:
+    context: BaseRuntimeContext,
+    get_from_carrier: httptextformat.Getter[_T],
+    carrier: _T,
+) -> typing.Optional[BaseRuntimeContext]:
     """Load the parent SpanContext from values in the carrier.
 
     Using the specified HTTPTextFormatter, the propagator will
@@ -42,11 +44,13 @@ def extract(
             must be paired with an appropriate get_from_carrier
             which understands how to extract a value from it.
     """
-    return get_global_httptextformat().extract(get_from_carrier, carrier)
+    for extractor in get_http_extractors():
+        return extractor.extract(context, get_from_carrier, carrier)
+    return None
 
 
 def inject(
-    context: BaseRuntimeContext
+    context: BaseRuntimeContext,
     set_in_carrier: httptextformat.Setter[_T],
     carrier: _T,
 ) -> None:
@@ -64,23 +68,36 @@ def inject(
             headers. Should be paired with set_in_carrier, which
             should know how to set header values on the carrier.
     """
-    get_global_httptextformat().inject(
-        tracer.get_current_span().get_context(), set_in_carrier, carrier
-    )
+    for injector in get_http_injectors():
+        injector.inject(context, set_in_carrier, carrier)
+
 
 _HTTP_TEXT_INJECTORS = [
-    TraceContextHTTPTextFormat()
+    TraceContextHTTPTextFormat
 ]  # typing.List[httptextformat.HTTPTextFormat]
 
 _HTTP_TEXT_EXTRACTORS = [
-    TraceContextHTTPTextFormat()
+    TraceContextHTTPTextFormat
 ]  # typing.List[httptextformat.HTTPTextFormat]
 
 
-def set_http_extractors(extractor_list: typing.List[httptextformat.HTTPTextFormat]) -> None:
+def set_http_extractors(
+    extractor_list: typing.List[httptextformat.HTTPTextFormat],
+) -> None:
     global _HTTP_TEXT_EXTRACTORS  # pylint:disable=global-statement
     _HTTP_TEXT_EXTRACTORS = extractor_list
 
-def set_http_injectors(extractor_list: typing.List[httptextformat.HTTPTextFormat]) -> None:
-    global _HTTP_TEXT_INJECTORS # pylint:disable=global-statement
+
+def set_http_injectors(
+    injector_list: typing.List[httptextformat.HTTPTextFormat],
+) -> None:
+    global _HTTP_TEXT_INJECTORS  # pylint:disable=global-statement
     _HTTP_TEXT_INJECTORS = injector_list
+
+
+def get_http_extractors() -> typing.List[httptextformat.HTTPTextFormat]:
+    return _HTTP_TEXT_EXTRACTORS
+
+
+def get_http_injectors() -> typing.List[httptextformat.HTTPTextFormat]:
+    return _HTTP_TEXT_INJECTORS

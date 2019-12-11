@@ -20,7 +20,7 @@ import flask
 import requests
 
 import opentelemetry.ext.http_requests
-from opentelemetry import propagators, trace
+from opentelemetry import propagation, trace
 from opentelemetry.ext.flask import instrument_app
 from opentelemetry.sdk.context.propagation.b3_format import B3Format
 from opentelemetry.sdk.trace import Tracer
@@ -51,7 +51,8 @@ def configure_opentelemetry(flask_app: flask.Flask):
     # carry this value).
 
     # TBD: can remove once default TraceContext propagators are installed.
-    propagators.set_global_httptextformat(B3Format())
+    propagation.set_http_extractors([B3Format])
+    propagation.set_http_injectors([B3Format])
 
     # Integrations are the glue that binds the OpenTelemetry API
     # and the frameworks and libraries that are used together, automatically

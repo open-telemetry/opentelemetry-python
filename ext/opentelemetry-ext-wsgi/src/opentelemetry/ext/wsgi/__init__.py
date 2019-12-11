@@ -22,7 +22,8 @@ import functools
 import typing
 import wsgiref.util as wsgiref_util
 
-from opentelemetry import propagators, trace
+from opentelemetry import propagation, trace
+from opentelemetry.context import BaseRuntimeContext
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -183,7 +184,10 @@ class OpenTelemetryMiddleware:
         """
 
         tracer = trace.tracer()
-        parent_span = propagators.extract(get_header_from_environ, environ)
+        # TODO: fix the return value here, expect a context
+        parent_span = propagation.extract(
+            BaseRuntimeContext.current(), get_header_from_environ, environ
+        )
         span_name = get_default_span_name(environ)
 
         span = tracer.start_span(

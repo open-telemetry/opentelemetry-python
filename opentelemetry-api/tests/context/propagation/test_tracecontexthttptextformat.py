@@ -16,9 +16,15 @@ import typing
 import unittest
 
 from opentelemetry import trace
+from opentelemetry.context import BaseRuntimeContext, Context
 from opentelemetry.context.propagation import tracecontexthttptextformat
+from opentelemetry.context.propagation.tracecontexthttptextformat import (
+    TraceContextHTTPTextFormat,
+)
+from opentelemetry.trace.propagation import ContextKeys
 
-FORMAT = tracecontexthttptextformat.TraceContextHTTPTextFormat()
+INJECT = TraceContextHTTPTextFormat
+EXTRACT = TraceContextHTTPTextFormat
 
 
 def get_as_list(
@@ -32,6 +38,9 @@ class TestTraceContextFormat(unittest.TestCase):
     TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
     SPAN_ID = int("1234567890123456", 16)  # type:int
 
+    def setUp(self):
+        self.ctx = BaseRuntimeContext.current()
+
     def test_no_traceparent_header(self):
         """When tracecontext headers are not present, a new SpanContext
         should be created.
@@ -41,7 +50,7 @@ class TestTraceContextFormat(unittest.TestCase):
         If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span_context = FORMAT.extract(get_as_list, output)
+        span_context = EXTRACT.extract(self.ctx, get_as_list, output)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
     def test_headers_with_tracestate(self):
@@ -53,12 +62,16 @@ class TestTraceContextFormat(unittest.TestCase):
             span_id=format(self.SPAN_ID, "016x"),
         )
         tracestate_value = "foo=1,bar=2,baz=3"
-        span_context = FORMAT.extract(
+        ctx = EXTRACT.extract(
+            self.ctx,
             get_as_list,
             {
                 "traceparent": [traceparent_value],
                 "tracestate": [tracestate_value],
             },
+        )
+        span_context = BaseRuntimeContext.value(
+            ctx, ContextKeys.span_context_key()
         )
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
@@ -67,7 +80,7 @@ class TestTraceContextFormat(unittest.TestCase):
         )
 
         output = {}  # type:typing.Dict[str, str]
-        FORMAT.inject(span_context, dict.__setitem__, output)
+        INJECT.inject(self.ctx, dict.__setitem__, output)
         self.assertEqual(output["traceparent"], traceparent_value)
         for pair in ["foo=1", "bar=2", "baz=3"]:
             self.assertIn(pair, output["tracestate"])
@@ -89,7 +102,8 @@ class TestTraceContextFormat(unittest.TestCase):
         If the vendor failed to parse traceparent, it MUST NOT attempt to parse tracestate.
         Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
         """
-        span_context = FORMAT.extract(
+        span_context = EXTRACT.extract(
+            self.ctx,
             get_as_list,
             {
                 "traceparent": [
@@ -115,7 +129,8 @@ class TestTraceContextFormat(unittest.TestCase):
         If the vendor failed to parse traceparent, it MUST NOT attempt to parse tracestate.
         Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
         """
-        span_context = FORMAT.extract(
+        span_context = EXTRACT.extract(
+            self.ctx,
             get_as_list,
             {
                 "traceparent": [
@@ -134,11 +149,14 @@ class TestTraceContextFormat(unittest.TestCase):
         Empty and whitespace-only list members are allowed. Vendors MUST accept empty
         tracestate headers but SHOULD avoid sending them.
         """
-        output = {}  # type:typing.Dict[str, str]
-        FORMAT.inject(
+        ctx = BaseRuntimeContext.set_value(
+            self.ctx,
+            ContextKeys.span_context_key(),
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID),
-            dict.__setitem__,
-            output,
+        )
+        output = {}  # type:typing.Dict[str, str]
+        INJECT.inject(
+            ctx, dict.__setitem__, output,
         )
         self.assertTrue("traceparent" in output)
         self.assertFalse("tracestate" in output)
@@ -151,7 +169,8 @@ class TestTraceContextFormat(unittest.TestCase):
 
         If the version cannot be parsed, return an invalid trace header.
         """
-        span_context = FORMAT.extract(
+        span_context = EXTRACT.extract(
+            self.ctx,
             get_as_list,
             {
                 "traceparent": [
@@ -166,12 +185,18 @@ class TestTraceContextFormat(unittest.TestCase):
         """Do not propagate invalid trace context.
         """
         output = {}  # type:typing.Dict[str, str]
-        FORMAT.inject(trace.INVALID_SPAN_CONTEXT, dict.__setitem__, output)
+        ctx = BaseRuntimeContext.set_value(
+            self.ctx,
+            ContextKeys.span_context_key(),
+            trace.INVALID_SPAN_CONTEXT,
+        )
+        INJECT.inject(ctx, dict.__setitem__, output)
         self.assertFalse("traceparent" in output)
 
     def test_tracestate_empty_header(self):
         """Test tracestate with an additional empty header (should be ignored)"""
-        span_context = FORMAT.extract(
+        ctx = EXTRACT.extract(
+            self.ctx,
             get_as_list,
             {
                 "traceparent": [
@@ -180,12 +205,16 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1", ""],
             },
         )
+        span_context = BaseRuntimeContext.value(
+            ctx, ContextKeys.span_context_key()
+        )
         self.assertEqual(span_context.trace_state["foo"], "1")
 
     def test_tracestate_header_with_trailing_comma(self):
         """Do not propagate invalid trace context.
         """
-        span_context = FORMAT.extract(
+        ctx = EXTRACT.extract(
+            self.ctx,
             get_as_list,
             {
                 "traceparent": [
@@ -193,5 +222,8 @@ class TestTraceContextFormat(unittest.TestCase):
                 ],
                 "tracestate": ["foo=1,"],
             },
+        )
+        span_context = BaseRuntimeContext.value(
+            ctx, ContextKeys.span_context_key()
         )
         self.assertEqual(span_context.trace_state["foo"], "1")

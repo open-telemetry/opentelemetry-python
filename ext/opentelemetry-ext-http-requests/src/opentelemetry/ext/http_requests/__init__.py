@@ -22,8 +22,8 @@ from urllib.parse import urlparse
 
 from requests.sessions import Session
 
-from opentelemetry import propagators
-from opentelemetry.context import Context
+from opentelemetry import propagation
+from opentelemetry.context import BaseRuntimeContext, Context
 from opentelemetry.trace import SpanKind
 
 
@@ -74,7 +74,11 @@ def enable(tracer):
             # to access propagators.
 
             headers = kwargs.setdefault("headers", {})
-            propagators.inject(tracer, type(headers).__setitem__, headers)
+            propagation.inject(
+                BaseRuntimeContext.current(),
+                type(headers).__setitem__,
+                headers,
+            )
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)

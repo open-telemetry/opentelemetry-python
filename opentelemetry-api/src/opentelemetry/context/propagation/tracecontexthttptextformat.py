@@ -16,7 +16,9 @@ import re
 import typing
 
 import opentelemetry.trace as trace
+from opentelemetry.context import BaseRuntimeContext
 from opentelemetry.context.propagation import httptextformat
+from opentelemetry.trace.propagation import ContextKeys
 
 _T = typing.TypeVar("_T")
 
@@ -61,8 +63,11 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
 
     @classmethod
     def extract(
-        cls, get_from_carrier: httptextformat.Getter[_T], carrier: _T
-    ) -> trace.SpanContext:
+        cls,
+        context: BaseRuntimeContext,
+        get_from_carrier: httptextformat.Getter[_T],
+        carrier: _T,
+    ) -> BaseRuntimeContext:
         """Extracts a valid SpanContext from the carrier.
         """
         header = get_from_carrier(carrier, cls._TRACEPARENT_HEADER_NAME)
@@ -100,25 +105,30 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             trace_state=tracestate,
         )
 
-        return span_context
+        ctx = BaseRuntimeContext.set_value(
+            context, ContextKeys.span_context_key(), span_context
+        )
+
+        return ctx
 
     @classmethod
     def inject(
         cls,
-        context: trace.SpanContext,
+        context: BaseRuntimeContext,
         set_in_carrier: httptextformat.Setter[_T],
         carrier: _T,
     ) -> None:
-        if context == trace.INVALID_SPAN_CONTEXT:
+        sc = BaseRuntimeContext.value(context, ContextKeys.span_context_key())
+        if sc is None or sc == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
-            context.trace_id, context.span_id, context.trace_options
+            sc.trace_id, sc.span_id, sc.trace_options,
         )
         set_in_carrier(
             carrier, cls._TRACEPARENT_HEADER_NAME, traceparent_string
         )
-        if context.trace_state:
-            tracestate_string = _format_tracestate(context.trace_state)
+        if sc.trace_state:
+            tracestate_string = _format_tracestate(sc.trace_state)
             set_in_carrier(
                 carrier, cls._TRACESTATE_HEADER_NAME, tracestate_string
             )

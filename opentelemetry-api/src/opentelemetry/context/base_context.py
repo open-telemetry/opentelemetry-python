@@ -128,3 +128,23 @@ class BaseRuntimeContext:
                 self.apply(backup_context)
 
         return call_with_current_context
+
+    @classmethod
+    def value(cls, ctx: "BaseRuntimeContext", key: str) -> str:
+        return ctx.__getitem__(key)
+
+    @classmethod
+    def set_value(
+        cls, ctx: "BaseRuntimeContext", key: str, value: "object"
+    ) -> "BaseRuntimeContext":
+        # TODO: dont use the context directly here
+        ctx.__setattr__(key, value)
+        return ctx
+
+    @classmethod
+    def current(cls) -> "BaseRuntimeContext":
+        return ctx.__getitem__("current-context")
+
+    @classmethod
+    def set_current(cls, ctx: "BaseRuntimeContext"):
+        ctx.__setattr__("current-context", ctx)
