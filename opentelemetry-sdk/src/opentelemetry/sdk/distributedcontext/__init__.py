@@ -19,8 +19,8 @@ from opentelemetry import distributedcontext as dctx_api
 from opentelemetry.context import Context
 
 
-class DistributedContextManager(dctx_api.DistributedContextManager):
-    """See `opentelemetry.distributedcontext.DistributedContextManager`
+class CorrelationContextManager(dctx_api.CorrelationContextManager):
+    """See `opentelemetry.distributedcontext.CorrelationContextManager`
 
     Args:
         name: The name of the context manager
@@ -28,35 +28,33 @@ class DistributedContextManager(dctx_api.DistributedContextManager):
 
     def __init__(self, name: str = "") -> None:
         if name:
-            slot_name = "DistributedContext.{}".format(name)
+            slot_name = "CorrelationContext.{}".format(name)
         else:
-            slot_name = "DistributedContext"
+            slot_name = "CorrelationContext"
 
         self._current_context = Context.register_slot(slot_name)
 
-    def get_current_context(
-        self,
-    ) -> typing.Optional[dctx_api.DistributedContext]:
-        """Gets the current DistributedContext.
+    def current_context(self,) -> typing.Optional[dctx_api.CorrelationContext]:
+        """Gets the current CorrelationContext.
 
         Returns:
-            A DistributedContext instance representing the current context.
+            A CorrelationContext instance representing the current context.
         """
         return self._current_context.get()
 
     @contextmanager
     def use_context(
-        self, context: dctx_api.DistributedContext
-    ) -> typing.Iterator[dctx_api.DistributedContext]:
-        """Context manager for controlling a DistributedContext lifetime.
+        self, context: dctx_api.CorrelationContext
+    ) -> typing.Iterator[dctx_api.CorrelationContext]:
+        """Context manager for controlling a CorrelationContext lifetime.
 
-        Set the context as the active DistributedContext.
+        Set the context as the active CorrelationContext.
 
         On exiting, the context manager will restore the parent
-        DistributedContext.
+        CorrelationContext.
 
         Args:
-            context: A DistributedContext instance to make current.
+            context: A CorrelationContext instance to make current.
         """
         snapshot = self._current_context.get()
         self._current_context.set(context)

@@ -18,25 +18,25 @@ from opentelemetry import distributedcontext as dctx_api
 from opentelemetry.sdk import distributedcontext
 
 
-class TestDistributedContextManager(unittest.TestCase):
+class TestCorrelationContextManager(unittest.TestCase):
     def setUp(self):
-        self.manager = distributedcontext.DistributedContextManager()
+        self.manager = distributedcontext.CorrelationContextManager()
 
     def test_use_context(self):
         # Context is None initially
-        self.assertIsNone(self.manager.get_current_context())
+        self.assertIsNone(self.manager.current_context())
 
         # Start initial context
-        dctx = dctx_api.DistributedContext(())
+        dctx = dctx_api.CorrelationContext(())
         with self.manager.use_context(dctx) as current:
             self.assertIs(current, dctx)
-            self.assertIs(self.manager.get_current_context(), dctx)
+            self.assertIs(self.manager.current_context(), dctx)
 
             # Context is overridden
-            nested_dctx = dctx_api.DistributedContext(())
+            nested_dctx = dctx_api.CorrelationContext(())
             with self.manager.use_context(nested_dctx) as current:
                 self.assertIs(current, nested_dctx)
-                self.assertIs(self.manager.get_current_context(), nested_dctx)
+                self.assertIs(self.manager.current_context(), nested_dctx)
 
             # Context is restored
-            self.assertIs(self.manager.get_current_context(), dctx)
+            self.assertIs(self.manager.current_context(), dctx)

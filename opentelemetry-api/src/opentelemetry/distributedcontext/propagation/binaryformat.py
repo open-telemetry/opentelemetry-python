@@ -15,7 +15,7 @@
 import abc
 import typing
 
-from opentelemetry.distributedcontext import DistributedContext
+from opentelemetry.distributedcontext import CorrelationContext
 
 
 class BinaryFormat(abc.ABC):
@@ -27,17 +27,17 @@ class BinaryFormat(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def to_bytes(context: DistributedContext) -> bytes:
-        """Creates a byte representation of a DistributedContext.
+    def to_bytes(context: CorrelationContext) -> bytes:
+        """Creates a byte representation of a CorrelationContext.
 
-        to_bytes should read values from a DistributedContext and return a data
+        to_bytes should read values from a CorrelationContext and return a data
         format to represent it, in bytes.
 
         Args:
-            context: the DistributedContext to serialize
+            context: the CorrelationContext to serialize
 
         Returns:
-            A bytes representation of the DistributedContext.
+            A bytes representation of the CorrelationContext.
 
         """
 
@@ -45,18 +45,18 @@ class BinaryFormat(abc.ABC):
     @abc.abstractmethod
     def from_bytes(
         byte_representation: bytes,
-    ) -> typing.Optional[DistributedContext]:
-        """Return a DistributedContext that was represented by bytes.
+    ) -> typing.Optional[CorrelationContext]:
+        """Return a CorrelationContext that was represented by bytes.
 
-        from_bytes should return back a DistributedContext that was constructed
+        from_bytes should return back a CorrelationContext that was constructed
         from the data serialized in the byte_representation passed. If it is
-        not possible to read in a proper DistributedContext, return None.
+        not possible to read in a proper CorrelationContext, return None.
 
         Args:
             byte_representation: the bytes to deserialize
 
         Returns:
-            A bytes representation of the DistributedContext if it is valid.
+            A bytes representation of the CorrelationContext if it is valid.
             Otherwise return None.
 
         """

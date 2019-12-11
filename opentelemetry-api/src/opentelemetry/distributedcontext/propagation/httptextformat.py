@@ -15,7 +15,7 @@
 import abc
 import typing
 
-from opentelemetry.distributedcontext import DistributedContext
+from opentelemetry.distributedcontext import CorrelationContext
 
 Setter = typing.Callable[[object, str, str], None]
 Getter = typing.Callable[[object, str], typing.List[str]]
@@ -69,34 +69,34 @@ class HTTPTextFormat(abc.ABC):
     @abc.abstractmethod
     def extract(
         self, get_from_carrier: Getter, carrier: object
-    ) -> DistributedContext:
-        """Create a DistributedContext from values in the carrier.
+    ) -> CorrelationContext:
+        """Create a CorrelationContext from values in the carrier.
 
         The extract function should retrieve values from the carrier
         object using get_from_carrier, and use values to populate a
-        DistributedContext value and return it.
+        CorrelationContext value and return it.
 
         Args:
             get_from_carrier: a function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.
             carrier: and object which contains values that are
-                used to construct a DistributedContext. This object
+                used to construct a CorrelationContext. This object
                 must be paired with an appropriate get_from_carrier
                 which understands how to extract a value from it.
         Returns:
-            A DistributedContext with configuration found in the carrier.
+            A CorrelationContext with configuration found in the carrier.
 
         """
 
     @abc.abstractmethod
     def inject(
         self,
-        context: DistributedContext,
+        context: CorrelationContext,
         set_in_carrier: Setter,
         carrier: object,
     ) -> None:
-        """Inject values from a DistributedContext into a carrier.
+        """Inject values from a CorrelationContext into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
@@ -104,7 +104,7 @@ class HTTPTextFormat(abc.ABC):
         carrier.
 
         Args:
-            context: The DistributedContext to read values from.
+            context: The CorrelationContext to read values from.
             set_in_carrier: A setter function that can set values
                 on the carrier.
             carrier: An object that a place to define HTTP headers.

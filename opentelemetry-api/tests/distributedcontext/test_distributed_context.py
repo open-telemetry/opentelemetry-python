@@ -67,7 +67,7 @@ class TestEntryValue(unittest.TestCase):
         self.assertEqual(key, "ok")
 
 
-class TestDistributedContext(unittest.TestCase):
+class TestCorrelationContext(unittest.TestCase):
     def setUp(self):
         entry = self.entry = distributedcontext.Entry(
             distributedcontext.EntryMetadata(
@@ -76,30 +76,37 @@ class TestDistributedContext(unittest.TestCase):
             distributedcontext.EntryKey("key"),
             distributedcontext.EntryValue("value"),
         )
-        self.context = distributedcontext.DistributedContext((entry,))
+        self.context = distributedcontext.CorrelationContext((entry,))
 
     def test_get_entries(self):
-        self.assertIn(self.entry, self.context.get_entries())
+        self.assertIn(
+            self.entry,
+            distributedcontext.CorrelationContext.get_entries(self.context),
+        )
 
     def test_get_entry_value_present(self):
-        value = self.context.get_entry_value(self.entry.key)
+        value = distributedcontext.CorrelationContext.get_entry_value(
+            self.context, self.entry.key
+        )
         self.assertIs(value, self.entry.value)
 
     def test_get_entry_value_missing(self):
         key = distributedcontext.EntryKey("missing")
-        value = self.context.get_entry_value(key)
+        value = distributedcontext.CorrelationContext.get_entry_value(
+            self.context, key
+        )
         self.assertIsNone(value)
 
 
-class TestDistributedContextManager(unittest.TestCase):
+class TestCorrelationContextManager(unittest.TestCase):
     def setUp(self):
-        self.manager = distributedcontext.DistributedContextManager()
+        self.manager = distributedcontext.CorrelationContextManager()
 
-    def test_get_current_context(self):
-        self.assertIsNone(self.manager.get_current_context())
+    def test_current_context(self):
+        self.assertIsNone(self.manager.current_context())
 
     def test_use_context(self):
-        expected = distributedcontext.DistributedContext(
+        expected = distributedcontext.CorrelationContext(
             (
                 distributedcontext.Entry(
                     distributedcontext.EntryMetadata(0),

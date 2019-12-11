@@ -25,7 +25,7 @@ PRINTABLE = frozenset(
 
 
 class EntryMetadata:
-    """A class representing metadata of a DistributedContext entry
+    """A class representing metadata of a CorrelationContext entry
 
     Args:
         entry_ttl: The time to live (in service hops) of an entry. Must be
@@ -41,7 +41,7 @@ class EntryMetadata:
 
 
 class EntryKey(str):
-    """A class representing a key for a DistributedContext entry"""
+    """A class representing a key for a CorrelationContext entry"""
 
     def __new__(cls, value: str) -> "EntryKey":
         return cls.create(value)
@@ -56,7 +56,7 @@ class EntryKey(str):
 
 
 class EntryValue(str):
-    """A class representing the value of a DistributedContext entry"""
+    """A class representing the value of a CorrelationContext entry"""
 
     def __new__(cls, value: str) -> "EntryValue":
         return cls.create(value)
@@ -78,10 +78,10 @@ class Entry:
         self.value = value
 
 
-class DistributedContext:
+class CorrelationContext:
     """A container for distributed context entries"""
 
-    KEY = "DistributedContext"
+    KEY = "CorrelationContext"
 
     def __init__(self, entries: typing.Iterable[Entry]) -> None:
         self._container = {entry.key: entry for entry in entries}
@@ -113,3 +113,16 @@ class DistributedContext:
         container = getattr(context, cls.KEY, {})
         if key in container:
             return container[key].value
+
+
+class CorrelationContextManager:
+    def current_context(self) -> typing.Optional[CorrelationContext]:
+        """ TODO """
+
+    def http_text_format(self):
+        """ TODO """
+
+    def use_context(
+        self, ctx: CorrelationContext
+    ) -> typing.Iterator[CorrelationContext]:
+        """ TODO """
