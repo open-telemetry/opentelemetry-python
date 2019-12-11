@@ -33,9 +33,8 @@ class HTTPExtractor:
     Used when no HTTPExtractor implementation is available.
     """
 
-    def extract(
-        self, ctx: Context, carrier: Carrier, getter: Getter
-    ) -> Context:
+    @staticmethod
+    def extract(ctx: Context, carrier: Carrier, getter: Getter) -> Context:
         """ TODO """
         # pylint: disable=unused-argument
         return ctx
@@ -47,9 +46,8 @@ class HTTPInjector:
     Used when no HTTPInjector implementation is available.
     """
 
-    def inject(
-        self, ctx: Context, carrier: Carrier, setter: Setter
-    ) -> Context:
+    @staticmethod
+    def inject(ctx: Context, carrier: Carrier, setter: Setter) -> Context:
         """ TODO """
         # pylint: disable=unused-argument
         return ctx
