@@ -19,14 +19,19 @@ from opentelemetry.context.propagation import Carrier, Getter, Setter
 class ContextKeys:
     """ TODO """
 
+    KEY = "baggage"
+
     @classmethod
     def span_context_key(cls):
         """ TODO """
-        return "baggage"
+        return cls.KEY
 
 
-class BaggageExtractor:
-    """ TODO """
+class HTTPExtractor:
+    """The default HTTPExtractor.
+
+    Used when no HTTPExtractor implementation is available.
+    """
 
     def extract(
         self, ctx: Context, carrier: Carrier, getter: Getter
@@ -36,8 +41,11 @@ class BaggageExtractor:
         return ctx
 
 
-class BaggageInjector:
-    """ TODO """
+class HTTPInjector:
+    """The default HTTPInjector.
+
+    Used when no HTTPInjector implementation is available.
+    """
 
     def inject(
         self, ctx: Context, carrier: Carrier, setter: Setter
@@ -45,17 +53,3 @@ class BaggageInjector:
         """ TODO """
         # pylint: disable=unused-argument
         return ctx
-
-
-class DefaultBaggageExtractor(BaggageExtractor):
-    """The default BaggageExtractor.
-
-    Used when no BaggageExtractor implementation is available.
-    """
-
-
-class DefaultBaggageInjector(BaggageInjector):
-    """The default BaggageInjector.
-
-    Used when no BaggageInjector implementation is available.
-    """
