@@ -112,7 +112,7 @@ class TracedConnection(wrapt.ObjectProxy):
         connection,
         db_api_integration: DatabaseApiIntegration,
         *args,
-        **kwargs,
+        **kwargs
     ):
         wrapt.ObjectProxy.__init__(self, connection)
         self._db_api_integration = db_api_integration
@@ -124,14 +124,14 @@ class TracedConnection(wrapt.ObjectProxy):
 
 
 class TracedCursor(wrapt.ObjectProxy):
-    
+
     # pylint: disable=unused-argument
     def __init__(
         self,
         cursor,
         db_api_integration: DatabaseApiIntegration,
         *args,
-        **kwargs,
+        **kwargs
     ):
         wrapt.ObjectProxy.__init__(self, cursor)
         self._db_api_integration = db_api_integration
@@ -155,7 +155,7 @@ class TracedCursor(wrapt.ObjectProxy):
         self,
         query_method: typing.Callable[..., any],
         *args: typing.Tuple[any, any],
-        **kwargs: typing.Dict[any, any],
+        **kwargs: typing.Dict[any, any]
     ):
 
         statement = args[0] if args else ""
