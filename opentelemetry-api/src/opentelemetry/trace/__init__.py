@@ -129,10 +129,12 @@ class SpanKind(enum.Enum):
     https://github.com/open-telemetry/opentelemetry-specification/pull/226.
     """
 
-    #: Default value. Indicates that the span is used internally in the application.
+    #: Default value. Indicates that the span is used internally in the
+    # application.
     INTERNAL = 0
 
-    #: Indicates that the span describes an operation that handles a remote request.
+    #: Indicates that the span describes an operation that handles a remote
+    # request.
     SERVER = 1
 
     #: Indicates that the span describes a request to some remote service.
@@ -235,6 +237,7 @@ class Span:
         exc_tb: typing.Optional[python_types.TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
+
         self.end()
 
 
@@ -435,6 +438,7 @@ class Tracer:
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
+        set_status_on_exception: bool = True,
     ) -> "Span":
         """Starts a span.
 
@@ -466,6 +470,11 @@ class Tracer:
             attributes: The span's attributes.
             links: Links span to other spans
             start_time: Sets the start time of a span
+            set_status_on_exception: Only relevant if the returned span is used
+                in a with/context manager. Defines wether the span status will
+                be automatically set to UNKNOWN when an uncaught exception is
+                raised in the span with block. The span status won't be set by
+                this mechanism if it was previousy set manually.
 
         Returns:
             The newly-created span.
