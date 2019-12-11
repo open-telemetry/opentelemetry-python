@@ -43,8 +43,14 @@ class TestDBApiIntegration(unittest.TestCase):
             "server_port": 123,
             "user": "testuser",
         }
+        connection_attributes = {
+            "database": "database",
+            "port": "server_port",
+            "host": "server_host",
+            "user": "user",
+        }
         db_integration = DatabaseApiIntegration(
-            self.tracer, "testcomponent", "testtype"
+            self.tracer, "testcomponent", "testtype", connection_attributes
         )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, connection_props

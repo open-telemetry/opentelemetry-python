@@ -27,4 +27,17 @@ def trace_integration(tracer: Tracer):
     """Integrate with MySQL Connector/Python library.
        https://dev.mysql.com/doc/connector-python/en/
     """
-    db_integration(tracer, mysql.connector, "connect", "mysql")
+    connection_attributes = {
+        "database": "database",
+        "port": "server_port",
+        "host": "server_host",
+        "user": "user",
+    }
+    db_integration(
+        tracer,
+        mysql.connector,
+        "connect",
+        "mysql",
+        "sql",
+        connection_attributes,
+    )
