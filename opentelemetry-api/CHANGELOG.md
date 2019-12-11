@@ -4,7 +4,7 @@
 
 ## 0.3a0
 
-Released 2019-12-10
+Released 2019-12-11
 
 - Multiple tracing API changes
 - Multiple metrics API changes

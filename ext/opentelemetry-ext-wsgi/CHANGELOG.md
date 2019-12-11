@@ -4,7 +4,7 @@
 
 ## 0.3a0
 
-Released 2019-12-10
+Released 2019-12-11
 
 - Support new semantic conventions
   ([#299](https://github.com/open-telemetry/opentelemetry-python/pull/299))
