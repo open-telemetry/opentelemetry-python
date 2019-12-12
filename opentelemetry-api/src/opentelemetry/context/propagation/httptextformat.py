@@ -15,7 +15,7 @@
 import abc
 import typing
 
-from opentelemetry.trace import SpanContext
+from opentelemetry.trace import Span, SpanContext
 
 _T = typing.TypeVar("_T")
 
@@ -95,7 +95,7 @@ class HTTPTextFormat(abc.ABC):
 
     @abc.abstractmethod
     def inject(
-        self, context: SpanContext, set_in_carrier: Setter[_T], carrier: _T
+        self, span: Span, set_in_carrier: Setter[_T], carrier: _T
     ) -> None:
         """Inject values from a SpanContext into a carrier.
 
