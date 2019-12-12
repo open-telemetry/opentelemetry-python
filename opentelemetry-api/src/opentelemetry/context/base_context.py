@@ -141,10 +141,8 @@ class BaseRuntimeContext:
         ctx.__setattr__(key, value)
         return ctx
 
-    @classmethod
-    def current(cls) -> "BaseRuntimeContext":
-        return ctx.__getitem__("current-context")
+    def current(self) -> "BaseRuntimeContext":
+        return self.__getitem__("__current_context__")
 
-    @classmethod
-    def set_current(cls, ctx: "BaseRuntimeContext"):
-        ctx.__setattr__("current-context", ctx)
+    def set_current(self, ctx: "BaseRuntimeContext"):
+        self.__setattr__("__current_context__", ctx)

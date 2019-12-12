@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 from requests.sessions import Session
 
 from opentelemetry import propagation
-from opentelemetry.context import BaseRuntimeContext, Context
+from opentelemetry.context import Context
 from opentelemetry.trace import SpanKind
 
 
@@ -75,9 +75,7 @@ def enable(tracer):
 
             headers = kwargs.setdefault("headers", {})
             propagation.inject(
-                BaseRuntimeContext.current(),
-                type(headers).__setitem__,
-                headers,
+                Context.current(), type(headers).__setitem__, headers,
             )
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 

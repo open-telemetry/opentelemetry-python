@@ -21,11 +21,14 @@ from contextlib import contextmanager
 from typing import Iterator, Optional, Sequence, Tuple
 
 from opentelemetry import trace as trace_api
-from opentelemetry.context import BaseRuntimeContext, Context
+from opentelemetry.context import Context
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import sampling
-from opentelemetry.trace.propagation import ContextKeys
+from opentelemetry.trace.propagation.context import (
+    from_context,
+    with_span_context,
+)
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
@@ -354,9 +357,7 @@ class Tracer(trace_api.Tracer):
             parent_context = parent.get_context()
 
         if parent_context is None:
-            parent_context = BaseRuntimeContext.value(
-                BaseRuntimeContext.current(), ContextKeys.span_context_key()
-            )
+            parent_context = from_context(Context.current())
 
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext
@@ -421,11 +422,7 @@ class Tracer(trace_api.Tracer):
         try:
             span_snapshot = self._current_span_slot.get()
             self._current_span_slot.set(span)
-            BaseRuntimeContext.set_value(
-                BaseRuntimeContext.current(),
-                ContextKeys.span_context_key(),
-                span.get_context(),
-            )
+            with_span_context(Context.current(), span.get_context())
             try:
                 yield span
             finally:

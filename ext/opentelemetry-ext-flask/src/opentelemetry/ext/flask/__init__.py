@@ -7,7 +7,7 @@ from flask import request as flask_request
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import propagation, trace
-from opentelemetry.context import BaseRuntimeContext
+from opentelemetry.context import Context
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -58,9 +58,7 @@ def _before_flask_request():
         environ
     )
     parent_span = propagation.extract(
-        BaseRuntimeContext.current(),
-        otel_wsgi.get_header_from_environ,
-        environ,
+        Context.current(), otel_wsgi.get_header_from_environ, environ,
     )
 
     tracer = trace.tracer()
