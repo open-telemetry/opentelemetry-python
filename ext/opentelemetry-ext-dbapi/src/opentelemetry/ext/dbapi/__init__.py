@@ -104,6 +104,7 @@ class DatabaseApiIntegration:
         return traced_connection
 
 
+# pylint: disable=abstract-method
 class TracedConnection(wrapt.ObjectProxy):
 
     # pylint: disable=unused-argument
@@ -123,6 +124,7 @@ class TracedConnection(wrapt.ObjectProxy):
         )
 
 
+# pylint: disable=abstract-method
 class TracedCursor(wrapt.ObjectProxy):
 
     # pylint: disable=unused-argument
