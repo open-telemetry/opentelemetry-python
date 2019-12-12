@@ -303,14 +303,15 @@ class ScopeShim(opentracing.Scope):
 
     It is necessary to have both ways for constructing `ScopeShim` objects
     because in some cases we need to create the object from an OpenTelemetry
-    `Span` context manager (as returned by
+    `opentelemetry.trace.Span` context manager (as returned by
     :meth:`opentelemetry.trace.Tracer.use_span`), in which case our only way of
-    retrieving a `Span` object is by calling the ``__enter__()`` method on the
-    context manager, which makes the span active in the OpenTelemetry tracer;
-    whereas in other cases we need to accept a `SpanShim` object and wrap it in
-    a `ScopeShim`. The former is used mainly when the instrumentation code
-    retrieves the currently-active span using `ScopeManagerShim.active`. The
-    latter is mainly used when the instrumentation code activates a span using
+    retrieving a `opentelemetry.trace.Span` object is by calling the
+    ``__enter__()`` method on the context manager, which makes the span active
+    in the OpenTelemetry tracer; whereas in other cases we need to accept a
+    `SpanShim` object and wrap it in a `ScopeShim`. The former is used mainly
+    when the instrumentation code retrieves the currently-active span using
+    `ScopeManagerShim.active`. The latter is mainly used when the
+    instrumentation code activates a span using
     :meth:`ScopeManagerShim.activate`.
 
     Args:
@@ -318,12 +319,14 @@ class ScopeShim(opentracing.Scope):
             :class:`ScopeShim`.
         span: The :class:`SpanShim` this :class:`ScopeShim` controls.
         span_cm(:class:`contextlib.AbstractContextManager`, optional): A
-            Python context manager which yields an OpenTelemetry `Span` from
-            its ``__enter__()`` method. Used by :meth:`from_context_manager` to
-            store the context manager as an attribute so that it can later be
-            closed by calling its ``__exit__()`` method. Defaults to `None`.
+            Python context manager which yields an OpenTelemetry
+            `opentelemetry.trace.Span` from its ``__enter__()`` method. Used
+            by :meth:`from_context_manager` to store the context manager as
+            an attribute so that it can later be closed by calling its
+            ``__exit__()`` method. Defaults to `None`.
 
-    TODO: Is :class:`contextlib.AbstractContextManager` the correct type for *span_cm*?
+    TODO: Is :class:`contextlib.AbstractContextManager` the correct
+          type for *span_cm*?
     """
 
     def __init__(self, manager, span, span_cm=None):
@@ -334,12 +337,13 @@ class ScopeShim(opentracing.Scope):
     # need to get rid of `manager.tracer` for this.
     @classmethod
     def from_context_manager(cls, manager, span_cm):
-        """Constructs a :class:`ScopeShim` from an OpenTelemetry `Span` context
+        """Constructs a :class:`ScopeShim` from an OpenTelemetry
+        `opentelemetry.trace.Span` context
         manager.
 
-        The method extracts a `Span` object from the context manager by calling
-        the context manager's ``__enter__()`` method. This causes the span to
-        start in the OpenTelemetry tracer.
+        The method extracts a `opentelemetry.trace.Span` object from the
+        context manager by calling the context manager's ``__enter__()``
+        method. This causes the span to start in the OpenTelemetry tracer.
 
         Example usage::
 
@@ -353,7 +357,7 @@ class ScopeShim(opentracing.Scope):
         Args:
             manager: The :class:`ScopeManagerShim` that created this
                 :class:`ScopeShim`.
-            span_cm: An OpenTelemetry `Span` context manager as returned by
+            span_cm: A context manager as returned by
                 :meth:`opentelemetry.trace.Tracer.use_span`.
         """
 
@@ -396,7 +400,7 @@ class ScopeShim(opentracing.Scope):
 
 class ScopeManagerShim(opentracing.ScopeManager):
     """Implements :class:`opentracing.ScopeManager` by setting and getting the
-    active `Span` in the OpenTelemetry tracer.
+    active `opentelemetry.trace.Span` in the OpenTelemetry tracer.
 
     This class keeps a reference to a :class:`TracerShim` as an attribute. This
     reference is used to communicate with the OpenTelemetry tracer. It is
