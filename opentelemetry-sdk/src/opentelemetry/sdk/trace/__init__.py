@@ -18,13 +18,15 @@ import logging
 import random
 import threading
 from contextlib import contextmanager
-from typing import Iterator, Optional, Sequence, Tuple
+from types import TracebackType
+from typing import Iterator, Optional, Sequence, Tuple, Type
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import SpanContext, sampling
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
@@ -135,6 +137,7 @@ class Span(trace_api.Span):
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
+        set_status_on_exception: bool = True,
     ) -> None:
 
         self.name = name
@@ -144,9 +147,10 @@ class Span(trace_api.Span):
         self.trace_config = trace_config
         self.resource = resource
         self.kind = kind
+        self._set_status_on_exception = set_status_on_exception
 
         self.span_processor = span_processor
-        self.status = trace_api.Status()
+        self.status = None
         self._lock = threading.Lock()
 
         if attributes is None:
@@ -175,7 +179,10 @@ class Span(trace_api.Span):
         )
 
     def __str__(self):
-        return '{}(name="{}", context={}, kind={}, parent={}, start_time={}, end_time={})'.format(
+        return (
+            '{}(name="{}", context={}, kind={}, '
+            "parent={}, start_time={}, end_time={})"
+        ).format(
             type(self).__name__,
             self.name,
             self.context,
@@ -255,6 +262,9 @@ class Span(trace_api.Span):
             logger.warning("Calling end() on an ended span.")
             return
 
+        if self.status is None:
+            self.set_status(Status(canonical_code=StatusCanonicalCode.OK))
+
         self.span_processor.on_end(self)
 
     def update_name(self, name: str) -> None:
@@ -275,6 +285,29 @@ class Span(trace_api.Span):
             logger.warning("Calling set_status() on an ended span.")
             return
         self.status = status
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        """Ends context manager and calls `end` on the `Span`."""
+
+        if (
+            self.status is None
+            and self._set_status_on_exception
+            and exc_val is not None
+        ):
+
+            self.set_status(
+                Status(
+                    canonical_code=StatusCanonicalCode.UNKNOWN,
+                    description="{}: {}".format(exc_type.__name__, exc_val),
+                )
+            )
+
+        super().__exit__(exc_type, exc_val, exc_tb)
 
 
 def generate_span_id() -> int:
@@ -335,7 +368,7 @@ class Tracer(trace_api.Tracer):
         span = self.start_span(name, parent, kind, attributes, links)
         return self.use_span(span, end_on_exit=True)
 
-    def start_span(
+    def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
@@ -343,6 +376,7 @@ class Tracer(trace_api.Tracer):
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
+        set_status_on_exception: bool = True,
     ) -> trace_api.Span:
         """See `opentelemetry.trace.Tracer.start_span`."""
 
@@ -402,6 +436,7 @@ class Tracer(trace_api.Tracer):
                 span_processor=self._active_span_processor,
                 kind=kind,
                 links=links,
+                set_status_on_exception=set_status_on_exception,
             )
             span.start(start_time=start_time)
         else:
