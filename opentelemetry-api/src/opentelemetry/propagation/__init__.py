@@ -17,7 +17,8 @@ import typing
 import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
 from opentelemetry.context.propagation.tracecontexthttptextformat import (
-    TraceContextHTTPTextFormat,
+    TraceContextHTTPExtractor,
+    TraceContextHTTPInjector,
 )
 from opentelemetry.context import BaseRuntimeContext
 
@@ -31,7 +32,7 @@ def extract(
 ) -> typing.Optional[BaseRuntimeContext]:
     """Load the parent SpanContext from values in the carrier.
 
-    Using the specified HTTPTextFormatter, the propagator will
+    Using the specified HTTPExtractor, the propagator will
     extract a SpanContext from the carrier. If one is found,
     it will be set as the parent context of the current span.
 
@@ -73,31 +74,31 @@ def inject(
 
 
 _HTTP_TEXT_INJECTORS = [
-    TraceContextHTTPTextFormat
-]  # typing.List[httptextformat.HTTPTextFormat]
+    TraceContextHTTPInjector
+]  # typing.List[httptextformat.HTTPInjector]
 
 _HTTP_TEXT_EXTRACTORS = [
-    TraceContextHTTPTextFormat
-]  # typing.List[httptextformat.HTTPTextFormat]
+    TraceContextHTTPExtractor
+]  # typing.List[httptextformat.HTTPExtractor]
 
 
 def set_http_extractors(
-    extractor_list: typing.List[httptextformat.HTTPTextFormat],
+    extractor_list: typing.List[httptextformat.HTTPExtractor],
 ) -> None:
     global _HTTP_TEXT_EXTRACTORS  # pylint:disable=global-statement
     _HTTP_TEXT_EXTRACTORS = extractor_list
 
 
 def set_http_injectors(
-    injector_list: typing.List[httptextformat.HTTPTextFormat],
+    injector_list: typing.List[httptextformat.HTTPInjector],
 ) -> None:
     global _HTTP_TEXT_INJECTORS  # pylint:disable=global-statement
     _HTTP_TEXT_INJECTORS = injector_list
 
 
-def get_http_extractors() -> typing.List[httptextformat.HTTPTextFormat]:
+def get_http_extractors() -> typing.List[httptextformat.HTTPExtractor]:
     return _HTTP_TEXT_EXTRACTORS
 
 
-def get_http_injectors() -> typing.List[httptextformat.HTTPTextFormat]:
+def get_http_injectors() -> typing.List[httptextformat.HTTPInjector]:
     return _HTTP_TEXT_INJECTORS

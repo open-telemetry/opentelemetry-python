@@ -19,7 +19,10 @@ import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagation, trace
-from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
+from opentelemetry.context.propagation.httptextformat import (
+    HTTPExtractor,
+    HTTPInjector,
+)
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import Tracer
 
@@ -46,8 +49,8 @@ class TestShim(unittest.TestCase):
         cls._previous_extractors = propagation.get_http_extractors()
 
         # Set mock propagator for testing.
-        propagation.set_http_extractors([MockHTTPTextFormat])
-        propagation.set_http_injectors([MockHTTPTextFormat])
+        propagation.set_http_extractors([MockHTTPExtractor])
+        propagation.set_http_injectors([MockHTTPInjector])
 
     @classmethod
     def tearDownClass(cls):
@@ -477,8 +480,8 @@ class TestShim(unittest.TestCase):
 
         headers = {}
         self.shim.inject(context, opentracing.Format.HTTP_HEADERS, headers)
-        self.assertEqual(headers[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
-        self.assertEqual(headers[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
+        self.assertEqual(headers[_TRACE_ID_KEY], str(1220))
+        self.assertEqual(headers[_SPAN_ID_KEY], str(7478))
 
     def test_inject_text_map(self):
         """Test `inject()` method for Format.TEXT_MAP."""
@@ -489,8 +492,8 @@ class TestShim(unittest.TestCase):
         # Verify Format.TEXT_MAP
         text_map = {}
         self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
-        self.assertEqual(text_map[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
-        self.assertEqual(text_map[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
+        self.assertEqual(text_map[_TRACE_ID_KEY], str(1220))
+        self.assertEqual(text_map[_SPAN_ID_KEY], str(7478))
 
     def test_inject_binary(self):
         """Test `inject()` method for Format.BINARY."""
@@ -506,8 +509,8 @@ class TestShim(unittest.TestCase):
         """Test `extract()` method for Format.HTTP_HEADERS."""
 
         carrier = {
-            MockHTTPTextFormat.TRACE_ID_KEY: 1220,
-            MockHTTPTextFormat.SPAN_ID_KEY: 7478,
+            _TRACE_ID_KEY: 1220,
+            _SPAN_ID_KEY: 7478,
         }
 
         ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
@@ -518,8 +521,8 @@ class TestShim(unittest.TestCase):
         """Test `extract()` method for Format.TEXT_MAP."""
 
         carrier = {
-            MockHTTPTextFormat.TRACE_ID_KEY: 1220,
-            MockHTTPTextFormat.SPAN_ID_KEY: 7478,
+            _TRACE_ID_KEY: 1220,
+            _SPAN_ID_KEY: 7478,
         }
 
         ctx = self.shim.extract(opentracing.Format.TEXT_MAP, carrier)
@@ -534,16 +537,17 @@ class TestShim(unittest.TestCase):
             self.shim.extract(opentracing.Format.BINARY, bytearray())
 
 
-class MockHTTPTextFormat(HTTPTextFormat):
-    """Mock propagator for testing purposes."""
+_TRACE_ID_KEY = "mock-traceid"
+_SPAN_ID_KEY = "mock-spanid"
 
-    TRACE_ID_KEY = "mock-traceid"
-    SPAN_ID_KEY = "mock-spanid"
+
+class MockHTTPExtractor(HTTPExtractor):
+    """Mock extractor for testing purposes."""
 
     @classmethod
     def extract(cls, context, get_from_carrier, carrier):
-        trace_id_list = get_from_carrier(carrier, cls.TRACE_ID_KEY)
-        span_id_list = get_from_carrier(carrier, cls.SPAN_ID_KEY)
+        trace_id_list = get_from_carrier(carrier, _TRACE_ID_KEY)
+        span_id_list = get_from_carrier(carrier, _SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
             return trace.INVALID_SPAN_CONTEXT
@@ -552,7 +556,11 @@ class MockHTTPTextFormat(HTTPTextFormat):
             trace_id=int(trace_id_list[0]), span_id=int(span_id_list[0])
         )
 
+
+class MockHTTPInjector(HTTPInjector):
+    """Mock injector for testing purposes."""
+
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
-        set_in_carrier(carrier, cls.TRACE_ID_KEY, str(context.trace_id))
-        set_in_carrier(carrier, cls.SPAN_ID_KEY, str(context.span_id))
+        set_in_carrier(carrier, _TRACE_ID_KEY, str(context.trace_id))
+        set_in_carrier(carrier, _SPAN_ID_KEY, str(context.span_id))

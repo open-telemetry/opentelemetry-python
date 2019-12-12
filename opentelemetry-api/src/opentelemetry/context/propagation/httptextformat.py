@@ -24,7 +24,7 @@ Setter = typing.Callable[[_T, str, str], None]
 Getter = typing.Callable[[_T, str], typing.List[str]]
 
 
-class HTTPTextFormat(abc.ABC):
+class HTTPExtractor(abc.ABC):
     """API for propagation of span context via headers.
 
     This class provides an interface that enables extracting and injecting
@@ -37,7 +37,7 @@ class HTTPTextFormat(abc.ABC):
 
         import flask
         import requests
-        from opentelemetry.context.propagation import HTTPTextFormat
+        from opentelemetry.context.propagation import HTTPExtractor
 
         PROPAGATOR = HTTPTextFormat()
 
@@ -98,6 +98,8 @@ class HTTPTextFormat(abc.ABC):
 
         """
 
+
+class HTTPInjector(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def inject(

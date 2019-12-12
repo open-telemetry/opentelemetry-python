@@ -19,15 +19,16 @@ from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.context.propagation import tracecontexthttptextformat
 from opentelemetry.context.propagation.tracecontexthttptextformat import (
-    TraceContextHTTPTextFormat,
+    TraceContextHTTPExtractor,
+    TraceContextHTTPInjector,
 )
 from opentelemetry.trace.propagation.context import (
     from_context,
     with_span_context,
 )
 
-INJECT = TraceContextHTTPTextFormat
-EXTRACT = TraceContextHTTPTextFormat
+INJECT = TraceContextHTTPInjector
+EXTRACT = TraceContextHTTPExtractor
 
 
 def get_as_list(

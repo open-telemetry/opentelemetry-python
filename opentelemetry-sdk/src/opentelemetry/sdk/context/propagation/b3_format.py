@@ -15,19 +15,24 @@
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
+from opentelemetry.context.propagation.httptextformat import (
+    HTTPExtractor,
+    HTTPInjector,
+)
 
 
-class B3Format(HTTPTextFormat):
+TRACE_ID_KEY = "x-b3-traceid"
+SPAN_ID_KEY = "x-b3-spanid"
+SAMPLED_KEY = "x-b3-sampled"
+
+
+class B3Extractor(HTTPExtractor):
     """Propagator for the B3 HTTP header format.
 
     See: https://github.com/openzipkin/b3-propagation
     """
 
     SINGLE_HEADER_KEY = "b3"
-    TRACE_ID_KEY = "x-b3-traceid"
-    SPAN_ID_KEY = "x-b3-spanid"
-    SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
@@ -60,21 +65,15 @@ class B3Format(HTTPTextFormat):
                 return trace.INVALID_SPAN_CONTEXT
         else:
             trace_id = (
-                _extract_first_element(
-                    get_from_carrier(carrier, cls.TRACE_ID_KEY)
-                )
+                _extract_first_element(get_from_carrier(carrier, TRACE_ID_KEY))
                 or trace_id
             )
             span_id = (
-                _extract_first_element(
-                    get_from_carrier(carrier, cls.SPAN_ID_KEY)
-                )
+                _extract_first_element(get_from_carrier(carrier, SPAN_ID_KEY))
                 or span_id
             )
             sampled = (
-                _extract_first_element(
-                    get_from_carrier(carrier, cls.SAMPLED_KEY)
-                )
+                _extract_first_element(get_from_carrier(carrier, SAMPLED_KEY))
                 or sampled
             )
             flags = (
@@ -99,16 +98,16 @@ class B3Format(HTTPTextFormat):
             trace_state=trace.TraceState(),
         )
 
+
+class B3Injector(HTTPInjector):
     @classmethod
     def inject(cls, context, set_in_carrier, carrier):
         sampled = (trace.TraceOptions.SAMPLED & context.trace_options) != 0
         set_in_carrier(
-            carrier, cls.TRACE_ID_KEY, format_trace_id(context.trace_id)
+            carrier, TRACE_ID_KEY, format_trace_id(context.trace_id)
         )
-        set_in_carrier(
-            carrier, cls.SPAN_ID_KEY, format_span_id(context.span_id)
-        )
-        set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
+        set_in_carrier(carrier, SPAN_ID_KEY, format_span_id(context.span_id))
+        set_in_carrier(carrier, SAMPLED_KEY, "1" if sampled else "0")
 
 
 def format_trace_id(trace_id: int) -> str:

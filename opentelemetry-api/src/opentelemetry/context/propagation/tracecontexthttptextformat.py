@@ -49,12 +49,14 @@ _MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
 _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
 
 
-class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
-    """Extracts and injects using w3c TraceContext's headers.
+TRACEPARENT_HEADER_NAME = "traceparent"
+TRACESTATE_HEADER_NAME = "tracestate"
+
+
+class TraceContextHTTPExtractor(httptextformat.HTTPExtractor):
+    """Extracts using w3c TraceContext's headers.
     """
 
-    _TRACEPARENT_HEADER_NAME = "traceparent"
-    _TRACESTATE_HEADER_NAME = "tracestate"
     _TRACEPARENT_HEADER_FORMAT = (
         "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
         + "(-.*)?[ \t]*$"
@@ -70,7 +72,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     ) -> BaseRuntimeContext:
         """Extracts a valid SpanContext from the carrier.
         """
-        header = get_from_carrier(carrier, cls._TRACEPARENT_HEADER_NAME)
+        header = get_from_carrier(carrier, TRACEPARENT_HEADER_NAME)
 
         if not header:
             return trace.INVALID_SPAN_CONTEXT
@@ -93,9 +95,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         if version == "ff":
             return trace.INVALID_SPAN_CONTEXT
 
-        tracestate_headers = get_from_carrier(
-            carrier, cls._TRACESTATE_HEADER_NAME
-        )
+        tracestate_headers = get_from_carrier(carrier, TRACESTATE_HEADER_NAME)
         tracestate = _parse_tracestate(tracestate_headers)
 
         span_context = trace.SpanContext(
@@ -111,6 +111,11 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
 
         return ctx
 
+
+class TraceContextHTTPInjector(httptextformat.HTTPInjector):
+    """Injects using w3c TraceContext's headers.
+    """
+
     @classmethod
     def inject(
         cls,
@@ -124,14 +129,10 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
             sc.trace_id, sc.span_id, sc.trace_options,
         )
-        set_in_carrier(
-            carrier, cls._TRACEPARENT_HEADER_NAME, traceparent_string
-        )
+        set_in_carrier(carrier, TRACEPARENT_HEADER_NAME, traceparent_string)
         if sc.trace_state:
             tracestate_string = _format_tracestate(sc.trace_state)
-            set_in_carrier(
-                carrier, cls._TRACESTATE_HEADER_NAME, tracestate_string
-            )
+            set_in_carrier(carrier, TRACESTATE_HEADER_NAME, tracestate_string)
 
 
 def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
