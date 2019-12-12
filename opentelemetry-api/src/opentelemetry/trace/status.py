@@ -163,14 +163,14 @@ class Status:
 
     def __init__(
         self,
-        canonical_code: "StatusCanonicalCode" = StatusCanonicalCode.OK,
+        canonical_code: StatusCanonicalCode = StatusCanonicalCode.OK,
         description: typing.Optional[str] = None,
     ):
         self._canonical_code = canonical_code
         self._description = description
 
     @property
-    def canonical_code(self) -> "StatusCanonicalCode":
+    def canonical_code(self) -> StatusCanonicalCode:
         """Represents the canonical status code of a finished Span."""
         return self._canonical_code
 

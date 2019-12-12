@@ -20,6 +20,7 @@ from unittest import mock
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
 from opentelemetry.trace import sampling
+from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
 
 
@@ -518,12 +519,7 @@ class TestSpan(unittest.TestCase):
         span.start()
         self.assertEqual(start_time, span.start_time)
 
-        # default status
-        self.assertTrue(span.status.is_ok)
-        self.assertIs(
-            span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
-        )
-        self.assertIs(span.status.description, None)
+        self.assertIs(span.status, None)
 
         # status
         new_status = trace_api.status.Status(
@@ -578,13 +574,17 @@ class TestSpan(unittest.TestCase):
                 "Test description",
             )
             root.set_status(new_status)
-            # default status
-            self.assertTrue(root.status.is_ok)
-            self.assertEqual(
-                root.status.canonical_code,
-                trace_api.status.StatusCanonicalCode.OK,
-            )
-            self.assertIs(root.status.description, None)
+            self.assertIs(root.status, None)
+
+    def test_error_status(self):
+        try:
+            with trace.Tracer("test_error_status").start_span("root") as root:
+                raise Exception("unknown")
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+        self.assertIs(root.status.canonical_code, StatusCanonicalCode.UNKNOWN)
+        self.assertEqual(root.status.description, "Exception: unknown")
 
 
 def span_event_start_fmt(span_processor_name, span_name):

@@ -18,13 +18,15 @@ import logging
 import random
 import threading
 from contextlib import contextmanager
-from typing import Iterator, Optional, Sequence, Tuple
+from types import TracebackType
+from typing import Iterator, Optional, Sequence, Tuple, Type
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
-from opentelemetry.trace import sampling
+from opentelemetry.trace import SpanContext, sampling
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
@@ -35,36 +37,36 @@ MAX_NUM_LINKS = 32
 
 
 class SpanProcessor:
-    """Interface which allows hooks for SDK's `Span`s start and end method
+    """Interface which allows hooks for SDK's `Span` start and end method
     invocations.
 
     Span processors can be registered directly using
-    :func:`~Tracer:add_span_processor` and they are invoked in the same order
+    :func:`Tracer.add_span_processor` and they are invoked in the same order
     as they were registered.
     """
 
     def on_start(self, span: "Span") -> None:
-        """Called when a :class:`Span` is started.
+        """Called when a :class:`opentelemetry.trace.Span` is started.
 
         This method is called synchronously on the thread that starts the
         span, therefore it should not block or throw an exception.
 
         Args:
-            span: The :class:`Span` that just started.
+            span: The :class:`opentelemetry.trace.Span` that just started.
         """
 
     def on_end(self, span: "Span") -> None:
-        """Called when a :class:`Span` is ended.
+        """Called when a :class:`opentelemetry.trace.Span` is ended.
 
         This method is called synchronously on the thread that ends the
         span, therefore it should not block or throw an exception.
 
         Args:
-            span: The :class:`Span` that just ended.
+            span: The :class:`opentelemetry.trace.Span` that just ended.
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`Tracer` is shutdown."""
+        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
 
 
 class MultiSpanProcessor(SpanProcessor):
@@ -99,7 +101,8 @@ class MultiSpanProcessor(SpanProcessor):
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
-    Users should create `Span`s via the `Tracer` instead of this constructor.
+    Users should create `Span` objects via the `Tracer` instead of this
+    constructor.
 
     Args:
         name: The name of the operation this span represents
@@ -135,6 +138,7 @@ class Span(trace_api.Span):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
         instrumentation_info: "InstrumentationInfo" = None,
+        set_status_on_exception: bool = True,
     ) -> None:
 
         self.name = name
@@ -144,9 +148,10 @@ class Span(trace_api.Span):
         self.trace_config = trace_config
         self.resource = resource
         self.kind = kind
+        self._set_status_on_exception = set_status_on_exception
 
         self.span_processor = span_processor
-        self.status = trace_api.Status()
+        self.status = None
         self._lock = threading.Lock()
 
         if attributes is None:
@@ -176,7 +181,10 @@ class Span(trace_api.Span):
         )
 
     def __str__(self):
-        return '{}(name="{}", context={}, kind={}, parent={}, start_time={}, end_time={})'.format(
+        return (
+            '{}(name="{}", context={}, kind={}, '
+            "parent={}, start_time={}, end_time={})"
+        ).format(
             type(self).__name__,
             self.name,
             self.context,
@@ -256,6 +264,9 @@ class Span(trace_api.Span):
             logger.warning("Calling end() on an ended span.")
             return
 
+        if self.status is None:
+            self.set_status(Status(canonical_code=StatusCanonicalCode.OK))
+
         self.span_processor.on_end(self)
 
     def update_name(self, name: str) -> None:
@@ -276,6 +287,29 @@ class Span(trace_api.Span):
             logger.warning("Calling set_status() on an ended span.")
             return
         self.status = status
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        """Ends context manager and calls `end` on the `Span`."""
+
+        if (
+            self.status is None
+            and self._set_status_on_exception
+            and exc_val is not None
+        ):
+
+            self.set_status(
+                Status(
+                    canonical_code=StatusCanonicalCode.UNKNOWN,
+                    description="{}: {}".format(exc_type.__name__, exc_val),
+                )
+            )
+
+        super().__exit__(exc_type, exc_val, exc_tb)
 
 
 def generate_span_id() -> int:
@@ -368,7 +402,7 @@ class Tracer(trace_api.Tracer):
         span = self.start_span(name, parent, kind, attributes, links)
         return self.use_span(span, end_on_exit=True)
 
-    def start_span(
+    def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
@@ -376,7 +410,8 @@ class Tracer(trace_api.Tracer):
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
-    ) -> "Span":
+        set_status_on_exception: bool = True,
+    ) -> trace_api.Span:
         """See `opentelemetry.trace.Tracer.start_span`."""
 
         if parent is Tracer.CURRENT_SPAN:
@@ -436,6 +471,7 @@ class Tracer(trace_api.Tracer):
                 kind=kind,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
+                set_status_on_exception=set_status_on_exception,
             )
             span.start(start_time=start_time)
         else:
