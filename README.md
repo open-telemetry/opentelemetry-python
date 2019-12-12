@@ -120,7 +120,6 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
 - [Christian Neumüller](https://github.com/Oberon00), Dynatrace
 - [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
 
 *Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
 
@@ -128,6 +127,7 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Reiley Yang](https://github.com/reyang), Microsoft
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
 
 *Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 
