@@ -138,6 +138,7 @@ Here goes a simple demo of how async could work in Python 3.7+::
         asyncio.run(main())
 """
 
+import copy
 from .base_context import BaseRuntimeContext
 
 __all__ = ["BaseRuntimeContext", "Context"]
@@ -154,25 +155,43 @@ except ImportError:
 
 
 class Context:
-    @classmethod
-    def value(cls, ctx: "BaseRuntimeContext", key: str) -> str:
-        return ctx.__getitem__(key)
-
-    @classmethod
-    def set_value(
-        cls, ctx: "BaseRuntimeContext", key: str, value: "object"
-    ) -> "BaseRuntimeContext":
-        # TODO: dont use the context directly here
-        ctx.__setattr__(key, value)
-        return ctx
-
-    @classmethod
-    def current(cls) -> "BaseRuntimeContext":
+    def __init__(self):
         global _CONTEXT
-        return _CONTEXT
+        self.contents = {}
+        self._id = "{}".format(id(self))
+        self._slot = _CONTEXT.register_slot(self._id)
+        self._slot.set(self)
+
+    def get(self, key):
+        return self.contents.get(key)
 
     @classmethod
-    def set_current(cls, ctx: "BaseRuntimeContext"):
-        global _CONTEXT
-        _CONTEXT = ctx
+    def value(cls, key: str) -> str:
+        return cls.current().contents.get(key)
 
+    @classmethod
+    def set_value(cls, key: str, value: "object") -> "Context":
+        getattr(_CONTEXT, _CONTEXT.current_context.get()).contents[key] = value
+        return cls.current()
+
+    @classmethod
+    def current(cls) -> "Context":
+        global _CONTEXT
+        if _CONTEXT.current_context is None:
+            ctx = Context()
+            cls.set_current(ctx)
+        snapshot = Context()
+        snapshot.contents = copy.deepcopy(
+            getattr(_CONTEXT, _CONTEXT.current_context.get()).contents
+        )
+        return snapshot
+
+    @classmethod
+    def set_current(cls, ctx: "Context"):
+        global _CONTEXT
+        if _CONTEXT.current_context is None:
+            _CONTEXT.current_context = _CONTEXT.register_slot(
+                # change the key here
+                "__current_prop_context__"
+            )
+        _CONTEXT.current_context.set(ctx._id)
