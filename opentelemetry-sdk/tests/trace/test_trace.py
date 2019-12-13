@@ -578,7 +578,9 @@ class TestSpan(unittest.TestCase):
 
     def test_error_status(self):
         try:
-            with trace.Tracer("test_error_status").start_span("root") as root:
+            with trace.TracerSource().get_tracer(
+                "opentelemetry-sdk"
+            ).start_span("root") as root:
                 raise Exception("unknown")
         except Exception:  # pylint: disable=broad-except
             pass
