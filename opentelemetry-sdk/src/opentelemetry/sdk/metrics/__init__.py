@@ -28,6 +28,7 @@ class LabelSet(metrics_api.LabelSet):
 
     def __init__(self, labels: Dict[str, str] = None):
         self.labels = labels
+        self.encoded = ''
 
 
 class BaseHandle:
@@ -36,11 +37,12 @@ class BaseHandle:
         value_type: Type[metrics_api.ValueT],
         enabled: bool,
         monotonic: bool,
+        aggregator
     ):
-        self.data = value_type()
         self.value_type = value_type
         self.enabled = enabled
         self.monotonic = monotonic
+        self.aggregator = aggregator
         self.last_update_timestamp = time_ns()
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
@@ -52,6 +54,10 @@ class BaseHandle:
             )
             return False
         return True
+
+    def update(self, value: metrics_api.ValueT):
+        self.last_update_timestamp = time_ns()
+        self.aggregator.update(value)
 
     def __repr__(self):
         return '{}(data="{}", last_update_timestamp={})'.format(
@@ -66,8 +72,7 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
                 return
-            self.last_update_timestamp = time_ns()
-            self.data += value
+            self.update(value)
 
 
 class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
@@ -77,8 +82,7 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
             if self.monotonic and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
-            self.last_update_timestamp = time_ns()
-            self.data = value
+            self.update(value)
 
 
 class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
@@ -88,8 +92,7 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
             if self.monotonic and value < 0:
                 logger.warning("Monotonic measure cannot accept negatives.")
                 return
-            self.last_update_timestamp = time_ns()
-            # TODO: record
+            self.update(value)
 
 
 class Metric(metrics_api.Metric):
@@ -103,6 +106,7 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        meter: Meter,
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -121,7 +125,8 @@ class Metric(metrics_api.Metric):
         handle = self.handles.get(label_set)
         if not handle:
             handle = self.HANDLE_TYPE(
-                self.value_type, self.enabled, self.monotonic
+                self.value_type, self.enabled, self.monotonic,
+                meter.batcher.aggregator_for(self.__class__)
             )
         self.handles[label_set] = handle
         return handle
@@ -150,6 +155,7 @@ class Counter(Metric, metrics_api.Counter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        meter: Meter,
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = True,
@@ -186,6 +192,7 @@ class Gauge(Metric, metrics_api.Gauge):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        meter: Meter,
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -222,6 +229,7 @@ class Measure(Metric, metrics_api.Measure):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        meter: Meter,
         label_keys: Sequence[str] = None,
         enabled: bool = False,
         monotonic: bool = False,
@@ -242,6 +250,13 @@ class Measure(Metric, metrics_api.Measure):
 
     UPDATE_FUNCTION = record
 
+class Record:
+
+    def __init__(self, encoded, metric_type, enabled, aggregator):
+        self.encoded = encoded
+        self.metric_type = metric_type
+        self.aggregator = aggregator
+
 
 # Used when getting a LabelSet with no key/values
 EMPTY_LABEL_SET = LabelSet()
@@ -250,8 +265,18 @@ EMPTY_LABEL_SET = LabelSet()
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`."""
 
-    def __init__(self):
-        self.labels = {}
+    def __init__(self, batcher):
+        self.label_sets = {}
+        self.metrics = {}
+        self.batcher = batcher
+
+    def collect(self):
+        for metric in metrics:
+            if metric.enabled:
+                metric_type = metric.metric_type
+                for label_set, handle in metrics.handles:
+                    record = Record(label_set.encoded, metric_type, handle.aggregator)
+                    self.batcher.process(record)
 
     def record_batch(
         self,
@@ -275,7 +300,7 @@ class Meter(metrics_api.Meter):
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
-        return metric_type(  # type: ignore
+        metric = metric_type(  # type: ignore
             name,
             description,
             unit,
@@ -284,6 +309,8 @@ class Meter(metrics_api.Meter):
             enabled=enabled,
             monotonic=monotonic,
         )
+        self.metrics.add(metric)
+        return metric
 
     def get_label_set(self, labels: Dict[str, str]):
         """See `opentelemetry.metrics.Meter.create_metric`.
@@ -299,8 +326,8 @@ class Meter(metrics_api.Meter):
         encoded = tuple(sorted(labels.items()))
         # If LabelSet exists for this meter in memory, use existing one
         if encoded not in self.labels:
-            self.labels[encoded] = LabelSet(labels=labels)
-        return self.labels[encoded]
+            self.label_sets[encoded] = LabelSet(labels=labels, encoded=encoded)
+        return self.label_sets[encoded]
 
 
 meter = Meter()
