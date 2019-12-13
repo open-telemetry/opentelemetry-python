@@ -76,8 +76,8 @@ class HTTPExtractor(abc.ABC):
     def extract(
         cls,
         context: BaseRuntimeContext,
-        get_from_carrier: Getter[_T],
         carrier: _T,
+        get_from_carrier: typing.Optional[Getter[_T]] = None,
     ) -> BaseRuntimeContext:
         """Create a SpanContext from values in the carrier.
 
@@ -105,8 +105,8 @@ class HTTPInjector(abc.ABC):
     def inject(
         cls,
         context: BaseRuntimeContext,
-        set_in_carrier: Setter[_T],
         carrier: _T,
+        set_from_carrier: typing.Optional[Setter[_T]],
     ) -> None:
         """Inject values from a SpanContext into a carrier.
 

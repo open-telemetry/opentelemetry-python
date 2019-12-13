@@ -142,11 +142,37 @@ from .base_context import BaseRuntimeContext
 
 __all__ = ["BaseRuntimeContext", "Context"]
 
+_CONTEXT = None
 try:
     from .async_context import AsyncRuntimeContext
 
-    Context = AsyncRuntimeContext()  # type: BaseRuntimeContext
+    _CONTEXT = AsyncRuntimeContext()  # type: BaseRuntimeContext
 except ImportError:
     from .thread_local_context import ThreadLocalRuntimeContext
 
-    Context = ThreadLocalRuntimeContext()
+    _CONTEXT = ThreadLocalRuntimeContext()
+
+
+class Context:
+    @classmethod
+    def value(cls, ctx: "BaseRuntimeContext", key: str) -> str:
+        return ctx.__getitem__(key)
+
+    @classmethod
+    def set_value(
+        cls, ctx: "BaseRuntimeContext", key: str, value: "object"
+    ) -> "BaseRuntimeContext":
+        # TODO: dont use the context directly here
+        ctx.__setattr__(key, value)
+        return ctx
+
+    @classmethod
+    def current(cls) -> "BaseRuntimeContext":
+        global _CONTEXT
+        return _CONTEXT
+
+    @classmethod
+    def set_current(cls, ctx: "BaseRuntimeContext"):
+        global _CONTEXT
+        _CONTEXT = ctx
+

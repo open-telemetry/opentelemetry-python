@@ -26,6 +26,7 @@ from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import sampling
 from opentelemetry.trace.propagation.context import (
+    ContextKeys,
     from_context,
     with_span_context,
 )
@@ -311,10 +312,9 @@ class Tracer(trace_api.Tracer):
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
         shutdown_on_exit: bool = True,
     ) -> None:
-        slot_name = "current_span"
+        self._slot_name = ContextKeys.span_context_key()
         if name:
-            slot_name = "{}.current_span".format(name)
-        self._current_span_slot = Context.register_slot(slot_name)
+            self._slot_name = "{}.{}".format(name, self._slot_name)
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
         self._atexit_handler = None
@@ -323,7 +323,7 @@ class Tracer(trace_api.Tracer):
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return self._current_span_slot.get()
+        return Context.value(Context.current(), self._slot_name)
 
     def start_as_current_span(
         self,
@@ -420,13 +420,12 @@ class Tracer(trace_api.Tracer):
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
-            span_snapshot = self._current_span_slot.get()
-            self._current_span_slot.set(span)
+            span_snapshot = self.get_current_span()
             with_span_context(Context.current(), span.get_context())
             try:
                 yield span
             finally:
-                self._current_span_slot.set(span_snapshot)
+                with_span_context(Context.current(), span_snapshot)
         finally:
             if end_on_exit:
                 span.end()

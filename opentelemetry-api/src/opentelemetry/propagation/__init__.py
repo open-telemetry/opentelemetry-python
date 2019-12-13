@@ -14,6 +14,7 @@
 
 import typing
 
+from opentelemetry.context import Context
 import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
 from opentelemetry.context.propagation.tracecontexthttptextformat import (
@@ -26,9 +27,11 @@ _T = typing.TypeVar("_T")
 
 
 def extract(
-    context: BaseRuntimeContext,
-    get_from_carrier: httptextformat.Getter[_T],
     carrier: _T,
+    context: typing.Optional[BaseRuntimeContext] = None,
+    extractors: typing.Optional[
+        typing.List[httptextformat.HTTPExtractor]
+    ] = None,
 ) -> typing.Optional[BaseRuntimeContext]:
     """Load the parent SpanContext from values in the carrier.
 
@@ -45,15 +48,22 @@ def extract(
             must be paired with an appropriate get_from_carrier
             which understands how to extract a value from it.
     """
-    for extractor in get_http_extractors():
-        return extractor.extract(context, get_from_carrier, carrier)
+    if context is None:
+        context = Context.current()
+    if extractors is None:
+        extractors = get_http_extractors()
+
+    for extractor in extractors:
+        return extractor.extract(context, carrier)
     return None
 
 
 def inject(
-    context: BaseRuntimeContext,
-    set_in_carrier: httptextformat.Setter[_T],
     carrier: _T,
+    injectors: typing.Optional[
+        typing.List[httptextformat.HTTPInjector]
+    ] = None,
+    context: typing.Optional[BaseRuntimeContext] = None,
 ) -> None:
     """Inject values from the current context into the carrier.
 
@@ -69,8 +79,13 @@ def inject(
             headers. Should be paired with set_in_carrier, which
             should know how to set header values on the carrier.
     """
-    for injector in get_http_injectors():
-        injector.inject(context, set_in_carrier, carrier)
+    if context is None:
+        context = Context.current()
+    if injectors is None:
+        injectors = get_http_injectors()
+
+    for injector in injectors:
+        injector.inject(context, carrier)
 
 
 _HTTP_TEXT_INJECTORS = [

@@ -15,15 +15,32 @@
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation.httptextformat import (
+from opentelemetry.context.propagation import (
     HTTPExtractor,
     HTTPInjector,
+)
+from opentelemetry.trace.propagation.context import (
+    from_context,
+    with_span_context,
 )
 
 
 TRACE_ID_KEY = "x-b3-traceid"
 SPAN_ID_KEY = "x-b3-spanid"
 SAMPLED_KEY = "x-b3-sampled"
+
+
+def _getter(headers, key):
+    return headers.get(key)
+
+
+def _setter(headers, key, value):
+    headers[key] = value
+
+
+def http_propagator() -> typing.Tuple[HTTPExtractor, HTTPInjector]:
+    """ TODO """
+    return B3Extractor, B3Injector
 
 
 class B3Extractor(HTTPExtractor):
@@ -37,7 +54,8 @@ class B3Extractor(HTTPExtractor):
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
     @classmethod
-    def extract(cls, get_from_carrier, carrier):
+    def extract(cls, context, carrier, get_from_carrier=_getter):
+
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
         span_id = format_span_id(trace.INVALID_SPAN_ID)
         sampled = "0"
@@ -90,23 +108,26 @@ class B3Extractor(HTTPExtractor):
         # header is set to allow.
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceOptions.SAMPLED
-        return trace.SpanContext(
-            # trace an span ids are encoded in hex, so must be converted
-            trace_id=int(trace_id, 16),
-            span_id=int(span_id, 16),
-            trace_options=trace.TraceOptions(options),
-            trace_state=trace.TraceState(),
+
+        return with_span_context(
+            context,
+            trace.SpanContext(
+                # trace an span ids are encoded in hex, so must be converted
+                trace_id=int(trace_id, 16),
+                span_id=int(span_id, 16),
+                trace_options=trace.TraceOptions(options),
+                trace_state=trace.TraceState(),
+            ),
         )
 
 
 class B3Injector(HTTPInjector):
     @classmethod
-    def inject(cls, context, set_in_carrier, carrier):
-        sampled = (trace.TraceOptions.SAMPLED & context.trace_options) != 0
-        set_in_carrier(
-            carrier, TRACE_ID_KEY, format_trace_id(context.trace_id)
-        )
-        set_in_carrier(carrier, SPAN_ID_KEY, format_span_id(context.span_id))
+    def inject(cls, context, carrier, set_in_carrier=_setter):
+        sc = from_context(context)
+        sampled = (trace.TraceOptions.SAMPLED & sc.trace_options) != 0
+        set_in_carrier(carrier, TRACE_ID_KEY, format_trace_id(sc.trace_id))
+        set_in_carrier(carrier, SPAN_ID_KEY, format_span_id(sc.span_id))
         set_in_carrier(carrier, SAMPLED_KEY, "1" if sampled else "0")
 
 

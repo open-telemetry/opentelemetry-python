@@ -19,6 +19,6 @@ class ContextKeys:
     KEY = "span-context"
 
     @classmethod
-    def span_context_key(cls):
+    def span_context_key(cls) -> str:
         """ TODO """
         return cls.KEY

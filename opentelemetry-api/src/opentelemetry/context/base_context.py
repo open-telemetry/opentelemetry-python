@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import types as python_types
 import threading
 import typing
 from contextlib import contextmanager
@@ -100,6 +101,17 @@ class BaseRuntimeContext:
     def __setitem__(self, name: str, value: "object") -> None:
         self.__setattr__(name, value)
 
+    def __enter__(self) -> "BaseRuntimeContext":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[python_types.TracebackType],
+    ) -> None:
+        return None
+
     @contextmanager  # type: ignore
     def use(self, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
         snapshot = {key: self[key] for key in kwargs}
@@ -128,21 +140,3 @@ class BaseRuntimeContext:
                 self.apply(backup_context)
 
         return call_with_current_context
-
-    @classmethod
-    def value(cls, ctx: "BaseRuntimeContext", key: str) -> str:
-        return ctx.__getitem__(key)
-
-    @classmethod
-    def set_value(
-        cls, ctx: "BaseRuntimeContext", key: str, value: "object"
-    ) -> "BaseRuntimeContext":
-        # TODO: dont use the context directly here
-        ctx.__setattr__(key, value)
-        return ctx
-
-    def current(self) -> "BaseRuntimeContext":
-        return self.__getitem__("__current_context__")
-
-    def set_current(self, ctx: "BaseRuntimeContext"):
-        self.__setattr__("__current_context__", ctx)

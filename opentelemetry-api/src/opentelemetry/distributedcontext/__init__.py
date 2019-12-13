@@ -15,7 +15,7 @@
 import itertools
 import string
 import typing
-from opentelemetry.context import BaseRuntimeContext
+from opentelemetry.context import BaseRuntimeContext, Context
 
 PRINTABLE = frozenset(
     itertools.chain(
@@ -89,7 +89,7 @@ class CorrelationContext:
     @classmethod
     def set_value(
         cls, context: BaseRuntimeContext, entry_list: typing.Iterable[Entry]
-    ):
+    ) -> None:
         distributed_context = getattr(context, cls.KEY, {})
         for entry in entry_list:
             distributed_context[entry.key] = entry
@@ -113,6 +113,7 @@ class CorrelationContext:
         container = getattr(context, cls.KEY, {})
         if key in container:
             return container[key].value
+        return None
 
 
 class CorrelationContextManager:
@@ -126,3 +127,15 @@ class CorrelationContextManager:
         self, ctx: CorrelationContext
     ) -> typing.Iterator[CorrelationContext]:
         """ TODO """
+
+    @classmethod
+    def set_value(cls, key, value, context=None):
+        if context is None:
+            return Context.set_value(Context.current(), key, value)
+        return Context.set_value(context, key, value)
+
+    @classmethod
+    def value(cls, key, context=None):
+        if context is None:
+            return Context.value(Context.current(), key)
+        return Context.value(context, key)
