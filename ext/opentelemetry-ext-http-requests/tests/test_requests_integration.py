@@ -55,7 +55,6 @@ class TestRequestsIntegration(unittest.TestCase):
             spec_set=True,
             return_value=self.span_context_manager,
         )
-        self.start_as_current_span = self.start_span_patcher.start()
 
         mocked_response = requests.models.Response()
         mocked_response.status_code = 200
@@ -67,6 +66,8 @@ class TestRequestsIntegration(unittest.TestCase):
             spec_set=True,
             return_value=mocked_response,
         )
+
+        self.start_as_current_span = self.start_span_patcher.start()
         self.send = self.send_patcher.start()
 
         opentelemetry.ext.http_requests.enable(self.tracer_source)
@@ -74,8 +75,7 @@ class TestRequestsIntegration(unittest.TestCase):
             "opentelemetry-ext-http-requests"
         ).version
         self.get_tracer.assert_called_with(
-            "opentelemetry-ext-http-requests", distver
-        )
+            opentelemetry.ext.http_requests.__name__, distver)
 
     def tearDown(self):
         opentelemetry.ext.http_requests.disable()

@@ -27,7 +27,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_tracer(self):
         tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer("opentelemetry-api")
+        tracer = tracer_source.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
             self.assertEqual(span, trace.INVALID_SPAN)

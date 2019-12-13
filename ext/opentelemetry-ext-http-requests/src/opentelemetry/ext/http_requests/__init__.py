@@ -48,9 +48,7 @@ def enable(tracer_source):
     # Guard against double instrumentation
     disable()
 
-    tracer = tracer_source.get_tracer(
-        "opentelemetry-ext-http-requests", __version__
-    )
+    tracer = tracer_source.get_tracer(__name__, __version__)
 
     wrapped = Session.request
 

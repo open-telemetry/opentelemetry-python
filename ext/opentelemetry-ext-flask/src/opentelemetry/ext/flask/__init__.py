@@ -61,9 +61,7 @@ def _before_flask_request():
         otel_wsgi.get_header_from_environ, environ
     )
 
-    tracer = trace.tracer_source().get_tracer(
-        "opentelemetry-ext-flask", __version__
-    )
+    tracer = trace.tracer_source().get_tracer(__name__, __version__)
 
     attributes = otel_wsgi.collect_request_attributes(environ)
     if flask_request.url_rule:

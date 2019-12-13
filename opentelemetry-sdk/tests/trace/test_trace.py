@@ -25,7 +25,7 @@ from opentelemetry.util import time_ns
 
 
 def new_tracer() -> trace_api.Tracer:
-    return trace.TracerSource().get_tracer("opentelemetry-sdk")
+    return trace.TracerSource().get_tracer(__name__)
 
 
 class TestTracer(unittest.TestCase):
@@ -119,7 +119,7 @@ class TestTracerSampling(unittest.TestCase):
 
     def test_sampler_no_sampling(self):
         tracer_source = trace.TracerSource(sampling.ALWAYS_OFF)
-        tracer = tracer_source.get_tracer("opentelemetry-sdk")
+        tracer = tracer_source.get_tracer(__name__)
 
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
@@ -179,7 +179,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertTrue(span1.is_recording_events())
         self.assertEqual(tracer1.instrumentation_info.version, "")
         self.assertEqual(
-            tracer1.instrumentation_info.name, "ERROR:MISSING LIB NAME"
+            tracer1.instrumentation_info.name, "ERROR:MISSING MODULE NAME"
         )
 
     def test_span_processor_for_source(self):
@@ -404,7 +404,7 @@ class TestSpan(unittest.TestCase):
             )
         )
 
-        self.tracer = tracer_source.get_tracer("opentelemetry-sdk")
+        self.tracer = tracer_source.get_tracer(__name__)
 
         with self.tracer.start_as_current_span("root2") as root:
             self.assertEqual(len(root.attributes), 2)
@@ -578,9 +578,9 @@ class TestSpan(unittest.TestCase):
 
     def test_error_status(self):
         try:
-            with trace.TracerSource().get_tracer(
-                "opentelemetry-sdk"
-            ).start_span("root") as root:
+            with trace.TracerSource().get_tracer(__name__).start_span(
+                "root"
+            ) as root:
                 raise Exception("unknown")
         except Exception:  # pylint: disable=broad-except
             pass
@@ -612,7 +612,7 @@ class MySpanProcessor(trace.SpanProcessor):
 class TestSpanProcessor(unittest.TestCase):
     def test_span_processor(self):
         tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer("opentelemetry-sdk")
+        tracer = tracer_source.get_tracer(__name__)
 
         spans_calls_list = []  # filled by MySpanProcessor
         expected_list = []  # filled by hand
@@ -681,7 +681,7 @@ class TestSpanProcessor(unittest.TestCase):
 
     def test_add_span_processor_after_span_creation(self):
         tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer("opentelemetry-sdk")
+        tracer = tracer_source.get_tracer(__name__)
 
         spans_calls_list = []  # filled by MySpanProcessor
         expected_list = []  # filled by hand

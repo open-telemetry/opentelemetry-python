@@ -6,7 +6,7 @@ from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-tracer = trace.tracer_source().get_tracer("myapp")
+tracer = trace.tracer_source().get_tracer(__name__)
 
 # create a JaegerSpanExporter
 jaeger_exporter = jaeger.JaegerSpanExporter(

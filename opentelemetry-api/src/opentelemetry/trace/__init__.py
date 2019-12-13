@@ -27,7 +27,7 @@ to use the API package alone without a supporting implementation.
 
 To get a tracer, you need to provide the package name from which you are
 calling the tracer APIs to OpenTelemetry by calling `TracerSource.get_tracer`
-with the name and version of your package.
+with the calling module name and the version of your package.
 
 The tracer supports creating spans that are "attached" or "detached" from the
 context. New spans are "attached" to the context in that they are
@@ -36,7 +36,7 @@ can optionally become the new active span::
 
     from opentelemetry import trace
 
-    tracer = trace.tracer_source().get_tracer("my-instrumentation-library")
+    tracer = trace.tracer_source().get_tracer(__name__)
 
     # Create a new root span, set it as the current span in context
     with tracer.start_as_current_span("parent"):
@@ -378,7 +378,7 @@ class TracerSource:
     # pylint:disable=no-self-use,unused-argument
     def get_tracer(
         self,
-        instrumenting_library_name: str,
+        instrumenting_module_name: str,
         instrumenting_library_version: str = "",
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
@@ -390,14 +390,13 @@ class TracerSource:
         vs.  a functional tracer).
 
         Args:
-            instrumenting_library_name: The name of the instrumenting library.
-                This should *not* be the name of the library that is
-                instrumented but the name of the instrumentation library.
-                E.g., instead of ``"requests"``,
-                ``"opentelemetry-ext-http-requests"``.
+            instrumenting_module_name: The name of the instrumenting module
+                (usually just ``__name__``).
 
-                This should be the ``pip install``-able name of the library
-                rather than the module name (see also the next argument).
+                This should *not* be the name of the module that is
+                instrumented but the name of the module doing the instrumentation.
+                E.g., instead of ``"requests"``, use
+                ``"opentelemetry.ext.http_requests"``.
 
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as

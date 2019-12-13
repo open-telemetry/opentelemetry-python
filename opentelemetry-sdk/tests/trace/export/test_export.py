@@ -45,7 +45,7 @@ class MySpanExporter(export.SpanExporter):
 class TestSimpleExportSpanProcessor(unittest.TestCase):
     def test_simple_span_processor(self):
         tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer("opentelemetry-sdk")
+        tracer = tracer_source.get_tracer(__name__)
 
         spans_names_list = []
 
@@ -70,7 +70,7 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         not it is ever the active span.
         """
         tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer("opentelemetry-sdk")
+        tracer = tracer_source.get_tracer(__name__)
 
         spans_names_list = []
 

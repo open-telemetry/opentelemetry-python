@@ -164,9 +164,7 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
-        self.tracer = trace.tracer_source().get_tracer(
-            "opentelemetry-ext-wsgi", __version__
-        )
+        self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
 
     @staticmethod
     def _create_start_response(span, start_response):

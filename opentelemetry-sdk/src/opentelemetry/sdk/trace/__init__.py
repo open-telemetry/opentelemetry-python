@@ -329,7 +329,7 @@ def generate_trace_id() -> int:
 
 
 class InstrumentationInfo:
-    """Immutable information about an instrumentation library.
+    """Immutable information about an instrumentation library module.
 
     See `TracerSource.get_tracer` for the meaning of the properties.
     """
@@ -516,16 +516,16 @@ class TracerSource(trace_api.TracerSource):
 
     def get_tracer(
         self,
-        instrumenting_library_name: str,
+        instrumenting_module_name: str,
         instrumenting_library_version: str = "",
     ) -> "trace_api.Tracer":
-        if not instrumenting_library_name:  # Reject empty strings too.
-            instrumenting_library_name = "ERROR:MISSING LIB NAME"
-            logger.error("get_tracer called with missing library name.")
+        if not instrumenting_module_name:  # Reject empty strings too.
+            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
+            logger.error("get_tracer called with missing module name.")
         return Tracer(
             self,
             InstrumentationInfo(
-                instrumenting_library_name, instrumenting_library_version
+                instrumenting_module_name, instrumenting_library_version
             ),
         )
 

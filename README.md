@@ -60,7 +60,7 @@ trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 trace.tracer_source().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
-tracer = trace.tracer_source().get_tracer("myapp")
+tracer = trace.tracer_source().get_tracer(__name__)
 with tracer.start_as_current_span('foo'):
     with tracer.start_as_current_span('bar'):
         with tracer.start_as_current_span('baz'):

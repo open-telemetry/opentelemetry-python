@@ -36,7 +36,7 @@ following example::
     trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 
     # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.tracer_source().get_tracer("myapp")
+    otel_tracer = trace.tracer_source().get_tracer(__name__)
 
     # Create an OpenTracing shim.
     shim = create_tracer(otel_tracer)
@@ -110,11 +110,7 @@ def create_tracer(otel_tracer_source):
         The created :class:`TracerShim`.
     """
 
-    return TracerShim(
-        otel_tracer_source.get_tracer(
-            "opentelemetry-ext-opentracing-shim", __version__
-        )
-    )
+    return TracerShim(otel_tracer_source.get_tracer(__name__, __version__))
 
 
 class SpanContextShim(opentracing.SpanContext):

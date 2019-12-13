@@ -42,7 +42,7 @@ else:
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
 trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-tracer = trace.tracer_source().get_tracer("opentelemetry-example-http")
+tracer = trace.tracer_source().get_tracer(__name__)
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)

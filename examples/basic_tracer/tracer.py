@@ -42,9 +42,7 @@ trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 # We tell OpenTelemetry who it is that is creating spans. In this case, we have
 # no real name (no setup.py), so we make one up. If we had a version, we would
 # also specify it here.
-tracer = trace.tracer_source().get_tracer(
-    "opentelemetry-examples-basic-tracer"
-)
+tracer = trace.tracer_source().get_tracer(__name__)
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)

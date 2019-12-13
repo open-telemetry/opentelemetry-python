@@ -71,9 +71,7 @@ def hello():
     version = pkg_resources.get_distribution(
         "opentelemetry-example-app"
     ).version
-    tracer = trace.tracer_source().get_tracer(
-        "opentelemetry-example-app", version
-    )
+    tracer = trace.tracer_source().get_tracer(__name__, version)
     with tracer.start_as_current_span("example-request"):
         requests.get("http://www.example.com")
     return "hello"
