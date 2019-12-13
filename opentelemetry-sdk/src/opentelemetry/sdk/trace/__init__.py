@@ -41,8 +41,8 @@ class SpanProcessor:
     invocations.
 
     Span processors can be registered directly using
-    :func:`Tracer.add_span_processor` and they are invoked in the same order
-    as they were registered.
+    :func:`TracerSource.add_span_processor` and they are invoked
+    in the same order as they were registered.
     """
 
     def on_start(self, span: "Span") -> None:
