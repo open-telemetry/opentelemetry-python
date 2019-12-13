@@ -43,6 +43,9 @@ setuptools.setup(
     entry_points={
         "console_scripts": [
             "auto_agent = opentelemetry.commands.auto_agent:run"
+        ],
+        "opentelemetry_patcher": [
+            "no_op_patcher = opentelemetry.patcher.no_op_patcher:NoOpPatcher"
         ]
     },
     description="OpenTelemetry Python API",
