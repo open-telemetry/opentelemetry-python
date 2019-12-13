@@ -20,10 +20,6 @@ from opentelemetry.context.propagation import (
     HTTPInjector,
 )
 
-#     # INVALID_HTTP_EXTRACTOR,
-#     # INVALID_HTTP_INJECTOR,
-# )
-
 
 EMPTY_VALUE = ""
 INVALID_CONTEXT = Context

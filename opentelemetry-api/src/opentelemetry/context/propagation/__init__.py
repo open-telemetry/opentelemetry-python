@@ -20,29 +20,3 @@ from .binaryformat import BinaryFormat
 from .httptextformat import HTTPExtractor, HTTPInjector
 
 __all__ = ["BinaryFormat", "HTTPExtractor", "HTTPInjector"]
-
-
-# class HTTPExtractor:
-#     """The default HTTPExtractor.
-
-#     Used when no HTTPExtractor implementation is available.
-#     """
-
-#     @staticmethod
-#     def extract(ctx: Context, carrier: Carrier, getter: Getter) -> Context:
-#         """ TODO """
-#         # pylint: disable=unused-argument
-#         return ctx
-
-
-# class HTTPInjector:
-#     """The default HTTPInjector.
-
-#     Used when no HTTPInjector implementation is available.
-#     """
-
-#     @staticmethod
-#     def inject(ctx: Context, carrier: Carrier, setter: Setter) -> Context:
-#         """ TODO """
-#         # pylint: disable=unused-argument
-#         return ctx
