@@ -75,7 +75,8 @@ class TestRequestsIntegration(unittest.TestCase):
             "opentelemetry-ext-http-requests"
         ).version
         self.get_tracer.assert_called_with(
-            opentelemetry.ext.http_requests.__name__, distver)
+            opentelemetry.ext.http_requests.__name__, distver
+        )
 
     def tearDown(self):
         opentelemetry.ext.http_requests.disable()
