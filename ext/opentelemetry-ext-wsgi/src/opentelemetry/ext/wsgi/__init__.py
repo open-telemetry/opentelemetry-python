@@ -23,7 +23,7 @@ import typing
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagators, trace
-from opentelemetry.ext.wsgi.version import __version__  # noqa
+from opentelemetry.ext.wsgi.version import __version__
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -164,6 +164,7 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
+        self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
 
     @staticmethod
     def _create_start_response(span, start_response):
@@ -182,11 +183,10 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        tracer = trace.tracer()
         parent_span = propagators.extract(get_header_from_environ, environ)
         span_name = get_default_span_name(environ)
 
-        span = tracer.start_span(
+        span = self.tracer.start_span(
             span_name,
             parent_span,
             kind=trace.SpanKind.SERVER,
@@ -194,13 +194,12 @@ class OpenTelemetryMiddleware:
         )
 
         try:
-            with tracer.use_span(span):
+            with self.tracer.use_span(span):
                 start_response = self._create_start_response(
                     span, start_response
                 )
-
                 iterable = self.wsgi(environ, start_response)
-                return _end_span_after_iterating(iterable, span, tracer)
+                return _end_span_after_iterating(iterable, span, self.tracer)
         except:  # noqa
             # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
             span.end()
