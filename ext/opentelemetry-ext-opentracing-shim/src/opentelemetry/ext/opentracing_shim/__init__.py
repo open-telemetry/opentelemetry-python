@@ -29,13 +29,15 @@ following example::
     import time
 
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import Tracer
+    from opentelemetry.sdk.trace import TracerSource
     from opentelemetry.ext.opentracing_shim import create_tracer
 
     # Tell OpenTelemetry which Tracer implementation to use.
-    trace.set_preferred_tracer_implementation(lambda T: Tracer())
+    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+
     # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.tracer()
+    otel_tracer = trace.tracer_source().get_tracer(__name__)
+
     # Create an OpenTracing shim.
     shim = create_tracer(otel_tracer)
 
@@ -86,20 +88,21 @@ from deprecated import deprecated
 import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.ext.opentracing_shim.version import __version__
 
 logger = logging.getLogger(__name__)
 
 
-def create_tracer(otel_tracer):
+def create_tracer(otel_tracer_source):
     """Creates a :class:`TracerShim` object from the provided OpenTelemetry
-    :class:`opentelemetry.trace.Tracer`.
+    :class:`opentelemetry.trace.TracerSource`.
 
     The returned :class:`TracerShim` is an implementation of
     :class:`opentracing.Tracer` using OpenTelemetry under the hood.
 
     Args:
-        otel_tracer: A :class:`opentelemetry.trace.Tracer` to be used for
-            constructing the :class:`TracerShim`. This tracer will be used
+        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be used for
+            constructing the :class:`TracerShim`. A tracer from this source will be used
             to perform the actual tracing when user code is instrumented using
             the OpenTracing API.
 
@@ -107,7 +110,7 @@ def create_tracer(otel_tracer):
         The created :class:`TracerShim`.
     """
 
-    return TracerShim(otel_tracer)
+    return TracerShim(otel_tracer_source.get_tracer(__name__, __version__))
 
 
 class SpanContextShim(opentracing.SpanContext):

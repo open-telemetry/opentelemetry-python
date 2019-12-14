@@ -21,7 +21,7 @@ import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
 from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 
 
 class TestShim(unittest.TestCase):
@@ -30,8 +30,7 @@ class TestShim(unittest.TestCase):
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
 
-        self.tracer = trace.tracer()
-        self.shim = opentracingshim.create_tracer(self.tracer)
+        self.shim = opentracingshim.create_tracer(trace.tracer_source())
 
     @classmethod
     def setUpClass(cls):
@@ -39,7 +38,9 @@ class TestShim(unittest.TestCase):
         every test method.
         """
 
-        trace.set_preferred_tracer_implementation(lambda T: Tracer())
+        trace.set_preferred_tracer_source_implementation(
+            lambda T: TracerSource()
+        )
 
         # Save current propagator to be restored on teardown.
         cls._previous_propagator = propagators.get_global_httptextformat()

@@ -41,8 +41,8 @@ class SpanProcessor:
     invocations.
 
     Span processors can be registered directly using
-    :func:`Tracer.add_span_processor` and they are invoked in the same order
-    as they were registered.
+    :func:`TracerSource.add_span_processor` and they are invoked
+    in the same order as they were registered.
     """
 
     def on_start(self, span: "Span") -> None:
@@ -137,6 +137,7 @@ class Span(trace_api.Span):
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
+        instrumentation_info: "InstrumentationInfo" = None,
         set_status_on_exception: bool = True,
     ) -> None:
 
@@ -172,6 +173,7 @@ class Span(trace_api.Span):
 
         self.end_time = None  # type: Optional[int]
         self.start_time = None  # type: Optional[int]
+        self.instrumentation_info = instrumentation_info
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -326,6 +328,46 @@ def generate_trace_id() -> int:
     return random.getrandbits(128)
 
 
+class InstrumentationInfo:
+    """Immutable information about an instrumentation library module.
+
+    See `TracerSource.get_tracer` for the meaning of the properties.
+    """
+
+    __slots__ = ("_name", "_version")
+
+    def __init__(self, name: str, version: str):
+        self._name = name
+        self._version = version
+
+    def __repr__(self):
+        return "{}({}, {})".format(
+            type(self).__name__, self._name, self._version
+        )
+
+    def __hash__(self):
+        return hash((self._name, self._version))
+
+    def __eq__(self, value):
+        return type(value) is type(self) and (self._name, self._version) == (
+            value._name,
+            value._version,
+        )
+
+    def __lt__(self, value):
+        if type(value) is not type(self):
+            return NotImplemented
+        return (self._name, self._version) < (value._name, value._version)
+
+    @property
+    def version(self) -> str:
+        return self._version
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
@@ -337,23 +379,15 @@ class Tracer(trace_api.Tracer):
 
     def __init__(
         self,
-        name: str = "",
-        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
-        shutdown_on_exit: bool = True,
+        source: "TracerSource",
+        instrumentation_info: InstrumentationInfo,
     ) -> None:
-        slot_name = "current_span"
-        if name:
-            slot_name = "{}.current_span".format(name)
-        self._current_span_slot = Context.register_slot(slot_name)
-        self._active_span_processor = MultiSpanProcessor()
-        self.sampler = sampler
-        self._atexit_handler = None
-        if shutdown_on_exit:
-            self._atexit_handler = atexit.register(self.shutdown)
+        self.source = source
+        self.instrumentation_info = instrumentation_info
 
     def get_current_span(self):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return self._current_span_slot.get()
+        return self.source.get_current_span()
 
     def start_as_current_span(
         self,
@@ -411,7 +445,7 @@ class Tracer(trace_api.Tracer):
         # exported.
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling decision.
-        sampling_decision = self.sampler.should_sample(
+        sampling_decision = self.source.sampler.should_sample(
             parent_context,
             context.trace_id,
             context.span_id,
@@ -431,11 +465,12 @@ class Tracer(trace_api.Tracer):
                 name=name,
                 context=context,
                 parent=parent,
-                sampler=self.sampler,
+                sampler=self.source.sampler,
                 attributes=span_attributes,
-                span_processor=self._active_span_processor,
+                span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
                 kind=kind,
                 links=links,
+                instrumentation_info=self.instrumentation_info,
                 set_status_on_exception=set_status_on_exception,
             )
             span.start(start_time=start_time)
@@ -449,18 +484,56 @@ class Tracer(trace_api.Tracer):
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
-            span_snapshot = self._current_span_slot.get()
-            self._current_span_slot.set(span)
+            span_snapshot = self.source.get_current_span()
+            self.source._current_span_slot.set(  # pylint:disable=protected-access
+                span
+            )
             try:
                 yield span
             finally:
-                self._current_span_slot.set(span_snapshot)
+                self.source._current_span_slot.set(  # pylint:disable=protected-access
+                    span_snapshot
+                )
         finally:
             if end_on_exit:
                 span.end()
 
+
+class TracerSource(trace_api.TracerSource):
+    def __init__(
+        self,
+        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        shutdown_on_exit: bool = True,
+    ):
+        # TODO: How should multiple TracerSources behave? Should they get their own contexts?
+        # This could be done by adding `str(id(self))` to the slot name.
+        self._current_span_slot = Context.register_slot("current_span")
+        self._active_span_processor = MultiSpanProcessor()
+        self.sampler = sampler
+        self._atexit_handler = None
+        if shutdown_on_exit:
+            self._atexit_handler = atexit.register(self.shutdown)
+
+    def get_tracer(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "trace_api.Tracer":
+        if not instrumenting_module_name:  # Reject empty strings too.
+            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
+            logger.error("get_tracer called with missing module name.")
+        return Tracer(
+            self,
+            InstrumentationInfo(
+                instrumenting_module_name, instrumenting_library_version
+            ),
+        )
+
+    def get_current_span(self) -> Span:
+        return self._current_span_slot.get()
+
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
-        """Registers a new :class:`SpanProcessor` for this `Tracer`.
+        """Registers a new :class:`SpanProcessor` for this `TracerSource`.
 
         The span processors are invoked in the same order they are registered.
         """
@@ -475,6 +548,3 @@ class Tracer(trace_api.Tracer):
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)
             self._atexit_handler = None
-
-
-tracer = Tracer()
