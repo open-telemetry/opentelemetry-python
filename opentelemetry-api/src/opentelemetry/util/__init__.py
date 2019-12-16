@@ -4,7 +4,7 @@ import time
 # this needs to be in the API.
 
 try:
-    time_ns = time.time_ns
+    time_ns = time.time_ns  # type: ignore
 # Python versions < 3.7
 except AttributeError:
 
