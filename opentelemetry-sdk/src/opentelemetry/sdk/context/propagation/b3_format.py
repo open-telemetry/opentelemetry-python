@@ -15,15 +15,11 @@
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation import (
-    HTTPExtractor,
-    HTTPInjector,
-)
+from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
 from opentelemetry.trace.propagation.context import (
     from_context,
     with_span_context,
 )
-
 
 TRACE_ID_KEY = "x-b3-traceid"
 SPAN_ID_KEY = "x-b3-spanid"

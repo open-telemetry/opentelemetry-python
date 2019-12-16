@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types as python_types
 import threading
+import types as python_types
 import typing
 from contextlib import contextmanager
 

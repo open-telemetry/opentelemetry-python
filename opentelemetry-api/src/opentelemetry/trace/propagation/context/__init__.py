@@ -24,4 +24,3 @@ def from_context(ctx: Optional[Context] = None) -> SpanContext:
 
 def with_span_context(span_context: SpanContext) -> BaseRuntimeContext:
     return Context.set_value(ContextKeys.span_context_key(), span_context)
-

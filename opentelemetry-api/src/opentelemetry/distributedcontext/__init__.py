@@ -15,6 +15,7 @@
 import itertools
 import string
 import typing
+
 from opentelemetry.context import BaseRuntimeContext, Context
 
 PRINTABLE = frozenset(
