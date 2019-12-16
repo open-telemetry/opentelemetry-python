@@ -54,7 +54,6 @@ def fetch_from_service_b() -> str:
     # reference to tracing or baggage.
     headers = {"Accept": "application/json"}
     propagation.inject(headers)
-    print(headers)
     resp = requests.get("https://opentelemetry.io", headers=headers)
     return resp.text
 
@@ -64,7 +63,6 @@ def fetch_from_service_c() -> str:
     # reference to tracing or baggage.
     headers = {"Accept": "application/json"}
     propagation.inject(headers)
-    print(headers)
     resp = requests.get("https://opentelemetry.io", headers=headers)
     return resp.text
 
@@ -80,21 +78,12 @@ def hello():
         # extract a baggage header
         with tracer.start_as_current_span("service-span"):
             with tracer.start_as_current_span("external-req-span"):
-                headers = {"Accept": "application/json"}
-                propagation.inject(headers)
                 version = CorrelationContextManager.value("version")
                 if version == "2.0":
                     return fetch_from_service_c()
 
                 return fetch_from_service_b()
 
-
-request_headers = {
-    "Accept": "application/json",
-    "x-b3-traceid": "038c3fb613811e30898424c863eeae5a",
-    "x-b3-spanid": "6c7f9e56212a6ffa",
-    "x-b3-sampled": "0",
-}
 
 if __name__ == "__main__":
     configure_opentelemetry(app)
