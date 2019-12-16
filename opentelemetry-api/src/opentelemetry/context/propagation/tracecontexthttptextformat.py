@@ -67,8 +67,8 @@ class TraceContextHTTPExtractor(httptextformat.HTTPExtractor):
     def extract(
         cls,
         context: BaseRuntimeContext,
-        get_from_carrier: httptextformat.Getter[_T],
         carrier: _T,
+        get_from_carrier: typing.Optional[httptextformat.Getter[_T]] = None,
     ) -> BaseRuntimeContext:
         """Extracts a valid SpanContext from the carrier.
         """
@@ -120,8 +120,8 @@ class TraceContextHTTPInjector(httptextformat.HTTPInjector):
     def inject(
         cls,
         context: BaseRuntimeContext,
-        set_in_carrier: httptextformat.Setter[_T],
         carrier: _T,
+        set_in_carrier: typing.Optional[httptextformat.Setter[_T]] = None,
     ) -> None:
         sc = BaseRuntimeContext.value(context, ContextKeys.span_context_key())
         if sc is None or sc == trace.INVALID_SPAN_CONTEXT:

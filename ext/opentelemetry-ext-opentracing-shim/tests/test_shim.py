@@ -545,7 +545,7 @@ class MockHTTPExtractor(HTTPExtractor):
     """Mock extractor for testing purposes."""
 
     @classmethod
-    def extract(cls, context, get_from_carrier, carrier):
+    def extract(cls, context, carrier, get_from_carrier=None):
         trace_id_list = get_from_carrier(carrier, _TRACE_ID_KEY)
         span_id_list = get_from_carrier(carrier, _SPAN_ID_KEY)
 
@@ -561,6 +561,6 @@ class MockHTTPInjector(HTTPInjector):
     """Mock injector for testing purposes."""
 
     @classmethod
-    def inject(cls, context, set_in_carrier, carrier):
+    def inject(cls, context, carrier, set_in_carrier=None):
         set_in_carrier(carrier, _TRACE_ID_KEY, str(context.trace_id))
         set_in_carrier(carrier, _SPAN_ID_KEY, str(context.span_id))

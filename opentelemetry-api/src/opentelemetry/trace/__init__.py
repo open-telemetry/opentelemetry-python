@@ -64,6 +64,7 @@ import types as python_types
 import typing
 from contextlib import contextmanager
 
+from opentelemetry.context import Context
 from opentelemetry.trace.status import Status
 from opentelemetry.util import loader, types
 
@@ -375,7 +376,9 @@ class Tracer:
     # This is the default behavior when creating spans.
     CURRENT_SPAN = Span()
 
-    def get_current_span(self) -> "Span":
+    def get_current_span(
+        self, context: typing.Optional[Context] = None
+    ) -> "Span":
         """Gets the currently active span from the context.
 
         If there is no current span, return a placeholder span with an invalid
@@ -385,7 +388,7 @@ class Tracer:
             The currently active :class:`.Span`, or a placeholder span with an
             invalid :class:`.SpanContext`.
         """
-        # pylint: disable=no-self-use
+        # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
     def start_span(
@@ -396,6 +399,7 @@ class Tracer:
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
+        context: typing.Optional[Context] = None,
     ) -> "Span":
         """Starts a span.
 
@@ -442,6 +446,7 @@ class Tracer:
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
+        context: typing.Optional[Context] = None,
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.

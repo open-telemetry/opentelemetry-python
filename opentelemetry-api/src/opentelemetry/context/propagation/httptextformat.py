@@ -15,8 +15,7 @@
 import abc
 import typing
 
-from opentelemetry.trace import SpanContext
-from opentelemetry.context import BaseRuntimeContext
+from opentelemetry.context import Context
 
 _T = typing.TypeVar("_T")
 
@@ -75,10 +74,10 @@ class HTTPExtractor(abc.ABC):
     @abc.abstractmethod
     def extract(
         cls,
-        context: BaseRuntimeContext,
+        context: Context,
         carrier: _T,
         get_from_carrier: typing.Optional[Getter[_T]] = None,
-    ) -> BaseRuntimeContext:
+    ) -> Context:
         """Create a SpanContext from values in the carrier.
 
         The extract function should retrieve values from the carrier
@@ -104,9 +103,9 @@ class HTTPInjector(abc.ABC):
     @abc.abstractmethod
     def inject(
         cls,
-        context: BaseRuntimeContext,
+        context: Context,
         carrier: _T,
-        set_from_carrier: typing.Optional[Setter[_T]],
+        set_in_carrier: typing.Optional[Setter[_T]],
     ) -> None:
         """Inject values from a SpanContext into a carrier.
 

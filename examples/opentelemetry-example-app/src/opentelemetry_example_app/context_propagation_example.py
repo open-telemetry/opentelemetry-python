@@ -20,8 +20,8 @@ to pass application-defined key-value pairs from service to service.
 # from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 
 import flask
-from flask import request
 import requests
+from flask import request
 
 from opentelemetry import propagation, trace
 from opentelemetry.distributedcontext import CorrelationContextManager

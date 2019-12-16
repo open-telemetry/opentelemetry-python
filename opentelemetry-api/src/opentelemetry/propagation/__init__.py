@@ -14,25 +14,24 @@
 
 import typing
 
-from opentelemetry.context import Context
 import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
+from opentelemetry.context import Context
 from opentelemetry.context.propagation.tracecontexthttptextformat import (
     TraceContextHTTPExtractor,
     TraceContextHTTPInjector,
 )
-from opentelemetry.context import BaseRuntimeContext
 
 _T = typing.TypeVar("_T")
 
 
 def extract(
     carrier: _T,
-    context: typing.Optional[BaseRuntimeContext] = None,
+    context: typing.Optional[Context] = None,
     extractors: typing.Optional[
         typing.List[httptextformat.HTTPExtractor]
     ] = None,
-) -> typing.Optional[BaseRuntimeContext]:
+) -> typing.Optional[Context]:
     """Load the parent SpanContext from values in the carrier.
 
     Using the specified HTTPExtractor, the propagator will
@@ -54,7 +53,7 @@ def extract(
         extractors = get_http_extractors()
 
     for extractor in extractors:
-        return extractor.extract(context, carrier)
+        return extractor.extract(context=context, carrier=carrier)
     return None
 
 
@@ -63,7 +62,7 @@ def inject(
     injectors: typing.Optional[
         typing.List[httptextformat.HTTPInjector]
     ] = None,
-    context: typing.Optional[BaseRuntimeContext] = None,
+    context: typing.Optional[Context] = None,
 ) -> None:
     """Inject values from the current context into the carrier.
 
@@ -85,7 +84,7 @@ def inject(
         injectors = get_http_injectors()
 
     for injector in injectors:
-        injector.inject(context, carrier)
+        injector.inject(context=context, carrier=carrier)
 
 
 _HTTP_TEXT_INJECTORS = [

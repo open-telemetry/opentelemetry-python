@@ -321,7 +321,7 @@ class Tracer(trace_api.Tracer):
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
 
-    def get_current_span(self, context=None):
+    def get_current_span(self, context: Optional[Context] = None):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
         return Context.value(self._slot_name, context=context)
 

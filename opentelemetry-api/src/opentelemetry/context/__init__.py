@@ -158,10 +158,9 @@ except ImportError:
 
 class Context:
     def __init__(self):
-        global _CONTEXT
         self.contents = {}
-        self._id = "{}".format(id(self))
-        self._slot = _CONTEXT.register_slot(self._id)
+        self.slot_name = "{}".format(id(self))
+        self._slot = _CONTEXT.register_slot(self.slot_name)
         self._slot.set(self)
 
     def __enter__(self):
@@ -190,7 +189,6 @@ class Context:
 
     @classmethod
     def current(cls) -> "Context":
-        global _CONTEXT
         if _CONTEXT.current_context is None:
             ctx = Context()
             cls.set_current(ctx)
@@ -202,15 +200,14 @@ class Context:
 
     @classmethod
     def set_current(cls, ctx: "Context"):
-        global _CONTEXT
         if _CONTEXT.current_context is None:
             _CONTEXT.current_context = _CONTEXT.register_slot(
                 # change the key here
                 "__current_prop_context__"
             )
-        _CONTEXT.current_context.set(ctx._id)
+        _CONTEXT.current_context.set(ctx.slot_name)
 
     @classmethod
-    def use(self, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
+    def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
         """TODO: do we want this passthrough here? Review where use is used """
-        return _CONTEXT.use()
+        return _CONTEXT.use(**kwargs)
