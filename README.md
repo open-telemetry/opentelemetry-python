@@ -52,15 +52,15 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 ```python
 from opentelemetry import trace
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
-trace.set_preferred_tracer_implementation(lambda T: Tracer())
-tracer = trace.tracer()
-tracer.add_span_processor(
+trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+trace.tracer_source().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
+tracer = trace.tracer_source().get_tracer(__name__)
 with tracer.start_as_current_span('foo'):
     with tracer.start_as_current_span('bar'):
         with tracer.start_as_current_span('baz'):
@@ -120,7 +120,6 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
 - [Christian Neumüller](https://github.com/Oberon00), Dynatrace
 - [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
 
 *Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
 
@@ -128,6 +127,7 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Reiley Yang](https://github.com/reyang), Microsoft
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
 
 *Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 
@@ -137,7 +137,9 @@ OpenTelemetry Python is under active development.
 
 The library is not yet _generally available_, and releases aren't guaranteed to
 conform to a specific version of the specification. Future releases will not
-attempt to maintain backwards compatibility with previous releases.
+attempt to maintain backwards compatibility with previous releases. Each alpha
+release includes significant changes to the API and SDK packages, making them
+incompatible with each other.
 
 The [v0.1 alpha
 release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.1.0)
@@ -159,6 +161,14 @@ includes:
 - Jaeger Trace Exporter
 - Trace Sampling
 
+The [v0.3 alpha
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.3.0)
+includes:
+
+- Metrics Instruments and Labels
+- Flask Integration
+- PyMongo Integration
+
 See the [project
 milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
 for details on upcoming releases. The dates and features described here are
@@ -166,16 +176,13 @@ estimates, and subject to change.
 
 Future releases targets include:
 
-| Component                           | Version    | Target Date     |
-| ----------------------------------- | ---------- | --------------- |
-| Zipkin Trace Exporter               | Alpha v0.3 | December 6 2019 |
-| W3C Correlation Context Propagation | Alpha v0.3 | December 6 2019 |
-| Support for Tags/Baggage            | Alpha v0.3 | December 6 2019 |
-| Metrics Aggregation                 | Alpha v0.3 | December 6 2019 |
-| gRPC Integrations                   | Alpha v0.3 | December 6 2019 |
-| Prometheus Metrics Exporter         | Alpha v0.3 | December 6 2019 |
-
-| Component              | Version    | Target Date      |
-| ---------------------- | ---------- | ---------------- |
-| OpenCensus Bridge      | Alpha v0.4 | December 31 2019 |
-| Metrics SDK (Complete) | Alpha v0.4 | December 31 2019 |
+| Component                           | Version    | Target Date      |
+| ----------------------------------- | ---------- | ---------------- |
+| Zipkin Trace Exporter               | Alpha v0.4 | December 31 2019 |
+| W3C Correlation Context Propagation | Alpha v0.4 | December 31 2019 |
+| Support for Tags/Baggage            | Alpha v0.4 | December 31 2019 |
+| Metrics Aggregation                 | Alpha v0.4 | December 31 2019 |
+| gRPC Integrations                   | Alpha v0.4 | December 31 2019 |
+| Prometheus Metrics Exporter         | Alpha v0.4 | December 31 2019 |
+| OpenCensus Bridge                   | Alpha v0.4 | December 31 2019 |
+| Metrics SDK (Complete)              | Alpha v0.4 | December 31 2019 |

@@ -15,12 +15,29 @@ class WsgiTestBase(unittest.TestCase):
         trace_api.set_preferred_tracer_implementation(lambda T: Tracer())
 
     def setUp(self):
-        tracer = trace_api.tracer()
-
+        self.span = mock.create_autospec(trace_api.Span, spec_set=True)
+        tracer = trace_api.Tracer()
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
         tracer.add_span_processor(span_processor)
 
+        self.get_tracer_patcher = mock.patch.object(
+            trace_api.TracerSource,
+            "get_tracer",
+            autospec=True,
+            spec_set=True,
+            return_value=tracer,
+        )
+        self.get_tracer_patcher.start()
+
+        self.start_span_patcher = mock.patch.object(
+            tracer,
+            "start_span",
+            autospec=True,
+            spec_set=True,
+            return_value=self.span,
+        )
+        self.start_span = self.start_span_patcher.start()
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
 
@@ -30,6 +47,10 @@ class WsgiTestBase(unittest.TestCase):
         self.status = None
         self.response_headers = None
         self.exc_info = None
+
+    def tearDown(self):
+        self.get_tracer_patcher.stop()
+        self.start_span_patcher.stop()
 
     def start_response(self, status, response_headers, exc_info=None):
         self.status = status
