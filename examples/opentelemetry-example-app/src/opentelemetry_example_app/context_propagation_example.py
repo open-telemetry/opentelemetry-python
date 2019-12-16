@@ -31,14 +31,12 @@ from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
     ConsoleSpanExporter,
 )
-from opentelemetry.baggage import BaggageManager
 
 
 def configure_opentelemetry(flask_app: flask.Flask):
     trace.set_preferred_tracer_implementation(lambda T: Tracer())
 
     # Global initialization
-    (baggage_extractor, baggage_injector) = BaggageManager.http_propagator()
     (b3_extractor, b3_injector) = b3_format.http_propagator()
     # propagation.set_http_extractors([b3_extractor, baggage_extractor])
     # propagation.set_http_injectors([b3_injector, baggage_injector])
