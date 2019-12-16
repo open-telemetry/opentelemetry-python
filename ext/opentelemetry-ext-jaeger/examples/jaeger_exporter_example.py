@@ -2,11 +2,11 @@ import time
 
 from opentelemetry import trace
 from opentelemetry.ext import jaeger
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-trace.set_preferred_tracer_implementation(lambda T: Tracer())
-tracer = trace.tracer()
+trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+tracer = trace.tracer_source().get_tracer(__name__)
 
 # create a JaegerSpanExporter
 jaeger_exporter = jaeger.JaegerSpanExporter(
@@ -25,8 +25,8 @@ jaeger_exporter = jaeger.JaegerSpanExporter(
 # create a BatchExportSpanProcessor and add the exporter to it
 span_processor = BatchExportSpanProcessor(jaeger_exporter)
 
-# add to the tracer
-tracer.add_span_processor(span_processor)
+# add to the tracer factory
+trace.tracer_source().add_span_processor(span_processor)
 
 # create some spans for testing
 with tracer.start_as_current_span("foo") as foo:

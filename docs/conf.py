@@ -12,12 +12,21 @@
 
 import os
 import sys
+from os import listdir
+from os.path import isdir, join
 
-sys.path[:0] = [
+source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
-    os.path.abspath("../ext/opentelemetry-ext-opentracing-shim/src/"),
+    os.path.abspath("../opentelemetry-sdk/src/"),
 ]
 
+ext = "../ext"
+ext_dirs = [
+    os.path.abspath("/".join(["../ext", f, "src"]))
+    for f in listdir(ext)
+    if isdir(join(ext, f))
+]
+sys.path[:0] = source_dirs + ext_dirs
 
 # -- Project information -----------------------------------------------------
 
@@ -64,7 +73,12 @@ nitpicky = True
 # Sphinx does not recognize generic type TypeVars
 # Container supposedly were fixed, but does not work
 # https://github.com/sphinx-doc/sphinx/pull/3744
-nitpick_ignore = [("py:class", "ValueT"), ("py:class", "typing.Tuple")]
+nitpick_ignore = [
+    ("py:class", "ValueT"),
+    ("py:class", "MetricT"),
+    ("py:class", "typing.Tuple"),
+    ("py:class", "pymongo.monitoring.CommandListener"),
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
