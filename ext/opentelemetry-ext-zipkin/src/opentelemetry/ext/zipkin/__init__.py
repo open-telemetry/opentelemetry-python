@@ -59,10 +59,10 @@ class ZipkinSpanExporter(SpanExporter):
     def __init__(
         self,
         service_name: str,
-        host_name: Optional[str] = DEFAULT_HOST_NAME,
-        port: Optional[int] = DEFAULT_PORT,
-        endpoint: Optional[str] = DEFAULT_ENDPOINT,
-        protocol: Optional[str] = DEFAULT_PROTOCOL,
+        host_name: str = DEFAULT_HOST_NAME,
+        port: int = DEFAULT_PORT,
+        endpoint: str = DEFAULT_ENDPOINT,
+        protocol: str = DEFAULT_PROTOCOL,
         ipv4: Optional[str] = None,
         ipv6: Optional[str] = None,
     ):
