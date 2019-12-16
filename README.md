@@ -178,11 +178,11 @@ Future releases targets include:
 
 | Component                           | Version    | Target Date      |
 | ----------------------------------- | ---------- | ---------------- |
-| Zipkin Trace Exporter               | Alpha v0.4 | December 31 2019 |
-| W3C Correlation Context Propagation | Alpha v0.4 | December 31 2019 |
-| Support for Tags/Baggage            | Alpha v0.4 | December 31 2019 |
-| Metrics Aggregation                 | Alpha v0.4 | December 31 2019 |
-| gRPC Integrations                   | Alpha v0.4 | December 31 2019 |
-| Prometheus Metrics Exporter         | Alpha v0.4 | December 31 2019 |
-| OpenCensus Bridge                   | Alpha v0.4 | December 31 2019 |
-| Metrics SDK (Complete)              | Alpha v0.4 | December 31 2019 |
+| Zipkin Trace Exporter               | Alpha v0.4 | January 28 2020  |
+| W3C Correlation Context Propagation | Alpha v0.4 | January 28 2020  |
+| Support for Tags/Baggage            | Alpha v0.4 | January 28 2020  |
+| Metrics Aggregation                 | Alpha v0.4 | January 28 2020  |
+| gRPC Integrations                   | Alpha v0.4 | January 28 2020  |
+| Prometheus Metrics Exporter         | Alpha v0.4 | January 28 2020  |
+| OpenCensus Bridge                   | Alpha v0.4 | January 28 2020  |
+| Metrics SDK (Complete)              | Alpha v0.4 | January 28 2020  |
