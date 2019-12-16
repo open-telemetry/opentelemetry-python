@@ -71,19 +71,14 @@ class ZipkinSpanExporter(SpanExporter):
         self.port = port
         self.endpoint = endpoint
         self.protocol = protocol
-        self.url = self.get_url
+        self.url = "{}://{}:{}{}".format(
+            self.protocol, self.host_name, self.port, self.endpoint
+        )
         self.ipv4 = ipv4
         self.ipv6 = ipv6
 
-    @property
-    def get_url(self):
-        return "{}://{}:{}{}".format(
-            self.protocol, self.host_name, self.port, self.endpoint
-        )
-
     def export(self, spans: Sequence[Span]) -> "SpanExportResult":
         zipkin_spans = self._translate_to_zipkin(spans)
-        print("about to call")
         result = requests.post(
             url=self.url, data=json.dumps(zipkin_spans), headers=ZIPKIN_HEADERS
         )
