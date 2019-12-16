@@ -21,8 +21,6 @@ from urllib.parse import urlsplit
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
-from opentelemetry.sdk.trace import MAX_NUM_ATTRIBUTES
-from opentelemetry.sdk.util import BoundedDict
 
 
 class Response:
@@ -101,21 +99,18 @@ class TestWsgiApplication(WsgiTestBase):
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
         self.assertEqual(
             span_list[0].attributes,
-            BoundedDict.from_map(
-                MAX_NUM_ATTRIBUTES,
-                {
-                    "component": "http",
-                    "http.method": "GET",
-                    "http.server_name": "127.0.0.1",
-                    "http.scheme": "http",
-                    "host.port": 80,
-                    "http.host": "127.0.0.1",
-                    "http.flavor": "1.0",
-                    "http.url": "http://127.0.0.1/",
-                    "http.status_text": "OK",
-                    "http.status_code": 200,
-                },
-            ),
+            {
+                "component": "http",
+                "http.method": "GET",
+                "http.server_name": "127.0.0.1",
+                "http.scheme": "http",
+                "host.port": 80,
+                "http.host": "127.0.0.1",
+                "http.flavor": "1.0",
+                "http.url": "http://127.0.0.1/",
+                "http.status_text": "OK",
+                "http.status_code": 200,
+            },
         )
 
     def test_basic_wsgi_call(self):

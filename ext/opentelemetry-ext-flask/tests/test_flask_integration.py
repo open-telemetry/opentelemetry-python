@@ -21,8 +21,6 @@ from werkzeug.wrappers import BaseResponse
 import opentelemetry.ext.flask as otel_flask
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
-from opentelemetry.sdk.trace import MAX_NUM_ATTRIBUTES
-from opentelemetry.sdk.util import BoundedDict
 
 
 class TestFlaskIntegration(WsgiTestBase):
