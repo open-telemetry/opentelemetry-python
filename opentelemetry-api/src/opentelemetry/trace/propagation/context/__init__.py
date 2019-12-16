@@ -18,16 +18,10 @@ from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import ContextKeys
 
 
-def from_context(ctx: Optional[BaseRuntimeContext] = None) -> SpanContext:
-    if ctx is None:
-        ctx = Context.current()
-    return Context.value(ctx, ContextKeys.span_context_key())
+def from_context(ctx: Optional[Context] = None) -> SpanContext:
+    return Context.value(ContextKeys.span_context_key(), context=ctx)
 
 
-def with_span_context(
-    ctx: BaseRuntimeContext, span_context: SpanContext
-) -> BaseRuntimeContext:
-    return Context.set_value(
-        ctx, ContextKeys.span_context_key(), span_context,
-    )
+def with_span_context(span_context: SpanContext) -> BaseRuntimeContext:
+    return Context.set_value(ContextKeys.span_context_key(), span_context)
 

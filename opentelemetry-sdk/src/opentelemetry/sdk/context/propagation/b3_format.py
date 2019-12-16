@@ -110,7 +110,6 @@ class B3Extractor(HTTPExtractor):
             options |= trace.TraceOptions.SAMPLED
 
         return with_span_context(
-            context,
             trace.SpanContext(
                 # trace an span ids are encoded in hex, so must be converted
                 trace_id=int(trace_id, 16),

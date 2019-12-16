@@ -668,7 +668,7 @@ class TracerShim(opentracing.Tracer):
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
-        ctx = with_span_context(Context.current(), span_context.unwrap())
+        ctx = with_span_context(span_context.unwrap())
         propagation.inject(ctx, type(carrier).__setitem__, carrier)
 
     def extract(self, format, carrier):

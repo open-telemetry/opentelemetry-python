@@ -139,6 +139,8 @@ Here goes a simple demo of how async could work in Python 3.7+::
 """
 
 import copy
+import typing
+
 from .base_context import BaseRuntimeContext
 
 __all__ = ["BaseRuntimeContext", "Context"]
@@ -162,12 +164,24 @@ class Context:
         self._slot = _CONTEXT.register_slot(self._id)
         self._slot.set(self)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
     def get(self, key):
         return self.contents.get(key)
 
     @classmethod
-    def value(cls, key: str) -> str:
-        return cls.current().contents.get(key)
+    def value(
+        cls, key: str, context: typing.Optional["Context"] = None
+    ) -> str:
+        if context is None:
+            return getattr(
+                _CONTEXT, _CONTEXT.current_context.get()
+            ).contents.get(key)
+        return context.contents.get(key)
 
     @classmethod
     def set_value(cls, key: str, value: "object") -> "Context":
@@ -195,3 +209,8 @@ class Context:
                 "__current_prop_context__"
             )
         _CONTEXT.current_context.set(ctx._id)
+
+    @classmethod
+    def use(self, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
+        """TODO: do we want this passthrough here? Review where use is used """
+        return _CONTEXT.use()

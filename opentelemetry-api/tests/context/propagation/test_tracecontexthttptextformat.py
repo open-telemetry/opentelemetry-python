@@ -151,9 +151,7 @@ class TestTraceContextFormat(unittest.TestCase):
         Empty and whitespace-only list members are allowed. Vendors MUST accept empty
         tracestate headers but SHOULD avoid sending them.
         """
-        ctx = with_span_context(
-            self.ctx, trace.SpanContext(self.TRACE_ID, self.SPAN_ID)
-        )
+        ctx = with_span_context(trace.SpanContext(self.TRACE_ID, self.SPAN_ID))
         output = {}  # type:typing.Dict[str, str]
         INJECT.inject(
             ctx, dict.__setitem__, output,
@@ -185,7 +183,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """Do not propagate invalid trace context.
         """
         output = {}  # type:typing.Dict[str, str]
-        ctx = with_span_context(self.ctx, trace.INVALID_SPAN_CONTEXT)
+        ctx = with_span_context(trace.INVALID_SPAN_CONTEXT)
         INJECT.inject(ctx, dict.__setitem__, output)
         self.assertFalse("traceparent" in output)
 

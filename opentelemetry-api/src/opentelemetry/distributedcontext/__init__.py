@@ -129,13 +129,9 @@ class CorrelationContextManager:
         """ TODO """
 
     @classmethod
-    def set_value(cls, key, value, context=None):
-        if context is None:
-            return Context.set_value(Context.current(), key, value)
-        return Context.set_value(context, key, value)
+    def set_value(cls, key, value):
+        return Context.set_value(key, value)
 
     @classmethod
     def value(cls, key, context=None):
-        if context is None:
-            return Context.value(Context.current(), key)
-        return Context.value(context, key)
+        return Context.value(key, context=context)

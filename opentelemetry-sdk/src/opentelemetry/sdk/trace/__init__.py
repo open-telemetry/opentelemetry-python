@@ -321,9 +321,9 @@ class Tracer(trace_api.Tracer):
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
 
-    def get_current_span(self):
+    def get_current_span(self, context=None):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return Context.value(Context.current(), self._slot_name)
+        return Context.value(self._slot_name, context=context)
 
     def start_as_current_span(
         self,
@@ -332,10 +332,13 @@ class Tracer(trace_api.Tracer):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
+        context: Optional[Context] = None,
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
-        span = self.start_span(name, parent, kind, attributes, links)
+        span = self.start_span(
+            name, parent, kind, attributes, links, context=context
+        )
         return self.use_span(span, end_on_exit=True)
 
     def start_span(
@@ -346,18 +349,19 @@ class Tracer(trace_api.Tracer):
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
+        context: Optional[Context] = None,
     ) -> "Span":
         """See `opentelemetry.trace.Tracer.start_span`."""
 
         if parent is Tracer.CURRENT_SPAN:
-            parent = self.get_current_span()
+            parent = self.get_current_span(context=context)
 
         parent_context = parent
         if isinstance(parent_context, trace_api.Span):
             parent_context = parent.get_context()
 
         if parent_context is None:
-            parent_context = from_context(Context.current())
+            parent_context = from_context(context)
 
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext
@@ -421,11 +425,11 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self.get_current_span()
-            with_span_context(Context.current(), span.get_context())
+            with_span_context(span.get_context())
             try:
                 yield span
             finally:
-                with_span_context(Context.current(), span_snapshot)
+                with_span_context(span_snapshot)
         finally:
             if end_on_exit:
                 span.end()
