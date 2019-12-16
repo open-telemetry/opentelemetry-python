@@ -42,22 +42,19 @@ class TestFlaskIntegration(WsgiTestBase):
         self.client = Client(self.app, BaseResponse)
 
     def test_simple(self):
-        expected_attrs = BoundedDict.from_map(
-            MAX_NUM_ATTRIBUTES,
-            {
-                "component": "http",
-                "http.method": "GET",
-                "http.server_name": "localhost",
-                "http.scheme": "http",
-                "host.port": 80,
-                "http.host": "localhost",
-                "http.target": "/hello/123",
-                "http.flavor": "1.1",
-                "http.route": "/hello/<int:helloid>",
-                "http.status_text": "OK",
-                "http.status_code": 200,
-            },
-        )
+        expected_attrs = {
+            "component": "http",
+            "http.method": "GET",
+            "http.server_name": "localhost",
+            "http.scheme": "http",
+            "host.port": 80,
+            "http.host": "localhost",
+            "http.target": "/hello/123",
+            "http.flavor": "1.1",
+            "http.route": "/hello/<int:helloid>",
+            "http.status_text": "OK",
+            "http.status_code": 200,
+        }
         resp = self.client.get("/hello/123")
         self.assertEqual(200, resp.status_code)
         self.assertEqual([b"Hello: 123"], list(resp.response))
@@ -68,21 +65,18 @@ class TestFlaskIntegration(WsgiTestBase):
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_404(self):
-        expected_attrs = BoundedDict.from_map(
-            MAX_NUM_ATTRIBUTES,
-            {
-                "component": "http",
-                "http.method": "POST",
-                "http.server_name": "localhost",
-                "http.scheme": "http",
-                "host.port": 80,
-                "http.host": "localhost",
-                "http.target": "/bye",
-                "http.flavor": "1.1",
-                "http.status_text": "NOT FOUND",
-                "http.status_code": 404,
-            },
-        )
+        expected_attrs = {
+            "component": "http",
+            "http.method": "POST",
+            "http.server_name": "localhost",
+            "http.scheme": "http",
+            "host.port": 80,
+            "http.host": "localhost",
+            "http.target": "/bye",
+            "http.flavor": "1.1",
+            "http.status_text": "NOT FOUND",
+            "http.status_code": 404,
+        }
         resp = self.client.post("/bye")
         self.assertEqual(404, resp.status_code)
         resp.close()
@@ -93,22 +87,19 @@ class TestFlaskIntegration(WsgiTestBase):
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_internal_error(self):
-        expected_attrs = BoundedDict.from_map(
-            MAX_NUM_ATTRIBUTES,
-            {
-                "component": "http",
-                "http.method": "GET",
-                "http.server_name": "localhost",
-                "http.scheme": "http",
-                "host.port": 80,
-                "http.host": "localhost",
-                "http.target": "/hello/500",
-                "http.flavor": "1.1",
-                "http.route": "/hello/<int:helloid>",
-                "http.status_text": "INTERNAL SERVER ERROR",
-                "http.status_code": 500,
-            },
-        )
+        expected_attrs = {
+            "component": "http",
+            "http.method": "GET",
+            "http.server_name": "localhost",
+            "http.scheme": "http",
+            "host.port": 80,
+            "http.host": "localhost",
+            "http.target": "/hello/500",
+            "http.flavor": "1.1",
+            "http.route": "/hello/<int:helloid>",
+            "http.status_text": "INTERNAL SERVER ERROR",
+            "http.status_code": 500,
+        }
         resp = self.client.get("/hello/500")
         self.assertEqual(500, resp.status_code)
         resp.close()
