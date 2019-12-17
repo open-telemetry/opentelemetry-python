@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 class LabelSet(metrics_api.LabelSet):
     """See `opentelemetry.metrics.LabelSet."""
 
-    def __init__(self, labels: Dict[str, str] = None):
+    def __init__(self, labels: Dict[str, str] = None, encoded=''):
         self.labels = labels
-        self.encoded = ''
+        self.encoded = encoded
 
 
 class BaseHandle:
@@ -106,7 +106,7 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: Meter,
+        meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -115,6 +115,7 @@ class Metric(metrics_api.Metric):
         self.description = description
         self.unit = unit
         self.value_type = value_type
+        self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
         self.monotonic = monotonic
@@ -126,7 +127,7 @@ class Metric(metrics_api.Metric):
         if not handle:
             handle = self.HANDLE_TYPE(
                 self.value_type, self.enabled, self.monotonic,
-                meter.batcher.aggregator_for(self.__class__)
+                self.meter.batcher.aggregator_for(self.__class__)
             )
         self.handles[label_set] = handle
         return handle
@@ -155,7 +156,7 @@ class Counter(Metric, metrics_api.Counter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: Meter,
+        meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = True,
@@ -165,6 +166,7 @@ class Counter(Metric, metrics_api.Counter):
             description,
             unit,
             value_type,
+            meter,
             label_keys=label_keys,
             enabled=enabled,
             monotonic=monotonic,
@@ -192,7 +194,7 @@ class Gauge(Metric, metrics_api.Gauge):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: Meter,
+        meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = True,
         monotonic: bool = False,
@@ -202,6 +204,7 @@ class Gauge(Metric, metrics_api.Gauge):
             description,
             unit,
             value_type,
+            meter,
             label_keys=label_keys,
             enabled=enabled,
             monotonic=monotonic,
@@ -229,7 +232,7 @@ class Measure(Metric, metrics_api.Measure):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: Meter,
+        meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = False,
         monotonic: bool = False,
@@ -239,6 +242,7 @@ class Measure(Metric, metrics_api.Measure):
             description,
             unit,
             value_type,
+            meter,
             label_keys=label_keys,
             enabled=enabled,
             monotonic=monotonic,
@@ -252,9 +256,9 @@ class Measure(Metric, metrics_api.Measure):
 
 class Record:
 
-    def __init__(self, encoded, metric_type, enabled, aggregator):
-        self.encoded = encoded
-        self.metric_type = metric_type
+    def __init__(self, metric, label_set, aggregator):
+        self.metric = metric
+        self.label_set = label_set
         self.aggregator = aggregator
 
 
@@ -267,15 +271,14 @@ class Meter(metrics_api.Meter):
 
     def __init__(self, batcher):
         self.label_sets = {}
-        self.metrics = {}
+        self.metrics = set()
         self.batcher = batcher
 
     def collect(self):
-        for metric in metrics:
+        for metric in self.metrics:
             if metric.enabled:
-                metric_type = metric.metric_type
-                for label_set, handle in metrics.handles:
-                    record = Record(label_set.encoded, metric_type, handle.aggregator)
+                for label_set, handle in metric.handles.items():
+                    record = Record(metric, label_set, handle.aggregator)
                     self.batcher.process(record)
 
     def record_batch(
@@ -305,6 +308,7 @@ class Meter(metrics_api.Meter):
             description,
             unit,
             value_type,
+            self,
             label_keys=label_keys,
             enabled=enabled,
             monotonic=monotonic,
@@ -325,9 +329,6 @@ class Meter(metrics_api.Meter):
         # Use simple encoding for now until encoding API is implemented
         encoded = tuple(sorted(labels.items()))
         # If LabelSet exists for this meter in memory, use existing one
-        if encoded not in self.labels:
+        if encoded not in self.label_sets:
             self.label_sets[encoded] = LabelSet(labels=labels, encoded=encoded)
         return self.label_sets[encoded]
-
-
-meter = Meter()

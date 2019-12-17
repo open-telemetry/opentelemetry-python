@@ -16,14 +16,8 @@ import abc
 
 from typing import Type
 from opentelemetry.metrics import Counter, MetricT
+from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
-
-
-class BatchKey:
-
-    def __init__(self, metric_type, encoded):
-        self.metric_type = metric_type
-        self.encoded = encoded
 
 
 class Batcher(abc.ABC):
@@ -39,6 +33,16 @@ class Batcher(abc.ABC):
             # TODO: Add other aggregators
             return CounterAggregator()
 
+    def check_point_set(self):
+        metric_records = []
+        for key, value in self.batch_map.items():
+            metric_records.append(MetricRecord(value[0], value[1], key[0]))
+        return metric_records
+
+    def finished_collection(self):
+        if not self.keep_state:
+            self.batch_map = {}
+
     @abc.abstractmethod
     def process(self, record):
         pass
@@ -47,14 +51,10 @@ class Batcher(abc.ABC):
 class UngroupedBatcher(Batcher):
 
     def process(self, record):
+        # checkpoints the current aggregator value to be collected for export
         record.aggregator.checkpoint()
         # TODO: Race case of incoming update at the same time as process
-        batch_key = BatchKey(record.metric_type, record.encoded)
-        aggregator = self.batch_map.get(batch_key)
-        if aggregator:
-            # Since checkpoints are reset every time process is called, merge
-            # the accumulated value from the 
-            aggregator.merge(record.aggregator)
-        else:
-
-        record.aggregator.checkpoint()
+        batch_key = (record.metric, record.label_set.encoded)
+        batch_value = self.batch_map.get(batch_key)
+        if not batch_value:
+            self.batch_map[batch_key] = (record.aggregator, record.label_set)

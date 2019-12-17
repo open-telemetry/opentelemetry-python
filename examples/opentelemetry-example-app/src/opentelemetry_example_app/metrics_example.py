@@ -18,8 +18,12 @@ This module serves as an example for a simple application using metrics
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, Meter
+from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
+from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.metrics.export.controller import PushController
 
-metrics.set_preferred_meter_implementation(lambda _: Meter())
+batcher = UngroupedBatcher(True)
+metrics.set_preferred_meter_implementation(lambda _: Meter(batcher))
 meter = metrics.meter()
 counter = meter.create_metric(
     "available memory",
@@ -27,7 +31,7 @@ counter = meter.create_metric(
     "bytes",
     int,
     Counter,
-    ("environment",),
+    ("environment",)
 )
 
 label_set = meter.get_label_set({"environment": "staging"})
@@ -41,6 +45,6 @@ counter_handle.add(100)
 
 # Record batch usage
 meter.record_batch(label_set, [(counter, 50)])
-print(counter_handle.data)
 
-# TODO: exporters
+exporter = ConsoleMetricsExporter()
+controller = PushController(meter, exporter, 5)

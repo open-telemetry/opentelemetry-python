@@ -18,6 +18,7 @@ class Aggregator(abc.ABC):
 
     def __init__(self):
         self.current = None
+        self.check_point = None
 
     @abc.abstractmethod
     def update(self, value):
@@ -30,7 +31,7 @@ class Aggregator(abc.ABC):
 class CounterAggregator(Aggregator):
 
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.current = 0
         self.check_point = 0
 
@@ -40,7 +41,6 @@ class CounterAggregator(Aggregator):
     def checkpoint(self):
         # TODO: Implement lock-free algorithm for concurrency
         self.check_point = self.current
-        self.current = 0
 
     def merge(self, aggregator):
         self.check_point += aggregator.check_point
