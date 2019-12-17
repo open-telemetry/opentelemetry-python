@@ -425,11 +425,11 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self.get_current_span()
-            with_span_context(span.get_context())
+            Context.current().contents[self._slot_name] = span
             try:
                 yield span
             finally:
-                with_span_context(span_snapshot)
+                Context.current().contents[self._slot_name] = span_snapshot
         finally:
             if end_on_exit:
                 span.end()
