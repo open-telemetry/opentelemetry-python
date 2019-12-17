@@ -53,7 +53,7 @@ class TestTraceContextFormat(unittest.TestCase):
         If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span_context = EXTRACT.extract(self.ctx, get_as_list, output)
+        span_context = EXTRACT.extract(output, self.ctx, get_as_list)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
     def test_headers_with_tracestate(self):
@@ -66,12 +66,12 @@ class TestTraceContextFormat(unittest.TestCase):
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         ctx = EXTRACT.extract(
-            self.ctx,
-            get_as_list,
             {
                 "traceparent": [traceparent_value],
                 "tracestate": [tracestate_value],
             },
+            self.ctx,
+            get_as_list,
         )
         span_context = from_context(ctx)
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
@@ -81,7 +81,7 @@ class TestTraceContextFormat(unittest.TestCase):
         )
 
         output = {}  # type:typing.Dict[str, str]
-        INJECT.inject(self.ctx, dict.__setitem__, output)
+        INJECT.inject(output, ctx, dict.__setitem__)
         self.assertEqual(output["traceparent"], traceparent_value)
         for pair in ["foo=1", "bar=2", "baz=3"]:
             self.assertIn(pair, output["tracestate"])
@@ -104,14 +104,14 @@ class TestTraceContextFormat(unittest.TestCase):
         Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
         """
         span_context = EXTRACT.extract(
-            self.ctx,
-            get_as_list,
             {
                 "traceparent": [
                     "00-00000000000000000000000000000000-1234567890123456-00"
                 ],
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
+            self.ctx,
+            get_as_list,
         )
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
@@ -131,14 +131,14 @@ class TestTraceContextFormat(unittest.TestCase):
         Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
         """
         span_context = EXTRACT.extract(
-            self.ctx,
-            get_as_list,
             {
                 "traceparent": [
                     "00-00000000000000000000000000000000-0000000000000000-00"
                 ],
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
+            self.ctx,
+            get_as_list,
         )
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
@@ -153,7 +153,7 @@ class TestTraceContextFormat(unittest.TestCase):
         ctx = with_span_context(trace.SpanContext(self.TRACE_ID, self.SPAN_ID))
         output = {}  # type:typing.Dict[str, str]
         INJECT.inject(
-            ctx, dict.__setitem__, output,
+            output, ctx, dict.__setitem__,
         )
         self.assertTrue("traceparent" in output)
         self.assertFalse("tracestate" in output)
@@ -167,14 +167,14 @@ class TestTraceContextFormat(unittest.TestCase):
         If the version cannot be parsed, return an invalid trace header.
         """
         span_context = EXTRACT.extract(
-            self.ctx,
-            get_as_list,
             {
                 "traceparent": [
                     "00-12345678901234567890123456789012-1234567890123456-00-residue"
                 ],
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
+            self.ctx,
+            get_as_list,
         )
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
@@ -183,20 +183,20 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, str]
         ctx = with_span_context(trace.INVALID_SPAN_CONTEXT)
-        INJECT.inject(ctx, dict.__setitem__, output)
+        INJECT.inject(output, ctx, dict.__setitem__)
         self.assertFalse("traceparent" in output)
 
     def test_tracestate_empty_header(self):
         """Test tracestate with an additional empty header (should be ignored)"""
         ctx = EXTRACT.extract(
-            self.ctx,
-            get_as_list,
             {
                 "traceparent": [
                     "00-12345678901234567890123456789012-1234567890123456-00"
                 ],
                 "tracestate": ["foo=1", ""],
             },
+            self.ctx,
+            get_as_list,
         )
         span_context = from_context(ctx)
         self.assertEqual(span_context.trace_state["foo"], "1")
@@ -205,14 +205,14 @@ class TestTraceContextFormat(unittest.TestCase):
         """Do not propagate invalid trace context.
         """
         ctx = EXTRACT.extract(
-            self.ctx,
-            get_as_list,
             {
                 "traceparent": [
                     "00-12345678901234567890123456789012-1234567890123456-00"
                 ],
                 "tracestate": ["foo=1,"],
             },
+            self.ctx,
+            get_as_list,
         )
         span_context = from_context(ctx)
         self.assertEqual(span_context.trace_state["foo"], "1")

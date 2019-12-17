@@ -50,7 +50,7 @@ class B3Extractor(HTTPExtractor):
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
     @classmethod
-    def extract(cls, context, carrier, get_from_carrier=_getter):
+    def extract(cls, carrier, context=None, get_from_carrier=_getter):
 
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
         span_id = format_span_id(trace.INVALID_SPAN_ID)
@@ -118,7 +118,7 @@ class B3Extractor(HTTPExtractor):
 
 class B3Injector(HTTPInjector):
     @classmethod
-    def inject(cls, context, carrier, set_in_carrier=_setter):
+    def inject(cls, carrier, context=None, set_in_carrier=_setter):
         sc = from_context(context)
         sampled = (trace.TraceOptions.SAMPLED & sc.trace_options) != 0
         set_in_carrier(carrier, TRACE_ID_KEY, format_trace_id(sc.trace_id))

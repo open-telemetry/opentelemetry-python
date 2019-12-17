@@ -13,7 +13,7 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.context import BaseRuntimeContext, Context
+from opentelemetry.context import Context
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import ContextKeys
 
@@ -22,5 +22,5 @@ def from_context(ctx: Optional[Context] = None) -> SpanContext:
     return Context.value(ContextKeys.span_context_key(), context=ctx)
 
 
-def with_span_context(span_context: SpanContext) -> BaseRuntimeContext:
+def with_span_context(span_context: SpanContext) -> Context:
     return Context.set_value(ContextKeys.span_context_key(), span_context)

@@ -26,6 +26,8 @@ Getter = typing.Callable[[_T, str], typing.List[str]]
 class HTTPExtractor(abc.ABC):
     """API for propagation of span context via headers.
 
+    TODO: update docs to reflect split into extractor/injector
+
     This class provides an interface that enables extracting and injecting
     span context into headers of HTTP requests. HTTP frameworks and clients
     can integrate with HTTPTextFormat by providing the object containing the
@@ -74,8 +76,8 @@ class HTTPExtractor(abc.ABC):
     @abc.abstractmethod
     def extract(
         cls,
-        context: Context,
         carrier: _T,
+        context: typing.Optional[Context] = None,
         get_from_carrier: typing.Optional[Getter[_T]] = None,
     ) -> Context:
         """Create a SpanContext from values in the carrier.
@@ -103,9 +105,9 @@ class HTTPInjector(abc.ABC):
     @abc.abstractmethod
     def inject(
         cls,
-        context: Context,
         carrier: _T,
-        set_in_carrier: typing.Optional[Setter[_T]],
+        context: typing.Optional[Context] = None,
+        set_in_carrier: typing.Optional[Setter[_T]] = None,
     ) -> None:
         """Inject values from a SpanContext into a carrier.
 

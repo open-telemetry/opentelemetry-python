@@ -16,9 +16,13 @@ import re
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context import BaseRuntimeContext
-from opentelemetry.context.propagation import httptextformat
-from opentelemetry.trace.propagation import ContextKeys
+from opentelemetry.context import Context
+from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
+from opentelemetry.context.propagation.httptextformat import Getter, Setter
+from opentelemetry.trace.propagation.context import (
+    from_context,
+    with_span_context,
+)
 
 _T = typing.TypeVar("_T")
 
@@ -53,7 +57,7 @@ TRACEPARENT_HEADER_NAME = "traceparent"
 TRACESTATE_HEADER_NAME = "tracestate"
 
 
-class TraceContextHTTPExtractor(httptextformat.HTTPExtractor):
+class TraceContextHTTPExtractor(HTTPExtractor):
     """Extracts using w3c TraceContext's headers.
     """
 
@@ -66,10 +70,10 @@ class TraceContextHTTPExtractor(httptextformat.HTTPExtractor):
     @classmethod
     def extract(
         cls,
-        context: BaseRuntimeContext,
         carrier: _T,
-        get_from_carrier: typing.Optional[httptextformat.Getter[_T]] = None,
-    ) -> BaseRuntimeContext:
+        context: typing.Optional[Context] = None,
+        get_from_carrier: typing.Optional[Getter[_T]] = None,
+    ) -> Context:
         """Extracts a valid SpanContext from the carrier.
         """
         header = get_from_carrier(carrier, TRACEPARENT_HEADER_NAME)
@@ -105,27 +109,30 @@ class TraceContextHTTPExtractor(httptextformat.HTTPExtractor):
             trace_state=tracestate,
         )
 
-        ctx = BaseRuntimeContext.set_value(
-            context, ContextKeys.span_context_key(), span_context
-        )
-
-        return ctx
+        return with_span_context(span_context)
 
 
-class TraceContextHTTPInjector(httptextformat.HTTPInjector):
+class TraceContextHTTPInjector(HTTPInjector):
     """Injects using w3c TraceContext's headers.
     """
 
     @classmethod
     def inject(
         cls,
-        context: BaseRuntimeContext,
         carrier: _T,
-        set_in_carrier: typing.Optional[httptextformat.Setter[_T]] = None,
+        context: typing.Optional[Context] = None,
+        set_in_carrier: typing.Optional[Setter[_T]] = None,
     ) -> None:
-        sc = BaseRuntimeContext.value(context, ContextKeys.span_context_key())
+        sc = from_context(context)
         if sc is None or sc == trace.INVALID_SPAN_CONTEXT:
             return
+
+        if (
+            sc.trace_id == trace.INVALID_TRACE_ID
+            or sc.span_id == trace.INVALID_SPAN_ID
+        ):
+            return
+
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
             sc.trace_id, sc.span_id, sc.trace_options,
         )
