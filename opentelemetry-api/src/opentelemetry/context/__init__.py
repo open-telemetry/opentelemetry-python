@@ -146,7 +146,6 @@ from .base_context import BaseRuntimeContext
 
 __all__ = ["BaseRuntimeContext", "Context"]
 
-_CONTEXT = None
 try:
     from .async_context import AsyncRuntimeContext
 
@@ -170,16 +169,13 @@ class Context:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def __getattr__(self, name: str) -> "object":
-        return _CONTEXT.__getattr__(name)
-
     def get(self, key):
         return self.contents.get(key)
 
     @classmethod
     def value(
         cls, key: str, context: typing.Optional["Context"] = None
-    ) -> str:
+    ) -> "object":
         if context is None:
             return cls.current().contents.get(key)
         return context.contents.get(key)
@@ -220,3 +216,7 @@ class Context:
         cls, name: str, default: "object" = None
     ) -> "BaseRuntimeContext.Slot":
         return _CONTEXT.register_slot(name, default)
+
+    @classmethod
+    def suppress_instrumentation(cls) -> "object":
+        return _CONTEXT.suppress_instrumentation
