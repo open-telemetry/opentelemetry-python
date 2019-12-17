@@ -125,7 +125,7 @@ class CorrelationContextManager:
         """ TODO """
 
     def use_context(
-        self, ctx: CorrelationContext
+        self, context: CorrelationContext
     ) -> typing.Iterator[CorrelationContext]:
         """ TODO """
 

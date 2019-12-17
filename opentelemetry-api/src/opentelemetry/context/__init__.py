@@ -169,6 +169,9 @@ class Context:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
+    def __getattr__(self, name: str) -> "object":
+        return _CONTEXT.__getattr__(name)
+
     def get(self, key):
         return self.contents.get(key)
 
@@ -206,8 +209,3 @@ class Context:
                 "__current_prop_context__"
             )
         _CONTEXT.current_context.set(ctx.slot_name)
-
-    @classmethod
-    def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
-        """TODO: do we want this passthrough here? Review where use is used """
-        return _CONTEXT.use(**kwargs)
