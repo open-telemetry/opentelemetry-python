@@ -669,7 +669,7 @@ class TracerShim(opentracing.Tracer):
             raise opentracing.UnsupportedFormatException
 
         ctx = with_span_context(span_context.unwrap())
-        propagation.inject(ctx, type(carrier).__setitem__, carrier)
+        propagation.inject(carrier, context=ctx)
 
     def extract(self, format, carrier):
         """Implements the ``extract`` method from the base class."""
@@ -683,14 +683,11 @@ class TracerShim(opentracing.Tracer):
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
-        def get_as_list(dict_object, key):
-            value = dict_object.get(key)
-            return [value] if value is not None else []
+        # def get_as_list(dict_object, key):
+        #     value = dict_object.get(key)
+        #     return [value] if value is not None else []
 
-        # propagator = propagation.get_global_httptextformat()
-
-        otel_context = from_context(
-            propagation.extract(Context.current(), get_as_list, carrier)
-        )
+        propagation.extract(carrier)
+        otel_context = from_context()
 
         return SpanContextShim(otel_context)

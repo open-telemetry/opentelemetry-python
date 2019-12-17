@@ -19,12 +19,25 @@ import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagation, trace
+from opentelemetry.trace.propagation.context import (
+    from_context,
+    with_span_context,
+)
 from opentelemetry.context.propagation.httptextformat import (
     HTTPExtractor,
     HTTPInjector,
 )
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import Tracer
+
+
+def _getter(dict_object, key):
+    value = dict_object.get(key)
+    return [value] if value is not None else []
+
+
+def _setter(dict_object, key, value):
+    dict_object[key] = value
 
 
 class TestShim(unittest.TestCase):
@@ -545,15 +558,17 @@ class MockHTTPExtractor(HTTPExtractor):
     """Mock extractor for testing purposes."""
 
     @classmethod
-    def extract(cls, carrier, context=None, get_from_carrier=None):
+    def extract(cls, carrier, context=None, get_from_carrier=_getter):
         trace_id_list = get_from_carrier(carrier, _TRACE_ID_KEY)
         span_id_list = get_from_carrier(carrier, _SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
-            return trace.INVALID_SPAN_CONTEXT
+            return with_span_context(trace.INVALID_SPAN_CONTEXT)
 
-        return trace.SpanContext(
-            trace_id=int(trace_id_list[0]), span_id=int(span_id_list[0])
+        return with_span_context(
+            trace.SpanContext(
+                trace_id=int(trace_id_list[0]), span_id=int(span_id_list[0])
+            )
         )
 
 
@@ -561,6 +576,7 @@ class MockHTTPInjector(HTTPInjector):
     """Mock injector for testing purposes."""
 
     @classmethod
-    def inject(cls, carrier, context=None, set_in_carrier=None):
-        set_in_carrier(carrier, _TRACE_ID_KEY, str(context.trace_id))
-        set_in_carrier(carrier, _SPAN_ID_KEY, str(context.span_id))
+    def inject(cls, carrier, context=None, set_in_carrier=_setter):
+        sc = from_context(context)
+        set_in_carrier(carrier, _TRACE_ID_KEY, str(sc.trace_id))
+        set_in_carrier(carrier, _SPAN_ID_KEY, str(sc.span_id))
