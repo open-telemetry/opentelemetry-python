@@ -15,9 +15,9 @@
 from opentelemetry.context import Context
 
 from .binaryformat import BinaryFormat
-from .httptextformat import HTTPExtractor, HTTPInjector
+from .httptextformat import Getter, HTTPExtractor, HTTPInjector, Setter
 
 # from opentelemetry.context.propagation import Carrier, Getter, Setter
 
 
-__all__ = ["BinaryFormat", "HTTPExtractor", "HTTPInjector"]
+__all__ = ["BinaryFormat", "Getter", "HTTPExtractor", "HTTPInjector", "Setter"]

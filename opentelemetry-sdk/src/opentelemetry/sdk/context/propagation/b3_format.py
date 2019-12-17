@@ -15,23 +15,23 @@
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
+from opentelemetry.context.propagation import (
+    Getter,
+    HTTPExtractor,
+    HTTPInjector,
+    Setter,
+)
 from opentelemetry.trace.propagation.context import (
+    Context,
     from_context,
     with_span_context,
 )
 
+_T = typing.TypeVar("_T")
+
 TRACE_ID_KEY = "x-b3-traceid"
 SPAN_ID_KEY = "x-b3-spanid"
 SAMPLED_KEY = "x-b3-sampled"
-
-
-def _getter(headers, key):
-    return headers.get(key)
-
-
-def _setter(headers, key, value):
-    headers[key] = value
 
 
 def http_propagator() -> typing.Tuple[HTTPExtractor, HTTPInjector]:
@@ -50,7 +50,12 @@ class B3Extractor(HTTPExtractor):
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
     @classmethod
-    def extract(cls, carrier, context=None, get_from_carrier=_getter):
+    def extract(
+        cls,
+        carrier,
+        context: typing.Optional[Context] = None,
+        get_from_carrier: typing.Optional[Getter[_T]] = None,
+    ):
 
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
         span_id = format_span_id(trace.INVALID_SPAN_ID)
@@ -76,7 +81,7 @@ class B3Extractor(HTTPExtractor):
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _parent_span_id = fields
             else:
-                return trace.INVALID_SPAN_CONTEXT
+                return with_span_context(trace.INVALID_SPAN_CONTEXT)
         else:
             trace_id = (
                 _extract_first_element(get_from_carrier(carrier, TRACE_ID_KEY))
@@ -118,7 +123,12 @@ class B3Extractor(HTTPExtractor):
 
 class B3Injector(HTTPInjector):
     @classmethod
-    def inject(cls, carrier, context=None, set_in_carrier=_setter):
+    def inject(
+        cls,
+        carrier,
+        context: typing.Optional[Context] = None,
+        set_in_carrier: typing.Optional[Setter[_T]] = None,
+    ):
         sc = from_context(context)
         sampled = (trace.TraceOptions.SAMPLED & sc.trace_options) != 0
         set_in_carrier(carrier, TRACE_ID_KEY, format_trace_id(sc.trace_id))

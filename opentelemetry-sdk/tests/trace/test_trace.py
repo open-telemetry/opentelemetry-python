@@ -18,6 +18,7 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
+from opentelemetry.context import Context
 from opentelemetry.sdk import trace
 from opentelemetry.trace import sampling
 from opentelemetry.util import time_ns
@@ -140,7 +141,7 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_start_span_implicit(self):
         tracer = trace.Tracer("test_start_span_implicit")
-
+        Context.set_current(Context())
         self.assertIsNone(tracer.get_current_span())
 
         root = tracer.start_span("root")
@@ -185,7 +186,7 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_start_span_explicit(self):
         tracer = trace.Tracer("test_start_span_explicit")
-
+        Context.set_current(Context())
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
@@ -233,7 +234,7 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_start_as_current_span_implicit(self):
         tracer = trace.Tracer("test_start_as_current_span_implicit")
-
+        Context.set_current(Context())
         self.assertIsNone(tracer.get_current_span())
 
         with tracer.start_as_current_span("root") as root:
@@ -253,7 +254,7 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_start_as_current_span_explicit(self):
         tracer = trace.Tracer("test_start_as_current_span_explicit")
-
+        Context.set_current(Context())
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
@@ -287,6 +288,7 @@ class TestSpanCreation(unittest.TestCase):
 
 class TestSpan(unittest.TestCase):
     def setUp(self):
+        Context.set_current(Context())
         self.tracer = trace.Tracer("test_span")
 
     def test_basic_span(self):

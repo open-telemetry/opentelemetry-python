@@ -14,6 +14,10 @@
 
 import unittest
 
+from opentelemetry.trace.propagation.context import (
+    from_context,
+    with_span_context,
+)
 import opentelemetry.sdk.context.propagation.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
 import opentelemetry.trace as trace_api
@@ -44,9 +48,11 @@ class TestB3Format(unittest.TestCase):
             b3_format.SPAN_ID_KEY: self.serialized_span_id,
             b3_format.SAMPLED_KEY: "1",
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
         new_carrier = {}
-        INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+        INJECTOR.inject(
+            new_carrier, set_in_carrier=dict.__setitem__,
+        )
         self.assertEqual(
             new_carrier[b3_format.TRACE_ID_KEY], self.serialized_trace_id
         )
@@ -62,9 +68,11 @@ class TestB3Format(unittest.TestCase):
                 self.serialized_trace_id, self.serialized_span_id
             )
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
         new_carrier = {}
-        INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+        INJECTOR.inject(
+            new_carrier, set_in_carrier=dict.__setitem__,
+        )
         self.assertEqual(
             new_carrier[b3_format.TRACE_ID_KEY], self.serialized_trace_id
         )
@@ -86,9 +94,11 @@ class TestB3Format(unittest.TestCase):
             b3_format.SPAN_ID_KEY: self.serialized_span_id,
             b3_format.SAMPLED_KEY: "1",
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
         new_carrier = {}
-        INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+        INJECTOR.inject(
+            new_carrier, set_in_carrier=dict.__setitem__,
+        )
         self.assertEqual(
             new_carrier[b3_format.TRACE_ID_KEY], single_header_trace_id
         )
@@ -101,9 +111,11 @@ class TestB3Format(unittest.TestCase):
                 b3_format.SPAN_ID_KEY: self.serialized_span_id,
                 b3_format.SAMPLED_KEY: variant,
             }
-            span_context = EXTRACTOR.extract(get_as_list, carrier)
+            EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
             new_carrier = {}
-            INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+            INJECTOR.inject(
+                new_carrier, set_in_carrier=dict.__setitem__,
+            )
             self.assertEqual(new_carrier[b3_format.SAMPLED_KEY], "1")
 
     def test_disabled_sampling(self):
@@ -114,9 +126,11 @@ class TestB3Format(unittest.TestCase):
                 b3_format.SPAN_ID_KEY: self.serialized_span_id,
                 b3_format.SAMPLED_KEY: variant,
             }
-            span_context = EXTRACTOR.extract(get_as_list, carrier)
+            EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
             new_carrier = {}
-            INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+            INJECTOR.inject(
+                new_carrier, set_in_carrier=dict.__setitem__,
+            )
             self.assertEqual(new_carrier[b3_format.SAMPLED_KEY], "0")
 
     def test_flags(self):
@@ -126,9 +140,12 @@ class TestB3Format(unittest.TestCase):
             b3_format.SPAN_ID_KEY: self.serialized_span_id,
             EXTRACTOR.FLAGS_KEY: "1",
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+
+        EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
         new_carrier = {}
-        INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+        INJECTOR.inject(
+            new_carrier, set_in_carrier=dict.__setitem__,
+        )
         self.assertEqual(new_carrier[b3_format.SAMPLED_KEY], "1")
 
     def test_flags_and_sampling(self):
@@ -138,9 +155,11 @@ class TestB3Format(unittest.TestCase):
             b3_format.SPAN_ID_KEY: self.serialized_span_id,
             EXTRACTOR.FLAGS_KEY: "1",
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
         new_carrier = {}
-        INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+        INJECTOR.inject(
+            new_carrier, set_in_carrier=dict.__setitem__,
+        )
         self.assertEqual(new_carrier[b3_format.SAMPLED_KEY], "1")
 
     def test_64bit_trace_id(self):
@@ -151,9 +170,11 @@ class TestB3Format(unittest.TestCase):
             b3_format.SPAN_ID_KEY: self.serialized_span_id,
             EXTRACTOR.FLAGS_KEY: "1",
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
         new_carrier = {}
-        INJECTOR.inject(span_context, dict.__setitem__, new_carrier)
+        INJECTOR.inject(
+            new_carrier, set_in_carrier=dict.__setitem__,
+        )
         self.assertEqual(
             new_carrier[b3_format.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
         )
@@ -163,7 +184,9 @@ class TestB3Format(unittest.TestCase):
         invalid SpanContext.
         """
         carrier = {EXTRACTOR.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        span_context = from_context(
+            EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
+        )
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
@@ -173,7 +196,9 @@ class TestB3Format(unittest.TestCase):
             b3_format.SPAN_ID_KEY: self.serialized_span_id,
             EXTRACTOR.FLAGS_KEY: "1",
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        span_context = from_context(
+            EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
+        )
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     def test_missing_span_id(self):
@@ -182,5 +207,7 @@ class TestB3Format(unittest.TestCase):
             b3_format.TRACE_ID_KEY: self.serialized_trace_id,
             EXTRACTOR.FLAGS_KEY: "1",
         }
-        span_context = EXTRACTOR.extract(get_as_list, carrier)
+        span_context = from_context(
+            EXTRACTOR.extract(carrier, get_from_carrier=get_as_list)
+        )
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)

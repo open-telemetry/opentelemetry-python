@@ -186,7 +186,7 @@ class OpenTelemetryMiddleware:
         tracer = trace.tracer()
         # TODO: fix the return value here, expect a context
         parent_span = propagation.extract(
-            Context.current(), get_header_from_environ, environ
+            environ, Context.current(), get_header_from_environ,
         )
         span_name = get_default_span_name(environ)
 
