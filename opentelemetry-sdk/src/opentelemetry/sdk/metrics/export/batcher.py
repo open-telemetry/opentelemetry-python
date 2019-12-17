@@ -14,46 +14,75 @@
 
 import abc
 
-from typing import Type
+from typing import Sequence, Type
 from opentelemetry.metrics import Counter, MetricT
+from opentelemetry.sdk.metrics import Record
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics \
+        .export.aggregate import Aggregator, CounterAggregator
 
 
 class Batcher(abc.ABC):
+    """Base class for all batcher types.
 
-    def __init__(self, keep_state):
+    The batcher is responsible for storing the aggregators and aggregated
+    received from updates from metrics in the meter. The stored values will be
+    sent to an exporter for exporting.
+    """
+    def __init__(self, keep_state: bool):
         self.batch_map = {}
+        # keep_state=True indicates the batcher computes checkpoints from over
+        # the process lifetime. False indicates the batcher computes
+        # checkpoints which descrive the updates of a single collection period
+        # (deltas)
         self.keep_state = keep_state
 
-    def aggregator_for(self, metric_type: Type[MetricT]):
+    def aggregator_for(self, metric_type: Type[MetricT]) -> Aggregator:
+        """Returns an aggregator based off metric type.
+
+        Aggregators keep track of and updates values when metrics get updated.
+        """
         if metric_type == Counter:
             return CounterAggregator()
         else:
             # TODO: Add other aggregators
             return CounterAggregator()
 
-    def check_point_set(self):
+    def check_point_set(self) -> Sequence[MetricRecord]:
+        """Returns a list of `MetricRecord` s used for exporting.
+
+        The list of `MetricRecord` s is a snapshot created from the current
+        data in all of the aggregators in this batcher.
+        """
         metric_records = []
         for key, value in self.batch_map.items():
             metric_records.append(MetricRecord(value[0], value[1], key[0]))
         return metric_records
 
     def finished_collection(self):
+        """Performs certain post-export logic.
+
+        For batchers that are stateless, resets the batch map.
+        """
         if not self.keep_state:
             self.batch_map = {}
 
     @abc.abstractmethod
-    def process(self, record):
-        pass
+    def process(self, record: Record) -> None:
+        """Stores record information to be ready for exporting.
+
+        Depending on type of batcher, performs pre-export logic, such as
+        filtering records based off of keys.
+        """
 
 
 class UngroupedBatcher(Batcher):
+    """Accepts all records and passes them for exporting"""
 
-    def process(self, record):
-        # checkpoints the current aggregator value to be collected for export
-        record.aggregator.checkpoint()
+    def process(self, record: Record):
         # TODO: Race case of incoming update at the same time as process
+        # Checkpoints the current aggregator value to be collected for export
+        record.aggregator.checkpoint()
         batch_key = (record.metric, record.label_set.encoded)
         batch_value = self.batch_map.get(batch_key)
         if not batch_value:

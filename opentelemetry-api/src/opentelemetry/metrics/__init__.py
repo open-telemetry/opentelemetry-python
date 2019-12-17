@@ -220,7 +220,7 @@ class Meter:
         metric_type: Type[MetricT],
         label_keys: Sequence[str] = None,
         enabled: bool = True,
-        monotonic: bool = False,
+        alternate: bool = False,
     ) -> "Metric":
         """Creates a ``metric_kind`` metric with type ``value_type``.
 
@@ -232,7 +232,7 @@ class Meter:
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
-            monotonic: Whether to only allow non-negative values.
+            alternate: Whether to only allow non-negative values.
 
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """

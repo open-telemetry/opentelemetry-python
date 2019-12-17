@@ -17,6 +17,8 @@ from collections import OrderedDict
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk.metrics.export.aggregate import Aggregator
+from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -26,22 +28,34 @@ logger = logging.getLogger(__name__)
 class LabelSet(metrics_api.LabelSet):
     """See `opentelemetry.metrics.LabelSet."""
 
-    def __init__(self, labels: Dict[str, str] = None, encoded=''):
+    def __init__(self, labels: Dict[str, str] = None, encoded=""):
         self.labels = labels
         self.encoded = encoded
 
 
 class BaseHandle:
+    """The base handle class containing common behavior for all handles.
+
+    Handles are responsible for operating on data for metric instruments for a
+    specific set of labels.
+
+    Args:
+        value_type: The type of values this handle holds (int, float).
+        enabled: True if the originating instrument is enabled.
+        alternate: Indicates applying default behavior for updating values.
+        aggregator: The aggregator for this handle. Will handle aggregation
+            upon updates and checkpointing of values for exporting.
+    """
     def __init__(
         self,
         value_type: Type[metrics_api.ValueT],
         enabled: bool,
-        monotonic: bool,
-        aggregator
+        alternate: bool,
+        aggregator: Aggregator
     ):
         self.value_type = value_type
         self.enabled = enabled
-        self.monotonic = monotonic
+        self.alternate = alternate
         self.aggregator = aggregator
         self.last_update_timestamp = time_ns()
 
@@ -69,7 +83,7 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
     def add(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.CounterHandle.add`."""
         if self._validate_update(value):
-            if self.monotonic and value < 0:
+            if self.alternate and value < 0:
                 logger.warning("Monotonic counter cannot descend.")
                 return
             self.update(value)
@@ -79,7 +93,7 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
     def set(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.GaugeHandle.set`."""
         if self._validate_update(value):
-            if self.monotonic and value < self.data:
+            if self.alternate and value < self.data:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
             self.update(value)
@@ -89,15 +103,20 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
     def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.MeasureHandle.record`."""
         if self._validate_update(value):
-            if self.monotonic and value < 0:
-                logger.warning("Monotonic measure cannot accept negatives.")
+            if self.alternate and value < 0:
+                logger.warning("Absolute measure cannot accept negatives.")
                 return
             self.update(value)
 
 
 class Metric(metrics_api.Metric):
-    """See `opentelemetry.metrics.Metric`."""
+    """Base class for all metric types.
 
+    Also known as `metric instrument`. This is the class that is used to
+    represent a metric that is to be continuously recorded and tracked. Each
+    metric has a set of handles that are created from the metric. See
+    `BaseHandle` for information on handles.
+    """
     HANDLE_TYPE = BaseHandle
 
     def __init__(
@@ -109,7 +128,7 @@ class Metric(metrics_api.Metric):
         meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = True,
-        monotonic: bool = False,
+        alternate: bool = False,
     ):
         self.name = name
         self.description = description
@@ -118,7 +137,7 @@ class Metric(metrics_api.Metric):
         self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
-        self.monotonic = monotonic
+        self.alternate = alternate
         self.handles = {}
 
     def get_handle(self, label_set: LabelSet) -> BaseHandle:
@@ -126,7 +145,8 @@ class Metric(metrics_api.Metric):
         handle = self.handles.get(label_set)
         if not handle:
             handle = self.HANDLE_TYPE(
-                self.value_type, self.enabled, self.monotonic,
+                self.value_type, self.enabled, self.alternate,
+                # Aggregator will be created based off type of metric
                 self.meter.batcher.aggregator_for(self.__class__)
             )
         self.handles[label_set] = handle
@@ -159,7 +179,7 @@ class Counter(Metric, metrics_api.Counter):
         meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = True,
-        monotonic: bool = True,
+        alternate: bool = True,
     ):
         super().__init__(
             name,
@@ -169,7 +189,7 @@ class Counter(Metric, metrics_api.Counter):
             meter,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
+            alternate=alternate,
         )
 
     def add(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
@@ -197,7 +217,7 @@ class Gauge(Metric, metrics_api.Gauge):
         meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = True,
-        monotonic: bool = False,
+        alternate: bool = False,
     ):
         super().__init__(
             name,
@@ -207,7 +227,7 @@ class Gauge(Metric, metrics_api.Gauge):
             meter,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
+            alternate=alternate,
         )
 
     def set(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
@@ -221,7 +241,7 @@ class Measure(Metric, metrics_api.Measure):
     """See `opentelemetry.metrics.Measure`.
 
     By default, measure metrics can accept both positive and negatives.
-    Negative inputs will be discarded when monotonic is True.
+    Negative inputs will be discarded when alternate is True.
     """
 
     HANDLE_TYPE = MeasureHandle
@@ -235,7 +255,7 @@ class Measure(Metric, metrics_api.Measure):
         meter: "Meter",
         label_keys: Sequence[str] = None,
         enabled: bool = False,
-        monotonic: bool = False,
+        alternate: bool = False
     ):
         super().__init__(
             name,
@@ -245,7 +265,7 @@ class Measure(Metric, metrics_api.Measure):
             meter,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
+            alternate=alternate,
         )
 
     def record(self, label_set: LabelSet, value: metrics_api.ValueT) -> None:
@@ -255,8 +275,13 @@ class Measure(Metric, metrics_api.Measure):
     UPDATE_FUNCTION = record
 
 class Record:
+    """Container class used for processing in the `Batcher`"""
 
-    def __init__(self, metric, label_set, aggregator):
+    def __init__(self,
+                 metric: Metric,
+                 label_set: LabelSet,
+                 aggregator: Aggregator
+    ):
         self.metric = metric
         self.label_set = label_set
         self.aggregator = aggregator
@@ -267,18 +292,31 @@ EMPTY_LABEL_SET = LabelSet()
 
 
 class Meter(metrics_api.Meter):
-    """See `opentelemetry.metrics.Meter`."""
-
-    def __init__(self, batcher):
+    """See `opentelemetry.metrics.Meter`.
+    
+    Args:
+        batcher: The `Batcher` used for this meter.
+    """
+    def __init__(self, batcher: Batcher):
+        self.batcher = batcher
+        # label_sets is a map of the labelset's encoded value to the label set
         self.label_sets = {}
         self.metrics = set()
-        self.batcher = batcher
 
-    def collect(self):
+    def collect(self) -> None:
+        """Collects all the metrics created with this `Meter` for export.
+        
+        Utilizes the batcher to create checkpoints of the current values in
+        each aggregator belonging to the metrics that were created with this
+        meter instance.
+        """
         for metric in self.metrics:
             if metric.enabled:
                 for label_set, handle in metric.handles.items():
+                    # Consider storing records in memory?
                     record = Record(metric, label_set, handle.aggregator)
+                    # Checkpoints the current aggregators
+                    # Applies different batching logic based on type of batcher
                     self.batcher.process(record)
 
     def record_batch(
@@ -299,7 +337,7 @@ class Meter(metrics_api.Meter):
         metric_type: Type[metrics_api.MetricT],
         label_keys: Sequence[str] = None,
         enabled: bool = True,
-        monotonic: bool = False,
+        alternate: bool = False,
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
@@ -311,7 +349,7 @@ class Meter(metrics_api.Meter):
             self,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
+            alternate=alternate,
         )
         self.metrics.add(metric)
         return metric

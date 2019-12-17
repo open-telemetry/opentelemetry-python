@@ -15,8 +15,6 @@
 from enum import Enum
 from typing import Sequence, Tuple
 
-from opentelemetry.sdk.metrics import Metric, LabelSet
-
 
 class MetricsExportResult(Enum):
     SUCCESS = 0
@@ -45,7 +43,7 @@ class MetricsExporter:
         """Exports a batch of telemetry data.
 
         Args:
-            metric_records: A sequence of `MetricRecord`. A `MetricRecord`
+            metric_records: A sequence of `MetricRecord` s. A `MetricRecord`
                 contains the metric to be exported, the label set associated
                 with that metric, as well as the aggregator used to export the
                 current checkpointed value.

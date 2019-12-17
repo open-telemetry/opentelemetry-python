@@ -15,6 +15,11 @@
 import threading
 
 class PushController(threading.Thread):
+    """A push based controller, used for exporting.
+
+    Uses a worker thread that periodically collects metrics for exporting,
+    exports them and performs some post-processing.
+    """
 
     def __init__(self, meter, exporter, interval):
         super().__init__()
@@ -36,4 +41,5 @@ class PushController(threading.Thread):
         self.meter.collect()
         # Export the given metrics in the batcher
         self.exporter.export(self.meter.batcher.check_point_set())
+        # Perform post-exporting logic based on batcher configuration
         self.meter.batcher.finished_collection()

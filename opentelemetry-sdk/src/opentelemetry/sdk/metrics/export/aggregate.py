@@ -15,6 +15,11 @@
 import abc
 
 class Aggregator(abc.ABC):
+    """Base class for aggregators.
+
+    Aggregators are responsible for holding aggregated values and taking a
+    snapshot of these values upon export (check_point).
+    """
 
     def __init__(self):
         self.current = None
@@ -29,6 +34,7 @@ class Aggregator(abc.ABC):
         pass
 
 class CounterAggregator(Aggregator):
+    """Aggregator for `Counter` metrics."""
 
     def __init__(self):
         super().__init__()
@@ -42,5 +48,3 @@ class CounterAggregator(Aggregator):
         # TODO: Implement lock-free algorithm for concurrency
         self.check_point = self.current
 
-    def merge(self, aggregator):
-        self.check_point += aggregator.check_point
