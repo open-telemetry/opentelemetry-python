@@ -141,6 +141,7 @@ Here goes a simple demo of how async could work in Python 3.7+::
 import copy
 import typing
 
+
 from .base_context import BaseRuntimeContext
 
 __all__ = ["BaseRuntimeContext", "Context"]
@@ -180,25 +181,25 @@ class Context:
         cls, key: str, context: typing.Optional["Context"] = None
     ) -> str:
         if context is None:
-            return getattr(
-                _CONTEXT, _CONTEXT.current_context.get()
-            ).contents.get(key)
+            return cls.current().contents.get(key)
         return context.contents.get(key)
 
     @classmethod
     def set_value(cls, key: str, value: "object") -> "Context":
-        getattr(_CONTEXT, _CONTEXT.current_context.get()).contents[key] = value
-        return cls.current()
+        cls.current().contents[key] = value
+        return cls.snapshot()
 
     @classmethod
     def current(cls) -> "Context":
         if _CONTEXT.current_context is None:
             ctx = Context()
             cls.set_current(ctx)
+        return getattr(_CONTEXT, _CONTEXT.current_context.get())
+
+    @classmethod
+    def snapshot(cls) -> "Context":
         snapshot = Context()
-        snapshot.contents = copy.deepcopy(
-            getattr(_CONTEXT, _CONTEXT.current_context.get()).contents
-        )
+        snapshot.contents = copy.deepcopy(cls.current().contents)
         return snapshot
 
     @classmethod
@@ -209,3 +210,13 @@ class Context:
                 "__current_prop_context__"
             )
         _CONTEXT.current_context.set(ctx.slot_name)
+
+    @classmethod
+    def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
+        return _CONTEXT.use(**kwargs)
+
+    @classmethod
+    def register_slot(
+        cls, name: str, default: "object" = None
+    ) -> "BaseRuntimeContext.Slot":
+        return _CONTEXT.register_slot(name, default)
