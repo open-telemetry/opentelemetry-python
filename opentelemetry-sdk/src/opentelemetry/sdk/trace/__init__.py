@@ -312,9 +312,6 @@ class Tracer(trace_api.Tracer):
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
         shutdown_on_exit: bool = True,
     ) -> None:
-        self._slot_name = ContextKeys.span_context_key()
-        if name:
-            self._slot_name = "{}.{}".format(name, self._slot_name)
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
         self._atexit_handler = None
@@ -323,7 +320,7 @@ class Tracer(trace_api.Tracer):
 
     def get_current_span(self, context: Optional[Context] = None):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return Context.value(self._slot_name, context=context)
+        return Context.value(ContextKeys.span_key, context=context)
 
     def start_as_current_span(
         self,
@@ -425,11 +422,13 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self.get_current_span()
-            Context.current().contents[self._slot_name] = span
+            Context.current().contents[ContextKeys.span_key] = span
             try:
                 yield span
             finally:
-                Context.current().contents[self._slot_name] = span_snapshot
+                Context.current().contents[
+                    ContextKeys.span_key
+                ] = span_snapshot
         finally:
             if end_on_exit:
                 span.end()

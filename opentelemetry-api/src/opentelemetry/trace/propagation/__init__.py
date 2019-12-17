@@ -16,9 +16,15 @@
 class ContextKeys:
     """ TODO """
 
-    KEY = "span-context"
+    EXTRACT_SPAN_CONTEXT_KEY = "extracted-span-context"
+    SPAN_KEY = "current-span"
 
     @classmethod
     def span_context_key(cls) -> str:
         """ TODO """
-        return cls.KEY
+        return cls.EXTRACT_SPAN_CONTEXT_KEY
+
+    @classmethod
+    def span_key(cls) -> str:
+        """ TODO """
+        return cls.SPAN_KEY
