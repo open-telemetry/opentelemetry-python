@@ -15,7 +15,7 @@ python:
 #    - python: '3.8-dev'
 
 services:
-  - docker
+  - mongodb
 
 install:
   - pip install tox-travis
