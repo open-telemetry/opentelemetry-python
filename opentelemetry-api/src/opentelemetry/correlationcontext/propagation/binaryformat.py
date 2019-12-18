@@ -15,9 +15,10 @@
 import abc
 import typing
 
-from opentelemetry.distributedcontext import CorrelationContext
+from opentelemetry.context import Context
 
 
+# TODO: can this be removed until it is needed?
 class BinaryFormat(abc.ABC):
     """API for serialization of span context into binary formats.
 
@@ -27,7 +28,7 @@ class BinaryFormat(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def to_bytes(context: CorrelationContext) -> bytes:
+    def to_bytes(context: Context) -> bytes:
         """Creates a byte representation of a CorrelationContext.
 
         to_bytes should read values from a CorrelationContext and return a data
@@ -43,9 +44,7 @@ class BinaryFormat(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def from_bytes(
-        byte_representation: bytes,
-    ) -> typing.Optional[CorrelationContext]:
+    def from_bytes(byte_representation: bytes,) -> typing.Optional[Context]:
         """Return a CorrelationContext that was represented by bytes.
 
         from_bytes should return back a CorrelationContext that was constructed

@@ -15,12 +15,12 @@
 import typing
 from contextlib import contextmanager
 
-from opentelemetry import distributedcontext as dctx_api
+from opentelemetry import correlationcontext as dctx_api
 from opentelemetry.context import Context
 
 
 class CorrelationContextManager(dctx_api.CorrelationContextManager):
-    """See `opentelemetry.distributedcontext.CorrelationContextManager`
+    """See `opentelemetry.correlationcontext.CorrelationContextManager`
 
     Args:
         name: The name of the context manager

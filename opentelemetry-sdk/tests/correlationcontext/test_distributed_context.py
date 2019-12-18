@@ -14,13 +14,13 @@
 
 import unittest
 
-from opentelemetry import distributedcontext as dctx_api
-from opentelemetry.sdk import distributedcontext
+from opentelemetry import correlationcontext as dctx_api
+from opentelemetry.sdk import correlationcontext
 
 
 class TestCorrelationContextManager(unittest.TestCase):
     def setUp(self):
-        self.manager = distributedcontext.CorrelationContextManager()
+        self.manager = correlationcontext.CorrelationContextManager()
 
     def test_use_context(self):
         # Context is None initially

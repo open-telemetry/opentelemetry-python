@@ -25,7 +25,7 @@ from flask import request
 
 import opentelemetry.ext.http_requests
 from opentelemetry import propagation, trace
-from opentelemetry.distributedcontext import CorrelationContextManager
+from opentelemetry.correlationcontext import CorrelationContextManager
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.context.propagation import b3_format
 from opentelemetry.sdk.trace import Tracer
@@ -40,10 +40,14 @@ def configure_opentelemetry(flask_app: flask.Flask):
 
     # Global initialization
     (b3_extractor, b3_injector) = b3_format.http_propagator()
+    (
+        correlation_extractor,
+        correlation_injector,
+    ) = CorrelationContextManager.http_propagator()
     # propagation.set_http_extractors([b3_extractor, baggage_extractor])
     # propagation.set_http_injectors([b3_injector, baggage_injector])
-    propagation.set_http_extractors([b3_extractor])
-    propagation.set_http_injectors([b3_injector])
+    propagation.set_http_extractors([b3_extractor, correlation_extractor])
+    propagation.set_http_injectors([b3_injector, correlation_injector])
 
     opentelemetry.ext.http_requests.enable(trace.tracer())
     flask_app.wsgi_app = OpenTelemetryMiddleware(flask_app.wsgi_app)
@@ -78,7 +82,7 @@ def hello():
         # extract a baggage header
         with tracer.start_as_current_span("service-span"):
             with tracer.start_as_current_span("external-req-span"):
-                version = CorrelationContextManager.value("version")
+                version = CorrelationContextManager.correlation("version")
                 if version == "2.0":
                     return fetch_from_service_c()
 

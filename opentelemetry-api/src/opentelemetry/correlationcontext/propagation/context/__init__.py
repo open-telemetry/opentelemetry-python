@@ -11,19 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Optional
 
-from .binaryformat import BinaryFormat
-from .httptextformat import HTTPTextFormat
+from opentelemetry.context import Context
+from opentelemetry.correlationcontext import CorrelationContext
+from opentelemetry.correlationcontext.propagation import ContextKeys
 
-__all__ = ["BinaryFormat", "HTTPTextFormat"]
+
+def from_context(ctx: Optional[Context] = None) -> CorrelationContext:
+    return Context.value(ContextKeys.span_context_key(), context=ctx)
 
 
-class ContextKeys:
-    """ TODO """
-
-    KEY = "correlation-context"
-
-    @classmethod
-    def span_context_key(cls):
-        """ TODO """
-        return cls.KEY
+def with_correlation_context(
+    correlation_context: CorrelationContext,
+) -> Context:
+    return Context.set_value(
+        ContextKeys.span_context_key(), correlation_context
+    )

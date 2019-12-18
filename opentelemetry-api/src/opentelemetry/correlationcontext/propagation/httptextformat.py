@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
 import typing
 
-from opentelemetry.distributedcontext import CorrelationContext
+from opentelemetry.context import Context
+from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
 
 Setter = typing.Callable[[object, str, str], None]
 Getter = typing.Callable[[object, str], typing.List[str]]
 
 
-class HTTPTextFormat(abc.ABC):
+class CorrelationHTTPExtractor(HTTPExtractor):
     """API for propagation of span context via headers.
 
     This class provides an interface that enables extracting and injecting
@@ -66,10 +66,13 @@ class HTTPTextFormat(abc.ABC):
        https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
     """
 
-    @abc.abstractmethod
+    @classmethod
     def extract(
-        self, get_from_carrier: Getter, carrier: object
-    ) -> CorrelationContext:
+        cls,
+        carrier,
+        context: typing.Optional[Context] = None,
+        get_from_carrier: typing.Optional[Getter] = None,
+    ) -> Context:
         """Create a CorrelationContext from values in the carrier.
 
         The extract function should retrieve values from the carrier
@@ -89,12 +92,16 @@ class HTTPTextFormat(abc.ABC):
 
         """
 
-    @abc.abstractmethod
+
+class CorrelationHTTPInjector(HTTPInjector):
+    """ TODO """
+
+    @classmethod
     def inject(
-        self,
-        context: CorrelationContext,
-        set_in_carrier: Setter,
-        carrier: object,
+        cls,
+        carrier,
+        context: typing.Optional[Context] = None,
+        set_in_carrier: typing.Optional[Setter] = None,
     ) -> None:
         """Inject values from a CorrelationContext into a carrier.
 

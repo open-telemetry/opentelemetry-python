@@ -16,7 +16,13 @@ import itertools
 import string
 import typing
 
-from opentelemetry.context import BaseRuntimeContext, Context
+from opentelemetry.context import Context
+from opentelemetry.context.propagation import (
+    HTTPExtractor,
+    HTTPInjector,
+)
+
+from .propagation import CorrelationHTTPExtractor, CorrelationHTTPInjector
 
 PRINTABLE = frozenset(
     itertools.chain(
@@ -24,7 +30,7 @@ PRINTABLE = frozenset(
     )
 )
 
-
+# TODO: are Entry* classes still needed here?
 class EntryMetadata:
     """A class representing metadata of a CorrelationContext entry
 
@@ -79,6 +85,7 @@ class Entry:
         self.value = value
 
 
+# TODO: is CorrelationContext still needed here?
 class CorrelationContext:
     """A container for distributed context entries"""
 
@@ -89,7 +96,7 @@ class CorrelationContext:
 
     @classmethod
     def set_value(
-        cls, context: BaseRuntimeContext, entry_list: typing.Iterable[Entry]
+        cls, context: Context, entry_list: typing.Iterable[Entry]
     ) -> None:
         distributed_context = getattr(context, cls.KEY, {})
         for entry in entry_list:
@@ -97,14 +104,14 @@ class CorrelationContext:
 
     @classmethod
     def get_entries(
-        cls, context: BaseRuntimeContext
+        cls, context: typing.Optional[Context] = None
     ) -> typing.Iterable[Entry]:
         """Returns an immutable iterator to entries."""
         return getattr(context, cls.KEY, {}).values()
 
     @classmethod
     def get_entry_value(
-        cls, context: BaseRuntimeContext, key: EntryKey
+        cls, key: EntryKey, context: typing.Optional[Context] = None,
     ) -> typing.Optional[EntryValue]:
         """Returns the entry associated with a key or None
 
@@ -118,21 +125,24 @@ class CorrelationContext:
 
 
 class CorrelationContextManager:
-    def current_context(self) -> typing.Optional[CorrelationContext]:
-        """ TODO """
-
-    def http_text_format(self):
-        """ TODO """
-
-    def use_context(
-        self, context: CorrelationContext
-    ) -> typing.Iterator[CorrelationContext]:
-        """ TODO """
-
     @classmethod
-    def set_value(cls, key, value):
+    def set_correlation(cls, key: str, value: "object") -> Context:
         return Context.set_value(key, value)
 
     @classmethod
-    def value(cls, key, context=None):
+    def correlation(
+        cls, key: str, context: typing.Optional[Context] = None
+    ) -> "object":
         return Context.value(key, context=context)
+
+    @classmethod
+    def remove_correlation(cls):
+        pass
+
+    @classmethod
+    def clear_correlation(cls):
+        pass
+
+    @classmethod
+    def http_propagator(cls) -> typing.Tuple[HTTPExtractor, HTTPInjector]:
+        return (CorrelationHTTPExtractor, CorrelationHTTPInjector)
