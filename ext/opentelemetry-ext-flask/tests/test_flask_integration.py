@@ -21,31 +21,10 @@ from werkzeug.wrappers import BaseResponse
 
 import opentelemetry.ext.flask as otel_flask
 from opentelemetry import trace as trace_api
-from opentelemetry import propagation
 from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
-from opentelemetry.sdk.context.propagation.tracecontexthttptextformat import (
-    http_propagator,
-)
 
 
 class TestFlaskIntegration(WsgiTestBase):
-    @classmethod
-    def setUpClass(cls):
-        """ Set preferred propagators """
-        extractor, injector = http_propagator()
-        # Save current propagator to be restored on teardown.
-        cls._previous_injectors = propagation.get_http_injectors()
-        cls._previous_extractors = propagation.get_http_extractors()
-
-        propagation.set_http_extractors([extractor])
-        propagation.set_http_injectors([injector])
-
-    @classmethod
-    def tearDownClass(cls):
-        """ Restore previous propagator """
-        propagation.set_http_extractors(cls._previous_extractors)
-        propagation.set_http_injectors(cls._previous_injectors)
-
     def setUp(self):
         super().setUp()
 
@@ -76,7 +55,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.start_span.assert_called_with(
             "hello_endpoint",
-            trace_api.INVALID_SPAN_CONTEXT,
+            None,
             kind=trace_api.SpanKind.SERVER,
             attributes={
                 "component": "http",
@@ -106,7 +85,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.start_span.assert_called_with(
             "/bye",
-            trace_api.INVALID_SPAN_CONTEXT,
+            None,
             kind=trace_api.SpanKind.SERVER,
             attributes={
                 "component": "http",
@@ -137,7 +116,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.start_span.assert_called_with(
             "hello_endpoint",
-            trace_api.INVALID_SPAN_CONTEXT,
+            None,
             kind=trace_api.SpanKind.SERVER,
             attributes={
                 "component": "http",
