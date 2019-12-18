@@ -23,7 +23,7 @@ from opentelemetry.context.propagation import (
     get_as_list,
     set_in_dict,
 )
-from opentelemetry.trace.propagation.context import (
+from opentelemetry.sdk.trace.propagation.context import (
     Context,
     from_context,
     with_span_context,
@@ -146,9 +146,6 @@ def format_trace_id(trace_id: int) -> str:
 def format_span_id(span_id: int) -> str:
     """Format the span id according to b3 specification."""
     return format(span_id, "016x")
-
-
-_T = typing.TypeVar("_T")
 
 
 def _extract_first_element(items: typing.Iterable[_T]) -> typing.Optional[_T]:

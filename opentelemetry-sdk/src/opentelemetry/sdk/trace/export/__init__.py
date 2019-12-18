@@ -18,7 +18,7 @@ import threading
 import typing
 from enum import Enum
 
-from opentelemetry.context import Context
+from opentelemetry.sdk.context import Context
 from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor

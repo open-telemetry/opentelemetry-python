@@ -16,7 +16,6 @@ import re
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context import Context
 from opentelemetry.context.propagation import (
     Getter,
     HTTPExtractor,
@@ -25,7 +24,8 @@ from opentelemetry.context.propagation import (
     get_as_list,
     set_in_dict,
 )
-from opentelemetry.trace.propagation.context import (
+from opentelemetry.sdk.context import Context
+from opentelemetry.sdk.trace.propagation.context import (
     from_context,
     with_span_context,
 )

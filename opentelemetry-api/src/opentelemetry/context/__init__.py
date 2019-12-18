@@ -137,85 +137,28 @@ Here goes a simple demo of how async could work in Python 3.7+::
     if __name__ == '__main__':
         asyncio.run(main())
 """
-
-import copy
 import typing
-
-from .base_context import BaseRuntimeContext
-
-__all__ = ["BaseRuntimeContext", "Context"]
-
-try:
-    from .async_context import AsyncRuntimeContext
-
-    _CONTEXT = AsyncRuntimeContext()  # type: BaseRuntimeContext
-except ImportError:
-    from .thread_local_context import ThreadLocalRuntimeContext
-
-    _CONTEXT = ThreadLocalRuntimeContext()
 
 
 class Context:
-    def __init__(self):
-        self.contents = {}
-        self.slot_name = "{}".format(id(self))
-        self._slot = _CONTEXT.register_slot(self.slot_name)
-        self._slot.set(self)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-    def get(self, key):
-        return self.contents.get(key)
-
     @classmethod
     def value(
         cls, key: str, context: typing.Optional["Context"] = None
     ) -> "object":
-        if context is None:
-            return cls.current().contents.get(key)
-        return context.contents.get(key)
+        """ TODO """
 
     @classmethod
     def set_value(cls, key: str, value: "object") -> "Context":
-        cls.current().contents[key] = value
-        return cls.snapshot()
+        """ TODO """
 
     @classmethod
     def current(cls) -> "Context":
-        if _CONTEXT.current_context is None:
-            ctx = Context()
-            cls.set_current(ctx)
-        return getattr(_CONTEXT, _CONTEXT.current_context.get())
+        """ TODO """
 
     @classmethod
     def snapshot(cls) -> "Context":
-        snapshot = Context()
-        snapshot.contents = cls.current().contents.copy()
-        return snapshot
+        """ TODO """
 
     @classmethod
     def set_current(cls, ctx: "Context"):
-        if _CONTEXT.current_context is None:
-            _CONTEXT.current_context = _CONTEXT.register_slot(
-                # change the key here
-                "__current_prop_context__"
-            )
-        _CONTEXT.current_context.set(ctx.slot_name)
-
-    @classmethod
-    def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
-        return _CONTEXT.use(**kwargs)
-
-    @classmethod
-    def register_slot(
-        cls, name: str, default: "object" = None
-    ) -> "BaseRuntimeContext.Slot":
-        return _CONTEXT.register_slot(name, default)
-
-    @classmethod
-    def suppress_instrumentation(cls) -> "object":
-        return _CONTEXT.suppress_instrumentation
+        """ TODO """

@@ -21,17 +21,17 @@ from contextlib import contextmanager
 from typing import Iterator, Optional, Sequence, Tuple
 
 from opentelemetry import trace as trace_api
-from opentelemetry.context import Context
 from opentelemetry.sdk import util
-from opentelemetry.sdk.util import BoundedDict, BoundedList
-from opentelemetry.trace import sampling
-from opentelemetry.trace.propagation.context import (
+from opentelemetry.sdk.context import Context
+from opentelemetry.sdk.trace.propagation.context import (
     ContextKeys,
     from_context,
     span_from_context,
     with_span,
     with_span_context,
 )
+from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.trace import sampling
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
