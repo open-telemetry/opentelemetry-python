@@ -195,7 +195,7 @@ class Context:
     @classmethod
     def snapshot(cls) -> "Context":
         snapshot = Context()
-        snapshot.contents = copy.deepcopy(cls.current().contents)
+        snapshot.contents = cls.current().contents.copy()
         return snapshot
 
     @classmethod
