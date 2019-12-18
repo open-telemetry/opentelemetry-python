@@ -22,10 +22,13 @@ import functools
 import typing
 import wsgiref.util as wsgiref_util
 
-from opentelemetry import propagation, trace
-from opentelemetry.context import Context
+from opentelemetry import trace
+
 from opentelemetry.ext.wsgi.version import __version__  # noqa
 from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.propagation.context import from_context
+
+from .propagation import WSGIExtractor
 
 _HTTP_VERSION_PREFIX = "HTTP/"
 
@@ -185,9 +188,10 @@ class OpenTelemetryMiddleware:
 
         tracer = trace.tracer()
         # TODO: fix the return value here, expect a context
-        parent_span = propagation.extract(
-            environ, Context.current(), get_header_from_environ,
+        WSGIExtractor.extract(
+            environ, get_from_carrier=get_header_from_environ
         )
+        parent_span = from_context()
         span_name = get_default_span_name(environ)
 
         span = tracer.start_span(
