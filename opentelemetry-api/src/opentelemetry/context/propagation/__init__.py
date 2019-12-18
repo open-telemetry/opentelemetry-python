@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import typing
 
 from opentelemetry.context import Context
 
@@ -21,3 +22,16 @@ from .httptextformat import Getter, HTTPExtractor, HTTPInjector, Setter
 
 
 __all__ = ["BinaryFormat", "Getter", "HTTPExtractor", "HTTPInjector", "Setter"]
+
+
+def get_as_list(dict_object: dict, key: str) -> typing.List[str]:
+    value = dict_object.get(key)
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def set_in_dict(dict_object: dict, key: str, value: str) -> None:
+    dict_object[key] = value

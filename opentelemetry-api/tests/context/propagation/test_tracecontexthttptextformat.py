@@ -30,13 +30,6 @@ INJECT = TraceContextHTTPInjector
 EXTRACT = TraceContextHTTPExtractor
 
 
-def get_as_list(
-    dict_object: typing.Dict[str, typing.List[str]], key: str
-) -> typing.List[str]:
-    value = dict_object.get(key)
-    return value if value is not None else []
-
-
 class TestTraceContextFormat(unittest.TestCase):
     TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
     SPAN_ID = int("1234567890123456", 16)  # type:int
@@ -53,7 +46,7 @@ class TestTraceContextFormat(unittest.TestCase):
         If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span_context = EXTRACT.extract(output, self.ctx, get_as_list)
+        span_context = EXTRACT.extract(output, self.ctx)
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
     def test_headers_with_tracestate(self):
@@ -71,7 +64,6 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": [tracestate_value],
             },
             self.ctx,
-            get_as_list,
         )
         span_context = from_context(ctx)
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
@@ -111,7 +103,6 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
             self.ctx,
-            get_as_list,
         )
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
@@ -138,7 +129,6 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
             self.ctx,
-            get_as_list,
         )
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
@@ -174,7 +164,6 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
             self.ctx,
-            get_as_list,
         )
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
@@ -196,7 +185,6 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1", ""],
             },
             self.ctx,
-            get_as_list,
         )
         span_context = from_context(ctx)
         self.assertEqual(span_context.trace_state["foo"], "1")
@@ -212,7 +200,6 @@ class TestTraceContextFormat(unittest.TestCase):
                 "tracestate": ["foo=1,"],
             },
             self.ctx,
-            get_as_list,
         )
         span_context = from_context(ctx)
         self.assertEqual(span_context.trace_state["foo"], "1")

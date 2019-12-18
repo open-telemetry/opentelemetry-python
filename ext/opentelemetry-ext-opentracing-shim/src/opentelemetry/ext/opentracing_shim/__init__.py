@@ -683,10 +683,6 @@ class TracerShim(opentracing.Tracer):
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
-        # def get_as_list(dict_object, key):
-        #     value = dict_object.get(key)
-        #     return [value] if value is not None else []
-
         propagation.extract(carrier)
         otel_context = from_context()
 

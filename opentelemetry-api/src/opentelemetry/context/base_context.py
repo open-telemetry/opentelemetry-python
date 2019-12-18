@@ -101,17 +101,6 @@ class BaseRuntimeContext:
     def __setitem__(self, name: str, value: "object") -> None:
         self.__setattr__(name, value)
 
-    def __enter__(self) -> "BaseRuntimeContext":
-        return self
-
-    def __exit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[python_types.TracebackType],
-    ) -> None:
-        return None
-
     @contextmanager  # type: ignore
     def use(self, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
         snapshot = {key: self[key] for key in kwargs}

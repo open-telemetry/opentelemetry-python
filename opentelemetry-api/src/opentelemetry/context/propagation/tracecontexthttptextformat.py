@@ -17,8 +17,15 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
-from opentelemetry.context.propagation.httptextformat import Getter, Setter
+from opentelemetry.context.propagation import (
+    get_as_list,
+    Getter,
+    HTTPExtractor,
+    HTTPInjector,
+    set_in_dict,
+    Setter,
+)
+
 from opentelemetry.trace.propagation.context import (
     from_context,
     with_span_context,
@@ -72,7 +79,7 @@ class TraceContextHTTPExtractor(HTTPExtractor):
         cls,
         carrier: _T,
         context: typing.Optional[Context] = None,
-        get_from_carrier: typing.Optional[Getter[_T]] = None,
+        get_from_carrier: typing.Optional[Getter[_T]] = get_as_list,
     ) -> Context:
         """Extracts a valid SpanContext from the carrier.
         """
@@ -121,7 +128,7 @@ class TraceContextHTTPInjector(HTTPInjector):
         cls,
         carrier: _T,
         context: typing.Optional[Context] = None,
-        set_in_carrier: typing.Optional[Setter[_T]] = None,
+        set_in_carrier: typing.Optional[Setter[_T]] = set_in_dict,
     ) -> None:
         sc = from_context(context)
         if sc is None or sc == trace.INVALID_SPAN_CONTEXT:
