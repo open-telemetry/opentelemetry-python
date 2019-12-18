@@ -31,6 +31,7 @@ def extract(
     extractors: typing.Optional[
         typing.List[httptextformat.HTTPExtractor]
     ] = None,
+    get_from_carrier: typing.Optional[typing.Callable] = None,
 ) -> typing.Optional[Context]:
     """Load the parent SpanContext from values in the carrier.
 
@@ -53,7 +54,15 @@ def extract(
         extractors = get_http_extractors()
 
     for extractor in extractors:
+        # TODO: improve this
+        if get_from_carrier:
+            return extractor.extract(
+                context=context,
+                carrier=carrier,
+                get_from_carrier=get_from_carrier,
+            )
         return extractor.extract(context=context, carrier=carrier)
+
     return None
 
 

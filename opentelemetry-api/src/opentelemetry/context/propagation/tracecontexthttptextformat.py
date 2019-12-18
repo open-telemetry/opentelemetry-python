@@ -86,11 +86,11 @@ class TraceContextHTTPExtractor(HTTPExtractor):
         header = get_from_carrier(carrier, TRACEPARENT_HEADER_NAME)
 
         if not header:
-            return trace.INVALID_SPAN_CONTEXT
+            return with_span_context(trace.INVALID_SPAN_CONTEXT)
 
         match = re.search(cls._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
-            return trace.INVALID_SPAN_CONTEXT
+            return with_span_context(trace.INVALID_SPAN_CONTEXT)
 
         version = match.group(1)
         trace_id = match.group(2)
@@ -98,25 +98,25 @@ class TraceContextHTTPExtractor(HTTPExtractor):
         trace_options = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
-            return trace.INVALID_SPAN_CONTEXT
+            return with_span_context(trace.INVALID_SPAN_CONTEXT)
 
         if version == "00":
             if match.group(5):
-                return trace.INVALID_SPAN_CONTEXT
+                return with_span_context(trace.INVALID_SPAN_CONTEXT)
         if version == "ff":
-            return trace.INVALID_SPAN_CONTEXT
+            return with_span_context(trace.INVALID_SPAN_CONTEXT)
 
         tracestate_headers = get_from_carrier(carrier, TRACESTATE_HEADER_NAME)
         tracestate = _parse_tracestate(tracestate_headers)
 
-        span_context = trace.SpanContext(
-            trace_id=int(trace_id, 16),
-            span_id=int(span_id, 16),
-            trace_options=trace.TraceOptions(trace_options),
-            trace_state=tracestate,
+        return with_span_context(
+            trace.SpanContext(
+                trace_id=int(trace_id, 16),
+                span_id=int(span_id, 16),
+                trace_options=trace.TraceOptions(trace_options),
+                trace_state=tracestate,
+            )
         )
-
-        return with_span_context(span_context)
 
 
 class TraceContextHTTPInjector(HTTPInjector):
