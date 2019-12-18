@@ -7,6 +7,7 @@ import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry.patcher.base_patcher import BasePatcher
 from opentelemetry import propagators, trace
 from opentelemetry.util import time_ns
+from opentelemetry.ext.flask.version import __version__
 import flask
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,9 @@ class FlaskPatcher(BasePatcher):
                         otel_wsgi.get_header_from_environ, environ
                     )
 
-                    tracer = trace.tracer()
+                    tracer = trace.tracer_source().get_tracer(
+                        __name__, __version__
+                    )
 
                     attributes = otel_wsgi.collect_request_attributes(environ)
                     if flask.request.url_rule:

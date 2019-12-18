@@ -25,7 +25,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
-from opentelemetry.trace import SpanContext, sampling
+from opentelemetry.trace import sampling
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
 
@@ -66,7 +66,8 @@ class SpanProcessor:
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
+        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is
+        shutdown."""
 
 
 class MultiSpanProcessor(SpanProcessor):
@@ -467,7 +468,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent,
                 sampler=self.source.sampler,
                 attributes=span_attributes,
-                span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
+                span_processor=self.source._active_span_processor,  # noqa pylint:disable=protected-access
                 kind=kind,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
@@ -485,13 +486,13 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self.source.get_current_span()
-            self.source._current_span_slot.set(  # pylint:disable=protected-access
+            self.source._current_span_slot.set(  # noqa pylint:disable=protected-access
                 span
             )
             try:
                 yield span
             finally:
-                self.source._current_span_slot.set(  # pylint:disable=protected-access
+                self.source._current_span_slot.set(  # noqa pylint:disable=protected-access
                     span_snapshot
                 )
         finally:
@@ -505,8 +506,9 @@ class TracerSource(trace_api.TracerSource):
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
         shutdown_on_exit: bool = True,
     ):
-        # TODO: How should multiple TracerSources behave? Should they get their own contexts?
-        # This could be done by adding `str(id(self))` to the slot name.
+        # TODO: How should multiple TracerSources behave? Should they get their
+        # own contexts? This could be done by adding `str(id(self))` to the
+        # slot name.
         self._current_span_slot = Context.register_slot("current_span")
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
