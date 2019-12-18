@@ -14,7 +14,7 @@
 from typing import Optional
 
 from opentelemetry.context import Context
-from opentelemetry.trace import SpanContext
+from opentelemetry.trace import Span, SpanContext
 from opentelemetry.trace.propagation import ContextKeys
 
 
@@ -24,3 +24,11 @@ def from_context(ctx: Optional[Context] = None) -> SpanContext:
 
 def with_span_context(span_context: SpanContext) -> Context:
     return Context.set_value(ContextKeys.span_context_key(), span_context)
+
+
+def span_from_context(context: Optional[Context] = None) -> Span:
+    return Context.value(ContextKeys.span_key(), context=context)
+
+
+def with_span(span: Span) -> Context:
+    return Context.set_value(ContextKeys.span_key(), span)

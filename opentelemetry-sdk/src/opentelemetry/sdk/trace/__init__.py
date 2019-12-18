@@ -28,6 +28,8 @@ from opentelemetry.trace import sampling
 from opentelemetry.trace.propagation.context import (
     ContextKeys,
     from_context,
+    span_from_context,
+    with_span,
     with_span_context,
 )
 from opentelemetry.util import time_ns, types
@@ -320,7 +322,7 @@ class Tracer(trace_api.Tracer):
 
     def get_current_span(self, context: Optional[Context] = None):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return Context.value(ContextKeys.span_key, context=context)
+        return span_from_context(context=context)
 
     def start_as_current_span(
         self,
@@ -422,13 +424,12 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             span_snapshot = self.get_current_span()
-            Context.current().contents[ContextKeys.span_key] = span
+            with_span(span)
+
             try:
                 yield span
             finally:
-                Context.current().contents[
-                    ContextKeys.span_key
-                ] = span_snapshot
+                with_span(span_snapshot)
         finally:
             if end_on_exit:
                 span.end()
