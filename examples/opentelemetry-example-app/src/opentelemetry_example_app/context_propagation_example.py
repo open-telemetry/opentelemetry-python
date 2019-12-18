@@ -23,8 +23,10 @@ import flask
 import requests
 from flask import request
 
+import opentelemetry.ext.http_requests
 from opentelemetry import propagation, trace
 from opentelemetry.distributedcontext import CorrelationContextManager
+from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.context.propagation import b3_format
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import (
@@ -43,8 +45,8 @@ def configure_opentelemetry(flask_app: flask.Flask):
     propagation.set_http_extractors([b3_extractor])
     propagation.set_http_injectors([b3_injector])
 
-    # opentelemetry.ext.http_requests.enable(trace.tracer())
-    # flask_app.wsgi_app = OpenTelemetryMiddleware(flask_app.wsgi_app)
+    opentelemetry.ext.http_requests.enable(trace.tracer())
+    flask_app.wsgi_app = OpenTelemetryMiddleware(flask_app.wsgi_app)
 
 
 def fetch_from_service_b() -> str:
@@ -80,7 +82,7 @@ def hello():
                 if version == "2.0":
                     return fetch_from_service_c()
 
-                return fetch_from_service_b()
+        return fetch_from_service_b()
 
 
 if __name__ == "__main__":
