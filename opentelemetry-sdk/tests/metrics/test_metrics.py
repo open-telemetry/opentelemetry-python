@@ -25,6 +25,43 @@ class TestMeter(unittest.TestCase):
         meter = metrics.Meter()
         self.assertIsInstance(meter, metrics_api.Meter)
 
+    def test_collect(self):
+        meter = metrics.Meter()
+        batcher_mock = mock.Mock()
+        meter.batcher = batcher_mock
+        label_keys = ("key1",)
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        kvp = {"key1": "value1"}
+        label_set = meter.get_label_set(kvp)
+        counter.add(label_set, 1.0)
+        meter.metrics.add(counter)
+        meter.collect()
+        self.assertTrue(batcher_mock.process.called)
+
+    def test_collect_no_metrics(self):
+        meter = metrics.Meter()
+        batcher_mock = mock.Mock()
+        meter.batcher = batcher_mock
+        meter.collect()
+        self.assertFalse(batcher_mock.process.called)
+
+    def test_collect_disabled_metric(self):
+        meter = metrics.Meter()
+        batcher_mock = mock.Mock()
+        meter.batcher = batcher_mock
+        label_keys = ("key1",)
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys, False
+        )
+        kvp = {"key1": "value1"}
+        label_set = meter.get_label_set(kvp)
+        counter.add(label_set, 1.0)
+        meter.metrics.add(counter)
+        meter.collect()
+        self.assertFalse(batcher_mock.process.called)
+
     def test_record_batch(self):
         meter = metrics.Meter()
         label_keys = ("key1",)
@@ -198,6 +235,16 @@ class TestCounterHandle(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
+    @mock.patch("opentelemetry.sdk.metrics.time_ns")
+    def test_update(self, time_mock):
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.CounterHandle(int, True, False, aggregator)
+        time_mock.return_value = 123
+        handle.update(4.0)
+        self.assertEqual(handle.last_update_timestamp, 123)
+        self.assertEqual(handle.aggregator.current, 4.0)
+
+
 # TODO: fix tests once aggregator implemented
 class TestGaugeHandle(unittest.TestCase):
     def test_set(self):
@@ -228,6 +275,16 @@ class TestGaugeHandle(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
+    @mock.patch("opentelemetry.sdk.metrics.time_ns")
+    def test_update(self, time_mock):
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.GaugeHandle(int, True, False, aggregator)
+        time_mock.return_value = 123
+        handle.update(4.0)
+        self.assertEqual(handle.last_update_timestamp, 123)
+        self.assertEqual(handle.aggregator.current, 4.0)
+
+
 # TODO: fix tests once aggregator implemented
 class TestMeasureHandle(unittest.TestCase):
     def test_record(self):
@@ -257,3 +314,12 @@ class TestMeasureHandle(unittest.TestCase):
         handle.record(3.0)
         self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
+
+    @mock.patch("opentelemetry.sdk.metrics.time_ns")
+    def test_update(self, time_mock):
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.MeasureHandle(int, True, False, aggregator)
+        time_mock.return_value = 123
+        handle.update(4.0)
+        self.assertEqual(handle.last_update_timestamp, 123)
+        self.assertEqual(handle.aggregator.current, 4.0)

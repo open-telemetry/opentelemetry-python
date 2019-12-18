@@ -19,6 +19,7 @@ from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics \
     .export import ConsoleMetricsExporter, MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 
 
 class TestConsoleMetricsExporter(unittest.TestCase):
@@ -44,3 +45,10 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         with mock.patch("sys.stdout") as mock_stdout:
             exporter.export([record])
             mock_stdout.write.assert_any_call(result)
+
+
+class TestBatcher(unittest.TestCase):
+    def test_aggregator_for(self):
+        batcher = UngroupedBatcher(True)
+        
+

@@ -47,4 +47,3 @@ class CounterAggregator(Aggregator):
     def checkpoint(self):
         # TODO: Implement lock-free algorithm for concurrency
         self.check_point = self.current
-
