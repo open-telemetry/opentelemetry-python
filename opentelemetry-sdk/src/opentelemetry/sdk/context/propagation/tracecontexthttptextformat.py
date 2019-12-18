@@ -63,6 +63,11 @@ TRACEPARENT_HEADER_NAME = "traceparent"
 TRACESTATE_HEADER_NAME = "tracestate"
 
 
+def http_propagator() -> typing.Tuple[HTTPExtractor, HTTPInjector]:
+    """ TODO """
+    return TraceContextHTTPExtractor, TraceContextHTTPInjector
+
+
 class TraceContextHTTPExtractor(HTTPExtractor):
     """Extracts using w3c TraceContext's headers.
     """

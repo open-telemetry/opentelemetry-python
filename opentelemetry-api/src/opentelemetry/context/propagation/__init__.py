@@ -16,12 +16,25 @@ import typing
 from opentelemetry.context import Context
 
 from .binaryformat import BinaryFormat
-from .httptextformat import Getter, HTTPExtractor, HTTPInjector, Setter
+from .httptextformat import (
+    Getter,
+    DefaultHTTPExtractor,
+    DefaultHTTPInjector,
+    HTTPExtractor,
+    HTTPInjector,
+    Setter,
+)
 
-# from opentelemetry.context.propagation import Carrier, Getter, Setter
 
-
-__all__ = ["BinaryFormat", "Getter", "HTTPExtractor", "HTTPInjector", "Setter"]
+__all__ = [
+    "BinaryFormat",
+    "Getter",
+    "DefaultHTTPExtractor",
+    "DefaultHTTPInjector",
+    "HTTPExtractor",
+    "HTTPInjector",
+    "Setter",
+]
 
 
 def get_as_list(dict_object: dict, key: str) -> typing.List[str]:

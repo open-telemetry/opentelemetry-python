@@ -17,7 +17,7 @@ import unittest
 
 from opentelemetry import trace
 from opentelemetry.context import Context
-from opentelemetry.context.propagation.tracecontexthttptextformat import (
+from opentelemetry.sdk.context.propagation.tracecontexthttptextformat import (
     TraceContextHTTPExtractor,
     TraceContextHTTPInjector,
 )

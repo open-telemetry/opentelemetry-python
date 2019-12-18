@@ -17,9 +17,9 @@ import typing
 import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.context.propagation.tracecontexthttptextformat import (
-    TraceContextHTTPExtractor,
-    TraceContextHTTPInjector,
+from opentelemetry.context.propagation import (
+    DefaultHTTPExtractor,
+    DefaultHTTPInjector,
 )
 
 _T = typing.TypeVar("_T")
@@ -97,11 +97,11 @@ def inject(
 
 
 _HTTP_TEXT_INJECTORS = [
-    TraceContextHTTPInjector
+    DefaultHTTPInjector
 ]  # typing.List[httptextformat.HTTPInjector]
 
 _HTTP_TEXT_EXTRACTORS = [
-    TraceContextHTTPExtractor
+    DefaultHTTPExtractor
 ]  # typing.List[httptextformat.HTTPExtractor]
 
 
