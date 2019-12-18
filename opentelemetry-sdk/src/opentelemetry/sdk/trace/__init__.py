@@ -314,6 +314,7 @@ class Tracer(trace_api.Tracer):
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
         shutdown_on_exit: bool = True,
     ) -> None:
+        # pylint: disable=unused-argument
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
         self._atexit_handler = None

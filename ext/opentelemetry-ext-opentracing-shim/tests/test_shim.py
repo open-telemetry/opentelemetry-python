@@ -24,12 +24,12 @@ from opentelemetry.context.propagation.httptextformat import (
     HTTPExtractor,
     HTTPInjector,
 )
+from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.sdk.trace import Tracer
 from opentelemetry.trace.propagation.context import (
     from_context,
     with_span_context,
 )
-from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.sdk.trace import Tracer
 
 
 class TestShim(unittest.TestCase):

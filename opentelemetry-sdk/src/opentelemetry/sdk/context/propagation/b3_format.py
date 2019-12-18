@@ -20,8 +20,9 @@ from opentelemetry.context.propagation import (
     HTTPExtractor,
     HTTPInjector,
     Setter,
+    get_as_list,
+    set_in_dict,
 )
-from opentelemetry.context.propagation import get_as_list, set_in_dict
 from opentelemetry.trace.propagation.context import (
     Context,
     from_context,

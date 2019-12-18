@@ -14,13 +14,10 @@
 
 import unittest
 
-from opentelemetry.trace.propagation.context import (
-    from_context,
-    with_span_context,
-)
 import opentelemetry.sdk.context.propagation.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
 import opentelemetry.trace as trace_api
+from opentelemetry.trace.propagation.context import from_context
 
 INJECTOR = b3_format.B3Injector
 EXTRACTOR = b3_format.B3Extractor

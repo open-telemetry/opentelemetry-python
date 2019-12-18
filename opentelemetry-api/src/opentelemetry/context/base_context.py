@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import threading
-import types as python_types
 import typing
 from contextlib import contextmanager
 

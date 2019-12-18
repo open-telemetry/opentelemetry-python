@@ -23,11 +23,9 @@ import typing
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagation, trace
-
 from opentelemetry.ext.wsgi.version import __version__  # noqa
-from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.trace.propagation.context import from_context
-
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
 

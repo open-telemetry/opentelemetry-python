@@ -17,10 +17,7 @@ import string
 import typing
 
 from opentelemetry.context import Context
-from opentelemetry.context.propagation import (
-    HTTPExtractor,
-    HTTPInjector,
-)
+from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
 
 from .propagation import CorrelationHTTPExtractor, CorrelationHTTPInjector
 
@@ -29,6 +26,7 @@ PRINTABLE = frozenset(
         string.ascii_letters, string.digits, string.punctuation, " "
     )
 )
+
 
 # TODO: are Entry* classes still needed here?
 class EntryMetadata:

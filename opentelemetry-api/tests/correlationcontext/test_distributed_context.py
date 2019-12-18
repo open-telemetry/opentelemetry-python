@@ -15,11 +15,6 @@
 import unittest
 
 from opentelemetry import correlationcontext
-from opentelemetry.correlationcontext import CorrelationContext
-from opentelemetry.correlationcontext.propagation.context import (
-    from_context,
-    with_correlation_context,
-)
 
 
 class TestEntryMetadata(unittest.TestCase):
