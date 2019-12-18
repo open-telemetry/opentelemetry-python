@@ -51,7 +51,7 @@ def enable(tracer):
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
-        if Context.suppress_instrumentation:
+        if Context.suppress_instrumentation():
             return wrapped(self, method, url, *args, **kwargs)
 
         # See
@@ -74,9 +74,7 @@ def enable(tracer):
             # to access propagators.
 
             headers = kwargs.setdefault("headers", {})
-            propagation.inject(
-                Context.current(), type(headers).__setitem__, headers,
-            )
+            propagation.inject(headers)
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)
