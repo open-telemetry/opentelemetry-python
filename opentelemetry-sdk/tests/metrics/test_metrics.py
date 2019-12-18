@@ -17,6 +17,7 @@ from unittest import mock
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk import metrics
+from opentelemetry.sdk.metrics import export
 
 
 class TestMeter(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestMeter(unittest.TestCase):
         label_set = meter.get_label_set(kvp)
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.get_handle(label_set).data, 1.0)
+        self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
 
     def test_record_batch_multiple(self):
         meter = metrics.Meter()
@@ -44,15 +45,16 @@ class TestMeter(unittest.TestCase):
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
-        gauge = metrics.Gauge("name", "desc", "unit", int, label_keys)
+        gauge = metrics.Gauge("name", "desc", "unit", int, meter, label_keys)
         measure = metrics.Measure(
             "name", "desc", "unit", float, meter, label_keys
         )
         record_tuples = [(counter, 1.0), (gauge, 5), (measure, 3.0)]
         meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.get_handle(label_set).data, 1.0)
-        self.assertEqual(gauge.get_handle(label_set).data, 5)
-        self.assertEqual(measure.get_handle(label_set).data, 0)
+        self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
+        self.assertEqual(gauge.get_handle(label_set).aggregator.current, 5.0)
+        # TODO: Fix when aggregator implemented for measure
+        self.assertEqual(measure.get_handle(label_set).aggregator.current, 3.0)
 
     def test_record_batch_exists(self):
         meter = metrics.Meter()
@@ -67,7 +69,7 @@ class TestMeter(unittest.TestCase):
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_set, record_tuples)
         self.assertEqual(counter.get_handle(label_set), handle)
-        self.assertEqual(handle.data, 2.0)
+        self.assertEqual(handle.aggregator.current, 2.0)
 
     def test_create_metric(self):
         meter = metrics.Meter()
@@ -101,7 +103,7 @@ class TestMeter(unittest.TestCase):
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
         encoded = tuple(sorted(kvp.items()))
-        self.assertIs(meter.labels[encoded], label_set)
+        self.assertIs(meter.label_sets[encoded], label_set)
 
     def test_get_label_set_empty(self):
         meter = metrics.Meter()
@@ -132,114 +134,126 @@ class TestMetric(unittest.TestCase):
 class TestCounter(unittest.TestCase):
     def test_add(self):
         meter = metrics.Meter()
-        metric = metrics.Counter("name", "desc", "unit", int, ("key",))
+        metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)
         metric.add(label_set, 3)
         metric.add(label_set, 2)
-        self.assertEqual(handle.data, 5)
+        self.assertEqual(handle.aggregator.current, 5)
 
 
 class TestGauge(unittest.TestCase):
     def test_set(self):
         meter = metrics.Meter()
-        metric = metrics.Gauge("name", "desc", "unit", int, ("key",))
+        metric = metrics.Gauge("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)
         metric.set(label_set, 3)
-        self.assertEqual(handle.data, 3)
+        self.assertEqual(handle.aggregator.current, 3)
         metric.set(label_set, 2)
-        self.assertEqual(handle.data, 2)
+        # TODO: Fix once other aggregators implemented
+        self.assertEqual(handle.aggregator.current, 5)
 
 
 class TestMeasure(unittest.TestCase):
     def test_record(self):
         meter = metrics.Meter()
-        metric = metrics.Measure("name", "desc", "unit", int, ("key",))
+        metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)
         metric.record(label_set, 3)
-        # Record not implemented yet
-        self.assertEqual(handle.data, 0)
+        # TODO: Fix once other aggregators implemented
+        self.assertEqual(handle.aggregator.current, 3)
 
 
 class TestCounterHandle(unittest.TestCase):
     def test_add(self):
-        handle = metrics.CounterHandle(int, True, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.CounterHandle(int, True, False, aggregator)
         handle.add(3)
-        self.assertEqual(handle.data, 3)
+        self.assertEqual(handle.aggregator.current, 3)
 
     def test_add_disabled(self):
-        handle = metrics.CounterHandle(int, False, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.CounterHandle(int, False, False, aggregator)
         handle.add(3)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_monotonic(self, logger_mock):
-        handle = metrics.CounterHandle(int, True, True)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.CounterHandle(int, True, True, aggregator)
         handle.add(-3)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
-        handle = metrics.CounterHandle(int, True, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.CounterHandle(int, True, False, aggregator)
         handle.add(3.0)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
-
+# TODO: fix tests once aggregator implemented
 class TestGaugeHandle(unittest.TestCase):
     def test_set(self):
-        handle = metrics.GaugeHandle(int, True, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.GaugeHandle(int, True, False, aggregator)
         handle.set(3)
-        self.assertEqual(handle.data, 3)
+        self.assertEqual(handle.aggregator.current, 3)
 
     def test_set_disabled(self):
-        handle = metrics.GaugeHandle(int, False, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.GaugeHandle(int, False, False, aggregator)
         handle.set(3)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_set_monotonic(self, logger_mock):
-        handle = metrics.GaugeHandle(int, True, True)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.GaugeHandle(int, True, True, aggregator)
         handle.set(-3)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_set_incorrect_type(self, logger_mock):
-        handle = metrics.GaugeHandle(int, True, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.GaugeHandle(int, True, False, aggregator)
         handle.set(3.0)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
-
+# TODO: fix tests once aggregator implemented
 class TestMeasureHandle(unittest.TestCase):
     def test_record(self):
-        handle = metrics.MeasureHandle(int, False, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.MeasureHandle(int, False, False, aggregator)
         handle.record(3)
-        # Record not implemented yet
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
 
     def test_record_disabled(self):
-        handle = metrics.MeasureHandle(int, False, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.MeasureHandle(int, False, False, aggregator)
         handle.record(3)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_monotonic(self, logger_mock):
-        handle = metrics.MeasureHandle(int, True, True)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.MeasureHandle(int, True, True, aggregator)
         handle.record(-3)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
-        handle = metrics.MeasureHandle(int, True, False)
+        aggregator = export.aggregate.CounterAggregator()
+        handle = metrics.MeasureHandle(int, True, False, aggregator)
         handle.record(3.0)
-        self.assertEqual(handle.data, 0)
+        self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)

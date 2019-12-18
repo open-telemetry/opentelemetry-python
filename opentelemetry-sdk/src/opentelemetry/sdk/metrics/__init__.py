@@ -18,7 +18,7 @@ from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
-from opentelemetry.sdk.metrics.export.batcher import Batcher
+from opentelemetry.sdk.metrics.export.batcher import Batcher, UngroupedBatcher
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ class BaseHandle:
 
     def __repr__(self):
         return '{}(data="{}", last_update_timestamp={})'.format(
-            type(self).__name__, self.data, self.last_update_timestamp
+            type(self).__name__, self.aggregator.current, self.last_update_timestamp
         )
 
 
@@ -93,7 +93,7 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
     def set(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.GaugeHandle.set`."""
         if self._validate_update(value):
-            if self.alternate and value < self.data:
+            if self.alternate and value < self.aggregator.current:
                 logger.warning("Monotonic gauge cannot descend.")
                 return
             self.update(value)
@@ -254,7 +254,7 @@ class Measure(Metric, metrics_api.Measure):
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
         label_keys: Sequence[str] = None,
-        enabled: bool = False,
+        enabled: bool = True,
         alternate: bool = False
     ):
         super().__init__(
@@ -297,7 +297,7 @@ class Meter(metrics_api.Meter):
     Args:
         batcher: The `Batcher` used for this meter.
     """
-    def __init__(self, batcher: Batcher):
+    def __init__(self, batcher: Batcher = UngroupedBatcher(True)):
         self.batcher = batcher
         # label_sets is a map of the labelset's encoded value to the label set
         self.label_sets = {}

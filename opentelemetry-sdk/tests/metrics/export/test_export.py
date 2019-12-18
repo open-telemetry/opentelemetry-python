@@ -16,7 +16,9 @@ import unittest
 from unittest import mock
 
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
+from opentelemetry.sdk.metrics \
+    .export import ConsoleMetricsExporter, MetricRecord
+from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 
 
 class TestConsoleMetricsExporter(unittest.TestCase):
@@ -34,10 +36,11 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         )
         kvp = {"environment": "staging"}
         label_set = meter.get_label_set(kvp)
-        handle = metric.get_handle(label_set)
-        result = '{}(data="{}", label_values="{}", metric_data={})'.format(
-            ConsoleMetricsExporter.__name__, metric, label_set, handle
+        aggregator = CounterAggregator()
+        record = MetricRecord(aggregator, label_set, metric)
+        result = '{}(data="{}", label_set="{}", value={})'.format(
+            ConsoleMetricsExporter.__name__, metric, label_set.labels, aggregator.check_point
         )
         with mock.patch("sys.stdout") as mock_stdout:
-            exporter.export([(metric, label_set)])
+            exporter.export([record])
             mock_stdout.write.assert_any_call(result)

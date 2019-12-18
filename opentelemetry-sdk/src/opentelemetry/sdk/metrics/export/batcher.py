@@ -16,7 +16,6 @@ import abc
 
 from typing import Sequence, Type
 from opentelemetry.metrics import Counter, MetricT
-from opentelemetry.sdk.metrics import Record
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics \
         .export.aggregate import Aggregator, CounterAggregator
@@ -68,7 +67,7 @@ class Batcher(abc.ABC):
             self.batch_map = {}
 
     @abc.abstractmethod
-    def process(self, record: Record) -> None:
+    def process(self, record: "Record") -> None:
         """Stores record information to be ready for exporting.
 
         Depending on type of batcher, performs pre-export logic, such as
@@ -79,7 +78,7 @@ class Batcher(abc.ABC):
 class UngroupedBatcher(Batcher):
     """Accepts all records and passes them for exporting"""
 
-    def process(self, record: Record):
+    def process(self, record: "Record"):
         # TODO: Race case of incoming update at the same time as process
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.checkpoint()
