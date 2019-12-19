@@ -24,8 +24,8 @@ class Decision:
     """A sampling decision as applied to a newly-created Span.
 
     Args:
-        sampled: Whether the `Span` should be sampled.
-        attributes: Attributes to add to the `Span`.
+        sampled: Whether the `opentelemetry.trace.Span` should be sampled.
+        attributes: Attributes to add to the `opentelemetry.trace.Span`.
     """
 
     def __repr__(self) -> str:
@@ -36,7 +36,7 @@ class Decision:
     def __init__(
         self,
         sampled: bool = False,
-        attributes: Mapping[str, "AttributeValue"] = None,
+        attributes: Optional[Mapping[str, "AttributeValue"]] = None,
     ) -> None:
         self.sampled = sampled  # type: bool
         if attributes is None:

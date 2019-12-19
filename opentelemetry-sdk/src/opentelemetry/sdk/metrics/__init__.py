@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=redefined-outer-name
 class LabelSet(metrics_api.LabelSet):
-    """See `opentelemetry.metrics.LabelSet."""
+    """See `opentelemetry.metrics.LabelSet`."""
 
     def __init__(self, labels: Dict[str, str] = None, encoded=""):
         self.labels = labels
@@ -126,7 +126,7 @@ class Metric(metrics_api.Metric):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         alternate: bool = False,
     ):
@@ -177,7 +177,7 @@ class Counter(Metric, metrics_api.Counter):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         alternate: bool = True,
     ):
@@ -215,7 +215,7 @@ class Gauge(Metric, metrics_api.Gauge):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         alternate: bool = False,
     ):
@@ -253,7 +253,7 @@ class Measure(Metric, metrics_api.Measure):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         alternate: bool = False
     ):
@@ -335,7 +335,7 @@ class Meter(metrics_api.Meter):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         metric_type: Type[metrics_api.MetricT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         alternate: bool = False,
     ) -> metrics_api.MetricT:

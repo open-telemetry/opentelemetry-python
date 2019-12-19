@@ -7,6 +7,7 @@ from flask import request as flask_request
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import propagators, trace
+from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -60,22 +61,23 @@ def _before_flask_request():
         otel_wsgi.get_header_from_environ, environ
     )
 
-    tracer = trace.tracer()
+    tracer = trace.tracer_source().get_tracer(__name__, __version__)
 
+    attributes = otel_wsgi.collect_request_attributes(environ)
+    if flask_request.url_rule:
+        # For 404 that result from no route found, etc, we don't have a url_rule.
+        attributes["http.route"] = flask_request.url_rule.rule
     span = tracer.start_span(
         span_name,
         parent_span,
         kind=trace.SpanKind.SERVER,
+        attributes=attributes,
         start_time=environ.get(_ENVIRON_STARTTIME_KEY),
     )
     activation = tracer.use_span(span, end_on_exit=True)
     activation.__enter__()
     environ[_ENVIRON_ACTIVATION_KEY] = activation
     environ[_ENVIRON_SPAN_KEY] = span
-    otel_wsgi.add_request_attributes(span, environ)
-    if flask_request.url_rule:
-        # For 404 that result from no route found, etc, we don't have a url_rule.
-        span.set_attribute("http.route", flask_request.url_rule.rule)
 
 
 def _teardown_flask_request(exc):
