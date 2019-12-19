@@ -24,6 +24,7 @@ from requests.sessions import Session
 
 from opentelemetry import propagation
 from opentelemetry.context import Context
+from opentelemetry.ext.http_requests.version import __version__
 from opentelemetry.trace import SpanKind
 
 
@@ -32,7 +33,7 @@ from opentelemetry.trace import SpanKind
 # if the SDK/tracer is already using `requests` they may, in theory, bypass our
 # instrumentation when using `import from`, etc. (currently we only instrument
 # a instance method so the probability for that is very low).
-def enable(tracer):
+def enable(tracer_source):
     """Enables tracing of all requests calls that go through
       :code:`requests.session.Session.request` (this includes
       :code:`requests.get`, etc.)."""
@@ -46,6 +47,8 @@ def enable(tracer):
 
     # Guard against double instrumentation
     disable()
+
+    tracer = tracer_source.get_tracer(__name__, __version__)
 
     wrapped = Session.request
 

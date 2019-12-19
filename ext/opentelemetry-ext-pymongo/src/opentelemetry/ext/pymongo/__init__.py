@@ -42,6 +42,7 @@ class CommandTracer(monitoring.CommandListener):
         self._span_dict = {}
 
     def started(self, event: monitoring.CommandStartedEvent):
+        """ Method to handle a pymongo CommandStartedEvent """
         command = event.command.get(event.command_name, "")
         name = DATABASE_TYPE + "." + event.command_name
         statement = event.command_name
@@ -77,6 +78,7 @@ class CommandTracer(monitoring.CommandListener):
                 self._remove_span(event)
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
+        """ Method to handle a pymongo CommandSucceededEvent """
         span = self._get_span(event)
         if span is not None:
             span.set_attribute(
@@ -87,6 +89,7 @@ class CommandTracer(monitoring.CommandListener):
             self._remove_span(event)
 
     def failed(self, event: monitoring.CommandFailedEvent):
+        """ Method to handle a pymongo CommandFailedEvent """
         span = self._get_span(event)
         if span is not None:
             span.set_attribute(

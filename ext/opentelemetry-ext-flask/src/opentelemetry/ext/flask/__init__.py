@@ -7,6 +7,7 @@ from flask import request as flask_request
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import propagation, trace
+from opentelemetry.ext.flask.version import __version__
 from opentelemetry.trace.propagation.context import from_context
 from opentelemetry.util import time_ns
 
@@ -63,7 +64,7 @@ def _before_flask_request():
     )
 
     parent_span = from_context()
-    tracer = trace.tracer()
+    tracer = trace.tracer_source().get_tracer(__name__, __version__)
 
     attributes = otel_wsgi.collect_request_attributes(environ)
     if flask_request.url_rule:

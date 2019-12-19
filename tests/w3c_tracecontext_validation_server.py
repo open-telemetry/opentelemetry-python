@@ -27,7 +27,7 @@ from opentelemetry import propagation, trace
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.context.propagation import tracecontexthttptextformat
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
@@ -39,16 +39,16 @@ propagation.set_http_injectors([w3c_injector])
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
-trace.set_preferred_tracer_implementation(lambda T: Tracer())
+trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
-http_requests.enable(trace.tracer())
+http_requests.enable(trace.tracer_source())
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = SimpleExportSpanProcessor(ConsoleSpanExporter())
-trace.tracer().add_span_processor(span_processor)
+trace.tracer_source().add_span_processor(span_processor)
 
 app = flask.Flask(__name__)
 app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)

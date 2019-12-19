@@ -28,7 +28,7 @@ from opentelemetry import propagation, trace
 from opentelemetry.correlationcontext import CorrelationContextManager
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.context.propagation import b3_format
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
     ConsoleSpanExporter,
@@ -36,7 +36,7 @@ from opentelemetry.sdk.trace.export import (
 
 
 def configure_opentelemetry(flask_app: flask.Flask):
-    trace.set_preferred_tracer_implementation(lambda T: Tracer())
+    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 
     # Global initialization
     (b3_extractor, b3_injector) = b3_format.http_propagator()
@@ -49,7 +49,7 @@ def configure_opentelemetry(flask_app: flask.Flask):
     propagation.set_http_extractors([b3_extractor, correlation_extractor])
     propagation.set_http_injectors([b3_injector, correlation_injector])
 
-    opentelemetry.ext.http_requests.enable(trace.tracer())
+    opentelemetry.ext.http_requests.enable(trace.tracer_source())
     flask_app.wsgi_app = OpenTelemetryMiddleware(flask_app.wsgi_app)
 
 
@@ -76,7 +76,7 @@ app = flask.Flask(__name__)
 
 @app.route("/")
 def hello():
-    tracer = trace.tracer()
+    tracer = trace.tracer_source()
     tracer.add_span_processor(BatchExportSpanProcessor(ConsoleSpanExporter()))
     with propagation.extract(request.headers):
         # extract a baggage header

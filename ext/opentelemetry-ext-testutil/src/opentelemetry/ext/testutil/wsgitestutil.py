@@ -8,8 +8,17 @@ from opentelemetry import trace as trace_api
 
 class WsgiTestBase(unittest.TestCase):
     def setUp(self):
-        tracer = trace_api.tracer()
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
+        tracer = trace_api.Tracer()
+        self.get_tracer_patcher = mock.patch.object(
+            trace_api.TracerSource,
+            "get_tracer",
+            autospec=True,
+            spec_set=True,
+            return_value=tracer,
+        )
+        self.get_tracer_patcher.start()
+
         self.start_span_patcher = mock.patch.object(
             tracer,
             "start_span",
@@ -29,6 +38,7 @@ class WsgiTestBase(unittest.TestCase):
         self.exc_info = None
 
     def tearDown(self):
+        self.get_tracer_patcher.stop()
         self.start_span_patcher.stop()
 
     def start_response(self, status, response_headers, exc_info=None):
