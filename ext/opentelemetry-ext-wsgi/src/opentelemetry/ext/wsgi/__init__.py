@@ -23,9 +23,8 @@ import typing
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagation, trace
-from opentelemetry.context import Context
 from opentelemetry.ext.wsgi.version import __version__  # noqa
-from opentelemetry.trace.propagation import ContextKeys
+from opentelemetry.trace.propagation.context import from_context
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -187,7 +186,7 @@ class OpenTelemetryMiddleware:
         tracer = trace.tracer()
         propagation.extract(environ, get_from_carrier=get_header_from_environ)
 
-        parent_span = Context.value(ContextKeys.span_context_key())
+        parent_span = from_context()
         span_name = get_default_span_name(environ)
 
         span = tracer.start_span(

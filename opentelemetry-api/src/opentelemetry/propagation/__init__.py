@@ -17,7 +17,6 @@ import typing
 import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.context import context as ctx
 from opentelemetry.context.propagation import (
     DefaultHTTPExtractor,
     DefaultHTTPInjector,
@@ -50,7 +49,7 @@ def extract(
             which understands how to extract a value from it.
     """
     if context is None:
-        context = ctx().current()
+        context = Context.current()
     if extractors is None:
         extractors = get_http_extractors()
 
@@ -89,7 +88,7 @@ def inject(
             should know how to set header values on the carrier.
     """
     if context is None:
-        context = ctx().current()
+        context = Context.current()
     if injectors is None:
         injectors = get_http_injectors()
 

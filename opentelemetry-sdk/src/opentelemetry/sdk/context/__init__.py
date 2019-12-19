@@ -96,3 +96,6 @@ class Context:
     ) -> "BaseRuntimeContext.Slot":
         return _CONTEXT.register_slot(name, default)
 
+    @classmethod
+    def suppress_instrumentation(cls) -> "object":
+        return _CONTEXT.suppress_instrumentation

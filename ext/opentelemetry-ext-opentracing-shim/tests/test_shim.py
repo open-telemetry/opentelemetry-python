@@ -19,8 +19,6 @@ import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagation, trace
-from opentelemetry.context import Context, set_preferred_context_implementation
-from opentelemetry.context import context as ctx
 from opentelemetry.context.propagation import get_as_list, set_in_dict
 from opentelemetry.context.propagation.httptextformat import (
     HTTPExtractor,
@@ -28,37 +26,15 @@ from opentelemetry.context.propagation.httptextformat import (
 )
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import Tracer
-from opentelemetry.trace.propagation import ContextKeys
-
-
-class MockContext(Context):
-    values = {}
-
-    @classmethod
-    def value(cls, key: str, context=None) -> "object":
-        print("getting things", key)
-        return cls.values.get(key)
-
-    @classmethod
-    def set_value(cls, key: str, value: "object") -> "Context":
-        print("setting things", key, value)
-        cls.values[key] = value
-
-    @classmethod
-    def current(cls) -> "Context":
-        """ TODO """
-
-    @classmethod
-    def snapshot(cls) -> "Context":
-        """ TODO """
-
-    @classmethod
-    def set_current(cls, context: "Context"):
-        """ TODO """
+from opentelemetry.trace.propagation.context import (
+    from_context,
+    with_span_context,
+)
 
 
 class TestShim(unittest.TestCase):
     # pylint: disable=too-many-public-methods
+
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
 
@@ -71,7 +47,6 @@ class TestShim(unittest.TestCase):
         every test method.
         """
 
-        set_preferred_context_implementation(lambda T: MockContext())
         trace.set_preferred_tracer_implementation(lambda T: Tracer())
 
         # Save current propagator to be restored on teardown.
@@ -543,9 +518,9 @@ class TestShim(unittest.TestCase):
             _SPAN_ID_KEY: 7478,
         }
 
-        context = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
-        self.assertEqual(context.unwrap().trace_id, 1220)
-        self.assertEqual(context.unwrap().span_id, 7478)
+        ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
+        self.assertEqual(ctx.unwrap().trace_id, 1220)
+        self.assertEqual(ctx.unwrap().span_id, 7478)
 
     def test_extract_text_map(self):
         """Test `extract()` method for Format.TEXT_MAP."""
@@ -555,9 +530,9 @@ class TestShim(unittest.TestCase):
             _SPAN_ID_KEY: 7478,
         }
 
-        context = self.shim.extract(opentracing.Format.TEXT_MAP, carrier)
-        self.assertEqual(context.unwrap().trace_id, 1220)
-        self.assertEqual(context.unwrap().span_id, 7478)
+        ctx = self.shim.extract(opentracing.Format.TEXT_MAP, carrier)
+        self.assertEqual(ctx.unwrap().trace_id, 1220)
+        self.assertEqual(ctx.unwrap().span_id, 7478)
 
     def test_extract_binary(self):
         """Test `extract()` method for Format.BINARY."""
@@ -580,15 +555,12 @@ class MockHTTPExtractor(HTTPExtractor):
         span_id_list = get_from_carrier(carrier, _SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
-            return ctx().set_value(
-                ContextKeys.span_context_key(), trace.INVALID_SPAN_CONTEXT
-            )
+            return with_span_context(trace.INVALID_SPAN_CONTEXT)
 
-        return ctx().set_value(
-            ContextKeys.span_context_key(),
+        return with_span_context(
             trace.SpanContext(
                 trace_id=int(trace_id_list[0]), span_id=int(span_id_list[0])
-            ),
+            )
         )
 
 
@@ -597,6 +569,6 @@ class MockHTTPInjector(HTTPInjector):
 
     @classmethod
     def inject(cls, carrier, context=None, set_in_carrier=set_in_dict):
-        sc = ctx().value(ContextKeys.span_context_key())
+        sc = from_context(context)
         set_in_carrier(carrier, _TRACE_ID_KEY, str(sc.trace_id))
         set_in_carrier(carrier, _SPAN_ID_KEY, str(sc.span_id))
