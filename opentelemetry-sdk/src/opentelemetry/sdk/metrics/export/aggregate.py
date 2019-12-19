@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import abc
+import threading
 
 class Aggregator(abc.ABC):
     """Base class for aggregators.
@@ -24,14 +25,19 @@ class Aggregator(abc.ABC):
     def __init__(self):
         self.current = None
         self.check_point = None
+        self._lock = threading.Lock()
 
     @abc.abstractmethod
     def update(self, value):
-        pass
+        """Updates the current with the new value."""
 
     @abc.abstractmethod
     def checkpoint(self):
-        pass
+        """Stores a snapshot of the current value."""
+
+    @abc.abstractmethod
+    def merge(self, other):
+        """Combines two aggregator values."""
 
 class CounterAggregator(Aggregator):
     """Aggregator for `Counter` metrics."""
@@ -46,4 +52,9 @@ class CounterAggregator(Aggregator):
 
     def checkpoint(self):
         # TODO: Implement lock-free algorithm for concurrency
-        self.check_point = self.current
+        with self._lock:
+            self.check_point = self.current
+            self.current = 0
+
+    def merge(self, other):
+        self.check_point += other.check_point

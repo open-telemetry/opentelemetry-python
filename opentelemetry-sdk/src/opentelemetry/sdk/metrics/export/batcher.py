@@ -79,10 +79,19 @@ class UngroupedBatcher(Batcher):
     """Accepts all records and passes them for exporting"""
 
     def process(self, record: "Record"):
-        # TODO: Race case of incoming update at the same time as process
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.checkpoint()
         batch_key = (record.metric, record.label_set.encoded)
         batch_value = self.batch_map.get(batch_key)
-        if not batch_value:
-            self.batch_map[batch_key] = (record.aggregator, record.label_set)
+        aggregator = record.aggregator
+        if batch_value:
+            # Update the stored checkpointed value if exists. This is for cases
+            # when an update comes at the same time as a checkpoint call
+            batch_value[0].merge(aggregator)
+            return
+        if self.keep_state:
+            # if stateful batcher, create a copy of the aggregator and update
+            # it with the current checkpointed value of long-term storage
+            aggregator = self.aggregator_for(record.metric.__class__)
+            aggregator.merge(record.aggregator)
+        self.batch_map[batch_key] = (aggregator, record.label_set)
