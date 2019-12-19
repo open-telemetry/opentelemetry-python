@@ -130,15 +130,15 @@ class CorrelationContextManager:
     @classmethod
     def correlation(
         cls, key: str, context: typing.Optional[Context] = None
-    ) -> "object":
+    ) -> typing.Any:
         return Context.value(key, context=context)
 
     @classmethod
-    def remove_correlation(cls):
+    def remove_correlation(cls) -> Context:
         pass
 
     @classmethod
-    def clear_correlation(cls):
+    def clear_correlation(cls) -> Context:
         pass
 
     @classmethod

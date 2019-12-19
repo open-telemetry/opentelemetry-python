@@ -36,7 +36,9 @@ __all__ = [
 ]
 
 
-def get_as_list(dict_object: dict, key: str) -> typing.List[str]:
+def get_as_list(
+    dict_object: typing.Dict[str, str], key: str
+) -> typing.List[str]:
     value = dict_object.get(key)
     if value is None:
         return []
@@ -45,5 +47,7 @@ def get_as_list(dict_object: dict, key: str) -> typing.List[str]:
     return [value]
 
 
-def set_in_dict(dict_object: dict, key: str, value: str) -> None:
+def set_in_dict(
+    dict_object: typing.Dict[str, str], key: str, value: str
+) -> None:
     dict_object[key] = value

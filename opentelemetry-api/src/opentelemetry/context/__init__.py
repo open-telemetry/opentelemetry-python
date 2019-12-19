@@ -139,6 +139,7 @@ Here goes a simple demo of how async could work in Python 3.7+::
 """
 
 import copy
+import types
 import typing
 
 from .base_context import BaseRuntimeContext
@@ -156,19 +157,24 @@ except ImportError:
 
 
 class Context:
-    def __init__(self):
-        self.contents = {}
+    def __init__(self) -> None:
+        self.contents = {}  # type: typing.Dict[str, object]
         self.slot_name = "{}".format(id(self))
         self._slot = _CONTEXT.register_slot(self.slot_name)
         self._slot.set(self)
 
-    def __enter__(self):
+    def __enter__(self) -> "Context":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         pass
 
-    def get(self, key):
+    def get(self, key: str) -> "object":
         return self.contents.get(key)
 
     @classmethod
@@ -198,7 +204,7 @@ class Context:
         return snapshot
 
     @classmethod
-    def set_current(cls, ctx: "Context"):
+    def set_current(cls, ctx: "Context") -> None:
         if _CONTEXT.current_context is None:
             _CONTEXT.current_context = _CONTEXT.register_slot(
                 # change the key here
