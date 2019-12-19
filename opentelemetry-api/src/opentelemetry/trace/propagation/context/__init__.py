@@ -13,7 +13,7 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.sdk.context import Context
+from opentelemetry.context import Context
 from opentelemetry.trace import Span, SpanContext
 from opentelemetry.trace.propagation import ContextKeys
 

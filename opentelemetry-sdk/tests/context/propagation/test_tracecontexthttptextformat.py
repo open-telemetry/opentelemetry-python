@@ -16,12 +16,12 @@ import typing
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.sdk.context import Context
+from opentelemetry.context import Context
 from opentelemetry.sdk.context.propagation.tracecontexthttptextformat import (
     TraceContextHTTPExtractor,
     TraceContextHTTPInjector,
 )
-from opentelemetry.sdk.trace.propagation.context import (
+from opentelemetry.trace.propagation.context import (
     from_context,
     with_span_context,
 )

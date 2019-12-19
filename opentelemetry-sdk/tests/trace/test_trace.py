@@ -18,8 +18,8 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
+from opentelemetry.context import Context
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.context import Context
 from opentelemetry.trace import sampling
 from opentelemetry.util import time_ns
 

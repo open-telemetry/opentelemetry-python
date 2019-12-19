@@ -17,13 +17,14 @@ from opentelemetry.context import Context
 
 from .binaryformat import BinaryFormat
 from .httptextformat import (
+    Getter,
     DefaultHTTPExtractor,
     DefaultHTTPInjector,
-    Getter,
     HTTPExtractor,
     HTTPInjector,
     Setter,
 )
+
 
 __all__ = [
     "BinaryFormat",
