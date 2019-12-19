@@ -38,12 +38,16 @@ MONGODB_COLLECTION_NAME = "test"
 class TestFunctionalPymongo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        process = subprocess.run(
-            "docker run -d -p 27017:27017 --name otmongo mongo", check=False
-        )
-        if process.returncode != 0:
-            logging.warning("Failed to start MongoDB container")
-        time.sleep(2)
+        # Enable mongo in docker only when running locally
+        cls._is_continuous_integration = bool(os.getenv("CI_RUNNING ", "0"))
+        if not cls._is_continuous_integration:
+            process = subprocess.run(
+                "docker run -d -p 27017:27017 --name otmongo mongo",
+                check=False,
+            )
+            if process.returncode != 0:
+                logging.warning("Failed to start MongoDB container")
+            time.sleep(2)
 
         cls._tracer_source = TracerSource()
         cls._tracer = Tracer(cls._tracer_source, None)
@@ -60,8 +64,9 @@ class TestFunctionalPymongo(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        subprocess.run("docker stop otmongo", check=False)
-        subprocess.run("docker rm otmongo", check=False)
+        if not cls._is_continuous_integration:
+            subprocess.run("docker stop otmongo", check=False)
+            subprocess.run("docker rm otmongo", check=False)
 
     def setUp(self):
         self._span_exporter.clear()

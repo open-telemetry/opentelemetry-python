@@ -17,6 +17,9 @@ python:
 services:
   - mongodb
 
+env:
+  - CI_RUNNING=True
+
 install:
   - pip install tox-travis
 
