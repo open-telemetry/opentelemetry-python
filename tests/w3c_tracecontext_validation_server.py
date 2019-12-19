@@ -23,14 +23,19 @@ import json
 import flask
 import requests
 
-from opentelemetry import trace
+from opentelemetry import propagation, trace
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.sdk.context.propagation import tracecontexthttptextformat
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+
+(w3c_extractor, w3c_injector) = tracecontexthttptextformat.http_propagator()
+propagation.set_http_extractors([w3c_extractor])
+propagation.set_http_injectors([w3c_injector])
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.

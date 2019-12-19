@@ -19,6 +19,9 @@ from opentelemetry.trace.propagation import ContextKeys
 
 
 def from_context(ctx: Optional[Context] = None) -> SpanContext:
+    span = span_from_context(ctx)
+    if span:
+        return span.get_context()
     return Context.value(ContextKeys.span_context_key(), context=ctx)
 
 
