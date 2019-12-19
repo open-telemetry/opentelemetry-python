@@ -85,12 +85,9 @@ from deprecated import deprecated
 
 import opentelemetry.trace as trace_api
 from opentelemetry import propagation
-from opentelemetry.context import Context
+from opentelemetry.context import context as ctx
 from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.trace.propagation.context import (
-    from_context,
-    with_span_context,
-)
+from opentelemetry.trace.propagation import ContextKeys
 
 logger = logging.getLogger(__name__)
 
@@ -653,8 +650,8 @@ class TracerShim(opentracing.Tracer):
             start_time=start_time_ns,
         )
 
-        context = SpanContextShim(span.get_context())
-        return SpanShim(self, context, span)
+        sc = SpanContextShim(span.get_context())
+        return SpanShim(self, sc, span)
 
     def inject(self, span_context, format, carrier):
         """Implements the ``inject`` method from the base class."""
@@ -668,8 +665,10 @@ class TracerShim(opentracing.Tracer):
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
-        ctx = with_span_context(span_context.unwrap())
-        propagation.inject(carrier, context=ctx)
+        context = ctx().set_value(
+            ContextKeys.span_context_key(), span_context.unwrap()
+        )
+        propagation.inject(carrier, context=context)
 
     def extract(self, format, carrier):
         """Implements the ``extract`` method from the base class."""
@@ -684,6 +683,6 @@ class TracerShim(opentracing.Tracer):
             raise opentracing.UnsupportedFormatException
 
         propagation.extract(carrier)
-        otel_context = from_context()
+        otel_context = ctx().value(ContextKeys.span_context_key())
 
         return SpanContextShim(otel_context)

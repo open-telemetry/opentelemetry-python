@@ -51,7 +51,7 @@ def enable(tracer):
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
-        if Context.suppress_instrumentation():
+        if Context.value("suppress_instrumentation"):
             return wrapped(self, method, url, *args, **kwargs)
 
         # See

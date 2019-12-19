@@ -138,6 +138,7 @@ Here goes a simple demo of how async could work in Python 3.7+::
         asyncio.run(main())
 """
 import typing
+from opentelemetry.util import loader
 
 
 class Context:
@@ -162,3 +163,49 @@ class Context:
     @classmethod
     def set_current(cls, ctx: "Context"):
         """ TODO """
+
+
+# Once https://github.com/python/mypy/issues/7092 is resolved,
+# the following type definition should be replaced with
+# from opentelemetry.util.loader import ImplementationFactory
+ImplementationFactory = typing.Callable[
+    [typing.Type[Context]], typing.Optional[Context]
+]
+
+_CONTEXT = None  # type: typing.Optional[Context]
+_CONTEXT_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+
+
+def context() -> Context:
+    """Gets the current global :class:`~.Context` object.
+
+    If there isn't one set yet, a default will be loaded.
+    """
+    global _CONTEXT, _CONTEXT_FACTORY  # pylint:disable=global-statement
+
+    if _CONTEXT is None:
+        # pylint:disable=protected-access
+        _CONTEXT = loader._load_impl(Context, _CONTEXT_FACTORY)
+        del _CONTEXT_FACTORY
+
+    return _CONTEXT
+
+
+def set_preferred_context_implementation(
+    factory: ImplementationFactory,
+) -> None:
+    """Set the factory to be used to create the context.
+
+    See :mod:`opentelemetry.util.loader` for details.
+
+    This function may not be called after a context is already loaded.
+
+    Args:
+        factory: Callback that should create a new :class:`Context` instance.
+    """
+    global _CONTEXT_FACTORY  # pylint:disable=global-statement
+
+    if _CONTEXT:
+        raise RuntimeError("Context already loaded.")
+
+    _CONTEXT_FACTORY = factory

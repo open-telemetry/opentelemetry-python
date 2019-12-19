@@ -73,7 +73,7 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        with Context.use(suppress_instrumentation=True):
+        with Context.set_value("suppress_instrumentation", True):
             try:
                 self.span_exporter.export((span,))
             # pylint: disable=broad-except
@@ -182,7 +182,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
-        with Context.use(suppress_instrumentation=True):
+        with Context.set_value("suppress_instrumentation", True):
             try:
                 # Ignore type b/c the Optional[None]+slicing is too "clever"
                 # for mypy
