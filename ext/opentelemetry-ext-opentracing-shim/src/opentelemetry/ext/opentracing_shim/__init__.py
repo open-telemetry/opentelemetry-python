@@ -85,7 +85,7 @@ from deprecated import deprecated
 
 import opentelemetry.trace as trace_api
 from opentelemetry import propagation
-from opentelemetry.context import context as ctx
+from opentelemetry.context import ctx
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.trace.propagation import ContextKeys
 

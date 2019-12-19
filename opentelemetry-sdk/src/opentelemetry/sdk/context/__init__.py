@@ -78,13 +78,13 @@ class Context:
         return snapshot
 
     @classmethod
-    def set_current(cls, ctx: "Context"):
+    def set_current(cls, context: "Context"):
         if _CONTEXT.current_context is None:
             _CONTEXT.current_context = _CONTEXT.register_slot(
                 # change the key here
                 "__current_prop_context__"
             )
-        _CONTEXT.current_context.set(ctx.slot_name)
+        _CONTEXT.current_context.set(context.slot_name)
 
     @classmethod
     def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
@@ -95,4 +95,3 @@ class Context:
         cls, name: str, default: "object" = None
     ) -> "BaseRuntimeContext.Slot":
         return _CONTEXT.register_slot(name, default)
-
