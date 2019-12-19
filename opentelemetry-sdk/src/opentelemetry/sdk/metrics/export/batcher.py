@@ -91,7 +91,7 @@ class UngroupedBatcher(Batcher):
             return
         if self.keep_state:
             # if stateful batcher, create a copy of the aggregator and update
-            # it with the current checkpointed value of long-term storage
+            # it with the current checkpointed value for long-term storage
             aggregator = self.aggregator_for(record.metric.__class__)
             aggregator.merge(record.aggregator)
         self.batch_map[batch_key] = (aggregator, record.label_set)

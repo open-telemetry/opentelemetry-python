@@ -48,7 +48,150 @@ class TestConsoleMetricsExporter(unittest.TestCase):
 
 
 class TestBatcher(unittest.TestCase):
-    def test_aggregator_for(self):
+    def test_aggregator_for_counter(self):
         batcher = UngroupedBatcher(True)
-        
+        self.assertTrue(isinstance(batcher.aggregator_for(metrics.Counter),
+                                   CounterAggregator))
+    # TODO: Add other aggregator tests
 
+    def test_check_point_set(self):
+        meter = metrics.Meter()
+        batcher = UngroupedBatcher(True)
+        aggregator = CounterAggregator()
+        metric = metrics.Counter(
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter,
+            ("environment",),
+        )
+        aggregator.update(1.0)
+        label_set = {}
+        batch_map = {}
+        batch_map[(metric, "")] = (aggregator, label_set)
+        batcher.batch_map = batch_map
+        records = batcher.check_point_set()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].metric, metric)
+        self.assertEqual(records[0].label_set, label_set)
+        self.assertEqual(records[0].aggregator, aggregator)
+
+    def test_check_point_set_empty(self):
+        batcher = UngroupedBatcher(True)
+        records = batcher.check_point_set()
+        self.assertEqual(len(records), 0)
+
+    def test_finished_collection_stateless(self):
+        meter = metrics.Meter()
+        batcher = UngroupedBatcher(False)
+        aggregator = CounterAggregator()
+        metric = metrics.Counter(
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter,
+            ("environment",),
+        )
+        aggregator.update(1.0)
+        label_set = {}
+        batch_map = {}
+        batch_map[(metric, "")] = (aggregator, label_set)
+        batcher.batch_map = batch_map
+        batcher.finished_collection()
+        self.assertEqual(len(batcher.batch_map), 0)
+
+    def test_finished_collection_stateful(self):
+        meter = metrics.Meter()
+        batcher = UngroupedBatcher(True)
+        aggregator = CounterAggregator()
+        metric = metrics.Counter(
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter,
+            ("environment",),
+        )
+        aggregator.update(1.0)
+        label_set = {}
+        batch_map = {}
+        batch_map[(metric, "")] = (aggregator, label_set)
+        batcher.batch_map = batch_map
+        batcher.finished_collection()
+        self.assertEqual(len(batcher.batch_map), 1)
+
+    def test_ungrouped_batcher_process_exists(self):
+        meter = metrics.Meter()
+        batcher = UngroupedBatcher(True)
+        aggregator = CounterAggregator()
+        aggregator2 = CounterAggregator()
+        metric = metrics.Counter(
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter,
+            ("environment",),
+        )
+        label_set = metrics.LabelSet()
+        batch_map = {}
+        batch_map[(metric, "")] = (aggregator, label_set)
+        aggregator2.update(1.0)
+        batcher.batch_map = batch_map
+        record = metrics.Record(metric, label_set, aggregator2)
+        batcher.process(record)
+        self.assertEqual(len(batcher.batch_map), 1)
+        self.assertIsNotNone(batcher.batch_map.get((metric, "")))
+        self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
+        self.assertEqual(batcher.batch_map.get((metric, ""))[0].check_point, 1.0)
+        self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
+
+    def test_ungrouped_batcher_process_not_exists(self):
+        meter = metrics.Meter()
+        batcher = UngroupedBatcher(True)
+        aggregator = CounterAggregator()
+        metric = metrics.Counter(
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter,
+            ("environment",),
+        )
+        label_set = metrics.LabelSet()
+        batch_map = {}
+        aggregator.update(1.0)
+        batcher.batch_map = batch_map
+        record = metrics.Record(metric, label_set, aggregator)
+        batcher.process(record)
+        self.assertEqual(len(batcher.batch_map), 1)
+        self.assertIsNotNone(batcher.batch_map.get((metric, "")))
+        self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
+        self.assertEqual(batcher.batch_map.get((metric, ""))[0].check_point, 1.0)
+        self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
+
+    def test_ungrouped_batcher_process_not_stateful(self):
+        meter = metrics.Meter()
+        batcher = UngroupedBatcher(True)
+        aggregator = CounterAggregator()
+        metric = metrics.Counter(
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter,
+            ("environment",),
+        )
+        label_set = metrics.LabelSet()
+        batch_map = {}
+        aggregator.update(1.0)
+        batcher.batch_map = batch_map
+        record = metrics.Record(metric, label_set, aggregator)
+        batcher.process(record)
+        self.assertEqual(len(batcher.batch_map), 1)
+        self.assertIsNotNone(batcher.batch_map.get((metric, "")))
+        self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
+        self.assertEqual(batcher.batch_map.get((metric, ""))[0].check_point, 1.0)
+        self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
