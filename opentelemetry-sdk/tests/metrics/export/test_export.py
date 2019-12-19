@@ -122,6 +122,7 @@ class TestBatcher(unittest.TestCase):
         batcher.finished_collection()
         self.assertEqual(len(batcher.batch_map), 1)
 
+    # TODO: Abstract the logic once other batchers implemented
     def test_ungrouped_batcher_process_exists(self):
         meter = metrics.Meter()
         batcher = UngroupedBatcher(True)
@@ -195,3 +196,26 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
         self.assertEqual(batcher.batch_map.get((metric, ""))[0].check_point, 1.0)
         self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
+
+class TestAggregator(unittest.TestCase):
+    # TODO: test other aggregators once implemented
+    def test_counter_update(self):
+        counter = CounterAggregator()
+        counter.update(1.0)
+        counter.update(2.0)
+        self.assertEqual(counter.current, 3.0)
+
+    def test_counter_check_point(self):
+        counter = CounterAggregator()
+        counter.update(2.0)
+        counter.checkpoint()
+        self.assertEqual(counter.current, 0)
+        self.assertEqual(counter.check_point, 2.0)
+
+    def test_counter_merge(self):
+        counter = CounterAggregator()
+        counter2 = CounterAggregator()
+        counter.check_point = 1.0
+        counter2.check_point = 3.0
+        counter.merge(counter2)
+        self.assertEqual(counter.check_point, 4.0)
