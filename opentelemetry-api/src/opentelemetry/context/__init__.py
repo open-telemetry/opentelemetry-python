@@ -138,7 +138,6 @@ Here goes a simple demo of how async could work in Python 3.7+::
         asyncio.run(main())
 """
 import typing
-
 from opentelemetry.util import loader
 
 
@@ -162,7 +161,7 @@ class Context:
         """ TODO """
 
     @classmethod
-    def set_current(cls, context: "Context"):
+    def set_current(cls, ctx: "Context"):
         """ TODO """
 
 
@@ -177,7 +176,7 @@ _CONTEXT = None  # type: typing.Optional[Context]
 _CONTEXT_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
-def ctx() -> Context:
+def context() -> Context:
     """Gets the current global :class:`~.Context` object.
 
     If there isn't one set yet, a default will be loaded.

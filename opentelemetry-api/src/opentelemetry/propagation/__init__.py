@@ -16,7 +16,8 @@ import typing
 
 import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
-from opentelemetry.context import Context, ctx
+from opentelemetry.context import Context
+from opentelemetry.context import context as ctx
 from opentelemetry.context.propagation import (
     DefaultHTTPExtractor,
     DefaultHTTPInjector,
