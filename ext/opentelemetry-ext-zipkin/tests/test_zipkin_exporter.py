@@ -20,6 +20,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.ext.zipkin import ZipkinSpanExporter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.trace import TraceOptions
 
 
 class MockResponse:
@@ -112,7 +113,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
             start_times[2] + durations[2],
         )
 
-        span_context = trace_api.SpanContext(trace_id, span_id)
+        span_context = trace_api.SpanContext(
+            trace_id,
+            span_id,
+            trace_options=TraceOptions(TraceOptions.SAMPLED),
+        )
         parent_context = trace_api.SpanContext(trace_id, parent_id)
         other_context = trace_api.SpanContext(trace_id, other_id)
 
@@ -189,6 +194,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "value": "event0",
                     }
                 ],
+                "debug": 1,
                 "parentId": format(parent_id, "x"),
             },
             {
