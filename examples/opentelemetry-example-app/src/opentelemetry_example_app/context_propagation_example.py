@@ -76,8 +76,10 @@ app = flask.Flask(__name__)
 
 @app.route("/")
 def hello():
-    tracer = trace.tracer_source()
-    tracer.add_span_processor(BatchExportSpanProcessor(ConsoleSpanExporter()))
+    tracer = trace.tracer_source().get_tracer(__name__)
+    trace.tracer_source().add_span_processor(
+        BatchExportSpanProcessor(ConsoleSpanExporter())
+    )
     with propagation.extract(request.headers):
         # extract a baggage header
         with tracer.start_as_current_span("service-span"):
