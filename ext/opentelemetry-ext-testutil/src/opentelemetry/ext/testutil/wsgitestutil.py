@@ -9,24 +9,29 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
+_MEMORY_EXPORTER = None
+
 
 class WsgiTestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        global _MEMORY_EXPORTER
         trace_api.set_preferred_tracer_source_implementation(
             lambda T: TracerSource()
         )
+        tracer_source = trace_api.tracer_source()
+        _MEMORY_EXPORTER = InMemorySpanExporter()
+        span_processor = export.SimpleExportSpanProcessor(_MEMORY_EXPORTER)
+        tracer_source.add_span_processor(span_processor)
 
     @classmethod
     def tearDownClass(cls):
         reload(trace_api)
 
     def setUp(self):
-        tracer_source = trace_api.tracer_source()
 
-        self.memory_exporter = InMemorySpanExporter()
-        span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
-        tracer_source.add_span_processor(span_processor)
+        self.memory_exporter = _MEMORY_EXPORTER
+        self.memory_exporter.clear()
 
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
