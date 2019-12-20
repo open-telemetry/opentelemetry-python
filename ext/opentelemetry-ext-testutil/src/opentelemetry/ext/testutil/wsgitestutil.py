@@ -1,6 +1,7 @@
 import io
 import unittest
 import wsgiref.util as wsgiref_util
+from importlib import reload
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.trace import TracerSource, export
@@ -15,6 +16,10 @@ class WsgiTestBase(unittest.TestCase):
         trace_api.set_preferred_tracer_source_implementation(
             lambda T: TracerSource()
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        reload(trace_api)
 
     def setUp(self):
         tracer_source = trace_api.tracer_source()
