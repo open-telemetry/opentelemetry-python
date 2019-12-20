@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-from opentelemetry import trace as trace_api
+from opentelemetry import trace
 from opentelemetry.ext import opentracing_shim
 from opentelemetry.ext.jaeger import JaegerSpanExporter
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 from rediscache import RedisCache
 
 # Configure the tracer using the default implementation
-trace_api.set_preferred_tracer_implementation(lambda T: Tracer())
-tracer = trace_api.tracer()
+trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+tracer = trace.tracer_source().get_tracer(__name__)
 
 # Configure the tracer to export traces to Jaeger
 jaeger_exporter = JaegerSpanExporter(
@@ -18,7 +18,7 @@ jaeger_exporter = JaegerSpanExporter(
     agent_port=6831,
 )
 span_processor = BatchExportSpanProcessor(jaeger_exporter)
-tracer.add_span_processor(span_processor)
+trace.tracer_source().add_span_processor(span_processor)
 
 # Create an OpenTracing shim. This implements the OpenTracing tracer API, but
 # forwards calls to the underlying OpenTelemetry tracer.

@@ -25,6 +25,12 @@ for more detail.
 
 Install Redis following the [instructions](https://redis.io/topics/quickstart).
 
+Make sure that the Redis server is running by executing this:
+
+```sh
+$ redis-server
+```
+
 ### Python Dependencies
 
 Install the Python dependencies in [`requirements.txt`](requirements.txt):
