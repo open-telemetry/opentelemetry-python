@@ -29,13 +29,13 @@ redis_cache = RedisCache(opentracing_tracer)
 
 
 @redis_cache
-def fib(n):
+def fib(number):
     """Get the Nth Fibonacci number, cache intermediate results in Redis."""
-    if n < 0:
+    if number < 0:
         raise ValueError
-    if n == 0 or n == 1:
-        return n
-    return fib(n - 1) + fib(n - 2)
+    if number in (0, 1):
+        return number
+    return fib(number - 1) + fib(number - 2)
 
 
 with tracer.start_as_current_span("Fibonacci") as span:
