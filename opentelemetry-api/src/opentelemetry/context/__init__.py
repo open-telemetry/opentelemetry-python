@@ -225,3 +225,9 @@ class Context:
     @classmethod
     def suppress_instrumentation(cls) -> "object":
         return _CONTEXT.suppress_instrumentation
+
+
+def merge_context_correlation(source: Context, dest: Context) -> Context:
+    for key, value in source.contents.items():
+        dest.contents[key] = value
+    return dest
