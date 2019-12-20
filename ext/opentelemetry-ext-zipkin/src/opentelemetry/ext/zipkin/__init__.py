@@ -37,7 +37,7 @@ SPAN_KIND_MAP = {
     SpanKind.CONSUMER: "CONSUMER",
 }
 
-SUCCESS_STATUS_CODE = (200, 202)
+SUCCESS_STATUS_CODES = (200, 202)
 
 logger = logging.getLogger(__name__)
 
@@ -77,13 +77,13 @@ class ZipkinSpanExporter(SpanExporter):
         self.ipv4 = ipv4
         self.ipv6 = ipv6
 
-    def export(self, spans: Sequence[Span]) -> "SpanExportResult":
+    def export(self, spans: Sequence[Span]) -> SpanExportResult:
         zipkin_spans = self._translate_to_zipkin(spans)
         result = requests.post(
             url=self.url, data=json.dumps(zipkin_spans), headers=ZIPKIN_HEADERS
         )
 
-        if result.status_code not in SUCCESS_STATUS_CODE:
+        if result.status_code not in SUCCESS_STATUS_CODES:
             logger.error(
                 "Traces cannot be uploaded; status code: %s, message %s",
                 result.status_code,
@@ -117,8 +117,8 @@ class ZipkinSpanExporter(SpanExporter):
             duration_mus = _nsec_to_usec_round(span.end_time - span.start_time)
 
             zipkin_span = {
-                "traceId": _format(trace_id),
-                "id": _format(span_id),
+                "traceId": format(trace_id, "x"),
+                "id": format(span_id, "x"),
                 "name": span.name,
                 "timestamp": start_timestamp_mus,
                 "duration": duration_mus,
@@ -129,21 +129,17 @@ class ZipkinSpanExporter(SpanExporter):
             }
 
             if isinstance(span.parent, Span):
-                zipkin_span["parentId"] = _format(
-                    span.parent.get_context().span_id
+                zipkin_span["parentId"] = format(
+                    span.parent.get_context().span_id, "x"
                 )
             elif isinstance(span.parent, SpanContext):
-                zipkin_span["parentId"] = _format(span.parent.span_id)
+                zipkin_span["parentId"] = format(span.parent.span_id, "x")
 
             zipkin_spans.append(zipkin_span)
         return zipkin_spans
 
     def shutdown(self) -> None:
         pass
-
-
-def _format(unformatted_id):
-    return format(unformatted_id, "x")
 
 
 def _extract_tags_from_span(attr):
@@ -154,8 +150,7 @@ def _extract_tags_from_span(attr):
         if isinstance(attribute_value, (int, bool, float)):
             value = str(attribute_value)
         elif isinstance(attribute_value, str):
-            res = attribute_value[:128]
-            value = res
+            value = attribute_value[:128]
         else:
             logger.warning("Could not serialize tag %s", attribute_key)
             continue
@@ -164,17 +159,14 @@ def _extract_tags_from_span(attr):
 
 
 def _extract_annotations_from_events(events):
-    if not events:
-        return None
-    annotations = []
-    for event in events:
-        annotations.append(
-            {
-                "timestamp": _nsec_to_usec_round(event.timestamp),
-                "value": event.name,
-            }
-        )
-    return annotations
+    return (
+        [
+            {"timestamp": _nsec_to_usec_round(e.timestamp), "value": e.name}
+            for e in events
+        ]
+        if events
+        else None
+    )
 
 
 def _nsec_to_usec_round(nsec):
