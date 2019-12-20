@@ -42,10 +42,10 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
         # optional:
         # host_name="localhost",
         # port=9411,
-        # endpoint: str = "/api/v2/spans",
-        # protocol: str = "http",
-        # ipv4: Optional[str] = None,
-        # ipv6: Optional[str] = None,
+        # endpoint="/api/v2/spans",
+        # protocol="http",
+        # ipv4="",
+        # ipv6="",
     )
 
     # Create a BatchExportSpanProcessor and add the exporter to it
