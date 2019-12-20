@@ -15,7 +15,7 @@ _MEMORY_EXPORTER = None
 class WsgiTestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        global _MEMORY_EXPORTER
+        global _MEMORY_EXPORTER  # pylint:disable=global-statement
         trace_api.set_preferred_tracer_source_implementation(
             lambda T: TracerSource()
         )
