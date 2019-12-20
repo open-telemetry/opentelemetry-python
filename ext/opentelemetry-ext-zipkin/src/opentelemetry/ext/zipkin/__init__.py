@@ -27,6 +27,7 @@ DEFAULT_ENDPOINT = "/api/v2/spans"
 DEFAULT_HOST_NAME = "localhost"
 DEFAULT_PORT = 9411
 DEFAULT_PROTOCOL = "http"
+DEFAULT_RETRY = False
 ZIPKIN_HEADERS = {"Content-Type": "application/json"}
 
 SPAN_KIND_MAP = {
@@ -54,6 +55,7 @@ class ZipkinSpanExporter(SpanExporter):
         protocol: The protocol used for the request.
         ipv4: Primary IPv4 address associated with this connection.
         ipv6: Primary IPv6 address associated with this connection.
+        retry: Set to True to configure the exporter to retry on failure.
     """
 
     def __init__(
@@ -65,6 +67,7 @@ class ZipkinSpanExporter(SpanExporter):
         protocol: str = DEFAULT_PROTOCOL,
         ipv4: Optional[str] = None,
         ipv6: Optional[str] = None,
+        retry: Optional[str] = DEFAULT_RETRY,
     ):
         self.service_name = service_name
         self.host_name = host_name
@@ -76,6 +79,7 @@ class ZipkinSpanExporter(SpanExporter):
         )
         self.ipv4 = ipv4
         self.ipv6 = ipv6
+        self.retry = retry
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         zipkin_spans = self._translate_to_zipkin(spans)
@@ -89,7 +93,9 @@ class ZipkinSpanExporter(SpanExporter):
                 result.status_code,
                 result.text,
             )
-            # TODO: should we retry here?
+
+            if self.retry:
+                return SpanExportResult.FAILED_RETRYABLE
             return SpanExportResult.FAILED_NOT_RETRYABLE
         return SpanExportResult.SUCCESS
 
@@ -108,11 +114,12 @@ class ZipkinSpanExporter(SpanExporter):
 
         zipkin_spans = []
         for span in spans:
-            ctx = span.get_context()
-            trace_id = ctx.trace_id
-            span_id = ctx.span_id
+            context = span.get_context()
+            trace_id = context.trace_id
+            span_id = context.span_id
 
             # Timestamp in zipkin spans is int of microseconds.
+            # see: https://zipkin.io/pages/instrumenting.html
             start_timestamp_mus = _nsec_to_usec_round(span.start_time)
             duration_mus = _nsec_to_usec_round(span.end_time - span.start_time)
 

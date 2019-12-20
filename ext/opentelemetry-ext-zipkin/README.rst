@@ -46,6 +46,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
         # protocol="http",
         # ipv4="",
         # ipv6="",
+        # retry=False,
     )
 
     # Create a BatchExportSpanProcessor and add the exporter to it
