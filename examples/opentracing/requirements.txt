@@ -1,4 +1,6 @@
 opentelemetry-api
+opentelemetry-sdk
+opentelemetry-ext-jaeger
 opentelemetry-opentracing-shim
 redis
 redis_opentracing

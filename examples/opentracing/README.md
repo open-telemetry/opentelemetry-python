@@ -5,7 +5,7 @@ package](https://github.com/open-telemetry/opentelemetry-python/tree/master/ext/
 to interact with libraries instrumented with
 [`opentracing-python`](https://github.com/opentracing/opentracing-python).
 
-The included `rediscache` library creates spans via the OpenTelemetry Redis
+The included `rediscache` library creates spans via the OpenTracing Redis
 integration,
 [`redis_opentracing`](https://github.com/opentracing-contrib/python-redis).
 Spans are exported via the Jaeger exporter, which is attached to the
@@ -66,7 +66,7 @@ Open the Jaeger UI in your browser at
 Each `main.py` run should generate a trace, and each trace should include
 multiple spans that represent calls to Redis.
 
-<p align="center"><img src="images/jaeger-trace-full.png?raw=true"/></p>
+<p align="center"><img src="./images/jaeger-trace-full.png?raw=true"/></p>
 
 Note that tags and logs (OpenTracing) and attributes and events (OpenTelemetry)
 from both tracing systems appear in the exported trace.
