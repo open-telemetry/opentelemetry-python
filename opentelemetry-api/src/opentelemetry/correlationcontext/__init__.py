@@ -87,40 +87,6 @@ class Entry:
 class CorrelationContext:
     """A container for distributed context entries"""
 
-    KEY = "CorrelationContext"
-
-    def __init__(self, entries: typing.Iterable[Entry]) -> None:
-        self._container = {entry.key: entry for entry in entries}
-
-    @classmethod
-    def set_value(
-        cls, context: Context, entry_list: typing.Iterable[Entry]
-    ) -> None:
-        distributed_context = getattr(context, cls.KEY, {})
-        for entry in entry_list:
-            distributed_context[entry.key] = entry
-
-    @classmethod
-    def get_entries(
-        cls, context: typing.Optional[Context] = None
-    ) -> typing.Iterable[Entry]:
-        """Returns an immutable iterator to entries."""
-        return getattr(context, cls.KEY, {}).values()
-
-    @classmethod
-    def get_entry_value(
-        cls, key: EntryKey, context: typing.Optional[Context] = None,
-    ) -> typing.Optional[EntryValue]:
-        """Returns the entry associated with a key or None
-
-        Args:
-            key: the key with which to perform a lookup
-        """
-        container = getattr(context, cls.KEY, {})
-        if key in container:
-            return container[key].value
-        return None
-
 
 class CorrelationContextManager:
     @classmethod
@@ -130,7 +96,7 @@ class CorrelationContextManager:
     @classmethod
     def correlation(
         cls, key: str, context: typing.Optional[Context] = None
-    ) -> typing.Any:
+    ) -> "object":
         return Context.value(key, context=context)
 
     @classmethod
@@ -143,4 +109,4 @@ class CorrelationContextManager:
 
     @classmethod
     def http_propagator(cls) -> typing.Tuple[HTTPExtractor, HTTPInjector]:
-        return (CorrelationHTTPExtractor, CorrelationHTTPInjector)
+        return (CorrelationHTTPExtractor, CorrelationHTTPInjector)  # type: ignore

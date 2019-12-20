@@ -15,10 +15,13 @@
 import typing
 
 from opentelemetry.context import Context
-from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
-
-Setter = typing.Callable[[object, str, str], None]
-Getter = typing.Callable[[object, str], typing.List[str]]
+from opentelemetry.context.propagation import (
+    ContextT,
+    Getter,
+    HTTPExtractor,
+    HTTPInjector,
+    Setter,
+)
 
 
 class CorrelationHTTPExtractor(HTTPExtractor):
@@ -69,9 +72,9 @@ class CorrelationHTTPExtractor(HTTPExtractor):
     @classmethod
     def extract(
         cls,
-        carrier,
+        carrier: ContextT,
         context: typing.Optional[Context] = None,
-        get_from_carrier: typing.Optional[Getter] = None,
+        get_from_carrier: typing.Optional[Getter[ContextT]] = None,
     ) -> Context:
         """Create a CorrelationContext from values in the carrier.
 
@@ -99,9 +102,9 @@ class CorrelationHTTPInjector(HTTPInjector):
     @classmethod
     def inject(
         cls,
-        carrier,
+        carrier: ContextT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: typing.Optional[Setter] = None,
+        set_in_carrier: typing.Optional[Setter[ContextT]] = None,
     ) -> None:
         """Inject values from a CorrelationContext into a carrier.
 

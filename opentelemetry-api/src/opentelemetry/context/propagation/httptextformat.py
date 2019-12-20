@@ -17,10 +17,10 @@ import typing
 
 from opentelemetry.context import Context
 
-_T = typing.TypeVar("_T")
+ContextT = typing.TypeVar("ContextT")
 
-Setter = typing.Callable[[_T, str, str], None]
-Getter = typing.Callable[[_T, str], typing.List[str]]
+Setter = typing.Callable[[ContextT, str, str], None]
+Getter = typing.Callable[[ContextT, str], typing.List[str]]
 
 
 class HTTPExtractor(abc.ABC):
@@ -76,9 +76,9 @@ class HTTPExtractor(abc.ABC):
     @abc.abstractmethod
     def extract(
         cls,
-        carrier: _T,
+        carrier: ContextT,
         context: typing.Optional[Context] = None,
-        get_from_carrier: typing.Optional[Getter[_T]] = None,
+        get_from_carrier: typing.Optional[Getter[ContextT]] = None,
     ) -> Context:
         """Create a SpanContext from values in the carrier.
 
@@ -105,9 +105,9 @@ class HTTPInjector(abc.ABC):
     @abc.abstractmethod
     def inject(
         cls,
-        carrier: _T,
+        carrier: ContextT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: typing.Optional[Setter[_T]] = None,
+        set_in_carrier: typing.Optional[Setter[ContextT]] = None,
     ) -> None:
         """Inject values from a SpanContext into a carrier.
 
@@ -179,9 +179,9 @@ class DefaultHTTPExtractor(HTTPExtractor):
     @classmethod
     def extract(
         cls,
-        carrier: _T,
+        carrier: ContextT,
         context: typing.Optional[Context] = None,
-        get_from_carrier: typing.Optional[Getter[_T]] = None,
+        get_from_carrier: typing.Optional[Getter[ContextT]] = None,
     ) -> Context:
         """Create a SpanContext from values in the carrier.
 
@@ -210,9 +210,9 @@ class DefaultHTTPInjector(HTTPInjector):
     @classmethod
     def inject(
         cls,
-        carrier: _T,
+        carrier: ContextT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: typing.Optional[Setter[_T]] = None,
+        set_in_carrier: typing.Optional[Setter[ContextT]] = None,
     ) -> None:
         """Inject values from a SpanContext into a carrier.
 

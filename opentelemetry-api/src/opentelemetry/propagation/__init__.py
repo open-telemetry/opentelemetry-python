@@ -18,20 +18,21 @@ import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
 from opentelemetry.context.propagation import (
+    ContextT,
     DefaultHTTPExtractor,
     DefaultHTTPInjector,
+    Getter,
+    Setter,
 )
-
-_T = typing.TypeVar("_T")
 
 
 def extract(
-    carrier: _T,
+    carrier: ContextT,
     context: typing.Optional[Context] = None,
     extractors: typing.Optional[
         typing.List[httptextformat.HTTPExtractor]
     ] = None,
-    get_from_carrier: typing.Optional[typing.Callable] = None,
+    get_from_carrier: typing.Optional[Getter[ContextT]] = None,
 ) -> typing.Optional[Context]:
     """Load the parent SpanContext from values in the carrier.
 
@@ -67,7 +68,7 @@ def extract(
 
 
 def inject(
-    carrier: _T,
+    carrier: ContextT,
     injectors: typing.Optional[
         typing.List[httptextformat.HTTPInjector]
     ] = None,
@@ -109,19 +110,19 @@ def set_http_extractors(
     extractor_list: typing.List[httptextformat.HTTPExtractor],
 ) -> None:
     global _HTTP_TEXT_EXTRACTORS  # pylint:disable=global-statement
-    _HTTP_TEXT_EXTRACTORS = extractor_list
+    _HTTP_TEXT_EXTRACTORS = extractor_list  # type: ignore
 
 
 def set_http_injectors(
     injector_list: typing.List[httptextformat.HTTPInjector],
 ) -> None:
     global _HTTP_TEXT_INJECTORS  # pylint:disable=global-statement
-    _HTTP_TEXT_INJECTORS = injector_list
+    _HTTP_TEXT_INJECTORS = injector_list  # type: ignore
 
 
 def get_http_extractors() -> typing.List[httptextformat.HTTPExtractor]:
-    return _HTTP_TEXT_EXTRACTORS
+    return _HTTP_TEXT_EXTRACTORS  # type: ignore
 
 
 def get_http_injectors() -> typing.List[httptextformat.HTTPInjector]:
-    return _HTTP_TEXT_INJECTORS
+    return _HTTP_TEXT_INJECTORS  # type: ignore

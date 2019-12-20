@@ -195,7 +195,7 @@ class Context:
         if _CONTEXT.current_context is None:
             ctx = Context()
             cls.set_current(ctx)
-        return getattr(_CONTEXT, _CONTEXT.current_context.get())
+        return getattr(_CONTEXT, _CONTEXT.current_context.get())  # type: ignore
 
     @classmethod
     def snapshot(cls) -> "Context":
@@ -210,11 +210,11 @@ class Context:
                 # change the key here
                 "__current_prop_context__"
             )
-        _CONTEXT.current_context.set(ctx.slot_name)
+        _CONTEXT.current_context.set(ctx.slot_name)  # type: ignore
 
     @classmethod
     def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
-        return _CONTEXT.use(**kwargs)
+        return _CONTEXT.use(**kwargs)  # type: ignore
 
     @classmethod
     def register_slot(

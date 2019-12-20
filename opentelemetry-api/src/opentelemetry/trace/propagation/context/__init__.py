@@ -19,10 +19,10 @@ from opentelemetry.trace.propagation import ContextKeys
 
 
 def from_context(ctx: Optional[Context] = None) -> SpanContext:
-    span = span_from_context(ctx)
+    span = span_from_context(context=ctx)
     if span:
         return span.get_context()
-    return Context.value(ContextKeys.span_context_key(), context=ctx)
+    return Context.value(ContextKeys.span_context_key(), context=ctx)  # type: ignore
 
 
 def with_span_context(span_context: SpanContext) -> Context:
@@ -30,7 +30,7 @@ def with_span_context(span_context: SpanContext) -> Context:
 
 
 def span_from_context(context: Optional[Context] = None) -> Span:
-    return Context.value(ContextKeys.span_key(), context=context)
+    return Context.value(ContextKeys.span_key(), context=context)  # type: ignore
 
 
 def with_span(span: Span) -> Context:
