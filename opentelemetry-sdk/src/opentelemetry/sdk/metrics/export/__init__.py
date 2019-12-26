@@ -23,7 +23,6 @@ class MetricsExportResult(Enum):
 
 
 class MetricRecord:
-
     def __init__(self, aggregator, label_set, metric):
         self.aggregator = aggregator
         self.label_set = label_set
@@ -72,7 +71,10 @@ class ConsoleMetricsExporter(MetricsExporter):
         for record in metric_records:
             print(
                 '{}(data="{}", label_set="{}", value={})'.format(
-                    type(self).__name__, record.metric, record.label_set.labels, record.aggregator.check_point
+                    type(self).__name__,
+                    record.metric,
+                    record.label_set.labels,
+                    record.aggregator.check_point,
                 )
             )
         return MetricsExportResult.SUCCESS

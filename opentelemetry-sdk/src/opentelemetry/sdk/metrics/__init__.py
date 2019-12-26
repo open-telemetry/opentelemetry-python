@@ -46,12 +46,13 @@ class BaseHandle:
         aggregator: The aggregator for this handle. Will handle aggregation
             upon updates and checkpointing of values for exporting.
     """
+
     def __init__(
         self,
         value_type: Type[metrics_api.ValueT],
         enabled: bool,
         alternate: bool,
-        aggregator: Aggregator
+        aggregator: Aggregator,
     ):
         self.value_type = value_type
         self.enabled = enabled
@@ -75,7 +76,9 @@ class BaseHandle:
 
     def __repr__(self):
         return '{}(data="{}", last_update_timestamp={})'.format(
-            type(self).__name__, self.aggregator.current, self.last_update_timestamp
+            type(self).__name__,
+            self.aggregator.current,
+            self.last_update_timestamp,
         )
 
 
@@ -112,11 +115,12 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
 class Metric(metrics_api.Metric):
     """Base class for all metric types.
 
-    Also known as `metric instrument`. This is the class that is used to
+    Also known as metric instrument. This is the class that is used to
     represent a metric that is to be continuously recorded and tracked. Each
     metric has a set of handles that are created from the metric. See
     `BaseHandle` for information on handles.
     """
+
     HANDLE_TYPE = BaseHandle
 
     def __init__(
@@ -145,9 +149,11 @@ class Metric(metrics_api.Metric):
         handle = self.handles.get(label_set)
         if not handle:
             handle = self.HANDLE_TYPE(
-                self.value_type, self.enabled, self.alternate,
+                self.value_type,
+                self.enabled,
+                self.alternate,
                 # Aggregator will be created based off type of metric
-                self.meter.batcher.aggregator_for(self.__class__)
+                self.meter.batcher.aggregator_for(self.__class__),
             )
         self.handles[label_set] = handle
         return handle
@@ -255,7 +261,7 @@ class Measure(Metric, metrics_api.Measure):
         meter: "Meter",
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        alternate: bool = False
+        alternate: bool = False,
     ):
         super().__init__(
             name,
@@ -274,13 +280,12 @@ class Measure(Metric, metrics_api.Measure):
 
     UPDATE_FUNCTION = record
 
+
 class Record:
     """Container class used for processing in the `Batcher`"""
 
-    def __init__(self,
-                 metric: Metric,
-                 label_set: LabelSet,
-                 aggregator: Aggregator
+    def __init__(
+        self, metric: Metric, label_set: LabelSet, aggregator: Aggregator
     ):
         self.metric = metric
         self.label_set = label_set
@@ -297,6 +302,7 @@ class Meter(metrics_api.Meter):
     Args:
         batcher: The `Batcher` used for this meter.
     """
+
     def __init__(self, batcher: Batcher = UngroupedBatcher(True)):
         self.batcher = batcher
         # label_sets is a map of the labelset's encoded value to the label set

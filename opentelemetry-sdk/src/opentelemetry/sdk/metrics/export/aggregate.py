@@ -15,6 +15,7 @@
 import abc
 import threading
 
+
 class Aggregator(abc.ABC):
     """Base class for aggregators.
 
@@ -39,8 +40,9 @@ class Aggregator(abc.ABC):
     def merge(self, other):
         """Combines two aggregator values."""
 
+
 class CounterAggregator(Aggregator):
-    """Aggregator for `Counter` metrics."""
+    """Aggregator for Counter metrics."""
 
     def __init__(self):
         super().__init__()

@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import unittest
 from unittest import mock
 
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics \
-    .export import ConsoleMetricsExporter, MetricRecord
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricsExporter,
+    MetricRecord,
+)
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.metrics.export.controller import PushController
 
 
 class TestConsoleMetricsExporter(unittest.TestCase):
@@ -40,7 +44,10 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         aggregator = CounterAggregator()
         record = MetricRecord(aggregator, label_set, metric)
         result = '{}(data="{}", label_set="{}", value={})'.format(
-            ConsoleMetricsExporter.__name__, metric, label_set.labels, aggregator.check_point
+            ConsoleMetricsExporter.__name__,
+            metric,
+            label_set.labels,
+            aggregator.check_point,
         )
         with mock.patch("sys.stdout") as mock_stdout:
             exporter.export([record])
@@ -50,8 +57,12 @@ class TestConsoleMetricsExporter(unittest.TestCase):
 class TestBatcher(unittest.TestCase):
     def test_aggregator_for_counter(self):
         batcher = UngroupedBatcher(True)
-        self.assertTrue(isinstance(batcher.aggregator_for(metrics.Counter),
-                                   CounterAggregator))
+        self.assertTrue(
+            isinstance(
+                batcher.aggregator_for(metrics.Counter), CounterAggregator
+            )
+        )
+
     # TODO: Add other aggregator tests
 
     def test_check_point_set(self):
@@ -146,7 +157,9 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher.batch_map), 1)
         self.assertIsNotNone(batcher.batch_map.get((metric, "")))
         self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
-        self.assertEqual(batcher.batch_map.get((metric, ""))[0].check_point, 1.0)
+        self.assertEqual(
+            batcher.batch_map.get((metric, ""))[0].check_point, 1.0
+        )
         self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
 
     def test_ungrouped_batcher_process_not_exists(self):
@@ -170,7 +183,9 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher.batch_map), 1)
         self.assertIsNotNone(batcher.batch_map.get((metric, "")))
         self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
-        self.assertEqual(batcher.batch_map.get((metric, ""))[0].check_point, 1.0)
+        self.assertEqual(
+            batcher.batch_map.get((metric, ""))[0].check_point, 1.0
+        )
         self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
 
     def test_ungrouped_batcher_process_not_stateful(self):
@@ -194,8 +209,11 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher.batch_map), 1)
         self.assertIsNotNone(batcher.batch_map.get((metric, "")))
         self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
-        self.assertEqual(batcher.batch_map.get((metric, ""))[0].check_point, 1.0)
+        self.assertEqual(
+            batcher.batch_map.get((metric, ""))[0].check_point, 1.0
+        )
         self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
+
 
 class TestAggregator(unittest.TestCase):
     # TODO: test other aggregators once implemented
@@ -219,3 +237,14 @@ class TestAggregator(unittest.TestCase):
         counter2.check_point = 3.0
         counter.merge(counter2)
         self.assertEqual(counter.check_point, 4.0)
+
+
+class TestController(unittest.TestCase):
+    def test_push_controller(self):
+        meter = mock.Mock()
+        exporter = mock.Mock()
+        controller = PushController(meter, exporter, 5.0)
+        meter.collect.assert_not_called()
+        exporter.export.assert_not_called()
+
+        controller.cancel()

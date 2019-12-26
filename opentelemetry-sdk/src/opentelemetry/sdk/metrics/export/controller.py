@@ -14,6 +14,7 @@
 
 import threading
 
+
 class PushController(threading.Thread):
     """A push based controller, used for exporting.
 
@@ -28,7 +29,7 @@ class PushController(threading.Thread):
         self.interval = interval
         self.finished = threading.Event()
         self.start()
-        
+
     def run(self):
         while not self.finished.wait(self.interval):
             self.tick()

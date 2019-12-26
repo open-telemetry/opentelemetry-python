@@ -17,8 +17,10 @@ import abc
 from typing import Sequence, Type
 from opentelemetry.metrics import Counter, MetricT
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics \
-        .export.aggregate import Aggregator, CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    Aggregator,
+    CounterAggregator,
+)
 
 
 class Batcher(abc.ABC):
@@ -28,6 +30,7 @@ class Batcher(abc.ABC):
     received from updates from metrics in the meter. The stored values will be
     sent to an exporter for exporting.
     """
+
     def __init__(self, keep_state: bool):
         self.batch_map = {}
         # keep_state=True indicates the batcher computes checkpoints from over
@@ -48,9 +51,9 @@ class Batcher(abc.ABC):
             return CounterAggregator()
 
     def check_point_set(self) -> Sequence[MetricRecord]:
-        """Returns a list of `MetricRecord` s used for exporting.
+        """Returns a list of MetricRecords used for exporting.
 
-        The list of `MetricRecord` s is a snapshot created from the current
+        The list of MetricRecords is a snapshot created from the current
         data in all of the aggregators in this batcher.
         """
         metric_records = []
