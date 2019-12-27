@@ -368,7 +368,11 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value1")
             root.set_attribute("attr-key", "attr-value2")
 
-            self.assertEqual(len(root.attributes), 7)
+            root.set_attribute("empty-list", [])
+            root.set_attribute("list-of-bools", [True, True, False])
+            root.set_attribute("list-of-numerics", [123, 3.14, 0])
+
+            self.assertEqual(len(root.attributes), 10)
             self.assertEqual(root.attributes["component"], "http")
             self.assertEqual(root.attributes["http.method"], "GET")
             self.assertEqual(
@@ -379,6 +383,9 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["http.status_text"], "OK")
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
+            self.assertEqual(root.attributes["empty-list"], [])
+            self.assertEqual(root.attributes["list-of-bools"], [True, True, False])
+            self.assertEqual(root.attributes["list-of-numerics"], [123, 3.14, 0])
 
         attributes = {
             "attr-key": "val",
@@ -392,6 +399,18 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-key"], "val")
             self.assertEqual(root.attributes["attr-key2"], "val2")
             self.assertEqual(root.attributes["attr-in-both"], "span-attr")
+
+    def test_invalid_attribute_values(self):
+        class NonPrimitive:
+            pass
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.set_attribute("non-primitive-data-type", NonPrimitive())
+            root.set_attribute("list-of-mixed-data-types-numeric-first", [123, False, "string"])
+            root.set_attribute("list-of-mixed-data-types-non-numeric-first", [False, 123, "string"])
+            root.set_attribute("list-with-non-primitive-data-type", [NonPrimitive(), 123])
+
+            self.assertEqual(len(root.attributes), 0)
 
     def test_sampling_attributes(self):
         decision_attributes = {
