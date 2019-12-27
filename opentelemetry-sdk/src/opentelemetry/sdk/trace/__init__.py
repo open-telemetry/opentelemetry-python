@@ -208,7 +208,10 @@ class Span(trace_api.Span):
         if has_ended:
             logger.warning("Setting attribute on ended span.")
             return
-
+        
+        if not isinstance(value, (int, float, bool, str, list)):
+            logger.warning("Invalid data type for attribute value")
+            return
         # If value is of type list, validate all items are of same,
         # valid data type
         if isinstance(value, list) and len(value) > 0:
@@ -226,9 +229,6 @@ class Span(trace_api.Span):
             else:
                 logger.warning("Invalid data type in value array")
                 return
-        elif not isinstance(value, (int, float, bool, str, list)):
-            logger.warning("Invalid data type for attribute value")
-            return
         self.attributes[key] = value
 
     def add_event(
