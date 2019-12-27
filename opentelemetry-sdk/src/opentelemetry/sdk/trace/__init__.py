@@ -208,6 +208,27 @@ class Span(trace_api.Span):
         if has_ended:
             logger.warning("Setting attribute on ended span.")
             return
+
+        # If value is of type list, validate all items are of same,
+        # valid data type
+        if isinstance(value, list) and len(value) > 0:
+            first_element_data_type = type(value[0])
+            # If first value is numeric, validate all values are numeric
+            if first_element_data_type in (int, float):
+                if any(not isinstance(item, (int, float)) for item in value):
+                    logger.warning("All data types of attribute value arrays must be identical")
+                    return
+            # Else, validate all values are of same type
+            elif first_element_data_type in (bool, str):
+                if any(not isinstance(item, first_element_data_type) for item in value):
+                    logger.warning("All data types of attribute value arrays must be identical")
+                    return
+            else:
+                logger.warning("Invalid data type in value array")
+                return
+        elif not isinstance(value, (int, float, bool, str, list)):
+            logger.warning("Invalid data type for attribute value")
+            return
         self.attributes[key] = value
 
     def add_event(
