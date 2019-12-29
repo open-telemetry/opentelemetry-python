@@ -20,7 +20,7 @@ import threading
 from contextlib import contextmanager
 from numbers import Number
 from types import TracebackType
-from typing import Iterator, Optional, Sequence, Tuple, Type
+from typing import Iterator, Optional, Sequence, Tuple, Type, Union
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -222,7 +222,7 @@ class Span(trace_api.Span):
         self.attributes[key] = value
 
     @staticmethod
-    def _check_sequence(sequence: (list, tuple)) -> (str, None):
+    def _check_sequence(sequence: (list, tuple)) -> Union[str, None]:
         """
         Checks if sequence items are valid and identical
         """
