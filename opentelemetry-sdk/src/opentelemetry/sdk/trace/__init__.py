@@ -18,6 +18,7 @@ import logging
 import random
 import threading
 from contextlib import contextmanager
+from numbers import Number
 from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
 
@@ -208,28 +209,37 @@ class Span(trace_api.Span):
         if has_ended:
             logger.warning("Setting attribute on ended span.")
             return
-        
-        if not isinstance(value, (int, float, bool, str, list)):
-            logger.warning("Invalid data type for attribute value")
+
+        if not isinstance(value, (int, float, bool, str, list, tuple)):
+            logger.warning("invalid type for attribute value")
             return
-        # If value is of type list, validate all items are of same,
-        # valid data type
-        if isinstance(value, list) and len(value) > 0:
-            first_element_data_type = type(value[0])
-            # If first value is numeric, validate all values are numeric
-            if first_element_data_type in (int, float):
-                if any(not isinstance(item, (int, float)) for item in value):
-                    logger.warning("All data types of attribute value arrays must be identical")
-                    return
-            # Else, validate all values are of same type
-            elif first_element_data_type in (bool, str):
-                if any(not isinstance(item, first_element_data_type) for item in value):
-                    logger.warning("All data types of attribute value arrays must be identical")
-                    return
-            else:
-                logger.warning("Invalid data type in value array")
+        if isinstance(value, (list, tuple)) and len(value) > 0:
+            return_code = self._check_sequence(value)
+            if return_code:
+                logger.warning("%s in attribute value sequence", return_code)
                 return
+
         self.attributes[key] = value
+
+    @staticmethod
+    def _check_sequence(sequence: (list, tuple)) -> (str, None):
+        """
+        Checks if sequence items are valid and identical
+        """
+        first_element_type = type(sequence[0])
+
+        if issubclass(type(sequence[0]), Number):
+            first_element_type = Number
+
+        for element in sequence:
+
+            if not isinstance(element, (bool, str, Number)):
+                return "invalid type"
+
+            if not isinstance(element, first_element_type):
+                return "different type"
+
+        return None
 
     def add_event(
         self,
