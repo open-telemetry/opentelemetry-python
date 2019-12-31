@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import unittest
 from unittest import mock
 
@@ -246,5 +245,5 @@ class TestController(unittest.TestCase):
         controller = PushController(meter, exporter, 5.0)
         meter.collect.assert_not_called()
         exporter.export.assert_not_called()
-
         controller.cancel()
+        self.assertTrue(controller.finished.isSet())

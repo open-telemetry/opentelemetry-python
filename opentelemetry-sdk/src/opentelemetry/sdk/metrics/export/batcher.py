@@ -44,11 +44,11 @@ class Batcher(abc.ABC):
 
         Aggregators keep track of and updates values when metrics get updated.
         """
+        # pylint:disable=R0201
         if metric_type == Counter:
             return CounterAggregator()
-        else:
-            # TODO: Add other aggregators
-            return CounterAggregator()
+        # TODO: Add other aggregators
+        return CounterAggregator()
 
     def check_point_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
@@ -70,7 +70,7 @@ class Batcher(abc.ABC):
             self.batch_map = {}
 
     @abc.abstractmethod
-    def process(self) -> None:
+    def process(self, record) -> None:
         """Stores record information to be ready for exporting.
 
         Depending on type of batcher, performs pre-export logic, such as
