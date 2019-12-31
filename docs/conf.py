@@ -77,7 +77,6 @@ nitpick_ignore = [
     ("py:class", "ValueT"),
     ("py:class", "MetricT"),
     ("py:class", "typing.Tuple"),
-    ("py:class", "Record"),
     ("py:class", "pymongo.monitoring.CommandListener"),
 ]
 

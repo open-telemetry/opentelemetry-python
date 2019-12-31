@@ -31,7 +31,7 @@ counter = meter.create_metric(
     "bytes",
     int,
     Counter,
-    ("environment",)
+    ("environment",),
 )
 
 label_set = meter.get_label_set({"environment": "staging"})
