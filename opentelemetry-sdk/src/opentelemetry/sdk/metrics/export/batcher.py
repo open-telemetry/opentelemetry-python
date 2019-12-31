@@ -13,10 +13,9 @@
 # limitations under the License.
 
 import abc
-
 from typing import Sequence, Type
+
 from opentelemetry.metrics import Counter, MetricT
-from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
     Aggregator,
@@ -71,7 +70,7 @@ class Batcher(abc.ABC):
             self.batch_map = {}
 
     @abc.abstractmethod
-    def process(self, record: "metrics.Record") -> None:
+    def process(self) -> None:
         """Stores record information to be ready for exporting.
 
         Depending on type of batcher, performs pre-export logic, such as
@@ -82,7 +81,7 @@ class Batcher(abc.ABC):
 class UngroupedBatcher(Batcher):
     """Accepts all records and passes them for exporting"""
 
-    def process(self, record: "metrics.Record"):
+    def process(self, record):
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.checkpoint()
         batch_key = (record.metric, record.label_set.encoded)
