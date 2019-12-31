@@ -298,7 +298,7 @@ EMPTY_LABEL_SET = LabelSet()
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`.
-    
+
     Args:
         batcher: The `Batcher` used for this meter.
     """
@@ -311,7 +311,7 @@ class Meter(metrics_api.Meter):
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
-        
+
         Utilizes the batcher to create checkpoints of the current values in
         each aggregator belonging to the metrics that were created with this
         meter instance.
