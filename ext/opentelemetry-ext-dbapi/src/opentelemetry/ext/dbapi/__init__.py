@@ -202,7 +202,7 @@ class TracedCursor(wrapt.ObjectProxy):
                 span.set_attribute("db.user", user)
             host = self._db_api_integration.connection_props.get("host")
             if host is not None:
-                span.set_attribute("net.peer.hostname", host)
+                span.set_attribute("net.peer.name", host)
             port = self._db_api_integration.connection_props.get("port")
             if port is not None:
                 span.set_attribute("net.peer.port", port)

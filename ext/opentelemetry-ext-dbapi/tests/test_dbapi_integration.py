@@ -21,7 +21,7 @@ from opentelemetry.ext.dbapi import DatabaseApiIntegration
 
 class TestDBApiIntegration(unittest.TestCase):
     def setUp(self):
-        self.tracer = trace_api.tracer()
+        self.tracer = trace_api.Tracer()
         self.span = MockSpan()
         self.start_current_span_patcher = mock.patch.object(
             self.tracer,
@@ -75,7 +75,7 @@ class TestDBApiIntegration(unittest.TestCase):
             "('param1Value', False)",
         )
         self.assertEqual(self.span.attributes["db.user"], "testuser")
-        self.assertEqual(self.span.attributes["net.peer.hostname"], "testhost")
+        self.assertEqual(self.span.attributes["net.peer.name"], "testhost")
         self.assertEqual(self.span.attributes["net.peer.port"], 123)
         self.assertIs(
             self.span.status.canonical_code,
