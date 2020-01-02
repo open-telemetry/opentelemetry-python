@@ -54,7 +54,7 @@ class TestPymongoIntegration(unittest.TestCase):
         self.assertEqual(span.attributes["db.type"], "mongodb")
         self.assertEqual(span.attributes["db.instance"], "database_name")
         self.assertEqual(span.attributes["db.statement"], "command_name find")
-        self.assertEqual(span.attributes["net.peer.hostname"], "test.com")
+        self.assertEqual(span.attributes["net.peer.name"], "test.com")
         self.assertEqual(span.attributes["net.peer.port"], "1234")
         self.assertEqual(
             span.attributes["db.mongo.operation_id"], "operation_id"

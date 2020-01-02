@@ -57,7 +57,7 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute("db.instance", event.database_name)
             span.set_attribute("db.statement", statement)
             if event.connection_id is not None:
-                span.set_attribute("net.peer.hostname", event.connection_id[0])
+                span.set_attribute("net.peer.name", event.connection_id[0])
                 span.set_attribute("net.peer.port", event.connection_id[1])
 
             # pymongo specific, not specified by spec
