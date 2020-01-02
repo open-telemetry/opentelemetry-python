@@ -75,8 +75,8 @@ class TestDBApiIntegration(unittest.TestCase):
             "('param1Value', False)",
         )
         self.assertEqual(self.span.attributes["db.user"], "testuser")
-        self.assertEqual(self.span.attributes["peer.hostname"], "testhost")
-        self.assertEqual(self.span.attributes["peer.port"], 123)
+        self.assertEqual(self.span.attributes["net.peer.hostname"], "testhost")
+        self.assertEqual(self.span.attributes["net.peer.port"], 123)
         self.assertIs(
             self.span.status.canonical_code,
             trace_api.status.StatusCanonicalCode.OK,

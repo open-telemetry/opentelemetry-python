@@ -10,7 +10,6 @@ Usage
 
 .. code:: python
 
-    import wrapt
     import mysql.connector
     from opentelemetry.trace import tracer
     from opentelemetry.ext.dbapi import trace_integration

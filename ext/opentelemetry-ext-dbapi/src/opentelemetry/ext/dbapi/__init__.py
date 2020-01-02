@@ -26,6 +26,8 @@ import wrapt
 from opentelemetry.trace import SpanKind, Tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
+logger = logging.getLogger(__name__)
+
 
 def trace_integration(
     tracer: Tracer,
@@ -36,8 +38,16 @@ def trace_integration(
     connection_attributes: typing.Dict = None,
 ):
     """Integrate with DB API library.
-       https://www.python.org/dev/peps/pep-0249/
+        https://www.python.org/dev/peps/pep-0249/
+        Args:
+            tracer: The :class:`Tracer` to use.
+            connect_module: Module name where connect method is available.
+            connect_method_name: The connect method name.
+            database_component: Database driver name or database name "JDBI", "jdbc", "odbc", "postgreSQL".
+            database_type: The Database type. For any SQL database, "sql".
+            connection_attributes: Attribute names for database, port, host and user in Connection object.
     """
+
     # pylint: disable=unused-argument
     def wrap_connect(
         wrapped: typing.Callable[..., any],
@@ -58,7 +68,7 @@ def trace_integration(
             connect_module, connect_method_name, wrap_connect
         )
     except Exception as ex:  # pylint: disable=broad-except
-        logging.warning("Failed to integrate with DB API. %s", str(ex))
+        logger.warning("Failed to integrate with DB API. %s", str(ex))
 
 
 class DatabaseApiIntegration:
@@ -84,6 +94,8 @@ class DatabaseApiIntegration:
         self.database_component = database_component
         self.database_type = database_type
         self.connection_props = {}
+        self.name = ""
+        self.database = ""
 
     def wrapped_connection(
         self,
@@ -99,7 +111,6 @@ class DatabaseApiIntegration:
             attribute = getattr(connection, value, None)
             if attribute:
                 self.connection_props[key] = attribute
-
         traced_connection = TracedConnection(connection, self)
         return traced_connection
 
@@ -117,6 +128,17 @@ class TracedConnection(wrapt.ObjectProxy):
     ):
         wrapt.ObjectProxy.__init__(self, connection)
         self._db_api_integration = db_api_integration
+
+        self._db_api_integration.name = (
+            self._db_api_integration.database_component
+        )
+        self._db_api_integration.database = self._db_api_integration.connection_props.get(
+            "database", ""
+        )
+        if self._db_api_integration.database:
+            self._db_api_integration.name += (
+                "." + self._db_api_integration.database
+            )
 
     def cursor(self, *args, **kwargs):
         return TracedCursor(
@@ -161,15 +183,8 @@ class TracedCursor(wrapt.ObjectProxy):
     ):
 
         statement = args[0] if args else ""
-        name = self._db_api_integration.database_component
-        database = self._db_api_integration.connection_props.get(
-            "database", ""
-        )
-        if database:
-            name += "." + database
-
         with self._db_api_integration.tracer.start_as_current_span(
-            name, kind=SpanKind.CLIENT
+            self._db_api_integration.name, kind=SpanKind.CLIENT
         ) as span:
             span.set_attribute(
                 "component", self._db_api_integration.database_component
@@ -177,7 +192,9 @@ class TracedCursor(wrapt.ObjectProxy):
             span.set_attribute(
                 "db.type", self._db_api_integration.database_type
             )
-            span.set_attribute("db.instance", database)
+            span.set_attribute(
+                "db.instance", self._db_api_integration.database
+            )
             span.set_attribute("db.statement", statement)
 
             user = self._db_api_integration.connection_props.get("user")
@@ -185,10 +202,10 @@ class TracedCursor(wrapt.ObjectProxy):
                 span.set_attribute("db.user", user)
             host = self._db_api_integration.connection_props.get("host")
             if host is not None:
-                span.set_attribute("peer.hostname", host)
+                span.set_attribute("net.peer.hostname", host)
             port = self._db_api_integration.connection_props.get("port")
             if port is not None:
-                span.set_attribute("peer.port", port)
+                span.set_attribute("net.peer.port", port)
 
             if len(args) > 1:
                 span.set_attribute("db.statement.parameters", str(args[1]))
