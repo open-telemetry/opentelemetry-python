@@ -52,15 +52,15 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 ```python
 from opentelemetry import trace
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
-trace.set_preferred_tracer_implementation(lambda T: Tracer())
-tracer = trace.tracer()
-tracer.add_span_processor(
+trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+trace.tracer_source().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
+tracer = trace.tracer_source().get_tracer(__name__)
 with tracer.start_as_current_span('foo'):
     with tracer.start_as_current_span('bar'):
         with tracer.start_as_current_span('baz'):
@@ -120,7 +120,6 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
 - [Christian Neumüller](https://github.com/Oberon00), Dynatrace
 - [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
 
 *Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
 
@@ -128,6 +127,7 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Reiley Yang](https://github.com/reyang), Microsoft
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
 
 *Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 
@@ -178,11 +178,11 @@ Future releases targets include:
 
 | Component                           | Version    | Target Date      |
 | ----------------------------------- | ---------- | ---------------- |
-| Zipkin Trace Exporter               | Alpha v0.4 | December 31 2019 |
-| W3C Correlation Context Propagation | Alpha v0.4 | December 31 2019 |
-| Support for Tags/Baggage            | Alpha v0.4 | December 31 2019 |
-| Metrics Aggregation                 | Alpha v0.4 | December 31 2019 |
-| gRPC Integrations                   | Alpha v0.4 | December 31 2019 |
-| Prometheus Metrics Exporter         | Alpha v0.4 | December 31 2019 |
-| OpenCensus Bridge                   | Alpha v0.4 | December 31 2019 |
-| Metrics SDK (Complete)              | Alpha v0.4 | December 31 2019 |
+| Zipkin Trace Exporter               | Alpha v0.4 | January 28 2020  |
+| W3C Correlation Context Propagation | Alpha v0.4 | January 28 2020  |
+| Support for Tags/Baggage            | Alpha v0.4 | January 28 2020  |
+| Metrics Aggregation                 | Alpha v0.4 | January 28 2020  |
+| gRPC Integrations                   | Alpha v0.4 | January 28 2020  |
+| Prometheus Metrics Exporter         | Alpha v0.4 | January 28 2020  |
+| OpenCensus Bridge                   | Alpha v0.4 | January 28 2020  |
+| Metrics SDK (Complete)              | Alpha v0.4 | January 28 2020  |
