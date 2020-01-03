@@ -1,4 +1,4 @@
-OpenTelemetry PostgreSQL integration
+OpenTelemetry Psycopg integration
 =================================
 
 The integration with PostgreSQL supports the `Psycopg`_ library and is specified

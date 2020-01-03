@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,21 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-import unittest
-from unittest import mock
+import setuptools
 
-from opentelemetry import trace as trace_api
+BASE_DIR = os.path.dirname(__file__)
+VERSION_FILENAME = os.path.join(
+    BASE_DIR, "src", "opentelemetry", "ext", "psycopg2", "version.py"
+)
+PACKAGE_INFO = {}
+with open(VERSION_FILENAME) as f:
+    exec(f.read(), PACKAGE_INFO)
 
-
-class TestPostgresqlIntegration(unittest.TestCase):
-    def setUp(self):
-        self.tracer = trace_api.tracer()
-        self.start_current_span_patcher = mock.patch.object(
-            self.tracer, "start_as_current_span", autospec=True, spec_set=True
-        )
-
-        self.start_as_current_span = self.start_current_span_patcher.start()
-
-    def tearDown(self):
-        self.start_current_span_patcher.stop()
+setuptools.setup(version=PACKAGE_INFO["__version__"])
