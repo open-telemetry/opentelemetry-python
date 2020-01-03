@@ -214,32 +214,29 @@ class Span(trace_api.Span):
             logger.warning("invalid type for attribute value")
             return
         if isinstance(value, (list, tuple)) and len(value) > 0:
-            return_code = self._check_sequence(value)
-            if return_code is not None:
-                logger.warning("%s in attribute value sequence", return_code)
+            error_message = self._check_attribute_value_sequence(value)
+            if error_message is not None:
+                logger.warning("%s in attribute value sequence", error_message)
                 return
 
         self.attributes[key] = value
 
     @staticmethod
-    def _check_sequence(sequence: (list, tuple)) -> Optional[str]:
+    def _check_attribute_value_sequence(sequence: (list, tuple)) -> Optional[str]:
         """
         Checks if sequence items are valid and identical
         """
         first_element_type = type(sequence[0])
 
-        if issubclass(type(sequence[0]), Number):
+        if issubclass(first_element_type, Number):
             first_element_type = Number
 
+        if first_element_type not in (bool, str, Number):
+            return "invalid type"
+
         for element in sequence:
-
-            if not isinstance(element, (bool, str, Number)):
-                return "invalid type"
-
             if not isinstance(element, first_element_type):
                 return "different type"
-
-        return None
 
     def add_event(
         self,
