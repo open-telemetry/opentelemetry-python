@@ -94,6 +94,7 @@ class DatabaseApiIntegration:
         self.database_component = database_component
         self.database_type = database_type
         self.connection_props = {}
+        self.span_attributes = {}
         self.name = ""
         self.database = ""
 
@@ -139,6 +140,15 @@ class TracedConnection(wrapt.ObjectProxy):
             self._db_api_integration.name += (
                 "." + self._db_api_integration.database
             )
+        user = self._db_api_integration.connection_props.get("user")
+        if user is not None:
+            self._db_api_integration.span_attributes["db.user"] = user
+        host = self._db_api_integration.connection_props.get("host")
+        if host is not None:
+            self._db_api_integration.span_attributes["net.peer.name"] = host
+        port = self._db_api_integration.connection_props.get("port")
+        if port is not None:
+            self._db_api_integration.span_attributes["net.peer.port"] = port
 
     def cursor(self, *args, **kwargs):
         return TracedCursor(
@@ -197,15 +207,11 @@ class TracedCursor(wrapt.ObjectProxy):
             )
             span.set_attribute("db.statement", statement)
 
-            user = self._db_api_integration.connection_props.get("user")
-            if user is not None:
-                span.set_attribute("db.user", user)
-            host = self._db_api_integration.connection_props.get("host")
-            if host is not None:
-                span.set_attribute("net.peer.name", host)
-            port = self._db_api_integration.connection_props.get("port")
-            if port is not None:
-                span.set_attribute("net.peer.port", port)
+            for (
+                attribute_key,
+                attribute_value,
+            ) in self._db_api_integration.span_attributes.items():
+                span.set_attribute(attribute_key, attribute_value)
 
             if len(args) > 1:
                 span.set_attribute("db.statement.parameters", str(args[1]))
