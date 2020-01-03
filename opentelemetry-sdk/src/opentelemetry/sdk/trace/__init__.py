@@ -224,7 +224,7 @@ class Span(trace_api.Span):
     @staticmethod
     def _check_sequence(sequence: (list, tuple)) -> Optional[str]:
         """
-        Checks if sequence items are valid and identical
+        Checks if sequence items are valid and are of the same type
         """
         first_element_type = type(sequence[0])
 
