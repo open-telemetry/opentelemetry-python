@@ -25,6 +25,10 @@ This module provides abstract (i.e. unimplemented) classes required for
 tracing, and a concrete no-op :class:`.DefaultSpan` that allows applications
 to use the API package alone without a supporting implementation.
 
+To get a tracer, you need to provide the package name from which you are
+calling the tracer APIs to OpenTelemetry by calling `TracerSource.get_tracer`
+with the calling module name and the version of your package.
+
 The tracer supports creating spans that are "attached" or "detached" from the
 context. New spans are "attached" to the context in that they are
 created as children of the currently active span, and the newly-created span
@@ -32,8 +36,10 @@ can optionally become the new active span::
 
     from opentelemetry import trace
 
+    tracer = trace.tracer_source().get_tracer(__name__)
+
     # Create a new root span, set it as the current span in context
-    with trace.tracer().start_as_current_span("parent"):
+    with tracer.start_as_current_span("parent"):
         # Attach a new child and update the current span
         with tracer.start_as_current_span("child"):
             do_work():
@@ -43,20 +49,21 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    from opentelemetry import trace
-
     # Explicit parent span assignment
-    child = trace.tracer().start_span("child", parent=parent)
+    child = tracer.start_span("child", parent=parent)
 
     try:
         do_work(span=child)
     finally:
         child.end()
 
-Applications should generally use a single global tracer, and use either
+Applications should generally use a single global tracer source, and use either
 implicit or explicit context propagation consistently throughout.
 
 .. versionadded:: 0.1.0
+.. versionchanged:: 0.3.0
+    `TracerSource` was introduced and the global ``tracer`` getter was replaced
+    by `tracer_source`.
 """
 
 import enum
@@ -122,10 +129,12 @@ class SpanKind(enum.Enum):
     https://github.com/open-telemetry/opentelemetry-specification/pull/226.
     """
 
-    #: Default value. Indicates that the span is used internally in the application.
+    #: Default value. Indicates that the span is used internally in the
+    # application.
     INTERNAL = 0
 
-    #: Indicates that the span describes an operation that handles a remote request.
+    #: Indicates that the span describes an operation that handles a remote
+    # request.
     SERVER = 1
 
     #: Indicates that the span describes a request to some remote service.
@@ -228,6 +237,7 @@ class Span:
         exc_tb: typing.Optional[python_types.TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
+
         self.end()
 
 
@@ -364,6 +374,37 @@ INVALID_SPAN_CONTEXT = SpanContext(
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
+class TracerSource:
+    # pylint:disable=no-self-use,unused-argument
+    def get_tracer(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "Tracer":
+        """Returns a `Tracer` for use by the given instrumentation library.
+
+        For any two calls it is undefined whether the same or different
+        `Tracer` instances are returned, even for different library names.
+
+        This function may return different `Tracer` types (e.g. a no-op tracer
+        vs.  a functional tracer).
+
+        Args:
+            instrumenting_module_name: The name of the instrumenting module
+                (usually just ``__name__``).
+
+                This should *not* be the name of the module that is
+                instrumented but the name of the module doing the instrumentation.
+                E.g., instead of ``"requests"``, use
+                ``"opentelemetry.ext.http_requests"``.
+
+            instrumenting_library_version: Optional. The version string of the
+                instrumenting library.  Usually this should be the same as
+                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+        """
+        return Tracer()
+
+
 class Tracer:
     """Handles span creation and in-process context propagation.
 
@@ -396,6 +437,7 @@ class Tracer:
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
+        set_status_on_exception: bool = True,
     ) -> "Span":
         """Starts a span.
 
@@ -427,6 +469,11 @@ class Tracer:
             attributes: The span's attributes.
             links: Links span to other spans
             start_time: Sets the start time of a span
+            set_status_on_exception: Only relevant if the returned span is used
+                in a with/context manager. Defines wether the span status will
+                be automatically set to UNKNOWN when an uncaught exception is
+                raised in the span with block. The span status won't be set by
+                this mechanism if it was previousy set manually.
 
         Returns:
             The newly-created span.
@@ -513,43 +560,46 @@ class Tracer:
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
 ImplementationFactory = typing.Callable[
-    [typing.Type[Tracer]], typing.Optional[Tracer]
+    [typing.Type[TracerSource]], typing.Optional[TracerSource]
 ]
 
-_TRACER = None  # type: typing.Optional[Tracer]
-_TRACER_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+_TRACER_SOURCE = None  # type: typing.Optional[TracerSource]
+_TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
-def tracer() -> Tracer:
-    """Gets the current global :class:`~.Tracer` object.
+def tracer_source() -> TracerSource:
+    """Gets the current global :class:`~.TracerSource` object.
 
     If there isn't one set yet, a default will be loaded.
     """
-    global _TRACER, _TRACER_FACTORY  # pylint:disable=global-statement
+    global _TRACER_SOURCE, _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
 
-    if _TRACER is None:
+    if _TRACER_SOURCE is None:
         # pylint:disable=protected-access
-        _TRACER = loader._load_impl(Tracer, _TRACER_FACTORY)
-        del _TRACER_FACTORY
+        _TRACER_SOURCE = loader._load_impl(
+            TracerSource, _TRACER_SOURCE_FACTORY
+        )
+        del _TRACER_SOURCE_FACTORY
 
-    return _TRACER
+    return _TRACER_SOURCE
 
 
-def set_preferred_tracer_implementation(
+def set_preferred_tracer_source_implementation(
     factory: ImplementationFactory,
 ) -> None:
-    """Set the factory to be used to create the tracer.
+    """Set the factory to be used to create the tracer source.
 
     See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 
     Args:
-        factory: Callback that should create a new :class:`Tracer` instance.
+        factory: Callback that should create a new :class:`TracerSource`
+            instance.
     """
-    global _TRACER_FACTORY  # pylint:disable=global-statement
+    global _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
 
-    if _TRACER:
-        raise RuntimeError("Tracer already loaded.")
+    if _TRACER_SOURCE:
+        raise RuntimeError("TracerSource already loaded.")
 
-    _TRACER_FACTORY = factory
+    _TRACER_SOURCE_FACTORY = factory

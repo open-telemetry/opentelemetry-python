@@ -17,13 +17,14 @@ This module serves as an example to integrate with flask, using
 the requests library to perform downstream requests
 """
 import flask
+import pkg_resources
 import requests
 
 import opentelemetry.ext.http_requests
 from opentelemetry import propagators, trace
 from opentelemetry.ext.flask import instrument_app
 from opentelemetry.sdk.context.propagation.b3_format import B3Format
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerSource
 
 
 def configure_opentelemetry(flask_app: flask.Flask):
@@ -45,7 +46,7 @@ def configure_opentelemetry(flask_app: flask.Flask):
     # the preferred implementation of these objects must be set,
     # as the opentelemetry-api defines the interface with a no-op
     # implementation.
-    trace.set_preferred_tracer_implementation(lambda _: Tracer())
+    trace.set_preferred_tracer_source_implementation(lambda _: TracerSource())
     # Next, we need to configure how the values that are used by
     # traces and metrics are propagated (such as what specific headers
     # carry this value).
@@ -56,7 +57,7 @@ def configure_opentelemetry(flask_app: flask.Flask):
     # Integrations are the glue that binds the OpenTelemetry API
     # and the frameworks and libraries that are used together, automatically
     # creating Spans and propagating context as appropriate.
-    opentelemetry.ext.http_requests.enable(trace.tracer())
+    opentelemetry.ext.http_requests.enable(trace.tracer_source())
     instrument_app(flask_app)
 
 
@@ -67,7 +68,11 @@ app = flask.Flask(__name__)
 def hello():
     # emit a trace that measures how long the
     # sleep takes
-    with trace.tracer().start_as_current_span("example-request"):
+    version = pkg_resources.get_distribution(
+        "opentelemetry-example-app"
+    ).version
+    tracer = trace.tracer_source().get_tracer(__name__, version)
+    with tracer.start_as_current_span("example-request"):
         requests.get("http://www.example.com")
     return "hello"
 
