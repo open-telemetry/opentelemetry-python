@@ -24,19 +24,7 @@ from opentelemetry.ext.psycopg2 import trace_integration
 class TestPostgresqlIntegration(unittest.TestCase):
     def test_trace_integration(self):
         tracer = trace_api.Tracer()
-        span = mock.create_autospec(trace_api.Span, spec_set=True)
-        start_current_span_patcher = mock.patch.object(
-            tracer,
-            "start_as_current_span",
-            autospec=True,
-            spec_set=True,
-            return_value=span,
-        )
-        start_as_current_span = start_current_span_patcher.start()
-        trace_integration(tracer)
-
-        conn = psycopg2.connect("dbname=testdb user=postgres password=passwordPostgres")
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM testtable;")
-        cur.fetchone()
-    
+        with mock.patch("psycopg2.connect"):
+            trace_integration(tracer)
+            cnx = psycopg2.connect(database="test")
+            self.assertIsNotNone(cnx.cursor_factory)

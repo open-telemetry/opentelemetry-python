@@ -21,10 +21,10 @@ import logging
 import typing
 
 import psycopg2
-from psycopg2.extensions import cursor as pgcursor
 import wrapt
+from psycopg2.sql import Composable
 
-from opentelemetry.ext.dbapi import DatabaseApiIntegration, TracedConnection, TracedCursor
+from opentelemetry.ext.dbapi import DatabaseApiIntegration, TracedCursor
 from opentelemetry.trace import Tracer
 
 logger = logging.getLogger(__name__)
@@ -44,8 +44,14 @@ def trace_integration(tracer):
         "host": "info.host",
         "user": "info.user",
     }
+    db_integration = DatabaseApiIntegration(
+        tracer,
+        DATABASE_COMPONENT,
+        database_type=DATABASE_TYPE,
+        connection_attributes=connection_attributes,
+    )
 
-     # pylint: disable=unused-argument
+    # pylint: disable=unused-argument
     def wrap_connect(
         connect_func: typing.Callable[..., any],
         instance: typing.Any,
@@ -53,42 +59,38 @@ def trace_integration(tracer):
         kwargs: typing.Dict[any, any],
     ):
         connection = connect_func(*args, **kwargs)
+        db_integration.get_connection_attributes(connection)
         connection.cursor_factory = PsycopgTraceCursor
         return connection
 
     try:
-        wrapt.wrap_function_wrapper(
-            psycopg2, "connect", wrap_connect
-        )
+        wrapt.wrap_function_wrapper(psycopg2, "connect", wrap_connect)
     except Exception as ex:  # pylint: disable=broad-except
         logger.warning("Failed to integrate with pyscopg2. %s", str(ex))
 
-
-    class PsycopgTraceCursor(pgcursor):
+    class PsycopgTraceCursor(psycopg2.extensions.cursor):
         def __init__(self, *args, **kwargs):
-            db_integration = DatabaseApiIntegration(
-                tracer,
-                DATABASE_COMPONENT,
-                database_type=DATABASE_TYPE,
-                connection_attributes=connection_attributes
-            )
-            self._tracedConnection = TracedConnection(db_integration)
-            self._tracedConnection.get_connection_attributes()
-            self._tracedCursor = TracedCursor(db_integration)
-            
+            self._traced_cursor = TracedCursor(db_integration)
             super(PsycopgTraceCursor, self).__init__(*args, **kwargs)
 
+        # pylint: disable=redefined-builtin
         def execute(self, query, vars=None):
-            return self._tracedCursor.traced_execution(
+            if isinstance(query, Composable):
+                query = query.as_string(self)
+            return self._traced_cursor.traced_execution(
                 super(PsycopgTraceCursor, self).execute, query, vars
             )
 
+        # pylint: disable=redefined-builtin
         def executemany(self, query, vars):
-            return self._tracedCursor.traced_execution(
+            if isinstance(query, Composable):
+                query = query.as_string(self)
+            return self._traced_cursor.traced_execution(
                 super(PsycopgTraceCursor, self).executemany, query, vars
             )
 
+        # pylint: disable=redefined-builtin
         def callproc(self, procname, vars=None):
-            return self._tracedCursor.traced_execution(
+            return self._traced_cursor.traced_execution(
                 super(PsycopgTraceCursor, self).callproc, procname, vars
             )
