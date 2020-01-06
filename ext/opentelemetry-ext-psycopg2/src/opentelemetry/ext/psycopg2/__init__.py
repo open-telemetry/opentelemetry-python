@@ -47,18 +47,14 @@ def trace_integration(tracer):
 
      # pylint: disable=unused-argument
     def wrap_connect(
-        wrapped: typing.Callable[..., any],
+        connect_func: typing.Callable[..., any],
         instance: typing.Any,
         args: typing.Tuple[any, any],
         kwargs: typing.Dict[any, any],
     ):
-        db_integration = DatabaseApiIntegration(
-            tracer,
-            DATABASE_COMPONENT,
-            database_type=DATABASE_TYPE,
-            connection_attributes=connection_attributes
-        )
-        return db_integration.wrapped_connection(wrapped, args, kwargs)
+        connection = connect_func(*args, **kwargs)
+        connection.cursor_factory = PsycopgTraceCursor
+        return connection
 
     try:
         wrapt.wrap_function_wrapper(
@@ -66,3 +62,33 @@ def trace_integration(tracer):
         )
     except Exception as ex:  # pylint: disable=broad-except
         logger.warning("Failed to integrate with pyscopg2. %s", str(ex))
+
+
+    class PsycopgTraceCursor(pgcursor):
+        def __init__(self, *args, **kwargs):
+            db_integration = DatabaseApiIntegration(
+                tracer,
+                DATABASE_COMPONENT,
+                database_type=DATABASE_TYPE,
+                connection_attributes=connection_attributes
+            )
+            self._tracedConnection = TracedConnection(db_integration)
+            self._tracedConnection.get_connection_attributes()
+            self._tracedCursor = TracedCursor(db_integration)
+            
+            super(PsycopgTraceCursor, self).__init__(*args, **kwargs)
+
+        def execute(self, query, vars=None):
+            return self._tracedCursor.traced_execution(
+                super(PsycopgTraceCursor, self).execute, query, vars
+            )
+
+        def executemany(self, query, vars):
+            return self._tracedCursor.traced_execution(
+                super(PsycopgTraceCursor, self).executemany, query, vars
+            )
+
+        def callproc(self, procname, vars=None):
+            return self._tracedCursor.traced_execution(
+                super(PsycopgTraceCursor, self).callproc, procname, vars
+            )
