@@ -424,17 +424,25 @@ class TestSpan(unittest.TestCase):
     def test_check_sequence_helper(self):
         # pylint: disable=protected-access
         self.assertEqual(
-            trace.Span._check_attribute_value_sequence([1, 2, 3.4, "ss", 4]), "different type"
-        )
-        self.assertEqual(
-            trace.Span._check_attribute_value_sequence([dict(), 1, 2, 3.4, 4]), "invalid type"
-        )
-        self.assertEqual(
-            trace.Span._check_attribute_value_sequence(["sw", "lf", 3.4, "ss"]),
+            trace.Span._check_attribute_value_sequence([1, 2, 3.4, "ss", 4]),
             "different type",
         )
-        self.assertIsNone(trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5]))
-        self.assertIsNone(trace.Span._check_attribute_value_sequence(["ss", "dw", "fw"]))
+        self.assertEqual(
+            trace.Span._check_attribute_value_sequence([dict(), 1, 2, 3.4, 4]),
+            "invalid type",
+        )
+        self.assertEqual(
+            trace.Span._check_attribute_value_sequence(
+                ["sw", "lf", 3.4, "ss"]
+            ),
+            "different type",
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5])
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence(["ss", "dw", "fw"])
+        )
 
     def test_sampling_attributes(self):
         decision_attributes = {
