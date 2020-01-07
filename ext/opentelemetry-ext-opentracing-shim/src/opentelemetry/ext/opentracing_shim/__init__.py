@@ -677,7 +677,7 @@ class TracerShim(opentracing.Tracer):
         propagator.inject(
             DefaultSpan(span_context.unwrap()),
             type(carrier).__setitem__,
-            carrier
+            carrier,
         )
 
     def extract(self, format, carrier):
