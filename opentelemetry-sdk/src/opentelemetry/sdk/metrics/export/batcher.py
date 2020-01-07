@@ -39,6 +39,14 @@ class Batcher(abc.ABC):
         # (deltas)
         self.keep_state = keep_state
 
+    @property
+    def batch_map(self):
+        return self._batch_map
+
+    @batch_map.setter
+    def batch_map(self, value):
+        self._batch_map = value
+
     def aggregator_for(self, metric_type: Type[MetricT]) -> Aggregator:
         """Returns an aggregator based off metric type.
 
