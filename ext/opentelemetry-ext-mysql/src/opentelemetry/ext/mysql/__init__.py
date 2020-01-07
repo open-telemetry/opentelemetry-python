@@ -18,6 +18,7 @@ MySQL Connector/Python library.
 """
 
 import mysql.connector
+
 from opentelemetry.ext.dbapi import trace_integration as db_integration
 from opentelemetry.trace import Tracer
 
