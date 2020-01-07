@@ -16,7 +16,6 @@ import unittest
 from unittest import mock
 
 import mysql.connector
-
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.mysql import trace_integration
 
