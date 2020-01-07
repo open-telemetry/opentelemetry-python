@@ -97,7 +97,7 @@ class HTTPTextFormat(abc.ABC):
     def inject(
         self, span: Span, set_in_carrier: Setter[_T], carrier: _T
     ) -> None:
-        """Inject values from a SpanContext into a carrier.
+        """Inject values from a Span into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
