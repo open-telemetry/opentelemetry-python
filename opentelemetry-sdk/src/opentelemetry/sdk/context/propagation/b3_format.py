@@ -101,9 +101,7 @@ class B3Format(HTTPTextFormat):
         )
 
     @classmethod
-    def inject(
-        cls, span, set_in_carrier, carrier
-    ):  # pylint: disable=arguments-differ
+    def inject(cls, span, set_in_carrier, carrier):
         sampled = (
             trace.TraceOptions.SAMPLED & span.context.trace_options
         ) != 0
