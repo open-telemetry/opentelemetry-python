@@ -143,7 +143,7 @@ class Metric(metrics_api.Metric):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
-        absolute: bool = True
+        absolute: bool = True,
     ):
         self.name = name
         self.description = description
@@ -199,7 +199,7 @@ class Counter(Metric, metrics_api.Counter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = True,
-        absolute: bool = False
+        absolute: bool = False,
     ):
         super().__init__(
             name,
@@ -210,7 +210,7 @@ class Counter(Metric, metrics_api.Counter):
             label_keys=label_keys,
             enabled=enabled,
             monotonic=monotonic,
-            absolute=absolute
+            absolute=absolute,
         )
 
     def add(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
@@ -239,7 +239,7 @@ class Gauge(Metric, metrics_api.Gauge):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
-        absolute: bool = False
+        absolute: bool = False,
     ):
         super().__init__(
             name,
@@ -250,7 +250,7 @@ class Gauge(Metric, metrics_api.Gauge):
             label_keys=label_keys,
             enabled=enabled,
             monotonic=monotonic,
-            absolute=absolute
+            absolute=absolute,
         )
 
     def set(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
@@ -335,7 +335,7 @@ class Meter(metrics_api.Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
-        absolute: bool = True
+        absolute: bool = True,
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
@@ -348,7 +348,7 @@ class Meter(metrics_api.Meter):
             label_keys=label_keys,
             enabled=enabled,
             monotonic=monotonic,
-            absolute=absolute
+            absolute=absolute,
         )
         self.metrics.add(metric)
         return metric

@@ -221,7 +221,7 @@ class Meter:
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
-        absolute: bool = True
+        absolute: bool = True,
     ) -> "Metric":
         """Creates a ``metric_kind`` metric with type ``value_type``.
 
