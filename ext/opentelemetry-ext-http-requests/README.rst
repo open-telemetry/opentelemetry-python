@@ -22,9 +22,13 @@ Usage
 
     import requests
     import opentelemetry.ext.http_requests
-    from opentelemetry.trace import tracer
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerSource
 
-    opentelemetry.ext.http_requests.enable(tracer())
+    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+    tracer = trace.tracer_source().get_tracer(__name__)
+
+    opentelemetry.ext.http_requests.enable(tracer)
     response = requests.get(url='https://www.example.org/')
 
 Limitations

@@ -11,12 +11,16 @@ Usage
 
 .. code:: python
     import psycopg2
-    from opentelemetry.trace import tracer
-    from opentelemetry.trace.ext.postgresql import trace_integration
-    trace_integration(tracer())
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerSource
+    from opentelemetry.trace.ext.psycopg2 import trace_integration
+
+    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+    tracer = trace.tracer_source().get_tracer(__name__)
+    trace_integration(tracer)
     cnx = psycopg2.connect(database='Database')
     cursor = cnx.cursor()
-    cursor.execute("INSERT INTO test (testField) VALUES (123)"
+    cursor.execute("INSERT INTO test (testField) VALUES (123)")
     cursor.close()
     cnx.close()
 
