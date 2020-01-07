@@ -128,12 +128,12 @@ class Counter(Metric):
         """Gets a `CounterHandle`."""
         return CounterHandle()
 
-    def add(self, label_set: LabelSet, value: ValueT) -> None:
+    def add(self, value: ValueT, label_set: LabelSet) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
             value: The value to add to the counter metric.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
@@ -150,12 +150,12 @@ class Gauge(Metric):
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
 
-    def set(self, label_set: LabelSet, value: ValueT) -> None:
+    def set(self, value: ValueT, label_set: LabelSet) -> None:
         """Sets the value of the gauge to ``value``.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
             value: The value to set the gauge metric to.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
@@ -171,12 +171,12 @@ class Measure(Metric):
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
-    def record(self, label_set: LabelSet, value: ValueT) -> None:
+    def record(self, value: ValueT, label_set: LabelSet) -> None:
         """Records the ``value`` to the measure.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
             value: The value to record to this measure metric.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
@@ -220,7 +220,8 @@ class Meter:
         metric_type: Type[MetricT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        alternate: bool = False,
+        monotonic: bool = False,
+        absolute: bool = True
     ) -> "Metric":
         """Creates a ``metric_kind`` metric with type ``value_type``.
 
@@ -232,8 +233,10 @@ class Meter:
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
-            alternate: Whether to only allow non-negative values.
-
+            monotonic: Configure a counter or gauge that accepts only
+                monotonic/non-monotonic updates.
+            absolute: Configure a measure that does or does not accept negative
+                updates.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
         # pylint: disable=no-self-use

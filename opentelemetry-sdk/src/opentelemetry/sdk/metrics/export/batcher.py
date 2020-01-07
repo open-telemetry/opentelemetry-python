@@ -27,15 +27,15 @@ class Batcher(abc.ABC):
     """Base class for all batcher types.
 
     The batcher is responsible for storing the aggregators and aggregated
-    received from updates from metrics in the meter. The stored values will be
+    values received from updates from metrics in the meter. The stored values will be
     sent to an exporter for exporting.
     """
 
     def __init__(self, keep_state: bool):
-        self.batch_map = {}
+        self._batch_map = {}
         # keep_state=True indicates the batcher computes checkpoints from over
         # the process lifetime. False indicates the batcher computes
-        # checkpoints which descrive the updates of a single collection period
+        # checkpoints which describe the updates of a single collection period
         # (deltas)
         self.keep_state = keep_state
 
@@ -57,7 +57,7 @@ class Batcher(abc.ABC):
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for key, value in self.batch_map.items():
+        for key, value in self._batch_map.items():
             metric_records.append(MetricRecord(value[0], value[1], key[0]))
         return metric_records
 
@@ -67,7 +67,7 @@ class Batcher(abc.ABC):
         For batchers that are stateless, resets the batch map.
         """
         if not self.keep_state:
-            self.batch_map = {}
+            self._batch_map = {}
 
     @abc.abstractmethod
     def process(self, record) -> None:
@@ -85,7 +85,7 @@ class UngroupedBatcher(Batcher):
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.checkpoint()
         batch_key = (record.metric, record.label_set.encoded)
-        batch_value = self.batch_map.get(batch_key)
+        batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator
         if batch_value:
             # Update the stored checkpointed value if exists. This is for cases
@@ -97,4 +97,4 @@ class UngroupedBatcher(Batcher):
             # it with the current checkpointed value for long-term storage
             aggregator = self.aggregator_for(record.metric.__class__)
             aggregator.merge(record.aggregator)
-        self.batch_map[batch_key] = (aggregator, record.label_set)
+        self._batch_map[batch_key] = (aggregator, record.label_set)

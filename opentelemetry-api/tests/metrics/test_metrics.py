@@ -52,7 +52,7 @@ class TestMetrics(unittest.TestCase):
     def test_counter_add(self):
         counter = metrics.Counter()
         label_set = metrics.LabelSet()
-        counter.add(label_set, 1)
+        counter.add(1, label_set)
 
     def test_gauge(self):
         gauge = metrics.Gauge()
@@ -63,7 +63,7 @@ class TestMetrics(unittest.TestCase):
     def test_gauge_set(self):
         gauge = metrics.Gauge()
         label_set = metrics.LabelSet()
-        gauge.set(label_set, 1)
+        gauge.set(1, label_set)
 
     def test_measure(self):
         measure = metrics.Measure()
@@ -74,7 +74,7 @@ class TestMetrics(unittest.TestCase):
     def test_measure_record(self):
         measure = metrics.Measure()
         label_set = metrics.LabelSet()
-        measure.record(label_set, 1)
+        measure.record(1, label_set)
 
     def test_default_handle(self):
         metrics.DefaultMetricHandle()
