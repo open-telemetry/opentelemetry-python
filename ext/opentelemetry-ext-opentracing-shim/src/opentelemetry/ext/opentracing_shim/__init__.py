@@ -89,7 +89,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
-from opentelemetry.sdk.trace import Span
+from opentelemetry.trace import DefaultSpan
 
 logger = logging.getLogger(__name__)
 
@@ -675,7 +675,9 @@ class TracerShim(opentracing.Tracer):
         propagator = propagators.get_global_httptextformat()
 
         propagator.inject(
-            Span("", span_context.unwrap()), type(carrier).__setitem__, carrier
+            DefaultSpan(span_context.unwrap()),
+            type(carrier).__setitem__,
+            carrier
         )
 
     def extract(self, format, carrier):
