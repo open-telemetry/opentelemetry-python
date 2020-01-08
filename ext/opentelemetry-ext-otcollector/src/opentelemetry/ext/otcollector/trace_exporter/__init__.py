@@ -33,21 +33,29 @@ class CollectorSpanExporter(SpanExporter):
     Args:
         service_name: Name of Collector service.
         endpoint: OpenTelemetry Collector endpoint.
+        client: TraceService client stub.
     """
 
     def __init__(
         self,
         service_name: str =DEFAULT_SERVICE_NAME,
         endpoint: str = DEFAULT_ENDPOINT,
+        client=None,
     ):
         self.service_name = service_name
         self.endpoint = endpoint
 
+        if client is None:
+            self.channel = grpc.insecure_channel(self.endpoint)
+            self.client = trace_service_pb2_grpc.TraceServiceStub(
+                channel=self.channel)
+        else:
+            self.client = client
+
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         collector_spans = self._translate_to_collector(spans)
-        
         try:
-            
+            self.client.Export(collector_spans)
         except grpc.RpcError:
             return SpanExportResult.FAILED_NOT_RETRYABLE
 
