@@ -21,10 +21,10 @@ class ContextKeys:
 
     @classmethod
     def span_context_key(cls) -> str:
-        """ TODO """
+        """ Returns key for a SpanContext """
         return cls.EXTRACT_SPAN_CONTEXT_KEY
 
     @classmethod
     def span_key(cls) -> str:
-        """ TODO """
+        """ Returns key for a Span """
         return cls.SPAN_KEY

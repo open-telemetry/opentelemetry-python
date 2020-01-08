@@ -109,6 +109,10 @@ _HTTP_TEXT_EXTRACTORS = [
 def set_http_extractors(
     extractor_list: typing.List[httptextformat.HTTPExtractor],
 ) -> None:
+    """
+    To update the global extractor, the Propagation API provides a
+    function which takes an extractor.
+    """
     global _HTTP_TEXT_EXTRACTORS  # pylint:disable=global-statement
     _HTTP_TEXT_EXTRACTORS = extractor_list  # type: ignore
 
@@ -116,13 +120,25 @@ def set_http_extractors(
 def set_http_injectors(
     injector_list: typing.List[httptextformat.HTTPInjector],
 ) -> None:
+    """
+    To update the global injector, the Propagation API provides a
+    function which takes an injector.
+    """
     global _HTTP_TEXT_INJECTORS  # pylint:disable=global-statement
     _HTTP_TEXT_INJECTORS = injector_list  # type: ignore
 
 
 def get_http_extractors() -> typing.List[httptextformat.HTTPExtractor]:
+    """
+    To access the global extractor, the Propagation API provides
+    a function which returns an extractor.
+    """
     return _HTTP_TEXT_EXTRACTORS  # type: ignore
 
 
 def get_http_injectors() -> typing.List[httptextformat.HTTPInjector]:
+    """
+    To access the global injector, the Propagation API provides a
+    function which returns an injector.
+    """
     return _HTTP_TEXT_INJECTORS  # type: ignore
