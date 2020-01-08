@@ -57,4 +57,3 @@ counter.add(50, label_set)
 time.sleep(5)
 
 # Following exported values would be 0
-
