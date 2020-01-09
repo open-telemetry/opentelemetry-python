@@ -167,8 +167,9 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_invalid_instrumentation_info(self):
         tracer_source = trace.TracerSource()
-        tracer1 = tracer_source.get_tracer("")
-        tracer2 = tracer_source.get_tracer(None)
+        with self.assertLogs(level="ERROR"):
+            tracer1 = tracer_source.get_tracer("")
+            tracer2 = tracer_source.get_tracer(None)
         self.assertEqual(
             tracer1.instrumentation_info, tracer2.instrumentation_info
         )
@@ -516,7 +517,8 @@ class TestSpan(unittest.TestCase):
 
         span.start()
         start_time = span.start_time
-        span.start()
+        with self.assertLogs(level="WARNING"):
+            span.start()
         self.assertEqual(start_time, span.start_time)
 
         self.assertIs(span.status, None)
@@ -556,24 +558,29 @@ class TestSpan(unittest.TestCase):
             end_time0 = root.end_time
 
             # call it a second time
-            root.end()
+            with self.assertLogs(level="WARNING"):
+                root.end()
             # end time shouldn't be changed
             self.assertEqual(end_time0, root.end_time)
 
-            root.set_attribute("component", "http")
+            with self.assertLogs(level="WARNING"):
+                root.set_attribute("component", "http")
             self.assertEqual(len(root.attributes), 0)
 
-            root.add_event("event1")
+            with self.assertLogs(level="WARNING"):
+                root.add_event("event1")
             self.assertEqual(len(root.events), 0)
 
-            root.update_name("xxx")
+            with self.assertLogs(level="WARNING"):
+                root.update_name("xxx")
             self.assertEqual(root.name, "root")
 
             new_status = trace_api.status.Status(
                 trace_api.status.StatusCanonicalCode.CANCELLED,
                 "Test description",
             )
-            root.set_status(new_status)
+            with self.assertLogs(level="WARNING"):
+                root.set_status(new_status)
             self.assertEqual(
                 root.status.canonical_code,
                 trace_api.status.StatusCanonicalCode.OK,
