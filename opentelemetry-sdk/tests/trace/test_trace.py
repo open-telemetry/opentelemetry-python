@@ -574,7 +574,10 @@ class TestSpan(unittest.TestCase):
                 "Test description",
             )
             root.set_status(new_status)
-            self.assertIs(root.status, None)
+            self.assertEqual(
+                root.status.canonical_code,
+                trace_api.status.StatusCanonicalCode.OK,
+            )
 
     def test_error_status(self):
         try:
