@@ -38,15 +38,15 @@ class SpanExporter:
     Interface to be implemented by services that want to export recorded in
     its own format.
 
-    To export data this MUST be registered to the :class`..Tracer` using a
-    `SimpleExportSpanProcessor` or a `BatchSpanProcessor`.
+    To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
+    `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.
     """
 
     def export(self, spans: typing.Sequence[Span]) -> "SpanExportResult":
         """Exports a batch of telemetry data.
 
         Args:
-            spans: The list of `Span`s to be exported
+            spans: The list of `opentelemetry.trace.Span` objects to be exported
 
         Returns:
             The result of the export
@@ -137,11 +137,11 @@ class BatchExportSpanProcessor(SpanProcessor):
 
     def on_end(self, span: Span) -> None:
         if self.done:
-            logging.warning("Already shutdown, dropping span.")
+            logger.warning("Already shutdown, dropping span.")
             return
         if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
-                logging.warning("Queue is full, likely spans will be dropped.")
+                logger.warning("Queue is full, likely spans will be dropped.")
                 self._spans_dropped = True
 
         self.queue.appendleft(span)

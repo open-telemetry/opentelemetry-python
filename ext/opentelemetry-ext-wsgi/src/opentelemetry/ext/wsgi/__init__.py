@@ -23,7 +23,10 @@ import typing
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagators, trace
-from opentelemetry.ext.wsgi.version import __version__  # noqa
+from opentelemetry.ext.wsgi.version import __version__
+from opentelemetry.trace.status import Status, StatusCanonicalCode
+
+_HTTP_VERSION_PREFIX = "HTTP/"
 
 
 def get_header_from_environ(
@@ -41,44 +44,78 @@ def get_header_from_environ(
     return []
 
 
-def add_request_attributes(span, environ):
-    """Adds HTTP request attributes from the PEP3333-conforming WSGI environ to span."""
+def setifnotnone(dic, key, value):
+    if value is not None:
+        dic[key] = value
 
-    span.set_attribute("component", "http")
-    span.set_attribute("http.method", environ["REQUEST_METHOD"])
 
-    host = environ.get("HTTP_HOST")
-    if not host:
-        host = environ["SERVER_NAME"]
-        port = environ["SERVER_PORT"]
-        scheme = environ["wsgi.url_scheme"]
-        if (
-            scheme == "http"
-            and port != "80"
-            or scheme == "https"
-            and port != "443"
-        ):
-            host += ":" + port
+def http_status_to_canonical_code(code: int, allow_redirect: bool = True):
+    # pylint:disable=too-many-branches,too-many-return-statements
+    if code < 100:
+        return StatusCanonicalCode.UNKNOWN
+    if code <= 299:
+        return StatusCanonicalCode.OK
+    if code <= 399:
+        if allow_redirect:
+            return StatusCanonicalCode.OK
+        return StatusCanonicalCode.DEADLINE_EXCEEDED
+    if code <= 499:
+        if code == 401:  # HTTPStatus.UNAUTHORIZED:
+            return StatusCanonicalCode.UNAUTHENTICATED
+        if code == 403:  # HTTPStatus.FORBIDDEN:
+            return StatusCanonicalCode.PERMISSION_DENIED
+        if code == 404:  # HTTPStatus.NOT_FOUND:
+            return StatusCanonicalCode.NOT_FOUND
+        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
+            return StatusCanonicalCode.RESOURCE_EXHAUSTED
+        return StatusCanonicalCode.INVALID_ARGUMENT
+    if code <= 599:
+        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
+            return StatusCanonicalCode.UNIMPLEMENTED
+        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
+            return StatusCanonicalCode.UNAVAILABLE
+        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
+            return StatusCanonicalCode.DEADLINE_EXCEEDED
+        return StatusCanonicalCode.INTERNAL
+    return StatusCanonicalCode.UNKNOWN
 
-    # NOTE: Nonstandard (but see
-    # https://github.com/open-telemetry/opentelemetry-specification/pull/263)
-    span.set_attribute("http.host", host)
 
-    url = environ.get("REQUEST_URI") or environ.get("RAW_URI")
+def collect_request_attributes(environ):
+    """Collects HTTP request attributes from the PEP3333-conforming
+    WSGI environ and returns a dictionary to be used as span creation attributes."""
 
-    if url:
-        if url[0] == "/":
-            # We assume that no scheme-relative URLs will be in url here.
-            # After all, if a request is made to http://myserver//foo, we may get
-            # //foo which looks like scheme-relative but isn't.
-            url = environ["wsgi.url_scheme"] + "://" + host + url
-        elif not url.startswith(environ["wsgi.url_scheme"] + ":"):
-            # Something fishy is in RAW_URL. Let's fall back to request_uri()
-            url = wsgiref_util.request_uri(environ)
+    result = {
+        "component": "http",
+        "http.method": environ["REQUEST_METHOD"],
+        "http.server_name": environ["SERVER_NAME"],
+        "http.scheme": environ["wsgi.url_scheme"],
+        "host.port": int(environ["SERVER_PORT"]),
+    }
+
+    setifnotnone(result, "http.host", environ.get("HTTP_HOST"))
+    target = environ.get("RAW_URI")
+    if target is None:  # Note: `"" or None is None`
+        target = environ.get("REQUEST_URI")
+    if target is not None:
+        result["http.target"] = target
     else:
-        url = wsgiref_util.request_uri(environ)
+        result["http.url"] = wsgiref_util.request_uri(environ)
 
-    span.set_attribute("http.url", url)
+    remote_addr = environ.get("REMOTE_ADDR")
+    if remote_addr:
+        result["net.peer.ip"] = remote_addr
+    remote_host = environ.get("REMOTE_HOST")
+    if remote_host and remote_host != remote_addr:
+        result["net.peer.name"] = remote_host
+
+    setifnotnone(result, "net.peer.port", environ.get("REMOTE_PORT"))
+    flavor = environ.get("SERVER_PROTOCOL", "")
+    if flavor.upper().startswith(_HTTP_VERSION_PREFIX):
+        flavor = flavor[len(_HTTP_VERSION_PREFIX) :]
+    if flavor:
+        result["http.flavor"] = flavor
+
+    return result
 
 
 def add_response_attributes(
@@ -93,9 +130,15 @@ def add_response_attributes(
     try:
         status_code = int(status_code)
     except ValueError:
-        pass
+        span.set_status(
+            Status(
+                StatusCanonicalCode.UNKNOWN,
+                "Non-integer HTTP status: " + repr(status_code),
+            )
+        )
     else:
         span.set_attribute("http.status_code", status_code)
+        span.set_status(Status(http_status_to_canonical_code(status_code)))
 
 
 def get_default_span_name(environ):
@@ -119,6 +162,7 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
+        self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
 
     @staticmethod
     def _create_start_response(span, start_response):
@@ -137,24 +181,25 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        tracer = trace.tracer()
         parent_span = propagators.extract(get_header_from_environ, environ)
         span_name = get_default_span_name(environ)
 
-        span = tracer.start_span(
-            span_name, parent_span, kind=trace.SpanKind.SERVER
+        span = self.tracer.start_span(
+            span_name,
+            parent_span,
+            kind=trace.SpanKind.SERVER,
+            attributes=collect_request_attributes(environ),
         )
 
         try:
-            with tracer.use_span(span):
-                add_request_attributes(span, environ)
+            with self.tracer.use_span(span):
                 start_response = self._create_start_response(
                     span, start_response
                 )
-
                 iterable = self.wsgi(environ, start_response)
-                return _end_span_after_iterating(iterable, span, tracer)
+                return _end_span_after_iterating(iterable, span, self.tracer)
         except:  # noqa
+            # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
             span.end()
             raise
 

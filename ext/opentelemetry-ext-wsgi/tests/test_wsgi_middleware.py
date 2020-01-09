@@ -16,7 +16,7 @@ import sys
 import unittest
 import unittest.mock as mock
 import wsgiref.util as wsgiref_util
-from urllib.parse import urlparse
+from urllib.parse import urlsplit
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import trace as trace_api
@@ -78,10 +78,8 @@ class TestWsgiApplication(WsgiTestBase):
         while True:
             try:
                 value = next(response)
-                self.assertEqual(0, self.span.end.call_count)
                 self.assertEqual(value, b"*")
             except StopIteration:
-                self.span.end.assert_called_once_with()
                 break
 
         self.assertEqual(self.status, "200 OK")
@@ -95,9 +93,24 @@ class TestWsgiApplication(WsgiTestBase):
         else:
             self.assertIsNone(self.exc_info)
 
-        # Verify that start_span has been called
-        self.start_span.assert_called_with(
-            "/", trace_api.INVALID_SPAN_CONTEXT, kind=trace_api.SpanKind.SERVER
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "/")
+        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(
+            span_list[0].attributes,
+            {
+                "component": "http",
+                "http.method": "GET",
+                "http.server_name": "127.0.0.1",
+                "http.scheme": "http",
+                "host.port": 80,
+                "http.host": "127.0.0.1",
+                "http.flavor": "1.0",
+                "http.url": "http://127.0.0.1/",
+                "http.status_text": "OK",
+                "http.status_code": 200,
+            },
         )
 
     def test_basic_wsgi_call(self):
@@ -144,31 +157,43 @@ class TestWsgiAttributes(unittest.TestCase):
     def test_request_attributes(self):
         self.environ["QUERY_STRING"] = "foo=bar"
 
-        otel_wsgi.add_request_attributes(self.span, self.environ)
-
-        expected = (
-            mock.call("component", "http"),
-            mock.call("http.method", "GET"),
-            mock.call("http.host", "127.0.0.1"),
-            mock.call("http.url", "http://127.0.0.1/?foo=bar"),
+        attrs = otel_wsgi.collect_request_attributes(self.environ)
+        self.assertDictEqual(
+            attrs,
+            {
+                "component": "http",
+                "http.method": "GET",
+                "http.host": "127.0.0.1",
+                "http.url": "http://127.0.0.1/?foo=bar",
+                "host.port": 80,
+                "http.scheme": "http",
+                "http.server_name": "127.0.0.1",
+                "http.flavor": "1.0",
+            },
         )
-        self.assertEqual(self.span.set_attribute.call_count, len(expected))
-        self.span.set_attribute.assert_has_calls(expected, any_order=True)
 
-    def validate_url(self, expected_url):
-        otel_wsgi.add_request_attributes(self.span, self.environ)
-        attrs = {
-            args[0][0]: args[0][1]
-            for args in self.span.set_attribute.call_args_list
+    def validate_url(self, expected_url, raw=False, has_host=True):
+        parts = urlsplit(expected_url)
+        expected = {
+            "http.scheme": parts.scheme,
+            "host.port": parts.port or (80 if parts.scheme == "http" else 443),
+            "http.server_name": parts.hostname,  # Not true in the general case, but for all tests.
         }
-        self.assertIn("http.url", attrs)
-        self.assertEqual(attrs["http.url"], expected_url)
-        self.assertIn("http.host", attrs)
-        self.assertEqual(attrs["http.host"], urlparse(expected_url).netloc)
+        if raw:
+            expected["http.target"] = expected_url.split(parts.netloc, 1)[1]
+        else:
+            expected["http.url"] = expected_url
+        if has_host:
+            expected["http.host"] = parts.hostname
+
+        attrs = otel_wsgi.collect_request_attributes(self.environ)
+        self.assertGreaterEqual(
+            attrs.items(), expected.items(), expected_url + " expected."
+        )
 
     def test_request_attributes_with_partial_raw_uri(self):
         self.environ["RAW_URI"] = "/#top"
-        self.validate_url("http://127.0.0.1/#top")
+        self.validate_url("http://127.0.0.1/#top", raw=True)
 
     def test_request_attributes_with_partial_raw_uri_and_nonstandard_port(
         self,
@@ -176,58 +201,80 @@ class TestWsgiAttributes(unittest.TestCase):
         self.environ["RAW_URI"] = "/?"
         del self.environ["HTTP_HOST"]
         self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("http://127.0.0.1:8080/?")
+        self.validate_url("http://127.0.0.1:8080/?", raw=True, has_host=False)
 
     def test_https_uri_port(self):
         del self.environ["HTTP_HOST"]
         self.environ["SERVER_PORT"] = "443"
         self.environ["wsgi.url_scheme"] = "https"
-        self.validate_url("https://127.0.0.1/")
+        self.validate_url("https://127.0.0.1/", has_host=False)
 
         self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("https://127.0.0.1:8080/")
+        self.validate_url("https://127.0.0.1:8080/", has_host=False)
 
         self.environ["SERVER_PORT"] = "80"
-        self.validate_url("https://127.0.0.1:80/")
+        self.validate_url("https://127.0.0.1:80/", has_host=False)
 
     def test_http_uri_port(self):
         del self.environ["HTTP_HOST"]
         self.environ["SERVER_PORT"] = "80"
         self.environ["wsgi.url_scheme"] = "http"
-        self.validate_url("http://127.0.0.1/")
+        self.validate_url("http://127.0.0.1/", has_host=False)
 
         self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("http://127.0.0.1:8080/")
+        self.validate_url("http://127.0.0.1:8080/", has_host=False)
 
         self.environ["SERVER_PORT"] = "443"
-        self.validate_url("http://127.0.0.1:443/")
+        self.validate_url("http://127.0.0.1:443/", has_host=False)
 
     def test_request_attributes_with_nonstandard_port_and_no_host(self):
         del self.environ["HTTP_HOST"]
         self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("http://127.0.0.1:8080/")
+        self.validate_url("http://127.0.0.1:8080/", has_host=False)
 
         self.environ["SERVER_PORT"] = "443"
-        self.validate_url("http://127.0.0.1:443/")
+        self.validate_url("http://127.0.0.1:443/", has_host=False)
 
-    def test_request_attributes_with_nonstandard_port(self):
-        self.environ["HTTP_HOST"] += ":8080"
-        self.validate_url("http://127.0.0.1:8080/")
+    def test_request_attributes_with_conflicting_nonstandard_port(self):
+        self.environ[
+            "HTTP_HOST"
+        ] += ":8080"  # Note that we do not correct SERVER_PORT
+        expected = {
+            "http.host": "127.0.0.1:8080",
+            "http.url": "http://127.0.0.1:8080/",
+            "host.port": 80,
+        }
+        self.assertGreaterEqual(
+            otel_wsgi.collect_request_attributes(self.environ).items(),
+            expected.items(),
+        )
 
     def test_request_attributes_with_faux_scheme_relative_raw_uri(self):
         self.environ["RAW_URI"] = "//127.0.0.1/?"
-        self.validate_url("http://127.0.0.1//127.0.0.1/?")
+        self.validate_url("http://127.0.0.1//127.0.0.1/?", raw=True)
 
-    def test_request_attributes_with_pathless_raw_uri(self):
-        self.environ["PATH_INFO"] = ""
-        self.environ["RAW_URI"] = "http://hello"
-        self.environ["HTTP_HOST"] = "hello"
-        self.validate_url("http://hello")
+    def test_request_attributes_pathless(self):
+        self.environ["RAW_URI"] = ""
+        expected = {"http.target": ""}
+        self.assertGreaterEqual(
+            otel_wsgi.collect_request_attributes(self.environ).items(),
+            expected.items(),
+        )
 
     def test_request_attributes_with_full_request_uri(self):
         self.environ["HTTP_HOST"] = "127.0.0.1:8080"
-        self.environ["REQUEST_URI"] = "http://127.0.0.1:8080/?foo=bar#top"
-        self.validate_url("http://127.0.0.1:8080/?foo=bar#top")
+        self.environ["REQUEST_METHOD"] = "CONNECT"
+        self.environ[
+            "REQUEST_URI"
+        ] = "127.0.0.1:8080"  # Might happen in a CONNECT request
+        expected = {
+            "http.host": "127.0.0.1:8080",
+            "http.target": "127.0.0.1:8080",
+        }
+        self.assertGreaterEqual(
+            otel_wsgi.collect_request_attributes(self.environ).items(),
+            expected.items(),
+        )
 
     def test_response_attributes(self):
         otel_wsgi.add_response_attributes(self.span, "404 Not Found", {})

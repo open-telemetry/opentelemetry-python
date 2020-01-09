@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-from unittest import mock
 
 from flask import Flask
 from werkzeug.test import Client
@@ -24,17 +23,27 @@ from opentelemetry import trace as trace_api
 from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
 
 
+def expected_attributes(override_attributes):
+    default_attributes = {
+        "component": "http",
+        "http.method": "GET",
+        "http.server_name": "localhost",
+        "http.scheme": "http",
+        "host.port": 80,
+        "http.host": "localhost",
+        "http.target": "/",
+        "http.flavor": "1.1",
+        "http.status_text": "OK",
+        "http.status_code": 200,
+    }
+    for key, val in override_attributes.items():
+        default_attributes[key] = val
+    return default_attributes
+
+
 class TestFlaskIntegration(WsgiTestBase):
     def setUp(self):
         super().setUp()
-
-        self.span_attrs = {}
-
-        def setspanattr(key, value):
-            self.assertIsInstance(key, str)
-            self.span_attrs[key] = value
-
-        self.span.set_attribute = setspanattr
 
         self.app = Flask(__name__)
 
@@ -49,88 +58,57 @@ class TestFlaskIntegration(WsgiTestBase):
         self.client = Client(self.app, BaseResponse)
 
     def test_simple(self):
+        expected_attrs = expected_attributes(
+            {
+                "http.target": "/hello/123",
+                "http.route": "/hello/<int:helloid>",
+            }
+        )
         resp = self.client.get("/hello/123")
         self.assertEqual(200, resp.status_code)
         self.assertEqual([b"Hello: 123"], list(resp.response))
-
-        self.start_span.assert_called_with(
-            "hello_endpoint",
-            trace_api.INVALID_SPAN_CONTEXT,
-            kind=trace_api.SpanKind.SERVER,
-            start_time=mock.ANY,
-        )
-
-        # TODO: Change this test to use the SDK, as mocking becomes painful
-
-        self.assertEqual(
-            self.span_attrs,
-            {
-                "component": "http",
-                "http.method": "GET",
-                "http.host": "localhost",
-                "http.url": "http://localhost/hello/123",
-                "http.route": "/hello/<int:helloid>",
-                "http.status_code": 200,
-                "http.status_text": "OK",
-            },
-        )
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_404(self):
+        expected_attrs = expected_attributes(
+            {
+                "http.method": "POST",
+                "http.target": "/bye",
+                "http.status_text": "NOT FOUND",
+                "http.status_code": 404,
+            }
+        )
+
         resp = self.client.post("/bye")
         self.assertEqual(404, resp.status_code)
         resp.close()
-
-        self.start_span.assert_called_with(
-            "/bye",
-            trace_api.INVALID_SPAN_CONTEXT,
-            kind=trace_api.SpanKind.SERVER,
-            start_time=mock.ANY,
-        )
-
-        # Nope, this uses Tracer.use_span(end_on_exit)
-        #  self.assertEqual(1, self.span.end.call_count)
-        # TODO: Change this test to use the SDK, as mocking becomes painful
-
-        self.assertEqual(
-            self.span_attrs,
-            {
-                "component": "http",
-                "http.method": "POST",
-                "http.host": "localhost",
-                "http.url": "http://localhost/bye",
-                "http.status_code": 404,
-                "http.status_text": "NOT FOUND",
-            },
-        )
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "/bye")
+        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_internal_error(self):
+        expected_attrs = expected_attributes(
+            {
+                "http.target": "/hello/500",
+                "http.route": "/hello/<int:helloid>",
+                "http.status_text": "INTERNAL SERVER ERROR",
+                "http.status_code": 500,
+            }
+        )
         resp = self.client.get("/hello/500")
         self.assertEqual(500, resp.status_code)
         resp.close()
-
-        self.start_span.assert_called_with(
-            "hello_endpoint",
-            trace_api.INVALID_SPAN_CONTEXT,
-            kind=trace_api.SpanKind.SERVER,
-            start_time=mock.ANY,
-        )
-
-        # Nope, this uses Tracer.use_span(end_on_exit)
-        #  self.assertEqual(1, self.span.end.call_count)
-        # TODO: Change this test to use the SDK, as mocking becomes painful
-
-        self.assertEqual(
-            self.span_attrs,
-            {
-                "component": "http",
-                "http.method": "GET",
-                "http.host": "localhost",
-                "http.url": "http://localhost/hello/500",
-                "http.route": "/hello/<int:helloid>",
-                "http.status_code": 500,
-                "http.status_text": "INTERNAL SERVER ERROR",
-            },
-        )
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].attributes, expected_attrs)
 
 
 if __name__ == "__main__":
