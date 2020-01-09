@@ -158,21 +158,10 @@ except ImportError:
 
 class Context:
     def __init__(self) -> None:
-        self.contents = {}  # type: typing.Dict[str, object]
         self.slot_name = "{}".format(id(self))
         self._slot = _CONTEXT.register_slot(self.slot_name)
         self._slot.set(self)
-
-    def __enter__(self) -> "Context":
-        return self
-
-    def __exit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        pass
+        self.contents = {}
 
     def get(self, key: str) -> "object":
         return self.contents.get(key)
@@ -181,36 +170,54 @@ class Context:
     def value(
         cls, key: str, context: typing.Optional["Context"] = None
     ) -> "object":
+        """
+        To access the local state of an concern, the Context API
+        provides a function which takes a context and a key as input,
+        and returns a value.
+        """
         if context is None:
-            return cls.current().contents.get(key)
-        return context.contents.get(key)
+            if cls.current():
+                return cls.current().get(key)
+            return None
+        return context.get(key)
 
     @classmethod
     def set_value(cls, key: str, value: "object") -> "Context":
-        cls.current().contents[key] = value
+        """
+        To record the local state of a cross-cutting concern, the
+        Context API provides a function which takes a context, a
+        key, and a value as input, and returns an updated context
+        which contains the new value.
+
+        Args:
+            key: 
+            value:
+        """
+        setattr(_CONTEXT, key, value)
         return cls.snapshot()
 
     @classmethod
     def current(cls) -> "Context":
-        if _CONTEXT.current_context is None:
-            ctx = Context()
-            cls.set_current(ctx)
-        return getattr(_CONTEXT, _CONTEXT.current_context.get())  # type: ignore
+        """
+        To access the context associated with program execution,
+        the Context API provides a function which takes no arguments
+        and returns a Context.
+        """
+        ctx = Context()
+        ctx.contents = _CONTEXT.snapshot()
+        return ctx
 
     @classmethod
     def snapshot(cls) -> "Context":
-        snapshot = Context()
-        snapshot.contents = cls.current().contents.copy()
-        return snapshot
+        return _CONTEXT.snapshot()
 
     @classmethod
     def set_current(cls, ctx: "Context") -> None:
-        if _CONTEXT.current_context is None:
-            _CONTEXT.current_context = _CONTEXT.register_slot(
-                # change the key here
-                "__current_prop_context__"
-            )
-        _CONTEXT.current_context.set(ctx.slot_name)  # type: ignore
+        """
+        To associate a context with program execution, the Context
+        API provides a function which takes a Context.
+        """
+        _CONTEXT.apply(ctx.contents)
 
     @classmethod
     def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
@@ -226,8 +233,17 @@ class Context:
     def suppress_instrumentation(cls) -> "object":
         return _CONTEXT.suppress_instrumentation
 
+    @classmethod
+    def with_current_context(
+        cls, func: typing.Callable[..., "object"]
+    ) -> typing.Callable[..., "object"]:
+        return _CONTEXT.with_current_context(func)
+
+    def apply(self, ctx: "Context") -> "Context":
+        for key in ctx.contents:
+            self.contents[key] = ctx.contents[key]
+
 
 def merge_context_correlation(source: Context, dest: Context) -> Context:
-    for key, value in source.contents.items():
-        dest.contents[key] = value
+    dest.apply(source)
     return dest
