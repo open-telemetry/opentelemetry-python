@@ -170,6 +170,7 @@ class TestSpanCreation(unittest.TestCase):
         tracer_source = trace.TracerSource()
         with self.assertLogs(level="ERROR"):
             tracer1 = tracer_source.get_tracer("")
+        with self.assertLogs(level="ERROR"):
             tracer2 = tracer_source.get_tracer(None)
         self.assertEqual(
             tracer1.instrumentation_info, tracer2.instrumentation_info
