@@ -15,6 +15,7 @@
 import shutil
 import subprocess
 import unittest
+from logging import WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -517,7 +518,7 @@ class TestSpan(unittest.TestCase):
 
         span.start()
         start_time = span.start_time
-        with self.assertLogs(level="WARNING"):
+        with self.assertLogs(level=WARNING):
             span.start()
         self.assertEqual(start_time, span.start_time)
 
@@ -558,20 +559,20 @@ class TestSpan(unittest.TestCase):
             end_time0 = root.end_time
 
             # call it a second time
-            with self.assertLogs(level="WARNING"):
+            with self.assertLogs(level=WARNING):
                 root.end()
             # end time shouldn't be changed
             self.assertEqual(end_time0, root.end_time)
 
-            with self.assertLogs(level="WARNING"):
+            with self.assertLogs(level=WARNING):
                 root.set_attribute("component", "http")
             self.assertEqual(len(root.attributes), 0)
 
-            with self.assertLogs(level="WARNING"):
+            with self.assertLogs(level=WARNING):
                 root.add_event("event1")
             self.assertEqual(len(root.events), 0)
 
-            with self.assertLogs(level="WARNING"):
+            with self.assertLogs(level=WARNING):
                 root.update_name("xxx")
             self.assertEqual(root.name, "root")
 
@@ -579,7 +580,7 @@ class TestSpan(unittest.TestCase):
                 trace_api.status.StatusCanonicalCode.CANCELLED,
                 "Test description",
             )
-            with self.assertLogs(level="WARNING"):
+            with self.assertLogs(level=WARNING):
                 root.set_status(new_status)
             self.assertEqual(
                 root.status.canonical_code,
