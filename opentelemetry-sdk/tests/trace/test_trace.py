@@ -15,7 +15,7 @@
 import shutil
 import subprocess
 import unittest
-from logging import WARNING
+from logging import WARNING, ERROR
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -168,9 +168,9 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_invalid_instrumentation_info(self):
         tracer_source = trace.TracerSource()
-        with self.assertLogs(level="ERROR"):
+        with self.assertLogs(level=ERROR):
             tracer1 = tracer_source.get_tracer("")
-        with self.assertLogs(level="ERROR"):
+        with self.assertLogs(level=ERROR):
             tracer2 = tracer_source.get_tracer(None)
         self.assertEqual(
             tracer1.instrumentation_info, tracer2.instrumentation_info
