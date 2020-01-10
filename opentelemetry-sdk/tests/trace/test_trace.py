@@ -15,7 +15,7 @@
 import shutil
 import subprocess
 import unittest
-from logging import WARNING, ERROR
+from logging import ERROR, WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
