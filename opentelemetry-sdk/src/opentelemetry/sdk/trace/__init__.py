@@ -505,7 +505,7 @@ class Tracer(trace_api.Tracer):
                     span_snapshot
                 )
         finally:
-            if end_on_exit and span.end_time is None:
+            if end_on_exit:
                 span.end()
 
 

@@ -548,7 +548,29 @@ class TestSpan(unittest.TestCase):
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
 
-        with self.tracer.start_as_current_span("root") as root:
+        class ContextWrapper:
+            # This auxiliary class is added here just to make it possible to
+            # handle the warning raised in the __exit__ method of the context
+            # manager in self.span_context. This class makes it possible to
+            # catch just that warning specifically with self.test.assertLogs.
+            # This is done to avoid having the whole test in a self.assertLogs
+            # context that would catch any warning raised.
+            test = self
+
+            def __init__(self):
+                self.span_context = self.test.tracer.start_as_current_span(
+                    "root"
+                )
+
+            def __enter__(self):
+                return self.span_context.__enter__()
+
+            def __exit__(self, *args):
+                with self.test.assertLogs(level=WARNING):
+                    self.span_context.__exit__(*args)
+
+        with ContextWrapper() as root:
+
             # everything should be empty at the beginning
             self.assertEqual(len(root.attributes), 0)
             self.assertEqual(len(root.events), 0)
@@ -580,6 +602,7 @@ class TestSpan(unittest.TestCase):
                 trace_api.status.StatusCanonicalCode.CANCELLED,
                 "Test description",
             )
+
             with self.assertLogs(level=WARNING):
                 root.set_status(new_status)
             self.assertEqual(
