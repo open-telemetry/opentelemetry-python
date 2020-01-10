@@ -238,9 +238,8 @@ class Meter(abc.ABC):
 
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
-        # pylint: disable=no-self-use
-        return DefaultMetric()
 
+    @abc.abstractmethod
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given labels.
 
@@ -249,8 +248,6 @@ class Meter(abc.ABC):
 
         Returns: A `LabelSet` object canonicalized using the given input.
         """
-        # pylint: disable=no-self-use
-        return DefaultLabelSet()
 
 
 class DefaultMeter(Meter):
@@ -276,6 +273,10 @@ class DefaultMeter(Meter):
     ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()
+
+    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
+        # pylint: disable=no-self-use
+        return DefaultLabelSet()
 
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,

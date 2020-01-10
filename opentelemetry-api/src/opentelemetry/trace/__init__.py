@@ -175,8 +175,6 @@ class Span(abc.ABC):
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
-        # pylint: disable=no-self-use
-        return INVALID_SPAN_CONTEXT
 
     @abc.abstractmethod
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -223,8 +221,6 @@ class Span(abc.ABC):
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
         """
-        # pylint: disable=no-self-use
-        return False
 
     @abc.abstractmethod
     def set_status(self, status: Status) -> None:
@@ -437,7 +433,7 @@ class TracerSource(abc.ABC):
 
 
 class DefaultTracerSource(TracerSource):
-    """The default TracerSource, used when no TracerSource implementation is available.
+    """The default TracerSource, used when no implementation is available.
 
     All operations are no-op.
     """
