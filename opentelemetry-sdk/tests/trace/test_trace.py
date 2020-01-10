@@ -566,9 +566,9 @@ class TestSpan(unittest.TestCase):
             def __enter__(self):
                 return self.span_context.__enter__()
 
-            def __exit__(self, *args):
+            def __exit__(self, type_, value, traceback):
                 with self.test.assertLogs(level=WARNING):
-                    self.span_context.__exit__(*args)
+                    self.span_context.__exit__(type_, value, traceback)
 
         with ContextWrapper() as root:
 
