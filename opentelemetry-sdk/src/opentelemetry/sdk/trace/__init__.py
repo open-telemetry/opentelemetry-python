@@ -210,7 +210,7 @@ class Span(trace_api.Span):
             logger.warning("Setting attribute on ended span.")
             return
 
-        if not isinstance(value, (int, float, bool, str, list, tuple)):
+        if not isinstance(value, (bool, str, Number, Sequence)):
             logger.warning("invalid type for attribute value")
             return
         if isinstance(value, Sequence) and len(value) > 0:
