@@ -271,7 +271,9 @@ class Span(trace_api.Span):
                 if self.status is None:
                     self.status = Status(canonical_code=StatusCanonicalCode.OK)
 
-                self.end_time = end_time if end_time is not None else time_ns()
+                self._end_time = (
+                    end_time if end_time is not None else time_ns()
+                )
 
         if has_ended:
             logger.warning("Calling end() on an ended span.")
