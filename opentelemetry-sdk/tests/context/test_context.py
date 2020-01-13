@@ -14,23 +14,23 @@
 
 import concurrent.futures
 import contextvars
+import unittest
 from multiprocessing.dummy import Pool as ThreadPool
 
-import unittest
-
-from opentelemetry import trace as trace_api
+from opentelemetry.context import Context, merge_context_correlation
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
-from opentelemetry.context import Context, merge_context_correlation
-from opentelemetry.trace import tracer_source
+
+def do_work():
+    Context.set_value("say-something", "bar")
 
 
 class TestContext(unittest.TestCase):
-    URLS = [
+    spans = [
         "test_span1",
         "test_span2",
         "test_span3",
@@ -39,11 +39,8 @@ class TestContext(unittest.TestCase):
     ]
 
     def do_some_work(self, name):
-        # try:
-        with self.tracer.start_as_current_span(name) as span:
+        with self.tracer.start_as_current_span(name):
             pass
-        # except Exception as err:
-        #     print(err)
 
     def setUp(self):
         self.tracer_source = trace.TracerSource()
@@ -52,26 +49,22 @@ class TestContext(unittest.TestCase):
         span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
         self.tracer_source.add_span_processor(span_processor)
 
-    def do_work(self):
-        Context.set_value("say-something", "bar")
-
     def test_context(self):
-        assert Context.value("say-something") is None
+        self.assertIsNone(Context.value("say-something"))
         empty_context = Context.current()
         Context.set_value("say-something", "foo")
-        assert Context.value("say-something") == "foo"
+        self.assertEqual(Context.value("say-something"), "foo")
         second_context = Context.current()
 
-        self.do_work()
-        assert Context.value("say-something") == "bar"
+        do_work()
+        self.assertEqual(Context.value("say-something"), "bar")
         third_context = Context.current()
 
-        assert empty_context.get("say-something") is None
-        assert second_context.get("say-something") == "foo"
-        assert third_context.get("say-something") == "bar"
+        self.assertIsNone(empty_context.get("say-something"))
+        self.assertEqual(second_context.get("say-something"), "foo")
+        self.assertEqual(third_context.get("say-something"), "bar")
 
     def test_merge(self):
-        self.maxDiff = None
         Context.set_value("name", "first")
         Context.set_value("somebool", True)
         Context.set_value("key", "value")
@@ -102,24 +95,13 @@ class TestContext(unittest.TestCase):
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=5
             ) as executor:
-                # Start the load operations and mark each future with its URL
-                future_to_url = {
+                # Start the load operations
+                for span in self.spans:
                     executor.submit(
-                        contextvars.copy_context().run, self.do_some_work, url,
-                    ): url
-                    for url in self.URLS
-                }
-                for future in concurrent.futures.as_completed(future_to_url):
-                    url = future_to_url[future]
-                    try:
-                        data = future.result()
-                    except Exception as exc:
-                        print("%r generated an exception: %s" % (url, exc))
-                    else:
-                        data_len = 0
-                        if data:
-                            data_len = len(data)
-                        print("%r page is %d bytes" % (url, data_len))
+                        contextvars.copy_context().run,
+                        self.do_some_work,
+                        span,
+                    )
 
         span_list = self.memory_exporter.get_finished_spans()
         spans_names_list = [span.name for span in span_list]
@@ -139,7 +121,7 @@ class TestContext(unittest.TestCase):
         with self.tracer.start_as_current_span("threads_test"):
             pool = ThreadPool(5)  # create a thread pool
             pool.map(
-                Context.with_current_context(self.do_some_work), self.URLS,
+                Context.with_current_context(self.do_some_work), self.spans,
             )
             pool.close()
             pool.join()

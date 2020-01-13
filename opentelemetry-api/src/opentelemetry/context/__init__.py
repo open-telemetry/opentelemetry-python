@@ -158,9 +158,6 @@ except ImportError:
 
 class Context:
     def __init__(self) -> None:
-        self.slot_name = "{}".format(id(self))
-        self._slot = _CONTEXT.register_slot(self.slot_name)
-        self._slot.set(self)
         self.contents = {}
 
     def get(self, key: str) -> "object":
@@ -190,7 +187,7 @@ class Context:
         which contains the new value.
 
         Args:
-            key: 
+            key:
             value:
         """
         setattr(_CONTEXT, key, value)
