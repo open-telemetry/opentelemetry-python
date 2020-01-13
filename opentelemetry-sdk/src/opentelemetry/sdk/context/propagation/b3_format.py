@@ -25,7 +25,7 @@ from opentelemetry.context.propagation import (
 )
 from opentelemetry.trace.propagation.context import (
     Context,
-    from_context,
+    span_context_from_context,
     with_span_context,
 )
 
@@ -131,7 +131,7 @@ class B3Injector(HTTPInjector):
         context: typing.Optional[Context] = None,
         set_in_carrier: typing.Optional[Setter[_T]] = set_in_dict,
     ):
-        sc = from_context(context)
+        sc = span_context_from_context(context)
         sampled = (trace.TraceOptions.SAMPLED & sc.trace_options) != 0
         set_in_carrier(carrier, TRACE_ID_KEY, format_trace_id(sc.trace_id))
         set_in_carrier(carrier, SPAN_ID_KEY, format_span_id(sc.span_id))

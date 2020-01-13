@@ -18,7 +18,9 @@ from opentelemetry.correlationcontext import CorrelationContext
 from opentelemetry.correlationcontext.propagation import ContextKeys
 
 
-def from_context(ctx: Optional[Context] = None) -> CorrelationContext:
+def correlation_context_from_context(
+    ctx: Optional[Context] = None,
+) -> CorrelationContext:
     return Context.value(ContextKeys.span_context_key(), context=ctx)  # type: ignore
 
 

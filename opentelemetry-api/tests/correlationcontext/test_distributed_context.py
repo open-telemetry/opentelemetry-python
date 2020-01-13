@@ -83,7 +83,7 @@ class TestEntryValue(unittest.TestCase):
 
 #     def test_get_entries(self):
 #         self.assertIn(
-#             self.entry, from_context(self.context).get_entries(),
+#             self.entry, correlation_context_from_context(self.context).get_entries(),
 #         )
 
 #     def test_get_entry_value_present(self):

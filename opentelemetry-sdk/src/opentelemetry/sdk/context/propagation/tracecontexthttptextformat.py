@@ -26,7 +26,7 @@ from opentelemetry.context.propagation import (
     set_in_dict,
 )
 from opentelemetry.trace.propagation.context import (
-    from_context,
+    span_context_from_context,
     with_span_context,
 )
 
@@ -134,7 +134,7 @@ class TraceContextHTTPInjector(HTTPInjector):
         context: typing.Optional[Context] = None,
         set_in_carrier: typing.Optional[Setter[_T]] = set_in_dict,
     ) -> None:
-        sc = from_context(context)
+        sc = span_context_from_context(context)
         if sc is None or sc == trace.INVALID_SPAN_CONTEXT:
             return
 

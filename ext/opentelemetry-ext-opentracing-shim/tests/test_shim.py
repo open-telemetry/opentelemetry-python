@@ -27,7 +27,7 @@ from opentelemetry.context.propagation.httptextformat import (
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.trace.propagation.context import (
-    from_context,
+    span_context_from_context,
     with_span_context,
 )
 
@@ -570,6 +570,6 @@ class MockHTTPInjector(HTTPInjector):
 
     @classmethod
     def inject(cls, carrier, context=None, set_in_carrier=set_in_dict):
-        sc = from_context(context)
+        sc = span_context_from_context(context)
         set_in_carrier(carrier, _TRACE_ID_KEY, str(sc.trace_id))
         set_in_carrier(carrier, _SPAN_ID_KEY, str(sc.span_id))

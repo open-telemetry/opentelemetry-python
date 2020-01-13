@@ -22,7 +22,7 @@ from opentelemetry.sdk.context.propagation.tracecontexthttptextformat import (
     TraceContextHTTPInjector,
 )
 from opentelemetry.trace.propagation.context import (
-    from_context,
+    span_context_from_context,
     with_span_context,
 )
 
@@ -46,7 +46,9 @@ class TestTraceContextFormat(unittest.TestCase):
         If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span_context = from_context(EXTRACT.extract(output, self.ctx))
+        span_context = span_context_from_context(
+            EXTRACT.extract(output, self.ctx)
+        )
         self.assertTrue(isinstance(span_context, trace.SpanContext))
 
     def test_headers_with_tracestate(self):
@@ -58,7 +60,7 @@ class TestTraceContextFormat(unittest.TestCase):
             span_id=format(self.SPAN_ID, "016x"),
         )
         tracestate_value = "foo=1,bar=2,baz=3"
-        span_context = from_context(
+        span_context = span_context_from_context(
             EXTRACT.extract(
                 {
                     "traceparent": [traceparent_value],
@@ -96,7 +98,7 @@ class TestTraceContextFormat(unittest.TestCase):
         If the vendor failed to parse traceparent, it MUST NOT attempt to parse tracestate.
         Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
         """
-        span_context = from_context(
+        span_context = span_context_from_context(
             EXTRACT.extract(
                 {
                     "traceparent": [
@@ -124,7 +126,7 @@ class TestTraceContextFormat(unittest.TestCase):
         If the vendor failed to parse traceparent, it MUST NOT attempt to parse tracestate.
         Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
         """
-        span_context = from_context(
+        span_context = span_context_from_context(
             EXTRACT.extract(
                 {
                     "traceparent": [
@@ -161,7 +163,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
         If the version cannot be parsed, return an invalid trace header.
         """
-        span_context = from_context(
+        span_context = span_context_from_context(
             EXTRACT.extract(
                 {
                     "traceparent": [
@@ -184,7 +186,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
     def test_tracestate_empty_header(self):
         """Test tracestate with an additional empty header (should be ignored)"""
-        span_context = from_context(
+        span_context = span_context_from_context(
             EXTRACT.extract(
                 {
                     "traceparent": [
@@ -200,7 +202,7 @@ class TestTraceContextFormat(unittest.TestCase):
     def test_tracestate_header_with_trailing_comma(self):
         """Do not propagate invalid trace context.
         """
-        span_context = from_context(
+        span_context = span_context_from_context(
             EXTRACT.extract(
                 {
                     "traceparent": [

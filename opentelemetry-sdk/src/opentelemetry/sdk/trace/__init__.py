@@ -28,7 +28,7 @@ from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import SpanContext, sampling
 from opentelemetry.trace.propagation.context import (
     ContextKeys,
-    from_context,
+    span_context_from_context,
     span_from_context,
     with_span,
     with_span_context,
@@ -433,7 +433,7 @@ class Tracer(trace_api.Tracer):
             parent_context = parent.get_context()
 
         if parent_context is None:
-            parent_context = from_context(context)
+            parent_context = span_context_from_context(context)
 
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext

@@ -17,7 +17,7 @@ import unittest
 import opentelemetry.sdk.context.propagation.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
 import opentelemetry.trace as trace_api
-from opentelemetry.trace.propagation.context import from_context
+from opentelemetry.trace.propagation.context import span_context_from_context
 
 INJECTOR = b3_format.B3Injector
 EXTRACTOR = b3_format.B3Extractor
@@ -176,7 +176,7 @@ class TestB3Format(unittest.TestCase):
         invalid SpanContext.
         """
         carrier = {EXTRACTOR.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        span_context = from_context(EXTRACTOR.extract(carrier))
+        span_context = span_context_from_context(EXTRACTOR.extract(carrier))
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
@@ -186,7 +186,7 @@ class TestB3Format(unittest.TestCase):
             b3_format.SPAN_ID_KEY: self.serialized_span_id,
             EXTRACTOR.FLAGS_KEY: "1",
         }
-        span_context = from_context(EXTRACTOR.extract(carrier))
+        span_context = span_context_from_context(EXTRACTOR.extract(carrier))
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     def test_missing_span_id(self):
@@ -195,5 +195,5 @@ class TestB3Format(unittest.TestCase):
             b3_format.TRACE_ID_KEY: self.serialized_trace_id,
             EXTRACTOR.FLAGS_KEY: "1",
         }
-        span_context = from_context(EXTRACTOR.extract(carrier))
+        span_context = span_context_from_context(EXTRACTOR.extract(carrier))
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)

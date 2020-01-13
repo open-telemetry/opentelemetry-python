@@ -91,7 +91,7 @@ from opentelemetry.context import Context
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
 from opentelemetry.trace.propagation.context import (
-    from_context,
+    span_context_from_context,
     with_span_context,
 )
 
@@ -691,6 +691,6 @@ class TracerShim(opentracing.Tracer):
             raise opentracing.UnsupportedFormatException
 
         propagation.extract(carrier)
-        otel_context = from_context()
+        otel_context = span_context_from_context()
 
         return SpanContextShim(otel_context)
