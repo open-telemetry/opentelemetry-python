@@ -54,21 +54,27 @@ def configure_opentelemetry(flask_app: flask.Flask):
 
 
 def fetch_from_service_b() -> str:
-    # Inject the contexts to be propagated. Note that there is no direct
-    # reference to tracing or baggage.
-    headers = {"Accept": "application/json"}
-    propagation.inject(headers)
-    resp = requests.get("https://opentelemetry.io", headers=headers)
-    return resp.text
+    with trace.tracer_source().get_tracer(__name__).start_as_current_span(
+        "fetch_from_service_b"
+    ):
+        # Inject the contexts to be propagated. Note that there is no direct
+        # reference to tracing or baggage.
+        headers = {"Accept": "text/html"}
+        propagation.inject(headers)
+        resp = requests.get("https://opentelemetry.io", headers=headers)
+        return resp.text
 
 
 def fetch_from_service_c() -> str:
-    # Inject the contexts to be propagated. Note that there is no direct
-    # reference to tracing or baggage.
-    headers = {"Accept": "application/json"}
-    propagation.inject(headers)
-    resp = requests.get("https://opentelemetry.io", headers=headers)
-    return resp.text
+    with trace.tracer_source().get_tracer(__name__).start_as_current_span(
+        "fetch_from_service_c"
+    ):
+        # Inject the contexts to be propagated. Note that there is no direct
+        # reference to tracing or baggage.
+        headers = {"Accept": "application/json"}
+        propagation.inject(headers)
+        resp = requests.get("https://opentelemetry.io", headers=headers)
+        return resp.text
 
 
 app = flask.Flask(__name__)
@@ -80,13 +86,14 @@ def hello():
     trace.tracer_source().add_span_processor(
         BatchExportSpanProcessor(ConsoleSpanExporter())
     )
-    with propagation.extract(request.headers):
-        # extract a baggage header
-        with tracer.start_as_current_span("service-span"):
-            with tracer.start_as_current_span("external-req-span"):
-                version = CorrelationContextManager.correlation("version")
-                if version == "2.0":
-                    return fetch_from_service_c()
+    # extract a baggage header
+    propagation.extract(request.headers)
+
+    with tracer.start_as_current_span("service-span"):
+        with tracer.start_as_current_span("external-req-span"):
+            version = CorrelationContextManager.correlation("version")
+            if version == "2.0":
+                return fetch_from_service_c()
 
         return fetch_from_service_b()
 
