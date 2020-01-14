@@ -28,11 +28,9 @@ class CorrelationContextManager(dctx_api.CorrelationContextManager):
 
     def __init__(self, name: str = "") -> None:
         if name:
-            slot_name = "CorrelationContext.{}".format(name)
+            self.slot_name = "CorrelationContext.{}".format(name)
         else:
-            slot_name = "CorrelationContext"
-
-        self._current_context = Context.register_slot(slot_name)
+            self.slot_name = "CorrelationContext"
 
     def current_context(self,) -> typing.Optional[dctx_api.CorrelationContext]:
         """Gets the current CorrelationContext.
@@ -40,7 +38,7 @@ class CorrelationContextManager(dctx_api.CorrelationContextManager):
         Returns:
             A CorrelationContext instance representing the current context.
         """
-        return self._current_context.get()
+        return Context.value(self.slot_name)
 
     @contextmanager
     def use_context(
@@ -56,9 +54,9 @@ class CorrelationContextManager(dctx_api.CorrelationContextManager):
         Args:
             context: A CorrelationContext instance to make current.
         """
-        snapshot = self._current_context.get()
-        self._current_context.set(context)
+        snapshot = Context.value(self.slot_name)
+        Context.set_value(self.slot_name, context)
         try:
             yield context
         finally:
-            self._current_context.set(snapshot)
+            Context.set_value(self.slot_name, snapshot)

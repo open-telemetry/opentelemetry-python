@@ -160,7 +160,7 @@ class Context:
     def __init__(self) -> None:
         self.contents = {}
 
-    def get(self, key: str) -> "object":
+    def get(self, key: str) -> typing.Optional["object"]:
         return self.contents.get(key)
 
     @classmethod
@@ -191,7 +191,7 @@ class Context:
             value:
         """
         setattr(_CONTEXT, key, value)
-        return cls.snapshot()
+        return _CONTEXT.snapshot()
 
     @classmethod
     def current(cls) -> "Context":
@@ -203,10 +203,6 @@ class Context:
         ctx = Context()
         ctx.contents = _CONTEXT.snapshot()
         return ctx
-
-    @classmethod
-    def snapshot(cls) -> "Context":
-        return _CONTEXT.snapshot()
 
     @classmethod
     def set_current(cls, ctx: "Context") -> None:
@@ -221,12 +217,6 @@ class Context:
         return _CONTEXT.use(**kwargs)  # type: ignore
 
     @classmethod
-    def register_slot(
-        cls, name: str, default: "object" = None
-    ) -> "BaseRuntimeContext.Slot":
-        return _CONTEXT.register_slot(name, default)
-
-    @classmethod
     def suppress_instrumentation(cls) -> "object":
         return _CONTEXT.suppress_instrumentation
 
@@ -236,7 +226,7 @@ class Context:
     ) -> typing.Callable[..., "object"]:
         return _CONTEXT.with_current_context(func)
 
-    def apply(self, ctx: "Context") -> "Context":
+    def apply(self, ctx: "Context") -> None:
         for key in ctx.contents:
             self.contents[key] = ctx.contents[key]
 

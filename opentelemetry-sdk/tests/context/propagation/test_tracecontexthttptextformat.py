@@ -35,7 +35,7 @@ class TestTraceContextFormat(unittest.TestCase):
     SPAN_ID = int("1234567890123456", 16)  # type:int
 
     def setUp(self):
-        self.ctx = Context.snapshot()
+        self.ctx = Context.current()
 
     def test_no_traceparent_header(self):
         """When tracecontext headers are not present, a new SpanContext

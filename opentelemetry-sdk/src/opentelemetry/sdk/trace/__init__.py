@@ -518,7 +518,7 @@ class TracerSource(trace_api.TracerSource):
     ):
         # TODO: How should multiple TracerSources behave? Should they get their own contexts?
         # This could be done by adding `str(id(self))` to the slot name.
-        self._current_span_slot = Context.register_slot("current_span")
+        self._current_span_name = "current_span"
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
         self._atexit_handler = None
@@ -540,8 +540,9 @@ class TracerSource(trace_api.TracerSource):
             ),
         )
 
-    def get_current_span(self) -> Span:
-        return self._current_span_slot.get()
+    def get_current_span(self, context: Optional[Context] = None) -> Span:
+        """See `opentelemetry.trace.Tracer.get_current_span`."""
+        return Context.value(self._current_span_name, context=context)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerSource`.
