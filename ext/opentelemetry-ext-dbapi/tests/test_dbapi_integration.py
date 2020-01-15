@@ -21,7 +21,7 @@ from opentelemetry.ext.dbapi import DatabaseApiIntegration
 
 class TestDBApiIntegration(unittest.TestCase):
     def setUp(self):
-        self.tracer = trace_api.Tracer()
+        self.tracer = trace_api.DefaultTracer()
         self.span = MockSpan()
         self.start_current_span_patcher = mock.patch.object(
             self.tracer,

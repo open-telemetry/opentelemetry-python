@@ -23,7 +23,7 @@ from opentelemetry.ext.mysql import trace_integration
 
 class TestMysqlIntegration(unittest.TestCase):
     def test_trace_integration(self):
-        tracer = trace_api.Tracer()
+        tracer = trace_api.DefaultTracer()
         span = mock.create_autospec(trace_api.Span, spec_set=True)
         start_current_span_patcher = mock.patch.object(
             tracer,
