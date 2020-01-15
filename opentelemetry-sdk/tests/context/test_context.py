@@ -77,15 +77,11 @@ class TestContext(unittest.TestCase):
         dst_ctx = Context.current()
 
         Context.set_current(merge_context_correlation(src_ctx, dst_ctx))
-        self.assertEqual(Context.current().contents.get("name"), "first")
-        self.assertTrue(Context.current().contents.get("somebool"))
-        self.assertEqual(Context.current().contents.get("key"), "value")
-        self.assertEqual(
-            Context.current().contents.get("otherkey"), "othervalue"
-        )
-        self.assertEqual(
-            Context.current().contents.get("anotherkey"), "anothervalue"
-        )
+        self.assertEqual(Context.current().get("name"), "first")
+        self.assertTrue(Context.current().get("somebool"))
+        self.assertEqual(Context.current().get("key"), "value")
+        self.assertEqual(Context.current().get("otherkey"), "othervalue")
+        self.assertEqual(Context.current().get("anotherkey"), "anothervalue")
 
     def test_propagation(self):
         pass
