@@ -46,6 +46,9 @@ counter = meter.create_metric(
     ("environment",),
 )
 
+# Labelsets are used to identify key-values that are associated with a specific
+# metric that you want to record. These are useful for pre-aggregation and can
+# be used to store custom dimensions pertaining to a metric
 label_set = meter.get_label_set({"environment": "staging"})
 
 counter.add(25, label_set)
