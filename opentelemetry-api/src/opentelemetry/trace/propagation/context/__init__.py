@@ -14,7 +14,7 @@
 from typing import Optional
 
 from opentelemetry.context import Context
-from opentelemetry.trace import Span, SpanContext
+from opentelemetry.trace import Span, SpanContext, INVALID_SPAN_CONTEXT
 from opentelemetry.trace.propagation import ContextKeys
 
 
@@ -22,7 +22,11 @@ def span_context_from_context(ctx: Optional[Context] = None) -> SpanContext:
     span = span_from_context(context=ctx)
     if span:
         return span.get_context()
-    return Context.value(ContextKeys.span_context_key(), context=ctx)  # type: ignore
+    sc = Context.value(ContextKeys.span_context_key(), context=ctx)  # type: ignore
+    if sc:
+        return sc
+
+    return INVALID_SPAN_CONTEXT
 
 
 def with_span_context(span_context: SpanContext) -> Context:

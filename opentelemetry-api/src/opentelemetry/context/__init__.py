@@ -138,8 +138,6 @@ Here goes a simple demo of how async could work in Python 3.7+::
         asyncio.run(main())
 """
 
-import copy
-import types
 import typing
 
 from .base_context import BaseRuntimeContext
@@ -191,7 +189,7 @@ class Context:
             value:
         """
         setattr(_CONTEXT, key, value)
-        return _CONTEXT.snapshot()
+        return cls.current()
 
     @classmethod
     def current(cls) -> "Context":

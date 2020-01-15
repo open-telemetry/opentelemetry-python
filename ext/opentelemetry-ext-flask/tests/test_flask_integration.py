@@ -55,7 +55,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.start_span.assert_called_with(
             "hello_endpoint",
-            None,
+            trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
             attributes={
                 "component": "http",
@@ -85,7 +85,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.start_span.assert_called_with(
             "/bye",
-            None,
+            trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
             attributes={
                 "component": "http",
@@ -116,7 +116,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.start_span.assert_called_with(
             "hello_endpoint",
-            None,
+            trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
             attributes={
                 "component": "http",

@@ -98,7 +98,7 @@ class TestWsgiApplication(WsgiTestBase):
         # Verify that start_span has been called
         self.start_span.assert_called_with(
             "/",
-            None,
+            trace_api.INVALID_SPAN_CONTEXT,
             kind=trace_api.SpanKind.SERVER,
             attributes={
                 "component": "http",
