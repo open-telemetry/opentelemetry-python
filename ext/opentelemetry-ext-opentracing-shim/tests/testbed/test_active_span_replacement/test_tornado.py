@@ -19,7 +19,9 @@ class TestTornado(OpenTelemetryTestCase):
         self.submit_another_task(span)
 
         stop_loop_when(
-            self.loop, lambda: len(self.tracer.finished_spans()) >= 3
+            self.loop,
+            lambda: len(self.tracer.finished_spans()) >= 3,
+            timeout=5.0,
         )
         self.loop.start()
 

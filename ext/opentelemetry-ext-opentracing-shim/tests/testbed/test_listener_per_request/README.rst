@@ -2,7 +2,7 @@
 Listener Response example.
 ==========================
 
-This example shows a ``Span`` created upon a message being sent to a ``Client``\ , and its handling along a related, **not shared** ``ResponseListener`` object with a ``on_response(self, response)`` method to finish it.
+This example shows a ``Span`` created upon a message being sent to a ``Client``, and its handling along a related, **not shared** ``ResponseListener`` object with a ``on_response(self, response)`` method to finish it.
 
 .. code-block:: python
 

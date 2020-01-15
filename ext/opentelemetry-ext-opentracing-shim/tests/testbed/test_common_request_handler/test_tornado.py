@@ -61,7 +61,9 @@ class TestTornado(OpenTelemetryTestCase):
         res_future2 = self.client.send("message2")
 
         stop_loop_when(
-            self.loop, lambda: len(self.tracer.finished_spans()) >= 2
+            self.loop,
+            lambda: len(self.tracer.finished_spans()) >= 2,
+            timeout=5.0,
         )
         self.loop.start()
 

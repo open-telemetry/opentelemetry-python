@@ -21,12 +21,12 @@ class TestAsyncio(OpenTelemetryTestCase):
         self.assertIsChildOf(spans[0], spans[1])
 
     async def parent_task(self, message):  # noqa
-        with self.tracer.start_active_span("parent") as scope:
-            res = await self.child_task(message, scope.span)
+        with self.tracer.start_active_span("parent"):
+            res = await self.child_task(message)
 
         return res
 
-    async def child_task(self, message, span):
-        with self.tracer.scope_manager.activate(span, False):
-            with self.tracer.start_active_span("child"):
-                return "%s::response" % message
+    async def child_task(self, message):
+        # No need to pass/activate the parent Span, as it stays in the context.
+        with self.tracer.start_active_span("child"):
+            return "%s::response" % message

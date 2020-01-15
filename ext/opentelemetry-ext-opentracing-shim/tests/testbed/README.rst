@@ -31,7 +31,7 @@ List of patterns
 * `Common Request Handler <test_common_request_handler>`_ - One request handler for all requests.
 * `Late Span finish <test_late_span_finish>`_ - Late parent ``Span`` finish.
 * `Multiple callbacks <test_multiple_callbacks>`_ - Multiple callbacks spawned at the same time.
-* `Nested callbacks <test_nested_callbacks>`_ - One callback at a time, defined ina pipeline fashion.
+* `Nested callbacks <test_nested_callbacks>`_ - One callback at a time, defined in a pipeline fashion.
 * `Subtask Span propagation <test_subtask_span_propagation>`_ - ``Span`` propagation for subtasks/coroutines.
 
 Adding new patterns

@@ -7,8 +7,8 @@ This example shows a ``Span`` for a top-level operation, and how it can be passe
 Implementation details:
 
 
-* For ```asyncio`` and ``threading``\ , the ``Span`` is manually passed down the call chain, activating it in each corotuine/task.
-* For ``tornado``\ , the active ``Span`` is not passed nor activated down the chain as the  ``Context`` automatically propagates it.
+* For ``threading``, the ``Span`` is manually activatted it in each corotuine/task.
+* For ``asyncio`` and ``tornado``, the active ``Span`` is not activated down the chain as the ``Context`` automatically propagates it.
 
 ``threading`` implementation:
 
@@ -19,11 +19,11 @@ Implementation details:
 
            def task1():
                with self.tracer.scope_manager.activate(span, False):
-                   span.set_tag("key1', '1")
+                   span.set_tag("key1", "1")
 
                    def task2():
                        with self.tracer.scope_manager.activate(span, False):
-                           span.set_tag("key2', '2")
+                           span.set_tag("key2", "2")
                            ...
 
 ``tornado`` implementation:
@@ -37,10 +37,10 @@ Implementation details:
            @gen.coroutine
            def task1():
                self.assertEqual(span, self.tracer.scope_manager.active.span)
-               span.set_tag("key1', '1")
+               span.set_tag("key1", "1")
 
                @gen.coroutine
                def task2():
                    self.assertEqual(span,
                                     self.tracer.scope_manager.active.span)
-                   span.set_tag("key2', '2")
+                   span.set_tag("key2", "2")

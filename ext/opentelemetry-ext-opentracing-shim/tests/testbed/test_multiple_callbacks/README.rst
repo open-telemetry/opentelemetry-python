@@ -4,7 +4,7 @@ Multiple callbacks example.
 
 This example shows a ``Span`` created for a top-level operation, covering a set of asynchronous operations (representing callbacks), and have this ``Span`` finished when **all** of them have been executed.
 
-``Client.send()`` is used to create a new asynchronous operation (callback), and in turn every operation both restores the active ``Span``\ , and creates a child ``Span`` (useful for measuring the performance of each callback).
+``Client.send()`` is used to create a new asynchronous operation (callback), and in turn every operation both restores the active ``Span``, and creates a child ``Span`` (useful for measuring the performance of each callback).
 
 Implementation details:
 

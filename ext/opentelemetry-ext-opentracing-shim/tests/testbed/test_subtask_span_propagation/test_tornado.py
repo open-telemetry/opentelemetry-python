@@ -32,7 +32,6 @@ class TestTornado(OpenTelemetryTestCase):
 
     @gen.coroutine
     def child_task(self, message):
-        # No need to pass/activate the parent Span, as
-        # it stays in the context.
+        # No need to pass/activate the parent Span, as it stays in the context.
         with self.tracer.start_active_span("child"):
             raise gen.Return("%s::response" % message)

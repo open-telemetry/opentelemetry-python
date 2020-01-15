@@ -6,8 +6,8 @@ This example shows an active ``Span`` being simply propagated to the subtasks -e
 
 Implementation details:
 
-* For ```asyncio`` and ``threading``\ , the ``Span`` is manually passed down the call chain, activating it in each corotuine/task.
-* For ``tornado``\ , the active ``Span`` is not passed nor activated down the chain as the  ``Context`` automatically propagates it.
+* For ``threading``, the ``Span`` is manually passed down the call chain, activating it in each corotuine/task.
+* For ``asyncio`` and ``tornado``, the active ``Span`` is not passed nor activated down the chain as the ``Context`` automatically propagates it.
 
 ``threading`` implementation:
 

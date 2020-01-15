@@ -12,9 +12,9 @@ This example shows a ``Span`` being created and then passed to an asynchronous t
    with self.tracer.start_active_span("task"):
 
        with self.tracer.scope_manager.activate(span, True):
-       # Simulate work strictly related to the initial Span
-       pass
+              # Simulate work strictly related to the initial Span
+              pass
 
        # Use the task span as parent of a new subtask
        with self.tracer.start_active_span("subtask"):
-       pass
+              pass

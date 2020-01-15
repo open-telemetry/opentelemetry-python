@@ -9,6 +9,7 @@ from ..testcase import OpenTelemetryTestCase
 class TestThreads(OpenTelemetryTestCase):
     def setUp(self):
         self.tracer = MockTracer()
+        # use max_workers=3 as a general example even if only one would suffice
         self.executor = ThreadPoolExecutor(max_workers=3)
 
     def test_main(self):
