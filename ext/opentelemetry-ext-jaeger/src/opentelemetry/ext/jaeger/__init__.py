@@ -153,9 +153,6 @@ def _translate_to_jaeger(spans: Span):
 
         tags = _extract_tags(span.attributes)
 
-        # TODO: status is missing:
-        # https://github.com/open-telemetry/opentelemetry-python/issues/98
-
         refs = _extract_refs_from_span(span)
         logs = _extract_logs_from_span(span)
 
