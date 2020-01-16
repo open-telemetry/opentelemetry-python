@@ -101,13 +101,16 @@ class TestAsyncio(OpenTelemetryTestCase):
         # Here check that there is no parent-child relation.
         self.assertIsNotChildOf(child_span, parent_span)
 
-    def test_bad_solution_to_set_parent(self):
-        """Solution is bad because parent is per client
-        (we don't have better choice)"""
+    def test_good_solution_to_set_parent(self):
+        """Asyncio and contextvars are integrated, in this case it is not needed
+        to activate current span by hand.
+        """
 
         async def do_task():
-            with self.tracer.start_active_span("parent") as scope:
-                req_handler = RequestHandler(self.tracer, scope.span.context)
+            with self.tracer.start_active_span("parent"):
+                # Set ignore_active_span to False indicating that the
+                # framework will do it for us.
+                req_handler = RequestHandler(self.tracer, ignore_active_span=False)
                 client = Client(req_handler, self.loop)
                 response = await client.send_task("correct_parent")
 
@@ -128,4 +131,4 @@ class TestAsyncio(OpenTelemetryTestCase):
         self.assertIsNotNone(parent_span)
 
         self.assertIsChildOf(spans[1], parent_span)
-        self.assertIsChildOf(spans[2], parent_span)
+        self.assertIsNotChildOf(spans[2], parent_span)

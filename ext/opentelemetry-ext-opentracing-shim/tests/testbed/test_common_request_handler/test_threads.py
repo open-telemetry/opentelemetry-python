@@ -92,11 +92,13 @@ class TestThreads(OpenTelemetryTestCase):
         self.assertIsNotChildOf(child_span, parent_span)
 
     def test_bad_solution_to_set_parent(self):
-        """Solution is bad because parent is per client
-        (we don't have better choice)"""
+        """Solution is bad because parent is per client and is not automatically
+        activated depending on the context.
+        """
 
         with self.tracer.start_active_span("parent") as scope:
             client = Client(
+                # Pass a span context to be used ad the parent.
                 RequestHandler(self.tracer, scope.span.context), self.executor
             )
             response = client.send_sync("correct_parent")
