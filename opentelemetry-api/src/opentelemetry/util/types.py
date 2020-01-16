@@ -13,16 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, Optional, Sequence, Union
+import typing
 
-AttributeValue = Union[
-    str,
-    bool,
-    int,
-    float,
-    Sequence[str],
-    Sequence[bool],
-    Sequence[int],
-    Sequence[float],
-]
-Attributes = Optional[Dict[str, AttributeValue]]
+AttributeValue = typing.Union[str, bool, float]
+Attributes = typing.Optional[typing.Dict[str, AttributeValue]]
