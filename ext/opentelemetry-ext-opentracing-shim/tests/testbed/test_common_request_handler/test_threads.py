@@ -99,7 +99,8 @@ class TestThreads(OpenTelemetryTestCase):
         with self.tracer.start_active_span("parent") as scope:
             client = Client(
                 # Pass a span context to be used ad the parent.
-                RequestHandler(self.tracer, scope.span.context), self.executor
+                RequestHandler(self.tracer, scope.span.context),
+                self.executor,
             )
             response = client.send_sync("correct_parent")
             self.assertEqual("correct_parent::response", response)

@@ -110,7 +110,9 @@ class TestAsyncio(OpenTelemetryTestCase):
             with self.tracer.start_active_span("parent"):
                 # Set ignore_active_span to False indicating that the
                 # framework will do it for us.
-                req_handler = RequestHandler(self.tracer, ignore_active_span=False)
+                req_handler = RequestHandler(
+                    self.tracer, ignore_active_span=False,
+                )
                 client = Client(req_handler, self.loop)
                 response = await client.send_task("correct_parent")
 
