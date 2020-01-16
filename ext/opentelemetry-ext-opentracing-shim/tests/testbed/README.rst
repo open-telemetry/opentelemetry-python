@@ -20,7 +20,7 @@ Alternatively, due to the organization of the suite, it's possible to run direct
 Tested frameworks
 -----------------
 
-Currently the examples cover ``threading``\ , ``tornado`` and ``asyncio``.
+Currently the examples cover ``threading`` and ``asyncio``.
 
 List of patterns
 ----------------
@@ -44,5 +44,4 @@ A new pattern is composed of a directory under *testbed* with the *test_* prefix
    testbed/
      test_new_pattern/
        test_threads.py
-       test_tornado.py
        test_asyncio.py

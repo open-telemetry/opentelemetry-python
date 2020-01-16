@@ -17,11 +17,7 @@ RequestHandler implementation:
 
            # If we should ignore the active Span, use any passed SpanContext
            # as the parent. Else, use the active one.
-           if self.ignore_active_span:
-               # Used by threading, gevent and asyncio.
-               span = self.tracer.start_span("send",
-                                             child_of=self.context,
-                                             ignore_active_span=True)
-           else:
-               # Used by tornado.
-               span = self.tracer.start_span("send")
+           span = self.tracer.start_span("send",
+                                         child_of=self.context,
+                                         ignore_active_span=True)
+

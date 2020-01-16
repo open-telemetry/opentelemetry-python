@@ -10,7 +10,7 @@ Implementation details:
 
 
 * For ``threading``, a thread-safe counter is put in each ``Span`` to keep track of the pending callbacks, and call ``Span.finish()`` when the count becomes 0.
-* For ``tornado`` and ``asyncio`` the children corotuines representing the subtasks are simply yielded over, so no counter is needed.
+* For ``asyncio`` the children corotuines representing the subtasks are simply yielded over, so no counter is needed.
 
 ``threading`` implementation:
 

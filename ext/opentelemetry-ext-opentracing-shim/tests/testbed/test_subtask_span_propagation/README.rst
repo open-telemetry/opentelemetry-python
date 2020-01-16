@@ -7,7 +7,7 @@ This example shows an active ``Span`` being simply propagated to the subtasks -e
 Implementation details:
 
 * For ``threading``, the ``Span`` is manually passed down the call chain, activating it in each corotuine/task.
-* For ``asyncio`` and ``tornado``, the active ``Span`` is not passed nor activated down the chain as the ``Context`` automatically propagates it.
+* For ``asyncio``, the active ``Span`` is not passed nor activated down the chain as the ``Context`` automatically propagates it.
 
 ``threading`` implementation:
 
@@ -25,19 +25,18 @@ Implementation details:
                with self.tracer.start_active_span("child"):
                    return "%s::response" % message
 
-``tornado`` implementation:
+``asyncio`` implementation:
 
 .. code-block:: python
 
-       def parent_task(self, message):
+       async def parent_task(self, message):  # noqa
            with self.tracer.start_active_span("parent"):
-               res = yield self.child_task(message)
+               res = await self.child_task(message)
 
-           raise gen.Return(res)
+           return res
 
-       @gen.coroutine
-       def child_task(self, message):
-           # No need to pass/activate the parent Span, as
-           # it stays in the context.
+       async def child_task(self, message):
+           # No need to pass/activate the parent Span, as it stays in the context.
            with self.tracer.start_active_span("child"):
-               raise gen.Return("%s::response" % message)
+               return "%s::response" % message
+

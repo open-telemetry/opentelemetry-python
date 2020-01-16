@@ -8,7 +8,7 @@ Implementation details:
 
 
 * For ``threading``, the ``Span`` is manually activatted it in each corotuine/task.
-* For ``asyncio`` and ``tornado``, the active ``Span`` is not activated down the chain as the ``Context`` automatically propagates it.
+* For ``asyncio``, the active ``Span`` is not activated down the chain as the ``Context`` automatically propagates it.
 
 ``threading`` implementation:
 
@@ -26,21 +26,22 @@ Implementation details:
                            span.set_tag("key2", "2")
                            ...
 
-``tornado`` implementation:
+``asyncio`` implementation:
 
 .. code-block:: python
 
-       @gen.coroutine
-       def submit(self):
-           span = self.tracer.scope_manager.active.span
+        async def task1():
+            span.set_tag("key1", "1")
 
-           @gen.coroutine
-           def task1():
-               self.assertEqual(span, self.tracer.scope_manager.active.span)
-               span.set_tag("key1", "1")
+            async def task2():
+                span.set_tag("key2", "2")
 
-               @gen.coroutine
-               def task2():
-                   self.assertEqual(span,
-                                    self.tracer.scope_manager.active.span)
-                   span.set_tag("key2", "2")
+                async def task3():
+                    span.set_tag("key3", "3")
+                    span.finish()
+
+                self.loop.create_task(task3())
+
+            self.loop.create_task(task2())
+
+        self.loop.create_task(task1())
