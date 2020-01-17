@@ -549,67 +549,50 @@ class TestSpan(unittest.TestCase):
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
 
-        class ContextWrapper:
-            # This auxiliary class is added here just to make it possible to
-            # handle the warning raised in the __exit__ method of the context
-            # manager in self.span_context. This class makes it possible to
-            # catch just that warning specifically with self.test.assertLogs.
-            # This is done to avoid having the whole test in a self.assertLogs
-            # context that would catch any warning raised.
-            test = self
-
-            def __init__(self):
-                self.span_context = self.test.tracer.start_as_current_span(
-                    "root"
-                )
-
-            def __enter__(self):
-                return self.span_context.__enter__()
-
-            def __exit__(self, type_, value, traceback):
-                with self.test.assertLogs(level=WARNING):
-                    self.span_context.__exit__(type_, value, traceback)
-
-        with ContextWrapper() as root:
-
-            # everything should be empty at the beginning
-            self.assertEqual(len(root.attributes), 0)
-            self.assertEqual(len(root.events), 0)
-            self.assertEqual(len(root.links), 0)
-
-            # call end first time
-            root.end()
-            end_time0 = root.end_time
-
-            # call it a second time
-            with self.assertLogs(level=WARNING):
+        # Test that end() is called when the context manager is exited
+        with self.assertLogs(level=WARNING):
+            with self.tracer.start_as_current_span("root") as root:
                 root.end()
-            # end time shouldn't be changed
-            self.assertEqual(end_time0, root.end_time)
 
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("component", "http")
-            self.assertEqual(len(root.attributes), 0)
+        root = self.tracer.start_span("root")
 
-            with self.assertLogs(level=WARNING):
-                root.add_event("event1")
-            self.assertEqual(len(root.events), 0)
+        # everything should be empty at the beginning
+        self.assertEqual(len(root.attributes), 0)
+        self.assertEqual(len(root.events), 0)
+        self.assertEqual(len(root.links), 0)
 
-            with self.assertLogs(level=WARNING):
-                root.update_name("xxx")
-            self.assertEqual(root.name, "root")
+        # call end first time
+        root.end()
+        end_time0 = root.end_time
 
-            new_status = trace_api.status.Status(
-                trace_api.status.StatusCanonicalCode.CANCELLED,
-                "Test description",
-            )
+        # call it a second time
+        with self.assertLogs(level=WARNING):
+            root.end()
+        # end time shouldn't be changed
+        self.assertEqual(end_time0, root.end_time)
 
-            with self.assertLogs(level=WARNING):
-                root.set_status(new_status)
-            self.assertEqual(
-                root.status.canonical_code,
-                trace_api.status.StatusCanonicalCode.OK,
-            )
+        with self.assertLogs(level=WARNING):
+            root.set_attribute("component", "http")
+        self.assertEqual(len(root.attributes), 0)
+
+        with self.assertLogs(level=WARNING):
+            root.add_event("event1")
+        self.assertEqual(len(root.events), 0)
+
+        with self.assertLogs(level=WARNING):
+            root.update_name("xxx")
+        self.assertEqual(root.name, "root")
+
+        new_status = trace_api.status.Status(
+            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description",
+        )
+
+        with self.assertLogs(level=WARNING):
+            root.set_status(new_status)
+        self.assertEqual(
+            root.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.OK,
+        )
 
     def test_error_status(self):
         try:
