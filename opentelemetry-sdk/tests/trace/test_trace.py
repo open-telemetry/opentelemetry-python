@@ -549,11 +549,6 @@ class TestSpan(unittest.TestCase):
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
 
-        # Test that end() is called when the context manager is exited
-        with self.assertLogs(level=WARNING):
-            with self.tracer.start_as_current_span("root") as root:
-                root.end()
-
         root = self.tracer.start_span("root")
 
         # everything should be empty at the beginning
