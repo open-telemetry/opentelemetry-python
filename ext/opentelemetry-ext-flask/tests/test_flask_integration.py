@@ -75,7 +75,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.app.route("/assert_environ")(assert_environ)
         self.client.get("/assert_environ")
-        self.assertEqual(nonstring_keys, set()) 
+        self.assertEqual(nonstring_keys, set())
 
     def test_simple(self):
         expected_attrs = expected_attributes(
