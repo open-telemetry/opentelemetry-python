@@ -3,8 +3,9 @@
 
 import logging
 
-import opentelemetry.ext.wsgi as otel_wsgi
 from flask import request as flask_request
+
+import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import propagators, trace
 from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import time_ns

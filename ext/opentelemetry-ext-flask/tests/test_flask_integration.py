@@ -14,12 +14,13 @@
 
 import unittest
 
-import opentelemetry.ext.flask as otel_flask
 from flask import Flask
-from opentelemetry import trace as trace_api
-from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
+
+import opentelemetry.ext.flask as otel_flask
+from opentelemetry import trace as trace_api
+from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
 
 
 def expected_attributes(override_attributes):
