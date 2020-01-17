@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Union, Optional, Dict, Sequence
+from typing import Dict, Optional, Sequence, Union
 
 AttributeValue = Union[
     str,
