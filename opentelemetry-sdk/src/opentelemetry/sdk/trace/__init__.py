@@ -210,7 +210,7 @@ class Span(trace_api.Span):
             logger.warning("Setting attribute on ended span.")
             return
 
-        if isinstance(value, Sequence) and len(value) > 0:
+        if isinstance(value, Sequence):
             error_message = self._check_attribute_value_sequence(value)
             if error_message is not None:
                 logger.warning("%s in attribute value sequence", error_message)
@@ -226,6 +226,9 @@ class Span(trace_api.Span):
         """
         Checks if sequence items are valid and are of the same type
         """
+        if len(sequence) == 0:
+            return None
+
         first_element_type = type(sequence[0])
 
         if issubclass(first_element_type, Number):
