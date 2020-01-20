@@ -14,7 +14,7 @@
 from typing import Optional
 
 from opentelemetry.context import Context
-from opentelemetry.trace import Span, SpanContext, INVALID_SPAN_CONTEXT
+from opentelemetry.trace import INVALID_SPAN_CONTEXT, Span, SpanContext
 from opentelemetry.trace.propagation import ContextKeys
 
 

@@ -98,4 +98,3 @@ class BaseRuntimeContext:
 
     def __setitem__(self, name: str, value: "object") -> None:
         self.__setattr__(name, value)
-

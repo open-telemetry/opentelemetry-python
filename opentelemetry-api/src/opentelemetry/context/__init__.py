@@ -139,7 +139,6 @@ Here goes a simple demo of how async could work in Python 3.7+::
 """
 
 import typing
-
 from contextlib import contextmanager
 
 from .base_context import BaseRuntimeContext
