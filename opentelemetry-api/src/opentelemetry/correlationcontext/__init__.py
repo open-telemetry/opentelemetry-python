@@ -18,7 +18,7 @@ import typing
 from typing import Optional
 
 from opentelemetry.context import Context
-from opentelemetry.context.propagation import Extractor, Injector
+from opentelemetry.propagation import Extractor, Injector
 
 PRINTABLE = frozenset(
     itertools.chain(

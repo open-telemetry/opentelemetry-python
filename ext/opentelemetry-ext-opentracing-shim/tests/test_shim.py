@@ -19,12 +19,13 @@ import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagation, trace
-from opentelemetry.context.propagation import get_as_list, set_in_dict
-from opentelemetry.context.propagation.httptextformat import (
+from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.propagation import (
     Extractor,
     Injector,
+    get_as_list,
+    set_in_dict,
 )
-from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.trace.propagation.context import (
     span_context_from_context,

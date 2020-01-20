@@ -15,7 +15,7 @@
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation import (
+from opentelemetry.propagation import (
     Extractor,
     Getter,
     Injector,
