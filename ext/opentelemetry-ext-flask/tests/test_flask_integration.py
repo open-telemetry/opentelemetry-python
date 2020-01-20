@@ -14,7 +14,7 @@
 
 import unittest
 
-from flask import Flask
+from flask import Flask, request
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
@@ -67,11 +67,9 @@ class TestFlaskIntegration(WsgiTestBase):
         nonstring_keys = set()
 
         def assert_environ():
-            from flask import request
-
-            for k in request.environ:
-                if not isinstance(k, str):
-                    nonstring_keys.add(k)
+            for key in request.environ:
+                if not isinstance(key, str):
+                    nonstring_keys.add(key)
             return "hi"
 
         self.app.route("/assert_environ")(assert_environ)
