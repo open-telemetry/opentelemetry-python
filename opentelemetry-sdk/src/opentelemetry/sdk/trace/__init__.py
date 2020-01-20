@@ -67,7 +67,8 @@ class SpanProcessor:
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
+        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown.
+        """
 
 
 class MultiSpanProcessor(SpanProcessor):
@@ -299,15 +300,16 @@ class Span(trace_api.Span):
                 raise RuntimeError("Calling end() on a not started span.")
             has_ended = self.end_time is not None
             if not has_ended:
+                if self.status is None:
+                    self.status = Status(canonical_code=StatusCanonicalCode.OK)
+
                 self._end_time = (
                     end_time if end_time is not None else time_ns()
                 )
+
         if has_ended:
             logger.warning("Calling end() on an ended span.")
             return
-
-        if self.status is None:
-            self.set_status(Status(canonical_code=StatusCanonicalCode.OK))
 
         self.span_processor.on_end(self)
 
