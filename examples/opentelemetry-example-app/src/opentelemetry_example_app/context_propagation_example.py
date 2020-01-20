@@ -37,6 +37,9 @@ from opentelemetry.sdk.trace.export import (
 
 def configure_opentelemetry(flask_app: flask.Flask):
     trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+    trace.tracer_source().add_span_processor(
+        BatchExportSpanProcessor(ConsoleSpanExporter())
+    )
 
     # Global initialization
     (b3_extractor, b3_injector) = b3_format.http_propagator()
@@ -79,9 +82,6 @@ app = flask.Flask(__name__)
 @app.route("/")
 def hello():
     tracer = trace.tracer_source().get_tracer(__name__)
-    trace.tracer_source().add_span_processor(
-        BatchExportSpanProcessor(ConsoleSpanExporter())
-    )
     # extract a baggage header
     propagation.extract(request.headers)
 
@@ -90,8 +90,7 @@ def hello():
             version = CorrelationContextManager.correlation("version")
             if version == "2.0":
                 return fetch_from_service_c()
-
-        return fetch_from_service_b()
+            return fetch_from_service_b()
 
 
 if __name__ == "__main__":
