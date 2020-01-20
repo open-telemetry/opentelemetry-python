@@ -59,7 +59,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
     def test_only_strings_in_environ(self):
         """
-        Some WSGI servers (such as Gunicorn) expect keys in the environ object 
+        Some WSGI servers (such as Gunicorn) expect keys in the environ object
         to be strings
 
         OpenTelemetry should adhere to this convention.
