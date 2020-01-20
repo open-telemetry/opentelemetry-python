@@ -18,6 +18,7 @@ import logging
 import random
 import threading
 from contextlib import contextmanager
+from numbers import Number
 from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
 
@@ -216,7 +217,38 @@ class Span(trace_api.Span):
         if has_ended:
             logger.warning("Setting attribute on ended span.")
             return
+
+        if isinstance(value, Sequence):
+            error_message = self._check_attribute_value_sequence(value)
+            if error_message is not None:
+                logger.warning("%s in attribute value sequence", error_message)
+                return
+        elif not isinstance(value, (bool, str, Number, Sequence)):
+            logger.warning("invalid type for attribute value")
+            return
+
         self.attributes[key] = value
+
+    @staticmethod
+    def _check_attribute_value_sequence(sequence: Sequence) -> Optional[str]:
+        """
+        Checks if sequence items are valid and are of the same type
+        """
+        if len(sequence) == 0:
+            return None
+
+        first_element_type = type(sequence[0])
+
+        if issubclass(first_element_type, Number):
+            first_element_type = Number
+
+        if first_element_type not in (bool, str, Number):
+            return "invalid type"
+
+        for element in sequence:
+            if not isinstance(element, first_element_type):
+                return "different type"
+        return None
 
     def add_event(
         self,
