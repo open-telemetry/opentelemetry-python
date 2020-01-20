@@ -148,3 +148,13 @@ class TestContext(unittest.TestCase):
             Context.set_value("a", "i_want_to_mess_it_but_wont_work")
             Context.set_value("b", "i_want_to_mess_it")
         self.assertEqual({"a": "xxx", "b": "yyy"}, Context.current().snapshot)
+
+    def test_set_value(self):
+        context = Context.set_value("a", "yyy")
+        context2 = Context.set_value("a", "zzz")
+        context3 = Context.set_value("a", "---", context)
+        current = Context.current()
+        self.assertEqual("yyy", Context.value("a", context=context))
+        self.assertEqual("zzz", Context.value("a", context=context2))
+        self.assertEqual("---", Context.value("a", context=context3))
+        self.assertEqual("zzz", Context.value("a", context=current))

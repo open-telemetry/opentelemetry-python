@@ -18,24 +18,30 @@ from opentelemetry.trace import INVALID_SPAN_CONTEXT, Span, SpanContext
 from opentelemetry.trace.propagation import ContextKeys
 
 
-def span_context_from_context(ctx: Optional[Context] = None) -> SpanContext:
-    span = span_from_context(context=ctx)
+def span_context_from_context(
+    context: Optional[Context] = None,
+) -> SpanContext:
+    span = span_from_context(context=context)
     if span:
         return span.get_context()
-    sc = Context.value(ContextKeys.span_context_key(), context=ctx)  # type: ignore
+    sc = Context.value(ContextKeys.span_context_key(), context=context)  # type: ignore
     if sc:
         return sc
 
     return INVALID_SPAN_CONTEXT
 
 
-def with_span_context(span_context: SpanContext) -> Context:
-    return Context.set_value(ContextKeys.span_context_key(), span_context)
+def with_span_context(
+    span_context: SpanContext, context: Optional[Context] = None
+) -> Context:
+    return Context.set_value(
+        ContextKeys.span_context_key(), span_context, context=context
+    )
 
 
 def span_from_context(context: Optional[Context] = None) -> Span:
     return Context.value(ContextKeys.span_key(), context=context)  # type: ignore
 
 
-def with_span(span: Span) -> Context:
-    return Context.set_value(ContextKeys.span_key(), span)
+def with_span(span: Span, context: Optional[Context] = None) -> Context:
+    return Context.set_value(ContextKeys.span_key(), span, context=context)

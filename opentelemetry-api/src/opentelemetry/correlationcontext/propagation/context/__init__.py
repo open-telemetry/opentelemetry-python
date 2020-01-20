@@ -19,14 +19,14 @@ from opentelemetry.correlationcontext.propagation import ContextKeys
 
 
 def correlation_context_from_context(
-    ctx: Optional[Context] = None,
+    context: Optional[Context] = None,
 ) -> CorrelationContext:
-    return Context.value(ContextKeys.span_context_key(), context=ctx)  # type: ignore
+    return Context.value(ContextKeys.span_context_key(), context=context)  # type: ignore
 
 
 def with_correlation_context(
-    correlation_context: CorrelationContext,
+    correlation_context: CorrelationContext, context: Optional[Context] = None,
 ) -> Context:
     return Context.set_value(
-        ContextKeys.span_context_key(), correlation_context
+        ContextKeys.span_context_key(), correlation_context, context=context
     )

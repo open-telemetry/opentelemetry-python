@@ -179,7 +179,12 @@ class Context:
         return None
 
     @classmethod
-    def set_value(cls, key: str, value: "object") -> "Context":
+    def set_value(
+        cls,
+        key: str,
+        value: "object",
+        context: typing.Optional["Context"] = None,
+    ) -> "Context":
         """
         To record the local state of a cross-cutting concern, the
         Context API provides a function which takes a context, a
@@ -190,6 +195,11 @@ class Context:
             key:
             value:
         """
+        if context:
+            new_context = Context()
+            new_context.apply(context)
+            new_context.snapshot[key] = value
+            return new_context
         setattr(_CONTEXT, key, value)
         return cls.current()
 

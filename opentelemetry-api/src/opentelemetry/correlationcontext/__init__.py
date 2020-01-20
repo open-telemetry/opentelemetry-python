@@ -15,6 +15,7 @@
 import itertools
 import string
 import typing
+from typing import Optional
 
 from opentelemetry.context import Context
 from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
@@ -88,19 +89,21 @@ class CorrelationContext:
 
 class CorrelationContextManager:
     @classmethod
-    def set_correlation(cls, key: str, value: "object") -> Context:
-        return Context.set_value(key, value)
+    def set_correlation(
+        cls, key: str, value: "object", context: Optional[Context] = None
+    ) -> Context:
+        return Context.set_value(key, value, context=context)
 
     @classmethod
     def correlation(
-        cls, key: str, context: typing.Optional[Context] = None
+        cls, key: str, context: Optional[Context] = None
     ) -> "object":
         return Context.value(key, context=context)
 
     @classmethod
-    def remove_correlation(cls) -> Context:
+    def remove_correlation(cls, context: Optional[Context] = None) -> Context:
         pass
 
     @classmethod
-    def clear_correlation(cls) -> Context:
+    def clear_correlation(cls, context: Optional[Context] = None) -> Context:
         pass
