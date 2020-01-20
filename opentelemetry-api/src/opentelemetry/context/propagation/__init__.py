@@ -18,24 +18,13 @@ from opentelemetry.context import Context
 from .binaryformat import BinaryFormat
 from .httptextformat import (
     ContextT,
-    DefaultHTTPExtractor,
-    DefaultHTTPInjector,
+    DefaultExtractor,
+    DefaultInjector,
+    Extractor,
     Getter,
-    HTTPExtractor,
-    HTTPInjector,
+    Injector,
     Setter,
 )
-
-__all__ = [
-    "BinaryFormat",
-    "ContextT",
-    "Getter",
-    "DefaultHTTPExtractor",
-    "DefaultHTTPInjector",
-    "HTTPExtractor",
-    "HTTPInjector",
-    "Setter",
-]
 
 
 def get_as_list(

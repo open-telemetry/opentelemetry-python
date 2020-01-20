@@ -18,9 +18,9 @@ import typing
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
 from opentelemetry.context.propagation import (
+    Extractor,
     Getter,
-    HTTPExtractor,
-    HTTPInjector,
+    Injector,
     Setter,
     get_as_list,
     set_in_dict,
@@ -63,12 +63,12 @@ TRACEPARENT_HEADER_NAME = "traceparent"
 TRACESTATE_HEADER_NAME = "tracestate"
 
 
-def http_propagator() -> typing.Tuple[HTTPExtractor, HTTPInjector]:
+def http_propagator() -> typing.Tuple[Extractor, Injector]:
     """ TODO """
     return TraceContextHTTPExtractor, TraceContextHTTPInjector
 
 
-class TraceContextHTTPExtractor(HTTPExtractor):
+class TraceContextHTTPExtractor(Extractor):
     """Extracts using w3c TraceContext's headers.
     """
 
@@ -123,7 +123,7 @@ class TraceContextHTTPExtractor(HTTPExtractor):
         )
 
 
-class TraceContextHTTPInjector(HTTPInjector):
+class TraceContextHTTPInjector(Injector):
     """Injects using w3c TraceContext's headers.
     """
 

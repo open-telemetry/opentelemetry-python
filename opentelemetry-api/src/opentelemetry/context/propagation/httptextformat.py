@@ -23,7 +23,7 @@ Setter = typing.Callable[[ContextT, str, str], None]
 Getter = typing.Callable[[ContextT, str], typing.List[str]]
 
 
-class HTTPExtractor(abc.ABC):
+class Extractor(abc.ABC):
     """API for propagation of span context via headers.
 
     TODO: update docs to reflect split into extractor/injector
@@ -38,7 +38,7 @@ class HTTPExtractor(abc.ABC):
 
         import flask
         import requests
-        from opentelemetry.context.propagation import HTTPExtractor
+        from opentelemetry.context.propagation import Extractor
 
         PROPAGATOR = HTTPTextFormat()
 
@@ -80,27 +80,27 @@ class HTTPExtractor(abc.ABC):
         context: typing.Optional[Context] = None,
         get_from_carrier: typing.Optional[Getter[ContextT]] = None,
     ) -> Context:
-        """Create a SpanContext from values in the carrier.
+        """Create a Context from values in the carrier.
 
         The extract function should retrieve values from the carrier
-        object using get_from_carrier, and use values to populate a
-        SpanContext value and return it.
+        object using get_from_carrier, use values to populate a
+        Context value and return it.
 
         Args:
+            carrier: and object which contains values that are
+                used to construct a Context. This object
+                must be paired with an appropriate get_from_carrier
+                which understands how to extract a value from it.
+            context: The Context to read values from.
             get_from_carrier: a function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.
-            carrier: and object which contains values that are
-                used to construct a SpanContext. This object
-                must be paired with an appropriate get_from_carrier
-                which understands how to extract a value from it.
         Returns:
-            A SpanContext with configuration found in the carrier.
-
+            A Context with configuration found in the carrier.
         """
 
 
-class HTTPInjector(abc.ABC):
+class Injector(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def inject(
@@ -109,7 +109,7 @@ class HTTPInjector(abc.ABC):
         context: typing.Optional[Context] = None,
         set_in_carrier: typing.Optional[Setter[ContextT]] = None,
     ) -> None:
-        """Inject values from a SpanContext into a carrier.
+        """Inject values from a Context into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
@@ -117,63 +117,19 @@ class HTTPInjector(abc.ABC):
         carrier.
 
         Args:
-            context: The SpanContext to read values from.
-            set_in_carrier: A setter function that can set values
-                on the carrier.
             carrier: An object that a place to define HTTP headers.
                 Should be paired with set_in_carrier, which should
                 know how to set header values on the carrier.
-
+            context: The Context to read values from.
+            set_in_carrier: A setter function that can set values
+                on the carrier.
         """
 
 
-class DefaultHTTPExtractor(HTTPExtractor):
-    """API for propagation of span context via headers.
+class DefaultExtractor(Extractor):
+    """The default Extractor that is used when no Extractor implementation is configured.
 
-    TODO: update docs to reflect split into extractor/injector
-
-    This class provides an interface that enables extracting and injecting
-    span context into headers of HTTP requests. HTTP frameworks and clients
-    can integrate with HTTPTextFormat by providing the object containing the
-    headers, and a getter and setter function for the extraction and
-    injection of values, respectively.
-
-    Example::
-
-        import flask
-        import requests
-        from opentelemetry.context.propagation import HTTPExtractor
-
-        PROPAGATOR = HTTPTextFormat()
-
-
-
-        def get_header_from_flask_request(request, key):
-            return request.headers.get_all(key)
-
-        def set_header_into_requests_request(request: requests.Request,
-                                             key: str, value: str):
-            request.headers[key] = value
-
-        def example_route():
-            span_context = PROPAGATOR.extract(
-                get_header_from_flask_request,
-                flask.request
-            )
-            request_to_downstream = requests.Request(
-                "GET", "http://httpbin.org/get"
-            )
-            PROPAGATOR.inject(
-                span_context,
-                set_header_into_requests_request,
-                request_to_downstream
-            )
-            session = requests.Session()
-            session.send(request_to_downstream.prepare())
-
-
-    .. _Propagation API Specification:
-       https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
+    All operations are no-ops.
     """
 
     @classmethod
@@ -183,30 +139,17 @@ class DefaultHTTPExtractor(HTTPExtractor):
         context: typing.Optional[Context] = None,
         get_from_carrier: typing.Optional[Getter[ContextT]] = None,
     ) -> Context:
-        """Create a SpanContext from values in the carrier.
-
-        The extract function should retrieve values from the carrier
-        object using get_from_carrier, and use values to populate a
-        SpanContext value and return it.
-
-        Args:
-            get_from_carrier: a function that can retrieve zero
-                or more values from the carrier. In the case that
-                the value does not exist, return an empty list.
-            carrier: and object which contains values that are
-                used to construct a SpanContext. This object
-                must be paired with an appropriate get_from_carrier
-                which understands how to extract a value from it.
-        Returns:
-            A SpanContext with configuration found in the carrier.
-
-        """
         if context:
             return context
         return Context.current()
 
 
-class DefaultHTTPInjector(HTTPInjector):
+class DefaultInjector(Injector):
+    """The default Injector that is used when no Injector implementation is configured.
+
+    All operations are no-ops.
+    """
+
     @classmethod
     def inject(
         cls,
@@ -214,20 +157,4 @@ class DefaultHTTPInjector(HTTPInjector):
         context: typing.Optional[Context] = None,
         set_in_carrier: typing.Optional[Setter[ContextT]] = None,
     ) -> None:
-        """Inject values from a SpanContext into a carrier.
-
-        inject enables the propagation of values into HTTP clients or
-        other objects which perform an HTTP request. Implementations
-        should use the set_in_carrier method to set values on the
-        carrier.
-
-        Args:
-            context: The SpanContext to read values from.
-            set_in_carrier: A setter function that can set values
-                on the carrier.
-            carrier: An object that a place to define HTTP headers.
-                Should be paired with set_in_carrier, which should
-                know how to set header values on the carrier.
-
-        """
         return None

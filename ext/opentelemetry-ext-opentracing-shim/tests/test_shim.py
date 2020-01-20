@@ -21,8 +21,8 @@ import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagation, trace
 from opentelemetry.context.propagation import get_as_list, set_in_dict
 from opentelemetry.context.propagation.httptextformat import (
-    HTTPExtractor,
-    HTTPInjector,
+    Extractor,
+    Injector,
 )
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerSource
@@ -547,7 +547,7 @@ _TRACE_ID_KEY = "mock-traceid"
 _SPAN_ID_KEY = "mock-spanid"
 
 
-class MockHTTPExtractor(HTTPExtractor):
+class MockHTTPExtractor(Extractor):
     """Mock extractor for testing purposes."""
 
     @classmethod
@@ -565,7 +565,7 @@ class MockHTTPExtractor(HTTPExtractor):
         )
 
 
-class MockHTTPInjector(HTTPInjector):
+class MockHTTPInjector(Injector):
     """Mock injector for testing purposes."""
 
     @classmethod

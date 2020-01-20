@@ -16,9 +16,9 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.propagation import (
+    Extractor,
     Getter,
-    HTTPExtractor,
-    HTTPInjector,
+    Injector,
     Setter,
     get_as_list,
     set_in_dict,
@@ -36,12 +36,12 @@ SPAN_ID_KEY = "x-b3-spanid"
 SAMPLED_KEY = "x-b3-sampled"
 
 
-def http_propagator() -> typing.Tuple[HTTPExtractor, HTTPInjector]:
+def http_propagator() -> typing.Tuple[Extractor, Injector]:
     """ TODO """
     return B3Extractor, B3Injector
 
 
-class B3Extractor(HTTPExtractor):
+class B3Extractor(Extractor):
     """Propagator for the B3 HTTP header format.
 
     See: https://github.com/openzipkin/b3-propagation
@@ -123,7 +123,7 @@ class B3Extractor(HTTPExtractor):
         )
 
 
-class B3Injector(HTTPInjector):
+class B3Injector(Injector):
     @classmethod
     def inject(
         cls,

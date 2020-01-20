@@ -19,8 +19,8 @@ import opentelemetry.trace as trace
 from opentelemetry.context import Context
 from opentelemetry.context.propagation import (
     ContextT,
-    DefaultHTTPExtractor,
-    DefaultHTTPInjector,
+    DefaultExtractor,
+    DefaultInjector,
     Getter,
     Setter,
 )
@@ -29,14 +29,12 @@ from opentelemetry.context.propagation import (
 def extract(
     carrier: ContextT,
     context: typing.Optional[Context] = None,
-    extractors: typing.Optional[
-        typing.List[httptextformat.HTTPExtractor]
-    ] = None,
+    extractors: typing.Optional[typing.List[httptextformat.Extractor]] = None,
     get_from_carrier: typing.Optional[Getter[ContextT]] = None,
 ) -> typing.Optional[Context]:
     """Load the parent SpanContext from values in the carrier.
 
-    Using the specified HTTPExtractor, the propagator will
+    Using the specified Extractor, the propagator will
     extract a SpanContext from the carrier. If one is found,
     it will be set as the parent context of the current span.
 
@@ -69,9 +67,7 @@ def extract(
 
 def inject(
     carrier: ContextT,
-    injectors: typing.Optional[
-        typing.List[httptextformat.HTTPInjector]
-    ] = None,
+    injectors: typing.Optional[typing.List[httptextformat.Injector]] = None,
     context: typing.Optional[Context] = None,
 ) -> None:
     """Inject values from the current context into the carrier.
@@ -98,16 +94,16 @@ def inject(
 
 
 _HTTP_TEXT_INJECTORS = [
-    DefaultHTTPInjector
-]  # typing.List[httptextformat.HTTPInjector]
+    DefaultInjector
+]  # typing.List[httptextformat.Injector]
 
 _HTTP_TEXT_EXTRACTORS = [
-    DefaultHTTPExtractor
-]  # typing.List[httptextformat.HTTPExtractor]
+    DefaultExtractor
+]  # typing.List[httptextformat.Extractor]
 
 
 def set_http_extractors(
-    extractor_list: typing.List[httptextformat.HTTPExtractor],
+    extractor_list: typing.List[httptextformat.Extractor],
 ) -> None:
     """
     To update the global extractor, the Propagation API provides a
@@ -118,7 +114,7 @@ def set_http_extractors(
 
 
 def set_http_injectors(
-    injector_list: typing.List[httptextformat.HTTPInjector],
+    injector_list: typing.List[httptextformat.Injector],
 ) -> None:
     """
     To update the global injector, the Propagation API provides a
@@ -128,7 +124,7 @@ def set_http_injectors(
     _HTTP_TEXT_INJECTORS = injector_list  # type: ignore
 
 
-def get_http_extractors() -> typing.List[httptextformat.HTTPExtractor]:
+def get_http_extractors() -> typing.List[httptextformat.Extractor]:
     """
     To access the global extractor, the Propagation API provides
     a function which returns an extractor.
@@ -136,7 +132,7 @@ def get_http_extractors() -> typing.List[httptextformat.HTTPExtractor]:
     return _HTTP_TEXT_EXTRACTORS  # type: ignore
 
 
-def get_http_injectors() -> typing.List[httptextformat.HTTPInjector]:
+def get_http_injectors() -> typing.List[httptextformat.Injector]:
     """
     To access the global injector, the Propagation API provides a
     function which returns an injector.
