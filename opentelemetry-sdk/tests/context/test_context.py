@@ -134,3 +134,17 @@ class TestContext(unittest.TestCase):
             ],
             spans_names_list,
         )
+
+    def test_restore_context_on_exit(self):
+        Context.set_current(Context())
+        Context.set_value("a", "xxx")
+        Context.set_value("b", "yyy")
+
+        self.assertEqual({"a": "xxx", "b": "yyy"}, Context.current().snapshot)
+        with Context.use(a="foo"):
+            self.assertEqual(
+                {"a": "foo", "b": "yyy"}, Context.current().snapshot
+            )
+            Context.set_value("a", "i_want_to_mess_it_but_wont_work")
+            Context.set_value("b", "i_want_to_mess_it")
+        self.assertEqual({"a": "xxx", "b": "yyy"}, Context.current().snapshot)
