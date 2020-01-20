@@ -68,7 +68,11 @@ class BaseRuntimeContext:
 
     def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
         """Set the current context from a given snapshot dictionary"""
-
+        keys = self._slots.keys()
+        for name in keys:
+            slot = self._slots[name]
+            slot.clear()
+        self._slots.clear()
         for name in snapshot:
             setattr(self, name, snapshot[name])
 

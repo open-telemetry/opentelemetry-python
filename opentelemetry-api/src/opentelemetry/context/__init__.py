@@ -157,7 +157,7 @@ except ImportError:
 
 class Context:
     def __init__(self) -> None:
-        self.snapshot = _CONTEXT.snapshot()
+        self.snapshot = {}
 
     def get(self, key: str) -> typing.Optional["object"]:
         return self.snapshot.get(key)
@@ -200,7 +200,9 @@ class Context:
         the Context API provides a function which takes no arguments
         and returns a Context.
         """
-        return Context()
+        context = Context()
+        context.snapshot = _CONTEXT.snapshot()
+        return context
 
     @classmethod
     def set_current(cls, context: "Context") -> None:
@@ -213,12 +215,11 @@ class Context:
     @classmethod
     @contextmanager
     def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
-        snapshot = {key: _CONTEXT[key] for key in kwargs}
+        snapshot = Context.current()
         for key in kwargs:
             _CONTEXT[key] = kwargs[key]
         yield
-        for key in kwargs:
-            _CONTEXT[key] = snapshot[key]
+        Context.set_current(snapshot)
 
     @classmethod
     def suppress_instrumentation(cls) -> "object":
