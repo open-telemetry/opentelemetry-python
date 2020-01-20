@@ -11,12 +11,12 @@ Usage
 .. code:: python
 
     import mysql.connector
-    from opentelemetry.trace import tracer
+    from opentelemetry.trace import tracer_source
     from opentelemetry.ext.dbapi import trace_integration
 
 
     # Ex: mysql.connector
-    trace_integration(tracer(), mysql.connector, "connect", "mysql")
+    trace_integration(tracer_source(), mysql.connector, "connect", "mysql")
 
 
 References
