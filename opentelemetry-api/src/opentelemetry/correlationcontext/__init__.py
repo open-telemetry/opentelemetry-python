@@ -19,8 +19,6 @@ import typing
 from opentelemetry.context import Context
 from opentelemetry.context.propagation import HTTPExtractor, HTTPInjector
 
-from .propagation import CorrelationHTTPExtractor, CorrelationHTTPInjector
-
 PRINTABLE = frozenset(
     itertools.chain(
         string.ascii_letters, string.digits, string.punctuation, " "
@@ -106,7 +104,3 @@ class CorrelationContextManager:
     @classmethod
     def clear_correlation(cls) -> Context:
         pass
-
-    @classmethod
-    def http_propagator(cls) -> typing.Tuple[HTTPExtractor, HTTPInjector]:
-        return (CorrelationHTTPExtractor, CorrelationHTTPInjector)  # type: ignore

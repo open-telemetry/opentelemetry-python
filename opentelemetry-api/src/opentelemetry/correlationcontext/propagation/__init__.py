@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .binaryformat import BinaryFormat
-from .httptextformat import CorrelationHTTPExtractor, CorrelationHTTPInjector
-
-__all__ = [
-    "BinaryFormat",
-    "CorrelationHTTPExtractor",
-    "CorrelationHTTPInjector",
-]
-
 
 class ContextKeys:
     """ TODO """

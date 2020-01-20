@@ -40,14 +40,10 @@ def configure_opentelemetry(flask_app: flask.Flask):
 
     # Global initialization
     (b3_extractor, b3_injector) = b3_format.http_propagator()
-    (
-        correlation_extractor,
-        correlation_injector,
-    ) = CorrelationContextManager.http_propagator()
     # propagation.set_http_extractors([b3_extractor, baggage_extractor])
     # propagation.set_http_injectors([b3_injector, baggage_injector])
-    propagation.set_http_extractors([b3_extractor, correlation_extractor])
-    propagation.set_http_injectors([b3_injector, correlation_injector])
+    propagation.set_http_extractors([b3_extractor])
+    propagation.set_http_injectors([b3_injector])
 
     opentelemetry.ext.http_requests.enable(trace.tracer_source())
     flask_app.wsgi_app = OpenTelemetryMiddleware(flask_app.wsgi_app)
