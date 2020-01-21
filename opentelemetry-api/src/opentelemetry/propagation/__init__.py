@@ -16,7 +16,7 @@ import abc
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context import Context
+from opentelemetry.context import Context, current
 
 ContextT = typing.TypeVar("ContextT")
 
@@ -142,7 +142,7 @@ class DefaultExtractor(Extractor):
     ) -> Context:
         if context:
             return context
-        return Context.current()
+        return current()
 
 
 class DefaultInjector(Injector):
@@ -183,7 +183,7 @@ def extract(
             which understands how to extract a value from it.
     """
     if context is None:
-        context = Context.current()
+        context = current()
     if extractors is None:
         extractors = get_http_extractors()
 
@@ -220,7 +220,7 @@ def inject(
             should know how to set header values on the carrier.
     """
     if context is None:
-        context = Context.current()
+        context = current()
     if injectors is None:
         injectors = get_http_injectors()
 

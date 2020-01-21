@@ -22,7 +22,7 @@ from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
 
 from opentelemetry import trace as trace_api
-from opentelemetry.context import Context
+from opentelemetry.context import Context, current
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import SpanContext, sampling
@@ -542,7 +542,7 @@ class TracerSource(trace_api.TracerSource):
 
     def get_current_span(self, context: Optional[Context] = None) -> Span:
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return Context.value(self._current_span_name, context=context)
+        return current().value(self._current_span_name, context=context)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerSource`.

@@ -18,8 +18,8 @@ import typing  # pylint: disable=unused-import
 from . import base_context
 
 
-class ThreadLocalRuntimeContext(base_context.BaseRuntimeContext):
-    class Slot(base_context.BaseRuntimeContext.Slot):
+class ThreadLocalRuntimeContext(base_context.BaseContext):
+    class Slot(base_context.BaseContext.Slot):
         _thread_local = threading.local()
 
         def __init__(self, name: str, default: "object"):

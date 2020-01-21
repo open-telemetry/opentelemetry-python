@@ -20,8 +20,8 @@ else:
     import typing  # pylint: disable=unused-import
     from . import base_context
 
-    class AsyncRuntimeContext(base_context.BaseRuntimeContext):
-        class Slot(base_context.BaseRuntimeContext.Slot):
+    class AsyncRuntimeContext(base_context.BaseContext):
+        class Slot(base_context.BaseContext.Slot):
             def __init__(self, name: str, default: object):
                 # pylint: disable=super-init-not-called
                 self.name = name

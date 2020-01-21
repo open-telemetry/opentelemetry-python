@@ -13,7 +13,7 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.context import Context
+from opentelemetry.context import Context, current
 from opentelemetry.correlationcontext import CorrelationContext
 from opentelemetry.correlationcontext.propagation import ContextKeys
 
@@ -21,12 +21,12 @@ from opentelemetry.correlationcontext.propagation import ContextKeys
 def correlation_context_from_context(
     context: Optional[Context] = None,
 ) -> CorrelationContext:
-    return Context.value(ContextKeys.span_context_key(), context=context)  # type: ignore
+    return current().value(ContextKeys.span_context_key(), context=context)  # type: ignore
 
 
 def with_correlation_context(
     correlation_context: CorrelationContext, context: Optional[Context] = None,
 ) -> Context:
-    return Context.set_value(
+    return current().set_value(
         ContextKeys.span_context_key(), correlation_context, context=context
     )

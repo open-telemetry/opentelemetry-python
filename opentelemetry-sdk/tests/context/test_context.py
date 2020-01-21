@@ -17,7 +17,11 @@ import contextvars
 import unittest
 from multiprocessing.dummy import Pool as ThreadPool
 
-from opentelemetry.context import Context, merge_context_correlation
+from opentelemetry.context import (
+    current,
+    merge_context_correlation,
+    new_context,
+)
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
@@ -26,7 +30,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 
 def do_work():
-    Context.set_value("say-something", "bar")
+    current().set_value("say-something", "bar")
 
 
 class TestContext(unittest.TestCase):
@@ -50,38 +54,38 @@ class TestContext(unittest.TestCase):
         self.tracer_source.add_span_processor(span_processor)
 
     def test_context(self):
-        self.assertIsNone(Context.value("say-something"))
-        empty_context = Context.current()
-        Context.set_value("say-something", "foo")
-        self.assertEqual(Context.value("say-something"), "foo")
-        second_context = Context.current()
+        self.assertIsNone(current().value("say-something"))
+        empty_context = current()
+        current().set_value("say-something", "foo")
+        self.assertEqual(current().value("say-something"), "foo")
+        second_context = current()
 
         do_work()
-        self.assertEqual(Context.value("say-something"), "bar")
-        third_context = Context.current()
+        self.assertEqual(current().value("say-something"), "bar")
+        third_context = current()
 
         self.assertIsNone(empty_context.get("say-something"))
         self.assertEqual(second_context.get("say-something"), "foo")
         self.assertEqual(third_context.get("say-something"), "bar")
 
     def test_merge(self):
-        Context.set_value("name", "first")
-        Context.set_value("somebool", True)
-        Context.set_value("key", "value")
-        Context.set_value("otherkey", "othervalue")
-        src_ctx = Context.current()
+        current().set_value("name", "first")
+        current().set_value("somebool", True)
+        current().set_value("key", "value")
+        current().set_value("otherkey", "othervalue")
+        src_ctx = current()
 
-        Context.set_value("name", "second")
-        Context.set_value("somebool", False)
-        Context.set_value("anotherkey", "anothervalue")
-        dst_ctx = Context.current()
+        current().set_value("name", "second")
+        current().set_value("somebool", False)
+        current().set_value("anotherkey", "anothervalue")
+        dst_ctx = current()
 
-        Context.set_current(merge_context_correlation(src_ctx, dst_ctx))
-        self.assertEqual(Context.current().get("name"), "first")
-        self.assertTrue(Context.current().get("somebool"))
-        self.assertEqual(Context.current().get("key"), "value")
-        self.assertEqual(Context.current().get("otherkey"), "othervalue")
-        self.assertEqual(Context.current().get("anotherkey"), "anothervalue")
+        current().set_current(merge_context_correlation(src_ctx, dst_ctx))
+        self.assertEqual(current().get("name"), "first")
+        self.assertTrue(current().get("somebool"))
+        self.assertEqual(current().get("key"), "value")
+        self.assertEqual(current().get("otherkey"), "othervalue")
+        self.assertEqual(current().get("anotherkey"), "anothervalue")
 
     def test_propagation(self):
         pass
@@ -100,61 +104,53 @@ class TestContext(unittest.TestCase):
                     )
 
         span_list = self.memory_exporter.get_finished_spans()
-        spans_names_list = [span.name for span in span_list]
-        self.assertListEqual(
-            [
-                "test_span1",
-                "test_span2",
-                "test_span3",
-                "test_span4",
-                "test_span5",
-                "futures_test",
-            ],
-            spans_names_list,
-        )
+        expected = [
+            "test_span1",
+            "test_span2",
+            "test_span3",
+            "test_span4",
+            "test_span5",
+            "futures_test",
+        ]
+        self.assertEqual(len(span_list), len(expected))
 
     def test_with_threads(self):
         with self.tracer.start_as_current_span("threads_test"):
             pool = ThreadPool(5)  # create a thread pool
             pool.map(
-                Context.with_current_context(self.do_some_work), self.spans,
+                current().with_current_context(self.do_some_work), self.spans,
             )
             pool.close()
             pool.join()
         span_list = self.memory_exporter.get_finished_spans()
-        spans_names_list = [span.name for span in span_list]
-        self.assertListEqual(
-            [
-                "test_span1",
-                "test_span2",
-                "test_span3",
-                "test_span4",
-                "test_span5",
-                "threads_test",
-            ],
-            spans_names_list,
-        )
+        expected = [
+            "test_span1",
+            "test_span2",
+            "test_span3",
+            "test_span4",
+            "test_span5",
+            "threads_test",
+        ]
+        self.assertEqual(len(span_list), len(expected))
 
     def test_restore_context_on_exit(self):
-        Context.set_current(Context())
-        Context.set_value("a", "xxx")
-        Context.set_value("b", "yyy")
+        current().set_current(new_context())
+        current().set_value("a", "xxx")
+        current().set_value("b", "yyy")
 
-        self.assertEqual({"a": "xxx", "b": "yyy"}, Context.current().snapshot)
-        with Context.use(a="foo"):
-            self.assertEqual(
-                {"a": "foo", "b": "yyy"}, Context.current().snapshot
-            )
-            Context.set_value("a", "i_want_to_mess_it_but_wont_work")
-            Context.set_value("b", "i_want_to_mess_it")
-        self.assertEqual({"a": "xxx", "b": "yyy"}, Context.current().snapshot)
+        self.assertEqual({"a": "xxx", "b": "yyy"}, current().snapshot)
+        with current().use(a="foo"):
+            self.assertEqual({"a": "foo", "b": "yyy"}, current().snapshot)
+            current().set_value("a", "i_want_to_mess_it_but_wont_work")
+            current().set_value("b", "i_want_to_mess_it")
+        self.assertEqual({"a": "xxx", "b": "yyy"}, current().snapshot)
 
     def test_set_value(self):
-        context = Context.set_value("a", "yyy")
-        context2 = Context.set_value("a", "zzz")
-        context3 = Context.set_value("a", "---", context)
-        current = Context.current()
-        self.assertEqual("yyy", Context.value("a", context=context))
-        self.assertEqual("zzz", Context.value("a", context=context2))
-        self.assertEqual("---", Context.value("a", context=context3))
-        self.assertEqual("zzz", Context.value("a", context=current))
+        context = current().set_value("a", "yyy")
+        context2 = current().set_value("a", "zzz")
+        context3 = current().set_value("a", "---", context)
+        current_context = current()
+        self.assertEqual("yyy", current().value("a", context=context))
+        self.assertEqual("zzz", current().value("a", context=context2))
+        self.assertEqual("---", current().value("a", context=context3))
+        self.assertEqual("zzz", current().value("a", context=current_context))

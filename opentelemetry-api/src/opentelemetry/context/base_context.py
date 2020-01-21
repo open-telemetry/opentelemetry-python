@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
 import threading
 import typing
+from contextlib import contextmanager
 
 
 def wrap_callable(target: "object") -> typing.Callable[[], object]:
@@ -22,7 +24,86 @@ def wrap_callable(target: "object") -> typing.Callable[[], object]:
     return lambda: target
 
 
-class BaseRuntimeContext:
+class Context(abc.ABC):
+    def __init__(self) -> None:
+        self.snapshot = {}
+
+    def get(self, key: str) -> typing.Optional["object"]:
+        return self.snapshot.get(key)
+
+    @contextmanager
+    def use(self, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
+        snapshot = self.current()
+        for key in kwargs:
+            self.set_value(key, kwargs[key])
+        yield
+        self.set_current(snapshot)
+
+    def with_current_context(
+        self, func: typing.Callable[..., "object"]
+    ) -> typing.Callable[..., "object"]:
+        """Capture the current context and apply it to the provided func.
+        """
+
+        caller_context = self.current()
+
+        def call_with_current_context(
+            *args: "object", **kwargs: "object"
+        ) -> "object":
+            try:
+                backup_context = self.current()
+                self.set_current(caller_context)
+                return func(*args, **kwargs)
+            finally:
+                self.set_current(backup_context)
+
+        return call_with_current_context
+
+    @abc.abstractmethod
+    def current(self) -> "Context":
+        """
+        To access the context associated with program execution,
+        the Context API provides a function which takes no arguments
+        and returns a Context.
+        """
+
+    @abc.abstractmethod
+    def set_current(self, context: "Context") -> None:
+        """
+        To associate a context with program execution, the Context
+        API provides a function which takes a Context.
+        """
+
+    @abc.abstractmethod
+    def set_value(
+        self,
+        key: str,
+        value: "object",
+        context: typing.Optional["Context"] = None,
+    ) -> "Context":
+        """
+        To record the local state of a cross-cutting concern, the
+        Context API provides a function which takes a context, a
+        key, and a value as input, and returns an updated context
+        which contains the new value.
+
+        Args:
+            key:
+            value:
+        """
+
+    @abc.abstractmethod
+    def value(
+        self, key: str, context: typing.Optional["Context"] = None
+    ) -> typing.Optional["object"]:
+        """
+        To access the local state of an concern, the Context API
+        provides a function which takes a context and a key as input,
+        and returns a value.
+        """
+
+
+class BaseContext(Context):
     class Slot:
         def __init__(self, name: str, default: "object"):
             raise NotImplementedError
@@ -37,7 +118,7 @@ class BaseRuntimeContext:
             raise NotImplementedError
 
     _lock = threading.Lock()
-    _slots = {}  # type: typing.Dict[str, 'BaseRuntimeContext.Slot']
+    _slots = {}  # type: typing.Dict[str, 'BaseContext.Slot']
 
     @classmethod
     def clear(cls) -> None:
@@ -50,7 +131,7 @@ class BaseRuntimeContext:
     @classmethod
     def register_slot(
         cls, name: str, default: "object" = None
-    ) -> "BaseRuntimeContext.Slot":
+    ) -> "BaseContext.Slot":
         """Register a context slot with an optional default value.
 
         :type name: str
@@ -66,39 +147,98 @@ class BaseRuntimeContext:
                 cls._slots[name] = cls.Slot(name, default)
             return cls._slots[name]
 
-    def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
-        """Set the current context from a given snapshot dictionary"""
-        keys = self._slots.keys()
-        for name in keys:
-            slot = self._slots[name]
-            slot.clear()
-        self._slots.clear()
-        for name in snapshot:
-            setattr(self, name, snapshot[name])
+    def merge(self, context: Context) -> Context:
+        new_context = self.current()
+        for key in context.snapshot:
+            new_context.snapshot[key] = context.snapshot[key]
+        return new_context
 
-    def snapshot(self) -> typing.Dict[str, "object"]:
+    def _freeze(self) -> typing.Dict[str, "object"]:
         """Return a dictionary of current slots by reference."""
 
         keys = self._slots.keys()
         return dict((n, self._slots[n].get()) for n in keys)
 
     def __repr__(self) -> str:
-        return "{}({})".format(type(self).__name__, self.snapshot())
+        return "{}({})".format(type(self).__name__, self._freeze())
 
-    def __getattr__(self, name: str) -> "object":
-        if name not in self._slots:
-            self.register_slot(name, None)
-        slot = self._slots[name]
-        return slot.get()
+    def _set(self, key: str, value: "object") -> None:
+        """
+        Set creates a Slot for the value if none exists, and sets the
+        value for that slot.
 
-    def __setattr__(self, name: str, value: "object") -> None:
-        if name not in self._slots:
-            self.register_slot(name, None)
-        slot = self._slots[name]
+        Args:
+            key: Name of the value
+            value: Contents of the value
+        """
+        if key not in self._slots:
+            self.register_slot(key, None)
+        slot = self._slots[key]
         slot.set(value)
 
-    def __getitem__(self, name: str) -> "object":
-        return self.__getattr__(name)
+    def value(
+        self, key: str, context: typing.Optional["Context"] = None
+    ) -> typing.Optional["object"]:
+        """
+        To access the local state of an concern, the Context API
+        provides a function which takes a context and a key as input,
+        and returns a value.
 
-    def __setitem__(self, name: str, value: "object") -> None:
-        self.__setattr__(name, value)
+        Args:
+            key: Name of the value
+            context:
+        """
+        if context:
+            return context.get(key)
+
+        return self.current().get(key)
+
+    def set_value(
+        self,
+        key: str,
+        value: "object",
+        context: typing.Optional["Context"] = None,
+    ) -> "Context":
+        """
+        To record the local state of a cross-cutting concern, the
+        Context API provides a function which takes a context, a
+        key, and a value as input, and returns an updated context
+        which contains the new value.
+
+        Args:
+            key: Name of the value
+            value: Contents of the value
+            context:
+        """
+        if context:
+            new_context = self.__class__()
+            for name in context.snapshot:
+                new_context.snapshot[name] = context.snapshot[name]
+            new_context.snapshot[key] = value
+            return new_context
+        self._set(key, value)
+        return self.current()
+
+    def current(self) -> "Context":
+        """
+        To access the context associated with program execution,
+        the Context API provides a function which takes no arguments
+        and returns a Context.
+        """
+        ctx = self.__class__()
+        ctx.snapshot = self._freeze()
+        return ctx
+
+    def set_current(self, context: "Context") -> None:
+        """
+        To associate a context with program execution, the Context
+        API provides a function which takes a Context.
+        """
+        keys = self._slots.keys()
+        for name in keys:
+            slot = self._slots[name]
+            slot.clear()
+        self._slots.clear()
+        if context.snapshot:
+            for name in context.snapshot:
+                self._set(name, context.snapshot[name])

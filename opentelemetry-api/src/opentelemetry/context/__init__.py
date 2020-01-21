@@ -141,126 +141,31 @@ Here goes a simple demo of how async could work in Python 3.7+::
 import typing
 from contextlib import contextmanager
 
-from .base_context import BaseRuntimeContext
-
-__all__ = ["Context"]
-
-try:
-    from .async_context import AsyncRuntimeContext
-
-    _CONTEXT = AsyncRuntimeContext()  # type: BaseRuntimeContext
-except ImportError:
-    from .thread_local_context import ThreadLocalRuntimeContext
-
-    _CONTEXT = ThreadLocalRuntimeContext()
+from .base_context import Context
 
 
-class Context:
-    def __init__(self) -> None:
-        self.snapshot = {}
+def current() -> Context:
+    return _CONTEXT.current()
 
-    def get(self, key: str) -> typing.Optional["object"]:
-        return self.snapshot.get(key)
 
-    @classmethod
-    def value(
-        cls, key: str, context: typing.Optional["Context"] = None
-    ) -> typing.Optional["object"]:
-        """
-        To access the local state of an concern, the Context API
-        provides a function which takes a context and a key as input,
-        and returns a value.
-        """
-        if context:
-            return context.get(key)
+def new_context() -> Context:
+    try:
+        from .async_context import (  # pylint: disable=import-outside-toplevel
+            AsyncRuntimeContext,
+        )
 
-        if cls.current():
-            return cls.current().get(key)
-        return None
+        context = AsyncRuntimeContext()  # type: Context
+    except ImportError:
+        from .thread_local_context import (  # pylint: disable=import-outside-toplevel
+            ThreadLocalRuntimeContext,
+        )
 
-    @classmethod
-    def set_value(
-        cls,
-        key: str,
-        value: "object",
-        context: typing.Optional["Context"] = None,
-    ) -> "Context":
-        """
-        To record the local state of a cross-cutting concern, the
-        Context API provides a function which takes a context, a
-        key, and a value as input, and returns an updated context
-        which contains the new value.
-
-        Args:
-            key:
-            value:
-        """
-        if context:
-            new_context = Context()
-            new_context.apply(context)
-            new_context.snapshot[key] = value
-            return new_context
-        setattr(_CONTEXT, key, value)
-        return cls.current()
-
-    @classmethod
-    def current(cls) -> "Context":
-        """
-        To access the context associated with program execution,
-        the Context API provides a function which takes no arguments
-        and returns a Context.
-        """
-        context = Context()
-        context.snapshot = _CONTEXT.snapshot()
-        return context
-
-    @classmethod
-    def set_current(cls, context: "Context") -> None:
-        """
-        To associate a context with program execution, the Context
-        API provides a function which takes a Context.
-        """
-        _CONTEXT.apply(context.snapshot)
-
-    @classmethod
-    @contextmanager
-    def use(cls, **kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
-        snapshot = Context.current()
-        for key in kwargs:
-            _CONTEXT[key] = kwargs[key]
-        yield
-        Context.set_current(snapshot)
-
-    @classmethod
-    def suppress_instrumentation(cls) -> "object":
-        return _CONTEXT.suppress_instrumentation
-
-    @classmethod
-    def with_current_context(
-        cls, func: typing.Callable[..., "object"]
-    ) -> typing.Callable[..., "object"]:
-        """Capture the current context and apply it to the provided func.
-        """
-
-        caller_context = _CONTEXT.snapshot()
-
-        def call_with_current_context(
-            *args: "object", **kwargs: "object"
-        ) -> "object":
-            try:
-                backup_context = _CONTEXT.snapshot()
-                _CONTEXT.apply(caller_context)
-                return func(*args, **kwargs)
-            finally:
-                _CONTEXT.apply(backup_context)
-
-        return call_with_current_context
-
-    def apply(self, ctx: "Context") -> None:
-        for key in ctx.snapshot:
-            self.snapshot[key] = ctx.snapshot[key]
+        context = ThreadLocalRuntimeContext()  # type: Context
+    return context
 
 
 def merge_context_correlation(source: Context, dest: Context) -> Context:
-    dest.apply(source)
-    return dest
+    return dest.merge(source)
+
+
+_CONTEXT = new_context()
