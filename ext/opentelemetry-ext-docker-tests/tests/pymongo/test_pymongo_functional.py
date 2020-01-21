@@ -66,9 +66,9 @@ class TestFunctionalPymongo(unittest.TestCase):
             pymongo_span.attributes["db.instance"], MONGODB_DB_NAME
         )
         self.assertEqual(
-            pymongo_span.attributes["peer.hostname"], MONGODB_HOST
+            pymongo_span.attributes["net.peer.name"], MONGODB_HOST
         )
-        self.assertEqual(pymongo_span.attributes["peer.port"], MONGODB_PORT)
+        self.assertEqual(pymongo_span.attributes["net.peer.port"], MONGODB_PORT)
 
     def test_insert(self):
         """Should create a child span for insert
