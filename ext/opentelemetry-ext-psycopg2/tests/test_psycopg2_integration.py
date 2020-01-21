@@ -23,7 +23,7 @@ from opentelemetry.ext.psycopg2 import trace_integration
 
 class TestPostgresqlIntegration(unittest.TestCase):
     def test_trace_integration(self):
-        tracer = trace_api.Tracer()
+        tracer = trace_api.DefaultTracer()
         with mock.patch("psycopg2.connect"):
             trace_integration(tracer)
             cnx = psycopg2.connect(database="test")
