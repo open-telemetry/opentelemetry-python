@@ -15,11 +15,11 @@
 import typing
 from contextlib import contextmanager
 
-from opentelemetry import correlationcontext as dctx_api
+from opentelemetry import correlationcontext as cctx_api
 from opentelemetry.context import Context, current
 
 
-class CorrelationContextManager(dctx_api.CorrelationContextManager):
+class CorrelationContextManager(cctx_api.CorrelationContextManager):
     """See `opentelemetry.correlationcontext.CorrelationContextManager`
 
     Args:
@@ -32,7 +32,7 @@ class CorrelationContextManager(dctx_api.CorrelationContextManager):
         else:
             self.slot_name = "CorrelationContext"
 
-    def current_context(self,) -> typing.Optional[dctx_api.CorrelationContext]:
+    def current_context(self,) -> typing.Optional[cctx_api.CorrelationContext]:
         """Gets the current CorrelationContext.
 
         Returns:
@@ -42,8 +42,8 @@ class CorrelationContextManager(dctx_api.CorrelationContextManager):
 
     @contextmanager
     def use_context(
-        self, context: dctx_api.CorrelationContext
-    ) -> typing.Iterator[dctx_api.CorrelationContext]:
+        self, context: cctx_api.CorrelationContext
+    ) -> typing.Iterator[cctx_api.CorrelationContext]:
         """Context manager for controlling a CorrelationContext lifetime.
 
         Set the context as the active CorrelationContext.

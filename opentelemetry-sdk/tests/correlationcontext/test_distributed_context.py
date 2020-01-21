@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry import correlationcontext as dctx_api
+from opentelemetry import correlationcontext as cctx_api
 from opentelemetry.sdk import correlationcontext
 
 
@@ -27,13 +27,13 @@ class TestCorrelationContextManager(unittest.TestCase):
         self.assertIsNone(self.manager.current_context())
 
         # Start initial context
-        dctx = dctx_api.CorrelationContext()
+        dctx = cctx_api.CorrelationContext()
         with self.manager.use_context(dctx) as current:
             self.assertIs(current, dctx)
             self.assertIs(self.manager.current_context(), dctx)
 
             # Context is overridden
-            nested_dctx = dctx_api.CorrelationContext()
+            nested_dctx = cctx_api.CorrelationContext()
             with self.manager.use_context(nested_dctx) as current:
                 self.assertIs(current, nested_dctx)
                 self.assertIs(self.manager.current_context(), nested_dctx)
