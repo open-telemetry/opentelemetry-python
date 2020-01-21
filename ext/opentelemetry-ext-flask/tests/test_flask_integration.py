@@ -14,7 +14,7 @@
 
 import unittest
 
-from flask import Flask, request
+from flask import Flask, copy_current_request_context, request
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
@@ -75,6 +75,35 @@ class TestFlaskIntegration(WsgiTestBase):
         self.app.route("/assert_environ")(assert_environ)
         self.client.get("/assert_environ")
         self.assertEqual(nonstring_keys, set())
+
+    def test_copy_current_request(self):
+        """
+        Regression test to verify copy_current_request also sets
+        spans correctly.
+        """
+
+        def copy_current_request():
+            @copy_current_request_context
+            def nest():
+                return "hello"
+
+            return nest()
+
+        self.app.route("/copy_current_request")(copy_current_request)
+        self.client.get("/copy_current_request")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "copy_current_request")
+        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(
+            span_list[0].attributes,
+            expected_attributes(
+                {
+                    "http.target": "/copy_current_request",
+                    "http.route": "/copy_current_request",
+                }
+            ),
+        )
 
     def test_simple(self):
         expected_attrs = expected_attributes(
