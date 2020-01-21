@@ -31,6 +31,7 @@ MONGODB_PORT = int(os.getenv("MONGODB_PORT ", "27017"))
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME ", "opentelemetry-tests")
 MONGODB_COLLECTION_NAME = "test"
 
+
 class TestFunctionalPymongo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -40,7 +41,9 @@ class TestFunctionalPymongo(unittest.TestCase):
         cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
         cls._tracer_source.add_span_processor(cls._span_processor)
         trace_integration(cls._tracer)
-        client = MongoClient(MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000)
+        client = MongoClient(
+            MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000
+        )
         db = client[MONGODB_DB_NAME]
         cls._collection = db[MONGODB_COLLECTION_NAME]
 
