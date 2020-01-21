@@ -12,17 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from typing import Dict, Optional, Sequence, Union
-
-AttributeValue = Union[
-    str,
-    bool,
-    int,
-    float,
-    Sequence[str],
-    Sequence[bool],
-    Sequence[int],
-    Sequence[float],
-]
-Attributes = Optional[Dict[str, AttributeValue]]
+__version__ = "0.4.dev0"

@@ -137,11 +137,11 @@ class BatchExportSpanProcessor(SpanProcessor):
 
     def on_end(self, span: Span) -> None:
         if self.done:
-            logging.warning("Already shutdown, dropping span.")
+            logger.warning("Already shutdown, dropping span.")
             return
         if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
-                logging.warning("Queue is full, likely spans will be dropped.")
+                logger.warning("Queue is full, likely spans will be dropped.")
                 self._spans_dropped = True
 
         self.queue.appendleft(span)
