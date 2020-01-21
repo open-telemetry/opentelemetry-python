@@ -2,4 +2,6 @@ version: '3'
 
 services:
   otmongo:
+    ports:
+     - "27017:27017"
     image: mongo:latest

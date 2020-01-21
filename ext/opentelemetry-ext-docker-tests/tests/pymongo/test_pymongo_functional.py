@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import os
-import pytest
-import requests
-import subprocess
-import time
 import typing
 import unittest
 
 from pymongo import MongoClient
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.pymongo import trace_integration
@@ -35,27 +28,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 MONGODB_HOST = os.getenv("MONGODB_HOST ", "localhost")
 MONGODB_PORT = int(os.getenv("MONGODB_PORT ", "27017"))
-MONGODB_DB_NAME = os.getenv("MONGODB_PORT ", "opentelemetry-tests")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME ", "opentelemetry-tests")
 MONGODB_COLLECTION_NAME = "test"
-
-pytest_plugins = ["docker_compose"]
-
-# Invoking this fixture: 'module_scoped_container_getter' starts all services
-@pytest.fixture(scope="module")
-def wait_for_otmongo(module_scoped_container_getter):
-    """Wait for the api from my_api_service to become responsive"""
-    request_session = requests.Session()
-    retries = Retry(total=5,
-                    backoff_factor=0.1,
-                    status_forcelist=[500, 502, 503, 504])
-    request_session.mount("localhost:27017", HTTPAdapter(max_retries=retries))
-
-    service = module_scoped_container_getter.get("otmongo")
-    return service
-
-def test_read_and_write(wait_for_otmongo):
-    """The Api is now verified good to go and tests can interact with it"""
-    data_string = 'some_data'
 
 class TestFunctionalPymongo(unittest.TestCase):
     @classmethod
