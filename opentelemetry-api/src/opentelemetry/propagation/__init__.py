@@ -12,6 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The OpenTelemetry propagation module provides an interface that enables
+propagation of Context details across any concerns which implement the
+Extractor and Injector interfaces.
+
+Example::
+
+    import flask
+    import requests
+    from opentelemetry.propagation import DefaultExtractor, DefaultInjector
+
+    extractor = DefaultExtractor()
+    injector = DefaultInjector()
+
+
+    def get_header_from_flask_request(request, key):
+        return request.headers.get_all(key)
+
+    def set_header_into_requests_request(request: requests.Request,
+                                            key: str, value: str):
+        request.headers[key] = value
+
+    def example_route():
+        span_context = extractor.extract(
+            get_header_from_flask_request,
+            flask.request
+        )
+        request_to_downstream = requests.Request(
+            "GET", "http://httpbin.org/get"
+        )
+        injector.inject(
+            span_context,
+            set_header_into_requests_request,
+            request_to_downstream
+        )
+        session = requests.Session()
+        session.send(request_to_downstream.prepare())
+
+
+.. _Propagation API Specification:
+    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
+"""
 import abc
 import typing
 
@@ -24,62 +66,31 @@ Setter = typing.Callable[[ContextT, str, str], None]
 Getter = typing.Callable[[ContextT, str], typing.List[str]]
 
 
+def get_as_list(
+    dict_object: typing.Dict[str, str], key: str
+) -> typing.List[str]:
+    value = dict_object.get(key)
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def set_in_dict(
+    dict_object: typing.Dict[str, str], key: str, value: str
+) -> None:
+    dict_object[key] = value
+
+
 class Extractor(abc.ABC):
-    """API for propagation of span context via headers.
-
-    TODO: update docs to reflect split into extractor/injector
-
-    This class provides an interface that enables extracting and injecting
-    span context into headers of HTTP requests. HTTP frameworks and clients
-    can integrate with HTTPTextFormat by providing the object containing the
-    headers, and a getter and setter function for the extraction and
-    injection of values, respectively.
-
-    Example::
-
-        import flask
-        import requests
-        from opentelemetry.context.propagation import Extractor
-
-        PROPAGATOR = HTTPTextFormat()
-
-
-
-        def get_header_from_flask_request(request, key):
-            return request.headers.get_all(key)
-
-        def set_header_into_requests_request(request: requests.Request,
-                                             key: str, value: str):
-            request.headers[key] = value
-
-        def example_route():
-            span_context = PROPAGATOR.extract(
-                get_header_from_flask_request,
-                flask.request
-            )
-            request_to_downstream = requests.Request(
-                "GET", "http://httpbin.org/get"
-            )
-            PROPAGATOR.inject(
-                span_context,
-                set_header_into_requests_request,
-                request_to_downstream
-            )
-            session = requests.Session()
-            session.send(request_to_downstream.prepare())
-
-
-    .. _Propagation API Specification:
-       https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
-    """
-
     @classmethod
     @abc.abstractmethod
     def extract(
         cls,
         carrier: ContextT,
         context: typing.Optional[Context] = None,
-        get_from_carrier: typing.Optional[Getter[ContextT]] = None,
+        get_from_carrier: typing.Optional[Getter[ContextT]] = get_as_list,
     ) -> Context:
         """Create a Context from values in the carrier.
 
@@ -88,12 +99,12 @@ class Extractor(abc.ABC):
         Context value and return it.
 
         Args:
-            carrier: and object which contains values that are
+            carrier: And object which contains values that are
                 used to construct a Context. This object
                 must be paired with an appropriate get_from_carrier
                 which understands how to extract a value from it.
-            context: The Context to read values from.
-            get_from_carrier: a function that can retrieve zero
+            context: The Context to set values into.
+            get_from_carrier: A function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.
         Returns:
@@ -108,7 +119,7 @@ class Injector(abc.ABC):
         cls,
         carrier: ContextT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: typing.Optional[Setter[ContextT]] = None,
+        set_in_carrier: typing.Optional[Setter[ContextT]] = set_in_dict,
     ) -> None:
         """Inject values from a Context into a carrier.
 
@@ -138,7 +149,7 @@ class DefaultExtractor(Extractor):
         cls,
         carrier: ContextT,
         context: typing.Optional[Context] = None,
-        get_from_carrier: typing.Optional[Getter[ContextT]] = None,
+        get_from_carrier: typing.Optional[Getter[ContextT]] = get_as_list,
     ) -> Context:
         if context:
             return context
@@ -156,7 +167,7 @@ class DefaultInjector(Injector):
         cls,
         carrier: ContextT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: typing.Optional[Setter[ContextT]] = None,
+        set_in_carrier: typing.Optional[Setter[ContextT]] = set_in_dict,
     ) -> None:
         return None
 
@@ -165,19 +176,18 @@ def extract(
     carrier: ContextT,
     context: typing.Optional[Context] = None,
     extractors: typing.Optional[typing.List[Extractor]] = None,
-    get_from_carrier: typing.Optional[Getter[ContextT]] = None,
+    get_from_carrier: typing.Optional[Getter[ContextT]] = get_as_list,
 ) -> typing.Optional[Context]:
-    """Load the parent SpanContext from values in the carrier.
+    """Load the Context from values in the carrier.
 
     Using the specified Extractor, the propagator will
-    extract a SpanContext from the carrier. If one is found,
-    it will be set as the parent context of the current span.
+    extract a Context from the carrier.
 
     Args:
-        get_from_carrier: a function that can retrieve zero
+        get_from_carrier: A function that can retrieve zero
             or more values from the carrier. In the case that
             the value does not exist, return an empty list.
-        carrier: and object which contains values that are
+        carrier: An object which contains values that are
             used to construct a SpanContext. This object
             must be paired with an appropriate get_from_carrier
             which understands how to extract a value from it.
@@ -204,6 +214,7 @@ def inject(
     carrier: ContextT,
     injectors: typing.Optional[typing.List[Injector]] = None,
     context: typing.Optional[Context] = None,
+    set_in_carrier: typing.Optional[Setter[ContextT]] = set_in_dict,
 ) -> None:
     """Inject values from the current context into the carrier.
 
@@ -225,7 +236,9 @@ def inject(
         injectors = get_http_injectors()
 
     for injector in injectors:
-        injector.inject(context=context, carrier=carrier)
+        injector.inject(
+            context=context, carrier=carrier, set_in_carrier=set_in_carrier
+        )
 
 
 _HTTP_TEXT_INJECTORS = [
@@ -269,20 +282,3 @@ def get_http_injectors() -> typing.List[Injector]:
     function which returns an injector.
     """
     return _HTTP_TEXT_INJECTORS  # type: ignore
-
-
-def get_as_list(
-    dict_object: typing.Dict[str, str], key: str
-) -> typing.List[str]:
-    value = dict_object.get(key)
-    if value is None:
-        return []
-    if isinstance(value, list):
-        return value
-    return [value]
-
-
-def set_in_dict(
-    dict_object: typing.Dict[str, str], key: str, value: str
-) -> None:
-    dict_object[key] = value
