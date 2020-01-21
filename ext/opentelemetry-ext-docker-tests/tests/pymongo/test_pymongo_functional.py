@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,16 @@
 
 import logging
 import os
+import pytest
+import requests
 import subprocess
 import time
 import typing
 import unittest
 
 from pymongo import MongoClient
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.pymongo import trace_integration
@@ -34,39 +38,37 @@ MONGODB_PORT = int(os.getenv("MONGODB_PORT ", "27017"))
 MONGODB_DB_NAME = os.getenv("MONGODB_PORT ", "opentelemetry-tests")
 MONGODB_COLLECTION_NAME = "test"
 
+pytest_plugins = ["docker_compose"]
+
+# Invoking this fixture: 'module_scoped_container_getter' starts all services
+@pytest.fixture(scope="module")
+def wait_for_otmongo(module_scoped_container_getter):
+    """Wait for the api from my_api_service to become responsive"""
+    request_session = requests.Session()
+    retries = Retry(total=5,
+                    backoff_factor=0.1,
+                    status_forcelist=[500, 502, 503, 504])
+    request_session.mount("localhost:27017", HTTPAdapter(max_retries=retries))
+
+    service = module_scoped_container_getter.get("otmongo")
+    return service
+
+def test_read_and_write(wait_for_otmongo):
+    """The Api is now verified good to go and tests can interact with it"""
+    data_string = 'some_data'
 
 class TestFunctionalPymongo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Enable mongo in docker only when running locally
-        cls._is_continuous_integration = bool(os.getenv("CI_RUNNING ", "0"))
-        if not cls._is_continuous_integration:
-            process = subprocess.run(
-                "docker run -d -p 27017:27017 --name otmongo mongo",
-                check=False,
-            )
-            if process.returncode != 0:
-                logging.warning("Failed to start MongoDB container")
-            time.sleep(2)
-
         cls._tracer_source = TracerSource()
         cls._tracer = Tracer(cls._tracer_source, None)
         cls._span_exporter = InMemorySpanExporter()
         cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
         cls._tracer_source.add_span_processor(cls._span_processor)
         trace_integration(cls._tracer)
-        try:
-            client = MongoClient(MONGODB_HOST, MONGODB_PORT)
-            db = client[MONGODB_DB_NAME]
-            cls._collection = db[MONGODB_COLLECTION_NAME]
-        except Exception:  # noqa pylint: disable=broad-except
-            logging.warning("Failed to connect to MongoDB")
-
-    @classmethod
-    def tearDownClass(cls):
-        if not cls._is_continuous_integration:
-            subprocess.run("docker stop otmongo", check=False)
-            subprocess.run("docker rm otmongo", check=False)
+        client = MongoClient(MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000)
+        db = client[MONGODB_DB_NAME]
+        cls._collection = db[MONGODB_COLLECTION_NAME]
 
     def setUp(self):
         self._span_exporter.clear()

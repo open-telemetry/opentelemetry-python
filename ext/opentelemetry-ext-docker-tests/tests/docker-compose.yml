@@ -1,0 +1,5 @@
+version: '3'
+
+services:
+  otmongo:
+    image: mongo:latest
