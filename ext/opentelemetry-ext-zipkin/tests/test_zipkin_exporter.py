@@ -154,18 +154,18 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace.Span(name=span_names[2], context=other_context, parent=None),
         ]
 
-        otel_spans[0].start_time = start_times[0]
+        otel_spans[0].start(start_time=start_times[0])
         # added here to preserve order
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
-        otel_spans[0].end_time = end_times[0]
+        otel_spans[0].end(end_time=end_times[0])
 
-        otel_spans[1].start_time = start_times[1]
-        otel_spans[1].end_time = end_times[1]
+        otel_spans[1].start(start_time=start_times[1])
+        otel_spans[1].end(end_time=end_times[1])
 
-        otel_spans[2].start_time = start_times[2]
-        otel_spans[2].end_time = end_times[2]
+        otel_spans[2].start(start_time=start_times[2])
+        otel_spans[2].end(end_time=end_times[2])
 
         service_name = "test-service"
         local_endpoint = {

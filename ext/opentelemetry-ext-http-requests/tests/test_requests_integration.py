@@ -29,8 +29,8 @@ class TestRequestsIntegration(unittest.TestCase):
     # TODO: Copy & paste from test_wsgi_middleware
     def setUp(self):
         self.span_attrs = {}
-        self.tracer_source = trace.TracerSource()
-        self.tracer = trace.Tracer()
+        self.tracer_source = trace.DefaultTracerSource()
+        self.tracer = trace.DefaultTracer()
         self.get_tracer_patcher = mock.patch.object(
             self.tracer_source,
             "get_tracer",

@@ -12,13 +12,10 @@ Usage
 .. code:: python
 
     import mysql.connector
-    from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerSource
+    from opentelemetry.trace import tracer_source
     from opentelemetry.ext.mysql import trace_integration
 
-    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-    tracer = trace.tracer_source().get_tracer(__name__)
-    trace_integration(tracer)
+    trace_integration(tracer_source())
     cnx = mysql.connector.connect(database='MySQL_Database')
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)"

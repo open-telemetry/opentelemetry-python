@@ -103,14 +103,12 @@ def collect_request_attributes(environ):
 
     remote_addr = environ.get("REMOTE_ADDR")
     if remote_addr:
-        result[
-            "peer.ipv6" if ":" in remote_addr else "peer.ipv4"
-        ] = remote_addr
+        result["net.peer.ip"] = remote_addr
     remote_host = environ.get("REMOTE_HOST")
     if remote_host and remote_host != remote_addr:
-        result["peer.hostname"] = remote_host
+        result["net.peer.name"] = remote_host
 
-    setifnotnone(result, "peer.port", environ.get("REMOTE_PORT"))
+    setifnotnone(result, "net.peer.port", environ.get("REMOTE_PORT"))
     flavor = environ.get("SERVER_PROTOCOL", "")
     if flavor.upper().startswith(_HTTP_VERSION_PREFIX):
         flavor = flavor[len(_HTTP_VERSION_PREFIX) :]
