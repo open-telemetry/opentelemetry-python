@@ -25,7 +25,12 @@ DUMMY_TRACER_SOURCE = None
 
 
 class DummyTracerSource(trace.TracerSource):
-    pass
+    def get_tracer(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "trace.Tracer":
+        return trace.DefaultTracer()
 
 
 def get_opentelemetry_implementation(type_):
@@ -49,7 +54,7 @@ class TestLoader(unittest.TestCase):
 
     def test_get_default(self):
         tracer_source = trace.tracer_source()
-        self.assertIs(type(tracer_source), trace.TracerSource)
+        self.assertIs(type(tracer_source), trace.DefaultTracerSource)
 
     def test_preferred_impl(self):
         trace.set_preferred_tracer_source_implementation(

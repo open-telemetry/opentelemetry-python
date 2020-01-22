@@ -18,6 +18,7 @@ import logging
 import random
 import threading
 from contextlib import contextmanager
+from numbers import Number
 from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
 
@@ -66,7 +67,8 @@ class SpanProcessor:
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
+        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown.
+        """
 
 
 class MultiSpanProcessor(SpanProcessor):
@@ -171,9 +173,17 @@ class Span(trace_api.Span):
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
-        self.end_time = None  # type: Optional[int]
-        self.start_time = None  # type: Optional[int]
+        self._end_time = None  # type: Optional[int]
+        self._start_time = None  # type: Optional[int]
         self.instrumentation_info = instrumentation_info
+
+    @property
+    def start_time(self):
+        return self._start_time
+
+    @property
+    def end_time(self):
+        return self._end_time
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -208,7 +218,38 @@ class Span(trace_api.Span):
         if has_ended:
             logger.warning("Setting attribute on ended span.")
             return
+
+        if isinstance(value, Sequence):
+            error_message = self._check_attribute_value_sequence(value)
+            if error_message is not None:
+                logger.warning("%s in attribute value sequence", error_message)
+                return
+        elif not isinstance(value, (bool, str, Number, Sequence)):
+            logger.warning("invalid type for attribute value")
+            return
+
         self.attributes[key] = value
+
+    @staticmethod
+    def _check_attribute_value_sequence(sequence: Sequence) -> Optional[str]:
+        """
+        Checks if sequence items are valid and are of the same type
+        """
+        if len(sequence) == 0:
+            return None
+
+        first_element_type = type(sequence[0])
+
+        if issubclass(first_element_type, Number):
+            first_element_type = Number
+
+        if first_element_type not in (bool, str, Number):
+            return "invalid type"
+
+        for element in sequence:
+            if not isinstance(element, first_element_type):
+                return "different type"
+        return None
 
     def add_event(
         self,
@@ -243,7 +284,7 @@ class Span(trace_api.Span):
                 return
             has_started = self.start_time is not None
             if not has_started:
-                self.start_time = (
+                self._start_time = (
                     start_time if start_time is not None else time_ns()
                 )
         if has_started:
@@ -259,13 +300,16 @@ class Span(trace_api.Span):
                 raise RuntimeError("Calling end() on a not started span.")
             has_ended = self.end_time is not None
             if not has_ended:
-                self.end_time = end_time if end_time is not None else time_ns()
+                if self.status is None:
+                    self.status = Status(canonical_code=StatusCanonicalCode.OK)
+
+                self._end_time = (
+                    end_time if end_time is not None else time_ns()
+                )
+
         if has_ended:
             logger.warning("Calling end() on an ended span.")
             return
-
-        if self.status is None:
-            self.set_status(Status(canonical_code=StatusCanonicalCode.OK))
 
         self.span_processor.on_end(self)
 
