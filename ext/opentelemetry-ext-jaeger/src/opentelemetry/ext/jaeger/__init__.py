@@ -233,9 +233,7 @@ def _extract_logs_from_span(span):
     logs = []
 
     for event in span.events:
-        fields = []
-        if event.attributes is not None:
-            fields = _extract_tags(event.attributes)
+        fields = _extract_tags(event.attributes)
 
         fields.append(
             jaeger.Tag(
