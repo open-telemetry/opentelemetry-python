@@ -156,9 +156,6 @@ def _translate_to_jaeger(spans: Span):
 
         tags = _extract_tags(span.attributes)
 
-        if tags is None:
-            tags = []
-
         tags.extend(
             [
                 _get_long_tag("status.code", status.canonical_code.value),
@@ -255,7 +252,7 @@ def _extract_logs_from_span(span):
 
 def _extract_tags(attr):
     if not attr:
-        return None
+        return []
     tags = []
     for attribute_key, attribute_value in attr.items():
         tag = _convert_attribute_to_tag(attribute_key, attribute_value)
