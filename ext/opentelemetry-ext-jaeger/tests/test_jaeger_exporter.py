@@ -20,6 +20,7 @@ from unittest import mock
 # pylint:disable=import-error
 import opentelemetry.ext.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.ext.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
 
@@ -174,6 +175,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
+        otel_spans[0].set_status(
+            Status(StatusCanonicalCode.OK, "Example description")
+        )
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
@@ -208,6 +212,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         key="key_float",
                         vType=jaeger.TagType.DOUBLE,
                         vDouble=111.22,
+                    ),
+                    jaeger.Tag(
+                        key="status.code", vType=jaeger.TagType.LONG, vLong=0,
+                    ),
+                    jaeger.Tag(
+                        key="status.message",
+                        vType=jaeger.TagType.STRING,
+                        vStr="Example description",
                     ),
                 ],
                 references=[
