@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+import time
 from unittest.mock import MagicMock, patch
 
 from prometheus_client.core import (
@@ -40,9 +41,30 @@ class MockResponse:
 class TestPrometheusMetricExporter(unittest.TestCase):
     def test_constructor(self):
         """Test the constructor."""
-        port = 12345
-        address = "testAddress"
+        port = 8000
+        address = "localhost"
+        meter = metrics.Meter()
+        metric = meter.create_metric(
+            "testname",
+            "testdesc",
+            "unit",
+            int,
+            metrics.Counter,
+            ["environment"],
+        )
+        kvp = {"environment": "staging"}
+        label_set = meter.get_label_set(kvp)
+        aggregator = CounterAggregator()
+        aggregator.check_point = 123
+        record = MetricRecord(aggregator, label_set, metric)
         exporter = PrometheusMetricsExporter(port=port, address=address)
+
+        exporter.export([record])
+
+        # Prevent main from exiting to see the data on prometheus
+        # localhost:8000/metrics
+        while True:
+            pass
 
     def test_shutdown(self):
         exporter = PrometheusMetricsExporter()
@@ -73,4 +95,6 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             self.assertEqual(prometheus_metric.name, "testname")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertEqual(prometheus_metric.samples[0].value, 123)
-            self.assertEqual(prometheus_metric.samples[0].labels["environment"], "staging")
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["environment"], "staging"
+            )

@@ -21,6 +21,7 @@ from typing import Sequence
 from prometheus_client import start_http_server
 from prometheus_client.core import (
     REGISTRY,
+    CollectorRegistry,
     CounterMetricFamily,
     GaugeMetricFamily,
     UnknownMetricFamily,
@@ -46,7 +47,11 @@ class PrometheusMetricsExporter(MetricsExporter):
         address: The Prometheus address to be used.
     """
 
-    def __init__(self, port: int = DEFAULT_PORT, address: str = ""):
+    def __init__(
+        self,
+        port: int = DEFAULT_PORT,
+        address: str = ""
+    ):
         self._port = port
         self._address = address
         self._collector = CustomCollector()
@@ -65,7 +70,7 @@ class PrometheusMetricsExporter(MetricsExporter):
 
 
 class CustomCollector(object):
-    """ Collector represents the Prometheus Collector object
+    """ CustomCollector represents the Prometheus Collector object
         https://github.com/prometheus/client_python#custom-collectors
     """
 
@@ -109,7 +114,8 @@ class CustomCollector(object):
 
         elif isinstance(metric_record.metric, Gauge):
             prometheus_metric = GaugeMetricFamily(
-                name=metric_name, documentation=metric_record.metric.description
+                name=metric_name,
+                documentation=metric_record.metric.description,
             )
             prometheus_metric.add_metric(
                 labels=label_values, value=metric_record.aggregator.check_point
@@ -117,14 +123,17 @@ class CustomCollector(object):
 
         elif isinstance(metric_record.metric, Measure):
             prometheus_metric = UnknownMetricFamily(
-                name=metric_name, documentation=metric_record.metric.description
+                name=metric_name,
+                documentation=metric_record.metric.description,
             )
             prometheus_metric.add_metric(
                 labels=label_values, value=metric_record.aggregator.check_point
             )
 
         else:
-            logger.warning("Unsupported metric type. %s", type(metric_record.metric))
+            logger.warning(
+                "Unsupported metric type. %s", type(metric_record.metric)
+            )
         return prometheus_metric
 
 
