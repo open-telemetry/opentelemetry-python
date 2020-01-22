@@ -156,6 +156,13 @@ class TestJaegerSpanExporter(unittest.TestCase):
             context=other_context, attributes=link_attributes
         )
 
+        default_status_tags = [
+            jaeger.Tag(key="status.code", vType=jaeger.TagType.LONG, vLong=0,),
+            jaeger.Tag(
+                key="status.message", vType=jaeger.TagType.STRING, vStr=None,
+            ),
+        ]
+
         otel_spans = [
             trace.Span(
                 name=span_names[0],
@@ -176,7 +183,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_status(
-            Status(StatusCanonicalCode.OK, "Example description")
+            Status(StatusCanonicalCode.UNKNOWN, "Example description")
         )
         otel_spans[0].end(end_time=end_times[0])
 
@@ -214,12 +221,15 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         vDouble=111.22,
                     ),
                     jaeger.Tag(
-                        key="status.code", vType=jaeger.TagType.LONG, vLong=0,
+                        key="status.code", vType=jaeger.TagType.LONG, vLong=2,
                     ),
                     jaeger.Tag(
                         key="status.message",
                         vType=jaeger.TagType.STRING,
                         vStr="Example description",
+                    ),
+                    jaeger.Tag(
+                        key="error", vType=jaeger.TagType.BOOL, vBool=True,
                     ),
                 ],
                 references=[
@@ -267,6 +277,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 startTime=start_times[1] // 10 ** 3,
                 duration=durations[1] // 10 ** 3,
                 flags=0,
+                tags=default_status_tags,
             ),
             jaeger.Span(
                 operationName=span_names[2],
@@ -277,6 +288,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 startTime=start_times[2] // 10 ** 3,
                 duration=durations[2] // 10 ** 3,
                 flags=0,
+                tags=default_status_tags,
             ),
         ]
 

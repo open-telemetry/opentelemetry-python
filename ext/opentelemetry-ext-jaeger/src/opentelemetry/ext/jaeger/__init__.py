@@ -156,20 +156,19 @@ def _translate_to_jaeger(spans: Span):
 
         tags = _extract_tags(span.attributes)
 
-        if status is not None:
-            if tags is None:
-                tags = []
+        if tags is None:
+            tags = []
 
-            tags.extend(
-                [
-                    _get_long_tag("status.code", status.canonical_code.value),
-                    _get_string_tag("status.message", status.description),
-                ]
-            )
+        tags.extend(
+            [
+                _get_long_tag("status.code", status.canonical_code.value),
+                _get_string_tag("status.message", status.description),
+            ]
+        )
 
-            # Ensure that if Status.Code is not OK, that we set the "error" tag on the Jaeger span.
-            if status.canonical_code is not StatusCanonicalCode.OK:
-                tags.append(_get_bool_tag("error", True))
+        # Ensure that if Status.Code is not OK, that we set the "error" tag on the Jaeger span.
+        if status.canonical_code is not StatusCanonicalCode.OK:
+            tags.append(_get_bool_tag("error", True))
 
         refs = _extract_refs_from_span(span)
         logs = _extract_logs_from_span(span)
