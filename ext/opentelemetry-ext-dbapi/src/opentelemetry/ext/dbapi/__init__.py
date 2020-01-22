@@ -18,6 +18,7 @@ ibraries following Ptyhon Database API specification:
 https://www.python.org/dev/peps/pep-0249/
 """
 
+import functools
 import logging
 import typing
 
@@ -72,7 +73,6 @@ def trace_integration(
 
 
 class DatabaseApiIntegration:
-    # pylint: disable=unused-argument
     def __init__(
         self,
         tracer: Tracer,
@@ -80,8 +80,6 @@ class DatabaseApiIntegration:
         database_type: str = "sql",
         connection_attributes=None,
     ):
-        if tracer is None:
-            raise ValueError("The tracer is not provided.")
         self.connection_attributes = connection_attributes
         if self.connection_attributes is None:
             self.connection_attributes = {
@@ -107,18 +105,40 @@ class DatabaseApiIntegration:
         """Add object proxy to connection object.
         """
         connection = connect_method(*args, **kwargs)
+        self.get_connection_attributes(connection)
+        traced_connection = TracedConnectionProxy(connection, self)
+        return traced_connection
 
+    def get_connection_attributes(self, connection):
+        # Populate span fields using connection
         for key, value in self.connection_attributes.items():
-            attribute = getattr(connection, value, None)
+            # Allow attributes nested in connection object
+            attribute = functools.reduce(
+                lambda attribute, attribute_value: getattr(
+                    attribute, attribute_value, None
+                ),
+                value.split("."),
+                connection,
+            )
             if attribute:
                 self.connection_props[key] = attribute
-        traced_connection = TracedConnection(connection, self)
-        return traced_connection
+        self.name = self.database_component
+        self.database = self.connection_props.get("database", "")
+        if self.database:
+            self.name += "." + self.database
+        user = self.connection_props.get("user")
+        if user is not None:
+            self.span_attributes["db.user"] = user
+        host = self.connection_props.get("host")
+        if host is not None:
+            self.span_attributes["net.peer.name"] = host
+        port = self.connection_props.get("port")
+        if port is not None:
+            self.span_attributes["net.peer.port"] = port
 
 
 # pylint: disable=abstract-method
-class TracedConnection(wrapt.ObjectProxy):
-
+class TracedConnectionProxy(wrapt.ObjectProxy):
     # pylint: disable=unused-argument
     def __init__(
         self,
@@ -130,62 +150,17 @@ class TracedConnection(wrapt.ObjectProxy):
         wrapt.ObjectProxy.__init__(self, connection)
         self._db_api_integration = db_api_integration
 
-        self._db_api_integration.name = (
-            self._db_api_integration.database_component
-        )
-        self._db_api_integration.database = self._db_api_integration.connection_props.get(
-            "database", ""
-        )
-        if self._db_api_integration.database:
-            self._db_api_integration.name += (
-                "." + self._db_api_integration.database
-            )
-        user = self._db_api_integration.connection_props.get("user")
-        if user is not None:
-            self._db_api_integration.span_attributes["db.user"] = user
-        host = self._db_api_integration.connection_props.get("host")
-        if host is not None:
-            self._db_api_integration.span_attributes["net.peer.name"] = host
-        port = self._db_api_integration.connection_props.get("port")
-        if port is not None:
-            self._db_api_integration.span_attributes["net.peer.port"] = port
-
     def cursor(self, *args, **kwargs):
-        return TracedCursor(
+        return TracedCursorProxy(
             self.__wrapped__.cursor(*args, **kwargs), self._db_api_integration
         )
 
 
-# pylint: disable=abstract-method
-class TracedCursor(wrapt.ObjectProxy):
-
-    # pylint: disable=unused-argument
-    def __init__(
-        self,
-        cursor,
-        db_api_integration: DatabaseApiIntegration,
-        *args,
-        **kwargs
-    ):
-        wrapt.ObjectProxy.__init__(self, cursor)
+class TracedCursor:
+    def __init__(self, db_api_integration: DatabaseApiIntegration):
         self._db_api_integration = db_api_integration
 
-    def execute(self, *args, **kwargs):
-        return self._traced_execution(
-            self.__wrapped__.execute, *args, **kwargs
-        )
-
-    def executemany(self, *args, **kwargs):
-        return self._traced_execution(
-            self.__wrapped__.executemany, *args, **kwargs
-        )
-
-    def callproc(self, *args, **kwargs):
-        return self._traced_execution(
-            self.__wrapped__.callproc, *args, **kwargs
-        )
-
-    def _traced_execution(
+    def traced_execution(
         self,
         query_method: typing.Callable[..., any],
         *args: typing.Tuple[any, any],
@@ -223,3 +198,33 @@ class TracedCursor(wrapt.ObjectProxy):
             except Exception as ex:  # pylint: disable=broad-except
                 span.set_status(Status(StatusCanonicalCode.UNKNOWN, str(ex)))
                 raise ex
+
+
+# pylint: disable=abstract-method
+class TracedCursorProxy(wrapt.ObjectProxy):
+
+    # pylint: disable=unused-argument
+    def __init__(
+        self,
+        cursor,
+        db_api_integration: DatabaseApiIntegration,
+        *args,
+        **kwargs
+    ):
+        wrapt.ObjectProxy.__init__(self, cursor)
+        self._traced_cursor = TracedCursor(db_api_integration)
+
+    def execute(self, *args, **kwargs):
+        return self._traced_cursor.traced_execution(
+            self.__wrapped__.execute, *args, **kwargs
+        )
+
+    def executemany(self, *args, **kwargs):
+        return self._traced_cursor.traced_execution(
+            self.__wrapped__.executemany, *args, **kwargs
+        )
+
+    def callproc(self, *args, **kwargs):
+        return self._traced_cursor.traced_execution(
+            self.__wrapped__.callproc, *args, **kwargs
+        )
