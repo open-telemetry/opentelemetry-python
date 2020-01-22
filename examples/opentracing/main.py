@@ -9,7 +9,7 @@ from rediscache import RedisCache
 
 # Configure the tracer using the default implementation
 trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-tracer = trace.tracer_source().get_tracer(__name__)
+tracer_source = trace.tracer_source()
 
 # Configure the tracer to export traces to Jaeger
 jaeger_exporter = JaegerSpanExporter(
@@ -18,14 +18,17 @@ jaeger_exporter = JaegerSpanExporter(
     agent_port=6831,
 )
 span_processor = BatchExportSpanProcessor(jaeger_exporter)
-trace.tracer_source().add_span_processor(span_processor)
+tracer_source.add_span_processor(span_processor)
 
 # Create an OpenTracing shim. This implements the OpenTracing tracer API, but
 # forwards calls to the underlying OpenTelemetry tracer.
-opentracing_tracer = opentracing_shim.create_tracer(tracer)
+opentracing_tracer = opentracing_shim.create_tracer(tracer_source)
 
 # Our example caching library expects an OpenTracing-compliant tracer.
 redis_cache = RedisCache(opentracing_tracer)
+
+# Appication code uses an OpenTelemetry Tracer as usual.
+tracer = trace.tracer_source().get_tracer(__name__)
 
 
 @redis_cache
