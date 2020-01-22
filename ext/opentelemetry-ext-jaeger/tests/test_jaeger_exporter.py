@@ -20,9 +20,9 @@ from unittest import mock
 # pylint:disable=import-error
 import opentelemetry.ext.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
-from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.ext.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
 class TestJaegerSpanExporter(unittest.TestCase):
