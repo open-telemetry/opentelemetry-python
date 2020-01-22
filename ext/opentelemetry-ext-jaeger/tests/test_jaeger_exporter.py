@@ -157,7 +157,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         )
 
         default_status_tags = [
-            jaeger.Tag(key="status.code", vType=jaeger.TagType.LONG, vLong=0,),
+            jaeger.Tag(
+                key="status.code",
+                vType=jaeger.TagType.LONG,
+                vLong=StatusCanonicalCode.OK.value,
+            ),
             jaeger.Tag(
                 key="status.message", vType=jaeger.TagType.STRING, vStr=None,
             ),
@@ -221,7 +225,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         vDouble=111.22,
                     ),
                     jaeger.Tag(
-                        key="status.code", vType=jaeger.TagType.LONG, vLong=2,
+                        key="status.code",
+                        vType=jaeger.TagType.LONG,
+                        vLong=StatusCanonicalCode.UNKNOWN.value,
                     ),
                     jaeger.Tag(
                         key="status.message",
