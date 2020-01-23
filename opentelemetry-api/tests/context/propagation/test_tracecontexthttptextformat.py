@@ -14,6 +14,7 @@
 
 import typing
 import unittest
+from unittest.mock import Mock
 
 from opentelemetry import trace
 from opentelemetry.context.propagation import tracecontexthttptextformat
@@ -38,7 +39,8 @@ class TestTraceContextFormat(unittest.TestCase):
 
         RFC 4.2.2:
 
-        If no traceparent header is received, the vendor creates a new trace-id and parent-id that represents the current request.
+        If no traceparent header is received, the vendor creates a new
+        trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
         span_context = FORMAT.extract(get_as_list, output)
@@ -66,8 +68,10 @@ class TestTraceContextFormat(unittest.TestCase):
             span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
 
+        mock_span = Mock()
+        mock_span.configure_mock(**{"get_context.return_value": span_context})
         output = {}  # type:typing.Dict[str, str]
-        FORMAT.inject(span_context, dict.__setitem__, output)
+        FORMAT.inject(mock_span, dict.__setitem__, output)
         self.assertEqual(output["traceparent"], traceparent_value)
         for pair in ["foo=1", "bar=2", "baz=3"]:
             self.assertIn(pair, output["tracestate"])
@@ -81,13 +85,16 @@ class TestTraceContextFormat(unittest.TestCase):
 
         RFC 3.2.2.3
 
-        If the trace-id value is invalid (for example if it contains non-allowed characters or all
-        zeros), vendors MUST ignore the traceparent.
+        If the trace-id value is invalid (for example if it contains
+        non-allowed characters or all zeros), vendors MUST ignore the
+        traceparent.
 
         RFC 3.3
 
-        If the vendor failed to parse traceparent, it MUST NOT attempt to parse tracestate.
-        Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
+        If the vendor failed to parse traceparent, it MUST NOT attempt to
+        parse tracestate.
+        Note that the opposite is not true: failure to parse tracestate MUST
+        NOT affect the parsing of traceparent.
         """
         span_context = FORMAT.extract(
             get_as_list,
@@ -101,19 +108,22 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
     def test_invalid_parent_id(self):
-        """If the parent id is invalid, we must ignore the full traceparent header.
+        """If the parent id is invalid, we must ignore the full traceparent
+        header.
 
         Also ignore any tracestate.
 
         RFC 3.2.2.3
 
-        Vendors MUST ignore the traceparent when the parent-id is invalid (for example,
-        if it contains non-lowercase hex characters).
+        Vendors MUST ignore the traceparent when the parent-id is invalid (for
+        example, if it contains non-lowercase hex characters).
 
         RFC 3.3
 
-        If the vendor failed to parse traceparent, it MUST NOT attempt to parse tracestate.
-        Note that the opposite is not true: failure to parse tracestate MUST NOT affect the parsing of traceparent.
+        If the vendor failed to parse traceparent, it MUST NOT attempt to parse
+        tracestate.
+        Note that the opposite is not true: failure to parse tracestate MUST
+        NOT affect the parsing of traceparent.
         """
         span_context = FORMAT.extract(
             get_as_list,
@@ -131,15 +141,19 @@ class TestTraceContextFormat(unittest.TestCase):
 
         RFC 3.3.1.1
 
-        Empty and whitespace-only list members are allowed. Vendors MUST accept empty
-        tracestate headers but SHOULD avoid sending them.
+        Empty and whitespace-only list members are allowed. Vendors MUST accept
+        empty tracestate headers but SHOULD avoid sending them.
         """
         output = {}  # type:typing.Dict[str, str]
-        FORMAT.inject(
-            trace.SpanContext(self.TRACE_ID, self.SPAN_ID),
-            dict.__setitem__,
-            output,
+        mock_span = Mock()
+        mock_span.configure_mock(
+            **{
+                "get_context.return_value": trace.SpanContext(
+                    self.TRACE_ID, self.SPAN_ID
+                )
+            }
         )
+        FORMAT.inject(mock_span, dict.__setitem__, output)
         self.assertTrue("traceparent" in output)
         self.assertFalse("tracestate" in output)
 
@@ -155,7 +169,8 @@ class TestTraceContextFormat(unittest.TestCase):
             get_as_list,
             {
                 "traceparent": [
-                    "00-12345678901234567890123456789012-1234567890123456-00-residue"
+                    "00-12345678901234567890123456789012-"
+                    "1234567890123456-00-residue"
                 ],
                 "tracestate": ["foo=1,bar=2,foo=3"],
             },
@@ -163,14 +178,14 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(span_context, trace.INVALID_SPAN_CONTEXT)
 
     def test_propagate_invalid_context(self):
-        """Do not propagate invalid trace context.
-        """
+        """Do not propagate invalid trace context."""
         output = {}  # type:typing.Dict[str, str]
-        FORMAT.inject(trace.INVALID_SPAN_CONTEXT, dict.__setitem__, output)
+        FORMAT.inject(trace.Span(), dict.__setitem__, output)
         self.assertFalse("traceparent" in output)
 
     def test_tracestate_empty_header(self):
-        """Test tracestate with an additional empty header (should be ignored)"""
+        """Test tracestate with an additional empty header (should be ignored)
+        """
         span_context = FORMAT.extract(
             get_as_list,
             {
