@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import time
-import unittest
+from unittest import TestCase
 
 from opentracing import (  # pylint: disable=no-name-in-module
     Format,
@@ -32,7 +32,7 @@ from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerSource
 
 
-class TestShim(unittest.TestCase):
+class TestShim(TestCase):
     # pylint: disable=too-many-public-methods
 
     def setUp(self):
@@ -494,6 +494,7 @@ class TestShim(unittest.TestCase):
 
         # Verify Format.TEXT_MAP
         text_map = {}
+
         self.shim.inject(context, Format.TEXT_MAP, text_map)
         self.assertEqual(text_map[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
         self.assertEqual(text_map[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
@@ -559,6 +560,10 @@ class MockHTTPTextFormat(HTTPTextFormat):
         )
 
     @classmethod
-    def inject(cls, context, set_in_carrier, carrier):
-        set_in_carrier(carrier, cls.TRACE_ID_KEY, str(context.trace_id))
-        set_in_carrier(carrier, cls.SPAN_ID_KEY, str(context.span_id))
+    def inject(cls, span, set_in_carrier, carrier):
+        set_in_carrier(
+            carrier, cls.TRACE_ID_KEY, str(span.get_context().trace_id)
+        )
+        set_in_carrier(
+            carrier, cls.SPAN_ID_KEY, str(span.get_context().span_id)
+        )

@@ -105,10 +105,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     @classmethod
     def inject(
         cls,
-        context: trace.SpanContext,
+        span: trace.Span,
         set_in_carrier: httptextformat.Setter[_T],
         carrier: _T,
     ) -> None:
+
+        context = span.get_context()
+
         if context == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
