@@ -15,15 +15,7 @@
 import time
 import unittest
 
-from opentracing import (  # pylint: disable=no-name-in-module
-    Format,
-    Scope,
-    Span,
-    SpanContext,
-    Tracer,
-    UnsupportedFormatException,
-    child_of,
-)
+import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
@@ -63,15 +55,15 @@ class TestShim(unittest.TestCase):
 
     def test_shim_type(self):
         # Verify shim is an OpenTracing tracer.
-        self.assertIsInstance(self.shim, Tracer)
+        self.assertIsInstance(self.shim, opentracing.Tracer)
 
     def test_start_active_span(self):
         """Test span creation and activation using `start_active_span()`."""
 
         with self.shim.start_active_span("TestSpan") as scope:
             # Verify correct type of Scope and Span objects.
-            self.assertIsInstance(scope, Scope)
-            self.assertIsInstance(scope.span, Span)
+            self.assertIsInstance(scope, opentracing.Scope)
+            self.assertIsInstance(scope.span, opentracing.Span)
 
             # Verify span is started.
             self.assertIsNotNone(scope.span.unwrap().start_time)
@@ -98,7 +90,7 @@ class TestShim(unittest.TestCase):
 
         with self.shim.start_span("TestSpan") as span:
             # Verify correct type of Span object.
-            self.assertIsInstance(span, Span)
+            self.assertIsInstance(span, opentracing.Span)
 
             # Verify span is started.
             self.assertIsNotNone(span.unwrap().start_time)
@@ -368,7 +360,7 @@ class TestShim(unittest.TestCase):
         """Test span creation using the `references` argument."""
 
         with self.shim.start_span("ParentSpan") as parent:
-            ref = child_of(parent.context)
+            ref = opentracing.child_of(parent.context)
 
             with self.shim.start_active_span(
                 "ChildSpan", references=[ref]
@@ -455,7 +447,7 @@ class TestShim(unittest.TestCase):
         otel_context = trace.SpanContext(1234, 5678)
         context = opentracingshim.SpanContextShim(otel_context)
 
-        self.assertIsInstance(context, SpanContext)
+        self.assertIsInstance(context, opentracing.SpanContext)
         self.assertEqual(context.unwrap().trace_id, 1234)
         self.assertEqual(context.unwrap().span_id, 5678)
 
@@ -482,7 +474,7 @@ class TestShim(unittest.TestCase):
         context = opentracingshim.SpanContextShim(otel_context)
 
         headers = {}
-        self.shim.inject(context, Format.HTTP_HEADERS, headers)
+        self.shim.inject(context, opentracing.Format.HTTP_HEADERS, headers)
         self.assertEqual(headers[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
         self.assertEqual(headers[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
 
@@ -494,7 +486,7 @@ class TestShim(unittest.TestCase):
 
         # Verify Format.TEXT_MAP
         text_map = {}
-        self.shim.inject(context, Format.TEXT_MAP, text_map)
+        self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
         self.assertEqual(text_map[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
         self.assertEqual(text_map[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
 
@@ -505,8 +497,8 @@ class TestShim(unittest.TestCase):
         context = opentracingshim.SpanContextShim(otel_context)
 
         # Verify exception for non supported binary format.
-        with self.assertRaises(UnsupportedFormatException):
-            self.shim.inject(context, Format.BINARY, bytearray())
+        with self.assertRaises(opentracing.UnsupportedFormatException):
+            self.shim.inject(context, opentracing.Format.BINARY, bytearray())
 
     def test_extract_http_headers(self):
         """Test `extract()` method for Format.HTTP_HEADERS."""
@@ -516,7 +508,7 @@ class TestShim(unittest.TestCase):
             MockHTTPTextFormat.SPAN_ID_KEY: 7478,
         }
 
-        ctx = self.shim.extract(Format.HTTP_HEADERS, carrier)
+        ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
         self.assertEqual(ctx.unwrap().trace_id, 1220)
         self.assertEqual(ctx.unwrap().span_id, 7478)
 
@@ -528,7 +520,7 @@ class TestShim(unittest.TestCase):
             MockHTTPTextFormat.SPAN_ID_KEY: 7478,
         }
 
-        ctx = self.shim.extract(Format.TEXT_MAP, carrier)
+        ctx = self.shim.extract(opentracing.Format.TEXT_MAP, carrier)
         self.assertEqual(ctx.unwrap().trace_id, 1220)
         self.assertEqual(ctx.unwrap().span_id, 7478)
 
@@ -536,8 +528,8 @@ class TestShim(unittest.TestCase):
         """Test `extract()` method for Format.BINARY."""
 
         # Verify exception for non supported binary format.
-        with self.assertRaises(UnsupportedFormatException):
-            self.shim.extract(Format.BINARY, bytearray())
+        with self.assertRaises(opentracing.UnsupportedFormatException):
+            self.shim.extract(opentracing.Format.BINARY, bytearray())
 
 
 class MockHTTPTextFormat(HTTPTextFormat):
