@@ -44,6 +44,8 @@ Alternatively, you can install the Python dependencies separately:
 ```sh
 $ pip install \
   opentelemetry-api \
+  opentelemetry-sdk \
+  opentelemetry-ext-jaeger \
   opentelemetry-opentracing-shim \
   redis \
   redis_opentracing
