@@ -21,8 +21,8 @@ from contextlib import contextmanager
 from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
 
+from opentelemetry import context as ctx_api
 from opentelemetry import trace as trace_api
-from opentelemetry.context import Context, current
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import SpanContext, sampling
@@ -392,7 +392,7 @@ class Tracer(trace_api.Tracer):
         self.source = source
         self.instrumentation_info = instrumentation_info
 
-    def get_current_span(self, context: Optional[Context] = None):
+    def get_current_span(self, context: Optional[ctx_api.Context] = None):
         """See `opentelemetry.trace.Tracer.get_current_span`."""
         return span_from_context(context=context)
 
@@ -403,7 +403,7 @@ class Tracer(trace_api.Tracer):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
-        context: Optional[Context] = None,
+        context: Optional[ctx_api.Context] = None,
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.start_as_current_span`."""
 
@@ -421,7 +421,7 @@ class Tracer(trace_api.Tracer):
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
-        context: Optional[Context] = None,
+        context: Optional[ctx_api.Context] = None,
     ) -> trace_api.Span:
         """See `opentelemetry.trace.Tracer.start_span`."""
 
@@ -540,9 +540,11 @@ class TracerSource(trace_api.TracerSource):
             ),
         )
 
-    def get_current_span(self, context: Optional[Context] = None) -> Span:
+    def get_current_span(
+        self, context: Optional[ctx_api.Context] = None
+    ) -> Span:
         """See `opentelemetry.trace.Tracer.get_current_span`."""
-        return current().value(self._current_span_name, context=context)
+        return ctx_api.value(self._current_span_name, context=context)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerSource`.

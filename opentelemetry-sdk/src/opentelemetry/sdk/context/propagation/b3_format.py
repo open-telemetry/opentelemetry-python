@@ -15,6 +15,7 @@
 import typing
 
 import opentelemetry.trace as trace
+from opentelemetry.context import Context
 from opentelemetry.propagation import (
     Extractor,
     Getter,
@@ -24,7 +25,6 @@ from opentelemetry.propagation import (
     set_in_dict,
 )
 from opentelemetry.trace.propagation.context import (
-    Context,
     span_context_from_context,
     with_span_context,
 )

@@ -138,34 +138,141 @@ Here goes a simple demo of how async could work in Python 3.7+::
         asyncio.run(main())
 """
 
+import threading
 import typing
 from contextlib import contextmanager
 
-from .base_context import Context
+from .base_context import Context, Slot
+
+try:
+    from .async_context import (
+        AsyncRuntimeContext,
+        ContextVarSlot,
+    )
+
+    _context_class = AsyncRuntimeContext  # pylint: disable=invalid-name
+    _slot_class = ContextVarSlot  # pylint: disable=invalid-name
+except ImportError:
+    from .thread_local_context import (
+        ThreadLocalRuntimeContext,
+        ThreadLocalSlot,
+    )
+
+    _context_class = ThreadLocalRuntimeContext  # pylint: disable=invalid-name
+    _slot_class = ThreadLocalSlot  # pylint: disable=invalid-name
+
+_slots = {}  # type: typing.Dict[str, 'Slot']
+_lock = threading.Lock()
+
+
+def _register_slot(name: str, default: "object" = None) -> Slot:
+    """Register a context slot with an optional default value.
+
+    :type name: str
+    :param name: The name of the context slot.
+
+    :type default: object
+    :param name: The default value of the slot, can be a value or lambda.
+
+    :returns: The registered slot.
+    """
+    with _lock:
+        if name not in _slots:
+            _slots[name] = _slot_class(name, default)  # type: Slot
+        return _slots[name]
+
+
+def set_value(
+    name: str, val: "object", context: typing.Optional[Context] = None,
+) -> Context:
+    """
+    To record the local state of a cross-cutting concern, the
+    Context API provides a function which takes a context, a
+    key, and a value as input, and returns an updated context
+    which contains the new value.
+
+    Args:
+        name: name of the entry to set
+        value: value of the entry to set
+        context: a context to copy, if None, the current context is used
+    """
+    # Function inside the module that performs the action on the current context
+    # or in the passsed one based on the context object
+    if context:
+        ret = Context()
+        ret.snapshot = dict((n, v) for n, v in context.snapshot.items())
+        ret.snapshot[name] = val
+        return ret
+
+    # update value on current context:
+    slot = _register_slot(name)
+    slot.set(val)
+    return current()
+
+
+def value(name: str, context: Context = None) -> typing.Optional["object"]:
+    """
+    To access the local state of an concern, the Context API
+    provides a function which takes a context and a key as input,
+    and returns a value.
+
+    Args:
+        name: name of the entry to retrieve
+        context: a context from which to retrieve the value, if None, the current context is used
+    """
+    if context:
+        return context.value(name)
+
+    # get context from current context
+    if name in _slots:
+        return _slots[name].get()
+    return None
 
 
 def current() -> Context:
-    return _CONTEXT.current()
+    """
+    To access the context associated with program execution,
+    the Context API provides a function which takes no arguments
+    and returns a Context.
+    """
+    ret = Context()
+    for key, slot in _slots.items():
+        ret.snapshot[key] = slot.get()
+
+    return ret
+
+
+def set_current(context: Context) -> None:
+    """
+    To associate a context with program execution, the Context
+    API provides a function which takes a Context.
+    """
+    _slots.clear()  # remove current data
+
+    for key, val in context.snapshot.items():
+        slot = _register_slot(key)
+        slot.set(val)
+
+
+@contextmanager
+def use(**kwargs: typing.Dict[str, object]) -> typing.Iterator[None]:
+    snapshot = current()
+    for key in kwargs:
+        set_value(key, kwargs[key])
+    yield
+    set_current(snapshot)
 
 
 def new_context() -> Context:
-    try:
-        from .async_context import (  # pylint: disable=import-outside-toplevel
-            AsyncRuntimeContext,
-        )
-
-        context = AsyncRuntimeContext()  # type: Context
-    except ImportError:
-        from .thread_local_context import (  # pylint: disable=import-outside-toplevel
-            ThreadLocalRuntimeContext,
-        )
-
-        context = ThreadLocalRuntimeContext()  # type: Context
-    return context
+    return _context_class()
 
 
 def merge_context_correlation(source: Context, dest: Context) -> Context:
-    return dest.merge(source)
+    ret = Context()
 
+    for key in dest.snapshot:
+        ret.snapshot[key] = dest.snapshot[key]
 
-_CONTEXT = new_context()
+    for key in source.snapshot:
+        ret.snapshot[key] = source.snapshot[key]
+    return ret

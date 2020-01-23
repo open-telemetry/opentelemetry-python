@@ -17,7 +17,7 @@ import string
 import typing
 from typing import Optional
 
-from opentelemetry.context import Context, current
+from opentelemetry import context as ctx_api
 from opentelemetry.propagation import Extractor, Injector
 
 PRINTABLE = frozenset(
@@ -90,20 +90,27 @@ class CorrelationContext:
 class CorrelationContextManager:
     @classmethod
     def set_correlation(
-        cls, key: str, value: "object", context: Optional[Context] = None
-    ) -> Context:
-        return current().set_value(key, value, context=context)
+        cls,
+        key: str,
+        value: "object",
+        context: Optional[ctx_api.Context] = None,
+    ) -> ctx_api.Context:
+        return ctx_api.set_value(key, value, context=context)
 
     @classmethod
     def correlation(
-        cls, key: str, context: Optional[Context] = None
+        cls, key: str, context: Optional[ctx_api.Context] = None
     ) -> "object":
-        return current().value(key, context=context)
+        return ctx_api.value(key, context=context)
 
     @classmethod
-    def remove_correlation(cls, context: Optional[Context] = None) -> Context:
+    def remove_correlation(
+        cls, context: Optional[ctx_api.Context] = None
+    ) -> ctx_api.Context:
         pass
 
     @classmethod
-    def clear_correlation(cls, context: Optional[Context] = None) -> Context:
+    def clear_correlation(
+        cls, context: Optional[ctx_api.Context] = None
+    ) -> ctx_api.Context:
         pass

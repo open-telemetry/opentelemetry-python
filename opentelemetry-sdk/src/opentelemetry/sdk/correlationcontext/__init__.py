@@ -16,7 +16,7 @@ import typing
 from contextlib import contextmanager
 
 from opentelemetry import correlationcontext as cctx_api
-from opentelemetry.context import Context, current
+from opentelemetry.context import current, set_value, value
 
 
 class CorrelationContextManager(cctx_api.CorrelationContextManager):
@@ -38,7 +38,7 @@ class CorrelationContextManager(cctx_api.CorrelationContextManager):
         Returns:
             A CorrelationContext instance representing the current context.
         """
-        return current().value(self.slot_name)
+        return value(self.slot_name)
 
     @contextmanager
     def use_context(
@@ -55,8 +55,8 @@ class CorrelationContextManager(cctx_api.CorrelationContextManager):
             context: A CorrelationContext instance to make current.
         """
         snapshot = current().value(self.slot_name)
-        current().set_value(self.slot_name, context)
+        set_value(self.slot_name, context)
         try:
             yield context
         finally:
-            current().set_value(self.slot_name, snapshot)
+            set_value(self.slot_name, snapshot)

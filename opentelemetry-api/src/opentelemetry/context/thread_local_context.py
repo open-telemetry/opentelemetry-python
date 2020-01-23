@@ -13,33 +13,54 @@
 # limitations under the License.
 
 import threading
-import typing  # pylint: disable=unused-import
+import typing
 
 from . import base_context
 
 
-class ThreadLocalRuntimeContext(base_context.BaseContext):
-    class Slot(base_context.BaseContext.Slot):
-        _thread_local = threading.local()
+class ThreadLocalSlot(base_context.Slot):
+    _thread_local = threading.local()
 
-        def __init__(self, name: str, default: "object"):
-            # pylint: disable=super-init-not-called
-            self.name = name
-            self.default = base_context.wrap_callable(
-                default
-            )  # type: typing.Callable[..., object]
+    def __init__(self, name: str, default: "object"):
+        # pylint: disable=super-init-not-called
+        self.name = name
+        self.default = base_context.wrap_callable(
+            default
+        )  # type: typing.Callable[..., object]
 
-        def clear(self) -> None:
-            setattr(self._thread_local, self.name, self.default())
+    def clear(self) -> None:
+        setattr(self._thread_local, self.name, self.default())
 
-        def get(self) -> "object":
-            try:
-                got = getattr(self._thread_local, self.name)  # type: object
-                return got
-            except AttributeError:
-                value = self.default()
-                self.set(value)
-                return value
+    def get(self) -> "object":
+        try:
+            got = getattr(self._thread_local, self.name)  # type: object
+            return got
+        except AttributeError:
+            value = self.default()
+            self.set(value)
+            return value
 
-        def set(self, value: "object") -> None:
-            setattr(self._thread_local, self.name, value)
+    def set(self, value: "object") -> None:
+        setattr(self._thread_local, self.name, value)
+
+
+class ThreadLocalRuntimeContext(base_context.Context):
+    def with_current_context(
+        self, func: typing.Callable[..., "object"]
+    ) -> typing.Callable[..., "object"]:
+        """Capture the current context and apply it to the provided func.
+        """
+        # TODO: implement this
+        # caller_context = self.current()
+
+        # def call_with_current_context(
+        #     *args: "object", **kwargs: "object"
+        # ) -> "object":
+        #     try:
+        #         backup_context = self.current()
+        #         self.set_current(caller_context)
+        #         return func(*args, **kwargs)
+        #     finally:
+        #         self.set_current(backup_context)
+
+        # return call_with_current_context
