@@ -80,18 +80,13 @@ Note:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """
 
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
+
 import logging
 
+import opentracing
 from deprecated import deprecated
-from opentracing import (  # pylint: disable=no-name-in-module
-    Format,
-    Scope,
-    ScopeManager,
-    Span,
-    SpanContext,
-    Tracer,
-    UnsupportedFormatException,
-)
 
 import opentelemetry.trace as trace_api
 from opentelemetry import propagators
@@ -122,7 +117,7 @@ def create_tracer(otel_tracer_source):
     return TracerShim(otel_tracer_source.get_tracer(__name__, __version__))
 
 
-class SpanContextShim(SpanContext):
+class SpanContextShim(opentracing.SpanContext):
     """Implements :class:`opentracing.SpanContext` by wrapping a
     :class:`opentelemetry.trace.SpanContext` object.
 
@@ -160,7 +155,7 @@ class SpanContextShim(SpanContext):
         # TODO: Implement.
 
 
-class SpanShim(Span):
+class SpanShim(opentracing.Span):
     """Implements :class:`opentracing.Span` by wrapping a
     :class:`opentelemetry.trace.Span` object.
 
@@ -274,7 +269,7 @@ class SpanShim(Span):
     def log_event(self, event, payload=None):
         super().log_event(event, payload=payload)
 
-    def set_baggage_item(self, key, value):
+    def set_baggage_item(self, key, value):  # pylint:disable=unused-argument
         """Implements the ``set_baggage_item()`` method from the base class.
 
         Warning:
@@ -287,7 +282,7 @@ class SpanShim(Span):
         )
         # TODO: Implement.
 
-    def get_baggage_item(self, key):
+    def get_baggage_item(self, key):  # pylint:disable=unused-argument
         """Implements the ``get_baggage_item()`` method from the base class.
 
         Warning:
@@ -301,7 +296,7 @@ class SpanShim(Span):
         # TODO: Implement.
 
 
-class ScopeShim(Scope):
+class ScopeShim(opentracing.Scope):
     """A `ScopeShim` wraps the OpenTelemetry functionality related to span
     activation/deactivation while using OpenTracing :class:`opentracing.Scope`
     objects for presentation.
@@ -410,7 +405,7 @@ class ScopeShim(Scope):
             self._span.unwrap().end()
 
 
-class ScopeManagerShim(ScopeManager):
+class ScopeManagerShim(opentracing.ScopeManager):
     """Implements :class:`opentracing.ScopeManager` by setting and getting the
     active `opentelemetry.trace.Span` in the OpenTelemetry tracer.
 
@@ -505,7 +500,7 @@ class ScopeManagerShim(ScopeManager):
         return self._tracer
 
 
-class TracerShim(Tracer):
+class TracerShim(opentracing.Tracer):
     """Implements :class:`opentracing.Tracer` by wrapping a
     :class:`opentelemetry.trace.Tracer` object.
 
@@ -527,8 +522,8 @@ class TracerShim(Tracer):
         super().__init__(scope_manager=ScopeManagerShim(self))
         self._otel_tracer = tracer
         self._supported_formats = (
-            Format.TEXT_MAP,
-            Format.HTTP_HEADERS,
+            opentracing.Format.TEXT_MAP,
+            opentracing.Format.HTTP_HEADERS,
         )
 
     def unwrap(self):
@@ -678,7 +673,7 @@ class TracerShim(Tracer):
         # opentelemetry-python.
 
         if format not in self._supported_formats:
-            raise UnsupportedFormatException
+            raise opentracing.UnsupportedFormatException
 
         propagator = propagators.get_global_httptextformat()
 
@@ -698,7 +693,7 @@ class TracerShim(Tracer):
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
         if format not in self._supported_formats:
-            raise UnsupportedFormatException
+            raise opentracing.UnsupportedFormatException
 
         def get_as_list(dict_object, key):
             value = dict_object.get(key)
