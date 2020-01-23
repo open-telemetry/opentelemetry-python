@@ -82,8 +82,16 @@ Note:
 
 import logging
 
-import opentracing
 from deprecated import deprecated
+from opentracing import (  # pylint: disable=no-name-in-module
+    Format,
+    Scope,
+    ScopeManager,
+    Span,
+    SpanContext,
+    Tracer,
+    UnsupportedFormatException,
+)
 
 import opentelemetry.trace as trace_api
 from opentelemetry import propagators
@@ -113,7 +121,7 @@ def create_tracer(otel_tracer_source):
     return TracerShim(otel_tracer_source.get_tracer(__name__, __version__))
 
 
-class SpanContextShim(opentracing.SpanContext):
+class SpanContextShim(SpanContext):
     """Implements :class:`opentracing.SpanContext` by wrapping a
     :class:`opentelemetry.trace.SpanContext` object.
 
@@ -151,7 +159,7 @@ class SpanContextShim(opentracing.SpanContext):
         # TODO: Implement.
 
 
-class SpanShim(opentracing.Span):
+class SpanShim(Span):
     """Implements :class:`opentracing.Span` by wrapping a
     :class:`opentelemetry.trace.Span` object.
 
@@ -292,7 +300,7 @@ class SpanShim(opentracing.Span):
         # TODO: Implement.
 
 
-class ScopeShim(opentracing.Scope):
+class ScopeShim(Scope):
     """A `ScopeShim` wraps the OpenTelemetry functionality related to span
     activation/deactivation while using OpenTracing :class:`opentracing.Scope`
     objects for presentation.
@@ -401,7 +409,7 @@ class ScopeShim(opentracing.Scope):
             self._span.unwrap().end()
 
 
-class ScopeManagerShim(opentracing.ScopeManager):
+class ScopeManagerShim(ScopeManager):
     """Implements :class:`opentracing.ScopeManager` by setting and getting the
     active `opentelemetry.trace.Span` in the OpenTelemetry tracer.
 
@@ -496,7 +504,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
         return self._tracer
 
 
-class TracerShim(opentracing.Tracer):
+class TracerShim(Tracer):
     """Implements :class:`opentracing.Tracer` by wrapping a
     :class:`opentelemetry.trace.Tracer` object.
 
@@ -518,8 +526,8 @@ class TracerShim(opentracing.Tracer):
         super().__init__(scope_manager=ScopeManagerShim(self))
         self._otel_tracer = tracer
         self._supported_formats = (
-            opentracing.Format.TEXT_MAP,
-            opentracing.Format.HTTP_HEADERS,
+            Format.TEXT_MAP,
+            Format.HTTP_HEADERS,
         )
 
     def unwrap(self):
@@ -668,7 +676,7 @@ class TracerShim(opentracing.Tracer):
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
         if format not in self._supported_formats:
-            raise opentracing.UnsupportedFormatException
+            raise UnsupportedFormatException
 
         propagator = propagators.get_global_httptextformat()
         propagator.inject(
@@ -685,7 +693,7 @@ class TracerShim(opentracing.Tracer):
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
         if format not in self._supported_formats:
-            raise opentracing.UnsupportedFormatException
+            raise UnsupportedFormatException
 
         def get_as_list(dict_object, key):
             value = dict_object.get(key)
