@@ -44,7 +44,3 @@ def fib(number):
 with tracer.start_as_current_span("Fibonacci") as span:
     span.set_attribute("is_example", "yes :)")
     fib(4)
-
-
-# Export the remaining span before exiting
-span_processor.shutdown()
