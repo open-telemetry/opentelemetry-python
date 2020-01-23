@@ -89,6 +89,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
+from opentelemetry.trace import DefaultSpan
 
 logger = logging.getLogger(__name__)
 
@@ -101,10 +102,10 @@ def create_tracer(otel_tracer_source):
     :class:`opentracing.Tracer` using OpenTelemetry under the hood.
 
     Args:
-        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be used for
-            constructing the :class:`TracerShim`. A tracer from this source will be used
-            to perform the actual tracing when user code is instrumented using
-            the OpenTracing API.
+        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be
+            used for constructing the :class:`TracerShim`. A tracer from this
+            source will be used to perform the actual tracing when user code is
+            instrumented using the OpenTracing API.
 
     Returns:
         The created :class:`TracerShim`.
@@ -667,12 +668,16 @@ class TracerShim(opentracing.Tracer):
         # uses the configured propagators in opentelemetry.propagators.
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
+
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
         propagator = propagators.get_global_httptextformat()
+
         propagator.inject(
-            span_context.unwrap(), type(carrier).__setitem__, carrier
+            DefaultSpan(span_context.unwrap()),
+            type(carrier).__setitem__,
+            carrier,
         )
 
     def extract(self, format, carrier):
