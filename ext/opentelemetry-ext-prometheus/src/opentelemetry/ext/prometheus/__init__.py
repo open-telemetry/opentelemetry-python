@@ -45,16 +45,15 @@ class PrometheusMetricsExporter(MetricsExporter):
     Args:
         port: The Prometheus port to be used.
         address: The Prometheus address to be used.
+        prefix: single-word application prefix relevant to the domain the metric belongs to.
     """
 
     def __init__(
-        self,
-        port: int = DEFAULT_PORT,
-        address: str = ""
+        self, port: int = DEFAULT_PORT, address: str = "", prefix: str = ""
     ):
         self._port = port
         self._address = address
-        self._collector = CustomCollector()
+        self._collector = CustomCollector(prefix)
 
         start_http_server(port=self._port, addr=str(self._address))
         REGISTRY.register(self._collector)
@@ -74,7 +73,8 @@ class CustomCollector(object):
         https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self):
+    def __init__(self, prefix: str = ""):
+        self._prefix = prefix
         self._metrics_to_export = []
 
     def add_metrics_data(self, metric_records: Sequence[MetricRecord]):
@@ -97,10 +97,12 @@ class CustomCollector(object):
             self._metrics_to_export.remove(metric_batch)
 
     def _translate_to_prometheus(self, metric_record: MetricRecord):
-        label_values = metric_record.label_set.labels.values()
         prometheus_metric = None
-
-        metric_name = sanitize(metric_record.metric.name)
+        label_values = metric_record.label_set.labels.values()
+        metric_name = ""
+        if self._prefix != "":
+            metric_name = self._prefix + "_"
+        metric_name += sanitize(metric_record.metric.name)
 
         if isinstance(metric_record.metric, Counter):
             prometheus_metric = CounterMetricFamily(
