@@ -164,14 +164,13 @@ MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 
 
 # pylint: disable=unused-argument
-class Meter(abc.ABC):
+class Meter:
     """An interface to allow the recording of metrics.
     `Metric` s are used for recording pre-defined aggregation (gauge and
     counter), or raw values (measure) in which the aggregation and labels
     for the exported metric are deferred.
     """
 
-    @abc.abstractmethod
     def record_batch(
         self,
         label_set: LabelSet,
@@ -189,7 +188,6 @@ class Meter(abc.ABC):
                 corresponding value to record for that metric.
         """
 
-    @abc.abstractmethod
     def create_metric(
         self,
         name: str,
@@ -217,41 +215,15 @@ class Meter(abc.ABC):
                 updates.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
+        # pylint: disable=no-self-use
+        return DefaultMetric()
 
-    @abc.abstractmethod
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given labels.
         Args:
             labels: A dictionary representing label key to label value pairs.
         Returns: A `LabelSet` object canonicalized using the given input.
         """
-
-
-class DefaultMeter(Meter):
-    """The default Meter used when no Meter implementation is available."""
-
-    def record_batch(
-        self,
-        label_set: LabelSet,
-        record_tuples: Sequence[Tuple["Metric", ValueT]],
-    ) -> None:
-        pass
-
-    def create_metric(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[ValueT],
-        metric_type: Type[MetricT],
-        label_keys: Sequence[str] = (),
-        enabled: bool = True,
-        monotonic: bool = False,
-    ) -> "Metric":
-        # pylint: disable=no-self-use
-        return DefaultMetric()
-
-    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         # pylint: disable=no-self-use
         return DefaultLabelSet()
 
@@ -273,7 +245,7 @@ def meter() -> Meter:
 
     if _METER is None:
         # pylint:disable=protected-access
-        _METER = loader._load_impl(DefaultMeter, _METER_FACTORY)
+        _METER = loader._load_impl(Meter, _METER_FACTORY)
         del _METER_FACTORY
 
     return _METER

@@ -15,23 +15,15 @@
 import unittest
 from unittest import mock
 
-from prometheus_client.core import (
-    CounterMetricFamily,
-    GaugeMetricFamily,
-    UnknownMetricFamily,
-)
+from prometheus_client.core import CounterMetricFamily
 
+from opentelemetry.ext.prometheus import (
+    CustomCollector,
+    PrometheusMetricsExporter,
+)
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
-from opentelemetry.sdk.metrics.export.aggregate import (
-    Aggregator,
-    CounterAggregator,
-)
-from opentelemetry.ext.prometheus import (
-    PrometheusMetricsExporter,
-    CustomCollector,
-    sanitize,
-)
+from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 
 
 class TestPrometheusMetricExporter(unittest.TestCase):
@@ -59,6 +51,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             side_effect=self._mock_registry_register,
         )
 
+    # pylint: disable=protected-access
     def test_constructor(self):
         """Test the constructor."""
         with self._registry_register_patch, self._start_http_server_patch:
@@ -72,9 +65,9 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             self.assertTrue(self._mock_registry_register.called)
 
     def test_shutdown(self):
-        with mock.patch(
+        with self._start_http_server_patch, mock.patch(
             "prometheus_client.core.REGISTRY.unregister"
-        ) as registry_unregister_patch, self._start_http_server_patch:
+        ) as registry_unregister_patch:
             exporter = PrometheusMetricsExporter()
             exporter.shutdown()
             self.assertTrue(registry_unregister_patch.called)
@@ -86,6 +79,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             )
             exporter = PrometheusMetricsExporter()
             result = exporter.export([record])
+            # pylint: disable=protected-access
             self.assertEqual(len(exporter._collector._metrics_to_export), 1)
             self.assertIs(result, MetricsExportResult.SUCCESS)
 

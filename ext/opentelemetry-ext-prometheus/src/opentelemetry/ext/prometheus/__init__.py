@@ -27,12 +27,12 @@ from prometheus_client.core import (
     UnknownMetricFamily,
 )
 
+from opentelemetry.metrics import Counter, Gauge, Measure, Metric
 from opentelemetry.sdk.metrics.export import (
+    MetricRecord,
     MetricsExporter,
     MetricsExportResult,
-    MetricRecord,
 )
-from opentelemetry.metrics import Metric, Counter, Gauge, Measure
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class PrometheusMetricsExporter(MetricsExporter):
         REGISTRY.unregister(self._collector)
 
 
-class CustomCollector(object):
+class CustomCollector:
     """ CustomCollector represents the Prometheus Collector object
         https://github.com/prometheus/client_python#custom-collectors
     """
@@ -123,6 +123,7 @@ class CustomCollector(object):
                 labels=label_values, value=metric_record.aggregator.check_point
             )
 
+        # TODO: Add support for histograms when supported in OT
         elif isinstance(metric_record.metric, Measure):
             prometheus_metric = UnknownMetricFamily(
                 name=metric_name,

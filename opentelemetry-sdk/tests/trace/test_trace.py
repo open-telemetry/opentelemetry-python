@@ -630,14 +630,13 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(root.name, "root")
 
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description",
+            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description"
         )
 
         with self.assertLogs(level=WARNING):
             root.set_status(new_status)
         self.assertEqual(
-            root.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.OK,
+            root.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
         )
 
     def test_error_status(self):
