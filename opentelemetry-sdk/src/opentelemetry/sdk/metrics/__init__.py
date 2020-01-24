@@ -303,7 +303,7 @@ class Meter(metrics_api.Meter):
         for metric in self.metrics:
             if metric.enabled:
                 for label_set, handle in metric.handles.items():
-                    # Consider storing records in memory?
+                    # TODO: Consider storing records in memory?
                     record = Record(metric, label_set, handle.aggregator)
                     # Checkpoints the current aggregators
                     # Applies different batching logic based on type of batcher
