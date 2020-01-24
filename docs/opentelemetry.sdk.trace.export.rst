@@ -1,7 +1,7 @@
-opentelemetry.sdk.trace.export
+opentelemetry.sdk.metrics.export
 ==========================================
 
-.. automodule:: opentelemetry.sdk.trace.export
+.. automodule:: opentelemetry.sdk.metrics.export
     :members:
     :undoc-members:
     :show-inheritance:
