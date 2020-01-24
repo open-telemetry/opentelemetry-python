@@ -54,12 +54,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording_events(), False)
 
-    def test_meter(self):
-        with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
-            metrics.Meter()  # type:ignore
-
     def test_default_meter(self):
-        meter = metrics.DefaultMeter()
+        meter = metrics.Meter()
         metric = meter.create_metric("", "", "", float, metrics.Counter)
         self.assertIsInstance(metric, metrics.DefaultMetric)
