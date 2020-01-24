@@ -14,7 +14,7 @@
 
 import unittest
 
-from flask import Flask
+from flask import Flask, request
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
@@ -56,6 +56,25 @@ class TestFlaskIntegration(WsgiTestBase):
 
         otel_flask.instrument_app(self.app)
         self.client = Client(self.app, BaseResponse)
+
+    def test_only_strings_in_environ(self):
+        """
+        Some WSGI servers (such as Gunicorn) expect keys in the environ object
+        to be strings
+
+        OpenTelemetry should adhere to this convention.
+        """
+        nonstring_keys = set()
+
+        def assert_environ():
+            for key in request.environ:
+                if not isinstance(key, str):
+                    nonstring_keys.add(key)
+            return "hi"
+
+        self.app.route("/assert_environ")(assert_environ)
+        self.client.get("/assert_environ")
+        self.assertEqual(nonstring_keys, set())
 
     def test_simple(self):
         expected_attrs = expected_attributes(

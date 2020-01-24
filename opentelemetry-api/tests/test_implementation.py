@@ -26,7 +26,12 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     """
 
     def test_tracer(self):
-        tracer_source = trace.TracerSource()
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            trace.TracerSource()  # type:ignore
+
+    def test_default_tracer(self):
+        tracer_source = trace.DefaultTracerSource()
         tracer = tracer_source.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
@@ -40,9 +45,9 @@ class TestAPIOnlyImplementation(unittest.TestCase):
                 self.assertIs(span2.is_recording_events(), False)
 
     def test_span(self):
-        span = trace.Span()
-        self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
-        self.assertIs(span.is_recording_events(), False)
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            trace.Span()  # type:ignore
 
     def test_default_span(self):
         span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
@@ -50,6 +55,11 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         self.assertIs(span.is_recording_events(), False)
 
     def test_meter(self):
-        meter = metrics.Meter()
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            metrics.Meter()  # type:ignore
+
+    def test_default_meter(self):
+        meter = metrics.DefaultMeter()
         metric = meter.create_metric("", "", "", float, metrics.Counter)
         self.assertIsInstance(metric, metrics.DefaultMetric)

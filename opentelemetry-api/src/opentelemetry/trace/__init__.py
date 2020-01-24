@@ -66,6 +66,7 @@ implicit or explicit context propagation consistently throughout.
     by `tracer_source`.
 """
 
+import abc
 import enum
 import types as python_types
 import typing
@@ -151,9 +152,10 @@ class SpanKind(enum.Enum):
     CONSUMER = 4
 
 
-class Span:
+class Span(abc.ABC):
     """A span represents a single operation within a trace."""
 
+    @abc.abstractmethod
     def end(self, end_time: typing.Optional[int] = None) -> None:
         """Sets the current time as the span's end time.
 
@@ -163,6 +165,7 @@ class Span:
         implementations are free to ignore or raise on further calls.
         """
 
+    @abc.abstractmethod
     def get_context(self) -> "SpanContext":
         """Gets the span's SpanContext.
 
@@ -172,15 +175,15 @@ class Span:
         Returns:
             A :class:`.SpanContext` with a copy of this span's immutable state.
         """
-        # pylint: disable=no-self-use
-        return INVALID_SPAN_CONTEXT
 
+    @abc.abstractmethod
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
         """
 
+    @abc.abstractmethod
     def add_event(
         self,
         name: str,
@@ -194,12 +197,14 @@ class Span:
         timestamp if the `timestamp` argument is omitted.
         """
 
+    @abc.abstractmethod
     def add_lazy_event(self, event: Event) -> None:
         """Adds an `Event`.
 
         Adds an `Event` that has previously been created.
         """
 
+    @abc.abstractmethod
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
@@ -209,15 +214,15 @@ class Span:
         on the implementation.
         """
 
+    @abc.abstractmethod
     def is_recording_events(self) -> bool:
         """Returns whether this span will be recorded.
 
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
         """
-        # pylint: disable=no-self-use
-        return False
 
+    @abc.abstractmethod
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status, which is OK.
@@ -362,6 +367,29 @@ class DefaultSpan(Span):
     def is_recording_events(self) -> bool:
         return False
 
+    def end(self, end_time: typing.Optional[int] = None) -> None:
+        pass
+
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+        pass
+
+    def add_event(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
+        pass
+
+    def add_lazy_event(self, event: Event) -> None:
+        pass
+
+    def update_name(self, name: str) -> None:
+        pass
+
+    def set_status(self, status: Status) -> None:
+        pass
+
 
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
@@ -374,8 +402,8 @@ INVALID_SPAN_CONTEXT = SpanContext(
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
-class TracerSource:
-    # pylint:disable=no-self-use,unused-argument
+class TracerSource(abc.ABC):
+    @abc.abstractmethod
     def get_tracer(
         self,
         instrumenting_module_name: str,
@@ -402,10 +430,24 @@ class TracerSource:
                 instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
         """
-        return Tracer()
 
 
-class Tracer:
+class DefaultTracerSource(TracerSource):
+    """The default TracerSource, used when no implementation is available.
+
+    All operations are no-op.
+    """
+
+    def get_tracer(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "Tracer":
+        # pylint:disable=no-self-use,unused-argument
+        return DefaultTracer()
+
+
+class Tracer(abc.ABC):
     """Handles span creation and in-process context propagation.
 
     This class provides methods for manipulating the context, creating spans,
@@ -414,8 +456,9 @@ class Tracer:
 
     # Constant used to represent the current span being used as a parent.
     # This is the default behavior when creating spans.
-    CURRENT_SPAN = Span()
+    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
+    @abc.abstractmethod
     def get_current_span(self) -> "Span":
         """Gets the currently active span from the context.
 
@@ -426,9 +469,8 @@ class Tracer:
             The currently active :class:`.Span`, or a placeholder span with an
             invalid :class:`.SpanContext`.
         """
-        # pylint: disable=no-self-use
-        return INVALID_SPAN
 
+    @abc.abstractmethod
     def start_span(
         self,
         name: str,
@@ -478,10 +520,9 @@ class Tracer:
         Returns:
             The newly-created span.
         """
-        # pylint: disable=unused-argument,no-self-use
-        return INVALID_SPAN
 
     @contextmanager  # type: ignore
+    @abc.abstractmethod
     def start_as_current_span(
         self,
         name: str,
@@ -531,10 +572,8 @@ class Tracer:
             The newly-created span.
         """
 
-        # pylint: disable=unused-argument,no-self-use
-        yield INVALID_SPAN
-
     @contextmanager  # type: ignore
+    @abc.abstractmethod
     def use_span(
         self, span: "Span", end_on_exit: bool = False
     ) -> typing.Iterator[None]:
@@ -552,6 +591,47 @@ class Tracer:
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
         """
+
+
+class DefaultTracer(Tracer):
+    """The default Tracer, used when no Tracer implementation is available.
+
+    All operations are no-op.
+    """
+
+    def get_current_span(self) -> "Span":
+        # pylint: disable=no-self-use
+        return INVALID_SPAN
+
+    def start_span(
+        self,
+        name: str,
+        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
+        set_status_on_exception: bool = True,
+    ) -> "Span":
+        # pylint: disable=unused-argument,no-self-use
+        return INVALID_SPAN
+
+    @contextmanager  # type: ignore
+    def start_as_current_span(
+        self,
+        name: str,
+        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: typing.Optional[types.Attributes] = None,
+        links: typing.Sequence[Link] = (),
+    ) -> typing.Iterator["Span"]:
+        # pylint: disable=unused-argument,no-self-use
+        yield INVALID_SPAN
+
+    @contextmanager  # type: ignore
+    def use_span(
+        self, span: "Span", end_on_exit: bool = False
+    ) -> typing.Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield
 
@@ -576,9 +656,14 @@ def tracer_source() -> TracerSource:
 
     if _TRACER_SOURCE is None:
         # pylint:disable=protected-access
-        _TRACER_SOURCE = loader._load_impl(
-            TracerSource, _TRACER_SOURCE_FACTORY
-        )
+        try:
+            _TRACER_SOURCE = loader._load_impl(
+                TracerSource, _TRACER_SOURCE_FACTORY  # type: ignore
+            )
+        except TypeError:
+            # if we raised an exception trying to instantiate an
+            # abstract class, default to no-op tracer impl
+            _TRACER_SOURCE = DefaultTracerSource()
         del _TRACER_SOURCE_FACTORY
 
     return _TRACER_SOURCE
