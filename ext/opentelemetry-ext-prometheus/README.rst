@@ -27,35 +27,41 @@ The **OpenTelemetry Prometheus Exporter** allows to export `OpenTelemetry`_ metr
 
 .. code:: python
 
-    from opentelemetry import trace
-    from opentelemetry.ext import zipkin
-    from opentelemetry.sdk.trace import TracerSource
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry import metrics
+    from opentelemetry.ext.prometheus import PrometheusMetricsExporter
+    from opentelemetry.sdk.metrics import Counter, Meter
+    from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
+    from opentelemetry.sdk.metrics.export.controller import PushController
 
-    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-    tracer = trace.tracer_source().get_tracer(__name__)
+    # Meter is responsible for creating and recording metrics
+    meter = Meter()
+    metrics.set_preferred_meter_implementation(meter)
+    # exporter to export metrics to Prometheus
+    port = 8000
+    address = "localhost"
+    prefix = "MyAppPrefix"
+    exporter = PrometheusMetricsExporter(port, address, prefix)
+    # controller collects metrics created from meter and exports it via the
+    # exporter every interval
+    controller = PushController(meter, exporter, 5)
 
-    # create a ZipkinSpanExporter
-    zipkin_exporter = zipkin.ZipkinSpanExporter(
-        service_name="my-helloworld-service",
-        # optional:
-        # host_name="localhost",
-        # port=9411,
-        # endpoint="/api/v2/spans",
-        # protocol="http",
-        # ipv4="",
-        # ipv6="",
-        # retry=False,
+    counter = meter.create_metric(
+        "available memory",
+        "available memory",
+        "bytes",
+        int,
+        Counter,
+        ("environment",),
     )
+    
+    # Labelsets are used to identify key-values that are associated with a specific
+    # metric that you want to record. These are useful for pre-aggregation and can
+    # be used to store custom dimensions pertaining to a metric
+    label_set = meter.get_label_set({"environment": "staging"})
 
-    # Create a BatchExportSpanProcessor and add the exporter to it
-    span_processor = BatchExportSpanProcessor(zipkin_exporter)
-
-    # add to the tracer
-    trace.tracer_source().add_span_processor(span_processor)
-
-    with tracer.start_as_current_span("foo"):
-        print("Hello world!")
+    counter.add(25, label_set)
+    # We sleep for 5 seconds, exported value should be 25
+    time.sleep(5)
 
 
 References
