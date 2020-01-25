@@ -17,9 +17,8 @@ The OpenTelemetry metrics API describes the classes used to report raw
 measurements, as well as metrics with known aggregation and labels.
 The `Meter` class is used to construct `Metric` s to record raw statistics
 as well as metrics with predefined aggregation.
-See the `metrics api`_ spec for terminology and context clarification.
-.. _metrics api:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
+See the Metrics api spec for terminology and context clarification.
+https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
 """
 import abc
 from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
@@ -182,10 +181,10 @@ class Meter:
         match the key-value pairs in the label tuples.
         Args:
             label_set: The `LabelSet` associated with all measurements in
-                the batch. A measurement is a tuple, representing the `Metric`
-                being recorded and the corresponding value to record.
+            the batch. A measurement is a tuple, representing the `Metric`
+            being recorded and the corresponding value to record.
             record_tuples: A sequence of pairs of `Metric` s and the
-                corresponding value to record for that metric.
+            corresponding value to record for that metric.
         """
 
     def create_metric(
@@ -210,9 +209,9 @@ class Meter:
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
             monotonic: Configure a counter or gauge that accepts only
-                monotonic/non-monotonic updates.
+            monotonic/non-monotonic updates.
             absolute: Configure a measure that does or does not accept negative
-                updates.
+            updates.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
         # pylint: disable=no-self-use

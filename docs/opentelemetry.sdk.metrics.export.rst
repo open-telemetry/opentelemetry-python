@@ -1,7 +1,7 @@
-opentelemetry.sdk.metrics.export.batcher
+opentelemetry.sdk.metrics.export
 ==========================================
 
-.. automodule:: opentelemetry.sdk.metrics.export.batcher
+.. automodule:: opentelemetry.sdk.metrics.export
     :members:
     :undoc-members:
     :show-inheritance:

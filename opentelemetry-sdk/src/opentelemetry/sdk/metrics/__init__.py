@@ -47,10 +47,10 @@ class BaseHandle:
         value_type: The type of values this handle holds (int, float).
         enabled: True if the originating instrument is enabled.
         monotonic: Indicates acceptance of only monotonic/non-monotonic values
-            for updating counter and gauge handles.
+        for updating counter and gauge handles.
         absolute: Indicates acceptance of negative updates to measure handles.
         aggregator: The aggregator for this handle. Will handle aggregation
-            upon updates and checkpointing of values for exporting.
+        upon updates and checkpointing of values for exporting.
     """
 
     def __init__(
