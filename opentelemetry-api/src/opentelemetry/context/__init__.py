@@ -138,6 +138,8 @@ Here goes a simple demo of how async could work in Python 3.7+::
         asyncio.run(main())
 """
 
+import typing
+
 from .base_context import BaseRuntimeContext
 
 __all__ = ["Context"]
@@ -150,3 +152,20 @@ except ImportError:
     from .thread_local_context import ThreadLocalRuntimeContext
 
     Context = ThreadLocalRuntimeContext()
+
+
+class ContextAPI:
+    """
+    Temporary class, will be replaced once the rest of
+    context propagation is implemented
+    """
+
+    def __init__(self) -> None:
+        self.contents = {}  # type: typing.Dict[str, typing.Any]
+
+    def get_value(self, name: str) -> typing.Any:
+        return self.contents.get(name)
+
+    def set_value(self, name: str, value: typing.Any) -> "ContextAPI":
+        self.contents[name] = value
+        return self
