@@ -78,10 +78,8 @@ class TestWsgiApplication(WsgiTestBase):
         while True:
             try:
                 value = next(response)
-                self.assertEqual(0, self.span.end.call_count)
                 self.assertEqual(value, b"*")
             except StopIteration:
-                self.span.end.assert_called_once_with()
                 break
 
         self.assertEqual(self.status, "200 OK")
@@ -95,12 +93,13 @@ class TestWsgiApplication(WsgiTestBase):
         else:
             self.assertIsNone(self.exc_info)
 
-        # Verify that start_span has been called
-        self.start_span.assert_called_with(
-            "/",
-            trace_api.INVALID_SPAN_CONTEXT,
-            kind=trace_api.SpanKind.SERVER,
-            attributes={
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "/")
+        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(
+            span_list[0].attributes,
+            {
                 "component": "http",
                 "http.method": "GET",
                 "http.server_name": "127.0.0.1",
@@ -109,6 +108,8 @@ class TestWsgiApplication(WsgiTestBase):
                 "http.host": "127.0.0.1",
                 "http.flavor": "1.0",
                 "http.url": "http://127.0.0.1/",
+                "http.status_text": "OK",
+                "http.status_code": 200,
             },
         )
 

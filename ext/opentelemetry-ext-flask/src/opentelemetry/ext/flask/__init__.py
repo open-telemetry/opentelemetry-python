@@ -12,9 +12,9 @@ from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 
-_ENVIRON_STARTTIME_KEY = object()
-_ENVIRON_SPAN_KEY = object()
-_ENVIRON_ACTIVATION_KEY = object()
+_ENVIRON_STARTTIME_KEY = "opentelemetry-flask.starttime_key"
+_ENVIRON_SPAN_KEY = "opentelemetry-flask.span_key"
+_ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
 
 
 def instrument_app(flask):

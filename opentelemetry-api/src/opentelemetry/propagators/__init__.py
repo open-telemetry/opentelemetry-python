@@ -64,7 +64,7 @@ def inject(
             should know how to set header values on the carrier.
     """
     get_global_httptextformat().inject(
-        tracer.get_current_span().get_context(), set_in_carrier, carrier
+        tracer.get_current_span(), set_in_carrier, carrier
     )
 
 
