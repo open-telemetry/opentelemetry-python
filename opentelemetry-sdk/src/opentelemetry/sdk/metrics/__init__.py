@@ -28,15 +28,20 @@ logger = logging.getLogger(__name__)
 class LabelSet(metrics_api.LabelSet):
     """See `opentelemetry.metrics.LabelSet`."""
 
-    def __init__(self, labels: Dict[str, str] = None, encoded=""):
-        self.labels = labels
-        self.encoded = encoded
+    def __init__(self, labels: Dict[str, str] = {}):
+        # LabelSet properties used only in dictionaries for fast lookup
+        self._labels = tuple(labels.items())
+        self._encoded = tuple(sorted(labels.items()))
+
+    @property
+    def labels(self):
+        return self._labels
 
     def __hash__(self):
-        return hash(self.encoded)
+        return hash(self._encoded)
 
     def __eq__(self, other):
-        return self.encoded == other.encoded
+        return self._encoded == other._encoded
 
 
 class BaseHandle:
@@ -168,7 +173,7 @@ class Metric(metrics_api.Metric):
                 # Aggregator will be created based off type of metric
                 self.meter.batcher.aggregator_for(self.__class__),
             )
-        self.handles[label_set] = handle
+            self.handles[label_set] = handle
         return handle
 
     def __repr__(self):
@@ -296,8 +301,6 @@ class Meter(metrics_api.Meter):
 
     def __init__(self, batcher: Batcher = UngroupedBatcher(True)):
         self.batcher = batcher
-        # label_sets is a map of the labelset's encoded value to the label set
-        self.label_sets = {}
         self.metrics = set()
 
     def collect(self) -> None:
@@ -363,9 +366,4 @@ class Meter(metrics_api.Meter):
         """
         if len(labels) == 0:
             return EMPTY_LABEL_SET
-        # Use simple encoding for now until encoding API is implemented
-        encoded = tuple(sorted(labels.items()))
-        # If LabelSet exists for this meter in memory, use existing one
-        if encoded not in self.label_sets:
-            self.label_sets[encoded] = LabelSet(labels=labels, encoded=encoded)
-        return self.label_sets[encoded]
+        return LabelSet(labels=labels)

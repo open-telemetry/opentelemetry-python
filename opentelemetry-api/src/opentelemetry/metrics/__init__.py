@@ -273,6 +273,7 @@ class DefaultMeter(Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
+        absolute: bool = True,
     ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()

@@ -139,21 +139,16 @@ class TestMeter(unittest.TestCase):
         meter = metrics.Meter()
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
-        encoded = tuple(sorted(kvp.items()))
-        self.assertIs(meter.label_sets[encoded], label_set)
+        kvp2 = {"environment": "staging", "a": "z"}
+        label_set2 = meter.get_label_set(kvp)
+        labels = set([label_set, label_set2])
+        self.assertEqual(len(labels), 1)
 
     def test_get_label_set_empty(self):
         meter = metrics.Meter()
         kvp = {}
         label_set = meter.get_label_set(kvp)
         self.assertEqual(label_set, metrics.EMPTY_LABEL_SET)
-
-    def test_get_label_set_exists(self):
-        meter = metrics.Meter()
-        kvp = {"environment": "staging", "a": "z"}
-        label_set = meter.get_label_set(kvp)
-        label_set2 = meter.get_label_set(kvp)
-        self.assertIs(label_set, label_set2)
 
 
 class TestMetric(unittest.TestCase):

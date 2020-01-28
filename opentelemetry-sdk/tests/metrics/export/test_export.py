@@ -77,9 +77,9 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = {}
+        label_set = metrics.LabelSet()
         batch_map = {}
-        batch_map[(metric, "")] = (aggregator, label_set)
+        batch_map[(metric, label_set)] = aggregator
         batcher.batch_map = batch_map
         records = batcher.check_point_set()
         self.assertEqual(len(records), 1)
@@ -105,9 +105,9 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = {}
+        label_set = metrics.LabelSet()
         batch_map = {}
-        batch_map[(metric, "")] = (aggregator, label_set)
+        batch_map[(metric, label_set)] = aggregator
         batcher.batch_map = batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher.batch_map), 0)
@@ -125,9 +125,9 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = {}
+        label_set = metrics.LabelSet()
         batch_map = {}
-        batch_map[(metric, "")] = (aggregator, label_set)
+        batch_map[(metric, label_set)] = aggregator
         batcher.batch_map = batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher.batch_map), 1)
@@ -148,18 +148,17 @@ class TestBatcher(unittest.TestCase):
         )
         label_set = metrics.LabelSet()
         batch_map = {}
-        batch_map[(metric, "")] = (aggregator, label_set)
+        batch_map[(metric, label_set)] = aggregator
         aggregator2.update(1.0)
         batcher.batch_map = batch_map
         record = metrics.Record(metric, label_set, aggregator2)
         batcher.process(record)
         self.assertEqual(len(batcher.batch_map), 1)
-        self.assertIsNotNone(batcher.batch_map.get((metric, "")))
-        self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
+        self.assertIsNotNone(batcher.batch_map.get((metric, label_set)))
+        self.assertEqual(batcher.batch_map.get((metric, label_set)).current, 0)
         self.assertEqual(
-            batcher.batch_map.get((metric, ""))[0].check_point, 1.0
+            batcher.batch_map.get((metric, label_set)).check_point, 1.0
         )
-        self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
 
     def test_ungrouped_batcher_process_not_exists(self):
         meter = metrics.Meter()
@@ -180,12 +179,11 @@ class TestBatcher(unittest.TestCase):
         record = metrics.Record(metric, label_set, aggregator)
         batcher.process(record)
         self.assertEqual(len(batcher.batch_map), 1)
-        self.assertIsNotNone(batcher.batch_map.get((metric, "")))
-        self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
+        self.assertIsNotNone(batcher.batch_map.get((metric, label_set)))
+        self.assertEqual(batcher.batch_map.get((metric, label_set)).current, 0)
         self.assertEqual(
-            batcher.batch_map.get((metric, ""))[0].check_point, 1.0
+            batcher.batch_map.get((metric, label_set)).check_point, 1.0
         )
-        self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
 
     def test_ungrouped_batcher_process_not_stateful(self):
         meter = metrics.Meter()
@@ -206,12 +204,11 @@ class TestBatcher(unittest.TestCase):
         record = metrics.Record(metric, label_set, aggregator)
         batcher.process(record)
         self.assertEqual(len(batcher.batch_map), 1)
-        self.assertIsNotNone(batcher.batch_map.get((metric, "")))
-        self.assertEqual(batcher.batch_map.get((metric, ""))[0].current, 0)
+        self.assertIsNotNone(batcher.batch_map.get((metric, label_set)))
+        self.assertEqual(batcher.batch_map.get((metric, label_set)).current, 0)
         self.assertEqual(
-            batcher.batch_map.get((metric, ""))[0].check_point, 1.0
+            batcher.batch_map.get((metric, label_set)).check_point, 1.0
         )
-        self.assertEqual(batcher.batch_map.get((metric, ""))[1], label_set)
 
 
 class TestAggregator(unittest.TestCase):

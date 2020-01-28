@@ -66,7 +66,8 @@ class Batcher(abc.ABC):
         """
         metric_records = []
         for key, value in self._batch_map.items():
-            metric_records.append(MetricRecord(value[0], value[1], key[0]))
+            # Batch map is in the format: (metric, label_set): aggregator
+            metric_records.append(MetricRecord(value, key[1], key[0]))
         return metric_records
 
     def finished_collection(self):
@@ -92,17 +93,17 @@ class UngroupedBatcher(Batcher):
     def process(self, record):
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.checkpoint()
-        batch_key = (record.metric, record.label_set.encoded)
+        batch_key = (record.metric, record.label_set)
         batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator
         if batch_value:
             # Update the stored checkpointed value if exists. This is for cases
             # when an update comes at the same time as a checkpoint call
-            batch_value[0].merge(aggregator)
+            batch_value.merge(aggregator)
             return
         if self.keep_state:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage
             aggregator = self.aggregator_for(record.metric.__class__)
             aggregator.merge(record.aggregator)
-        self._batch_map[batch_key] = (aggregator, record.label_set)
+        self._batch_map[batch_key] = aggregator
