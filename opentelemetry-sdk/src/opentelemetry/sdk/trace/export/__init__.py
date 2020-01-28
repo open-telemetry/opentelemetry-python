@@ -71,7 +71,7 @@ class SimpleExportSpanProcessor(SpanProcessor):
     """
 
     def __init__(
-        self, span_exporter: SpanExporter, timeout: int = None,
+        self, span_exporter: SpanExporter, timeout: int = 60,
     ):
         self.span_exporter = span_exporter
         self.timeout = timeout
@@ -106,7 +106,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         max_queue_size: int = 2048,
         schedule_delay_millis: float = 5000,
         max_export_batch_size: int = 512,
-        timeout: int = None,
+        timeout: int = 60,
     ):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
