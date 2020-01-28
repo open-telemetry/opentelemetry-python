@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import datetime
+import signal
 import threading
 from collections import OrderedDict, deque
+from contextlib import contextmanager
 
 try:
     # pylint: disable=ungrouped-imports
@@ -24,6 +26,31 @@ except ImportError:
     # pylint: disable=no-name-in-module,ungrouped-imports
     from collections import MutableMapping
     from collections import Sequence
+
+
+def set_timeout_signal_handler():
+    "Signal timeout setter."
+
+    def signal_handler_function(signum, frame):
+        raise TimeoutError
+
+    return signal.signal(signal.SIGALRM, signal_handler_function)
+
+
+@contextmanager
+def timeout_in_seconds(seconds=None):
+    """A general timeout mechanism."""
+
+    if seconds is None:
+        yield
+    else:
+        if threading.current_thread() is threading.main_thread():
+            set_timeout_signal_handler()
+        signal.alarm(seconds)
+        try:
+            yield
+        finally:
+            signal.alarm(0)
 
 
 def ns_to_iso_str(nanoseconds):
