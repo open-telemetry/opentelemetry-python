@@ -26,14 +26,13 @@ class Aggregator(abc.ABC):
     def __init__(self):
         self.current = None
         self.check_point = None
-        self._lock = threading.Lock()
 
     @abc.abstractmethod
     def update(self, value):
         """Updates the current with the new value."""
 
     @abc.abstractmethod
-    def checkpoint(self):
+    def take_checkpoint(self):
         """Stores a snapshot of the current value."""
 
     @abc.abstractmethod
@@ -48,12 +47,12 @@ class CounterAggregator(Aggregator):
         super().__init__()
         self.current = 0
         self.check_point = 0
+        self._lock = threading.Lock()
 
     def update(self, value):
         self.current += value
 
-    def checkpoint(self):
-        # Lock-free algorithm?
+    def take_checkpoint(self):
         with self._lock:
             self.check_point = self.current
             self.current = 0

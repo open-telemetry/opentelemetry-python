@@ -27,8 +27,8 @@ class Batcher(abc.ABC):
     """Base class for all batcher types.
 
     The batcher is responsible for storing the aggregators and aggregated
-    values received from updates from metrics in the meter. The stored values will be
-    sent to an exporter for exporting.
+    values received from updates from metrics in the meter. The stored values
+    will be sent to an exporter for exporting.
     """
 
     def __init__(self, keep_state: bool):
@@ -92,7 +92,7 @@ class UngroupedBatcher(Batcher):
 
     def process(self, record):
         # Checkpoints the current aggregator value to be collected for export
-        record.aggregator.checkpoint()
+        record.aggregator.take_checkpoint()
         batch_key = (record.metric, record.label_set)
         batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator

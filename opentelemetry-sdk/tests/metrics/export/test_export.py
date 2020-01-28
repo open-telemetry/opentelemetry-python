@@ -222,7 +222,7 @@ class TestAggregator(unittest.TestCase):
     def test_counter_check_point(self):
         counter = CounterAggregator()
         counter.update(2.0)
-        counter.checkpoint()
+        counter.take_checkpoint()
         self.assertEqual(counter.current, 0)
         self.assertEqual(counter.check_point, 2.0)
 
