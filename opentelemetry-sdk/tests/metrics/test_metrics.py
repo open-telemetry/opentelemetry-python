@@ -139,7 +139,6 @@ class TestMeter(unittest.TestCase):
         meter = metrics.Meter()
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
-        kvp2 = {"environment": "staging", "a": "z"}
         label_set2 = meter.get_label_set(kvp)
         labels = set([label_set, label_set2])
         self.assertEqual(len(labels), 1)
