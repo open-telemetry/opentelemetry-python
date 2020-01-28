@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 class LabelSet(metrics_api.LabelSet):
     """See `opentelemetry.metrics.LabelSet`."""
 
-    def __init__(self, labels: Dict[str, str] = {}):
+    def __init__(self, labels: Dict[str, str] = None):
+        if labels is None:
+            labels = {}
         # LabelSet properties used only in dictionaries for fast lookup
         self._labels = tuple(labels.items())
         self._encoded = tuple(sorted(labels.items()))
