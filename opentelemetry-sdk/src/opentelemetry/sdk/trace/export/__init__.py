@@ -19,6 +19,10 @@ import typing
 from enum import Enum
 
 from opentelemetry.context import Context
+from opentelemetry.sdk.util import (
+    set_timeout_signal_handler,
+    timeout_in_seconds,
+)
 from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
@@ -66,8 +70,11 @@ class SimpleExportSpanProcessor(SpanProcessor):
     passes ended spans directly to the configured `SpanExporter`.
     """
 
-    def __init__(self, span_exporter: SpanExporter):
+    def __init__(
+        self, span_exporter: SpanExporter, timeout: int = None,
+    ):
         self.span_exporter = span_exporter
+        self.timeout = timeout
 
     def on_start(self, span: Span) -> None:
         pass
@@ -75,9 +82,11 @@ class SimpleExportSpanProcessor(SpanProcessor):
     def on_end(self, span: Span) -> None:
         with Context.use(suppress_instrumentation=True):
             try:
-                self.span_exporter.export((span,))
-            # pylint: disable=broad-except
-            except Exception:
+                with timeout_in_seconds(self.timeout):
+                    self.span_exporter.export((span,))
+            except TimeoutError:
+                logger.exception("Timeout Exception while exporting Span.")
+            except Exception:  # pylint: disable=broad-except
                 logger.exception("Exception while exporting Span.")
 
     def shutdown(self) -> None:
@@ -97,6 +106,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         max_queue_size: int = 2048,
         schedule_delay_millis: float = 5000,
         max_export_batch_size: int = 512,
+        timeout: int = None,
     ):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
@@ -131,6 +141,9 @@ class BatchExportSpanProcessor(SpanProcessor):
             None
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
+        self.timeout = timeout
+        # used by general timeout mechanism
+        set_timeout_signal_handler()
 
     def on_start(self, span: Span) -> None:
         pass
@@ -184,13 +197,17 @@ class BatchExportSpanProcessor(SpanProcessor):
             idx += 1
         with Context.use(suppress_instrumentation=True):
             try:
-                # Ignore type b/c the Optional[None]+slicing is too "clever"
-                # for mypy
-                self.span_exporter.export(
-                    self.spans_list[:idx]
-                )  # type: ignore
-            # pylint: disable=broad-except
-            except Exception:
+                with timeout_in_seconds(self.timeout):
+                    # Ignore type b/c the Optional[None]+slicing is too "clever"
+                    # for mypy
+                    self.span_exporter.export(
+                        self.spans_list[:idx]
+                    )  # type: ignore
+            except TimeoutError:
+                logger.exception(
+                    "Timeout Exception while exporting Span batch."
+                )
+            except Exception:  # pylint: disable=broad-except
                 logger.exception("Exception while exporting Span batch.")
 
         # clean up list
