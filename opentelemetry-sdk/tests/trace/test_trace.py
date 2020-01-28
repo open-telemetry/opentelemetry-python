@@ -641,16 +641,26 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_error_status(self):
-        try:
-            with trace.TracerSource().get_tracer(__name__).start_span(
-                "root"
-            ) as root:
-                raise Exception("unknown")
-        except Exception:  # pylint: disable=broad-except
-            pass
+        def error_status_test(context):
+            try:
+                with context as root:
+                    raise Exception("unknown")
+            except Exception:  # pylint: disable=broad-except
+                pass
 
-        self.assertIs(root.status.canonical_code, StatusCanonicalCode.UNKNOWN)
-        self.assertEqual(root.status.description, "Exception: unknown")
+            self.assertIs(
+                root.status.canonical_code, StatusCanonicalCode.UNKNOWN
+            )
+            self.assertEqual(root.status.description, "Exception: unknown")
+
+        error_status_test(
+            trace.TracerSource().get_tracer(__name__).start_span("root")
+        )
+        error_status_test(
+            trace.TracerSource()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
 
 
 def span_event_start_fmt(span_processor_name, span_name):
