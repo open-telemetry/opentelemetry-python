@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
+
 import time
 from unittest import TestCase
 
