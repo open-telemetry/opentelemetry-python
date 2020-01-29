@@ -108,9 +108,10 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for name in span_names:
             _create_start_and_end_span(name, span_processor)
 
-        span_processor.shutdown()
+        span_processor.force_flush()
         self.assertListEqual(span_names, spans_names_list)
 
+        span_processor.shutdown()
         self.assertTrue(my_exporter.is_shutdown)
 
     def test_batch_span_processor_lossless(self):
@@ -127,8 +128,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for _ in range(512):
             _create_start_and_end_span("foo", span_processor)
 
-        span_processor.shutdown()
+        span_processor.force_flush()
         self.assertEqual(len(spans_names_list), 512)
+        span_processor.shutdown()
 
     def test_batch_span_processor_many_spans(self):
         """Test that no spans are lost when sending many spans"""
@@ -150,8 +152,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
             time.sleep(0.05)  # give some time for the exporter to upload spans
 
-        span_processor.shutdown()
+        span_processor.force_flush()
         self.assertEqual(len(spans_names_list), 1024)
+        span_processor.shutdown()
 
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""
