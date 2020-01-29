@@ -80,6 +80,9 @@ Note:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """
 
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
+
 import logging
 
 from deprecated import deprecated
@@ -274,7 +277,7 @@ class SpanShim(Span):
     def log_event(self, event, payload=None):
         super().log_event(event, payload=payload)
 
-    def set_baggage_item(self, key, value):  # pylint: disable=W0613
+    def set_baggage_item(self, key, value):  # pylint:disable=unused-argument
         """Implements the ``set_baggage_item()`` method from the base class.
 
         Warning:
@@ -287,7 +290,7 @@ class SpanShim(Span):
         )
         # TODO: Implement.
 
-    def get_baggage_item(self, key):  # pylint: disable=W0613
+    def get_baggage_item(self, key):  # pylint:disable=unused-argument
         """Implements the ``get_baggage_item()`` method from the base class.
 
         Warning:
