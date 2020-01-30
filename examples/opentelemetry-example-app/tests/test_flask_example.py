@@ -20,7 +20,8 @@ from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
 import opentelemetry_example_app.flask_example as flask_example
-from opentelemetry.sdk import trace
+from opentelemetry import trace
+from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.sdk.context.propagation import b3_format
 
 
@@ -46,7 +47,7 @@ class TestFlaskExample(unittest.TestCase):
         self.send_patcher.stop()
 
     def test_full_path(self):
-        trace_id = trace.generate_trace_id()
+        trace_id = trace_sdk.generate_trace_id()
         # We need to use the Werkzeug test app because
         # The headers are injected at the wsgi layer.
         # The flask test app will not include these, and
@@ -56,18 +57,14 @@ class TestFlaskExample(unittest.TestCase):
         client.get(
             "/",
             headers={
-                "x-b3-traceid": b3_format.format_trace_id(trace_id),
-                "x-b3-spanid": b3_format.format_span_id(
-                    trace.generate_span_id()
-                ),
-                "x-b3-sampled": "1",
+                "traceparent": "00-{:032x}-{:016x}-{:02x}".format(
+                    trace_id,
+                    trace_sdk.generate_span_id(),
+                    trace.TraceOptions.RECORDED,
+                )
             },
         )
         # assert the http request header was propagated through.
         prepared_request = self.send.call_args[0][1]
         headers = prepared_request.headers
-        for required_header in {"x-b3-traceid", "x-b3-spanid", "x-b3-sampled"}:
-            self.assertIn(required_header, headers)
-        self.assertEqual(
-            headers["x-b3-traceid"], b3_format.format_trace_id(trace_id)
-        )
+        self.assertRegex(headers['traceparent'], r'00-{:032x}-.*-01'.format(trace_id))
