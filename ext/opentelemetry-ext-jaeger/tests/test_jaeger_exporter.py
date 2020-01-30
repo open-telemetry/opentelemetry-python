@@ -156,7 +156,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             context=other_context, attributes=link_attributes
         )
 
-        default_status_tags = [
+        default_tags = [
             jaeger.Tag(
                 key="status.code",
                 vType=jaeger.TagType.LONG,
@@ -164,6 +164,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
             ),
             jaeger.Tag(
                 key="status.message", vType=jaeger.TagType.STRING, vStr=None,
+            ),
+            jaeger.Tag(
+                key="span.kind",
+                vType=jaeger.TagType.STRING,
+                vStr=trace_api.SpanKind.INTERNAL.name,
             ),
         ]
 
@@ -174,6 +179,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 parent=parent_context,
                 events=(event,),
                 links=(link,),
+                kind=trace_api.SpanKind.CLIENT,
             ),
             trace.Span(
                 name=span_names[1], context=parent_context, parent=None
@@ -235,6 +241,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         vStr="Example description",
                     ),
                     jaeger.Tag(
+                        key="span.kind",
+                        vType=jaeger.TagType.STRING,
+                        vStr=trace_api.SpanKind.CLIENT.name,
+                    ),
+                    jaeger.Tag(
                         key="error", vType=jaeger.TagType.BOOL, vBool=True,
                     ),
                 ],
@@ -283,7 +294,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 startTime=start_times[1] // 10 ** 3,
                 duration=durations[1] // 10 ** 3,
                 flags=0,
-                tags=default_status_tags,
+                tags=default_tags,
             ),
             jaeger.Span(
                 operationName=span_names[2],
@@ -294,7 +305,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 startTime=start_times[2] // 10 ** 3,
                 duration=durations[2] // 10 ** 3,
                 flags=0,
-                tags=default_status_tags,
+                tags=default_tags,
             ),
         ]
 
