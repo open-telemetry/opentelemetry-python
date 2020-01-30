@@ -27,6 +27,7 @@ class MySpanExporter(export.SpanExporter):
     def __init__(self, destination, max_export_batch_size=None):
         self.destination = destination
         self.max_export_batch_size = max_export_batch_size
+        self.is_shutdown = False
 
     def export(self, spans: trace.Span) -> export.SpanExportResult:
         if (
@@ -37,16 +38,45 @@ class MySpanExporter(export.SpanExporter):
         self.destination.extend(span.name for span in spans)
         return export.SpanExportResult.SUCCESS
 
+    def shutdown(self):
+        self.is_shutdown = True
+
 
 class TestSimpleExportSpanProcessor(unittest.TestCase):
     def test_simple_span_processor(self):
-        tracer = trace.Tracer()
+        tracer_source = trace.TracerSource()
+        tracer = tracer_source.get_tracer(__name__)
 
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor = export.SimpleExportSpanProcessor(my_exporter)
-        tracer.add_span_processor(span_processor)
+        tracer_source.add_span_processor(span_processor)
+
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("xxx"):
+                    pass
+
+        self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
+
+        span_processor.shutdown()
+        self.assertTrue(my_exporter.is_shutdown)
+
+    def test_simple_span_processor_no_context(self):
+        """Check that we process spans that are never made active.
+
+        SpanProcessors should act on a span's start and end events whether or
+        not it is ever the active span.
+        """
+        tracer_source = trace.TracerSource()
+        tracer = tracer_source.get_tracer(__name__)
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.SimpleExportSpanProcessor(my_exporter)
+        tracer_source.add_span_processor(span_processor)
 
         with tracer.start_span("foo"):
             with tracer.start_span("bar"):
@@ -80,6 +110,8 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         span_processor.shutdown()
         self.assertListEqual(span_names, spans_names_list)
+
+        self.assertTrue(my_exporter.is_shutdown)
 
     def test_batch_span_processor_lossless(self):
         """Test that no spans are lost when sending max_queue_size spans"""

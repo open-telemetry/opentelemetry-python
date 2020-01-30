@@ -12,14 +12,26 @@
 
 import os
 import sys
+from os import listdir
+from os.path import isdir, join
 
-sys.path.insert(0, os.path.abspath("../opentelemetry-api/src/"))
+source_dirs = [
+    os.path.abspath("../opentelemetry-api/src/"),
+    os.path.abspath("../opentelemetry-sdk/src/"),
+]
 
+ext = "../ext"
+ext_dirs = [
+    os.path.abspath("/".join(["../ext", f, "src"]))
+    for f in listdir(ext)
+    if isdir(join(ext, f))
+]
+sys.path[:0] = source_dirs + ext_dirs
 
 # -- Project information -----------------------------------------------------
 
 project = "OpenTelemetry"
-copyright = "2019, OpenTelemetry Authors"
+copyright = "2019, OpenTelemetry Authors"  # pylint: disable=redefined-builtin
 author = "OpenTelemetry Authors"
 
 
@@ -47,12 +59,26 @@ extensions = [
     "sphinx.ext.githubpages",
 ]
 
-intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "opentracing": (
+        "https://opentracing-python.readthedocs.io/en/latest/",
+        None,
+    ),
+}
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
 # Sphinx will warn about all references where the target cannot be found.
 nitpicky = True
-nitpick_ignore = []
+# Sphinx does not recognize generic type TypeVars
+# Container supposedly were fixed, but does not work
+# https://github.com/sphinx-doc/sphinx/pull/3744
+nitpick_ignore = [
+    ("py:class", "ValueT"),
+    ("py:class", "MetricT"),
+    ("py:class", "typing.Tuple"),
+    ("py:class", "pymongo.monitoring.CommandListener"),
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

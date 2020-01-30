@@ -7,15 +7,19 @@ python:
   - '3.5'
   - '3.6'
   - '3.7'
+  - '3.8'
   - 'pypy3.5'
-  - '3.8-dev'
 
-matrix:
-  allow_failures:
-    - python: '3.8-dev'
+#matrix:
+#  allow_failures:
+#    - python: '3.8-dev'
 
 install:
   - pip install tox-travis
 
 script:
   - tox
+
+after_success:
+  - pip install codecov
+  - codecov -v

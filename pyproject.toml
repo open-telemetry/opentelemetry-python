@@ -1,2 +1,9 @@
 [tool.black]
 line-length = 79
+exclude = '''
+(
+  /(
+    ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen     # generated files
+  )/
+)
+'''

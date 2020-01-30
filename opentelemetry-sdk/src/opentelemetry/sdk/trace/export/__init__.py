@@ -19,7 +19,7 @@ import typing
 from enum import Enum
 
 from opentelemetry.context import Context
-from opentelemetry.sdk import util
+from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
 
@@ -38,15 +38,15 @@ class SpanExporter:
     Interface to be implemented by services that want to export recorded in
     its own format.
 
-    To export data this MUST be registered to the :class`..Tracer` using a
-    `SimpleExportSpanProcessor` or a `BatchSpanProcessor`.
+    To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
+    `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.
     """
 
     def export(self, spans: typing.Sequence[Span]) -> "SpanExportResult":
         """Exports a batch of telemetry data.
 
         Args:
-            spans: The list of `Span`s to be exported
+            spans: The list of `opentelemetry.trace.Span` objects to be exported
 
         Returns:
             The result of the export
@@ -73,15 +73,12 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        suppress_instrumentation = Context.suppress_instrumentation
-        try:
-            Context.suppress_instrumentation = True
-            self.span_exporter.export((span,))
-        # pylint: disable=broad-except
-        except Exception as exc:
-            logger.warning("Exception while exporting data: %s", exc)
-        finally:
-            Context.suppress_instrumentation = suppress_instrumentation
+        with Context.use(suppress_instrumentation=True):
+            try:
+                self.span_exporter.export((span,))
+            # pylint: disable=broad-except
+            except Exception:
+                logger.exception("Exception while exporting Span.")
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -118,7 +115,9 @@ class BatchExportSpanProcessor(SpanProcessor):
             )
 
         self.span_exporter = span_exporter
-        self.queue = collections.deque([], max_queue_size)
+        self.queue = collections.deque(
+            [], max_queue_size
+        )  # type: typing.Deque[Span]
         self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.condition = threading.Condition(threading.Lock())
         self.schedule_delay_millis = schedule_delay_millis
@@ -128,7 +127,9 @@ class BatchExportSpanProcessor(SpanProcessor):
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
         # precallocated list to send spans to exporter
-        self.spans_list = [None] * self.max_export_batch_size
+        self.spans_list = [
+            None
+        ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
 
     def on_start(self, span: Span) -> None:
@@ -136,11 +137,11 @@ class BatchExportSpanProcessor(SpanProcessor):
 
     def on_end(self, span: Span) -> None:
         if self.done:
-            logging.warning("Already shutdown, dropping span.")
+            logger.warning("Already shutdown, dropping span.")
             return
         if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
-                logging.warning("Queue is full, likely spans will be dropped.")
+                logger.warning("Queue is full, likely spans will be dropped.")
                 self._spans_dropped = True
 
         self.queue.appendleft(span)
@@ -163,16 +164,16 @@ class BatchExportSpanProcessor(SpanProcessor):
                         break
 
             # substract the duration of this export call to the next timeout
-            start = util.time_ns()
+            start = time_ns()
             self.export()
-            end = util.time_ns()
+            end = time_ns()
             duration = (end - start) / 1e9
             timeout = self.schedule_delay_millis / 1e3 - duration
 
         # be sure that all spans are sent
         self._flush()
 
-    def export(self) -> bool:
+    def export(self) -> None:
         """Exports at most max_export_batch_size spans."""
         idx = 0
 
@@ -181,15 +182,16 @@ class BatchExportSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
-        suppress_instrumentation = Context.suppress_instrumentation
-        try:
-            Context.suppress_instrumentation = True
-            self.span_exporter.export(self.spans_list[:idx])
-        # pylint: disable=broad-except
-        except Exception:
-            logger.exception("Exception while exporting data.")
-        finally:
-            Context.suppress_instrumentation = suppress_instrumentation
+        with Context.use(suppress_instrumentation=True):
+            try:
+                # Ignore type b/c the Optional[None]+slicing is too "clever"
+                # for mypy
+                self.span_exporter.export(
+                    self.spans_list[:idx]
+                )  # type: ignore
+            # pylint: disable=broad-except
+            except Exception:
+                logger.exception("Exception while exporting Span batch.")
 
         # clean up list
         for index in range(idx):

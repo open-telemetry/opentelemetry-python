@@ -20,37 +20,61 @@ from opentelemetry import metrics
 # pylint: disable=no-self-use
 class TestMeter(unittest.TestCase):
     def setUp(self):
-        self.meter = metrics.Meter()
+        self.meter = metrics.DefaultMeter()
 
     def test_record_batch(self):
         counter = metrics.Counter()
-        self.meter.record_batch(("values"), ((counter, 1)))
+        label_set = metrics.LabelSet()
+        self.meter.record_batch(label_set, ((counter, 1),))
 
     def test_create_metric(self):
         metric = self.meter.create_metric("", "", "", float, metrics.Counter)
         self.assertIsInstance(metric, metrics.DefaultMetric)
 
+    def test_get_label_set(self):
+        metric = self.meter.get_label_set({})
+        self.assertIsInstance(metric, metrics.DefaultLabelSet)
+
 
 class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
-        handle = default.get_handle(("test", "test1"))
+        default_ls = metrics.DefaultLabelSet()
+        handle = default.get_handle(default_ls)
         self.assertIsInstance(handle, metrics.DefaultMetricHandle)
 
     def test_counter(self):
         counter = metrics.Counter()
-        handle = counter.get_handle(("test", "test1"))
+        label_set = metrics.LabelSet()
+        handle = counter.get_handle(label_set)
         self.assertIsInstance(handle, metrics.CounterHandle)
+
+    def test_counter_add(self):
+        counter = metrics.Counter()
+        label_set = metrics.LabelSet()
+        counter.add(label_set, 1)
 
     def test_gauge(self):
         gauge = metrics.Gauge()
-        handle = gauge.get_handle(("test", "test1"))
+        label_set = metrics.LabelSet()
+        handle = gauge.get_handle(label_set)
         self.assertIsInstance(handle, metrics.GaugeHandle)
+
+    def test_gauge_set(self):
+        gauge = metrics.Gauge()
+        label_set = metrics.LabelSet()
+        gauge.set(label_set, 1)
 
     def test_measure(self):
         measure = metrics.Measure()
-        handle = measure.get_handle(("test", "test1"))
+        label_set = metrics.LabelSet()
+        handle = measure.get_handle(label_set)
         self.assertIsInstance(handle, metrics.MeasureHandle)
+
+    def test_measure_record(self):
+        measure = metrics.Measure()
+        label_set = metrics.LabelSet()
+        measure.record(label_set, 1)
 
     def test_default_handle(self):
         metrics.DefaultMetricHandle()
