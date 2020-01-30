@@ -553,6 +553,8 @@ class Tracer(trace_api.Tracer):
                     )
                 )
 
+                raise
+
         finally:
             if end_on_exit:
                 span.end()

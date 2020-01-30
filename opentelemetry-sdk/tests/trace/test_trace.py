@@ -642,16 +642,16 @@ class TestSpan(unittest.TestCase):
 
     def test_error_status(self):
         def error_status_test(context):
-            try:
+            with self.assertRaises(AssertionError):
                 with context as root:
-                    raise Exception("unknown")
-            except Exception:  # pylint: disable=broad-except
-                pass
+                    raise AssertionError("unknown")
 
             self.assertIs(
                 root.status.canonical_code, StatusCanonicalCode.UNKNOWN
             )
-            self.assertEqual(root.status.description, "Exception: unknown")
+            self.assertEqual(
+                root.status.description, "AssertionError: unknown"
+            )
 
         error_status_test(
             trace.TracerSource().get_tracer(__name__).start_span("root")
