@@ -50,7 +50,8 @@ class TestFunctionalPymongo(unittest.TestCase):
     def setUp(self):
         self._span_exporter.clear()
 
-    def validate_spans(self, spans: typing.Tuple[Span]):
+    def validate_spans(self):
+        spans = self._span_exporter.get_finished_spans()
         self.assertEqual(len(spans), 2)
         for span in spans:
             if span.name == "rootSpan":
@@ -59,6 +60,8 @@ class TestFunctionalPymongo(unittest.TestCase):
                 pymongo_span = span
             self.assertIsInstance(span.start_time, int)
             self.assertIsInstance(span.end_time, int)
+        self.assertIsNot(root_span, None)
+        self.assertIsNot(pymongo_span, None)
         self.assertIsNotNone(pymongo_span.parent)
         self.assertEqual(pymongo_span.parent.name, root_span.name)
         self.assertIs(pymongo_span.kind, trace_api.SpanKind.CLIENT)
@@ -79,7 +82,7 @@ class TestFunctionalPymongo(unittest.TestCase):
             self._collection.insert_one(
                 {"name": "testName", "value": "testValue"}
             )
-        self.validate_spans(self._span_exporter.get_finished_spans())
+        self.validate_spans()
 
     def test_update(self):
         """Should create a child span for update
@@ -88,18 +91,18 @@ class TestFunctionalPymongo(unittest.TestCase):
             self._collection.update_one(
                 {"name": "testName"}, {"$set": {"value": "someOtherValue"}}
             )
-        self.validate_spans(self._span_exporter.get_finished_spans())
+        self.validate_spans()
 
     def test_find(self):
         """Should create a child span for find
         """
         with self._tracer.start_as_current_span("rootSpan"):
             self._collection.find_one()
-        self.validate_spans(self._span_exporter.get_finished_spans())
+        self.validate_spans()
 
     def test_delete(self):
         """Should create a child span for delete
         """
         with self._tracer.start_as_current_span("rootSpan"):
             self._collection.delete_one({"name": "testName"})
-        self.validate_spans(self._span_exporter.get_finished_spans())
+        self.validate_spans()
