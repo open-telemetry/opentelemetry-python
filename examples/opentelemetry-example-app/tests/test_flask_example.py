@@ -22,7 +22,6 @@ from werkzeug.wrappers import BaseResponse
 import opentelemetry_example_app.flask_example as flask_example
 from opentelemetry import trace
 from opentelemetry.sdk import trace as trace_sdk
-from opentelemetry.sdk.context.propagation import b3_format
 
 
 class TestFlaskExample(unittest.TestCase):
