@@ -67,5 +67,6 @@ class TestFlaskExample(unittest.TestCase):
         prepared_request = self.send.call_args[0][1]
         headers = prepared_request.headers
         self.assertRegex(
-            headers["traceparent"], r"00-{:032x}-[0-9a-f]{{16}}-01".format(trace_id)
+            headers["traceparent"],
+            r"00-{:032x}-[0-9a-f]{{16}}-01".format(trace_id),
         )
