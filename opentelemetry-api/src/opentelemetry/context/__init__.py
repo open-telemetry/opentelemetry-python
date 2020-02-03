@@ -12,141 +12,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
+from os import environ
 
-"""
-The OpenTelemetry context module provides abstraction layer on top of
-thread-local storage and contextvars. The long term direction is to switch to
-contextvars provided by the Python runtime library.
+from pkg_resources import iter_entry_points
 
-A global object ``Context`` is provided to access all the context related
-functionalities::
+from opentelemetry.context.context import Context
 
-    >>> from opentelemetry.context import Context
-    >>> Context.foo = 1
-    >>> Context.foo = 2
-    >>> Context.foo
-    2
+# FIXME use a better implementation of a configuration manager to avoid having
+# to get configuration values straight from environment variables
+_CONTEXT = {
+    entry_point.name: entry_point.load()
+    for entry_point in (iter_entry_points("opentelemetry_context"))
+}[
+    environ.get("OPENTELEMETRY_CONTEXT", "default_context")
+]()  # type: Context
 
-When explicit thread is used, a helper function
-``Context.with_current_context`` can be used to carry the context across
-threads::
 
-    from threading import Thread
-    from opentelemetry.context import Context
+def _copy_context(context: typing.Optional[Context]) -> Context:
+    if context:
+        return context.copy()
+    return get_current().copy()
 
-    def work(name):
-        print('Entering worker:', Context)
-        Context.operation_id = name
-        print('Exiting worker:', Context)
 
-    if __name__ == '__main__':
-        print('Main thread:', Context)
-        Context.operation_id = 'main'
+def create_key(key: str) -> "object":
+    # FIXME Implement this
+    raise NotImplementedError
 
-        print('Main thread:', Context)
 
-        # by default context is not propagated to worker thread
-        thread = Thread(target=work, args=('foo',))
-        thread.start()
-        thread.join()
+def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
+    if context:
+        return context.get_value(key)
+    return get_current().get_value(key)
 
-        print('Main thread:', Context)
 
-        # user can propagate context explicitly
-        thread = Thread(
-            target=Context.with_current_context(work),
-            args=('bar',),
-        )
-        thread.start()
-        thread.join()
+def set_value(
+    key: str, value: "object", context: typing.Optional[Context] = None
+) -> Context:
+    new_context = _copy_context(context)
+    new_context.set_value(key, value)
+    return new_context
 
-        print('Main thread:', Context)
 
-Here goes another example using thread pool::
+def remove_value(context: Context, key: str) -> Context:
+    new_context = _copy_context(context)
+    new_context.remove_value(key)
+    return new_context
 
-    import time
-    import threading
 
-    from multiprocessing.dummy import Pool as ThreadPool
-    from opentelemetry.context import Context
+def get_current() -> Context:
+    return _CONTEXT
 
-    _console_lock = threading.Lock()
 
-    def println(msg):
-        with _console_lock:
-            print(msg)
+def set_current(context: Context) -> None:
+    global _CONTEXT
+    _CONTEXT = context
 
-    def work(name):
-        println('Entering worker[{}]: {}'.format(name, Context))
-        Context.operation_id = name
-        time.sleep(0.01)
-        println('Exiting worker[{}]: {}'.format(name, Context))
 
-    if __name__ == "__main__":
-        println('Main thread: {}'.format(Context))
-        Context.operation_id = 'main'
-        pool = ThreadPool(2)  # create a thread pool with 2 threads
-        pool.map(Context.with_current_context(work), [
-            'bear',
-            'cat',
-            'dog',
-            'horse',
-            'rabbit',
-        ])
-        pool.close()
-        pool.join()
-        println('Main thread: {}'.format(Context))
-
-Here goes a simple demo of how async could work in Python 3.7+::
-
-    import asyncio
-
-    from opentelemetry.context import Context
-
-    class Span(object):
-        def __init__(self, name):
-            self.name = name
-            self.parent = Context.current_span
-
-        def __repr__(self):
-            return ('{}(name={}, parent={})'
-                    .format(
-                        type(self).__name__,
-                        self.name,
-                        self.parent,
-                    ))
-
-        async def __aenter__(self):
-            Context.current_span = self
-
-        async def __aexit__(self, exc_type, exc, tb):
-            Context.current_span = self.parent
-
-    async def main():
-        print(Context)
-        async with Span('foo'):
-            print(Context)
-            await asyncio.sleep(0.1)
-            async with Span('bar'):
-                print(Context)
-                await asyncio.sleep(0.1)
-            print(Context)
-            await asyncio.sleep(0.1)
-        print(Context)
-
-    if __name__ == '__main__':
-        asyncio.run(main())
-"""
-
-from .base_context import BaseRuntimeContext
-
-__all__ = ["Context"]
-
-try:
-    from .async_context import AsyncRuntimeContext
-
-    Context = AsyncRuntimeContext()  # type: BaseRuntimeContext
-except ImportError:
-    from .thread_local_context import ThreadLocalRuntimeContext
-
-    Context = ThreadLocalRuntimeContext()
+__all__ = [
+    "get_value",
+    "set_value",
+    "remove_value",
+    "get_current",
+    "set_current",
+    "Context",
+]

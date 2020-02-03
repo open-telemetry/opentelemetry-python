@@ -23,10 +23,11 @@ from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
 
 from opentelemetry import trace as trace_api
-from opentelemetry.context import Context
+from opentelemetry.context import Context, get_value
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import SpanContext, sampling
+from opentelemetry.trace.propagation import span_from_context, with_span
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
 
@@ -528,16 +529,12 @@ class Tracer(trace_api.Tracer):
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
-            span_snapshot = self.source.get_current_span()
-            self.source._current_span_slot.set(  # pylint:disable=protected-access
-                span
-            )
+            span_snapshot = span_from_context()
+            with_span(span)
             try:
                 yield span
             finally:
-                self.source._current_span_slot.set(  # pylint:disable=protected-access
-                    span_snapshot
-                )
+                with_span(span_snapshot)
         finally:
             if end_on_exit:
                 span.end()
@@ -551,7 +548,6 @@ class TracerSource(trace_api.TracerSource):
     ):
         # TODO: How should multiple TracerSources behave? Should they get their own contexts?
         # This could be done by adding `str(id(self))` to the slot name.
-        self._current_span_slot = Context.register_slot("current_span")
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
         self._atexit_handler = None
@@ -573,8 +569,8 @@ class TracerSource(trace_api.TracerSource):
             ),
         )
 
-    def get_current_span(self) -> Span:
-        return self._current_span_slot.get()
+    def get_current_span(self, context: Optional[Context] = None) -> Span:
+        return span_from_context(context=context)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerSource`.
