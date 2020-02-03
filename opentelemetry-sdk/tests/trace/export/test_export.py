@@ -103,16 +103,24 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor = export.BatchExportSpanProcessor(my_exporter)
 
-        span_names = ["xxx", "bar", "foo"]
+        span_names0 = ["xxx", "bar", "foo"]
+        span_names1 = ["yyy", "baz", "fox"]
 
-        for name in span_names:
+        for name in span_names0:
             _create_start_and_end_span(name, span_processor)
 
         span_processor.force_flush()
-        self.assertListEqual(span_names, spans_names_list)
+        self.assertListEqual(span_names0, spans_names_list)
+
+        # create some more spans to check that span processor still works
+        for name in span_names1:
+            _create_start_and_end_span(name, span_processor)
 
         span_processor.shutdown()
         self.assertTrue(my_exporter.is_shutdown)
+
+        # check that processor is flushed after shutdown()
+        self.assertListEqual(span_names0 + span_names1, spans_names_list)
 
     def test_batch_span_processor_lossless(self):
         """Test that no spans are lost when sending max_queue_size spans"""
