@@ -535,6 +535,23 @@ class Tracer(trace_api.Tracer):
                 yield span
             finally:
                 with_span(span_snapshot)
+
+        except Exception as error:  # pylint: disable=broad-except
+            if (
+                span.status is None
+                and span._set_status_on_exception  # pylint:disable=protected-access  # noqa
+            ):
+                span.set_status(
+                    Status(
+                        canonical_code=StatusCanonicalCode.UNKNOWN,
+                        description="{}: {}".format(
+                            type(error).__name__, error
+                        ),
+                    )
+                )
+
+                raise
+
         finally:
             if end_on_exit:
                 span.end()

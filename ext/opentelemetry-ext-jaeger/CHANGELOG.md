@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Export span status ([#367](https://github.com/open-telemetry/opentelemetry-python/pull/367))
+- Export span kind ([#387](https://github.com/open-telemetry/opentelemetry-python/pull/387))
 
 ## 0.3a0
 

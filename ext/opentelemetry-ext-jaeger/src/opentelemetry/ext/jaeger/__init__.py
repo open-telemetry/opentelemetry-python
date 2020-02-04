@@ -160,6 +160,7 @@ def _translate_to_jaeger(spans: Span):
             [
                 _get_long_tag("status.code", status.canonical_code.value),
                 _get_string_tag("status.message", status.description),
+                _get_string_tag("span.kind", span.kind.name),
             ]
         )
 

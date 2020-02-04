@@ -87,13 +87,14 @@ class DefaultLabelSet(LabelSet):
     """
 
 
-class Metric:
+class Metric(abc.ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
     handle that the metric holds.
     """
 
+    @abc.abstractmethod
     def get_handle(self, label_set: LabelSet) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
