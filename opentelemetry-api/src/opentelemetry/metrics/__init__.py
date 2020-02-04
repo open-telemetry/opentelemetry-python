@@ -40,6 +40,27 @@ class DefaultMetricHandle:
     Used when no MetricHandle implementation is available.
     """
 
+    def add(self, value: ValueT) -> None:
+        """No-op implementation of `CounterHandle` add.
+
+        Args:
+            value: The value to record to the handle.
+        """
+
+    def set(self, value: ValueT) -> None:
+        """No-op implementation of `GaugeHandle` set.
+
+        Args:
+            value: The value to record to the handle.
+        """
+
+    def record(self, value: ValueT) -> None:
+        """No-op implementation of `MeasureHandle` record.
+
+        Args:
+            value: The value to record to the handle.
+        """
+
 
 class CounterHandle:
     def add(self, value: ValueT) -> None:
@@ -120,6 +141,30 @@ class DefaultMetric(Metric):
             label_set: `LabelSet` to associate with the returned handle.
         """
         return DefaultMetricHandle()
+
+    def add(self, value: ValueT, label_set: LabelSet) -> None:
+        """No-op implementation of `Counter` add.
+
+        Args:
+            value: The value to add to the counter metric.
+            label_set: `LabelSet` to associate with the returned handle.
+        """
+
+    def set(self, value: ValueT, label_set: LabelSet) -> None:
+        """No-op implementation of `Gauge` set.
+
+        Args:
+            value: The value to set the gauge metric to.
+            label_set: `LabelSet` to associate with the returned handle.
+        """
+
+    def record(self, value: ValueT, label_set: LabelSet) -> None:
+        """No-op implementation of `Measure` record.
+
+        Args:
+            value: The value to record to this measure metric.
+            label_set: `LabelSet` to associate with the returned handle.
+        """
 
 
 class Counter(Metric):
