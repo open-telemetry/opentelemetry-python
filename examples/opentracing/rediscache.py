@@ -1,7 +1,7 @@
 """
 This is an example of a library written to work with opentracing-python. It
 provides a simple caching decorator backed by Redis, and uses the OpenTracing
-Redis integartion to automatically generate spans for each call to Redis.
+Redis integration to automatically generate spans for each call to Redis.
 """
 
 import pickle
