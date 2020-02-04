@@ -489,7 +489,6 @@ class TestShim(TestCase):
 
         # Verify Format.TEXT_MAP
         text_map = {}
-
         self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
         self.assertEqual(text_map[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
         self.assertEqual(text_map[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
