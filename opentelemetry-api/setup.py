@@ -44,7 +44,7 @@ setuptools.setup(
     include_package_data=True,
     long_description=open("README.rst").read(),
     long_description_content_type="text/x-rst",
-    install_requires=["typing; python_version<'3.5'"],
+    install_requires=["typing; python_version<'3.5'", "aiocontextvars"],
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},

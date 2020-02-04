@@ -136,8 +136,8 @@ def distributed_context_from_context(
     context: typing.Optional[Context] = None,
 ) -> DistributedContext:
     if context is not None:
-        return context.get_value(_DISTRIBUTED_CONTEXT_KEY)
-    return get_current().get_value(_DISTRIBUTED_CONTEXT_KEY)
+        return context.get_value(_DISTRIBUTED_CONTEXT_KEY)  # type: ignore
+    return get_current().get_value(_DISTRIBUTED_CONTEXT_KEY)  # type: ignore
 
 
 def with_distributed_context(
