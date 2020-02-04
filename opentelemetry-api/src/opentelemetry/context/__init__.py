@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import typing
 from os import environ
 
@@ -19,12 +20,21 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context
 
+logger = logging.getLogger(__name__)
+
 # FIXME use a better implementation of a configuration manager to avoid having
 # to get configuration values straight from environment variables
-_CONTEXT = {
-    entry_point.name: entry_point.load()
-    for entry_point in (iter_entry_points("opentelemetry_context"))
-}[
+available_contexts = {}
+
+for entry_point in iter_entry_points("opentelemetry_context"):
+    try:
+        available_contexts[entry_point.name] = entry_point.load()
+    except Exception as err:
+        logger.warning(
+            "Could not load entry_point %s:%s", entry_point.name, err
+        )
+
+_CONTEXT = available_contexts[
     environ.get("OPENTELEMETRY_CONTEXT", "default_context")
 ]()  # type: Context
 

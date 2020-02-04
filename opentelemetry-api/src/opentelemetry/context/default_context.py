@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import typing
 
 from opentelemetry.context.context import Context
 
 
 class DefaultContext(Context):
-    def __init__(self):
-        self.values = {}
+    def __init__(self) -> None:
+        self.values = {}  # type: typing.Dict[str, object]
 
     def set_value(self, key: str, value: "object") -> None:
         """Set a value in this context"""

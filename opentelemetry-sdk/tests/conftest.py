@@ -13,11 +13,16 @@
 # limitations under the License.
 
 from os import environ
+from sys import version_info
 
 
 def pytest_sessionstart(session):
     # pylint: disable=unused-argument
-    environ["OPENTELEMETRY_CONTEXT"] = "contextvars_context"
+    if (3, 4) <= version_info:
+        # contextvars are not supported in 3.4, use thread-local storage
+        environ["OPENTELEMETRY_CONTEXT"] = "threadlocal_context"
+    else:
+        environ["OPENTELEMETRY_CONTEXT"] = "contextvars_context"
 
 
 def pytest_sessionfinish(session):

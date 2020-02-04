@@ -12,39 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from abc import ABC, abstractmethod
-from contextlib import contextmanager
-from copy import deepcopy
-from typing import Dict, Iterator
+import threading
+from opentelemetry.context import Context
 
 
-class Context(ABC):
-    @abstractmethod
+class ThreadLocalContext(Context):
+    def __init__(self) -> None:
+        self._thread_local = threading.local()
+
     def set_value(self, key: str, value: "object") -> None:
         """Set a value in this context"""
+        setattr(self._thread_local, key, value)
 
-    @abstractmethod
     def get_value(self, key: str) -> "object":
         """Get a value from this context"""
+        try:
+            got = getattr(self._thread_local, key)  # type: object
+            return got
+        except AttributeError:
+            return None
 
-    @abstractmethod
     def remove_value(self, key: str) -> None:
         """Remove a value from this context"""
-
-    @contextmanager  # type: ignore
-    def use(self, **kwargs: Dict[str, object]) -> Iterator[None]:
-        snapshot = {key: self.get_value(key) for key in kwargs}
-        for key in kwargs:
-            self.set_value(key, kwargs[key])
-        yield
-        for key in kwargs:
-            self.set_value(key, snapshot[key])
-
-    def copy(self) -> "Context":
-        """Return a copy of this context"""
-
-        return deepcopy(self)
-
-
-__all__ = ["Context"]
+        delattr(self._thread_local, key)

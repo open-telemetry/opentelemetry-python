@@ -38,7 +38,7 @@ def span_context_from_context(
 
 def with_span_context(
     span_context: SpanContext, context: Optional[Context] = None
-) -> Context:
+) -> None:
     if context:
         context.set_value(_SPAN_CONTEXT_KEY, span_context)
     return get_current().set_value(_SPAN_CONTEXT_KEY, span_context)
@@ -50,7 +50,7 @@ def span_from_context(context: Optional[Context] = None) -> Span:
     return get_current().get_value(_SPAN_KEY)
 
 
-def with_span(span: Span, context: Optional[Context] = None) -> Context:
+def with_span(span: Span, context: Optional[Context] = None) -> None:
     if context:
         return context.set_value(_SPAN_KEY, span)
     return get_current().set_value(_SPAN_KEY, span)

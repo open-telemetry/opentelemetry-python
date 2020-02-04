@@ -142,7 +142,7 @@ def distributed_context_from_context(
 
 def with_distributed_context(
     dctx: DistributedContext, context: typing.Optional[Context] = None
-) -> Context:
+) -> None:
     if context:
         return context.set_value(_DISTRIBUTED_CONTEXT_KEY, dctx)
     return get_current().set_value(_DISTRIBUTED_CONTEXT_KEY, dctx)
