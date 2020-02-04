@@ -29,7 +29,7 @@ available_contexts = {}
 for entry_point in iter_entry_points("opentelemetry_context"):
     try:
         available_contexts[entry_point.name] = entry_point.load()
-    except Exception as err:
+    except Exception as err:  # pylint: disable=broad-except
         logger.warning(
             "Could not load entry_point %s:%s", entry_point.name, err
         )

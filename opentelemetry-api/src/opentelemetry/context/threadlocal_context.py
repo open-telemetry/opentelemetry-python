@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import threading
+
 from opentelemetry.context import Context
 
 
