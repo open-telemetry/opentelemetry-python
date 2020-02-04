@@ -44,7 +44,7 @@ setuptools.setup(
     include_package_data=True,
     long_description=open("README.rst").read(),
     long_description_content_type="text/x-rst",
-    install_requires=["opentelemetry-api==0.4.dev0"],
+    install_requires=["opentelemetry-api==0.4.dev0", "aiocontextvars"],
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
@@ -56,4 +56,14 @@ setuptools.setup(
         "/tree/master/opentelemetry-sdk"
     ),
     zip_safe=False,
+    entry_points={
+        "opentelemetry_context": [
+            "contextvars_context = "
+            "opentelemetry.sdk.context.contextvars_context:"
+            "ContextVarsContext",
+            "threadlocal_context = "
+            "opentelemetry.sdk.context.threadlocal_context:"
+            "ThreadLocalContext",
+        ]
+    },
 )
