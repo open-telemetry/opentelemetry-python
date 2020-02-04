@@ -65,7 +65,7 @@ def get_current() -> Context:
 
 
 def set_current(context: Context) -> None:
-    global _CONTEXT
+    global _CONTEXT  # pylint: disable=global-statement
     _CONTEXT = context
 
 

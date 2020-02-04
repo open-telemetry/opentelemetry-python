@@ -16,8 +16,10 @@ from os import environ
 
 
 def pytest_sessionstart(session):
+    # pylint: disable=unused-argument
     environ["OPENTELEMETRY_CONTEXT"] = "contextvars_context"
 
 
 def pytest_sessionfinish(session):
+    # pylint: disable=unused-argument
     environ.pop("OPENTELEMETRY_CONTEXT")

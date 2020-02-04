@@ -570,6 +570,7 @@ class TracerSource(trace_api.TracerSource):
         )
 
     def get_current_span(self, context: Optional[Context] = None) -> Span:
+        # pylint: disable=no-self-use
         return span_from_context(context=context)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:

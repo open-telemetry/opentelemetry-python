@@ -19,7 +19,7 @@ from sys import version_info
 from opentelemetry.context.context import Context
 
 if (3, 5, 3) <= version_info < (3, 7):
-    import aiocontextvars
+    import aiocontextvars  # pylint:disable=unused-import
 
 elif (3, 4) < version_info <= (3, 5, 2):
 
@@ -33,6 +33,7 @@ elif (3, 4) < version_info <= (3, 5, 2):
 
     if not hasattr(asyncio, "_get_running_loop"):
         # noinspection PyCompatibility
+        # pylint:disable=protected-access
         import asyncio.events
         from threading import local as threading_local
 
@@ -81,6 +82,7 @@ elif (3, 4) < version_info <= (3, 5, 2):
         def callback() -> None:
             try:
                 # noinspection PyProtectedMember,PyUnresolvedReferences
+                # pylint:disable=protected-access
                 asyncio.futures._chain_future(task, future)
             except Exception as exc:
                 if future.set_running_or_notify_cancel():
@@ -124,8 +126,7 @@ class ContextVarsContext(Context):
         context_copy = ContextVarsContext()
 
         for key, value in self._contextvars.items():
-            context_copy._contextvars[key] = ContextVar(key)
-            context_copy._contextvars[key].set(copy(value))
+            context_copy.set_value(key, copy(value))
 
         return context_copy
 
