@@ -83,6 +83,9 @@ class SimpleExportSpanProcessor(SpanProcessor):
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
 
+    def force_flush(self) -> None:
+        pass
+
 
 class BatchExportSpanProcessor(SpanProcessor):
     """Batch span processor implementation.
@@ -171,7 +174,7 @@ class BatchExportSpanProcessor(SpanProcessor):
             timeout = self.schedule_delay_millis / 1e3 - duration
 
         # be sure that all spans are sent
-        self._flush()
+        self.force_flush()
 
     def export(self) -> None:
         """Exports at most max_export_batch_size spans."""
@@ -197,7 +200,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         for index in range(idx):
             self.spans_list[index] = None
 
-    def _flush(self):
+    def force_flush(self):
         # export all elements until queue is empty
         while self.queue:
             self.export()
