@@ -39,7 +39,7 @@ _CONTEXT = _available_contexts[
 ]()  # type: Context
 
 
-def _copy_context(context: Context) -> Context:
+def _copy_context(context: typing.Optional[Context]) -> Context:
     if context is not None:
         return context.copy()
     return get_current().copy()
