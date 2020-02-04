@@ -68,7 +68,7 @@ After running, you can view the generated trace in the Jaeger UI.
 #### Jaeger UI
 
 Open the Jaeger UI in your browser at
-[http://localhost:16686](http://localhost:16686) and view traces for the
+<http://localhost:16686> and view traces for the
 "OpenTracing Shim Example" service.
 
 Each `main.py` run should generate a trace, and each trace should include
