@@ -117,9 +117,12 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
+- [Alex Boten](https://github.com/codeboten), LightStep
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
 - [Christian Neumüller](https://github.com/Oberon00), Dynatrace
+- [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
 - [Leighton Chen](https://github.com/lzchen), Microsoft
+- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Reiley Yang](https://github.com/reyang), Microsoft
 
 *Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
@@ -176,13 +179,13 @@ estimates, and subject to change.
 
 Future releases targets include:
 
-| Component                           | Version    | Target Date      |
-| ----------------------------------- | ---------- | ---------------- |
-| Zipkin Trace Exporter               | Alpha v0.4 | January 28 2020  |
-| W3C Correlation Context Propagation | Alpha v0.4 | January 28 2020  |
-| Support for Tags/Baggage            | Alpha v0.4 | January 28 2020  |
-| Metrics Aggregation                 | Alpha v0.4 | January 28 2020  |
-| gRPC Integrations                   | Alpha v0.4 | January 28 2020  |
-| Prometheus Metrics Exporter         | Alpha v0.4 | January 28 2020  |
-| OpenCensus Bridge                   | Alpha v0.4 | January 28 2020  |
-| Metrics SDK (Complete)              | Alpha v0.4 | January 28 2020  |
+| Component                           | Version    | Target Date       |
+| ----------------------------------- | ---------- | ----------------- |
+| Zipkin Trace Exporter               | Alpha v0.4 | February 21 2020  |
+| W3C Correlation Context Propagation | Alpha v0.4 | February 21 2020  |
+| Support for Tags/Baggage            | Alpha v0.4 | February 21 2020  |
+| Metrics Aggregation                 | Alpha v0.4 | February 21 2020  |
+| gRPC Integrations                   | Alpha v0.4 | February 21 2020  |
+| Prometheus Metrics Exporter         | Alpha v0.4 | February 21 2020  |
+| OpenCensus Bridge                   | Alpha v0.4 | February 21 2020  |
+| Metrics SDK (Complete)              | Alpha v0.4 | February 21 2020  |
