@@ -15,11 +15,11 @@
 import unittest
 from unittest import mock
 
-import opentelemetry_example_app.flask_example as flask_example
 import requests
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
+import opentelemetry_example_app.flask_example as flask_example
 from opentelemetry import trace
 from opentelemetry.sdk import trace as trace_sdk
 
