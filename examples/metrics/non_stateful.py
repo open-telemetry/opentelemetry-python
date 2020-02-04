@@ -29,8 +29,8 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 # checkpoints which describe the updates of a single collection period (deltas)
 batcher = UngroupedBatcher(False)
 # Meter is responsible for creating and recording metrics
-meter = Meter(batcher)
-metrics.set_preferred_meter_implementation(meter)
+metrics.set_preferred_meter_implementation(lambda _: Meter(batcher))
+meter = metrics.meter()
 # exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 # controller collects metrics created from meter and exports it via the

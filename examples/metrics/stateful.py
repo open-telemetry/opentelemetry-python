@@ -32,8 +32,8 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 batcher = UngroupedBatcher(True)
 # If a batcher is not provded, a default batcher is used
 # Meter is responsible for creating and recording metrics
-meter = Meter(batcher)
-metrics.set_preferred_meter_implementation(meter)
+metrics.set_preferred_meter_implementation(lambda _: Meter(batcher))
+meter = metrics.meter()
 # exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 # controller collects metrics created from meter and exports it via the

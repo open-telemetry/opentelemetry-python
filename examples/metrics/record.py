@@ -23,8 +23,8 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Meter is responsible for creating and recording metrics
-meter = Meter()
-metrics.set_preferred_meter_implementation(meter)
+metrics.set_preferred_meter_implementation(lambda _: Meter())
+meter = metrics.meter()
 # exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 # controller collects metrics created from meter and exports it via the
@@ -35,6 +35,15 @@ controller = PushController(meter, exporter, 5)
 counter = meter.create_metric(
     "available memory",
     "available memory",
+    "bytes",
+    int,
+    Counter,
+    ("environment",),
+)
+
+counter2 = meter.create_metric(
+    "available memory2",
+    "available memory2",
     "bytes",
     int,
     Counter,
@@ -65,4 +74,4 @@ counter.add(25, label_set)
 # You can record metrics in a batch by passing in a labelset and a sequence of
 # (metric, value) pairs. The value would be recorded for each metric using the
 # specified labelset for each.
-meter.record_batch(label_set, [(counter, 50)])
+meter.record_batch(label_set, [(counter, 50), (counter2, 70)])
