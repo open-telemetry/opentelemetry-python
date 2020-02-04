@@ -97,7 +97,25 @@ def _create_start_and_end_span(name, span_processor):
 
 
 class TestBatchExportSpanProcessor(unittest.TestCase):
-    def test_batch_span_processor(self):
+    def test_shutdown(self):
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.BatchExportSpanProcessor(my_exporter)
+
+        span_names = ["xxx", "bar", "foo"]
+
+        for name in span_names:
+            _create_start_and_end_span(name, span_processor)
+
+        span_processor.shutdown()
+        self.assertTrue(my_exporter.is_shutdown)
+
+        # check that spans are exported without an explicitly call to
+        # force_flush()
+        self.assertListEqual(span_names, spans_names_list)
+
+    def test_flush(self):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
@@ -116,11 +134,10 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for name in span_names1:
             _create_start_and_end_span(name, span_processor)
 
-        span_processor.shutdown()
-        self.assertTrue(my_exporter.is_shutdown)
-
-        # check that processor is flushed after shutdown()
+        span_processor.force_flush()
         self.assertListEqual(span_names0 + span_names1, spans_names_list)
+
+        span_processor.shutdown()
 
     def test_batch_span_processor_lossless(self):
         """Test that no spans are lost when sending max_queue_size spans"""
