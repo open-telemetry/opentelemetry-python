@@ -19,7 +19,7 @@ from sys import version_info
 from opentelemetry.context.context import Context
 
 if (3, 5, 3) <= version_info < (3, 7):
-    import aiocontextvars  # pylint:disable=unused-import
+    import aiocontextvars  # type: ignore # pylint:disable=unused-import
 
 elif (3, 4) < version_info <= (3, 5, 2):
     import opentelemetry.context.aiocontextvarsfix  # pylint:disable=unused-import

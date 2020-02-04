@@ -22,6 +22,7 @@ import asyncio.coroutines
 import asyncio.futures
 import concurrent.futures
 
+
 if not hasattr(asyncio, "_get_running_loop"):
     # noinspection PyCompatibility
     # pylint:disable=protected-access
@@ -57,7 +58,7 @@ if not hasattr(asyncio, "_get_running_loop"):
 # It needs only to be imported to activate the patching of the contextvars
 # backport (see the comment in setup.py)
 # noinspection PyUnresolvedReferences
-import aiocontextvars
+import aiocontextvars  # pylint: disable=unused-import
 
 
 def _run_coroutine_threadsafe(coro, loop):

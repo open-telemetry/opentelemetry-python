@@ -58,7 +58,7 @@ def span_from_context(
     key = _get_span_key(name)
     if context is not None:
         context.get_value(key)
-    return get_current().get_value(key)
+    return get_current().get_value(key)  # type: ignore
 
 
 def with_span(
