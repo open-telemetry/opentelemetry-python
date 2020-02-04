@@ -24,23 +24,23 @@ logger = logging.getLogger(__name__)
 
 # FIXME use a better implementation of a configuration manager to avoid having
 # to get configuration values straight from environment variables
-available_contexts = {}
+_available_contexts = {}
 
 for entry_point in iter_entry_points("opentelemetry_context"):
     try:
-        available_contexts[entry_point.name] = entry_point.load()
+        _available_contexts[entry_point.name] = entry_point.load()
     except Exception as err:  # pylint: disable=broad-except
         logger.warning(
             "Could not load entry_point %s:%s", entry_point.name, err
         )
 
-_CONTEXT = available_contexts[
+_CONTEXT = _available_contexts[
     environ.get("OPENTELEMETRY_CONTEXT", "default_context")
 ]()  # type: Context
 
 
-def _copy_context(context: typing.Optional[Context]) -> Context:
-    if context:
+def _copy_context(context: Context) -> Context:
+    if context is not None:
         return context.copy()
     return get_current().copy()
 
@@ -51,7 +51,7 @@ def create_key(key: str) -> "object":
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
-    if context:
+    if context is not None:
         return context.get_value(key)
     return get_current().get_value(key)
 
@@ -64,7 +64,9 @@ def set_value(
     return new_context
 
 
-def remove_value(context: Context, key: str) -> Context:
+def remove_value(
+    key: str, context: typing.Optional[Context] = None
+) -> Context:
     new_context = _copy_context(context)
     new_context.remove_value(key)
     return new_context

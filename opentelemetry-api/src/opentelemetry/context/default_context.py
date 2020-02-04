@@ -18,20 +18,20 @@ from opentelemetry.context.context import Context
 
 class DefaultContext(Context):
     def __init__(self) -> None:
-        self.values = {}  # type: typing.Dict[str, object]
+        self._values = {}  # type: typing.Dict[str, object]
 
     def set_value(self, key: str, value: "object") -> None:
         """Set a value in this context"""
-        self.values[key] = value
+        self._values[key] = value
 
     def get_value(self, key: str) -> "object":
         """Get a value from this context"""
-        return self.values.get(key)
+        return self._values.get(key)
 
     def remove_value(self, key: str) -> None:
         """Remove a value from this context"""
-        if key in self.values:
-            self.values.pop(key)
+        if key in self._values:
+            self._values.pop(key)
 
 
 __all__ = ["DefaultContext"]

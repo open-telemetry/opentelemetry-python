@@ -58,8 +58,15 @@ setuptools.setup(
     zip_safe=False,
     entry_points={
         "opentelemetry_context": [
+            "contextvars_context = "
+            "opentelemetry.context.contextvars_context:"
+            "ContextVarsContext",
+            "threadlocal_context = "
+            "opentelemetry.context.threadlocal_context:"
+            "ThreadLocalContext",
             "default_context = "
-            "opentelemetry.context.default_context:DefaultContext",
+            "opentelemetry.context.default_context:"
+            "DefaultContext",
         ]
     },
 )

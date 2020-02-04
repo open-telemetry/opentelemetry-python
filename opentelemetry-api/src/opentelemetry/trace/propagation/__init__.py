@@ -24,13 +24,13 @@ def span_context_from_context(
     context: Optional[Context] = None,
 ) -> SpanContext:
     span = span_from_context(context=context)
-    if span:
+    if span is not None:
         return span.get_context()
-    if context:
+    if context is not None:
         sc = context.get_value(_SPAN_CONTEXT_KEY)
     else:
         sc = get_current().get_value(_SPAN_CONTEXT_KEY)
-    if sc:
+    if sc is not None:
         return sc
 
     return INVALID_SPAN_CONTEXT
@@ -39,18 +39,18 @@ def span_context_from_context(
 def with_span_context(
     span_context: SpanContext, context: Optional[Context] = None
 ) -> None:
-    if context:
+    if context is not None:
         context.set_value(_SPAN_CONTEXT_KEY, span_context)
     return get_current().set_value(_SPAN_CONTEXT_KEY, span_context)
 
 
 def span_from_context(context: Optional[Context] = None) -> Span:
-    if context:
+    if context is not None:
         context.get_value(_SPAN_KEY)
     return get_current().get_value(_SPAN_KEY)
 
 
 def with_span(span: Span, context: Optional[Context] = None) -> None:
-    if context:
+    if context is not None:
         return context.set_value(_SPAN_KEY, span)
     return get_current().set_value(_SPAN_KEY, span)

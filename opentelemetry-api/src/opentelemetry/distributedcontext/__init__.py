@@ -135,7 +135,7 @@ _DISTRIBUTED_CONTEXT_KEY = "DistributedContext"
 def distributed_context_from_context(
     context: typing.Optional[Context] = None,
 ) -> DistributedContext:
-    if context:
+    if context is not None:
         return context.get_value(_DISTRIBUTED_CONTEXT_KEY)
     return get_current().get_value(_DISTRIBUTED_CONTEXT_KEY)
 
@@ -143,6 +143,6 @@ def distributed_context_from_context(
 def with_distributed_context(
     dctx: DistributedContext, context: typing.Optional[Context] = None
 ) -> None:
-    if context:
+    if context is not None:
         return context.set_value(_DISTRIBUTED_CONTEXT_KEY, dctx)
     return get_current().set_value(_DISTRIBUTED_CONTEXT_KEY, dctx)

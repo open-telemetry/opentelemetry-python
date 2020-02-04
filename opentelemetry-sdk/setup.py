@@ -56,14 +56,4 @@ setuptools.setup(
         "/tree/master/opentelemetry-sdk"
     ),
     zip_safe=False,
-    entry_points={
-        "opentelemetry_context": [
-            "contextvars_context = "
-            "opentelemetry.context.contextvars_context:"
-            "ContextVarsContext",
-            "threadlocal_context = "
-            "opentelemetry.context.threadlocal_context:"
-            "ThreadLocalContext",
-        ]
-    },
 )
