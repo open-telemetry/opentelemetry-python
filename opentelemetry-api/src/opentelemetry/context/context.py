@@ -31,7 +31,7 @@ class Context(ABC):
     def set_value(self, key: str, value: "object") -> None:
         """
         Set a value in this context
-        
+
         Args:
             key: The key for the value to set.
             value: The value to set.
@@ -41,7 +41,7 @@ class Context(ABC):
     def get_value(self, key: str) -> "object":
         """
         Get a value from this context
-        
+
         Args:
             key: The key for the value to retrieve.
         """
@@ -50,7 +50,7 @@ class Context(ABC):
     def remove_value(self, key: str) -> None:
         """
         Remove a value from this context
-        
+
         Args:
             key: The key for the value to remove.
         """

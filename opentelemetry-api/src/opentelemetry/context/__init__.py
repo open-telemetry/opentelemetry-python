@@ -24,12 +24,6 @@ logger = logging.getLogger(__name__)
 _CONTEXT = None  # type: typing.Optional[Context]
 
 
-def _copy_context(context: typing.Optional[Context]) -> Context:
-    if context is not None:
-        return context.copy()
-    return get_current().copy()
-
-
 def create_key(key: str) -> "object":
     # FIXME Implement this
     raise NotImplementedError
@@ -45,9 +39,7 @@ def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
         key: The key of the value to retrieve.
         context: The context from which to retrieve the value, if None, the current context is used.
     """
-    if context is not None:
-        return context.get_value(key)
-    return get_current().get_value(key)
+    return context.get_value(key) if context else get_current().get_value(key)
 
 
 def set_value(
@@ -64,7 +56,7 @@ def set_value(
         value: The value of the entry to set
         context: The context to copy, if None, the current context is used
     """
-    new_context = _copy_context(context)
+    new_context = context.copy() if context else get_current().copy()
     new_context.set_value(key, value)
     return new_context
 
@@ -80,7 +72,7 @@ def remove_value(
         key: The key of the entry to remove
         context: The context to copy, if None, the current context is used
     """
-    new_context = _copy_context(context)
+    new_context = context.copy() if context else get_current().copy()
     new_context.remove_value(key)
     return new_context
 
