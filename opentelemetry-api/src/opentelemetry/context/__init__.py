@@ -87,18 +87,13 @@ def get_current() -> Context:
     if _CONTEXT is None:
         # FIXME use a better implementation of a configuration manager to avoid having
         # to get configuration values straight from environment variables
-        _available_contexts = {}  # typing.Dict[str, Context]
-
-        for entry_point in iter_entry_points("opentelemetry_context"):
-            try:
-                _available_contexts[entry_point.name] = entry_point.load()  # type: ignore
-            except Exception:  # pylint: disable=broad-except
-                logger.error("Could not load entry_point %s", entry_point.name)
 
         configured_context = environ.get(
             "OPENTELEMETRY_CONTEXT", "default_context"
         )  # type: str
-        _CONTEXT = _available_contexts[configured_context]()  # type: ignore
+        _CONTEXT = next(
+            iter_entry_points("opentelemetry_context", configured_context)
+        ).load()()
     return _CONTEXT  # type: ignore
 
 
