@@ -18,7 +18,7 @@ import threading
 import typing
 from enum import Enum
 
-from opentelemetry.context import get_current
+from opentelemetry.context import remove_value, set_current, set_value
 from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
@@ -73,12 +73,13 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        with get_current().use(suppress_instrumentation=True):
-            try:
-                self.span_exporter.export((span,))
-            # pylint: disable=broad-except
-            except Exception:
-                logger.exception("Exception while exporting Span.")
+        set_current(set_value("suppress_instrumentation", True))
+        try:
+            self.span_exporter.export((span,))
+        # pylint: disable=broad-except
+        except Exception:
+            logger.exception("Exception while exporting Span.")
+        set_current(remove_value("suppress_instrumentation"))
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -182,16 +183,15 @@ class BatchExportSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
-        with get_current().use(suppress_instrumentation=True):
-            try:
-                # Ignore type b/c the Optional[None]+slicing is too "clever"
-                # for mypy
-                self.span_exporter.export(
-                    self.spans_list[:idx]
-                )  # type: ignore
-            # pylint: disable=broad-except
-            except Exception:
-                logger.exception("Exception while exporting Span batch.")
+        set_current(set_value("suppress_instrumentation", True))
+        try:
+            # Ignore type b/c the Optional[None]+slicing is too "clever"
+            # for mypy
+            self.span_exporter.export(self.spans_list[:idx])  # type: ignore
+        # pylint: disable=broad-except
+        except Exception:
+            logger.exception("Exception while exporting Span batch.")
+        set_current(remove_value("suppress_instrumentation"))
         # clean up list
         for index in range(idx):
             self.spans_list[index] = None

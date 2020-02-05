@@ -55,15 +55,6 @@ class Context(ABC):
             key: The key for the value to remove.
         """
 
-    @contextmanager  # type: ignore
-    def use(self, **kwargs: Dict[str, object]) -> Iterator[None]:
-        snapshot = {key: self.get_value(key) for key in kwargs}
-        for key in kwargs:
-            self.set_value(key, kwargs[key])
-        yield
-        for key in kwargs:
-            self.set_value(key, snapshot[key])
-
     def copy(self) -> "Context":
         """Return a copy of this context"""
 
