@@ -22,8 +22,7 @@ from urllib.parse import urlparse
 
 from requests.sessions import Session
 
-from opentelemetry import propagators
-from opentelemetry.context import get_value
+from opentelemetry import context, propagators
 from opentelemetry.ext.http_requests.version import __version__
 from opentelemetry.trace import SpanKind
 
@@ -54,7 +53,7 @@ def enable(tracer_source):
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
-        if get_value("suppress_instrumentation"):
+        if context.get_value("suppress_instrumentation"):
             return wrapped(self, method, url, *args, **kwargs)
 
         # See
