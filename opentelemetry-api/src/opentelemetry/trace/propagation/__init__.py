@@ -52,7 +52,7 @@ def span_from_context(
     context: Optional[Context] = None, name: Optional[str] = None
 ) -> Span:
     key = _get_span_key(name)
-    return get_value(key, context)
+    return get_value(key, context)  # type: ignore
 
 
 def with_span(

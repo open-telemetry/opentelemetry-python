@@ -135,7 +135,7 @@ _DISTRIBUTED_CONTEXT_KEY = "DistributedContext"
 def distributed_context_from_context(
     context: typing.Optional[Context] = None,
 ) -> DistributedContext:
-    return get_value(_DISTRIBUTED_CONTEXT_KEY, context)
+    return get_value(_DISTRIBUTED_CONTEXT_KEY, context)  # type: ignore
 
 
 def with_distributed_context(

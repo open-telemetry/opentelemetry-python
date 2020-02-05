@@ -17,7 +17,7 @@ import unittest
 from opentelemetry import context
 
 
-def do_work():
+def do_work() -> None:
     context.set_current(context.set_value("say-something", "bar"))
 
 
