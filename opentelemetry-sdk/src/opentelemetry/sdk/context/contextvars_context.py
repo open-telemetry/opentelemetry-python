@@ -62,7 +62,7 @@ class ContextVarsContext(Context):
         context_copy = ContextVarsContext()
 
         for key, value in self._contextvars.items():
-            context_copy.set_value(key, copy(value))
+            context_copy.set_value(key, copy(value.get()))
 
         return context_copy
 
