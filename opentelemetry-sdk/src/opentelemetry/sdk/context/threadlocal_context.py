@@ -18,6 +18,12 @@ from opentelemetry.context import Context
 
 
 class ThreadLocalContext(Context):
+    """
+    An implementation of the Context interface
+    which uses thread-local storage under the hood. This
+    implementation is available for usage with Python 3.4.
+    """
+
     def __init__(self) -> None:
         self._thread_local = threading.local()
 

@@ -17,6 +17,11 @@ from opentelemetry.context.context import Context
 
 
 class DefaultContext(Context):
+    """
+    A default implementation of the Context interface using
+    a dictionary to store values.
+    """
+
     def __init__(self) -> None:
         self._values = {}  # type: typing.Dict[str, object]
 

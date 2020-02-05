@@ -26,6 +26,12 @@ elif (3, 4) < version_info <= (3, 5, 2):
 
 
 class ContextVarsContext(Context):
+    """
+    An implementation of the Context interface
+    which wraps ContextVar under the hood. This is the prefered
+    implementation for usage with Python 3.5+
+    """
+
     def __init__(self) -> None:
         self._contextvars = {}  # type: typing.Dict[str, ContextVar[object]]
 

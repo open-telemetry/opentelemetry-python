@@ -20,17 +20,40 @@ from typing import Dict, Iterator
 
 
 class Context(ABC):
+    """
+    The Context interface provides a wrapper for the different
+    mechanisms that are used to propagate context in Python.
+    Implementations can be made available via entry_points and
+    selected through environment variables.
+    """
+
     @abstractmethod
     def set_value(self, key: str, value: "object") -> None:
-        """Set a value in this context"""
+        """
+        Set a value in this context
+        
+        Args:
+            key: The key for the value to set.
+            value: The value to set.
+        """
 
     @abstractmethod
     def get_value(self, key: str) -> "object":
-        """Get a value from this context"""
+        """
+        Get a value from this context
+        
+        Args:
+            key: The key for the value to retrieve.
+        """
 
     @abstractmethod
     def remove_value(self, key: str) -> None:
-        """Remove a value from this context"""
+        """
+        Remove a value from this context
+        
+        Args:
+            key: The key for the value to remove.
+        """
 
     @contextmanager  # type: ignore
     def use(self, **kwargs: Dict[str, object]) -> Iterator[None]:
