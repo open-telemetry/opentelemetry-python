@@ -13,7 +13,7 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.context import Context, get_current
+from opentelemetry.context import Context, get_current, get_value
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, Span, SpanContext
 
 _SPAN_CONTEXT_KEY = "extracted-span-context"
@@ -26,10 +26,7 @@ def span_context_from_context(
     span = span_from_context(context=context)
     if span is not None:
         return span.get_context()
-    if context is not None:
-        sc = context.get_value(_SPAN_CONTEXT_KEY)
-    else:
-        sc = get_current().get_value(_SPAN_CONTEXT_KEY)
+    sc = get_value(_SPAN_CONTEXT_KEY, context=context)
     if sc is not None:
         return sc
 
@@ -55,9 +52,7 @@ def span_from_context(
     context: Optional[Context] = None, name: Optional[str] = None
 ) -> Span:
     key = _get_span_key(name)
-    if context is not None:
-        context.get_value(key)
-    return get_current().get_value(key)  # type: ignore
+    return get_value(key, context)
 
 
 def with_span(
