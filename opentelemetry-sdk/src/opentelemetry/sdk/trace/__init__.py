@@ -70,9 +70,15 @@ class SpanProcessor:
         """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown.
         """
 
-    def force_flush(self) -> None:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Export all ended spans to the configured Exporter that have not
         yet been exported.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for spans to be exported.
+
+        Returns:
+            False if the timeout is exceeded, True otherwise.
         """
 
 
