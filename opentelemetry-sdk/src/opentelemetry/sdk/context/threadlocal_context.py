@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import copy
 import threading
 
 from opentelemetry.context import Context
@@ -42,3 +43,13 @@ class ThreadLocalContext(Context):
     def remove_value(self, key: str) -> None:
         """Remove a value from this context"""
         delattr(self._thread_local, key)
+
+    def copy(self) -> Context:
+        """Return a copy of this context"""
+
+        context_copy = ThreadLocalContext()
+
+        for key, value in self._thread_local.__dict__.items():
+            context_copy.set_value(key, copy(value))
+
+        return context_copy
