@@ -36,6 +36,15 @@ def create_key(key: str) -> "object":
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
+    """
+    To access the local state of an concern, the Context API
+    provides a function which takes a context and a key as input,
+    and returns a value.
+
+    Args:
+        key: The key of the value to retrieve.
+        context: The context from which to retrieve the value, if None, the current context is used.
+    """
     if context is not None:
         return context.get_value(key)
     return get_current().get_value(key)
@@ -44,6 +53,17 @@ def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
 def set_value(
     key: str, value: "object", context: typing.Optional[Context] = None
 ) -> Context:
+    """
+    To record the local state of a cross-cutting concern, the
+    Context API provides a function which takes a context, a
+    key, and a value as input, and returns an updated context
+    which contains the new value.
+
+    Args:
+        key: The key of the entry to set
+        value: The value of the entry to set
+        context: The context to copy, if None, the current context is used
+    """
     new_context = _copy_context(context)
     new_context.set_value(key, value)
     return new_context
@@ -52,12 +72,25 @@ def set_value(
 def remove_value(
     key: str, context: typing.Optional[Context] = None
 ) -> Context:
+    """
+    To remove a value, this method returns a new context with the key cleared.
+    Note that the removed value still remains present in the old context.
+
+    Args:
+        key: The key of the entry to remove
+        context: The context to copy, if None, the current context is used
+    """
     new_context = _copy_context(context)
     new_context.remove_value(key)
     return new_context
 
 
 def get_current() -> Context:
+    """
+    To access the context associated with program execution,
+    the Context API provides a function which takes no arguments
+    and returns a Context.
+    """
     global _CONTEXT  # pylint: disable=global-statement
     if _CONTEXT is None:
         # FIXME use a better implementation of a configuration manager to avoid having
@@ -80,6 +113,13 @@ def get_current() -> Context:
 
 
 def set_current(context: Context) -> None:
+    """
+    To associate a context with program execution, the Context
+    API provides a function which takes a Context.
+
+    Args:
+        context: The context to use as current.
+    """
     global _CONTEXT  # pylint: disable=global-statement
     _CONTEXT = context
 
