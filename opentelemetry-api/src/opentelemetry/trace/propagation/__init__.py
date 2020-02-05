@@ -48,7 +48,6 @@ def _get_span_key(name: Optional[str] = None) -> str:
     key = _SPAN_KEY
     if name is not None:
         key = "{}-{}".format(key, name)
-        print(key)
     return key
 
 

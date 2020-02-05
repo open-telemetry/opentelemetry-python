@@ -100,10 +100,8 @@ def get_current() -> Context:
         for entry_point in iter_entry_points("opentelemetry_context"):
             try:
                 _available_contexts[entry_point.name] = entry_point.load()  # type: ignore
-            except Exception as err:  # pylint: disable=broad-except
-                logger.warning(
-                    "Could not load entry_point %s:%s", entry_point.name, err
-                )
+            except Exception:  # pylint: disable=broad-except
+                logger.error("Could not load entry_point %s", entry_point.name)
 
         configured_context = environ.get(
             "OPENTELEMETRY_CONTEXT", "default_context"
