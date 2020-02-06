@@ -35,8 +35,7 @@ class DefaultContext(Context):
 
     def remove_value(self, key: str) -> None:
         """Remove a value from this context"""
-        if key in self._values:
-            self._values.pop(key)
+        self._values.pop(key, None)
 
 
 __all__ = ["DefaultContext"]

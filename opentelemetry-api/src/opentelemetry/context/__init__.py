@@ -114,17 +114,20 @@ def with_current_context(
     Capture the current context and apply it to the provided func.
     """
 
-    caller_context = get_current().copy()
+    caller_context = get_current().snapshot()
 
     def call_with_current_context(
         *args: "object", **kwargs: "object"
     ) -> "object":
         try:
-            backup_context = get_current().copy()
-            set_current(caller_context)
+            backup = get_current().snapshot()
+            new_context = get_current().copy()
+            new_context.apply(caller_context)
+            set_current(new_context)
             return func(*args, **kwargs)
         finally:
-            set_current(backup_context)
+            new_context.apply(backup)
+            set_current(new_context)
 
     return call_with_current_context
 

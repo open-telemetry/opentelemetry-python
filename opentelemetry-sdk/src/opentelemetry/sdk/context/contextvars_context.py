@@ -47,14 +47,13 @@ class ContextVarsContext(Context):
         if key in self._contextvars:
             try:
                 return self._contextvars[key].get()
-            except LookupError:
+            except (KeyError, LookupError):
                 pass
         return None
 
     def remove_value(self, key: str) -> None:
         """Remove a value from this context"""
-        if key in self._contextvars.keys():
-            self._contextvars.pop(key)
+        self._contextvars.pop(key, None)
 
     def copy(self) -> Context:
         """Return a copy of this context"""
@@ -65,6 +64,15 @@ class ContextVarsContext(Context):
             context_copy.set_value(key, copy(value.get()))
 
         return context_copy
+
+    def snapshot(self) -> typing.Dict:
+        return dict(
+            (key, value.get()) for key, value in self._contextvars.items()
+        )
+
+    def apply(self, snapshot: typing.Dict) -> None:
+        for name in snapshot:
+            self.set_value(name, snapshot[name])
 
 
 __all__ = ["ContextVarsContext"]

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing.dummy import Pool
 
 from opentelemetry import context
 from opentelemetry.sdk import trace
@@ -51,7 +51,7 @@ class TestThreads(unittest.TestCase):
 
     def test_with_threads(self):
         with self.tracer.start_as_current_span("threads_test"):
-            pool = ThreadPool(5)  # create a thread pool
+            pool = Pool(5)  # create a thread pool
             pool.map(
                 context.with_current_context(self.do_work), self.span_names
             )

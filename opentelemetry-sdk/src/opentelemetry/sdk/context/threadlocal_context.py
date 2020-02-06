@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import threading
+import typing
 from copy import copy
 
 from opentelemetry.context import Context
@@ -53,3 +54,15 @@ class ThreadLocalContext(Context):
             context_copy.set_value(key, copy(value))
 
         return context_copy
+
+    def snapshot(self) -> typing.Dict:
+        return dict(
+            (key, value) for key, value in self._thread_local.__dict__.items()
+        )
+
+    def apply(self, snapshot: typing.Dict) -> None:
+        for name in snapshot:
+            self.set_value(name, snapshot[name])
+
+
+__all__ = ["ThreadLocalContext"]
