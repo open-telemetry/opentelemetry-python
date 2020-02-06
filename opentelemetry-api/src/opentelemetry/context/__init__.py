@@ -24,11 +24,6 @@ logger = logging.getLogger(__name__)
 _CONTEXT = None  # type: typing.Optional[Context]
 
 
-def create_key(key: str) -> "object":
-    # FIXME Implement this
-    raise NotImplementedError
-
-
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
     """
     To access the local state of an concern, the Context API
