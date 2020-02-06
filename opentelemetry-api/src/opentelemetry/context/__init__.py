@@ -107,6 +107,28 @@ def set_current(context: Context) -> None:
     _CONTEXT = context
 
 
+def with_current_context(
+    func: typing.Callable[..., "object"]
+) -> typing.Callable[..., "object"]:
+    """
+    Capture the current context and apply it to the provided func.
+    """
+
+    caller_context = get_current().copy()
+
+    def call_with_current_context(
+        *args: "object", **kwargs: "object"
+    ) -> "object":
+        try:
+            backup_context = get_current().copy()
+            set_current(caller_context)
+            return func(*args, **kwargs)
+        finally:
+            set_current(backup_context)
+
+    return call_with_current_context
+
+
 __all__ = [
     "get_value",
     "set_value",
