@@ -134,14 +134,14 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for name in span_names0:
             _create_start_and_end_span(name, span_processor)
 
-        self.assertTrue(span_processor.force_flush())
+        span_processor.force_flush()
         self.assertListEqual(span_names0, spans_names_list)
 
         # create some more spans to check that span processor still works
         for name in span_names1:
             _create_start_and_end_span(name, span_processor)
 
-        self.assertTrue(span_processor.force_flush())
+        span_processor.force_flush()
         self.assertListEqual(span_names0 + span_names1, spans_names_list)
 
         span_processor.shutdown()
@@ -157,7 +157,8 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         _create_start_and_end_span("foo", span_processor)
 
         # check that the timeout is not meet
-        self.assertFalse(span_processor.force_flush(100))
+        with self.assertRaises(RuntimeError):
+            span_processor.force_flush(100)
         span_processor.shutdown()
 
     def test_batch_span_processor_lossless(self):
@@ -174,7 +175,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for _ in range(512):
             _create_start_and_end_span("foo", span_processor)
 
-        self.assertTrue(span_processor.force_flush())
+        span_processor.force_flush()
         self.assertEqual(len(spans_names_list), 512)
         span_processor.shutdown()
 
@@ -198,7 +199,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
             time.sleep(0.05)  # give some time for the exporter to upload spans
 
-        self.assertTrue(span_processor.force_flush())
+        span_processor.force_flush()
         self.assertEqual(len(spans_names_list), 1024)
         span_processor.shutdown()
 

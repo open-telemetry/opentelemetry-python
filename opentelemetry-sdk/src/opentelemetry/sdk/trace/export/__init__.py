@@ -84,9 +84,9 @@ class SimpleExportSpanProcessor(SpanProcessor):
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000):
         # pylint: disable=unused-argument
-        return True
+        pass
 
 
 class BatchExportSpanProcessor(SpanProcessor):
@@ -227,10 +227,10 @@ class BatchExportSpanProcessor(SpanProcessor):
         while self.queue:
             self.export()
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000):
         if self.done:
             logger.warning("Already shutdown, ignoring call to force_flush().")
-            return True
+            return
 
         self._flushing = True
         self.queue.appendleft(self._FLUSH_TOKEN_SPAN)
@@ -244,7 +244,8 @@ class BatchExportSpanProcessor(SpanProcessor):
             ret = self.flush_condition.wait(timeout_millis / 1e3)
 
         self._flushing = False
-        return ret
+        if not ret:
+            raise RuntimeError("timeout exceeded on force_flush()")
 
     def shutdown(self) -> None:
         # signal the worker thread to finish and then wait for it
