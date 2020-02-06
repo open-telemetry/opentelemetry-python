@@ -86,9 +86,12 @@ def get_current() -> Context:
         configured_context = environ.get(
             "OPENTELEMETRY_CONTEXT", "default_context"
         )  # type: str
-        _CONTEXT = next(
-            iter_entry_points("opentelemetry_context", configured_context)
-        ).load()()
+        try:
+            _CONTEXT = next(
+                iter_entry_points("opentelemetry_context", configured_context)
+            ).load()()
+        except Exception:  # pylint: disable=broad-except
+            logger.error("Failed to load context: %s", configured_context)
     return _CONTEXT  # type: ignore
 
 
