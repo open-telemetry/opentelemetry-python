@@ -41,18 +41,18 @@ exporter = ConsoleMetricsExporter()
 controller = PushController(meter, exporter, 5)
 
 counter = meter.create_metric(
-    "available memory",
-    "available memory",
-    "bytes",
+    "requests",
+    "number of requests",
+    "requests",
     int,
     Counter,
     ("environment",),
 )
 
 counter2 = meter.create_metric(
-    "available memory2",
-    "available memory2",
-    "bytes2",
+    "clicks",
+    "number of clicks",
+    "clicks",
     int,
     Counter,
     ("environment",),

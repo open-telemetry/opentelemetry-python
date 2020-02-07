@@ -33,18 +33,18 @@ controller = PushController(meter, exporter, 5)
 
 # Example to show how to record using the meter
 counter = meter.create_metric(
-    "available memory",
-    "available memory",
-    "bytes",
+    "requests",
+    "number of requests",
+    "requests",
     int,
     Counter,
     ("environment",),
 )
 
 counter2 = meter.create_metric(
-    "available memory2",
-    "available memory2",
-    "bytes",
+    "clicks",
+    "number of clicks",
+    "clicks",
     int,
     Counter,
     ("environment",),

@@ -34,7 +34,7 @@ class PushController(threading.Thread):
         while not self.finished.wait(self.interval):
             self.tick()
 
-    def cancel(self):
+    def shutdown(self):
         self.finished.set()
 
     def tick(self):

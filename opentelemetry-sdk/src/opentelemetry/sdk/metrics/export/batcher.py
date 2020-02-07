@@ -31,24 +31,16 @@ class Batcher(abc.ABC):
     will be sent to an exporter for exporting.
     """
 
-    def __init__(self, keep_state: bool):
+    def __init__(self, stateful: bool):
         self._batch_map = {}
-        # keep_state=True indicates the batcher computes checkpoints from over
+        # stateful=True indicates the batcher computes checkpoints from over
         # the process lifetime. False indicates the batcher computes
         # checkpoints which describe the updates of a single collection period
         # (deltas)
-        self.keep_state = keep_state
-
-    @property
-    def batch_map(self):
-        return self._batch_map
-
-    @batch_map.setter
-    def batch_map(self, value):
-        self._batch_map = value
+        self.stateful = stateful
 
     def aggregator_for(self, metric_type: Type[MetricT]) -> Aggregator:
-        """Returns an aggregator based off metric type.
+        """Returns an aggregator based on metric type.
 
         Aggregators keep track of and updates values when metrics get updated.
         """
@@ -58,16 +50,15 @@ class Batcher(abc.ABC):
         # TODO: Add other aggregators
         return CounterAggregator()
 
-    def check_point_set(self) -> Sequence[MetricRecord]:
+    def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
 
         The list of MetricRecords is a snapshot created from the current
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for key, value in self._batch_map.items():
-            # Batch map is in the format: (metric, label_set): aggregator
-            metric_records.append(MetricRecord(value, key[1], key[0]))
+        for (metric, label_set), aggregator in self._batch_map.items():
+            metric_records.append(MetricRecord(aggregator, label_set, metric))
         return metric_records
 
     def finished_collection(self):
@@ -75,7 +66,7 @@ class Batcher(abc.ABC):
 
         For batchers that are stateless, resets the batch map.
         """
-        if not self.keep_state:
+        if not self.stateful:
             self._batch_map = {}
 
     @abc.abstractmethod
@@ -97,11 +88,11 @@ class UngroupedBatcher(Batcher):
         batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator
         if batch_value:
-            # Update the stored checkpointed value if exists. This is for cases
-            # when an update comes at the same time as a checkpoint call
+            # Update the stored checkpointed value if exists. The call to merge
+            # here combines only identical records (same key).
             batch_value.merge(aggregator)
             return
-        if self.keep_state:
+        if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage
             aggregator = self.aggregator_for(record.metric.__class__)
