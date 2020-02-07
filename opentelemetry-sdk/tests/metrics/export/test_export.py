@@ -243,5 +243,6 @@ class TestController(unittest.TestCase):
         controller = PushController(meter, exporter, 5.0)
         meter.collect.assert_not_called()
         exporter.export.assert_not_called()
-        controller.cancel()
+        controller.shutdown()
         self.assertTrue(controller.finished.isSet())
+        exporter.shutdown.assert_any_call()
