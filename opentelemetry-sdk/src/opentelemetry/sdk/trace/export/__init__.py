@@ -244,6 +244,9 @@ class BatchExportSpanProcessor(SpanProcessor):
             ret = self.flush_condition.wait(timeout_millis / 1e3)
 
         self._flushing = False
+
+        if not ret:
+            logger.warning("Timeout was exceeded in force_flush().")
         return ret
 
     def shutdown(self) -> None:
