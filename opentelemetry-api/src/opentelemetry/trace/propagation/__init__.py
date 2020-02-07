@@ -13,7 +13,6 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.context import Context, get_value, set_current, set_value
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, Span, SpanContext
 
 _SPAN_CONTEXT_KEY = "extracted-span-context"

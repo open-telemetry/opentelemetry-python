@@ -16,8 +16,8 @@ import typing
 from abc import ABC, abstractmethod
 
 
-class Context(ABC):
-    """The Context interface provides a wrapper for the different
+class RuntimeContext(ABC):
+    """The RuntimeContext interface provides a wrapper for the different
     mechanisms that are used to propagate context in Python.
     Implementations can be made available via entry_points and
     selected through environment variables.
@@ -49,7 +49,7 @@ class Context(ABC):
         """
 
     @abstractmethod
-    def copy(self) -> "Context":
+    def copy(self) -> "RuntimeContext":
         """Return a copy of this context."""
 
     @abstractmethod
@@ -65,4 +65,4 @@ class Context(ABC):
         """
 
 
-__all__ = ["Context"]
+__all__ = ["RuntimeContext"]

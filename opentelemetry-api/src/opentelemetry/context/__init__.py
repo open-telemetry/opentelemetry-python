@@ -18,14 +18,31 @@ from os import environ
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.context.context import Context
+from opentelemetry.context.context import RuntimeContext
 
 logger = logging.getLogger(__name__)
+_CONTEXT_RUNTIME = None  # type: typing.Optional[RuntimeContext]
 _CONTEXT = None  # type: typing.Optional[Context]
 
 
+class Context:
+    def __init__(
+        self, values: typing.Optional[typing.Dict[str, object]] = None
+    ):
+        if values:
+            self._data = values
+        else:
+            self._data = _CONTEXT_RUNTIME.snapshot()  # type: ignore
+
+    def get_value(self, key: str) -> "object":
+        return self._data.get(key)
+
+    def snapshot(self) -> typing.Dict[str, object]:
+        return dict((key, value) for key, value in self._data.items())
+
+
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
-    """To access the local state of an concern, the Context API
+    """To access the local state of an concern, the RuntimeContext API
     provides a function which takes a context and a key as input,
     and returns a value.
 
@@ -40,7 +57,7 @@ def set_value(
     key: str, value: "object", context: typing.Optional[Context] = None
 ) -> Context:
     """To record the local state of a cross-cutting concern, the
-    Context API provides a function which takes a context, a
+    RuntimeContext API provides a function which takes a context, a
     key, and a value as input, and returns an updated context
     which contains the new value.
 
@@ -49,9 +66,11 @@ def set_value(
         value: The value of the entry to set
         context: The context to copy, if None, the current context is used
     """
-    new_context = context.copy() if context else get_current().copy()
-    new_context.set_value(key, value)
-    return new_context
+    if context is None:
+        context = get_current()
+    new_values = context.snapshot()
+    new_values[key] = value
+    return Context(new_values)
 
 
 def remove_value(
@@ -65,18 +84,20 @@ def remove_value(
         key: The key of the entry to remove
         context: The context to copy, if None, the current context is used
     """
-    new_context = context.copy() if context else get_current().copy()
-    new_context.remove_value(key)
-    return new_context
+    if context is None:
+        context = get_current()
+    new_values = context.snapshot()
+    new_values.pop(key, None)
+    return Context(new_values)
 
 
 def get_current() -> Context:
     """To access the context associated with program execution,
-    the Context API provides a function which takes no arguments
-    and returns a Context.
+    the RuntimeContext API provides a function which takes no arguments
+    and returns a RuntimeContext.
     """
-    global _CONTEXT  # pylint: disable=global-statement
-    if _CONTEXT is None:
+    global _CONTEXT_RUNTIME  # pylint: disable=global-statement
+    if _CONTEXT_RUNTIME is None:
         # FIXME use a better implementation of a configuration manager to avoid having
         # to get configuration values straight from environment variables
 
@@ -84,11 +105,15 @@ def get_current() -> Context:
             "OPENTELEMETRY_CONTEXT", "default_context"
         )  # type: str
         try:
-            _CONTEXT = next(
+            _CONTEXT_RUNTIME = next(
                 iter_entry_points("opentelemetry_context", configured_context)
             ).load()()
         except Exception:  # pylint: disable=broad-except
             logger.error("Failed to load context: %s", configured_context)
+
+    global _CONTEXT  # pylint: disable=global-statement
+    if _CONTEXT is None:
+        set_current(Context())
     return _CONTEXT  # type: ignore
 
 
@@ -108,20 +133,17 @@ def with_current_context(
 ) -> typing.Callable[..., "object"]:
     """Capture the current context and apply it to the provided func."""
 
-    caller_context = get_current().snapshot()
+    caller_context = get_current()
 
     def call_with_current_context(
         *args: "object", **kwargs: "object"
     ) -> "object":
         try:
-            backup = get_current().snapshot()
-            new_context = get_current().copy()
-            new_context.apply(caller_context)
-            set_current(new_context)
+            backup = get_current()
+            set_current(caller_context)
             return func(*args, **kwargs)
         finally:
-            new_context.apply(backup)
-            set_current(new_context)
+            set_current(backup)
 
     return call_with_current_context
 
@@ -132,5 +154,5 @@ __all__ = [
     "remove_value",
     "get_current",
     "set_current",
-    "Context",
+    "RuntimeContext",
 ]

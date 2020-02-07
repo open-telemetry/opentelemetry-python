@@ -13,10 +13,9 @@
 # limitations under the License.
 import typing
 from contextvars import ContextVar
-from copy import copy
 from sys import version_info
 
-from opentelemetry.context.context import Context
+from opentelemetry.context.context import RuntimeContext
 
 if (3, 5, 3) <= version_info < (3, 7):
     import aiocontextvars  # type: ignore # pylint:disable=unused-import
@@ -25,8 +24,8 @@ elif (3, 4) < version_info <= (3, 5, 2):
     import opentelemetry.sdk.context.aiocontextvarsfix  # pylint:disable=unused-import
 
 
-class ContextVarsContext(Context):
-    """An implementation of the Context interface which wraps ContextVar under
+class ContextVarsRuntimeContext(RuntimeContext):
+    """An implementation of the RuntimeContext interface which wraps ContextVar under
     the hood. This is the prefered implementation for usage with Python 3.5+
     """
 
@@ -34,14 +33,14 @@ class ContextVarsContext(Context):
         self._contextvars = {}  # type: typing.Dict[str, ContextVar[object]]
 
     def set_value(self, key: str, value: "object") -> None:
-        """See `opentelemetry.context.Context.set_value`."""
+        """See `opentelemetry.context.RuntimeContext.set_value`."""
         if key not in self._contextvars.keys():
             self._contextvars[key] = ContextVar(key)
 
         self._contextvars[key].set(value)
 
     def get_value(self, key: str) -> "object":
-        """See `opentelemetry.context.Context.get_value`."""
+        """See `opentelemetry.context.RuntimeContext.get_value`."""
         if key in self._contextvars:
             try:
                 return self._contextvars[key].get()
@@ -50,32 +49,25 @@ class ContextVarsContext(Context):
         return None
 
     def remove_value(self, key: str) -> None:
-        """See `opentelemetry.context.Context.remove_value`."""
+        """See `opentelemetry.context.RuntimeContext.remove_value`."""
         self._contextvars.pop(key, None)
 
-    def copy(self) -> Context:
-        """See `opentelemetry.context.Context.copy`."""
-
-        context_copy = ContextVarsContext()
-
-        for key, value in self._contextvars.items():
-            try:
-                context_copy.set_value(key, copy(value.get()))
-            except (KeyError, LookupError):
-                pass
-
-        return context_copy
+    def copy(self) -> RuntimeContext:
+        """See `opentelemetry.context.RuntimeContext.copy`."""
+        # under the hood, ContextVars returns a copy on set
+        # we dont need to do any copying ourselves
+        return self
 
     def snapshot(self) -> typing.Dict:
-        """See `opentelemetry.context.Context.snapshot`."""
+        """See `opentelemetry.context.RuntimeContext.snapshot`."""
         return dict(
             (key, value.get()) for key, value in self._contextvars.items()
         )
 
     def apply(self, snapshot: typing.Dict) -> None:
-        """See `opentelemetry.context.Context.apply`."""
+        """See `opentelemetry.context.RuntimeContext.apply`."""
         for name in snapshot:
             self.set_value(name, snapshot[name])
 
 
-__all__ = ["ContextVarsContext"]
+__all__ = ["ContextVarsRuntimeContext"]

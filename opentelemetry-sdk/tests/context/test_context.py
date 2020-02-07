@@ -13,10 +13,15 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import patch
 
 from opentelemetry import context
-from opentelemetry.sdk.context.contextvars_context import ContextVarsContext
-from opentelemetry.sdk.context.threadlocal_context import ThreadLocalContext
+from opentelemetry.sdk.context.contextvars_context import (
+    ContextVarsRuntimeContext,
+)
+from opentelemetry.sdk.context.threadlocal_context import (
+    ThreadLocalRuntimeContext,
+)
 
 
 def do_work() -> None:
@@ -26,11 +31,13 @@ def do_work() -> None:
 class TestThreadLocalContext(unittest.TestCase):
     def setUp(self):
         self.previous_context = context.get_current()
-        context.set_current(ThreadLocalContext())
 
     def tearDown(self):
         context.set_current(self.previous_context)
 
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ThreadLocalRuntimeContext()
+    )
     def test_context(self):
         self.assertIsNone(context.get_value("say-something"))
         empty_context = context.get_current()
@@ -45,6 +52,9 @@ class TestThreadLocalContext(unittest.TestCase):
         self.assertEqual(second_context.get_value("say-something"), "foo")
         self.assertEqual(third_context.get_value("say-something"), "bar")
 
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ThreadLocalRuntimeContext()
+    )
     def test_set_value(self):
         first = context.set_value("a", "yyy")
         second = context.set_value("a", "zzz")
@@ -58,11 +68,13 @@ class TestThreadLocalContext(unittest.TestCase):
 class TestContextVarsContext(unittest.TestCase):
     def setUp(self):
         self.previous_context = context.get_current()
-        context.set_current(ContextVarsContext())
 
     def tearDown(self):
         context.set_current(self.previous_context)
 
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+    )
     def test_context(self):
         self.assertIsNone(context.get_value("say-something"))
         empty_context = context.get_current()
@@ -77,6 +89,9 @@ class TestContextVarsContext(unittest.TestCase):
         self.assertEqual(second_context.get_value("say-something"), "foo")
         self.assertEqual(third_context.get_value("say-something"), "bar")
 
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+    )
     def test_set_value(self):
         first = context.set_value("a", "yyy")
         second = context.set_value("a", "zzz")

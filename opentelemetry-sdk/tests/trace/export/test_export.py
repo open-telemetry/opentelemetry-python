@@ -17,9 +17,7 @@ import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.context import set_current
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.context.contextvars_context import ContextVarsContext
 from opentelemetry.sdk.trace import export
 
 
@@ -99,11 +97,6 @@ def _create_start_and_end_span(name, span_processor):
 
 
 class TestBatchExportSpanProcessor(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        # reset the current context
-        set_current(ContextVarsContext())
-
     def test_shutdown(self):
         spans_names_list = []
 

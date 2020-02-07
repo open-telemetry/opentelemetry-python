@@ -60,10 +60,10 @@ setuptools.setup(
         "opentelemetry_context": [
             "contextvars_context = "
             "opentelemetry.sdk.context.contextvars_context:"
-            "ContextVarsContext",
+            "ContextVarsRuntimeContext",
             "threadlocal_context = "
             "opentelemetry.sdk.context.threadlocal_context:"
-            "ThreadLocalContext",
+            "ThreadLocalRuntimeContext",
         ]
     },
 )

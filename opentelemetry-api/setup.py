@@ -60,7 +60,7 @@ setuptools.setup(
         "opentelemetry_context": [
             "default_context = "
             "opentelemetry.context.default_context:"
-            "DefaultContext",
+            "DefaultRuntimeContext",
         ]
     },
 )

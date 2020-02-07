@@ -14,10 +14,13 @@
 
 import unittest
 from multiprocessing.dummy import Pool
+from unittest.mock import patch
 
 from opentelemetry import context
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.context.threadlocal_context import ThreadLocalContext
+from opentelemetry.sdk.context.threadlocal_context import (
+    ThreadLocalRuntimeContext,
+)
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -39,7 +42,7 @@ class TestThreads(unittest.TestCase):
 
     def setUp(self):
         self.previous_context = context.get_current()
-        context.set_current(ThreadLocalContext())
+        context.set_current(context.Context())
         self.tracer_source = trace.TracerSource()
         self.tracer = self.tracer_source.get_tracer(__name__)
         self.memory_exporter = InMemorySpanExporter()
@@ -49,6 +52,9 @@ class TestThreads(unittest.TestCase):
     def tearDown(self):
         context.set_current(self.previous_context)
 
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ThreadLocalRuntimeContext()
+    )
     def test_with_threads(self):
         with self.tracer.start_as_current_span("threads_test"):
             pool = Pool(5)  # create a thread pool

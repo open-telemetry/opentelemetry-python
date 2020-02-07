@@ -14,10 +14,13 @@
 
 import asyncio
 import unittest
+from unittest.mock import patch
 
-from opentelemetry import context
+from opentelemetry import context as context_api
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.context.contextvars_context import ContextVarsContext
+from opentelemetry.sdk.context.contextvars_context import (
+    ContextVarsRuntimeContext,
+)
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -47,14 +50,14 @@ def stop_loop_when(loop, cond_func, timeout=5.0):
 class TestAsyncio(unittest.TestCase):
     async def task(self, name):
         with self.tracer.start_as_current_span(name):
-            context.set_value("say-something", "bar")
+            context_api.set_value("say-something", "bar")
 
     def submit_another_task(self, name):
         self.loop.create_task(self.task(name))
 
     def setUp(self):
-        self.previous_context = context.get_current()
-        context.set_current(ContextVarsContext())
+        self.previous_context = context_api.get_current()
+        context_api.set_current(context_api.Context())
         self.tracer_source = trace.TracerSource()
         self.tracer = self.tracer_source.get_tracer(__name__)
         self.memory_exporter = InMemorySpanExporter()
@@ -63,8 +66,11 @@ class TestAsyncio(unittest.TestCase):
         self.loop = asyncio.get_event_loop()
 
     def tearDown(self):
-        context.set_current(self.previous_context)
+        context_api.set_current(self.previous_context)
 
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+    )
     def test_with_asyncio(self):
         with self.tracer.start_as_current_span("asyncio_test"):
             for name in _SPAN_NAMES:
