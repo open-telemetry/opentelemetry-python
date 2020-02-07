@@ -22,7 +22,9 @@ class PushController(threading.Thread):
     Uses a worker thread that periodically collects metrics for exporting,
     exports them and performs some post-processing.
     """
+
     daemon = True
+
     def __init__(self, meter, exporter, interval, shutdown_on_exit=True):
         super().__init__()
         self.meter = meter

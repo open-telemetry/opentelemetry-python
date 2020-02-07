@@ -50,12 +50,7 @@ counter = meter.create_metric(
 )
 
 counter2 = meter.create_metric(
-    "clicks",
-    "number of clicks",
-    "clicks",
-    int,
-    Counter,
-    ("environment",),
+    "clicks", "number of clicks", "clicks", int, Counter, ("environment",)
 )
 
 # Labelsets are used to identify key-values that are associated with a specific

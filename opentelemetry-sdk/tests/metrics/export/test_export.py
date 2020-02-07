@@ -156,7 +156,9 @@ class TestBatcher(unittest.TestCase):
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
         self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
-        self.assertEqual(batcher._batch_map.get((metric, label_set)).current, 0)
+        self.assertEqual(
+            batcher._batch_map.get((metric, label_set)).current, 0
+        )
         self.assertEqual(
             batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
         )
@@ -181,7 +183,9 @@ class TestBatcher(unittest.TestCase):
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
         self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
-        self.assertEqual(batcher._batch_map.get((metric, label_set)).current, 0)
+        self.assertEqual(
+            batcher._batch_map.get((metric, label_set)).current, 0
+        )
         self.assertEqual(
             batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
         )
@@ -206,7 +210,9 @@ class TestBatcher(unittest.TestCase):
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
         self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
-        self.assertEqual(batcher._batch_map.get((metric, label_set)).current, 0)
+        self.assertEqual(
+            batcher._batch_map.get((metric, label_set)).current, 0
+        )
         self.assertEqual(
             batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
         )
