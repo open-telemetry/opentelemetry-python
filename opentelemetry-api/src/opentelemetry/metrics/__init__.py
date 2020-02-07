@@ -347,7 +347,7 @@ def meter() -> Meter:
 
     if _METER is None:
         # pylint:disable=protected-access
-        _METER = loader._load_impl(DefaultMeter, _METER_FACTORY)
+        _METER = loader._load_impl(Meter, _METER_FACTORY)
         del _METER_FACTORY
 
     return _METER

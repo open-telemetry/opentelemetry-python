@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import atexit
 import threading
 
 
@@ -21,13 +22,16 @@ class PushController(threading.Thread):
     Uses a worker thread that periodically collects metrics for exporting,
     exports them and performs some post-processing.
     """
-
-    def __init__(self, meter, exporter, interval):
+    daemon = True
+    def __init__(self, meter, exporter, interval, shutdown_on_exit=True):
         super().__init__()
         self.meter = meter
         self.exporter = exporter
         self.interval = interval
         self.finished = threading.Event()
+        self._atexit_handler = None
+        if shutdown_on_exit:
+            self._atexit_handler = atexit.register(self.shutdown)
         self.start()
 
     def run(self):
@@ -36,11 +40,15 @@ class PushController(threading.Thread):
 
     def shutdown(self):
         self.finished.set()
+        self.exporter.shutdown()
+        if self._atexit_handler is not None:
+            atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None
 
     def tick(self):
         # Collect all of the meter's metrics to be exported
         self.meter.collect()
         # Export the given metrics in the batcher
-        self.exporter.export(self.meter.batcher.check_point_set())
+        self.exporter.export(self.meter.batcher.checkpoint_set())
         # Perform post-exporting logic based on batcher configuration
         self.meter.batcher.finished_collection()

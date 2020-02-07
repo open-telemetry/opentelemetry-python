@@ -74,7 +74,7 @@ class ConsoleMetricsExporter(MetricsExporter):
                     type(self).__name__,
                     record.metric,
                     record.label_set.labels,
-                    record.aggregator.check_point,
+                    record.aggregator.checkpoint,
                 )
             )
         return MetricsExportResult.SUCCESS
