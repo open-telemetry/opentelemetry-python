@@ -236,6 +236,9 @@ class Span(trace_api.Span):
             if error_message is not None:
                 logger.warning("%s in attribute value sequence", error_message)
                 return
+            else:
+                # convert value : sequence into immutable tuple lest client changes it.
+                value_tuple = tuple(value)
         elif not isinstance(value, (bool, str, Number, Sequence)):
             logger.warning("invalid type for attribute value")
             return
@@ -258,9 +261,9 @@ class Span(trace_api.Span):
         if first_element_type not in (bool, str, Number):
             return "invalid type"
 
-        for element in sequence:
-            if not isinstance(element, first_element_type):
-                return "different type"
+        if any(not isinstance(element, first_element_type) for element in sequence):
+            return "different type"
+        
         return None
 
     def add_event(
