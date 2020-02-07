@@ -14,6 +14,7 @@
 
 import time
 import unittest
+from logging import WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -24,10 +25,16 @@ from opentelemetry.sdk.trace import export
 class MySpanExporter(export.SpanExporter):
     """Very simple span exporter used for testing."""
 
-    def __init__(self, destination, max_export_batch_size=None):
+    def __init__(
+        self,
+        destination,
+        max_export_batch_size=None,
+        export_timeout_millis=0.0,
+    ):
         self.destination = destination
         self.max_export_batch_size = max_export_batch_size
         self.is_shutdown = False
+        self.export_timeout = export_timeout_millis / 1e3
 
     def export(self, spans: trace.Span) -> export.SpanExportResult:
         if (
@@ -35,6 +42,7 @@ class MySpanExporter(export.SpanExporter):
             and len(spans) > self.max_export_batch_size
         ):
             raise ValueError("Batch is too big")
+        time.sleep(self.export_timeout)
         self.destination.extend(span.name for span in spans)
         return export.SpanExportResult.SUCCESS
 
@@ -127,16 +135,31 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for name in span_names0:
             _create_start_and_end_span(name, span_processor)
 
-        span_processor.force_flush()
+        self.assertTrue(span_processor.force_flush())
         self.assertListEqual(span_names0, spans_names_list)
 
         # create some more spans to check that span processor still works
         for name in span_names1:
             _create_start_and_end_span(name, span_processor)
 
-        span_processor.force_flush()
+        self.assertTrue(span_processor.force_flush())
         self.assertListEqual(span_names0 + span_names1, spans_names_list)
 
+        span_processor.shutdown()
+
+    def test_flush_timeout(self):
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(
+            destination=spans_names_list, export_timeout_millis=500
+        )
+        span_processor = export.BatchExportSpanProcessor(my_exporter)
+
+        _create_start_and_end_span("foo", span_processor)
+
+        # check that the timeout is not meet
+        with self.assertLogs(level=WARNING):
+            self.assertFalse(span_processor.force_flush(100))
         span_processor.shutdown()
 
     def test_batch_span_processor_lossless(self):
@@ -153,7 +176,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for _ in range(512):
             _create_start_and_end_span("foo", span_processor)
 
-        span_processor.force_flush()
+        self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 512)
         span_processor.shutdown()
 
@@ -177,7 +200,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
             time.sleep(0.05)  # give some time for the exporter to upload spans
 
-        span_processor.force_flush()
+        self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 1024)
         span_processor.shutdown()
 
