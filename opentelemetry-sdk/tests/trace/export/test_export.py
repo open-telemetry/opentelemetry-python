@@ -104,7 +104,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         # reset the current context
         set_current(ContextVarsContext())
 
-    def test_batch_span_processor(self):
+    def test_shutdown(self):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
@@ -116,9 +116,35 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
             _create_start_and_end_span(name, span_processor)
 
         span_processor.shutdown()
+        self.assertTrue(my_exporter.is_shutdown)
+
+        # check that spans are exported without an explicitly call to
+        # force_flush()
         self.assertListEqual(span_names, spans_names_list)
 
-        self.assertTrue(my_exporter.is_shutdown)
+    def test_flush(self):
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.BatchExportSpanProcessor(my_exporter)
+
+        span_names0 = ["xxx", "bar", "foo"]
+        span_names1 = ["yyy", "baz", "fox"]
+
+        for name in span_names0:
+            _create_start_and_end_span(name, span_processor)
+
+        span_processor.force_flush()
+        self.assertListEqual(span_names0, spans_names_list)
+
+        # create some more spans to check that span processor still works
+        for name in span_names1:
+            _create_start_and_end_span(name, span_processor)
+
+        span_processor.force_flush()
+        self.assertListEqual(span_names0 + span_names1, spans_names_list)
+
+        span_processor.shutdown()
 
     def test_batch_span_processor_lossless(self):
         """Test that no spans are lost when sending max_queue_size spans"""
@@ -134,8 +160,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         for _ in range(512):
             _create_start_and_end_span("foo", span_processor)
 
-        span_processor.shutdown()
+        span_processor.force_flush()
         self.assertEqual(len(spans_names_list), 512)
+        span_processor.shutdown()
 
     def test_batch_span_processor_many_spans(self):
         """Test that no spans are lost when sending many spans"""
@@ -157,8 +184,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
             time.sleep(0.05)  # give some time for the exporter to upload spans
 
-        span_processor.shutdown()
+        span_processor.force_flush()
         self.assertEqual(len(spans_names_list), 1024)
+        span_processor.shutdown()
 
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""

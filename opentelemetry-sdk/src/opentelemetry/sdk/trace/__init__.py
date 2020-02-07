@@ -71,6 +71,11 @@ class SpanProcessor:
         """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown.
         """
 
+    def force_flush(self) -> None:
+        """Export all ended spans to the configured Exporter that have not
+        yet been exported.
+        """
+
 
 class MultiSpanProcessor(SpanProcessor):
     """Implementation of :class:`SpanProcessor` that forwards all received
