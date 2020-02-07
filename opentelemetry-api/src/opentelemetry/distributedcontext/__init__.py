@@ -17,7 +17,7 @@ import string
 import typing
 from contextlib import contextmanager
 
-from opentelemetry.context import Context, get_current, get_value
+from opentelemetry.context import Context, get_value, set_current, set_value
 
 PRINTABLE = frozenset(
     itertools.chain(
@@ -141,6 +141,4 @@ def distributed_context_from_context(
 def with_distributed_context(
     dctx: DistributedContext, context: typing.Optional[Context] = None
 ) -> None:
-    if context is not None:
-        return context.set_value(_DISTRIBUTED_CONTEXT_KEY, dctx)
-    return get_current().set_value(_DISTRIBUTED_CONTEXT_KEY, dctx)
+    set_current(set_value(_DISTRIBUTED_CONTEXT_KEY, dctx, context=context))

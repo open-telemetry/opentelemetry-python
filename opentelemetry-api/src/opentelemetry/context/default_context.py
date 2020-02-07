@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import typing
-from copy import deepcopy
+from copy import copy
 
 from opentelemetry.context.context import Context
 
@@ -40,8 +40,17 @@ class DefaultContext(Context):
 
     def copy(self) -> "Context":
         """Return a copy of this context."""
+        context_copy = DefaultContext()
+        for key, value in self._values.items():
+            context_copy.set_value(key, copy(value))
+        return context_copy
 
-        return deepcopy(self)
+    def snapshot(self) -> typing.Dict[str, "object"]:
+        return dict((key, value) for key, value in self._values.items())
+
+    def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
+        for name in snapshot:
+            self.set_value(name, snapshot[name])
 
 
 __all__ = ["DefaultContext"]

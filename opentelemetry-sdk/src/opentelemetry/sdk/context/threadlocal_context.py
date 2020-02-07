@@ -58,12 +58,12 @@ class ThreadLocalContext(Context):
 
         return context_copy
 
-    def snapshot(self) -> typing.Dict:
+    def snapshot(self) -> typing.Dict[str, "object"]:
         return dict(
             (key, value) for key, value in self._thread_local.__dict__.items()
         )
 
-    def apply(self, snapshot: typing.Dict) -> None:
+    def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
         for name in snapshot:
             self.set_value(name, snapshot[name])
 

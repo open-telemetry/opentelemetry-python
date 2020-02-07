@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import typing
 from abc import ABC, abstractmethod
 
 
@@ -55,6 +55,14 @@ class Context(ABC):
     @abstractmethod
     def copy(self) -> "Context":
         """Return a copy of this context"""
+
+    @abstractmethod
+    def snapshot(self) -> typing.Dict[str, "object"]:
+        """Returns the contents of a context."""
+
+    @abstractmethod
+    def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
+        """Sets the contents of a context."""
 
 
 __all__ = ["Context"]
