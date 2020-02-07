@@ -14,6 +14,7 @@
 
 import time
 import unittest
+from logging import WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -157,7 +158,8 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         _create_start_and_end_span("foo", span_processor)
 
         # check that the timeout is not meet
-        self.assertFalse(span_processor.force_flush(100))
+        with self.assertLogs(level=WARNING):
+            self.assertFalse(span_processor.force_flush(100))
         span_processor.shutdown()
 
     def test_batch_span_processor_lossless(self):
