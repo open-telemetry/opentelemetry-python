@@ -18,7 +18,12 @@ import threading
 import typing
 from enum import Enum
 
-from opentelemetry.context import remove_value, set_current, set_value
+from opentelemetry.context import (
+    get_current,
+    remove_value,
+    set_current,
+    set_value,
+)
 from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
@@ -73,13 +78,14 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
+        backup_context = get_current()
         set_current(set_value("suppress_instrumentation", True))
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-except
         except Exception:
             logger.exception("Exception while exporting Span.")
-        set_current(remove_value("suppress_instrumentation"))
+        set_current(backup_context)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -183,6 +189,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
+        backup_context = get_current()
         set_current(set_value("suppress_instrumentation", True))
         try:
             # Ignore type b/c the Optional[None]+slicing is too "clever"
@@ -191,7 +198,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         # pylint: disable=broad-except
         except Exception:
             logger.exception("Exception while exporting Span batch.")
-        set_current(remove_value("suppress_instrumentation"))
+        set_current(backup_context)
         # clean up list
         for index in range(idx):
             self.spans_list[index] = None

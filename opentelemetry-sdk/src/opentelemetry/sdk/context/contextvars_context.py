@@ -26,10 +26,8 @@ elif (3, 4) < version_info <= (3, 5, 2):
 
 
 class ContextVarsContext(Context):
-    """
-    An implementation of the Context interface
-    which wraps ContextVar under the hood. This is the prefered
-    implementation for usage with Python 3.5+
+    """An implementation of the Context interface which wraps ContextVar under
+    the hood. This is the prefered implementation for usage with Python 3.5+
     """
 
     def __init__(self) -> None:
@@ -61,7 +59,10 @@ class ContextVarsContext(Context):
         context_copy = ContextVarsContext()
 
         for key, value in self._contextvars.items():
-            context_copy.set_value(key, copy(value.get()))
+            try:
+                context_copy.set_value(key, copy(value.get()))
+            except (KeyError, LookupError):
+                pass
 
         return context_copy
 

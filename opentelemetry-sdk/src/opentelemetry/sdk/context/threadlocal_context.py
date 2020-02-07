@@ -43,7 +43,10 @@ class ThreadLocalContext(Context):
 
     def remove_value(self, key: str) -> None:
         """Remove a value from this context"""
-        delattr(self._thread_local, key)
+        try:
+            delattr(self._thread_local, key)
+        except AttributeError:
+            pass
 
     def copy(self) -> Context:
         """Return a copy of this context"""

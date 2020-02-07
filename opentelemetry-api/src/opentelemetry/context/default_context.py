@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import typing
+from copy import deepcopy
 
 from opentelemetry.context.context import Context
 
@@ -36,6 +37,11 @@ class DefaultContext(Context):
     def remove_value(self, key: str) -> None:
         """Remove a value from this context"""
         self._values.pop(key, None)
+
+    def copy(self) -> "Context":
+        """Return a copy of this context."""
+
+        return deepcopy(self)
 
 
 __all__ = ["DefaultContext"]

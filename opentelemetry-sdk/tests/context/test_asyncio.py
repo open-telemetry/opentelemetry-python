@@ -71,12 +71,12 @@ class TestAsyncio(unittest.TestCase):
             for name in _SPAN_NAMES:
                 self.submit_another_task(name)
 
-        stop_loop_when(
-            self.loop,
-            lambda: len(self.memory_exporter.get_finished_spans()) >= 6,
-            timeout=5.0,
-        )
-        self.loop.run_forever()
+            stop_loop_when(
+                self.loop,
+                lambda: len(self.memory_exporter.get_finished_spans()) >= 5,
+                timeout=5.0,
+            )
+            self.loop.run_forever()
         span_list = self.memory_exporter.get_finished_spans()
         span_names_list = [span.name for span in span_list]
         expected = [
@@ -94,7 +94,6 @@ class TestAsyncio(unittest.TestCase):
         expected_parent = next(
             span for span in span_list if span.name == "asyncio_test"
         )
-        # FIXME
         for span in span_list:
             if span is expected_parent:
                 continue

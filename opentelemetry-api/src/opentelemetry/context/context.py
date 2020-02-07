@@ -14,7 +14,6 @@
 
 
 from abc import ABC, abstractmethod
-from copy import deepcopy
 
 
 class Context(ABC):
@@ -53,10 +52,9 @@ class Context(ABC):
             key: The key for the value to remove.
         """
 
+    @abstractmethod
     def copy(self) -> "Context":
         """Return a copy of this context"""
-
-        return deepcopy(self)
 
 
 __all__ = ["Context"]
