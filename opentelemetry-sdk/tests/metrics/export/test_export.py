@@ -47,7 +47,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             ConsoleMetricsExporter.__name__,
             metric,
             label_set.labels,
-            aggregator.check_point,
+            aggregator.checkpoint,
         )
         with mock.patch("sys.stdout") as mock_stdout:
             exporter.export([record])
@@ -65,7 +65,7 @@ class TestBatcher(unittest.TestCase):
 
     # TODO: Add other aggregator tests
 
-    def test_check_point_set(self):
+    def test_checkpoint_set(self):
         meter = metrics.Meter()
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
@@ -82,15 +82,15 @@ class TestBatcher(unittest.TestCase):
         _batch_map = {}
         _batch_map[(metric, label_set)] = aggregator
         batcher._batch_map = _batch_map
-        records = batcher.check_point_set()
+        records = batcher.checkpoint_set()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].metric, metric)
         self.assertEqual(records[0].label_set, label_set)
         self.assertEqual(records[0].aggregator, aggregator)
 
-    def test_check_point_set_empty(self):
+    def test_checkpoint_set_empty(self):
         batcher = UngroupedBatcher(True)
-        records = batcher.check_point_set()
+        records = batcher.checkpoint_set()
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
@@ -158,7 +158,7 @@ class TestBatcher(unittest.TestCase):
         self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
         self.assertEqual(batcher._batch_map.get((metric, label_set)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).check_point, 1.0
+            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
         )
 
     def test_ungrouped_batcher_process_not_exists(self):
@@ -183,7 +183,7 @@ class TestBatcher(unittest.TestCase):
         self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
         self.assertEqual(batcher._batch_map.get((metric, label_set)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).check_point, 1.0
+            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
         )
 
     def test_ungrouped_batcher_process_not_stateful(self):
@@ -208,7 +208,7 @@ class TestBatcher(unittest.TestCase):
         self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
         self.assertEqual(batcher._batch_map.get((metric, label_set)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).check_point, 1.0
+            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
         )
 
 
@@ -220,20 +220,20 @@ class TestAggregator(unittest.TestCase):
         counter.update(2.0)
         self.assertEqual(counter.current, 3.0)
 
-    def test_counter_check_point(self):
+    def test_counter_checkpoint(self):
         counter = CounterAggregator()
         counter.update(2.0)
         counter.take_checkpoint()
         self.assertEqual(counter.current, 0)
-        self.assertEqual(counter.check_point, 2.0)
+        self.assertEqual(counter.checkpoint, 2.0)
 
     def test_counter_merge(self):
         counter = CounterAggregator()
         counter2 = CounterAggregator()
-        counter.check_point = 1.0
-        counter2.check_point = 3.0
+        counter.checkpoint = 1.0
+        counter2.checkpoint = 3.0
         counter.merge(counter2)
-        self.assertEqual(counter.check_point, 4.0)
+        self.assertEqual(counter.checkpoint, 4.0)
 
 
 class TestController(unittest.TestCase):
