@@ -14,6 +14,9 @@ python:
 #  allow_failures:
 #    - python: '3.8-dev'
 
+services:
+  - docker
+
 install:
   - pip install tox-travis
 
