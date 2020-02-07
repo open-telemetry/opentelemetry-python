@@ -17,8 +17,7 @@ from abc import ABC, abstractmethod
 
 
 class Context(ABC):
-    """
-    The Context interface provides a wrapper for the different
+    """The Context interface provides a wrapper for the different
     mechanisms that are used to propagate context in Python.
     Implementations can be made available via entry_points and
     selected through environment variables.
@@ -26,8 +25,7 @@ class Context(ABC):
 
     @abstractmethod
     def set_value(self, key: str, value: "object") -> None:
-        """
-        Set a value in this context
+        """Set a value in this context.
 
         Args:
             key: The key for the value to set.
@@ -36,8 +34,7 @@ class Context(ABC):
 
     @abstractmethod
     def get_value(self, key: str) -> "object":
-        """
-        Get a value from this context
+        """Get a value from this context.
 
         Args:
             key: The key for the value to retrieve.
@@ -45,8 +42,7 @@ class Context(ABC):
 
     @abstractmethod
     def remove_value(self, key: str) -> None:
-        """
-        Remove a value from this context
+        """Remove a value from this context.
 
         Args:
             key: The key for the value to remove.
@@ -54,7 +50,7 @@ class Context(ABC):
 
     @abstractmethod
     def copy(self) -> "Context":
-        """Return a copy of this context"""
+        """Return a copy of this context."""
 
     @abstractmethod
     def snapshot(self) -> typing.Dict[str, "object"]:
@@ -62,7 +58,11 @@ class Context(ABC):
 
     @abstractmethod
     def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
-        """Sets the contents of a context."""
+        """Sets the contents of a context.
+
+        Args:
+            snapshot: The contents to set.
+        """
 
 
 __all__ = ["Context"]

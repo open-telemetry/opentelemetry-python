@@ -20,8 +20,7 @@ from opentelemetry.context import Context
 
 
 class ThreadLocalContext(Context):
-    """
-    An implementation of the Context interface
+    """An implementation of the Context interface
     which uses thread-local storage under the hood. This
     implementation is available for usage with Python 3.4.
     """
@@ -30,11 +29,11 @@ class ThreadLocalContext(Context):
         self._thread_local = threading.local()
 
     def set_value(self, key: str, value: "object") -> None:
-        """Set a value in this context"""
+        """See `opentelemetry.context.Context.set_value`."""
         setattr(self._thread_local, key, value)
 
     def get_value(self, key: str) -> "object":
-        """Get a value from this context"""
+        """See `opentelemetry.context.Context.get_value`."""
         try:
             got = getattr(self._thread_local, key)  # type: object
             return got
@@ -42,14 +41,14 @@ class ThreadLocalContext(Context):
             return None
 
     def remove_value(self, key: str) -> None:
-        """Remove a value from this context"""
+        """See `opentelemetry.context.Context.remove_value`."""
         try:
             delattr(self._thread_local, key)
         except AttributeError:
             pass
 
     def copy(self) -> Context:
-        """Return a copy of this context"""
+        """See `opentelemetry.context.Context.copy`."""
 
         context_copy = ThreadLocalContext()
 
@@ -59,11 +58,13 @@ class ThreadLocalContext(Context):
         return context_copy
 
     def snapshot(self) -> typing.Dict[str, "object"]:
+        """See `opentelemetry.context.Context.snapshot`."""
         return dict(
             (key, value) for key, value in self._thread_local.__dict__.items()
         )
 
     def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
+        """See `opentelemetry.context.Context.apply`."""
         for name in snapshot:
             self.set_value(name, snapshot[name])
 

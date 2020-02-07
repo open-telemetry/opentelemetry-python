@@ -34,14 +34,14 @@ class ContextVarsContext(Context):
         self._contextvars = {}  # type: typing.Dict[str, ContextVar[object]]
 
     def set_value(self, key: str, value: "object") -> None:
-        """Set a value in this context"""
+        """See `opentelemetry.context.Context.set_value`."""
         if key not in self._contextvars.keys():
             self._contextvars[key] = ContextVar(key)
 
         self._contextvars[key].set(value)
 
     def get_value(self, key: str) -> "object":
-        """Get a value from this context"""
+        """See `opentelemetry.context.Context.get_value`."""
         if key in self._contextvars:
             try:
                 return self._contextvars[key].get()
@@ -50,11 +50,11 @@ class ContextVarsContext(Context):
         return None
 
     def remove_value(self, key: str) -> None:
-        """Remove a value from this context"""
+        """See `opentelemetry.context.Context.remove_value`."""
         self._contextvars.pop(key, None)
 
     def copy(self) -> Context:
-        """Return a copy of this context"""
+        """See `opentelemetry.context.Context.copy`."""
 
         context_copy = ContextVarsContext()
 
@@ -67,11 +67,13 @@ class ContextVarsContext(Context):
         return context_copy
 
     def snapshot(self) -> typing.Dict:
+        """See `opentelemetry.context.Context.snapshot`."""
         return dict(
             (key, value.get()) for key, value in self._contextvars.items()
         )
 
     def apply(self, snapshot: typing.Dict) -> None:
+        """See `opentelemetry.context.Context.apply`."""
         for name in snapshot:
             self.set_value(name, snapshot[name])
 

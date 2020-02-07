@@ -18,8 +18,7 @@ from opentelemetry.context.context import Context
 
 
 class DefaultContext(Context):
-    """
-    A default implementation of the Context interface using
+    """A default implementation of the Context interface using
     a dictionary to store values.
     """
 
@@ -27,28 +26,30 @@ class DefaultContext(Context):
         self._values = {}  # type: typing.Dict[str, object]
 
     def set_value(self, key: str, value: "object") -> None:
-        """Set a value in this context"""
+        """See `opentelemetry.context.Context.set_value`."""
         self._values[key] = value
 
     def get_value(self, key: str) -> "object":
-        """Get a value from this context"""
+        """See `opentelemetry.context.Context.get_value`."""
         return self._values.get(key)
 
     def remove_value(self, key: str) -> None:
-        """Remove a value from this context"""
+        """See `opentelemetry.context.Context.remove_value`."""
         self._values.pop(key, None)
 
     def copy(self) -> "Context":
-        """Return a copy of this context."""
+        """See `opentelemetry.context.Context.copy`."""
         context_copy = DefaultContext()
         for key, value in self._values.items():
             context_copy.set_value(key, copy(value))
         return context_copy
 
     def snapshot(self) -> typing.Dict[str, "object"]:
+        """See `opentelemetry.context.Context.snapshot`."""
         return dict((key, value) for key, value in self._values.items())
 
     def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
+        """See `opentelemetry.context.Context.apply`."""
         for name in snapshot:
             self.set_value(name, snapshot[name])
 

@@ -33,8 +33,7 @@ _SPAN_NAMES = [
 
 
 def stop_loop_when(loop, cond_func, timeout=5.0):
-    """
-    Registers a periodic callback that stops the loop when cond_func() == True.
+    """Registers a periodic callback that stops the loop when cond_func() == True.
     Compatible with both Tornado and asyncio.
     """
     if cond_func() or timeout <= 0.0:
