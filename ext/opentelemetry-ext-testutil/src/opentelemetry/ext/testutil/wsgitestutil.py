@@ -1,5 +1,6 @@
 import io
 import wsgiref.util as wsgiref_util
+
 from opentelemetry.ext.testutil.spantestutil import SpanTestBase
 
 

@@ -18,9 +18,10 @@ on any ASGI framework (such as Django-channels / Quart) to track requests
 timing through OpenTelemetry.
 """
 
-from functools import wraps
-import typing
 import operator
+import typing
+from functools import wraps
+
 from asgiref.compatibility import guarantee_single_callable
 
 from opentelemetry import propagators, trace
