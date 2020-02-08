@@ -4,17 +4,19 @@ from opentelemetry.ext.testutil.spantestutil import SpanTestBase
 
 
 def setup_testing_defaults(scope):
-    scope.update({
-        'client': ('127.0.0.1', 32767),
-        'headers': [],
-        'http_version': '1.0',
-        'method': 'GET',
-        'path': '/',
-        'query_string': b'',
-        'scheme': 'http',
-        'server': ('127.0.0.1', 80),
-        'type': 'http'
-    })
+    scope.update(
+        {
+            "client": ("127.0.0.1", 32767),
+            "headers": [],
+            "http_version": "1.0",
+            "method": "GET",
+            "path": "/",
+            "query_string": b"",
+            "scheme": "http",
+            "server": ("127.0.0.1", 80),
+            "type": "http",
+        }
+    )
 
 
 class AsgiTestBase(SpanTestBase):
@@ -38,9 +40,9 @@ class AsgiTestBase(SpanTestBase):
         asyncio.get_event_loop().run_until_complete(
             self.communicator.send_input(payload)
         )
-        
+
     def send_default_request(self):
-        self.send_input({'type': 'http.request', 'body': b''})
+        self.send_input({"type": "http.request", "body": b""})
 
     def get_output(self):
         output = asyncio.get_event_loop().run_until_complete(

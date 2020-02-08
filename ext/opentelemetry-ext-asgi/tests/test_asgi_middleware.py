@@ -20,48 +20,43 @@ from urllib.parse import urlsplit
 import opentelemetry.ext.asgi as otel_asgi
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.testutil.asgitestutil import (
-    AsgiTestBase, setup_testing_defaults
+    AsgiTestBase,
+    setup_testing_defaults,
 )
 
 
 async def simple_asgi(scope, receive, send):
     assert isinstance(scope, dict)
-    assert scope.get('type') == "http"
+    assert scope.get("type") == "http"
     payload = await receive()
-    if payload.get('type') == "http.request":
-        await send({
-            'type': 'http.response.start',
-            'status': 200,
-            'headers': [
-                [b'Content-Type', b'text/plain'],
-            ],
-        })
-        await send({
-            'type': 'http.response.body',
-            'body': b"*"
-        })
+    if payload.get("type") == "http.request":
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [[b"Content-Type", b"text/plain"]],
+            }
+        )
+        await send({"type": "http.response.body", "body": b"*"})
 
 
 async def error_asgi(scope, receive, send):
     assert isinstance(scope, dict)
-    assert scope.get('type') == "http"
+    assert scope.get("type") == "http"
     payload = await receive()
-    if payload.get('type') == "http.request":
+    if payload.get("type") == "http.request":
         try:
             raise ValueError
         except ValueError:
-            scope['hack_exc_info'] = sys.exc_info()
-        await send({
-            'type': 'http.response.start',
-            'status': 200,
-            'headers': [
-                [b'Content-Type', b'text/plain'],
-            ],
-        })
-        await send({
-            'type': 'http.response.body',
-            'body': b"*"
-        })
+            scope["hack_exc_info"] = sys.exc_info()
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [[b"Content-Type", b"text/plain"]],
+            }
+        )
+        await send({"type": "http.response.body", "body": b"*"})
 
 
 class TestAsgiApplication(AsgiTestBase):
@@ -70,17 +65,19 @@ class TestAsgiApplication(AsgiTestBase):
         self.assertEqual(len(outputs), 2)
         response_start = outputs[0]
         response_body = outputs[1]
-        self.assertEqual(response_start['type'], 'http.response.start')
-        self.assertEqual(response_body['type'], 'http.response.body')
+        self.assertEqual(response_start["type"], "http.response.start")
+        self.assertEqual(response_body["type"], "http.response.body")
 
         # Check http response body
-        self.assertEqual(response_body['body'], b"*")
+        self.assertEqual(response_body["body"], b"*")
 
         # Check http response start
-        self.assertEqual(response_start['status'], 200)
-        self.assertEqual(response_start['headers'], [[b'Content-Type', b'text/plain']])
+        self.assertEqual(response_start["status"], 200)
+        self.assertEqual(
+            response_start["headers"], [[b"Content-Type", b"text/plain"]]
+        )
 
-        exc_info = self.scope.get('hack_exc_info')
+        exc_info = self.scope.get("hack_exc_info")
         if error:
             self.assertIs(exc_info[0], error)
             self.assertIsInstance(exc_info[1], error)
@@ -93,32 +90,27 @@ class TestAsgiApplication(AsgiTestBase):
         self.assertEqual(len(span_list), 4)
         expected = [
             {
-                'name': "/ (http.request)",
-                'kind': trace_api.SpanKind.INTERNAL,
-                'attributes': {
-                    "type": "http.request",
-                },
+                "name": "/ (http.request)",
+                "kind": trace_api.SpanKind.INTERNAL,
+                "attributes": {"type": "http.request"},
             },
-
             {
-                'name': "/ (http.response.start)",
-                'kind': trace_api.SpanKind.INTERNAL,
-                'attributes': {
+                "name": "/ (http.response.start)",
+                "kind": trace_api.SpanKind.INTERNAL,
+                "attributes": {
                     "http.status_code": 200,
                     "type": "http.response.start",
                 },
             },
             {
-                'name': "/ (http.response.body)",
-                'kind': trace_api.SpanKind.INTERNAL,
-                'attributes': {
-                    "type": "http.response.body",
-                },
+                "name": "/ (http.response.body)",
+                "kind": trace_api.SpanKind.INTERNAL,
+                "attributes": {"type": "http.response.body"},
             },
             {
-                'name': "/",
-                'kind': trace_api.SpanKind.SERVER,
-                'attributes': {
+                "name": "/",
+                "kind": trace_api.SpanKind.SERVER,
+                "attributes": {
                     "component": "http",
                     "http.method": "GET",
                     "http.server_name": "127.0.0.1",
@@ -134,9 +126,9 @@ class TestAsgiApplication(AsgiTestBase):
             },
         ]
         for span, expected in zip(span_list, expected):
-            self.assertEqual(span.name, expected['name'])
-            self.assertEqual(span.kind, expected['kind'])
-            self.assertEqual(span.attributes, expected['attributes'])
+            self.assertEqual(span.name, expected["name"])
+            self.assertEqual(span.kind, expected["kind"])
+            self.assertEqual(span.attributes, expected["attributes"])
 
     def test_basic_asgi_call(self):
         app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
@@ -176,15 +168,13 @@ class TestAsgiAttributes(unittest.TestCase):
                 "http.server_name": "127.0.0.1",
                 "http.flavor": "1.0",
                 "net.peer.ip": "127.0.0.1",
-                "net.peer.port": 32767
+                "net.peer.port": 32767,
             },
         )
 
     def test_response_attributes(self):
         otel_asgi.set_status_code(self.span, 404)
-        expected = (
-            mock.call("http.status_code", 404),
-        )
+        expected = (mock.call("http.status_code", 404),)
         self.assertEqual(self.span.set_attribute.call_count, 1)
         self.assertEqual(self.span.set_attribute.call_count, 1)
         self.span.set_attribute.assert_has_calls(expected, any_order=True)
