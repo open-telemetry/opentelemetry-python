@@ -33,6 +33,7 @@ and integration packages.
     :maxdepth: 1
     :caption: OpenTelemetry Integrations:
 
+    opentelemetry.ext.asgi
     opentelemetry.ext.flask
     opentelemetry.ext.http_requests
     opentelemetry.ext.jaeger
