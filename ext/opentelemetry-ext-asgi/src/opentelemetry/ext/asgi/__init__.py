@@ -30,18 +30,17 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 _HTTP_VERSION_PREFIX = "HTTP/"
 
 
-def get_header_from_scope(
-    scope: dict, header_name: str
-) -> typing.List[str]:
+def get_header_from_scope(scope: dict, header_name: str) -> typing.List[str]:
     """Retrieve a HTTP header value from the ASGI scope.
 
     Returns:
         A list with a single string with the header value if it exists, else an empty list.
     """
-    headers = scope.get('headers')
+    headers = scope.get("headers")
     return [
-        value.decode('utf8') for (key,value) in headers
-        if key.decode('utf8') == header_name
+        value.decode("utf8")
+        for (key, value) in headers
+        if key.decode("utf8") == header_name
     ]
 
 
@@ -81,8 +80,8 @@ def collect_request_attributes(scope):
     dictionary to be used as span creation attributes."""
 
     port = scope.get("server")[1]
-    server_host = (
-        scope.get("server")[0] + (":" + str(port) if port != 80 else "")
+    server_host = scope.get("server")[0] + (
+        ":" + str(port) if port != 80 else ""
     )
     http_url = scope.get("scheme") + "://" + server_host + scope.get("path")
     if scope.get("query_string"):
@@ -159,33 +158,48 @@ class OpenTelemetryMiddleware:
         span_name = get_default_span_name(scope)
 
         with self.tracer.start_as_current_span(
-            span_name, parent_span, kind=trace.SpanKind.SERVER,
-            attributes=collect_request_attributes(scope)) as connection_span:
+            span_name,
+            parent_span,
+            kind=trace.SpanKind.SERVER,
+            attributes=collect_request_attributes(scope),
+        ) as connection_span:
 
             @wraps(receive)
             async def wrapped_receive():
-                with self.tracer.start_as_current_span(span_name + " (unknown-receive)") as receive_span:
+                with self.tracer.start_as_current_span(
+                    span_name + " (unknown-receive)"
+                ) as receive_span:
                     payload = await receive()
-                    if payload['type'] == "websocket.receive":
+                    if payload["type"] == "websocket.receive":
                         set_status_code(receive_span, 200)
-                        receive_span.set_attribute("http.status_text", payload['text'])
+                        receive_span.set_attribute(
+                            "http.status_text", payload["text"]
+                        )
 
-                    receive_span.update_name(span_name + " (" + payload['type'] + ")")
-                    receive_span.set_attribute('type', payload['type'])
+                    receive_span.update_name(
+                        span_name + " (" + payload["type"] + ")"
+                    )
+                    receive_span.set_attribute("type", payload["type"])
                 return payload
 
             @wraps(send)
             async def wrapped_send(payload):
-                with self.tracer.start_as_current_span(span_name + " (unknown-send)") as send_span:
-                    if payload['type'] == "http.response.start":
-                        status_code = payload['status']
+                with self.tracer.start_as_current_span(
+                    span_name + " (unknown-send)"
+                ) as send_span:
+                    if payload["type"] == "http.response.start":
+                        status_code = payload["status"]
                         set_status_code(send_span, status_code)
-                    elif payload['type'] == "websocket.send":
+                    elif payload["type"] == "websocket.send":
                         set_status_code(send_span, 200)
-                        send_span.set_attribute("http.status_text", payload['text'])
+                        send_span.set_attribute(
+                            "http.status_text", payload["text"]
+                        )
 
-                    send_span.update_name(span_name + " (" + payload['type'] + ")")
-                    send_span.set_attribute('type', payload['type'])
+                    send_span.update_name(
+                        span_name + " (" + payload["type"] + ")"
+                    )
+                    send_span.set_attribute("type", payload["type"])
                     await send(payload)
 
             await self.app(scope, wrapped_receive, wrapped_send)
