@@ -242,7 +242,6 @@ class Span(trace_api.Span):
         elif not isinstance(value, (bool, str, Number, Sequence)):
             logger.warning("invalid type for attribute value")
             return
-
         self.attributes[key] = value
 
     @staticmethod
