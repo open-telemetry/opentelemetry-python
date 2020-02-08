@@ -1,37 +1,11 @@
 import io
-import unittest
 import wsgiref.util as wsgiref_util
-from importlib import reload
-
-from opentelemetry import trace as trace_api
-from opentelemetry.sdk.trace import TracerSource, export
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
-
-_MEMORY_EXPORTER = None
+from opentelemetry.ext.testutil.spantestutil import SpanTestBase
 
 
-class WsgiTestBase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        global _MEMORY_EXPORTER  # pylint:disable=global-statement
-        trace_api.set_preferred_tracer_source_implementation(
-            lambda T: TracerSource()
-        )
-        tracer_source = trace_api.tracer_source()
-        _MEMORY_EXPORTER = InMemorySpanExporter()
-        span_processor = export.SimpleExportSpanProcessor(_MEMORY_EXPORTER)
-        tracer_source.add_span_processor(span_processor)
-
-    @classmethod
-    def tearDownClass(cls):
-        reload(trace_api)
-
+class WsgiTestBase(SpanTestBase):
     def setUp(self):
-
-        self.memory_exporter = _MEMORY_EXPORTER
-        self.memory_exporter.clear()
+        super().setUp()
 
         self.write_buffer = io.BytesIO()
         self.write = self.write_buffer.write
