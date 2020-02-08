@@ -236,7 +236,7 @@ class Span(trace_api.Span):
             if error_message is not None:
                 logger.warning("%s in attribute value sequence", error_message)
                 return
-            else:
+            elif not isinstance(value, str):
                 # convert value : sequence into immutable tuple lest client changes it.
                 value = tuple(value)
         elif not isinstance(value, (bool, str, Number, Sequence)):
