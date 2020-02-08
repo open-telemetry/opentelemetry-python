@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 """
-This module serves as an example for a simple application using metrics.
+This module serves as an example for a simple application using metrics
 """
 
 from opentelemetry import metrics

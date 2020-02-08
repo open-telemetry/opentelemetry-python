@@ -44,14 +44,14 @@ class DefaultMetricHandle:
         """No-op implementation of `CounterHandle` add.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to add to the handle.
         """
 
     def set(self, value: ValueT) -> None:
         """No-op implementation of `GaugeHandle` set.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to set to the handle.
         """
 
     def record(self, value: ValueT) -> None:
@@ -67,7 +67,7 @@ class CounterHandle:
         """Increases the value of the handle by ``value``.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to add to the handle.
         """
 
 
@@ -76,7 +76,7 @@ class GaugeHandle:
         """Sets the current value of the handle to ``value``.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to set to the handle.
         """
 
 

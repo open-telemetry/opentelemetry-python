@@ -57,6 +57,6 @@ time.sleep(5)
 
 counter.add(50, label_set)
 # exported value should be 50 due to non-stateful batcher
-time.sleep(5)
+time.sleep(20)
 
 # Following exported values would be 0

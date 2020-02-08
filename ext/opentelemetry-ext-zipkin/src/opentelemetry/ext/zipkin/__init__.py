@@ -101,10 +101,7 @@ class ZipkinSpanExporter(SpanExporter):
 
     def _translate_to_zipkin(self, spans: Sequence[Span]):
 
-        local_endpoint = {
-            "serviceName": self.service_name,
-            "port": self.port,
-        }
+        local_endpoint = {"serviceName": self.service_name, "port": self.port}
 
         if self.ipv4 is not None:
             local_endpoint["ipv4"] = self.ipv4
