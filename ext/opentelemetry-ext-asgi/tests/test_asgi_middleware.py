@@ -15,282 +15,183 @@
 import sys
 import unittest
 import unittest.mock as mock
-import wsgiref.util as wsgiref_util
 from urllib.parse import urlsplit
 
-import opentelemetry.ext.wsgi as otel_wsgi
+import opentelemetry.ext.asgi as otel_asgi
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
+from opentelemetry.ext.testutil.asgitestutil import (
+    AsgiTestBase, setup_testing_defaults
+)
 
 
-class Response:
-    def __init__(self):
-        self.iter = iter([b"*"])
-        self.close_calls = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        return next(self.iter)
-
-    def close(self):
-        self.close_calls += 1
-
-
-def simple_wsgi(environ, start_response):
-    assert isinstance(environ, dict)
-    start_response("200 OK", [("Content-Type", "text/plain")])
-    return [b"*"]
+async def simple_asgi(scope, receive, send):
+    assert isinstance(scope, dict)
+    assert scope.get('type') == "http"
+    payload = await receive()
+    if payload.get('type') == "http.request":
+        await send({
+            'type': 'http.response.start',
+            'status': 200,
+            'headers': [
+                [b'Content-Type', b'text/plain'],
+            ],
+        })
+        await send({
+            'type': 'http.response.body',
+            'body': b"*"
+        })
 
 
-def create_iter_wsgi(response):
-    def iter_wsgi(environ, start_response):
-        assert isinstance(environ, dict)
-        start_response("200 OK", [("Content-Type", "text/plain")])
-        return response
-
-    return iter_wsgi
-
-
-def create_gen_wsgi(response):
-    def gen_wsgi(environ, start_response):
-        result = create_iter_wsgi(response)(environ, start_response)
-        yield from result
-        getattr(result, "close", lambda: None)()
-
-    return gen_wsgi
-
-
-def error_wsgi(environ, start_response):
-    assert isinstance(environ, dict)
-    try:
-        raise ValueError
-    except ValueError:
-        exc_info = sys.exc_info()
-    start_response("200 OK", [("Content-Type", "text/plain")], exc_info)
-    exc_info = None
-    return [b"*"]
+async def error_asgi(scope, receive, send):
+    assert isinstance(scope, dict)
+    assert scope.get('type') == "http"
+    payload = await receive()
+    if payload.get('type') == "http.request":
+        try:
+            raise ValueError
+        except ValueError:
+            scope['hack_exc_info'] = sys.exc_info()
+        await send({
+            'type': 'http.response.start',
+            'status': 200,
+            'headers': [
+                [b'Content-Type', b'text/plain'],
+            ],
+        })
+        await send({
+            'type': 'http.response.body',
+            'body': b"*"
+        })
 
 
-class TestWsgiApplication(WsgiTestBase):
-    def validate_response(self, response, error=None):
-        while True:
-            try:
-                value = next(response)
-                self.assertEqual(value, b"*")
-            except StopIteration:
-                break
+class TestAsgiApplication(AsgiTestBase):
+    def validate_outputs(self, outputs, error=None):
+        # Check for expected outputs
+        self.assertEqual(len(outputs), 2)
+        response_start = outputs[0]
+        response_body = outputs[1]
+        self.assertEqual(response_start['type'], 'http.response.start')
+        self.assertEqual(response_body['type'], 'http.response.body')
 
-        self.assertEqual(self.status, "200 OK")
-        self.assertEqual(
-            self.response_headers, [("Content-Type", "text/plain")]
-        )
+        # Check http response body
+        self.assertEqual(response_body['body'], b"*")
+
+        # Check http response start
+        self.assertEqual(response_start['status'], 200)
+        self.assertEqual(response_start['headers'], [[b'Content-Type', b'text/plain']])
+
+        exc_info = self.scope.get('hack_exc_info')
         if error:
-            self.assertIs(self.exc_info[0], error)
-            self.assertIsInstance(self.exc_info[1], error)
-            self.assertIsNotNone(self.exc_info[2])
+            self.assertIs(exc_info[0], error)
+            self.assertIsInstance(exc_info[1], error)
+            self.assertIsNotNone(exc_info[2])
         else:
-            self.assertIsNone(self.exc_info)
+            self.assertIsNone(exc_info)
 
+        # Check spans
         span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "/")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
-        self.assertEqual(
-            span_list[0].attributes,
+        self.assertEqual(len(span_list), 4)
+        expected = [
             {
-                "component": "http",
-                "http.method": "GET",
-                "http.server_name": "127.0.0.1",
-                "http.scheme": "http",
-                "host.port": 80,
-                "http.host": "127.0.0.1",
-                "http.flavor": "1.0",
-                "http.url": "http://127.0.0.1/",
-                "http.status_text": "OK",
-                "http.status_code": 200,
+                'name': "/ (http.request)",
+                'kind': trace_api.SpanKind.INTERNAL,
+                'attributes': {
+                    "type": "http.request",
+                },
             },
-        )
 
-    def test_basic_wsgi_call(self):
-        app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
-        response = app(self.environ, self.start_response)
-        self.validate_response(response)
+            {
+                'name': "/ (http.response.start)",
+                'kind': trace_api.SpanKind.INTERNAL,
+                'attributes': {
+                    "http.status_code": 200,
+                    "type": "http.response.start",
+                },
+            },
+            {
+                'name': "/ (http.response.body)",
+                'kind': trace_api.SpanKind.INTERNAL,
+                'attributes': {
+                    "type": "http.response.body",
+                },
+            },
+            {
+                'name': "/",
+                'kind': trace_api.SpanKind.SERVER,
+                'attributes': {
+                    "component": "http",
+                    "http.method": "GET",
+                    "http.server_name": "127.0.0.1",
+                    "http.scheme": "http",
+                    "host.port": 80,
+                    "http.host": "127.0.0.1",
+                    "http.flavor": "1.0",
+                    "http.target": "/",
+                    "http.url": "http://127.0.0.1/",
+                    "net.peer.ip": "127.0.0.1",
+                    "net.peer.port": 32767,
+                },
+            },
+        ]
+        for span, expected in zip(span_list, expected):
+            self.assertEqual(span.name, expected['name'])
+            self.assertEqual(span.kind, expected['kind'])
+            self.assertEqual(span.attributes, expected['attributes'])
 
-    def test_wsgi_iterable(self):
-        original_response = Response()
-        iter_wsgi = create_iter_wsgi(original_response)
-        app = otel_wsgi.OpenTelemetryMiddleware(iter_wsgi)
-        response = app(self.environ, self.start_response)
-        # Verify that start_response has been called
-        self.assertTrue(self.status)
-        self.validate_response(response)
-
-        # Verify that close has been called exactly once
-        self.assertEqual(1, original_response.close_calls)
-
-    def test_wsgi_generator(self):
-        original_response = Response()
-        gen_wsgi = create_gen_wsgi(original_response)
-        app = otel_wsgi.OpenTelemetryMiddleware(gen_wsgi)
-        response = app(self.environ, self.start_response)
-        # Verify that start_response has not been called
-        self.assertIsNone(self.status)
-        self.validate_response(response)
-
-        # Verify that close has been called exactly once
-        self.assertEqual(original_response.close_calls, 1)
+    def test_basic_asgi_call(self):
+        app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        self.validate_outputs(outputs)
 
     def test_wsgi_exc_info(self):
-        app = otel_wsgi.OpenTelemetryMiddleware(error_wsgi)
-        response = app(self.environ, self.start_response)
-        self.validate_response(response, error=ValueError)
+        app = otel_asgi.OpenTelemetryMiddleware(error_asgi)
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        self.validate_outputs(outputs, error=ValueError)
 
 
-class TestWsgiAttributes(unittest.TestCase):
+class TestAsgiAttributes(unittest.TestCase):
     def setUp(self):
-        self.environ = {}
-        wsgiref_util.setup_testing_defaults(self.environ)
+        self.scope = {}
+        setup_testing_defaults(self.scope)
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
 
     def test_request_attributes(self):
-        self.environ["QUERY_STRING"] = "foo=bar"
+        self.scope["query_string"] = b"foo=bar"
 
-        attrs = otel_wsgi.collect_request_attributes(self.environ)
+        attrs = otel_asgi.collect_request_attributes(self.scope)
         self.assertDictEqual(
             attrs,
             {
                 "component": "http",
                 "http.method": "GET",
                 "http.host": "127.0.0.1",
+                "http.target": "/",
                 "http.url": "http://127.0.0.1/?foo=bar",
                 "host.port": 80,
                 "http.scheme": "http",
                 "http.server_name": "127.0.0.1",
                 "http.flavor": "1.0",
+                "net.peer.ip": "127.0.0.1",
+                "net.peer.port": 32767
             },
         )
 
-    def validate_url(self, expected_url, raw=False, has_host=True):
-        parts = urlsplit(expected_url)
-        expected = {
-            "http.scheme": parts.scheme,
-            "host.port": parts.port or (80 if parts.scheme == "http" else 443),
-            "http.server_name": parts.hostname,  # Not true in the general case, but for all tests.
-        }
-        if raw:
-            expected["http.target"] = expected_url.split(parts.netloc, 1)[1]
-        else:
-            expected["http.url"] = expected_url
-        if has_host:
-            expected["http.host"] = parts.hostname
-
-        attrs = otel_wsgi.collect_request_attributes(self.environ)
-        self.assertGreaterEqual(
-            attrs.items(), expected.items(), expected_url + " expected."
-        )
-
-    def test_request_attributes_with_partial_raw_uri(self):
-        self.environ["RAW_URI"] = "/#top"
-        self.validate_url("http://127.0.0.1/#top", raw=True)
-
-    def test_request_attributes_with_partial_raw_uri_and_nonstandard_port(
-        self,
-    ):
-        self.environ["RAW_URI"] = "/?"
-        del self.environ["HTTP_HOST"]
-        self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("http://127.0.0.1:8080/?", raw=True, has_host=False)
-
-    def test_https_uri_port(self):
-        del self.environ["HTTP_HOST"]
-        self.environ["SERVER_PORT"] = "443"
-        self.environ["wsgi.url_scheme"] = "https"
-        self.validate_url("https://127.0.0.1/", has_host=False)
-
-        self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("https://127.0.0.1:8080/", has_host=False)
-
-        self.environ["SERVER_PORT"] = "80"
-        self.validate_url("https://127.0.0.1:80/", has_host=False)
-
-    def test_http_uri_port(self):
-        del self.environ["HTTP_HOST"]
-        self.environ["SERVER_PORT"] = "80"
-        self.environ["wsgi.url_scheme"] = "http"
-        self.validate_url("http://127.0.0.1/", has_host=False)
-
-        self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("http://127.0.0.1:8080/", has_host=False)
-
-        self.environ["SERVER_PORT"] = "443"
-        self.validate_url("http://127.0.0.1:443/", has_host=False)
-
-    def test_request_attributes_with_nonstandard_port_and_no_host(self):
-        del self.environ["HTTP_HOST"]
-        self.environ["SERVER_PORT"] = "8080"
-        self.validate_url("http://127.0.0.1:8080/", has_host=False)
-
-        self.environ["SERVER_PORT"] = "443"
-        self.validate_url("http://127.0.0.1:443/", has_host=False)
-
-    def test_request_attributes_with_conflicting_nonstandard_port(self):
-        self.environ[
-            "HTTP_HOST"
-        ] += ":8080"  # Note that we do not correct SERVER_PORT
-        expected = {
-            "http.host": "127.0.0.1:8080",
-            "http.url": "http://127.0.0.1:8080/",
-            "host.port": 80,
-        }
-        self.assertGreaterEqual(
-            otel_wsgi.collect_request_attributes(self.environ).items(),
-            expected.items(),
-        )
-
-    def test_request_attributes_with_faux_scheme_relative_raw_uri(self):
-        self.environ["RAW_URI"] = "//127.0.0.1/?"
-        self.validate_url("http://127.0.0.1//127.0.0.1/?", raw=True)
-
-    def test_request_attributes_pathless(self):
-        self.environ["RAW_URI"] = ""
-        expected = {"http.target": ""}
-        self.assertGreaterEqual(
-            otel_wsgi.collect_request_attributes(self.environ).items(),
-            expected.items(),
-        )
-
-    def test_request_attributes_with_full_request_uri(self):
-        self.environ["HTTP_HOST"] = "127.0.0.1:8080"
-        self.environ["REQUEST_METHOD"] = "CONNECT"
-        self.environ[
-            "REQUEST_URI"
-        ] = "127.0.0.1:8080"  # Might happen in a CONNECT request
-        expected = {
-            "http.host": "127.0.0.1:8080",
-            "http.target": "127.0.0.1:8080",
-        }
-        self.assertGreaterEqual(
-            otel_wsgi.collect_request_attributes(self.environ).items(),
-            expected.items(),
-        )
-
     def test_response_attributes(self):
-        otel_wsgi.add_response_attributes(self.span, "404 Not Found", {})
+        otel_asgi.set_status_code(self.span, 404)
         expected = (
             mock.call("http.status_code", 404),
-            mock.call("http.status_text", "Not Found"),
         )
-        self.assertEqual(self.span.set_attribute.call_count, len(expected))
+        self.assertEqual(self.span.set_attribute.call_count, 1)
+        self.assertEqual(self.span.set_attribute.call_count, 1)
         self.span.set_attribute.assert_has_calls(expected, any_order=True)
 
     def test_response_attributes_invalid_status_code(self):
-        otel_wsgi.add_response_attributes(self.span, "Invalid Status Code", {})
-        self.assertEqual(self.span.set_attribute.call_count, 1)
-        self.span.set_attribute.assert_called_with(
-            "http.status_text", "Status Code"
-        )
+        otel_asgi.set_status_code(self.span, "Invalid Status Code")
+        self.assertEqual(self.span.set_status.call_count, 1)
 
 
 if __name__ == "__main__":
