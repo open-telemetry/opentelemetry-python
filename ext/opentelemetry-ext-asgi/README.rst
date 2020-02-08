@@ -1,13 +1,13 @@
-OpenTelemetry WSGI Middleware
+OpenTelemetry ASGI Middleware
 =============================
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-wsgi.svg
-   :target: https://pypi.org/project/opentelemetry-ext-wsgi/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-asgi.svg
+   :target: https://pypi.org/project/opentelemetry-ext-asgi/
 
 
-This library provides a WSGI middleware that can be used on any WSGI framework
+This library provides a ASGI middleware that can be used on any ASGI framework
 (such as Django / Flask) to track requests timing through OpenTelemetry.
 
 Installation
@@ -15,22 +15,22 @@ Installation
 
 ::
 
-    pip install opentelemetry-ext-wsgi
+    pip install opentelemetry-ext-asgi
 
 
-Usage (Flask)
+Usage (Quart)
 -------------
 
 .. code-block:: python
 
-    from flask import Flask
-    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+    from quart import Quart
+    from opentelemetry.ext.asgi import OpenTelemetryMiddleware
 
-    app = Flask(__name__)
-    app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
+    app = Quart(__name__)
+    app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
 
     @app.route("/")
-    def hello():
+    async def hello():
         return "Hello!"
 
     if __name__ == "__main__":
@@ -40,21 +40,22 @@ Usage (Flask)
 Usage (Django)
 --------------
 
-Modify the application's ``wsgi.py`` file as shown below.
+Modify the application's ``asgi.py`` file as shown below.
 
 .. code-block:: python
 
     import os
-    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
-    from django.core.wsgi import get_wsgi_application
+    import django
+    from channels.routing import get_default_application
+    from opentelemetry.ext.asgi import OpenTelemetryMiddleware
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'application.settings')
+    django.setup()
 
-    application = get_wsgi_application()
+    application = get_default_application()
     application = OpenTelemetryMiddleware(application)
 
 References
 ----------
 
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `WSGI <https://www.python.org/dev/peps/pep-3333>`_
