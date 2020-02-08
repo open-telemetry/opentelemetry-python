@@ -57,6 +57,6 @@ class AsgiTestBase(SpanTestBase):
         while True:
             try:
                 outputs.append(self.get_output())
-            except asyncio.TimeoutError as e:
+            except asyncio.TimeoutError:
                 break
         return outputs

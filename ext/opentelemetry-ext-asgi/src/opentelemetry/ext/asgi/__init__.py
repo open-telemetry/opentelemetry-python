@@ -163,7 +163,7 @@ class OpenTelemetryMiddleware:
             parent_span,
             kind=trace.SpanKind.SERVER,
             attributes=collect_request_attributes(scope),
-        ) as connection_span:
+        ):
 
             @wraps(receive)
             async def wrapped_receive():
