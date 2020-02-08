@@ -236,6 +236,5 @@ class TestSampler(unittest.TestCase):
         # the highest theoretical sampling rate. If this test fails the test
         # above is wrong.
         self.assertLess(
-            almost_almost_always_on.bound,
-            0xFFFFFFFFFFFFFFFF,
+            almost_almost_always_on.bound, 0xFFFFFFFFFFFFFFFF,
         )
