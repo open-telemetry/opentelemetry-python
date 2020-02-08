@@ -27,6 +27,7 @@ class B3Format(HTTPTextFormat):
     SINGLE_HEADER_KEY = "b3"
     TRACE_ID_KEY = "x-b3-traceid"
     SPAN_ID_KEY = "x-b3-spanid"
+    PARENT_SPAN_ID_KEY = "x-b3-parentspanid"
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
@@ -55,7 +56,7 @@ class B3Format(HTTPTextFormat):
             elif len(fields) == 3:
                 trace_id, span_id, sampled = fields
             elif len(fields) == 4:
-                trace_id, span_id, sampled, _parent_span_id = fields
+                trace_id, span_id, sampled, _ = fields
             else:
                 return trace.INVALID_SPAN_CONTEXT
         else:
@@ -100,14 +101,22 @@ class B3Format(HTTPTextFormat):
         )
 
     @classmethod
-    def inject(cls, context, set_in_carrier, carrier):
-        sampled = (trace.TraceOptions.SAMPLED & context.trace_options) != 0
+    def inject(cls, span, set_in_carrier, carrier):
+        sampled = (
+            trace.TraceOptions.SAMPLED & span.context.trace_options
+        ) != 0
         set_in_carrier(
-            carrier, cls.TRACE_ID_KEY, format_trace_id(context.trace_id)
+            carrier, cls.TRACE_ID_KEY, format_trace_id(span.context.trace_id)
         )
         set_in_carrier(
-            carrier, cls.SPAN_ID_KEY, format_span_id(context.span_id)
+            carrier, cls.SPAN_ID_KEY, format_span_id(span.context.span_id)
         )
+        if span.parent is not None:
+            set_in_carrier(
+                carrier,
+                cls.PARENT_SPAN_ID_KEY,
+                format_span_id(span.parent.context.span_id),
+            )
         set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
 
 

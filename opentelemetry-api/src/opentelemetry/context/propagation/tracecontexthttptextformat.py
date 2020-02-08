@@ -21,7 +21,7 @@ from opentelemetry.context.propagation import httptextformat
 _T = typing.TypeVar("_T")
 
 #    Keys and values are strings of up to 256 printable US-ASCII characters.
-#    Implementations should conform to the the `W3C Trace Context - Tracestate`_
+#    Implementations should conform to the `W3C Trace Context - Tracestate`_
 #    spec, which describes additional restrictions on valid field values.
 #
 #    .. _W3C Trace Context - Tracestate:
@@ -39,10 +39,12 @@ _VALUE_FORMAT = (
 )
 
 _DELIMITER_FORMAT = "[ \t]*,[ \t]*"
-_MEMBER_FORMAT = "({})(=)({})".format(_KEY_FORMAT, _VALUE_FORMAT)
+_MEMBER_FORMAT = "({})(=)({})[ \t]*".format(_KEY_FORMAT, _VALUE_FORMAT)
 
 _DELIMITER_FORMAT_RE = re.compile(_DELIMITER_FORMAT)
 _MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
+
+_TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
 
 
 class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
@@ -86,15 +88,10 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         if version == "ff":
             return trace.INVALID_SPAN_CONTEXT
 
-        tracestate = trace.TraceState()
-        for tracestate_header in get_from_carrier(
+        tracestate_headers = get_from_carrier(
             carrier, cls._TRACESTATE_HEADER_NAME
-        ):
-            # typing.Dict's update is not recognized by pylint:
-            # https://github.com/PyCQA/pylint/issues/2420
-            tracestate.update(  # pylint:disable=E1101
-                _parse_tracestate(tracestate_header)
-            )
+        )
+        tracestate = _parse_tracestate(tracestate_headers)
 
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
@@ -108,10 +105,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     @classmethod
     def inject(
         cls,
-        context: trace.SpanContext,
+        span: trace.Span,
         set_in_carrier: httptextformat.Setter[_T],
         carrier: _T,
     ) -> None:
+
+        context = span.get_context()
+
         if context == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
@@ -127,8 +127,8 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             )
 
 
-def _parse_tracestate(string: str) -> trace.TraceState:
-    """Parse a w3c tracestate header into a TraceState.
+def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
+    """Parse one or more w3c tracestate header into a TraceState.
 
     Args:
         string: the value of the tracestate header.
@@ -136,16 +136,35 @@ def _parse_tracestate(string: str) -> trace.TraceState:
     Returns:
         A valid TraceState that contains values extracted from
         the tracestate header.
+
+        If the format of one headers is illegal, all values will
+        be discarded and an empty tracestate will be returned.
+
+        If the number of keys is beyond the maximum, all values
+        will be discarded and an empty tracestate will be returned.
     """
     tracestate = trace.TraceState()
-    for member in re.split(_DELIMITER_FORMAT_RE, string):
-        match = _MEMBER_FORMAT_RE.match(member)
-        if not match:
-            raise ValueError("illegal key-value format %r" % (member))
-        key, _eq, value = match.groups()
-        # typing.Dict's update is not recognized by pylint:
-        # https://github.com/PyCQA/pylint/issues/2420
-        tracestate[key] = value  # pylint:disable=E1137
+    value_count = 0
+    for header in header_list:
+        for member in re.split(_DELIMITER_FORMAT_RE, header):
+            # empty members are valid, but no need to process further.
+            if not member:
+                continue
+            match = _MEMBER_FORMAT_RE.fullmatch(member)
+            if not match:
+                # TODO: log this?
+                return trace.TraceState()
+            key, _eq, value = match.groups()
+            if key in tracestate:  # pylint:disable=E1135
+                # duplicate keys are not legal in
+                # the header, so we will remove
+                return trace.TraceState()
+            # typing.Dict's update is not recognized by pylint:
+            # https://github.com/PyCQA/pylint/issues/2420
+            tracestate[key] = value  # pylint:disable=E1137
+            value_count += 1
+            if value_count > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+                return trace.TraceState()
     return tracestate
 
 

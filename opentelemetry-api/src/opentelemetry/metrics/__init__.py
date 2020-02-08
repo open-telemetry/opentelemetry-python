@@ -26,8 +26,8 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 
 """
-from abc import ABC, abstractmethod
-from typing import Callable, Optional, Sequence, Tuple, Type, TypeVar
+import abc
+from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
 
@@ -43,28 +43,59 @@ class DefaultMetricHandle:
 
 class CounterHandle:
     def add(self, value: ValueT) -> None:
-        """Increases the value of the handle by ``value``"""
+        """Increases the value of the handle by ``value``.
+
+        Args:
+            value: The value to record to the handle.
+        """
 
 
 class GaugeHandle:
     def set(self, value: ValueT) -> None:
-        """Sets the current value of the handle to ``value``."""
+        """Sets the current value of the handle to ``value``.
+
+        Args:
+            value: The value to record to the handle.
+        """
 
 
 class MeasureHandle:
     def record(self, value: ValueT) -> None:
-        """Records the given ``value`` to this handle."""
+        """Records the given ``value`` to this handle.
+
+        Args:
+            value: The value to record to the handle.
+        """
 
 
-class Metric(ABC):
+class LabelSet(abc.ABC):
+    """A canonicalized set of labels useful for preaggregation
+
+    Re-usable LabelSet objects provide a potential optimization for scenarios
+    where handles might not be effective. For example, if the LabelSet will be
+    re-used but only used once per metrics, handles do not offer any
+    optimization. It may best to pre-compute a canonicalized LabelSet once and
+    re-use it with the direct calling convention. LabelSets are immutable and
+    should be opaque in implementation.
+    """
+
+
+class DefaultLabelSet(LabelSet):
+    """The default LabelSet.
+
+    Used when no LabelSet implementation is available.
+    """
+
+
+class Metric(abc.ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
     handle that the metric holds.
     """
 
-    @abstractmethod
-    def get_handle(self, label_values: Sequence[str]) -> "object":
+    @abc.abstractmethod
+    def get_handle(self, label_set: LabelSet) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
 
         Handles are useful to reduce the cost of repeatedly recording a metric
@@ -75,23 +106,36 @@ class Metric(ABC):
         a value was not provided are permitted.
 
         Args:
-            label_values: Values to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def get_handle(self, label_values: Sequence[str]) -> "DefaultMetricHandle":
+    def get_handle(self, label_set: LabelSet) -> "DefaultMetricHandle":
+        """Gets a `DefaultMetricHandle`.
+
+        Args:
+            label_set: `LabelSet` to associate with the returned handle.
+        """
         return DefaultMetricHandle()
 
 
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def get_handle(self, label_values: Sequence[str]) -> "CounterHandle":
+    def get_handle(self, label_set: LabelSet) -> "CounterHandle":
         """Gets a `CounterHandle`."""
         return CounterHandle()
+
+    def add(self, label_set: LabelSet, value: ValueT) -> None:
+        """Increases the value of the counter by ``value``.
+
+        Args:
+            label_set: `LabelSet` to associate with the returned handle.
+            value: The value to add to the counter metric.
+        """
 
 
 class Gauge(Metric):
@@ -103,9 +147,17 @@ class Gauge(Metric):
     the measurement interval is arbitrary.
     """
 
-    def get_handle(self, label_values: Sequence[str]) -> "GaugeHandle":
+    def get_handle(self, label_set: LabelSet) -> "GaugeHandle":
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
+
+    def set(self, label_set: LabelSet, value: ValueT) -> None:
+        """Sets the value of the gauge to ``value``.
+
+        Args:
+            label_set: `LabelSet` to associate with the returned handle.
+            value: The value to set the gauge metric to.
+        """
 
 
 class Measure(Metric):
@@ -116,16 +168,24 @@ class Measure(Metric):
     Negative inputs will be discarded when monotonic is True.
     """
 
-    def get_handle(self, label_values: Sequence[str]) -> "MeasureHandle":
+    def get_handle(self, label_set: LabelSet) -> "MeasureHandle":
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
+
+    def record(self, label_set: LabelSet, value: ValueT) -> None:
+        """Records the ``value`` to the measure.
+
+        Args:
+            label_set: `LabelSet` to associate with the returned handle.
+            value: The value to record to this measure metric.
+        """
 
 
 MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 
 
 # pylint: disable=unused-argument
-class Meter:
+class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
 
     `Metric` s are used for recording pre-defined aggregation (gauge and
@@ -133,9 +193,10 @@ class Meter:
     for the exported metric are deferred.
     """
 
+    @abc.abstractmethod
     def record_batch(
         self,
-        label_values: Sequence[str],
+        label_set: LabelSet,
         record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
@@ -145,12 +206,14 @@ class Meter:
         match the key-value pairs in the label tuples.
 
         Args:
-            label_values: The values that will be matched against to record for
-                the handles under each metric that has those labels.
+            label_set: The `LabelSet` associated with all measurements in
+                the batch. A measurement is a tuple, representing the `Metric`
+                being recorded and the corresponding value to record.
             record_tuples: A sequence of pairs of `Metric` s and the
                 corresponding value to record for that metric.
         """
 
+    @abc.abstractmethod
     def create_metric(
         self,
         name: str,
@@ -158,7 +221,7 @@ class Meter:
         unit: str,
         value_type: Type[ValueT],
         metric_type: Type[MetricT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
     ) -> "Metric":
@@ -171,15 +234,50 @@ class Meter:
             value_type: The type of values being recorded by the metric.
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
-                Order of the sequence is important as the same order must be
-                used on recording when suppling values for these labels.
             enabled: Whether to report the metric by default.
             monotonic: Whether to only allow non-negative values.
 
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
+
+    @abc.abstractmethod
+    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
+        """Gets a `LabelSet` with the given labels.
+
+        Args:
+            labels: A dictionary representing label key to label value pairs.
+
+        Returns: A `LabelSet` object canonicalized using the given input.
+        """
+
+
+class DefaultMeter(Meter):
+    """The default Meter used when no Meter implementation is available."""
+
+    def record_batch(
+        self,
+        label_set: LabelSet,
+        record_tuples: Sequence[Tuple["Metric", ValueT]],
+    ) -> None:
+        pass
+
+    def create_metric(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        metric_type: Type[MetricT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+        monotonic: bool = False,
+    ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()
+
+    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
+        # pylint: disable=no-self-use
+        return DefaultLabelSet()
 
 
 # Once https://github.com/python/mypy/issues/7092 is resolved,
@@ -200,7 +298,7 @@ def meter() -> Meter:
 
     if _METER is None:
         # pylint:disable=protected-access
-        _METER = loader._load_impl(Meter, _METER_FACTORY)
+        _METER = loader._load_impl(DefaultMeter, _METER_FACTORY)
         del _METER_FACTORY
 
     return _METER

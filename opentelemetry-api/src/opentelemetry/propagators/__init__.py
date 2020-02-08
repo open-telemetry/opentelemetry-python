@@ -64,7 +64,7 @@ def inject(
             should know how to set header values on the carrier.
     """
     get_global_httptextformat().inject(
-        tracer.get_current_span().get_context(), set_in_carrier, carrier
+        tracer.get_current_span(), set_in_carrier, carrier
     )
 
 
@@ -78,7 +78,7 @@ def get_global_httptextformat() -> httptextformat.HTTPTextFormat:
 
 
 def set_global_httptextformat(
-    http_text_format: httptextformat.HTTPTextFormat
+    http_text_format: httptextformat.HTTPTextFormat,
 ) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
     _HTTP_TEXT_FORMAT = http_text_format
