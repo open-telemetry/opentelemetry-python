@@ -137,7 +137,7 @@ class TestAsgiApplication(AsgiTestBase):
         outputs = self.get_all_output()
         self.validate_outputs(outputs)
 
-    def test_wsgi_exc_info(self):
+    def test_asgi_exc_info(self):
         app = otel_asgi.OpenTelemetryMiddleware(error_asgi)
         self.seed_app(app)
         self.send_default_request()
