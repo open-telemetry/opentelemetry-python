@@ -1,5 +1,7 @@
 import asyncio
+
 from asgiref.testing import ApplicationCommunicator
+
 from opentelemetry.ext.testutil.spantestutil import SpanTestBase
 
 
