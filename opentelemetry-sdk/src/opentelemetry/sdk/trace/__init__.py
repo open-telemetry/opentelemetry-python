@@ -264,7 +264,7 @@ class Span(trace_api.Span):
         for element in sequence:
             if not isinstance(element, first_element_type):
                 return "different type"
-        
+
         return None
 
     def add_event(
