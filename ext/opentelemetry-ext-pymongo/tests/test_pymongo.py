@@ -20,7 +20,7 @@ from opentelemetry.ext.pymongo import CommandTracer, trace_integration
 from opentelemetry.util import time_ns
 
 
-class TestPymongoIntegration(unittest.TestCase):
+class TestPymongo(unittest.TestCase):
     def test_trace_integration(self):
         mock_register = mock.Mock()
         patch = mock.patch(
