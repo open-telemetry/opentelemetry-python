@@ -40,7 +40,7 @@ controller = PushController(meter, exporter, 5)
 counter = meter.create_metric(
     "requests",
     "number of requests",
-    "requests",
+    1,
     int,
     Counter,
     ("environment",),
