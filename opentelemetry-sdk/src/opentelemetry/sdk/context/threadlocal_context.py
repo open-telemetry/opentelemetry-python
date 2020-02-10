@@ -65,6 +65,9 @@ class ThreadLocalRuntimeContext(RuntimeContext):
 
     def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
         """See `opentelemetry.context.RuntimeContext.apply`."""
+        diff = set(self._thread_local.__dict__) - set(snapshot)
+        for key in diff:
+            self._thread_local.__dict__.pop(key, None)
         for name in snapshot:
             self.set_value(name, snapshot[name])
 

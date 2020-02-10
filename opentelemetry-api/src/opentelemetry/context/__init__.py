@@ -22,7 +22,6 @@ from opentelemetry.context.context import RuntimeContext
 
 logger = logging.getLogger(__name__)
 _CONTEXT_RUNTIME = None  # type: typing.Optional[RuntimeContext]
-_CONTEXT = None  # type: typing.Optional[Context]
 
 
 class Context:
@@ -111,10 +110,7 @@ def get_current() -> Context:
         except Exception:  # pylint: disable=broad-except
             logger.error("Failed to load context: %s", configured_context)
 
-    global _CONTEXT  # pylint: disable=global-statement
-    if _CONTEXT is None:
-        set_current(Context())
-    return _CONTEXT  # type: ignore
+    return Context(_CONTEXT_RUNTIME.snapshot())
 
 
 def set_current(context: Context) -> None:
@@ -124,8 +120,9 @@ def set_current(context: Context) -> None:
     Args:
         context: The context to use as current.
     """
-    global _CONTEXT  # pylint: disable=global-statement
-    _CONTEXT = context
+    if _CONTEXT_RUNTIME is None:
+        get_current()
+    _CONTEXT_RUNTIME.apply(context.snapshot())
 
 
 def with_current_context(

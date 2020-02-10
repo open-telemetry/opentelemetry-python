@@ -60,12 +60,19 @@ class ContextVarsRuntimeContext(RuntimeContext):
 
     def snapshot(self) -> typing.Dict:
         """See `opentelemetry.context.RuntimeContext.snapshot`."""
-        return dict(
-            (key, value.get()) for key, value in self._contextvars.items()
-        )
+        values = {}
+        for key, value in self._contextvars.items():
+            try:
+                values[key] = value.get()
+            except (KeyError, LookupError):
+                pass
+        return values
 
     def apply(self, snapshot: typing.Dict) -> None:
         """See `opentelemetry.context.RuntimeContext.apply`."""
+        diff = set(self._contextvars) - set(snapshot)
+        for key in diff:
+            self._contextvars.pop(key, None)
         for name in snapshot:
             self.set_value(name, snapshot[name])
 
