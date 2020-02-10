@@ -16,6 +16,23 @@ import typing
 from abc import ABC, abstractmethod
 
 
+class Context:
+    def __init__(
+        self, values: typing.Optional[typing.Dict[str, object]] = None
+    ):
+        if values is None:
+            values = {}
+        self._data = values
+
+    def get_value(self, key: str) -> "object":
+        return self._data.get(key)
+
+    def snapshot(self) -> typing.Dict[str, object]:
+        if self._data:
+            return dict((key, value) for key, value in self._data.items())
+        return {}
+
+
 class RuntimeContext(ABC):
     """The RuntimeContext interface provides a wrapper for the different
     mechanisms that are used to propagate context in Python.
@@ -49,20 +66,20 @@ class RuntimeContext(ABC):
         """
 
     @abstractmethod
-    def copy(self) -> "RuntimeContext":
-        """Return a copy of this context."""
-
-    @abstractmethod
     def snapshot(self) -> typing.Dict[str, "object"]:
         """Returns the contents of a context."""
 
     @abstractmethod
-    def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
-        """Sets the contents of a context.
-
+    def set_current(self, context: Context) -> None:
+        """ Sets the current Context object.
+        
         Args:
-            snapshot: The contents to set.
+            context: The Context to set.
         """
+
+    @abstractmethod
+    def get_current(self) -> Context:
+        """ Returns the current Context object. """
 
 
 __all__ = ["RuntimeContext"]

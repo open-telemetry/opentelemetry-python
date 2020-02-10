@@ -14,9 +14,11 @@
 
 import threading
 import typing
-from copy import copy
 
-from opentelemetry.context import RuntimeContext
+from opentelemetry.context import Context, RuntimeContext
+
+
+_CONTEXT_KEY = "current_context"
 
 
 class ThreadLocalRuntimeContext(RuntimeContext):
@@ -27,6 +29,7 @@ class ThreadLocalRuntimeContext(RuntimeContext):
 
     def __init__(self) -> None:
         self._thread_local = threading.local()
+        self._current_context = threading.local()
 
     def set_value(self, key: str, value: "object") -> None:
         """See `opentelemetry.context.RuntimeContext.set_value`."""
@@ -47,29 +50,26 @@ class ThreadLocalRuntimeContext(RuntimeContext):
         except AttributeError:
             pass
 
-    def copy(self) -> RuntimeContext:
-        """See `opentelemetry.context.RuntimeContext.copy`."""
-
-        context_copy = ThreadLocalRuntimeContext()
-
-        for key, value in self._thread_local.__dict__.items():
-            context_copy.set_value(key, copy(value))
-
-        return context_copy
-
     def snapshot(self) -> typing.Dict[str, "object"]:
         """See `opentelemetry.context.RuntimeContext.snapshot`."""
         return dict(
             (key, value) for key, value in self._thread_local.__dict__.items()
         )
 
-    def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
-        """See `opentelemetry.context.RuntimeContext.apply`."""
-        diff = set(self._thread_local.__dict__) - set(snapshot)
-        for key in diff:
-            self._thread_local.__dict__.pop(key, None)
-        for name in snapshot:
-            self.set_value(name, snapshot[name])
+    def set_current(self, context: Context) -> None:
+        """See `opentelemetry.context.RuntimeContext.set_current`."""
+        setattr(self._current_context, _CONTEXT_KEY, context)
+
+    def get_current(self) -> Context:
+        """See `opentelemetry.context.RuntimeContext.get_current`."""
+        try:
+            got = getattr(self._current_context, _CONTEXT_KEY)  # type: object
+        except AttributeError:
+            setattr(
+                self._current_context, _CONTEXT_KEY, Context(self.snapshot()),
+            )
+            got = getattr(self._current_context, _CONTEXT_KEY)
+        return got
 
 
 __all__ = ["ThreadLocalRuntimeContext"]

@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import typing
-from copy import copy
 
-from opentelemetry.context.context import RuntimeContext
+from opentelemetry.context.context import Context, RuntimeContext
 
 
 class DefaultRuntimeContext(RuntimeContext):
@@ -24,6 +23,7 @@ class DefaultRuntimeContext(RuntimeContext):
 
     def __init__(self) -> None:
         self._values = {}  # type: typing.Dict[str, object]
+        self._current_context = None
 
     def set_value(self, key: str, value: "object") -> None:
         """See `opentelemetry.context.RuntimeContext.set_value`."""
@@ -37,24 +37,19 @@ class DefaultRuntimeContext(RuntimeContext):
         """See `opentelemetry.context.RuntimeContext.remove_value`."""
         self._values.pop(key, None)
 
-    def copy(self) -> "RuntimeContext":
-        """See `opentelemetry.context.RuntimeContext.copy`."""
-        context_copy = DefaultRuntimeContext()
-        for key, value in self._values.items():
-            context_copy.set_value(key, copy(value))
-        return context_copy
-
     def snapshot(self) -> typing.Dict[str, "object"]:
         """See `opentelemetry.context.RuntimeContext.snapshot`."""
         return dict((key, value) for key, value in self._values.items())
 
-    def apply(self, snapshot: typing.Dict[str, "object"]) -> None:
-        """See `opentelemetry.context.RuntimeContext.apply`."""
-        diff = set(self._values) - set(snapshot)
-        for key in diff:
-            self._values.pop(key, None)
-        for name in snapshot:
-            self.set_value(name, snapshot[name])
+    def set_current(self, context: Context) -> None:
+        """See `opentelemetry.context.RuntimeContext.set_current`."""
+        self._current_context = context
+
+    def get_current(self) -> Context:
+        """See `opentelemetry.context.RuntimeContext.get_current`."""
+        if self._current_context is None:
+            self._current_context = Context(self.snapshot())
+        return self._current_context
 
 
 __all__ = ["DefaultRuntimeContext"]

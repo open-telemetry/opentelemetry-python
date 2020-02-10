@@ -18,26 +18,10 @@ from os import environ
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.context.context import RuntimeContext
+from opentelemetry.context.context import Context, RuntimeContext
 
 logger = logging.getLogger(__name__)
 _CONTEXT_RUNTIME = None  # type: typing.Optional[RuntimeContext]
-
-
-class Context:
-    def __init__(
-        self, values: typing.Optional[typing.Dict[str, object]] = None
-    ):
-        if values:
-            self._data = values
-        else:
-            self._data = _CONTEXT_RUNTIME.snapshot()  # type: ignore
-
-    def get_value(self, key: str) -> "object":
-        return self._data.get(key)
-
-    def snapshot(self) -> typing.Dict[str, object]:
-        return dict((key, value) for key, value in self._data.items())
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
@@ -110,7 +94,7 @@ def get_current() -> Context:
         except Exception:  # pylint: disable=broad-except
             logger.error("Failed to load context: %s", configured_context)
 
-    return Context(_CONTEXT_RUNTIME.snapshot())
+    return _CONTEXT_RUNTIME.get_current()
 
 
 def set_current(context: Context) -> None:
@@ -120,9 +104,7 @@ def set_current(context: Context) -> None:
     Args:
         context: The context to use as current.
     """
-    if _CONTEXT_RUNTIME is None:
-        get_current()
-    _CONTEXT_RUNTIME.apply(context.snapshot())
+    _CONTEXT_RUNTIME.set_current(Context(context.snapshot()))
 
 
 def with_current_context(

@@ -15,6 +15,7 @@ import typing
 from contextvars import ContextVar
 from sys import version_info
 
+from opentelemetry.context import Context
 from opentelemetry.context.context import RuntimeContext
 
 if (3, 5, 3) <= version_info < (3, 7):
@@ -24,6 +25,9 @@ elif (3, 4) < version_info <= (3, 5, 2):
     import opentelemetry.sdk.context.aiocontextvarsfix  # pylint:disable=unused-import
 
 
+_CONTEXT_KEY = "current_context"
+
+
 class ContextVarsRuntimeContext(RuntimeContext):
     """An implementation of the RuntimeContext interface which wraps ContextVar under
     the hood. This is the prefered implementation for usage with Python 3.5+
@@ -31,6 +35,7 @@ class ContextVarsRuntimeContext(RuntimeContext):
 
     def __init__(self) -> None:
         self._contextvars = {}  # type: typing.Dict[str, ContextVar[object]]
+        self._current_context = ContextVar(_CONTEXT_KEY)
 
     def set_value(self, key: str, value: "object") -> None:
         """See `opentelemetry.context.RuntimeContext.set_value`."""
@@ -52,12 +57,6 @@ class ContextVarsRuntimeContext(RuntimeContext):
         """See `opentelemetry.context.RuntimeContext.remove_value`."""
         self._contextvars.pop(key, None)
 
-    def copy(self) -> RuntimeContext:
-        """See `opentelemetry.context.RuntimeContext.copy`."""
-        # under the hood, ContextVars returns a copy on set
-        # we dont need to do any copying ourselves
-        return self
-
     def snapshot(self) -> typing.Dict:
         """See `opentelemetry.context.RuntimeContext.snapshot`."""
         values = {}
@@ -68,13 +67,17 @@ class ContextVarsRuntimeContext(RuntimeContext):
                 pass
         return values
 
-    def apply(self, snapshot: typing.Dict) -> None:
-        """See `opentelemetry.context.RuntimeContext.apply`."""
-        diff = set(self._contextvars) - set(snapshot)
-        for key in diff:
-            self._contextvars.pop(key, None)
-        for name in snapshot:
-            self.set_value(name, snapshot[name])
+    def set_current(self, context: Context) -> None:
+        """See `opentelemetry.context.RuntimeContext.set_current`."""
+        self._current_context.set(context)
+
+    def get_current(self) -> Context:
+        """See `opentelemetry.context.RuntimeContext.get_current`."""
+        try:
+            return self._current_context.get()
+        except LookupError:
+            self.set_current(Context(self.snapshot()))
+            return self._current_context.get()
 
 
 __all__ = ["ContextVarsRuntimeContext"]
