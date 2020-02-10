@@ -16,6 +16,7 @@
 This module serves as an example for a simple application using metrics.
 It demonstrates the different ways you can record metrics via the meter.
 """
+import time
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, Meter
@@ -70,3 +71,4 @@ counter.add(25, label_set)
 # (metric, value) pairs. The value would be recorded for each metric using the
 # specified labelset for each.
 meter.record_batch(label_set, [(counter, 50), (counter2, 70)])
+time.sleep(100)
