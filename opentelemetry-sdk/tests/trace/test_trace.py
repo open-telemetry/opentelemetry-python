@@ -15,6 +15,7 @@
 import shutil
 import subprocess
 import unittest
+from logging import ERROR, WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -167,8 +168,10 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_invalid_instrumentation_info(self):
         tracer_source = trace.TracerSource()
-        tracer1 = tracer_source.get_tracer("")
-        tracer2 = tracer_source.get_tracer(None)
+        with self.assertLogs(level=ERROR):
+            tracer1 = tracer_source.get_tracer("")
+        with self.assertLogs(level=ERROR):
+            tracer2 = tracer_source.get_tracer(None)
         self.assertEqual(
             tracer1.instrumentation_info, tracer2.instrumentation_info
         )
@@ -368,7 +371,11 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value1")
             root.set_attribute("attr-key", "attr-value2")
 
-            self.assertEqual(len(root.attributes), 7)
+            root.set_attribute("empty-list", [])
+            root.set_attribute("list-of-bools", [True, True, False])
+            root.set_attribute("list-of-numerics", [123, 3.14, 0])
+
+            self.assertEqual(len(root.attributes), 10)
             self.assertEqual(root.attributes["component"], "http")
             self.assertEqual(root.attributes["http.method"], "GET")
             self.assertEqual(
@@ -379,6 +386,13 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["http.status_text"], "OK")
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
+            self.assertEqual(root.attributes["empty-list"], [])
+            self.assertEqual(
+                root.attributes["list-of-bools"], [True, True, False]
+            )
+            self.assertEqual(
+                root.attributes["list-of-numerics"], [123, 3.14, 0]
+            )
 
         attributes = {
             "attr-key": "val",
@@ -392,6 +406,46 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-key"], "val")
             self.assertEqual(root.attributes["attr-key2"], "val2")
             self.assertEqual(root.attributes["attr-in-both"], "span-attr")
+
+    def test_invalid_attribute_values(self):
+        with self.tracer.start_as_current_span("root") as root:
+            root.set_attribute("non-primitive-data-type", dict())
+            root.set_attribute(
+                "list-of-mixed-data-types-numeric-first",
+                [123, False, "string"],
+            )
+            root.set_attribute(
+                "list-of-mixed-data-types-non-numeric-first",
+                [False, 123, "string"],
+            )
+            root.set_attribute(
+                "list-with-non-primitive-data-type", [dict(), 123]
+            )
+
+            self.assertEqual(len(root.attributes), 0)
+
+    def test_check_sequence_helper(self):
+        # pylint: disable=protected-access
+        self.assertEqual(
+            trace.Span._check_attribute_value_sequence([1, 2, 3.4, "ss", 4]),
+            "different type",
+        )
+        self.assertEqual(
+            trace.Span._check_attribute_value_sequence([dict(), 1, 2, 3.4, 4]),
+            "invalid type",
+        )
+        self.assertEqual(
+            trace.Span._check_attribute_value_sequence(
+                ["sw", "lf", 3.4, "ss"]
+            ),
+            "different type",
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5])
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence(["ss", "dw", "fw"])
+        )
 
     def test_sampling_attributes(self):
         decision_attributes = {
@@ -516,7 +570,8 @@ class TestSpan(unittest.TestCase):
 
         span.start()
         start_time = span.start_time
-        span.start()
+        with self.assertLogs(level=WARNING):
+            span.start()
         self.assertEqual(start_time, span.start_time)
 
         self.assertIs(span.status, None)
@@ -545,48 +600,67 @@ class TestSpan(unittest.TestCase):
     def test_ended_span(self):
         """"Events, attributes are not allowed after span is ended"""
 
-        with self.tracer.start_as_current_span("root") as root:
-            # everything should be empty at the beginning
-            self.assertEqual(len(root.attributes), 0)
-            self.assertEqual(len(root.events), 0)
-            self.assertEqual(len(root.links), 0)
+        root = self.tracer.start_span("root")
 
-            # call end first time
+        # everything should be empty at the beginning
+        self.assertEqual(len(root.attributes), 0)
+        self.assertEqual(len(root.events), 0)
+        self.assertEqual(len(root.links), 0)
+
+        # call end first time
+        root.end()
+        end_time0 = root.end_time
+
+        # call it a second time
+        with self.assertLogs(level=WARNING):
             root.end()
-            end_time0 = root.end_time
+        # end time shouldn't be changed
+        self.assertEqual(end_time0, root.end_time)
 
-            # call it a second time
-            root.end()
-            # end time shouldn't be changed
-            self.assertEqual(end_time0, root.end_time)
-
+        with self.assertLogs(level=WARNING):
             root.set_attribute("component", "http")
-            self.assertEqual(len(root.attributes), 0)
+        self.assertEqual(len(root.attributes), 0)
 
+        with self.assertLogs(level=WARNING):
             root.add_event("event1")
-            self.assertEqual(len(root.events), 0)
+        self.assertEqual(len(root.events), 0)
 
+        with self.assertLogs(level=WARNING):
             root.update_name("xxx")
-            self.assertEqual(root.name, "root")
+        self.assertEqual(root.name, "root")
 
-            new_status = trace_api.status.Status(
-                trace_api.status.StatusCanonicalCode.CANCELLED,
-                "Test description",
-            )
+        new_status = trace_api.status.Status(
+            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description",
+        )
+
+        with self.assertLogs(level=WARNING):
             root.set_status(new_status)
-            self.assertIs(root.status, None)
+        self.assertEqual(
+            root.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.OK,
+        )
 
     def test_error_status(self):
-        try:
-            with trace.TracerSource().get_tracer(__name__).start_span(
-                "root"
-            ) as root:
-                raise Exception("unknown")
-        except Exception:  # pylint: disable=broad-except
-            pass
+        def error_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    raise AssertionError("unknown")
 
-        self.assertIs(root.status.canonical_code, StatusCanonicalCode.UNKNOWN)
-        self.assertEqual(root.status.description, "Exception: unknown")
+            self.assertIs(
+                root.status.canonical_code, StatusCanonicalCode.UNKNOWN
+            )
+            self.assertEqual(
+                root.status.description, "AssertionError: unknown"
+            )
+
+        error_status_test(
+            trace.TracerSource().get_tracer(__name__).start_span("root")
+        )
+        error_status_test(
+            trace.TracerSource()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
 
 
 def span_event_start_fmt(span_processor_name, span_name):

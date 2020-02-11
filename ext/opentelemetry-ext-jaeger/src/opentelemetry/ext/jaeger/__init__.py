@@ -26,6 +26,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry.ext.jaeger.gen.agent import Agent as agent
 from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
+from opentelemetry.trace.status import StatusCanonicalCode
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
@@ -145,6 +146,8 @@ def _translate_to_jaeger(spans: Span):
         start_time_us = _nsec_to_usec_round(span.start_time)
         duration_us = _nsec_to_usec_round(span.end_time - span.start_time)
 
+        status = span.status
+
         parent_id = 0
         if isinstance(span.parent, trace_api.Span):
             parent_id = span.parent.get_context().span_id
@@ -153,8 +156,17 @@ def _translate_to_jaeger(spans: Span):
 
         tags = _extract_tags(span.attributes)
 
-        # TODO: status is missing:
-        # https://github.com/open-telemetry/opentelemetry-python/issues/98
+        tags.extend(
+            [
+                _get_long_tag("status.code", status.canonical_code.value),
+                _get_string_tag("status.message", status.description),
+                _get_string_tag("span.kind", span.kind.name),
+            ]
+        )
+
+        # Ensure that if Status.Code is not OK, that we set the "error" tag on the Jaeger span.
+        if status.canonical_code is not StatusCanonicalCode.OK:
+            tags.append(_get_bool_tag("error", True))
 
         refs = _extract_refs_from_span(span)
         logs = _extract_logs_from_span(span)
@@ -222,9 +234,7 @@ def _extract_logs_from_span(span):
     logs = []
 
     for event in span.events:
-        fields = []
-        if event.attributes is not None:
-            fields = _extract_tags(event.attributes)
+        fields = _extract_tags(event.attributes)
 
         fields.append(
             jaeger.Tag(
@@ -241,7 +251,7 @@ def _extract_logs_from_span(span):
 
 def _extract_tags(attr):
     if not attr:
-        return None
+        return []
     tags = []
     for attribute_key, attribute_value in attr.items():
         tag = _convert_attribute_to_tag(attribute_key, attribute_value)
@@ -263,6 +273,18 @@ def _convert_attribute_to_tag(key, attr):
         return jaeger.Tag(key=key, vDouble=attr, vType=jaeger.TagType.DOUBLE)
     logger.warning("Could not serialize attribute %s:%r to tag", key, attr)
     return None
+
+
+def _get_long_tag(key, val):
+    return jaeger.Tag(key=key, vLong=val, vType=jaeger.TagType.LONG)
+
+
+def _get_string_tag(key, val):
+    return jaeger.Tag(key=key, vStr=val, vType=jaeger.TagType.STRING)
+
+
+def _get_bool_tag(key, val):
+    return jaeger.Tag(key=key, vBool=val, vType=jaeger.TagType.BOOL)
 
 
 class AgentClientUDP:

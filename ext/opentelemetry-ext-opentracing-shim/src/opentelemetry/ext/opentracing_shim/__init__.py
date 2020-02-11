@@ -80,6 +80,9 @@ Note:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """
 
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
+
 import logging
 
 import opentracing
@@ -89,6 +92,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
+from opentelemetry.trace import DefaultSpan
 
 logger = logging.getLogger(__name__)
 
@@ -101,10 +105,10 @@ def create_tracer(otel_tracer_source):
     :class:`opentracing.Tracer` using OpenTelemetry under the hood.
 
     Args:
-        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be used for
-            constructing the :class:`TracerShim`. A tracer from this source will be used
-            to perform the actual tracing when user code is instrumented using
-            the OpenTracing API.
+        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be
+            used for constructing the :class:`TracerShim`. A tracer from this
+            source will be used to perform the actual tracing when user code is
+            instrumented using the OpenTracing API.
 
     Returns:
         The created :class:`TracerShim`.
@@ -265,7 +269,7 @@ class SpanShim(opentracing.Span):
     def log_event(self, event, payload=None):
         super().log_event(event, payload=payload)
 
-    def set_baggage_item(self, key, value):
+    def set_baggage_item(self, key, value):  # pylint:disable=unused-argument
         """Implements the ``set_baggage_item()`` method from the base class.
 
         Warning:
@@ -278,7 +282,7 @@ class SpanShim(opentracing.Span):
         )
         # TODO: Implement.
 
-    def get_baggage_item(self, key):
+    def get_baggage_item(self, key):  # pylint:disable=unused-argument
         """Implements the ``get_baggage_item()`` method from the base class.
 
         Warning:
@@ -667,12 +671,16 @@ class TracerShim(opentracing.Tracer):
         # uses the configured propagators in opentelemetry.propagators.
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
+
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
         propagator = propagators.get_global_httptextformat()
+
         propagator.inject(
-            span_context.unwrap(), type(carrier).__setitem__, carrier
+            DefaultSpan(span_context.unwrap()),
+            type(carrier).__setitem__,
+            carrier,
         )
 
     def extract(self, format, carrier):
