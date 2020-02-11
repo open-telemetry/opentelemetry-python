@@ -53,7 +53,7 @@ class TestThreads(unittest.TestCase):
         context.set_current(self.previous_context)
 
     @patch(
-        "opentelemetry.context._CONTEXT_RUNTIME", ThreadLocalRuntimeContext()
+        "opentelemetry.context._RUNTIME_CONTEXT", ThreadLocalRuntimeContext()
     )
     def test_with_threads(self):
         with self.tracer.start_as_current_span("threads_test"):

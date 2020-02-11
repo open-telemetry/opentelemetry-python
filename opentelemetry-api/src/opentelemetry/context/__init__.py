@@ -21,7 +21,7 @@ from pkg_resources import iter_entry_points
 from opentelemetry.context.context import Context, RuntimeContext
 
 logger = logging.getLogger(__name__)
-_CONTEXT_RUNTIME = None  # type: typing.Optional[RuntimeContext]
+_RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
@@ -74,37 +74,46 @@ def remove_value(
     return Context(new_values)
 
 
+def _init_runtime():
+    # FIXME use a better implementation of a configuration manager to avoid having
+    # to get configuration values straight from environment variables
+
+    global _RUNTIME_CONTEXT  # pylint: disable=global-statement
+    configured_context = environ.get(
+        "OPENTELEMETRY_CONTEXT", "default_context"
+    )  # type: str
+    try:
+        _RUNTIME_CONTEXT = next(
+            iter_entry_points("opentelemetry_context", configured_context)
+        ).load()()
+    except Exception:  # pylint: disable=broad-except
+        logger.error("Failed to load context: %s", configured_context)
+
+
 def get_current() -> Context:
     """To access the context associated with program execution,
     the RuntimeContext API provides a function which takes no arguments
     and returns a RuntimeContext.
     """
-    global _CONTEXT_RUNTIME  # pylint: disable=global-statement
-    if _CONTEXT_RUNTIME is None:
-        # FIXME use a better implementation of a configuration manager to avoid having
-        # to get configuration values straight from environment variables
 
-        configured_context = environ.get(
-            "OPENTELEMETRY_CONTEXT", "default_context"
-        )  # type: str
-        try:
-            _CONTEXT_RUNTIME = next(
-                iter_entry_points("opentelemetry_context", configured_context)
-            ).load()()
-        except Exception:  # pylint: disable=broad-except
-            logger.error("Failed to load context: %s", configured_context)
+    if _RUNTIME_CONTEXT is None:
+        _init_runtime()
 
-    return _CONTEXT_RUNTIME.get_current()  # type: ignore
+    return _RUNTIME_CONTEXT.get_current()  # type: ignore
 
 
-def set_current(context: Context) -> None:
+def set_current(context: Context) -> Context:
     """To associate a context with program execution, the Context
     API provides a function which takes a Context.
 
     Args:
         context: The context to use as current.
     """
-    _CONTEXT_RUNTIME.set_current(Context(context.copy()))  # type: ignore
+    if _RUNTIME_CONTEXT is None:
+        _init_runtime()
+    old_context = _RUNTIME_CONTEXT.get_current()
+    _RUNTIME_CONTEXT.set_current(Context(context.copy()))  # type: ignore
+    return old_context
 
 
 def with_current_context(

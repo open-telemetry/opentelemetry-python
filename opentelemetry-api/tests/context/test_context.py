@@ -15,6 +15,7 @@
 import unittest
 
 from opentelemetry import context
+from opentelemetry.context.context import Context
 
 
 def do_work() -> None:
@@ -22,6 +23,9 @@ def do_work() -> None:
 
 
 class TestContext(unittest.TestCase):
+    def setUp(self):
+        context.set_current(Context())
+
     def test_context(self):
         self.assertIsNone(context.get_value("say"))
         empty = context.get_current()
@@ -49,3 +53,10 @@ class TestContext(unittest.TestCase):
         with self.assertRaises(ValueError):
             # ensure a context
             context.get_current()["test"] = "cant-change-immutable"
+
+    def test_set_current(self):
+        context.set_current(context.set_value("a", "yyy"))
+
+        old_context = context.set_current(context.set_value("a", "zzz"))
+        self.assertEqual("yyy", context.get_value("a", context=old_context))
+        self.assertEqual("zzz", context.get_value("a"))

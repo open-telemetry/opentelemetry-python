@@ -80,7 +80,7 @@ class TestAsyncio(unittest.TestCase):
         context.set_current(self.previous_context)
 
     @patch(
-        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+        "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()
     )
     def test_with_asyncio(self):
         with self.tracer.start_as_current_span("asyncio_test"):
@@ -124,7 +124,7 @@ class TestContextVarsContext(unittest.TestCase):
         context.set_current(self.previous_context)
 
     @patch(
-        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+        "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()
     )
     def test_context(self):
         self.assertIsNone(context.get_value("say"))
@@ -142,7 +142,7 @@ class TestContextVarsContext(unittest.TestCase):
         self.assertEqual(context.get_value("say", context=third), "bar")
 
     @patch(
-        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+        "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()
     )
     def test_set_value(self):
         first = context.set_value("a", "yyy")
