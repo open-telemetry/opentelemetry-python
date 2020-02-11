@@ -16,6 +16,7 @@ import logging
 import typing
 from os import environ
 
+
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context, RuntimeContext
@@ -74,7 +75,7 @@ def remove_value(
     return Context(new_values)
 
 
-def _init_runtime():
+def _init_runtime() -> None:
     # FIXME use a better implementation of a configuration manager to avoid having
     # to get configuration values straight from environment variables
 
@@ -99,7 +100,7 @@ def get_current() -> Context:
     if _RUNTIME_CONTEXT is None:
         _init_runtime()
 
-    return _RUNTIME_CONTEXT.get_current()  # type: ignore
+    return _RUNTIME_CONTEXT.get_current()  # type:ignore
 
 
 def set_current(context: Context) -> Context:
@@ -111,9 +112,9 @@ def set_current(context: Context) -> Context:
     """
     if _RUNTIME_CONTEXT is None:
         _init_runtime()
-    old_context = _RUNTIME_CONTEXT.get_current()
-    _RUNTIME_CONTEXT.set_current(Context(context.copy()))  # type: ignore
-    return old_context
+    old_context = _RUNTIME_CONTEXT.get_current()  # type:ignore
+    _RUNTIME_CONTEXT.set_current(Context(context.copy()))  # type:ignore
+    return old_context  # type:ignore
 
 
 def with_current_context(
