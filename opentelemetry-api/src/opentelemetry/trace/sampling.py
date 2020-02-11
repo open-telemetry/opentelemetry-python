@@ -88,7 +88,7 @@ class ProbabilitySampler(Sampler):
 
     @classmethod
     def get_bound_for_rate(cls, rate: float) -> int:
-        return round(rate * cls.TRACE_ID_LIMIT + 1)
+        return round(rate * (cls.TRACE_ID_LIMIT + 1))
 
     @property
     def rate(self) -> float:
