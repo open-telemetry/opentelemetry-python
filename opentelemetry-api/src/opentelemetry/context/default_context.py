@@ -37,10 +37,6 @@ class DefaultRuntimeContext(RuntimeContext):
         """See `opentelemetry.context.RuntimeContext.remove_value`."""
         self._values.pop(key, None)
 
-    def snapshot(self) -> typing.Dict[str, "object"]:
-        """See `opentelemetry.context.RuntimeContext.snapshot`."""
-        return dict((key, value) for key, value in self._values.items())
-
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
         self._current_context = context
@@ -48,7 +44,8 @@ class DefaultRuntimeContext(RuntimeContext):
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
         if self._current_context is None:
-            self._current_context = Context(self.snapshot())
+            values = dict((key, value) for key, value in self._values.items())
+            self._current_context = Context(values)
         return self._current_context
 
 

@@ -30,7 +30,7 @@ class RuntimeContext(ABC):
 
     @abstractmethod
     def set_value(self, key: str, value: "object") -> None:
-        """Set a value in this context.
+        """Set a value in this `RuntimeContext`.
 
         Args:
             key: The key for the value to set.
@@ -39,7 +39,7 @@ class RuntimeContext(ABC):
 
     @abstractmethod
     def get_value(self, key: str) -> "object":
-        """Get a value from this context.
+        """Get a value from this `RuntimeContext`.
 
         Args:
             key: The key for the value to retrieve.
@@ -47,19 +47,15 @@ class RuntimeContext(ABC):
 
     @abstractmethod
     def remove_value(self, key: str) -> None:
-        """Remove a value from this context.
+        """Remove a value from this `RuntimeContext`.
 
         Args:
             key: The key for the value to remove.
         """
 
     @abstractmethod
-    def snapshot(self) -> typing.Dict[str, "object"]:
-        """Returns the contents of a context."""
-
-    @abstractmethod
     def set_current(self, context: Context) -> None:
-        """ Sets the current Context object.
+        """ Sets the current `Context` object.
 
         Args:
             context: The Context to set.
@@ -67,7 +63,7 @@ class RuntimeContext(ABC):
 
     @abstractmethod
     def get_current(self) -> Context:
-        """ Returns the current Context object. """
+        """ Returns the current `Context` object. """
 
 
 __all__ = ["Context", "RuntimeContext"]

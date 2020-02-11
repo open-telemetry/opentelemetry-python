@@ -57,16 +57,6 @@ class ContextVarsRuntimeContext(RuntimeContext):
         """See `opentelemetry.context.RuntimeContext.remove_value`."""
         self._contextvars.pop(key, None)
 
-    def snapshot(self) -> typing.Dict:
-        """See `opentelemetry.context.RuntimeContext.snapshot`."""
-        values = {}
-        for key, value in self._contextvars.items():
-            try:
-                values[key] = value.get()
-            except (KeyError, LookupError):
-                pass
-        return values
-
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
         self._current_context.set(context)
@@ -76,7 +66,13 @@ class ContextVarsRuntimeContext(RuntimeContext):
         try:
             return self._current_context.get()
         except LookupError:
-            self.set_current(Context(self.snapshot()))
+            values = {}
+            for key, value in self._contextvars.items():
+                try:
+                    values[key] = value.get()
+                except (KeyError, LookupError):
+                    pass
+            self.set_current(Context(values))
             return self._current_context.get()
 
 

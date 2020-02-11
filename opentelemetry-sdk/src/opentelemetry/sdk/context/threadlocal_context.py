@@ -49,12 +49,6 @@ class ThreadLocalRuntimeContext(RuntimeContext):
         except AttributeError:
             pass
 
-    def snapshot(self) -> typing.Dict[str, "object"]:
-        """See `opentelemetry.context.RuntimeContext.snapshot`."""
-        return dict(
-            (key, value) for key, value in self._thread_local.__dict__.items()
-        )
-
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
         setattr(self._current_context, _CONTEXT_KEY, context)
@@ -64,8 +58,12 @@ class ThreadLocalRuntimeContext(RuntimeContext):
         try:
             got = getattr(self._current_context, _CONTEXT_KEY)  # type: object
         except AttributeError:
+            values = dict(
+                (key, value)
+                for key, value in self._thread_local.__dict__.items()
+            )
             setattr(
-                self._current_context, _CONTEXT_KEY, Context(self.snapshot()),
+                self._current_context, _CONTEXT_KEY, Context(values),
             )
             got = getattr(self._current_context, _CONTEXT_KEY)
         return got
