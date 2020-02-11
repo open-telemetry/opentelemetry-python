@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import grpc
-import json
 import unittest
 from unittest import mock
 
-from google.protobuf.timestamp_pb2 import Timestamp
-
-from opencensus.proto.agent.common.v1 import common_pb2
+import grpc
 from opencensus.proto.trace.v1 import trace_pb2
+
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
 from opentelemetry.sdk import trace
@@ -51,6 +48,8 @@ class TestCollectorSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.endpoint, endpoint)
         mock_get_node.assert_called_with(service_name, host_name)
 
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-statements
     def test_export(self):
         span_names = ("test1", "test2", "test3")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
@@ -111,7 +110,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace.Span(name=span_names[2], context=other_context, parent=None),
         ]
 
-        otel_spans[0].start_time = start_times[0]
+        otel_spans[0].start(start_time=start_times[0])
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
@@ -121,13 +120,13 @@ class TestCollectorSpanExporter(unittest.TestCase):
                 "test description",
             )
         )
-        otel_spans[0].end_time = end_times[0]
+        otel_spans[0].end(end_time=end_times[0])
 
-        otel_spans[1].start_time = start_times[1]
-        otel_spans[1].end_time = end_times[1]
+        otel_spans[1].start(start_time=start_times[1])
+        otel_spans[1].end(end_time=end_times[1])
 
-        otel_spans[2].start_time = start_times[2]
-        otel_spans[2].end_time = end_times[2]
+        otel_spans[2].start(start_time=start_times[2])
+        otel_spans[2].end(end_time=end_times[2])
 
         mock_client = mock.MagicMock()
         mock_export = mock.MagicMock()

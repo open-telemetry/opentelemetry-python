@@ -14,20 +14,20 @@
 
 """OpenTelemetry Collector Exporter."""
 
-import grpc
 import logging
 from typing import Optional, Sequence
 
-import opentelemetry.ext.otcollector.util as utils
-from opentelemetry.trace import TraceState, SpanKind
-
-from opencensus.proto.trace.v1 import trace_pb2
+import grpc
 from opencensus.proto.agent.trace.v1 import (
     trace_service_pb2,
     trace_service_pb2_grpc,
 )
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opencensus.proto.trace.v1 import trace_pb2
+
+import opentelemetry.ext.otcollector.util as utils
 from opentelemetry.sdk.trace import Span, SpanContext
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.trace import SpanKind, TraceState
 
 DEFAULT_ENDPOINT = "http://localhost:55678"
 
@@ -123,7 +123,7 @@ class CollectorSpanExporter(SpanExporter):
                             attribute_value,
                         )
 
-                    collector_span_event = collector_span.time_events.time_event.add(
+                    collector_span.time_events.time_event.add(
                         time=utils.proto_timestamp_from_time_ns(
                             event.timestamp
                         ),

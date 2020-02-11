@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import os
 import socket
+import time
 
 from google.protobuf.timestamp_pb2 import Timestamp
-
-from opentelemetry.trace import SpanKind
-
-from opentelemetry.util.version import __version__ as opentelemetry_version
 from opencensus.proto.agent.common.v1 import common_pb2
 from opencensus.proto.trace.v1 import trace_pb2
+
+from opentelemetry.trace import SpanKind
+from opentelemetry.util.version import __version__ as opentelemetry_version
 
 # OT Collector exporter version
 EXPORTER_VERSION = "0.0.1"
@@ -46,10 +45,9 @@ def proto_timestamp_from_time_ns(time_ns):
 def get_collector_span_kind(kind: SpanKind):
     if kind is SpanKind.SERVER:
         return trace_pb2.Span.SpanKind.SERVER
-    elif kind is SpanKind.CLIENT:
+    if kind is SpanKind.CLIENT:
         return trace_pb2.Span.SpanKind.CLIENT
-    else:
-        return trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED
+    return trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED
 
 
 def add_proto_attribute_value(pb_attributes, attribute_key, attribute_value):
