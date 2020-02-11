@@ -41,9 +41,10 @@ class MetricsExporter:
         """Exports a batch of telemetry data.
         Args:
             metric_records: A sequence of `MetricRecord` s. A `MetricRecord`
-            contains the metric to be exported, the label set associated
-            with that metric, as well as the aggregator used to export the
-            current checkpointed value.
+                contains the metric to be exported, the label set associated
+                with that metric, as well as the aggregator used to export the
+                current checkpointed value.
+
         Returns:
             The result of the export
         """
@@ -69,7 +70,7 @@ class ConsoleMetricsExporter(MetricsExporter):
                     type(self).__name__,
                     record.metric,
                     record.label_set.labels,
-                    record.aggregator.check_point,
+                    record.aggregator.checkpoint,
                 )
             )
         return MetricsExportResult.SUCCESS

@@ -13,26 +13,25 @@
 # limitations under the License.
 
 import abc
-import threading
 
 
 class Aggregator(abc.ABC):
     """Base class for aggregators.
+
     Aggregators are responsible for holding aggregated values and taking a
-    snapshot of these values upon export (check_point).
+    snapshot of these values upon export (checkpoint).
     """
 
     def __init__(self):
         self.current = None
-        self.check_point = None
-        self._lock = threading.Lock()
+        self.checkpoint = None
 
     @abc.abstractmethod
     def update(self, value):
         """Updates the current with the new value."""
 
     @abc.abstractmethod
-    def checkpoint(self):
+    def take_checkpoint(self):
         """Stores a snapshot of the current value."""
 
     @abc.abstractmethod
@@ -46,16 +45,14 @@ class CounterAggregator(Aggregator):
     def __init__(self):
         super().__init__()
         self.current = 0
-        self.check_point = 0
+        self.checkpoint = 0
 
     def update(self, value):
         self.current += value
 
-    def checkpoint(self):
-        # Lock-free algorithm?
-        with self._lock:
-            self.check_point = self.current
-            self.current = 0
+    def take_checkpoint(self):
+        self.checkpoint = self.current
+        self.current = 0
 
     def merge(self, other):
-        self.check_point += other.check_point
+        self.checkpoint += other.checkpoint

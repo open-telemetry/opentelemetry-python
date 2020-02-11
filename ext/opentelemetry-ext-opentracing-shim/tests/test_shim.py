@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
+
 import time
 from unittest import TestCase
 
@@ -486,7 +489,6 @@ class TestShim(TestCase):
 
         # Verify Format.TEXT_MAP
         text_map = {}
-
         self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
         self.assertEqual(text_map[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
         self.assertEqual(text_map[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
