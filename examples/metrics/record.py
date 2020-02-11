@@ -34,12 +34,7 @@ controller = PushController(meter, exporter, 5)
 
 # Example to show how to record using the meter
 counter = meter.create_metric(
-    "requests",
-    "number of requests",
-    1,
-    int,
-    Counter,
-    ("environment",),
+    "requests", "number of requests", 1, int, Counter, ("environment",)
 )
 
 counter2 = meter.create_metric(

@@ -38,12 +38,7 @@ exporter = ConsoleMetricsExporter()
 controller = PushController(meter, exporter, 5)
 
 counter = meter.create_metric(
-    "requests",
-    "number of requests",
-    1,
-    int,
-    Counter,
-    ("environment",),
+    "requests", "number of requests", 1, int, Counter, ("environment",)
 )
 
 # Labelsets are used to identify key-values that are associated with a specific

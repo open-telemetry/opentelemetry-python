@@ -348,7 +348,7 @@ def meter() -> Meter:
     if _METER is None:
         # pylint:disable=protected-access
         try:
-            _METER = loader._load_impl(Meter, _METER_FACTORY) # type: ignore
+            _METER = loader._load_impl(Meter, _METER_FACTORY)  # type: ignore
         except TypeError:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op tracer impl

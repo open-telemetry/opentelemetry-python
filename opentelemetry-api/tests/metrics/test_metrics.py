@@ -95,6 +95,7 @@ class TestMetrics(unittest.TestCase):
 
 
 @contextmanager
+# type: ignore
 def patch_metrics_globals(meter=None, meter_factory=None):
     """Mock metrics._METER and metrics._METER_FACTORY.
 
