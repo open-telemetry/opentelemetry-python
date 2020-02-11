@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import threading
-import typing
 
 from opentelemetry.context import Context, RuntimeContext
 

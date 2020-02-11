@@ -16,7 +16,6 @@ import logging
 import typing
 from os import environ
 
-
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context, RuntimeContext
