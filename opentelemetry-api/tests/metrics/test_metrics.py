@@ -22,7 +22,7 @@ from opentelemetry import metrics
 # pylint: disable=no-self-use
 class TestMeter(unittest.TestCase):
     def setUp(self):
-        self.meter = metrics.Meter()
+        self.meter = metrics.DefaultMeter()
 
     def test_record_batch(self):
         counter = metrics.Counter()
@@ -98,7 +98,6 @@ class TestMetrics(unittest.TestCase):
 # type: ignore
 def patch_metrics_globals(meter=None, meter_factory=None):
     """Mock metrics._METER and metrics._METER_FACTORY.
-
     This prevents previous changes to these values from affecting the code in
     this scope, and prevents changes in this scope from leaking out and
     affecting other tests.

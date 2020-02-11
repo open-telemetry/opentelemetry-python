@@ -98,7 +98,13 @@ class CustomCollector:
 
     def _translate_to_prometheus(self, metric_record: MetricRecord):
         prometheus_metric = None
-        label_values = metric_record.label_set.labels.values()
+        label_values = []
+        for label in metric_record.label_set.labels:
+            for index, label_tuple_value in enumerate(label):
+                # Odd number
+                if index & 1 == 1:
+                    label_values.append(label_tuple_value)
+
         metric_name = ""
         if self._prefix != "":
             metric_name = self._prefix + "_"

@@ -48,10 +48,8 @@ class LabelSet(metrics_api.LabelSet):
 
 class BaseHandle:
     """The base handle class containing common behavior for all handles.
-
     Handles are responsible for operating on data for metric instruments for a
     specific set of labels.
-
     Args:
         value_type: The type of values this handle holds (int, float).
         enabled: True if the originating instrument is enabled.

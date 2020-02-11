@@ -17,8 +17,9 @@ The OpenTelemetry metrics API describes the classes used to report raw
 measurements, as well as metrics with known aggregation and labels.
 The `Meter` class is used to construct `Metric` s to record raw statistics
 as well as metrics with predefined aggregation.
-See the Metrics api spec for terminology and context clarification.
-https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
+See the `metrics api`_ spec for terminology and context clarification.
+.. _metrics api:
+    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
 """
 import abc
 from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
@@ -35,21 +36,18 @@ class DefaultMetricHandle:
 
     def add(self, value: ValueT) -> None:
         """No-op implementation of `CounterHandle` add.
-
         Args:
             value: The value to add to the handle.
         """
 
     def set(self, value: ValueT) -> None:
         """No-op implementation of `GaugeHandle` set.
-
         Args:
             value: The value to set to the handle.
         """
 
     def record(self, value: ValueT) -> None:
         """No-op implementation of `MeasureHandle` record.
-
         Args:
             value: The value to record to the handle.
         """
@@ -128,7 +126,6 @@ class DefaultMetric(Metric):
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Counter` add.
-
         Args:
             value: The value to add to the counter metric.
             label_set: `LabelSet` to associate with the returned handle.
@@ -136,7 +133,6 @@ class DefaultMetric(Metric):
 
     def set(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Gauge` set.
-
         Args:
             value: The value to set the gauge metric to.
             label_set: `LabelSet` to associate with the returned handle.
@@ -144,7 +140,6 @@ class DefaultMetric(Metric):
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Measure` record.
-
         Args:
             value: The value to record to this measure metric.
             label_set: `LabelSet` to associate with the returned handle.
@@ -209,13 +204,14 @@ MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 
 
 # pylint: disable=unused-argument
-class Meter:
+class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
     `Metric` s are used for recording pre-defined aggregation (gauge and
     counter), or raw values (measure) in which the aggregation and labels
     for the exported metric are deferred.
     """
 
+    @abc.abstractmethod
     def record_batch(
         self,
         label_set: LabelSet,
@@ -227,12 +223,13 @@ class Meter:
         match the key-value pairs in the label tuples.
         Args:
             label_set: The `LabelSet` associated with all measurements in
-            the batch. A measurement is a tuple, representing the `Metric`
-            being recorded and the corresponding value to record.
+                the batch. A measurement is a tuple, representing the `Metric`
+                being recorded and the corresponding value to record.
             record_tuples: A sequence of pairs of `Metric` s and the
-            corresponding value to record for that metric.
+                corresponding value to record for that metric.
         """
 
+    @abc.abstractmethod
     def create_metric(
         self,
         name: str,
@@ -260,9 +257,8 @@ class Meter:
                 updates.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
-        # pylint: disable=no-self-use
-        return DefaultMetric()
 
+    @abc.abstractmethod
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given labels.
         Args:

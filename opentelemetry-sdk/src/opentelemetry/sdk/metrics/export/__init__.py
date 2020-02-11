@@ -44,7 +44,6 @@ class MetricsExporter:
                 contains the metric to be exported, the label set associated
                 with that metric, as well as the aggregator used to export the
                 current checkpointed value.
-
         Returns:
             The result of the export
         """
