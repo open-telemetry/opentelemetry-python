@@ -26,7 +26,6 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     """
 
     def __init__(self) -> None:
-        self._thread_local = threading.local()
         self._current_context = threading.local()
 
     def set_current(self, context: Context) -> None:
@@ -38,12 +37,8 @@ class ThreadLocalRuntimeContext(RuntimeContext):
         try:
             got = getattr(self._current_context, _CONTEXT_KEY)  # type: object
         except AttributeError:
-            values = dict(
-                (key, value)
-                for key, value in self._thread_local.__dict__.items()
-            )
             setattr(
-                self._current_context, _CONTEXT_KEY, Context(values),
+                self._current_context, _CONTEXT_KEY, Context(),
             )
             got = getattr(self._current_context, _CONTEXT_KEY)
         return got

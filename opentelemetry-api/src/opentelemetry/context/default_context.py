@@ -22,7 +22,6 @@ class DefaultRuntimeContext(RuntimeContext):
     """
 
     def __init__(self) -> None:
-        self._values = {}  # type: typing.Dict[str, object]
         self._current_context = None  # type: typing.Optional[Context]
 
     def set_current(self, context: Context) -> None:
@@ -32,8 +31,7 @@ class DefaultRuntimeContext(RuntimeContext):
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
         if self._current_context is None:
-            values = dict((key, value) for key, value in self._values.items())
-            self._current_context = Context(values)
+            self._current_context = Context()
         return self._current_context
 
 

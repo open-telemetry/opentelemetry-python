@@ -34,7 +34,6 @@ class ContextVarsRuntimeContext(RuntimeContext):
     """
 
     def __init__(self) -> None:
-        self._contextvars = {}  # type: typing.Dict[str, ContextVar[object]]
         self._current_context = ContextVar(_CONTEXT_KEY)
 
     def set_current(self, context: Context) -> None:
@@ -46,13 +45,7 @@ class ContextVarsRuntimeContext(RuntimeContext):
         try:
             return self._current_context.get()
         except LookupError:
-            values = {}
-            for key, value in self._contextvars.items():
-                try:
-                    values[key] = value.get()
-                except (KeyError, LookupError):
-                    pass
-            self.set_current(Context(values))
+            self.set_current(Context())
             return self._current_context.get()
 
 
