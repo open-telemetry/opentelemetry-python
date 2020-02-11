@@ -18,11 +18,18 @@ import grpc
 import logging
 from typing import Optional, Sequence
 
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace import Span, SpanContext, SpanKind
+import opentelemetry.ext.otcollector.util as utils
+from opentelemetry.trace import TraceState, SpanKind
 
-DEFAULT_SERVICE_NAME = "collector-exporter"
-DEFAULT_ENDPOINT = "http://localhost:55678/v1/trace"
+from opencensus.proto.trace.v1 import trace_pb2
+from opencensus.proto.agent.trace.v1 import (
+    trace_service_pb2,
+    trace_service_pb2_grpc,
+)
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace import Span, SpanContext
+
+DEFAULT_ENDPOINT = "http://localhost:55678"
 
 logger = logging.getLogger(__name__)
 
@@ -37,25 +44,27 @@ class CollectorSpanExporter(SpanExporter):
     """
 
     def __init__(
-        self,
-        service_name: str =DEFAULT_SERVICE_NAME,
-        endpoint: str = DEFAULT_ENDPOINT,
-        client=None,
+        self, endpoint=None, service_name=None, host_name=None, client=None
     ):
-        self.service_name = service_name
-        self.endpoint = endpoint
+        self.endpoint = DEFAULT_ENDPOINT if endpoint is None else endpoint
 
         if client is None:
             self.channel = grpc.insecure_channel(self.endpoint)
             self.client = trace_service_pb2_grpc.TraceServiceStub(
-                channel=self.channel)
+                channel=self.channel
+            )
         else:
             self.client = client
 
+        self.node = utils.get_node(service_name, host_name)
+
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         collector_spans = self._translate_to_collector(spans)
+        export_request = trace_service_pb2.ExportTraceServiceRequest(
+            node=self.node, spans=collector_spans
+        )
         try:
-            self.client.Export(collector_spans)
+            self.client.Export(export_request)
         except grpc.RpcError:
             return SpanExportResult.FAILED_NOT_RETRYABLE
 
@@ -64,7 +73,95 @@ class CollectorSpanExporter(SpanExporter):
     def _translate_to_collector(self, spans: Sequence[Span]):
         collector_spans = []
         for span in spans:
-            collector_span = {}
+            collector_span = trace_pb2.Span(
+                name=trace_pb2.TruncatableString(value=span.name),
+                kind=utils.get_collector_span_kind(span.kind),
+                trace_id=span.context.trace_id.to_bytes(16, "big"),
+                span_id=span.context.span_id.to_bytes(8, "big"),
+                start_time=utils.proto_timestamp_from_time_ns(span.start_time),
+                end_time=utils.proto_timestamp_from_time_ns(span.end_time),
+                status=trace_pb2.Status(
+                    code=span.status.canonical_code.value,
+                    message=span.status.description,
+                )
+                if span.status is not None
+                else None,
+            )
+
+            if span.parent is not None:
+                collector_span.parent_span_id = span.parent.span_id.to_bytes(
+                    8, "big"
+                )
+
+            if span.context.trace_state is not None:
+                for (key, value) in span.context.trace_state.items():
+                    collector_span.tracestate.entries.add(key=key, value=value)
+
+            if span.attributes is not None:
+                for attribute_key, attribute_value in span.attributes.items():
+                    utils.add_proto_attribute_value(
+                        collector_span.attributes,
+                        attribute_key,
+                        attribute_value,
+                    )
+
+            if span.events is not None:
+                for event in span.events:
+                    collector_annotation = trace_pb2.Span.TimeEvent.Annotation(
+                        description=trace_pb2.TruncatableString(
+                            value=event.name
+                        )
+                    )
+
+                    for (
+                        attribute_key,
+                        attribute_value,
+                    ) in event.attributes.items():
+                        utils.add_proto_attribute_value(
+                            collector_annotation.attributes,
+                            attribute_key,
+                            attribute_value,
+                        )
+
+                    collector_span_event = collector_span.time_events.time_event.add(
+                        time=utils.proto_timestamp_from_time_ns(
+                            event.timestamp
+                        ),
+                        annotation=collector_annotation,
+                    )
+
+            if span.links is not None:
+                for link in span.links:
+                    collector_span_link = collector_span.links.link.add()
+                    collector_span_link.trace_id = link.context.trace_id.to_bytes(
+                        16, "big"
+                    )
+                    collector_span_link.span_id = link.context.span_id.to_bytes(
+                        8, "big"
+                    )
+                    if (
+                        span.parent is not None
+                        and link.context.span_id == span.parent.span_id
+                        and link.context.trace_id == span.parent.trace_id
+                    ):
+                        collector_span_link.type = (
+                            trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN
+                        )
+                    else:
+                        collector_span_link.type = (
+                            trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED
+                        )
+
+                    for (
+                        attribute_key,
+                        attribute_value,
+                    ) in link.attributes.items():
+                        utils.add_proto_attribute_value(
+                            collector_span_link.attributes,
+                            attribute_key,
+                            attribute_value,
+                        )
+
             collector_spans.append(collector_span)
         return collector_spans
 

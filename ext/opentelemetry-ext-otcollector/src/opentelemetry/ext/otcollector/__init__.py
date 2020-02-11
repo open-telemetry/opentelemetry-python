@@ -11,3 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+The OpenTelemetry OTCollector package is used to export traces and metrics to Collector
+"""
+from . import trace_exporter, util
+
+__all__ = ["trace_exporter", "util"]

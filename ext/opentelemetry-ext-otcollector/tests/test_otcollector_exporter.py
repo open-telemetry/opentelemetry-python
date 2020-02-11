@@ -12,88 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import grpc
 import json
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest import mock
 
+from google.protobuf.timestamp_pb2 import Timestamp
+
+from opencensus.proto.agent.common.v1 import common_pb2
+from opencensus.proto.trace.v1 import trace_pb2
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.zipkin import ZipkinSpanExporter
+from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import TraceOptions
 
 
-class MockResponse:
-    def __init__(self, status_code):
-        self.status_code = status_code
-        self.text = status_code
-
-
-class TestZipkinSpanExporter(unittest.TestCase):
-    def setUp(self):
-        # create and save span to be used in tests
-        context = trace_api.SpanContext(
-            trace_id=0x000000000000000000000000DEADBEEF,
-            span_id=0x00000000DEADBEF0,
+class TestCollectorSpanExporter(unittest.TestCase):
+    def test_constructor(self):
+        mock_get_node = mock.Mock()
+        patch = mock.patch(
+            "opentelemetry.ext.otcollector.util.get_node",
+            side_effect=mock_get_node,
         )
+        service_name = "testServiceName"
+        host_name = "testHostName"
+        client = grpc.insecure_channel("")
+        endpoint = "testEndpoint"
+        with patch:
+            exporter = CollectorSpanExporter(
+                service_name=service_name,
+                host_name=host_name,
+                endpoint=endpoint,
+                client=client,
+            )
 
-        self._test_span = trace.Span("test_span", context=context)
-        self._test_span.start()
-        self._test_span.end()
-
-    def test_constructor_default(self):
-        """Test the default values assigned by constructor."""
-        service_name = "my-service-name"
-        host_name = "localhost"
-        port = 9411
-        endpoint = "/api/v2/spans"
-        exporter = ZipkinSpanExporter(service_name)
-        ipv4 = None
-        ipv6 = None
-        protocol = "http"
-        url = "http://localhost:9411/api/v2/spans"
-
-        self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.host_name, host_name)
-        self.assertEqual(exporter.port, port)
+        self.assertIs(exporter.client, client)
         self.assertEqual(exporter.endpoint, endpoint)
-        self.assertEqual(exporter.ipv4, ipv4)
-        self.assertEqual(exporter.ipv6, ipv6)
-        self.assertEqual(exporter.protocol, protocol)
-        self.assertEqual(exporter.url, url)
+        mock_get_node.assert_called_with(service_name, host_name)
 
-    def test_constructor_explicit(self):
-        """Test the constructor passing all the options."""
-        service_name = "my-opentelemetry-zipkin"
-        host_name = "opentelemetry.io"
-        port = 15875
-        endpoint = "/myapi/traces?format=zipkin"
-        ipv4 = "1.2.3.4"
-        ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-        protocol = "https"
-        url = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
-        exporter = ZipkinSpanExporter(
-            service_name=service_name,
-            host_name=host_name,
-            port=port,
-            endpoint=endpoint,
-            ipv4=ipv4,
-            ipv6=ipv6,
-            protocol=protocol,
-        )
-
-        self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.host_name, host_name)
-        self.assertEqual(exporter.port, port)
-        self.assertEqual(exporter.endpoint, endpoint)
-        self.assertEqual(exporter.ipv4, ipv4)
-        self.assertEqual(exporter.ipv6, ipv6)
-        self.assertEqual(exporter.protocol, protocol)
-        self.assertEqual(exporter.url, url)
-
-    # pylint: disable=too-many-locals
     def test_export(self):
-
         span_names = ("test1", "test2", "test3")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
@@ -114,9 +72,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         span_context = trace_api.SpanContext(
-            trace_id,
-            span_id,
-            trace_options=TraceOptions(TraceOptions.SAMPLED),
+            trace_id, span_id, trace_options=TraceOptions(TraceOptions.SAMPLED)
         )
         parent_context = trace_api.SpanContext(trace_id, parent_id)
         other_context = trace_api.SpanContext(trace_id, other_id)
@@ -147,6 +103,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 parent=parent_context,
                 events=(event,),
                 links=(link,),
+                kind=trace_api.SpanKind.CLIENT,
             ),
             trace.Span(
                 name=span_names[1], context=parent_context, parent=None
@@ -155,10 +112,15 @@ class TestZipkinSpanExporter(unittest.TestCase):
         ]
 
         otel_spans[0].start_time = start_times[0]
-        # added here to preserve order
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
+        otel_spans[0].set_status(
+            trace_api.Status(
+                trace_api.status.StatusCanonicalCode.INTERNAL,
+                "test description",
+            )
+        )
         otel_spans[0].end_time = end_times[0]
 
         otel_spans[1].start_time = start_times[1]
@@ -167,76 +129,51 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[2].start_time = start_times[2]
         otel_spans[2].end_time = end_times[2]
 
-        service_name = "test-service"
-        local_endpoint = {
-            "serviceName": service_name,
-            "port": 9411,
-        }
-
-        exporter = ZipkinSpanExporter(service_name)
-        expected = [
-            {
-                "traceId": format(trace_id, "x"),
-                "id": format(span_id, "x"),
-                "name": span_names[0],
-                "timestamp": start_times[0] // 10 ** 3,
-                "duration": durations[0] // 10 ** 3,
-                "localEndpoint": local_endpoint,
-                "kind": None,
-                "tags": {
-                    "key_bool": "False",
-                    "key_string": "hello_world",
-                    "key_float": "111.22",
-                },
-                "annotations": [
-                    {
-                        "timestamp": event_timestamp // 10 ** 3,
-                        "value": "event0",
-                    }
-                ],
-                "debug": 1,
-                "parentId": format(parent_id, "x"),
-            },
-            {
-                "traceId": format(trace_id, "x"),
-                "id": format(parent_id, "x"),
-                "name": span_names[1],
-                "timestamp": start_times[1] // 10 ** 3,
-                "duration": durations[1] // 10 ** 3,
-                "localEndpoint": local_endpoint,
-                "kind": None,
-                "tags": None,
-                "annotations": None,
-            },
-            {
-                "traceId": format(trace_id, "x"),
-                "id": format(other_id, "x"),
-                "name": span_names[2],
-                "timestamp": start_times[2] // 10 ** 3,
-                "duration": durations[2] // 10 ** 3,
-                "localEndpoint": local_endpoint,
-                "kind": None,
-                "tags": None,
-                "annotations": None,
-            },
-        ]
-
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export(otel_spans)
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        mock_post.assert_called_with(
-            url="http://localhost:9411/api/v2/spans",
-            data=json.dumps(expected),
-            headers={"Content-Type": "application/json"},
+        mock_client = mock.MagicMock()
+        mock_export = mock.MagicMock()
+        mock_client.Export = mock_export
+        host_name = "testHostName"
+        collector_exporter = CollectorSpanExporter(
+            client=mock_client, host_name=host_name
         )
 
-    @patch("requests.post")
-    def test_invalid_response(self, mock_post):
-        mock_post.return_value = MockResponse(404)
-        spans = []
-        exporter = ZipkinSpanExporter("test-service")
-        status = exporter.export(spans)
-        self.assertEqual(SpanExportResult.FAILED_NOT_RETRYABLE, status)
+        result_status = collector_exporter.export(otel_spans)
+        self.assertEqual(SpanExportResult.SUCCESS, result_status)
+
+        node_arg = mock_export.call_args[0]
+        output_spans = getattr(node_arg[0], "spans")
+        output_node = getattr(node_arg[0], "node")
+        self.assertEqual(
+            output_spans[0].trace_id, b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''."
+        )
+        self.assertEqual(
+            output_spans[0].span_id, b"4\xbf\x92\xde\xef\xc5\x8c\x92"
+        )
+        self.assertEqual(
+            output_spans[0].name,
+            trace_pb2.TruncatableString(value=span_names[0]),
+        )
+        self.assertEqual(
+            output_spans[0].start_time.seconds,
+            int(start_times[0] / 1000000000),
+        )
+        self.assertEqual(
+            output_spans[0].end_time.seconds, int(end_times[0] / 1000000000)
+        )
+        self.assertEqual(output_spans[0].kind, trace_api.SpanKind.CLIENT.value)
+
+        self.assertEqual(
+            output_spans[0].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
+        )
+        self.assertEqual(
+            output_spans[0].status.code,
+            trace_api.status.StatusCanonicalCode.INTERNAL.value,
+        )
+        self.assertEqual(output_spans[0].status.message, "test description")
+
+        self.assertIsNotNone(getattr(output_node, "library_info"))
+        self.assertIsNotNone(getattr(output_node, "service_info"))
+        output_identifier = getattr(output_node, "identifier")
+        self.assertEqual(
+            getattr(output_identifier, "host_name"), "testHostName"
+        )
