@@ -117,6 +117,7 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(root_span, trace.Span)
         child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace.Span)
+        self.assertTrue(root_span.context.trace_options.sampled)
 
     def test_sampler_no_sampling(self):
         tracer_source = trace.TracerSource(sampling.ALWAYS_OFF)
@@ -251,6 +252,7 @@ class TestSpanCreation(unittest.TestCase):
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            trace_options=trace_api.TraceOptions.get_sampled(),
         )
 
         self.assertIsNone(tracer.get_current_span())
