@@ -82,7 +82,7 @@ class ProbabilitySampler(Sampler):
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
 
-    # For compatability with 64 bit trace IDs, the sampler checks the 64
+    # For compatibility with 64 bit trace IDs, the sampler checks the 64
     # low-order bits of the trace ID to decide whether to sample a given trace.
     TRACE_ID_LIMIT = (1 << 64) - 1
 
