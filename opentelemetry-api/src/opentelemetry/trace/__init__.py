@@ -266,7 +266,9 @@ class TraceOptions(int):
         return cls(cls.DEFAULT)
 
     @classmethod
-    def get_sampled(cls, other: "TraceOptions" = None) -> "TraceOptions":
+    def get_sampled(
+        cls, other: typing.Optional["TraceOptions"] = None
+    ) -> "TraceOptions":
         if other is None:
             return cls(cls.SAMPLED)
         return cls(other | cls.SAMPLED)
