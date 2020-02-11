@@ -17,7 +17,6 @@ import typing
 
 from opentelemetry.context import Context, RuntimeContext
 
-
 _CONTEXT_KEY = "current_context"
 
 

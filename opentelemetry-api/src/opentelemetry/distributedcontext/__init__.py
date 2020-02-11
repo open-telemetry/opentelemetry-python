@@ -17,7 +17,8 @@ import string
 import typing
 from contextlib import contextmanager
 
-from opentelemetry.context import Context, get_value, set_current, set_value
+from opentelemetry.context import get_value, set_current, set_value
+from opentelemetry.context.context import Context
 
 PRINTABLE = frozenset(
     itertools.chain(

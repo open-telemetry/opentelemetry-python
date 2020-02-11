@@ -23,7 +23,7 @@ class DefaultRuntimeContext(RuntimeContext):
 
     def __init__(self) -> None:
         self._values = {}  # type: typing.Dict[str, object]
-        self._current_context = None
+        self._current_context = None  # type: typing.Optional[Context]
 
     def set_value(self, key: str, value: "object") -> None:
         """See `opentelemetry.context.RuntimeContext.set_value`."""

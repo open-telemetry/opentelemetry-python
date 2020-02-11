@@ -94,7 +94,7 @@ def get_current() -> Context:
         except Exception:  # pylint: disable=broad-except
             logger.error("Failed to load context: %s", configured_context)
 
-    return _CONTEXT_RUNTIME.get_current()
+    return _CONTEXT_RUNTIME.get_current()  # type: ignore
 
 
 def set_current(context: Context) -> None:
@@ -104,7 +104,7 @@ def set_current(context: Context) -> None:
     Args:
         context: The context to use as current.
     """
-    _CONTEXT_RUNTIME.set_current(Context(context.snapshot()))
+    _CONTEXT_RUNTIME.set_current(Context(context.snapshot()))  # type: ignore
 
 
 def with_current_context(

@@ -16,9 +16,6 @@ import unittest
 from unittest.mock import patch
 
 from opentelemetry import context
-from opentelemetry.sdk.context.contextvars_context import (
-    ContextVarsRuntimeContext,
-)
 from opentelemetry.sdk.context.threadlocal_context import (
     ThreadLocalRuntimeContext,
 )
@@ -54,43 +51,6 @@ class TestThreadLocalContext(unittest.TestCase):
 
     @patch(
         "opentelemetry.context._CONTEXT_RUNTIME", ThreadLocalRuntimeContext()
-    )
-    def test_set_value(self):
-        first = context.set_value("a", "yyy")
-        second = context.set_value("a", "zzz")
-        third = context.set_value("a", "---", first)
-        self.assertEqual("yyy", context.get_value("a", context=first))
-        self.assertEqual("zzz", context.get_value("a", context=second))
-        self.assertEqual("---", context.get_value("a", context=third))
-        self.assertEqual(None, context.get_value("a"))
-
-
-class TestContextVarsContext(unittest.TestCase):
-    def setUp(self):
-        self.previous_context = context.get_current()
-
-    def tearDown(self):
-        context.set_current(self.previous_context)
-
-    @patch(
-        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
-    )
-    def test_context(self):
-        self.assertIsNone(context.get_value("say-something"))
-        empty_context = context.get_current()
-        second_context = context.set_value("say-something", "foo")
-        self.assertEqual(second_context.get_value("say-something"), "foo")
-
-        do_work()
-        self.assertEqual(context.get_value("say-something"), "bar")
-        third_context = context.get_current()
-
-        self.assertIsNone(empty_context.get_value("say-something"))
-        self.assertEqual(second_context.get_value("say-something"), "foo")
-        self.assertEqual(third_context.get_value("say-something"), "bar")
-
-    @patch(
-        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
     )
     def test_set_value(self):
         first = context.set_value("a", "yyy")

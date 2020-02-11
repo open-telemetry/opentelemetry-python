@@ -26,6 +26,12 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
+try:
+    import contextvars  # pylint: disable=unused-import
+except ImportError:
+    raise unittest.SkipTest("contextvars not available")
+
+
 _SPAN_NAMES = [
     "test_span1",
     "test_span2",
@@ -47,8 +53,13 @@ def stop_loop_when(loop, cond_func, timeout=5.0):
     loop.call_later(0.1, stop_loop_when, loop, cond_func, timeout)
 
 
+def do_work() -> None:
+    context_api.set_current(context_api.set_value("say-something", "bar"))
+
+
 class TestAsyncio(unittest.TestCase):
-    async def task(self, name):
+    @asyncio.coroutine
+    def task(self, name):
         with self.tracer.start_as_current_span(name):
             context_api.set_value("say-something", "bar")
 
@@ -103,3 +114,40 @@ class TestAsyncio(unittest.TestCase):
             if span is expected_parent:
                 continue
             self.assertEqual(span.parent, expected_parent)
+
+
+class TestContextVarsContext(unittest.TestCase):
+    def setUp(self):
+        self.previous_context = context_api.get_current()
+
+    def tearDown(self):
+        context_api.set_current(self.previous_context)
+
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+    )
+    def test_context(self):
+        self.assertIsNone(context_api.get_value("say-something"))
+        empty_context = context_api.get_current()
+        second_context = context_api.set_value("say-something", "foo")
+        self.assertEqual(second_context.get_value("say-something"), "foo")
+
+        do_work()
+        self.assertEqual(context_api.get_value("say-something"), "bar")
+        third_context = context_api.get_current()
+
+        self.assertIsNone(empty_context.get_value("say-something"))
+        self.assertEqual(second_context.get_value("say-something"), "foo")
+        self.assertEqual(third_context.get_value("say-something"), "bar")
+
+    @patch(
+        "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
+    )
+    def test_set_value(self):
+        first = context_api.set_value("a", "yyy")
+        second = context_api.set_value("a", "zzz")
+        third = context_api.set_value("a", "---", first)
+        self.assertEqual("yyy", context_api.get_value("a", context=first))
+        self.assertEqual("zzz", context_api.get_value("a", context=second))
+        self.assertEqual("---", context_api.get_value("a", context=third))
+        self.assertEqual(None, context_api.get_value("a"))

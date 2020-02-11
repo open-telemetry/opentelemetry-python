@@ -72,7 +72,7 @@ class RuntimeContext(ABC):
     @abstractmethod
     def set_current(self, context: Context) -> None:
         """ Sets the current Context object.
-        
+
         Args:
             context: The Context to set.
         """
