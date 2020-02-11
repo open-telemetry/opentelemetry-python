@@ -55,9 +55,6 @@ class BaseHandle:
     Args:
         value_type: The type of values this handle holds (int, float).
         enabled: True if the originating instrument is enabled.
-        monotonic: Indicates acceptance of only monotonic/non-monotonic values
-            for updating counter and gauge handles.
-        absolute: Indicates acceptance of negative updates to measure handles.
         aggregator: The aggregator for this handle. Will handle aggregation
             upon updates and checkpointing of values for exporting.
     """
@@ -66,14 +63,10 @@ class BaseHandle:
         self,
         value_type: Type[metrics_api.ValueT],
         enabled: bool,
-        monotonic: bool,
-        absolute: bool,
         aggregator: Aggregator,
     ):
         self.value_type = value_type
         self.enabled = enabled
-        self.monotonic = monotonic
-        self.absolute = absolute
         self.aggregator = aggregator
         self.last_update_timestamp = time_ns()
 
@@ -103,9 +96,6 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
     def add(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.CounterHandle.add`."""
         if self._validate_update(value):
-            if self.monotonic and value < 0:
-                logger.warning("Monotonic counter cannot descend.")
-                return
             self.update(value)
 
 
@@ -113,9 +103,6 @@ class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
     def set(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.GaugeHandle.set`."""
         if self._validate_update(value):
-            if self.monotonic and value < self.aggregator.current:
-                logger.warning("Monotonic gauge cannot descend.")
-                return
             self.update(value)
 
 
@@ -123,9 +110,6 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
     def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.MeasureHandle.record`."""
         if self._validate_update(value):
-            if self.absolute and value < 0:
-                logger.warning("Absolute measure cannot accept negatives.")
-                return
             self.update(value)
 
 
@@ -149,8 +133,6 @@ class Metric(metrics_api.Metric):
         meter: "Meter",
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = False,
-        absolute: bool = True,
     ):
         self.name = name
         self.description = description
@@ -159,8 +141,6 @@ class Metric(metrics_api.Metric):
         self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
-        self.monotonic = monotonic
-        self.absolute = absolute
         self.handles = {}
 
     def get_handle(self, label_set: LabelSet) -> BaseHandle:
@@ -170,8 +150,6 @@ class Metric(metrics_api.Metric):
             handle = self.HANDLE_TYPE(
                 self.value_type,
                 self.enabled,
-                self.monotonic,
-                self.absolute,
                 # Aggregator will be created based off type of metric
                 self.meter.batcher.aggregator_for(self.__class__),
             )
@@ -188,10 +166,6 @@ class Metric(metrics_api.Metric):
 
 class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
-
-    By default, counter values can only go up (monotonic). Negative inputs
-    will be rejected for monotonic counter metrics. Counter metrics that have a
-    monotonic option set to False allows negative inputs.
     """
 
     HANDLE_TYPE = CounterHandle
@@ -205,8 +179,6 @@ class Counter(Metric, metrics_api.Counter):
         meter: "Meter",
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = True,
-        absolute: bool = False,
     ):
         super().__init__(
             name,
@@ -216,8 +188,6 @@ class Counter(Metric, metrics_api.Counter):
             meter,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
-            absolute=absolute,
         )
 
     def add(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
@@ -229,9 +199,6 @@ class Counter(Metric, metrics_api.Counter):
 
 class Gauge(Metric, metrics_api.Gauge):
     """See `opentelemetry.metrics.Gauge`.
-
-    By default, gauge values can go both up and down (non-monotonic).
-    Negative inputs will be rejected for monotonic gauge metrics.
     """
 
     HANDLE_TYPE = GaugeHandle
@@ -245,8 +212,6 @@ class Gauge(Metric, metrics_api.Gauge):
         meter: "Meter",
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = False,
-        absolute: bool = False,
     ):
         super().__init__(
             name,
@@ -256,8 +221,6 @@ class Gauge(Metric, metrics_api.Gauge):
             meter,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
-            absolute=absolute,
         )
 
     def set(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
@@ -339,8 +302,6 @@ class Meter(metrics_api.Meter):
         metric_type: Type[metrics_api.MetricT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = False,
-        absolute: bool = True,
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
@@ -352,8 +313,6 @@ class Meter(metrics_api.Meter):
             self,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
-            absolute=absolute,
         )
         self.metrics.add(metric)
         return metric
