@@ -37,26 +37,6 @@ class ContextVarsRuntimeContext(RuntimeContext):
         self._contextvars = {}  # type: typing.Dict[str, ContextVar[object]]
         self._current_context = ContextVar(_CONTEXT_KEY)
 
-    def set_value(self, key: str, value: "object") -> None:
-        """See `opentelemetry.context.RuntimeContext.set_value`."""
-        if key not in self._contextvars.keys():
-            self._contextvars[key] = ContextVar(key)
-
-        self._contextvars[key].set(value)
-
-    def get_value(self, key: str) -> "object":
-        """See `opentelemetry.context.RuntimeContext.get_value`."""
-        if key in self._contextvars:
-            try:
-                return self._contextvars[key].get()
-            except (KeyError, LookupError):
-                pass
-        return None
-
-    def remove_value(self, key: str) -> None:
-        """See `opentelemetry.context.RuntimeContext.remove_value`."""
-        self._contextvars.pop(key, None)
-
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
         self._current_context.set(context)

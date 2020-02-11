@@ -29,31 +29,6 @@ class RuntimeContext(ABC):
     """
 
     @abstractmethod
-    def set_value(self, key: str, value: "object") -> None:
-        """Set a value in this `RuntimeContext`.
-
-        Args:
-            key: The key for the value to set.
-            value: The value to set.
-        """
-
-    @abstractmethod
-    def get_value(self, key: str) -> "object":
-        """Get a value from this `RuntimeContext`.
-
-        Args:
-            key: The key for the value to retrieve.
-        """
-
-    @abstractmethod
-    def remove_value(self, key: str) -> None:
-        """Remove a value from this `RuntimeContext`.
-
-        Args:
-            key: The key for the value to remove.
-        """
-
-    @abstractmethod
     def set_current(self, context: Context) -> None:
         """ Sets the current `Context` object.
 

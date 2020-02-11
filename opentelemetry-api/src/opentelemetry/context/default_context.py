@@ -25,18 +25,6 @@ class DefaultRuntimeContext(RuntimeContext):
         self._values = {}  # type: typing.Dict[str, object]
         self._current_context = None  # type: typing.Optional[Context]
 
-    def set_value(self, key: str, value: "object") -> None:
-        """See `opentelemetry.context.RuntimeContext.set_value`."""
-        self._values[key] = value
-
-    def get_value(self, key: str) -> "object":
-        """See `opentelemetry.context.RuntimeContext.get_value`."""
-        return self._values.get(key)
-
-    def remove_value(self, key: str) -> None:
-        """See `opentelemetry.context.RuntimeContext.remove_value`."""
-        self._values.pop(key, None)
-
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
         self._current_context = context

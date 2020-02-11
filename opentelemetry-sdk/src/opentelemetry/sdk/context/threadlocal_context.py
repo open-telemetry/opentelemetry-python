@@ -30,25 +30,6 @@ class ThreadLocalRuntimeContext(RuntimeContext):
         self._thread_local = threading.local()
         self._current_context = threading.local()
 
-    def set_value(self, key: str, value: "object") -> None:
-        """See `opentelemetry.context.RuntimeContext.set_value`."""
-        setattr(self._thread_local, key, value)
-
-    def get_value(self, key: str) -> "object":
-        """See `opentelemetry.context.RuntimeContext.get_value`."""
-        try:
-            got = getattr(self._thread_local, key)  # type: object
-            return got
-        except AttributeError:
-            return None
-
-    def remove_value(self, key: str) -> None:
-        """See `opentelemetry.context.RuntimeContext.remove_value`."""
-        try:
-            delattr(self._thread_local, key)
-        except AttributeError:
-            pass
-
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
         setattr(self._current_context, _CONTEXT_KEY, context)
