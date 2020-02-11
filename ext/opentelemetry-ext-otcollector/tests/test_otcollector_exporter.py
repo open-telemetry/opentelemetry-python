@@ -51,82 +51,59 @@ class TestCollectorSpanExporter(unittest.TestCase):
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
     def test_export(self):
-        span_names = ("test1", "test2", "test3")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
         parent_id = 0x1111111111111111
         other_id = 0x2222222222222222
+        start_time = 683647322 * 10 ** 9  # in ns
 
-        base_time = 683647322 * 10 ** 9  # in ns
-        start_times = (
-            base_time,
-            base_time + 150 * 10 ** 6,
-            base_time + 300 * 10 ** 6,
-        )
-        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
-        end_times = (
-            start_times[0] + durations[0],
-            start_times[1] + durations[1],
-            start_times[2] + durations[2],
-        )
-
+        duration = 50 * 10 ** 6
+        end_time = start_time + duration
         span_context = trace_api.SpanContext(
-            trace_id, span_id, trace_options=TraceOptions(TraceOptions.SAMPLED)
+            trace_id,
+            span_id,
+            trace_options=TraceOptions(TraceOptions.SAMPLED),
+            trace_state=trace_api.TraceState({"testKey": "testValue"}),
         )
         parent_context = trace_api.SpanContext(trace_id, parent_id)
         other_context = trace_api.SpanContext(trace_id, other_id)
-
         event_attributes = {
             "annotation_bool": True,
             "annotation_string": "annotation_test",
             "key_float": 0.3,
         }
-
-        event_timestamp = base_time + 50 * 10 ** 6
+        event_timestamp = start_time + 50 * 10 ** 6
         event = trace_api.Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
         )
-
         link_attributes = {"key_bool": True}
-
         link = trace_api.Link(
             context=other_context, attributes=link_attributes
         )
-
         otel_spans = [
             trace.Span(
-                name=span_names[0],
+                name="test1",
                 context=span_context,
                 parent=parent_context,
                 events=(event,),
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
-            ),
-            trace.Span(
-                name=span_names[1], context=parent_context, parent=None
-            ),
-            trace.Span(name=span_names[2], context=other_context, parent=None),
+            )
         ]
-
-        otel_spans[0].start(start_time=start_times[0])
+        otel_spans[0].start(start_time=start_time)
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
+        otel_spans[0].set_attribute("key_int", 333)
         otel_spans[0].set_status(
             trace_api.Status(
                 trace_api.status.StatusCanonicalCode.INTERNAL,
                 "test description",
             )
         )
-        otel_spans[0].end(end_time=end_times[0])
-
-        otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1].end(end_time=end_times[1])
-
-        otel_spans[2].start(start_time=start_times[2])
-        otel_spans[2].end(end_time=end_times[2])
+        otel_spans[0].end(end_time=end_time)
 
         mock_client = mock.MagicMock()
         mock_export = mock.MagicMock()
@@ -149,15 +126,13 @@ class TestCollectorSpanExporter(unittest.TestCase):
             output_spans[0].span_id, b"4\xbf\x92\xde\xef\xc5\x8c\x92"
         )
         self.assertEqual(
-            output_spans[0].name,
-            trace_pb2.TruncatableString(value=span_names[0]),
+            output_spans[0].name, trace_pb2.TruncatableString(value="test1")
         )
         self.assertEqual(
-            output_spans[0].start_time.seconds,
-            int(start_times[0] / 1000000000),
+            output_spans[0].start_time.seconds, int(start_time / 1000000000)
         )
         self.assertEqual(
-            output_spans[0].end_time.seconds, int(end_times[0] / 1000000000)
+            output_spans[0].end_time.seconds, int(end_time / 1000000000)
         )
         self.assertEqual(output_spans[0].kind, trace_api.SpanKind.CLIENT.value)
 
@@ -169,6 +144,77 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_api.status.StatusCanonicalCode.INTERNAL.value,
         )
         self.assertEqual(output_spans[0].status.message, "test description")
+
+        self.assertEqual(output_spans[0].tracestate.entries[0].key, "testKey")
+        self.assertEqual(
+            output_spans[0].tracestate.entries[0].value, "testValue"
+        )
+
+        self.assertEqual(
+            output_spans[0].attributes.attribute_map["key_bool"].bool_value,
+            False,
+        )
+        self.assertEqual(
+            output_spans[0]
+            .attributes.attribute_map["key_string"]
+            .string_value.value,
+            "hello_world",
+        )
+        self.assertEqual(
+            output_spans[0].attributes.attribute_map["key_float"].double_value,
+            111.22,
+        )
+        self.assertEqual(
+            output_spans[0].attributes.attribute_map["key_int"].int_value, 333
+        )
+
+        self.assertEqual(
+            output_spans[0].time_events.time_event[0].time.seconds, 683647322
+        )
+        self.assertEqual(
+            output_spans[0]
+            .time_events.time_event[0]
+            .annotation.description.value,
+            "event0",
+        )
+        self.assertEqual(
+            output_spans[0]
+            .time_events.time_event[0]
+            .annotation.attributes.attribute_map["annotation_bool"]
+            .bool_value,
+            True,
+        )
+        self.assertEqual(
+            output_spans[0]
+            .time_events.time_event[0]
+            .annotation.attributes.attribute_map["annotation_string"]
+            .string_value.value,
+            "annotation_test",
+        )
+        self.assertEqual(
+            output_spans[0]
+            .time_events.time_event[0]
+            .annotation.attributes.attribute_map["key_float"]
+            .double_value,
+            0.3,
+        )
+
+        self.assertEqual(
+            output_spans[0].links.link[0].trace_id,
+            b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''.",
+        )
+        self.assertEqual(output_spans[0].links.link[0].span_id, b'""""""""')
+        self.assertEqual(
+            output_spans[0].links.link[0].type,
+            trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED,
+        )
+        self.assertEqual(
+            output_spans[0]
+            .links.link[0]
+            .attributes.attribute_map["key_bool"]
+            .bool_value,
+            True,
+        )
 
         self.assertIsNotNone(getattr(output_node, "library_info"))
         self.assertIsNotNone(getattr(output_node, "service_info"))

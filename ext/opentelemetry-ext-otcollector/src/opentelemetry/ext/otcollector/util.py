@@ -38,10 +38,12 @@ def proto_timestamp_from_time_ns(time_ns):
     """
     ts = Timestamp()
     if time_ns is not None:
+        # pylint: disable=no-member
         ts.FromNanoseconds(time_ns)
     return ts
 
 
+# pylint: disable=no-member
 def get_collector_span_kind(kind: SpanKind):
     if kind is SpanKind.SERVER:
         return trace_pb2.Span.SpanKind.SERVER
@@ -50,7 +52,7 @@ def get_collector_span_kind(kind: SpanKind):
     return trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED
 
 
-def add_proto_attribute_value(pb_attributes, attribute_key, attribute_value):
+def add_proto_attribute_value(pb_attributes, key, value):
     """Sets string, int, boolean or float value on protobuf
         span, link or annotation attributes.
 
@@ -58,31 +60,26 @@ def add_proto_attribute_value(pb_attributes, attribute_key, attribute_value):
         :class: `~opencensus.proto.trace.Span.Attributes`
     :param pb_attributes: protobuf Span's attributes property
 
-    :type attribute_key: str
-    :param attribute_key: attribute key to set
+    :type key: str
+    :param key: attribute key to set
 
-    :type attribute_value: str or int or bool or float
-    :param attribute_value: attribute value
+    :type value: str or int or bool or float
+    :param value: attribute value
     """
 
-    if isinstance(attribute_value, bool):
-        pb_attributes.attribute_map[attribute_key].bool_value = attribute_value
-    elif isinstance(attribute_value, int):
-        pb_attributes.attribute_map[attribute_key].int_value = attribute_value
-    elif isinstance(attribute_value, str):
-        pb_attributes.attribute_map[
-            attribute_key
-        ].string_value.value = attribute_value
-    elif isinstance(attribute_value, float):
-        pb_attributes.attribute_map[
-            attribute_key
-        ].double_value = attribute_value
+    if isinstance(value, bool):
+        pb_attributes.attribute_map[key].bool_value = value
+    elif isinstance(value, int):
+        pb_attributes.attribute_map[key].int_value = value
+    elif isinstance(value, str):
+        pb_attributes.attribute_map[key].string_value.value = value
+    elif isinstance(value, float):
+        pb_attributes.attribute_map[key].double_value = value
     else:
-        pb_attributes.attribute_map[attribute_key].string_value.value = str(
-            attribute_value
-        )
+        pb_attributes.attribute_map[key].string_value.value = str(value)
 
 
+# pylint: disable=no-member
 def get_node(service_name, host_name):
     """Generates Node message from params and system information.
     """
