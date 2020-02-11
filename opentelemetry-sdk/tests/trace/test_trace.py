@@ -252,7 +252,9 @@ class TestSpanCreation(unittest.TestCase):
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
-            trace_options=trace_api.TraceOptions.get_sampled(),
+            trace_options=trace_api.TraceOptions(
+                trace_api.TraceOptions.SAMPLED
+            ),
         )
 
         self.assertIsNone(tracer.get_current_span())
