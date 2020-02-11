@@ -36,8 +36,6 @@ from opentelemetry.sdk.metrics.export import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_PORT = 8000
-
 
 class PrometheusMetricsExporter(MetricsExporter):
     """Prometheus metric exporter for OpenTelemetry.
@@ -48,9 +46,7 @@ class PrometheusMetricsExporter(MetricsExporter):
         prefix: single-word application prefix relevant to the domain the metric belongs to.
     """
 
-    def __init__(
-        self, port: int = DEFAULT_PORT, address: str = "", prefix: str = ""
-    ):
+    def __init__(self, port: int = 8000, address: str = "", prefix: str = ""):
         self._port = port
         self._address = address
         self._collector = CustomCollector(prefix)
@@ -87,7 +83,7 @@ class CustomCollector:
         for example when the HTTP endpoint is invoked by Prometheus.
         """
 
-        for metric_batch in list(self._metrics_to_export):
+        for metric_batch in self._metrics_to_export:
             for metric_record in metric_batch:
                 prometheus_metric = self._translate_to_prometheus(
                     metric_record
@@ -99,12 +95,15 @@ class CustomCollector:
     def _translate_to_prometheus(self, metric_record: MetricRecord):
         prometheus_metric = None
         label_values = []
+        label_keys = []
         for label in metric_record.label_set.labels:
             for index, label_tuple_value in enumerate(label):
                 # Odd number
                 if index & 1 == 1:
                     label_values.append(label_tuple_value)
 
+        for label_key in metric_record.metric.label_keys:
+            label_keys.append(sanitize(label_key))
         metric_name = ""
         if self._prefix != "":
             metric_name = self._prefix + "_"
@@ -114,7 +113,7 @@ class CustomCollector:
             prometheus_metric = CounterMetricFamily(
                 name=metric_name,
                 documentation=metric_record.metric.description,
-                labels=metric_record.metric.label_keys,
+                labels=label_keys,
             )
             prometheus_metric.add_metric(
                 labels=label_values, value=metric_record.aggregator.check_point
@@ -124,6 +123,7 @@ class CustomCollector:
             prometheus_metric = GaugeMetricFamily(
                 name=metric_name,
                 documentation=metric_record.metric.description,
+                labels=label_keys,
             )
             prometheus_metric.add_metric(
                 labels=label_values, value=metric_record.aggregator.check_point
@@ -134,6 +134,7 @@ class CustomCollector:
             prometheus_metric = UnknownMetricFamily(
                 name=metric_name,
                 documentation=metric_record.metric.description,
+                labels=label_keys,
             )
             prometheus_metric.add_metric(
                 labels=label_values, value=metric_record.aggregator.check_point

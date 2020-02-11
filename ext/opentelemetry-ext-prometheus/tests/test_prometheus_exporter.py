@@ -91,9 +91,9 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "unit",
             int,
             metrics.Counter,
-            ["environment"],
+            ["environment@"],
         )
-        kvp = {"environment": "staging"}
+        kvp = {"environment@": "staging"}
         label_set = meter.get_label_set(kvp)
         aggregator = CounterAggregator()
         aggregator.check_point = 123
@@ -107,7 +107,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertEqual(prometheus_metric.samples[0].value, 123)
             self.assertEqual(
-                prometheus_metric.samples[0].labels["environment"], "staging"
+                prometheus_metric.samples[0].labels["environment_"], "staging"
             )
 
     def test_gauge_to_prometheus(self):
