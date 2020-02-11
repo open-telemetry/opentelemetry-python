@@ -16,21 +16,9 @@ import typing
 from abc import ABC, abstractmethod
 
 
-class Context:
-    def __init__(
-        self, values: typing.Optional[typing.Dict[str, object]] = None
-    ):
-        if values is None:
-            values = {}
-        self._data = values
-
-    def get_value(self, key: str) -> "object":
-        return self._data.get(key)
-
-    def snapshot(self) -> typing.Dict[str, object]:
-        if self._data:
-            return dict((key, value) for key, value in self._data.items())
-        return {}
+class Context(dict):
+    def __setitem__(self, key, value):
+        raise ValueError
 
 
 class RuntimeContext(ABC):

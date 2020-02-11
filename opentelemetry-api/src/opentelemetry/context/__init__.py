@@ -33,7 +33,7 @@ def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
         key: The key of the value to retrieve.
         context: The context from which to retrieve the value, if None, the current context is used.
     """
-    return context.get_value(key) if context else get_current().get_value(key)
+    return context.get(key) if context is not None else get_current().get(key)
 
 
 def set_value(
@@ -51,7 +51,7 @@ def set_value(
     """
     if context is None:
         context = get_current()
-    new_values = context.snapshot()
+    new_values = context.copy()
     new_values[key] = value
     return Context(new_values)
 
@@ -69,7 +69,7 @@ def remove_value(
     """
     if context is None:
         context = get_current()
-    new_values = context.snapshot()
+    new_values = context.copy()
     new_values.pop(key, None)
     return Context(new_values)
 
@@ -104,7 +104,7 @@ def set_current(context: Context) -> None:
     Args:
         context: The context to use as current.
     """
-    _CONTEXT_RUNTIME.set_current(Context(context.snapshot()))  # type: ignore
+    _CONTEXT_RUNTIME.set_current(Context(context.copy()))  # type: ignore
 
 
 def with_current_context(

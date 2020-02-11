@@ -16,7 +16,7 @@ import asyncio
 import unittest
 from unittest.mock import patch
 
-from opentelemetry import context as context_api
+from opentelemetry import context
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.context.contextvars_context import (
     ContextVarsRuntimeContext,
@@ -54,21 +54,21 @@ def stop_loop_when(loop, cond_func, timeout=5.0):
 
 
 def do_work() -> None:
-    context_api.set_current(context_api.set_value("say-something", "bar"))
+    context.set_current(context.set_value("say", "bar"))
 
 
 class TestAsyncio(unittest.TestCase):
     @asyncio.coroutine
     def task(self, name):
         with self.tracer.start_as_current_span(name):
-            context_api.set_value("say-something", "bar")
+            context.set_value("say", "bar")
 
     def submit_another_task(self, name):
         self.loop.create_task(self.task(name))
 
     def setUp(self):
-        self.previous_context = context_api.get_current()
-        context_api.set_current(context_api.Context())
+        self.previous_context = context.get_current()
+        context.set_current(context.Context())
         self.tracer_source = trace.TracerSource()
         self.tracer = self.tracer_source.get_tracer(__name__)
         self.memory_exporter = InMemorySpanExporter()
@@ -77,7 +77,7 @@ class TestAsyncio(unittest.TestCase):
         self.loop = asyncio.get_event_loop()
 
     def tearDown(self):
-        context_api.set_current(self.previous_context)
+        context.set_current(self.previous_context)
 
     @patch(
         "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
@@ -118,36 +118,37 @@ class TestAsyncio(unittest.TestCase):
 
 class TestContextVarsContext(unittest.TestCase):
     def setUp(self):
-        self.previous_context = context_api.get_current()
+        self.previous_context = context.get_current()
 
     def tearDown(self):
-        context_api.set_current(self.previous_context)
+        context.set_current(self.previous_context)
 
     @patch(
         "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
     )
     def test_context(self):
-        self.assertIsNone(context_api.get_value("say-something"))
-        empty_context = context_api.get_current()
-        second_context = context_api.set_value("say-something", "foo")
-        self.assertEqual(second_context.get_value("say-something"), "foo")
+        self.assertIsNone(context.get_value("say"))
+        empty = context.get_current()
+        second = context.set_value("say", "foo")
+
+        self.assertEqual(context.get_value("say", context=second), "foo")
 
         do_work()
-        self.assertEqual(context_api.get_value("say-something"), "bar")
-        third_context = context_api.get_current()
+        self.assertEqual(context.get_value("say"), "bar")
+        third = context.get_current()
 
-        self.assertIsNone(empty_context.get_value("say-something"))
-        self.assertEqual(second_context.get_value("say-something"), "foo")
-        self.assertEqual(third_context.get_value("say-something"), "bar")
+        self.assertIsNone(context.get_value("say", context=empty))
+        self.assertEqual(context.get_value("say", context=second), "foo")
+        self.assertEqual(context.get_value("say", context=third), "bar")
 
     @patch(
         "opentelemetry.context._CONTEXT_RUNTIME", ContextVarsRuntimeContext()
     )
     def test_set_value(self):
-        first = context_api.set_value("a", "yyy")
-        second = context_api.set_value("a", "zzz")
-        third = context_api.set_value("a", "---", first)
-        self.assertEqual("yyy", context_api.get_value("a", context=first))
-        self.assertEqual("zzz", context_api.get_value("a", context=second))
-        self.assertEqual("---", context_api.get_value("a", context=third))
-        self.assertEqual(None, context_api.get_value("a"))
+        first = context.set_value("a", "yyy")
+        second = context.set_value("a", "zzz")
+        third = context.set_value("a", "---", first)
+        self.assertEqual("yyy", context.get_value("a", context=first))
+        self.assertEqual("zzz", context.get_value("a", context=second))
+        self.assertEqual("---", context.get_value("a", context=third))
+        self.assertEqual(None, context.get_value("a"))

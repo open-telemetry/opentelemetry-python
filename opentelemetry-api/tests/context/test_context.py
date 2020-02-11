@@ -18,23 +18,23 @@ from opentelemetry import context
 
 
 def do_work() -> None:
-    context.set_current(context.set_value("say-something", "bar"))
+    context.set_current(context.set_value("say", "bar"))
 
 
 class TestContext(unittest.TestCase):
     def test_context(self):
-        self.assertIsNone(context.get_value("say-something"))
-        empty_context = context.get_current()
-        second_context = context.set_value("say-something", "foo")
-        self.assertEqual(second_context.get_value("say-something"), "foo")
+        self.assertIsNone(context.get_value("say"))
+        empty = context.get_current()
+        second = context.set_value("say", "foo")
+        self.assertEqual(context.get_value("say", context=second), "foo")
 
         do_work()
-        self.assertEqual(context.get_value("say-something"), "bar")
-        third_context = context.get_current()
+        self.assertEqual(context.get_value("say"), "bar")
+        third = context.get_current()
 
-        self.assertIsNone(empty_context.get_value("say-something"))
-        self.assertEqual(second_context.get_value("say-something"), "foo")
-        self.assertEqual(third_context.get_value("say-something"), "bar")
+        self.assertIsNone(context.get_value("say", context=empty))
+        self.assertEqual(context.get_value("say", context=second), "foo")
+        self.assertEqual(context.get_value("say", context=third), "bar")
 
     def test_set_value(self):
         first = context.set_value("a", "yyy")
@@ -44,3 +44,8 @@ class TestContext(unittest.TestCase):
         self.assertEqual("zzz", context.get_value("a", context=second))
         self.assertEqual("---", context.get_value("a", context=third))
         self.assertEqual(None, context.get_value("a"))
+
+    def test_context_is_immutable(self):
+        with self.assertRaises(ValueError):
+            # ensure a context
+            context.get_current()["test"] = "cant-change-immutable"

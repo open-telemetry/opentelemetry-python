@@ -22,7 +22,7 @@ from opentelemetry.sdk.context.threadlocal_context import (
 
 
 def do_work() -> None:
-    context.set_current(context.set_value("say-something", "bar"))
+    context.set_current(context.set_value("say", "bar"))
 
 
 class TestThreadLocalContext(unittest.TestCase):
@@ -36,18 +36,19 @@ class TestThreadLocalContext(unittest.TestCase):
         "opentelemetry.context._CONTEXT_RUNTIME", ThreadLocalRuntimeContext()
     )
     def test_context(self):
-        self.assertIsNone(context.get_value("say-something"))
-        empty_context = context.get_current()
-        second_context = context.set_value("say-something", "foo")
-        self.assertEqual(second_context.get_value("say-something"), "foo")
+        self.assertIsNone(context.get_value("say"))
+        empty = context.get_current()
+        second = context.set_value("say", "foo")
+
+        self.assertEqual(context.get_value("say", context=second), "foo")
 
         do_work()
-        self.assertEqual(context.get_value("say-something"), "bar")
-        third_context = context.get_current()
+        self.assertEqual(context.get_value("say"), "bar")
+        third = context.get_current()
 
-        self.assertIsNone(empty_context.get_value("say-something"))
-        self.assertEqual(second_context.get_value("say-something"), "foo")
-        self.assertEqual(third_context.get_value("say-something"), "bar")
+        self.assertIsNone(context.get_value("say", context=empty))
+        self.assertEqual(context.get_value("say", context=second), "foo")
+        self.assertEqual(context.get_value("say", context=third), "bar")
 
     @patch(
         "opentelemetry.context._CONTEXT_RUNTIME", ThreadLocalRuntimeContext()
