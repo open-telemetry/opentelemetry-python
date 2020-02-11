@@ -18,9 +18,6 @@ from unittest.mock import patch
 
 from opentelemetry import context
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.context.contextvars_context import (
-    ContextVarsRuntimeContext,
-)
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -28,6 +25,9 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 try:
     import contextvars  # pylint: disable=unused-import
+    from opentelemetry.sdk.context.contextvars_context import (
+        ContextVarsRuntimeContext,
+    )
 except ImportError:
     raise unittest.SkipTest("contextvars not available")
 
