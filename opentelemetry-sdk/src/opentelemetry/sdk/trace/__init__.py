@@ -434,9 +434,7 @@ class Tracer(trace_api.Tracer):
     """
 
     def __init__(
-        self,
-        source: "TracerSource",
-        instrumentation_info: InstrumentationInfo,
+        self, source: "TracerSource", instrumentation_info: InstrumentationInfo
     ) -> None:
         self.source = source
         self.instrumentation_info = instrumentation_info
