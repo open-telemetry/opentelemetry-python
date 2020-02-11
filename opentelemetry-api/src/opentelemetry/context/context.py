@@ -70,4 +70,4 @@ class RuntimeContext(ABC):
         """ Returns the current Context object. """
 
 
-__all__ = ["RuntimeContext"]
+__all__ = ["Context", "RuntimeContext"]
