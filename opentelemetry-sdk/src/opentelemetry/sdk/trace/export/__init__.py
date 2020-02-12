@@ -273,7 +273,7 @@ class ConsoleSpanExporter(SpanExporter):
         format: str = "",
     ):
         self.out = out
-        self.format = format
+        self.format= format
 
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
