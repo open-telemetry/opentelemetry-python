@@ -16,8 +16,6 @@
 This module serves as an example for a simple application using metrics
 Examples show how to recording affects the collection of metrics to be exported
 """
-import time
-
 from opentelemetry import metrics
 from opentelemetry.ext.prometheus import PrometheusMetricsExporter
 from opentelemetry.sdk.metrics import Counter, Meter
@@ -36,8 +34,8 @@ exporter = PrometheusMetricsExporter(port, address, prefix)
 controller = PushController(meter, exporter, 5)
 
 counter = meter.create_metric(
-    "available memory",
-    "available memory",
+    "incoming requests",
+    "incoming requests",
     "bytes",
     int,
     Counter,

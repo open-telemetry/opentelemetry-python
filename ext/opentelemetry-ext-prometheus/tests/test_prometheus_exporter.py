@@ -105,15 +105,52 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             self.assertEqual(type(prometheus_metric), CounterMetricFamily)
             self.assertEqual(prometheus_metric.name, "testprefix_test_name")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
+            self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 1)
             self.assertEqual(
                 prometheus_metric.samples[0].labels["environment_"], "staging"
             )
 
-    def test_gauge_to_prometheus(self):
-        # TODO: Add unit test once GaugeAggregator is available
-        self.assertEqual(True, True)
+    # TODO: Add unit test once GaugeAggregator is available
+    # TODO: Add unit test once Measure Aggregators are available
 
-    def test_measure_to_prometheus(self):
-        # TODO: Add unit test once Measure Aggregators are available
-        self.assertEqual(True, True)
+    def test_invalid_metric(self):
+
+        meter = metrics.Meter()
+        metric = meter.create_metric(
+            "test@name", "testdesc", "unit", int, TestMetric
+        )
+        kvp = {"environment": "staging"}
+        label_set = meter.get_label_set(kvp)
+        record = MetricRecord(None, label_set, metric)
+        collector = CustomCollector("testprefix")
+        collector.add_metrics_data([record])
+        collector.collect()
+        self.assertLogs("opentelemetry.ext.prometheus", level="WARNING")
+
+
+class TestMetric(metrics.Metric):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type,
+        meter,
+        label_keys,
+        enabled: bool = True,
+        monotonic: bool = True,
+        absolute: bool = False,
+    ):
+        super().__init__(
+            name,
+            description,
+            unit,
+            value_type,
+            meter,
+            label_keys=label_keys,
+            enabled=enabled,
+            monotonic=monotonic,
+            absolute=absolute,
+        )

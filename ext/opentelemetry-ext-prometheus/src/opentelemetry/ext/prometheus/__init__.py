@@ -14,6 +14,7 @@
 
 """Prometheus Metrics Exporter for OpenTelemetry."""
 
+import collections
 import logging
 import re
 from typing import Sequence
@@ -41,8 +42,8 @@ class PrometheusMetricsExporter(MetricsExporter):
     """Prometheus metric exporter for OpenTelemetry.
 
     Args:
-        port: The Prometheus port to be used.
-        address: The Prometheus address to be used.
+        port: Port number to listen.
+        address: Endpoint address (default is localhost).
         prefix: single-word application prefix relevant to the domain the metric belongs to.
     """
 
@@ -51,7 +52,7 @@ class PrometheusMetricsExporter(MetricsExporter):
         self._address = address
         self._collector = CustomCollector(prefix)
 
-        start_http_server(port=self._port, addr=str(self._address))
+        start_http_server(port=self._port, addr=self._address)
         REGISTRY.register(self._collector)
 
     def export(
@@ -71,7 +72,10 @@ class CustomCollector:
 
     def __init__(self, prefix: str = ""):
         self._prefix = prefix
-        self._metrics_to_export = []
+        self._metrics_to_export = collections.deque()
+        self._non_letters_nor_digits_re = re.compile(
+            r"[^\w]", re.UNICODE | re.IGNORECASE
+        )
 
     def add_metrics_data(self, metric_records: Sequence[MetricRecord]):
         self._metrics_to_export.append(metric_records)
@@ -83,31 +87,28 @@ class CustomCollector:
         for example when the HTTP endpoint is invoked by Prometheus.
         """
 
-        for metric_batch in self._metrics_to_export:
-            for metric_record in metric_batch:
+        while self._metrics_to_export:
+            for metric_record in self._metrics_to_export.popleft():
                 prometheus_metric = self._translate_to_prometheus(
                     metric_record
                 )
-                if prometheus_metric:
+                if prometheus_metric is not None:
                     yield prometheus_metric
-            self._metrics_to_export.remove(metric_batch)
 
     def _translate_to_prometheus(self, metric_record: MetricRecord):
         prometheus_metric = None
         label_values = []
         label_keys = []
         for label in metric_record.label_set.labels:
-            for index, label_tuple_value in enumerate(label):
-                # Odd number
-                if index & 1 == 1:
-                    label_values.append(label_tuple_value)
+            for label_tuple_value in label[1::2]:
+                label_values.append(label_tuple_value)
 
         for label_key in metric_record.metric.label_keys:
-            label_keys.append(sanitize(label_key))
+            label_keys.append(self._sanitize(label_key))
         metric_name = ""
         if self._prefix != "":
             metric_name = self._prefix + "_"
-        metric_name += sanitize(metric_record.metric.name)
+        metric_name += self._sanitize(metric_record.metric.name)
 
         if isinstance(metric_record.metric, Counter):
             prometheus_metric = CounterMetricFamily(
@@ -146,12 +147,8 @@ class CustomCollector:
             )
         return prometheus_metric
 
-
-_NON_LETTERS_NOR_DIGITS_RE = re.compile(r"[^\w]", re.UNICODE | re.IGNORECASE)
-
-
-def sanitize(key):
-    """ sanitize the given metric name or label according to Prometheus rule.
-    Replace all characters other than [A-Za-z0-9_] with '_'.
-    """
-    return _NON_LETTERS_NOR_DIGITS_RE.sub("_", key)
+    def _sanitize(self, key):
+        """ sanitize the given metric name or label according to Prometheus rule.
+        Replace all characters other than [A-Za-z0-9_] with '_'.
+        """
+        return self._non_letters_nor_digits_re.sub("_", key)

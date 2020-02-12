@@ -27,8 +27,6 @@ The **OpenTelemetry Prometheus Exporter** allows to export `OpenTelemetry`_ metr
 
 .. code:: python
 
-    import time
-
     from opentelemetry import metrics
     from opentelemetry.ext.prometheus import PrometheusMetricsExporter
     from opentelemetry.sdk.metrics import Counter, Meter
@@ -48,8 +46,8 @@ The **OpenTelemetry Prometheus Exporter** allows to export `OpenTelemetry`_ metr
     controller = PushController(meter, exporter, 5)
 
     counter = meter.create_metric(
-        "available memory",
-        "available memory",
+        "incoming requests",
+        "incoming requests",
         "bytes",
         int,
         Counter,
