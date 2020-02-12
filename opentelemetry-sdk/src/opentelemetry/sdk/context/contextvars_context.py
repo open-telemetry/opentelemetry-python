@@ -33,7 +33,7 @@ class ContextVarsRuntimeContext(RuntimeContext):
     """
 
     def __init__(self) -> None:
-        self._current_context = ContextVar(_CONTEXT_KEY)
+        self._current_context = ContextVar(_CONTEXT_KEY, default=Context())
 
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
@@ -41,11 +41,7 @@ class ContextVarsRuntimeContext(RuntimeContext):
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
-        try:
-            return self._current_context.get()
-        except LookupError:
-            self.set_current(Context())
-            return self._current_context.get()
+        return self._current_context.get()
 
 
 __all__ = ["ContextVarsRuntimeContext"]
