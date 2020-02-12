@@ -15,11 +15,16 @@
 """
 The OpenTelemetry metrics API describes the classes used to report raw
 measurements, as well as metrics with known aggregation and labels.
+
 The `Meter` class is used to construct `Metric` s to record raw statistics
 as well as metrics with predefined aggregation.
+
 See the `metrics api`_ spec for terminology and context clarification.
+
 .. _metrics api:
     https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
+
+
 """
 import abc
 from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
@@ -31,23 +36,27 @@ ValueT = TypeVar("ValueT", int, float)
 
 class DefaultMetricHandle:
     """The default MetricHandle.
+
     Used when no MetricHandle implementation is available.
     """
 
     def add(self, value: ValueT) -> None:
         """No-op implementation of `CounterHandle` add.
+
         Args:
             value: The value to add to the handle.
         """
 
     def set(self, value: ValueT) -> None:
         """No-op implementation of `GaugeHandle` set.
+
         Args:
             value: The value to set to the handle.
         """
 
     def record(self, value: ValueT) -> None:
         """No-op implementation of `MeasureHandle` record.
+
         Args:
             value: The value to record to the handle.
         """
@@ -56,6 +65,7 @@ class DefaultMetricHandle:
 class CounterHandle:
     def add(self, value: ValueT) -> None:
         """Increases the value of the handle by ``value``.
+
         Args:
             value: The value to add to the handle.
         """
@@ -64,6 +74,7 @@ class CounterHandle:
 class GaugeHandle:
     def set(self, value: ValueT) -> None:
         """Sets the current value of the handle to ``value``.
+
         Args:
             value: The value to set to the handle.
         """
@@ -72,6 +83,7 @@ class GaugeHandle:
 class MeasureHandle:
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this handle.
+
         Args:
             value: The value to record to the handle.
         """
@@ -79,6 +91,7 @@ class MeasureHandle:
 
 class LabelSet(abc.ABC):
     """A canonicalized set of labels useful for preaggregation
+
     Re-usable LabelSet objects provide a potential optimization for scenarios
     where handles might not be effective. For example, if the LabelSet will be
     re-used but only used once per metrics, handles do not offer any
@@ -90,12 +103,14 @@ class LabelSet(abc.ABC):
 
 class DefaultLabelSet(LabelSet):
     """The default LabelSet.
+
     Used when no LabelSet implementation is available.
     """
 
 
 class Metric(abc.ABC):
     """Base class for various types of metrics.
+
     Metric class that inherit from this class are specialized with the type of
     handle that the metric holds.
     """
@@ -103,12 +118,14 @@ class Metric(abc.ABC):
     @abc.abstractmethod
     def get_handle(self, label_set: LabelSet) -> "object":
         """Gets a handle, used for repeated-use of metrics instruments.
+
         Handles are useful to reduce the cost of repeatedly recording a metric
         with a pre-defined set of label values. All metric kinds (counter,
         gauge, measure) support declaring a set of required label keys. The
         values corresponding to these keys should be specified in every handle.
         "Unspecified" label values, in cases where a handle is requested but
         a value was not provided are permitted.
+
         Args:
             label_set: `LabelSet` to associate with the returned handle.
         """
@@ -119,6 +136,7 @@ class DefaultMetric(Metric):
 
     def get_handle(self, label_set: LabelSet) -> "DefaultMetricHandle":
         """Gets a `DefaultMetricHandle`.
+
         Args:
             label_set: `LabelSet` to associate with the returned handle.
         """
@@ -126,6 +144,7 @@ class DefaultMetric(Metric):
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Counter` add.
+
         Args:
             value: The value to add to the counter metric.
             label_set: `LabelSet` to associate with the returned handle.
@@ -133,6 +152,7 @@ class DefaultMetric(Metric):
 
     def set(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Gauge` set.
+
         Args:
             value: The value to set the gauge metric to.
             label_set: `LabelSet` to associate with the returned handle.
@@ -140,6 +160,7 @@ class DefaultMetric(Metric):
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Measure` record.
+
         Args:
             value: The value to record to this measure metric.
             label_set: `LabelSet` to associate with the returned handle.
@@ -155,6 +176,7 @@ class Counter(Metric):
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """Increases the value of the counter by ``value``.
+
         Args:
             value: The value to add to the counter metric.
             label_set: `LabelSet` to associate with the returned handle.
@@ -163,6 +185,7 @@ class Counter(Metric):
 
 class Gauge(Metric):
     """A gauge type metric that expresses a pre-calculated value.
+
     Gauge metrics have a value that is either ``Set`` by explicit
     instrumentation or observed through a callback. This kind of metric
     should be used when the metric cannot be expressed as a sum or because
@@ -175,6 +198,7 @@ class Gauge(Metric):
 
     def set(self, value: ValueT, label_set: LabelSet) -> None:
         """Sets the value of the gauge to ``value``.
+
         Args:
             value: The value to set the gauge metric to.
             label_set: `LabelSet` to associate with the returned handle.
@@ -183,6 +207,7 @@ class Gauge(Metric):
 
 class Measure(Metric):
     """A measure type metric that represent raw stats that are recorded.
+
     Measure metrics represent raw statistics that are recorded. By
     default, measure metrics can accept both positive and negatives.
     Negative inputs will be discarded when monotonic is True.
@@ -194,6 +219,7 @@ class Measure(Metric):
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
         """Records the ``value`` to the measure.
+
         Args:
             value: The value to record to this measure metric.
             label_set: `LabelSet` to associate with the returned handle.
@@ -206,6 +232,7 @@ MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 # pylint: disable=unused-argument
 class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
+
     `Metric` s are used for recording pre-defined aggregation (gauge and
     counter), or raw values (measure) in which the aggregation and labels
     for the exported metric are deferred.
@@ -218,9 +245,11 @@ class Meter(abc.ABC):
         record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
+
         Allows the functionality of acting upon multiple metrics with
         a single API call. Implementations should find metric and handles that
         match the key-value pairs in the label tuples.
+
         Args:
             label_set: The `LabelSet` associated with all measurements in
                 the batch. A measurement is a tuple, representing the `Metric`
@@ -243,6 +272,7 @@ class Meter(abc.ABC):
         absolute: bool = True,
     ) -> "Metric":
         """Creates a ``metric_kind`` metric with type ``value_type``.
+
         Args:
             name: The name of the metric.
             description: Human-readable description of the metric.
@@ -261,8 +291,10 @@ class Meter(abc.ABC):
     @abc.abstractmethod
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given labels.
+
         Args:
             labels: A dictionary representing label key to label value pairs.
+
         Returns: A `LabelSet` object canonicalized using the given input.
         """
 
@@ -308,6 +340,7 @@ _METER_FACTORY = None
 
 def meter() -> Meter:
     """Gets the current global :class:`~.Meter` object.
+
     If there isn't one set yet, a default will be loaded.
     """
     global _METER, _METER_FACTORY  # pylint:disable=global-statement
@@ -327,8 +360,11 @@ def meter() -> Meter:
 
 def set_preferred_meter_implementation(factory: ImplementationFactory) -> None:
     """Set the factory to be used to create the meter.
+
     See :mod:`opentelemetry.util.loader` for details.
+
     This function may not be called after a meter is already loaded.
+
     Args:
         factory: Callback that should create a new :class:`Meter` instance.
     """

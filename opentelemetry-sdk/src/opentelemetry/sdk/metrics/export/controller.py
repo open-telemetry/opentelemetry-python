@@ -18,6 +18,7 @@ import threading
 
 class PushController(threading.Thread):
     """A push based controller, used for exporting.
+
     Uses a worker thread that periodically collects metrics for exporting,
     exports them and performs some post-processing.
     """

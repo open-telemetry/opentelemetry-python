@@ -1,7 +1,15 @@
-opentelemetry.metrics package
-=============================
+opentelemetry.sdk.metrics package
+==========================================
 
-Module contents
----------------
+Submodules
+----------
 
-.. automodule:: opentelemetry.metrics
+.. toctree::
+
+   opentelemetry.sdk.metrics.export.aggregate
+   opentelemetry.sdk.metrics.export.batcher
+
+.. automodule:: opentelemetry.sdk.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:

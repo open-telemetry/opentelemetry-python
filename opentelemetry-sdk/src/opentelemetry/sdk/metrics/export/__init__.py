@@ -31,6 +31,7 @@ class MetricRecord:
 
 class MetricsExporter:
     """Interface for exporting metrics.
+
     Interface to be implemented by services that want to export recorded
     metrics in its own format.
     """
@@ -39,23 +40,27 @@ class MetricsExporter:
         self, metric_records: Sequence[MetricRecord]
     ) -> "MetricsExportResult":
         """Exports a batch of telemetry data.
+
         Args:
             metric_records: A sequence of `MetricRecord` s. A `MetricRecord`
                 contains the metric to be exported, the label set associated
                 with that metric, as well as the aggregator used to export the
                 current checkpointed value.
+
         Returns:
             The result of the export
         """
 
     def shutdown(self) -> None:
         """Shuts down the exporter.
+
         Called when the SDK is shut down.
         """
 
 
 class ConsoleMetricsExporter(MetricsExporter):
     """Implementation of `MetricsExporter` that prints metrics to the console.
+
     This class can be used for diagnostic purposes. It prints the exported
     metrics to the console STDOUT.
     """

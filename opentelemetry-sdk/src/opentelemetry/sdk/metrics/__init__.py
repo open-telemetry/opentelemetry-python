@@ -48,8 +48,10 @@ class LabelSet(metrics_api.LabelSet):
 
 class BaseHandle:
     """The base handle class containing common behavior for all handles.
+
     Handles are responsible for operating on data for metric instruments for a
     specific set of labels.
+
     Args:
         value_type: The type of values this handle holds (int, float).
         enabled: True if the originating instrument is enabled.
@@ -129,6 +131,7 @@ class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
 
 class Metric(metrics_api.Metric):
     """Base class for all metric types.
+
     Also known as metric instrument. This is the class that is used to
     represent a metric that is to be continuously recorded and tracked. Each
     metric has a set of handles that are created from the metric. See
@@ -185,6 +188,7 @@ class Metric(metrics_api.Metric):
 
 class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
+
     By default, counter values can only go up (monotonic). Negative inputs
     will be rejected for monotonic counter metrics. Counter metrics that have a
     monotonic option set to False allows negative inputs.
@@ -225,6 +229,7 @@ class Counter(Metric, metrics_api.Counter):
 
 class Gauge(Metric, metrics_api.Gauge):
     """See `opentelemetry.metrics.Gauge`.
+
     By default, gauge values can go both up and down (non-monotonic).
     Negative inputs will be rejected for monotonic gauge metrics.
     """
@@ -291,6 +296,7 @@ EMPTY_LABEL_SET = LabelSet()
 
 class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`.
+
     Args:
         batcher: The `Batcher` used for this meter.
     """
@@ -301,6 +307,7 @@ class Meter(metrics_api.Meter):
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
+
         Utilizes the batcher to create checkpoints of the current values in
         each aggregator belonging to the metrics that were created with this
         meter instance.
@@ -353,7 +360,9 @@ class Meter(metrics_api.Meter):
 
     def get_label_set(self, labels: Dict[str, str]):
         """See `opentelemetry.metrics.Meter.create_metric`.
+
         This implementation encodes the labels to use as a map key.
+
         Args:
             labels: The dictionary of label keys to label values.
         """

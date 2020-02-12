@@ -25,6 +25,7 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 
 class Batcher(abc.ABC):
     """Base class for all batcher types.
+
     The batcher is responsible for storing the aggregators and aggregated
     values received from updates from metrics in the meter. The stored values
     will be sent to an exporter for exporting.
@@ -40,6 +41,7 @@ class Batcher(abc.ABC):
 
     def aggregator_for(self, metric_type: Type[MetricT]) -> Aggregator:
         """Returns an aggregator based on metric type.
+
         Aggregators keep track of and updates values when metrics get updated.
         """
         # pylint:disable=R0201
@@ -50,6 +52,7 @@ class Batcher(abc.ABC):
 
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
+
         The list of MetricRecords is a snapshot created from the current
         data in all of the aggregators in this batcher.
         """
@@ -60,6 +63,7 @@ class Batcher(abc.ABC):
 
     def finished_collection(self):
         """Performs certain post-export logic.
+
         For batchers that are stateless, resets the batch map.
         """
         if not self.stateful:
@@ -68,6 +72,7 @@ class Batcher(abc.ABC):
     @abc.abstractmethod
     def process(self, record) -> None:
         """Stores record information to be ready for exporting.
+
         Depending on type of batcher, performs pre-export logic, such as
         filtering records based off of keys.
         """
