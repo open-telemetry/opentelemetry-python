@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,3 +60,6 @@ class TestContext(unittest.TestCase):
         old_context = context.set_current(context.set_value("a", "zzz"))
         self.assertEqual("yyy", context.get_value("a", context=old_context))
         self.assertEqual("zzz", context.get_value("a"))
+
+        context.set_current(old_context)
+        self.assertEqual("yyy", context.get_value("a"))

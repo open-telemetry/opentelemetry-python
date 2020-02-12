@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import typing
-
 from opentelemetry.context.context import Context, RuntimeContext
 
 
@@ -22,7 +20,7 @@ class DefaultRuntimeContext(RuntimeContext):
     """
 
     def __init__(self) -> None:
-        self._current_context = None  # type: typing.Optional[Context]
+        self._current_context = Context()
 
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
@@ -30,8 +28,6 @@ class DefaultRuntimeContext(RuntimeContext):
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
-        if self._current_context is None:
-            self._current_context = Context()
         return self._current_context
 
 
