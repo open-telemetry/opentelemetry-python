@@ -270,12 +270,12 @@ class ConsoleSpanExporter(SpanExporter):
     def __init__(
         self,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[Span], str] = str,
+        format: str = "",
     ):
         self.out = out
-        self.formatter = formatter
+        self.format= format
 
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
-            self.out.write(self.formatter(span))
+            self.out.write(format(span, self.format))
         return SpanExportResult.SUCCESS
