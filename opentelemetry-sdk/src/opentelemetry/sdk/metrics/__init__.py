@@ -99,13 +99,6 @@ class CounterHandle(metrics_api.CounterHandle, BaseHandle):
             self.update(value)
 
 
-class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
-    def set(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.GaugeHandle.set`."""
-        if self._validate_update(value):
-            self.update(value)
-
-
 class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
     def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.MeasureHandle.record`."""
@@ -195,39 +188,6 @@ class Counter(Metric, metrics_api.Counter):
         self.get_handle(label_set).add(value)
 
     UPDATE_FUNCTION = add
-
-
-class Gauge(Metric, metrics_api.Gauge):
-    """See `opentelemetry.metrics.Gauge`.
-    """
-
-    HANDLE_TYPE = GaugeHandle
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
-        label_keys: Sequence[str] = (),
-        enabled: bool = True,
-    ):
-        super().__init__(
-            name,
-            description,
-            unit,
-            value_type,
-            meter,
-            label_keys=label_keys,
-            enabled=enabled,
-        )
-
-    def set(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
-        """See `opentelemetry.metrics.Gauge.set`."""
-        self.get_handle(label_set).set(value)
-
-    UPDATE_FUNCTION = set
 
 
 class Measure(Metric, metrics_api.Measure):

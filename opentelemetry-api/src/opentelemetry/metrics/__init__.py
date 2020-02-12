@@ -47,13 +47,6 @@ class DefaultMetricHandle:
             value: The value to add to the handle.
         """
 
-    def set(self, value: ValueT) -> None:
-        """No-op implementation of `GaugeHandle` set.
-
-        Args:
-            value: The value to set to the handle.
-        """
-
     def record(self, value: ValueT) -> None:
         """No-op implementation of `MeasureHandle` record.
 
@@ -68,15 +61,6 @@ class CounterHandle:
 
         Args:
             value: The value to add to the handle.
-        """
-
-
-class GaugeHandle:
-    def set(self, value: ValueT) -> None:
-        """Sets the current value of the handle to ``value``.
-
-        Args:
-            value: The value to set to the handle.
         """
 
 
@@ -121,7 +105,7 @@ class Metric(abc.ABC):
 
         Handles are useful to reduce the cost of repeatedly recording a metric
         with a pre-defined set of label values. All metric kinds (counter,
-        gauge, measure) support declaring a set of required label keys. The
+        measure) support declaring a set of required label keys. The
         values corresponding to these keys should be specified in every handle.
         "Unspecified" label values, in cases where a handle is requested but
         a value was not provided are permitted.
@@ -150,14 +134,6 @@ class DefaultMetric(Metric):
             label_set: `LabelSet` to associate with the returned handle.
         """
 
-    def set(self, value: ValueT, label_set: LabelSet) -> None:
-        """No-op implementation of `Gauge` set.
-
-        Args:
-            value: The value to set the gauge metric to.
-            label_set: `LabelSet` to associate with the returned handle.
-        """
-
     def record(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Measure` record.
 
@@ -183,28 +159,6 @@ class Counter(Metric):
         """
 
 
-class Gauge(Metric):
-    """A gauge type metric that expresses a pre-calculated value.
-
-    Gauge metrics have a value that is either ``Set`` by explicit
-    instrumentation or observed through a callback. This kind of metric
-    should be used when the metric cannot be expressed as a sum or because
-    the measurement interval is arbitrary.
-    """
-
-    def get_handle(self, label_set: LabelSet) -> "GaugeHandle":
-        """Gets a `GaugeHandle`."""
-        return GaugeHandle()
-
-    def set(self, value: ValueT, label_set: LabelSet) -> None:
-        """Sets the value of the gauge to ``value``.
-
-        Args:
-            value: The value to set the gauge metric to.
-            label_set: `LabelSet` to associate with the returned handle.
-        """
-
-
 class Measure(Metric):
     """A measure type metric that represent raw stats that are recorded.
 
@@ -224,15 +178,15 @@ class Measure(Metric):
         """
 
 
-MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
+MetricT = TypeVar("MetricT", Counter, Measure)
 
 
 # pylint: disable=unused-argument
 class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
 
-    `Metric` s are used for recording pre-defined aggregation (gauge and
-    counter), or raw values (measure) in which the aggregation and labels
+    `Metric` s are used for recording pre-defined aggregation (counter),
+    or raw values (measure) in which the aggregation and labels
     for the exported metric are deferred.
     """
 

@@ -82,14 +82,12 @@ class TestMeter(unittest.TestCase):
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
-        gauge = metrics.Gauge("name", "desc", "unit", int, meter, label_keys)
         measure = metrics.Measure(
             "name", "desc", "unit", float, meter, label_keys
         )
-        record_tuples = [(counter, 1.0), (gauge, 5), (measure, 3.0)]
+        record_tuples = [(counter, 1.0), (measure, 3.0)]
         meter.record_batch(label_set, record_tuples)
         self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
-        self.assertEqual(gauge.get_handle(label_set).aggregator.current, 5.0)
         self.assertEqual(
             measure.get_handle(label_set).aggregator.current,
             (3.0, 3.0, 3.0, 1),
@@ -119,15 +117,6 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
 
-    def test_create_gauge(self):
-        meter = metrics.Meter()
-        gauge = meter.create_metric(
-            "name", "desc", "unit", float, metrics.Gauge, ()
-        )
-        self.assertTrue(isinstance(gauge, metrics.Gauge))
-        self.assertEqual(gauge.value_type, float)
-        self.assertEqual(gauge.name, "name")
-
     def test_create_measure(self):
         meter = metrics.Meter()
         measure = meter.create_metric(
@@ -155,7 +144,7 @@ class TestMeter(unittest.TestCase):
 class TestMetric(unittest.TestCase):
     def test_get_handle(self):
         meter = metrics.Meter()
-        metric_types = [metrics.Counter, metrics.Gauge, metrics.Measure]
+        metric_types = [metrics.Counter, metrics.Measure]
         for _type in metric_types:
             metric = _type("name", "desc", "unit", int, meter, ("key",))
             kvp = {"key": "value"}
@@ -173,20 +162,6 @@ class TestCounter(unittest.TestCase):
         handle = metric.get_handle(label_set)
         metric.add(3, label_set)
         metric.add(2, label_set)
-        self.assertEqual(handle.aggregator.current, 5)
-
-
-class TestGauge(unittest.TestCase):
-    def test_set(self):
-        meter = metrics.Meter()
-        metric = metrics.Gauge("name", "desc", "unit", int, meter, ("key",))
-        kvp = {"key": "value"}
-        label_set = meter.get_label_set(kvp)
-        handle = metric.get_handle(label_set)
-        metric.set(3, label_set)
-        self.assertEqual(handle.aggregator.current, 3)
-        metric.set(2, label_set)
-        # TODO: Fix once other aggregators implemented
         self.assertEqual(handle.aggregator.current, 5)
 
 
@@ -235,37 +210,6 @@ class TestCounterHandle(unittest.TestCase):
         handle.update(4.0)
         self.assertEqual(handle.last_update_timestamp, 123)
         self.assertEqual(handle.aggregator.current, 4.0)
-
-
-class TestMeasureHandle(unittest.TestCase):
-    def test_record(self):
-        aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, True, aggregator)
-        handle.record(3)
-        self.assertEqual(handle.aggregator.current, (3, 3, 3, 1))
-
-    def test_record_disabled(self):
-        aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, False, aggregator)
-        handle.record(3)
-        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
-
-    @mock.patch("opentelemetry.sdk.metrics.logger")
-    def test_record_incorrect_type(self, logger_mock):
-        aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, True, aggregator)
-        handle.record(3.0)
-        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
-        self.assertTrue(logger_mock.warning.called)
-
-    @mock.patch("opentelemetry.sdk.metrics.time_ns")
-    def test_update(self, time_mock):
-        aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, True, aggregator)
-        time_mock.return_value = 123
-        handle.update(4.0)
-        self.assertEqual(handle.last_update_timestamp, 123)
-        self.assertEqual(handle.aggregator.current, (4.0, 4.0, 4.0, 1))
 
 
 class TestMeasureHandle(unittest.TestCase):
