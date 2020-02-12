@@ -25,7 +25,7 @@ _RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
-    """To access the local state of an concern, the RuntimeContext API
+    """To access the local state of a concern, the RuntimeContext API
     provides a function which takes a context and a key as input,
     and returns a value.
 
