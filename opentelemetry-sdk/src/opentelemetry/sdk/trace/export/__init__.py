@@ -14,6 +14,7 @@
 
 import collections
 import logging
+import sys
 import threading
 import typing
 from enum import Enum
@@ -266,7 +267,15 @@ class ConsoleSpanExporter(SpanExporter):
     spans to the console STDOUT.
     """
 
+    def __init__(
+        self,
+        out: typing.IO = sys.stdout,
+        formatter: typing.Callable[[Span], str] = str,
+    ):
+        self.out = out
+        self.formatter = formatter
+
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
-            print(span)
+            self.out.write(self.formatter(span))
         return SpanExportResult.SUCCESS

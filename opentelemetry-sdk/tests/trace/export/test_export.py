@@ -276,3 +276,29 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
             max_queue_size=256,
             max_export_batch_size=512,
         )
+
+
+class TestConsoleSpanExporter(unittest.TestCase):
+    def test_export(self):  # pylint: disable=no-self-use
+        """Check that the console exporter prints spans."""
+        exporter = export.ConsoleSpanExporter()
+
+        # Mocking stdout interferes with debugging and test reporting, mock on
+        # the exporter instance instead.
+        with mock.patch.object(exporter, "out") as mock_stdout:
+            exporter.export([trace.Span("span name", mock.Mock())])
+        mock_stdout.write.assert_called_once()
+
+    def test_export_custom(self):  # pylint: disable=no-self-use
+        """Check that console exporter uses custom io, formatter."""
+        mock_span_str = mock.Mock(str)
+
+        def formatter(span):  # pylint: disable=unused-argument
+            return mock_span_str
+
+        mock_stdout = mock.Mock()
+        exporter = export.ConsoleSpanExporter(
+            out=mock_stdout, formatter=formatter
+        )
+        exporter.export([trace.Span("span name", mock.Mock())])
+        mock_stdout.write.assert_called_once_with(mock_span_str)
