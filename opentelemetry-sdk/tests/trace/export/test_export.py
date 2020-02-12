@@ -279,7 +279,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
 
 class TestConsoleSpanExporter(unittest.TestCase):
-    def test_export(self):  # pylint: disable=no-self-use
+    def test_export(self):
         """Check that the console exporter prints spans."""
         exporter = export.ConsoleSpanExporter()
 
@@ -287,7 +287,8 @@ class TestConsoleSpanExporter(unittest.TestCase):
         # the exporter instance instead.
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([trace.Span("span name", mock.Mock())])
-        mock_stdout.write.assert_called_once()
+        mock_stdout.write.assert_called()
+        self.assertEqual(mock_stdout.write.call_count, 1)
 
     def test_export_custom(self):  # pylint: disable=no-self-use
         """Check that console exporter uses custom io, formatter."""
