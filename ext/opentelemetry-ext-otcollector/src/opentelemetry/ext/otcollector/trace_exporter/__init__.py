@@ -39,8 +39,9 @@ class CollectorSpanExporter(SpanExporter):
     """OpenTelemetry Collector span exporter.
 
     Args:
+        endpoint: OpenTelemetry Collector OpenCensus receiver endpoint.
         service_name: Name of Collector service.
-        endpoint: OpenTelemetry Collector endpoint.
+        host_name: Host name.
         client: TraceService client stub.
     """
 
