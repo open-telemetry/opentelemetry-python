@@ -106,7 +106,7 @@ def set_current(context: Context) -> Context:
         context: The context to use as current.
     """
     old_context = get_current()
-    _RUNTIME_CONTEXT.set_current(Context(context))  # type:ignore
+    _RUNTIME_CONTEXT.set_current(context)  # type:ignore
     return old_context
 
 
