@@ -96,7 +96,8 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         kvp = {"environment@": "staging"}
         label_set = meter.get_label_set(kvp)
         aggregator = CounterAggregator()
-        aggregator.check_point = 123
+        aggregator.update(123)
+        aggregator.take_checkpoint()
         record = MetricRecord(aggregator, label_set, metric)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])

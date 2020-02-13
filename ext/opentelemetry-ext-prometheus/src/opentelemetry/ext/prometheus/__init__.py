@@ -117,7 +117,7 @@ class CustomCollector:
                 labels=label_keys,
             )
             prometheus_metric.add_metric(
-                labels=label_values, value=metric_record.aggregator.check_point
+                labels=label_values, value=metric_record.aggregator.checkpoint
             )
 
         elif isinstance(metric_record.metric, Gauge):
@@ -127,7 +127,7 @@ class CustomCollector:
                 labels=label_keys,
             )
             prometheus_metric.add_metric(
-                labels=label_values, value=metric_record.aggregator.check_point
+                labels=label_values, value=metric_record.aggregator.checkpoint
             )
 
         # TODO: Add support for histograms when supported in OT
@@ -138,7 +138,7 @@ class CustomCollector:
                 labels=label_keys,
             )
             prometheus_metric.add_metric(
-                labels=label_values, value=metric_record.aggregator.check_point
+                labels=label_values, value=metric_record.aggregator.checkpoint
             )
 
         else:
