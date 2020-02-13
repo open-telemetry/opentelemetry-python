@@ -12,141 +12,119 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+import typing
+from os import environ
 
-"""
-The OpenTelemetry context module provides abstraction layer on top of
-thread-local storage and contextvars. The long term direction is to switch to
-contextvars provided by the Python runtime library.
+from pkg_resources import iter_entry_points
 
-A global object ``Context`` is provided to access all the context related
-functionalities::
+from opentelemetry.context.context import Context, RuntimeContext
 
-    >>> from opentelemetry.context import Context
-    >>> Context.foo = 1
-    >>> Context.foo = 2
-    >>> Context.foo
-    2
+logger = logging.getLogger(__name__)
+_RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
 
-When explicit thread is used, a helper function
-``Context.with_current_context`` can be used to carry the context across
-threads::
 
-    from threading import Thread
-    from opentelemetry.context import Context
+def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
+    """To access the local state of a concern, the RuntimeContext API
+    provides a function which takes a context and a key as input,
+    and returns a value.
 
-    def work(name):
-        print('Entering worker:', Context)
-        Context.operation_id = name
-        print('Exiting worker:', Context)
+    Args:
+        key: The key of the value to retrieve.
+        context: The context from which to retrieve the value, if None, the current context is used.
+    """
+    return context.get(key) if context is not None else get_current().get(key)
 
-    if __name__ == '__main__':
-        print('Main thread:', Context)
-        Context.operation_id = 'main'
 
-        print('Main thread:', Context)
+def set_value(
+    key: str, value: "object", context: typing.Optional[Context] = None
+) -> Context:
+    """To record the local state of a cross-cutting concern, the
+    RuntimeContext API provides a function which takes a context, a
+    key, and a value as input, and returns an updated context
+    which contains the new value.
 
-        # by default context is not propagated to worker thread
-        thread = Thread(target=work, args=('foo',))
-        thread.start()
-        thread.join()
+    Args:
+        key: The key of the entry to set
+        value: The value of the entry to set
+        context: The context to copy, if None, the current context is used
+    """
+    if context is None:
+        context = get_current()
+    new_values = context.copy()
+    new_values[key] = value
+    return Context(new_values)
 
-        print('Main thread:', Context)
 
-        # user can propagate context explicitly
-        thread = Thread(
-            target=Context.with_current_context(work),
-            args=('bar',),
-        )
-        thread.start()
-        thread.join()
+def remove_value(
+    key: str, context: typing.Optional[Context] = None
+) -> Context:
+    """To remove a value, this method returns a new context with the key
+    cleared. Note that the removed value still remains present in the old
+    context.
 
-        print('Main thread:', Context)
+    Args:
+        key: The key of the entry to remove
+        context: The context to copy, if None, the current context is used
+    """
+    if context is None:
+        context = get_current()
+    new_values = context.copy()
+    new_values.pop(key, None)
+    return Context(new_values)
 
-Here goes another example using thread pool::
 
-    import time
-    import threading
+def get_current() -> Context:
+    """To access the context associated with program execution,
+    the RuntimeContext API provides a function which takes no arguments
+    and returns a RuntimeContext.
+    """
 
-    from multiprocessing.dummy import Pool as ThreadPool
-    from opentelemetry.context import Context
+    global _RUNTIME_CONTEXT  # pylint: disable=global-statement
+    if _RUNTIME_CONTEXT is None:
+        # FIXME use a better implementation of a configuration manager to avoid having
+        # to get configuration values straight from environment variables
 
-    _console_lock = threading.Lock()
+        configured_context = environ.get(
+            "OPENTELEMETRY_CONTEXT", "default_context"
+        )  # type: str
+        try:
+            _RUNTIME_CONTEXT = next(
+                iter_entry_points("opentelemetry_context", configured_context)
+            ).load()()
+        except Exception:  # pylint: disable=broad-except
+            logger.error("Failed to load context: %s", configured_context)
 
-    def println(msg):
-        with _console_lock:
-            print(msg)
+    return _RUNTIME_CONTEXT.get_current()  # type:ignore
 
-    def work(name):
-        println('Entering worker[{}]: {}'.format(name, Context))
-        Context.operation_id = name
-        time.sleep(0.01)
-        println('Exiting worker[{}]: {}'.format(name, Context))
 
-    if __name__ == "__main__":
-        println('Main thread: {}'.format(Context))
-        Context.operation_id = 'main'
-        pool = ThreadPool(2)  # create a thread pool with 2 threads
-        pool.map(Context.with_current_context(work), [
-            'bear',
-            'cat',
-            'dog',
-            'horse',
-            'rabbit',
-        ])
-        pool.close()
-        pool.join()
-        println('Main thread: {}'.format(Context))
+def set_current(context: Context) -> Context:
+    """To associate a context with program execution, the Context
+    API provides a function which takes a Context.
 
-Here goes a simple demo of how async could work in Python 3.7+::
+    Args:
+        context: The context to use as current.
+    """
+    old_context = get_current()
+    _RUNTIME_CONTEXT.set_current(context)  # type:ignore
+    return old_context
 
-    import asyncio
 
-    from opentelemetry.context import Context
+def with_current_context(
+    func: typing.Callable[..., "object"]
+) -> typing.Callable[..., "object"]:
+    """Capture the current context and apply it to the provided func."""
 
-    class Span(object):
-        def __init__(self, name):
-            self.name = name
-            self.parent = Context.current_span
+    caller_context = get_current()
 
-        def __repr__(self):
-            return ('{}(name={}, parent={})'
-                    .format(
-                        type(self).__name__,
-                        self.name,
-                        self.parent,
-                    ))
+    def call_with_current_context(
+        *args: "object", **kwargs: "object"
+    ) -> "object":
+        try:
+            backup = get_current()
+            set_current(caller_context)
+            return func(*args, **kwargs)
+        finally:
+            set_current(backup)
 
-        async def __aenter__(self):
-            Context.current_span = self
-
-        async def __aexit__(self, exc_type, exc, tb):
-            Context.current_span = self.parent
-
-    async def main():
-        print(Context)
-        async with Span('foo'):
-            print(Context)
-            await asyncio.sleep(0.1)
-            async with Span('bar'):
-                print(Context)
-                await asyncio.sleep(0.1)
-            print(Context)
-            await asyncio.sleep(0.1)
-        print(Context)
-
-    if __name__ == '__main__':
-        asyncio.run(main())
-"""
-
-from .base_context import BaseRuntimeContext
-
-__all__ = ["Context"]
-
-try:
-    from .async_context import AsyncRuntimeContext
-
-    Context = AsyncRuntimeContext()  # type: BaseRuntimeContext
-except ImportError:
-    from .thread_local_context import ThreadLocalRuntimeContext
-
-    Context = ThreadLocalRuntimeContext()
+    return call_with_current_context

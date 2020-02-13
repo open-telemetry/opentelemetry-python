@@ -1,7 +1,7 @@
 opentelemetry.context.base\_context module
 ==========================================
 
-.. automodule:: opentelemetry.context.base_context
+.. automodule:: opentelemetry.context.context
     :members:
     :undoc-members:
     :show-inheritance:
