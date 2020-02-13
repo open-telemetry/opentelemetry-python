@@ -16,8 +16,6 @@ import threading
 
 from opentelemetry.context import Context, RuntimeContext
 
-_CONTEXT_KEY = "current_context"
-
 
 class ThreadLocalRuntimeContext(RuntimeContext):
     """An implementation of the RuntimeContext interface
@@ -25,23 +23,22 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     implementation is available for usage with Python 3.4.
     """
 
+    _CONTEXT_KEY = "current_context"
+
     def __init__(self) -> None:
         self._current_context = threading.local()
 
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
-        setattr(self._current_context, _CONTEXT_KEY, context)
+        setattr(self._current_context, self._CONTEXT_KEY, context)
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
-        try:
-            got = getattr(self._current_context, _CONTEXT_KEY)  # type: object
-        except AttributeError:
+        if not hasattr(self._current_context, self._CONTEXT_KEY):
             setattr(
-                self._current_context, _CONTEXT_KEY, Context(),
+                self._current_context, self._CONTEXT_KEY, Context(),
             )
-            got = getattr(self._current_context, _CONTEXT_KEY)
-        return got
+        return getattr(self._current_context, self._CONTEXT_KEY)
 
 
 __all__ = ["ThreadLocalRuntimeContext"]

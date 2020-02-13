@@ -24,16 +24,17 @@ elif (3, 4) < version_info <= (3, 5, 2):
     import opentelemetry.sdk.context.aiocontextvarsfix  # pylint:disable=unused-import
 
 
-_CONTEXT_KEY = "current_context"
-
-
 class ContextVarsRuntimeContext(RuntimeContext):
     """An implementation of the RuntimeContext interface which wraps ContextVar under
     the hood. This is the prefered implementation for usage with Python 3.5+
     """
 
+    _CONTEXT_KEY = "current_context"
+
     def __init__(self) -> None:
-        self._current_context = ContextVar(_CONTEXT_KEY, default=Context())
+        self._current_context = ContextVar(
+            self._CONTEXT_KEY, default=Context()
+        )
 
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
