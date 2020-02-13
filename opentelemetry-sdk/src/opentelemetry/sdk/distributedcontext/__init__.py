@@ -16,33 +16,27 @@ import typing
 from contextlib import contextmanager
 
 from opentelemetry import distributedcontext as dctx_api
-from opentelemetry.context import Context
+from opentelemetry.context import Context, get_value, set_value
+from opentelemetry.distributedcontext import (
+    distributed_context_from_context,
+    with_distributed_context,
+)
 
 
 class DistributedContextManager(dctx_api.DistributedContextManager):
     """See `opentelemetry.distributedcontext.DistributedContextManager`
 
-    Args:
-        name: The name of the context manager
     """
 
-    def __init__(self, name: str = "") -> None:
-        if name:
-            slot_name = "DistributedContext.{}".format(name)
-        else:
-            slot_name = "DistributedContext"
-
-        self._current_context = Context.register_slot(slot_name)
-
     def get_current_context(
-        self,
+        self, context: typing.Optional[Context] = None
     ) -> typing.Optional[dctx_api.DistributedContext]:
         """Gets the current DistributedContext.
 
         Returns:
             A DistributedContext instance representing the current context.
         """
-        return self._current_context.get()
+        return distributed_context_from_context(context=context)
 
     @contextmanager
     def use_context(
@@ -58,9 +52,10 @@ class DistributedContextManager(dctx_api.DistributedContextManager):
         Args:
             context: A DistributedContext instance to make current.
         """
-        snapshot = self._current_context.get()
-        self._current_context.set(context)
+        snapshot = distributed_context_from_context()
+        with_distributed_context(context)
+
         try:
             yield context
         finally:
-            self._current_context.set(snapshot)
+            with_distributed_context(snapshot)
