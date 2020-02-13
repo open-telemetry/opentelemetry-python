@@ -438,9 +438,7 @@ class Tracer(trace_api.Tracer):
     """
 
     def __init__(
-        self,
-        source: "TracerSource",
-        instrumentation_info: InstrumentationInfo,
+        self, source: "TracerSource", instrumentation_info: InstrumentationInfo
     ) -> None:
         self.source = source
         self.instrumentation_info = instrumentation_info
@@ -515,6 +513,8 @@ class Tracer(trace_api.Tracer):
         )
 
         if sampling_decision.sampled:
+            options = context.trace_options | trace_api.TraceOptions.SAMPLED
+            context.trace_options = trace_api.TraceOptions(options)
             if attributes is None:
                 span_attributes = sampling_decision.attributes
             else:

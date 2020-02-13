@@ -163,7 +163,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 vLong=StatusCanonicalCode.OK.value,
             ),
             jaeger.Tag(
-                key="status.message", vType=jaeger.TagType.STRING, vStr=None,
+                key="status.message", vType=jaeger.TagType.STRING, vStr=None
             ),
             jaeger.Tag(
                 key="span.kind",
@@ -246,7 +246,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         vStr=trace_api.SpanKind.CLIENT.name,
                     ),
                     jaeger.Tag(
-                        key="error", vType=jaeger.TagType.BOOL, vBool=True,
+                        key="error", vType=jaeger.TagType.BOOL, vBool=True
                     ),
                 ],
                 references=[

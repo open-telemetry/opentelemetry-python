@@ -82,13 +82,13 @@ class ProbabilitySampler(Sampler):
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
 
-    # The sampler checks the last 8 bytes of the trace ID to decide whether to
-    # sample a given trace.
-    CHECK_BYTES = 0xFFFFFFFFFFFFFFFF
+    # For compatibility with 64 bit trace IDs, the sampler checks the 64
+    # low-order bits of the trace ID to decide whether to sample a given trace.
+    TRACE_ID_LIMIT = (1 << 64) - 1
 
     @classmethod
     def get_bound_for_rate(cls, rate: float) -> int:
-        return round(rate * (cls.CHECK_BYTES + 1))
+        return round(rate * (cls.TRACE_ID_LIMIT + 1))
 
     @property
     def rate(self) -> float:
@@ -115,7 +115,7 @@ class ProbabilitySampler(Sampler):
         if parent_context is not None:
             return Decision(parent_context.trace_options.sampled)
 
-        return Decision(trace_id & self.CHECK_BYTES < self.bound)
+        return Decision(trace_id & self.TRACE_ID_LIMIT < self.bound)
 
 
 # Samplers that ignore the parent sampling decision and never/always sample.

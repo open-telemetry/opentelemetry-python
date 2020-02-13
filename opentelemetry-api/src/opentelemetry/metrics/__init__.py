@@ -40,13 +40,34 @@ class DefaultMetricHandle:
     Used when no MetricHandle implementation is available.
     """
 
+    def add(self, value: ValueT) -> None:
+        """No-op implementation of `CounterHandle` add.
+
+        Args:
+            value: The value to add to the handle.
+        """
+
+    def set(self, value: ValueT) -> None:
+        """No-op implementation of `GaugeHandle` set.
+
+        Args:
+            value: The value to set to the handle.
+        """
+
+    def record(self, value: ValueT) -> None:
+        """No-op implementation of `MeasureHandle` record.
+
+        Args:
+            value: The value to record to the handle.
+        """
+
 
 class CounterHandle:
     def add(self, value: ValueT) -> None:
         """Increases the value of the handle by ``value``.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to add to the handle.
         """
 
 
@@ -55,7 +76,7 @@ class GaugeHandle:
         """Sets the current value of the handle to ``value``.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to set to the handle.
         """
 
 
@@ -121,6 +142,30 @@ class DefaultMetric(Metric):
         """
         return DefaultMetricHandle()
 
+    def add(self, value: ValueT, label_set: LabelSet) -> None:
+        """No-op implementation of `Counter` add.
+
+        Args:
+            value: The value to add to the counter metric.
+            label_set: `LabelSet` to associate with the returned handle.
+        """
+
+    def set(self, value: ValueT, label_set: LabelSet) -> None:
+        """No-op implementation of `Gauge` set.
+
+        Args:
+            value: The value to set the gauge metric to.
+            label_set: `LabelSet` to associate with the returned handle.
+        """
+
+    def record(self, value: ValueT, label_set: LabelSet) -> None:
+        """No-op implementation of `Measure` record.
+
+        Args:
+            value: The value to record to this measure metric.
+            label_set: `LabelSet` to associate with the returned handle.
+        """
+
 
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
@@ -129,12 +174,12 @@ class Counter(Metric):
         """Gets a `CounterHandle`."""
         return CounterHandle()
 
-    def add(self, label_set: LabelSet, value: ValueT) -> None:
+    def add(self, value: ValueT, label_set: LabelSet) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
             value: The value to add to the counter metric.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
@@ -151,12 +196,12 @@ class Gauge(Metric):
         """Gets a `GaugeHandle`."""
         return GaugeHandle()
 
-    def set(self, label_set: LabelSet, value: ValueT) -> None:
+    def set(self, value: ValueT, label_set: LabelSet) -> None:
         """Sets the value of the gauge to ``value``.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
             value: The value to set the gauge metric to.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
@@ -172,12 +217,12 @@ class Measure(Metric):
         """Gets a `MeasureHandle` with a float value."""
         return MeasureHandle()
 
-    def record(self, label_set: LabelSet, value: ValueT) -> None:
+    def record(self, value: ValueT, label_set: LabelSet) -> None:
         """Records the ``value`` to the measure.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
             value: The value to record to this measure metric.
+            label_set: `LabelSet` to associate with the returned handle.
         """
 
 
@@ -224,6 +269,7 @@ class Meter(abc.ABC):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
+        absolute: bool = True,
     ) -> "Metric":
         """Creates a ``metric_kind`` metric with type ``value_type``.
 
@@ -235,8 +281,10 @@ class Meter(abc.ABC):
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
-            monotonic: Whether to only allow non-negative values.
-
+            monotonic: Configure a counter or gauge that accepts only
+                monotonic/non-monotonic updates.
+            absolute: Configure a measure that does or does not accept negative
+                updates.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
 
@@ -271,6 +319,7 @@ class DefaultMeter(Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
         monotonic: bool = False,
+        absolute: bool = True,
     ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()
@@ -298,7 +347,12 @@ def meter() -> Meter:
 
     if _METER is None:
         # pylint:disable=protected-access
-        _METER = loader._load_impl(DefaultMeter, _METER_FACTORY)
+        try:
+            _METER = loader._load_impl(Meter, _METER_FACTORY)  # type: ignore
+        except TypeError:
+            # if we raised an exception trying to instantiate an
+            # abstract class, default to no-op tracer impl
+            _METER = DefaultMeter()
         del _METER_FACTORY
 
     return _METER
