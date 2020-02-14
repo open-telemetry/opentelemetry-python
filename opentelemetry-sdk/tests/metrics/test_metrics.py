@@ -203,28 +203,20 @@ class TestMeasure(unittest.TestCase):
 class TestCounterHandle(unittest.TestCase):
     def test_add(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, True, False, False, aggregator)
+        handle = metrics.CounterHandle(int, True, aggregator)
         handle.add(3)
         self.assertEqual(handle.aggregator.current, 3)
 
     def test_add_disabled(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, False, False, False, aggregator)
+        handle = metrics.CounterHandle(int, False, aggregator)
         handle.add(3)
         self.assertEqual(handle.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
-    def test_add_monotonic(self, logger_mock):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, True, True, False, aggregator)
-        handle.add(-3)
-        self.assertEqual(handle.aggregator.current, 0)
-        self.assertTrue(logger_mock.warning.called)
-
-    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, True, False, False, aggregator)
+        handle = metrics.CounterHandle(int, True, aggregator)
         handle.add(3.0)
         self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
@@ -232,7 +224,7 @@ class TestCounterHandle(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, True, False, False, aggregator)
+        handle = metrics.CounterHandle(int, True, aggregator)
         time_mock.return_value = 123
         handle.update(4.0)
         self.assertEqual(handle.last_update_timestamp, 123)
@@ -243,28 +235,20 @@ class TestCounterHandle(unittest.TestCase):
 class TestGaugeHandle(unittest.TestCase):
     def test_set(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, True, False, False, aggregator)
+        handle = metrics.GaugeHandle(int, True, aggregator)
         handle.set(3)
         self.assertEqual(handle.aggregator.current, 3)
 
     def test_set_disabled(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, False, False, False, aggregator)
+        handle = metrics.GaugeHandle(int, False, aggregator)
         handle.set(3)
         self.assertEqual(handle.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
-    def test_set_monotonic(self, logger_mock):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, True, True, False, aggregator)
-        handle.set(-3)
-        self.assertEqual(handle.aggregator.current, 0)
-        self.assertTrue(logger_mock.warning.called)
-
-    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_set_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, True, False, False, aggregator)
+        handle = metrics.GaugeHandle(int, True, aggregator)
         handle.set(3.0)
         self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
@@ -272,7 +256,7 @@ class TestGaugeHandle(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, True, False, False, aggregator)
+        handle = metrics.GaugeHandle(int, True, aggregator)
         time_mock.return_value = 123
         handle.update(4.0)
         self.assertEqual(handle.last_update_timestamp, 123)
@@ -283,28 +267,20 @@ class TestGaugeHandle(unittest.TestCase):
 class TestMeasureHandle(unittest.TestCase):
     def test_record(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.MeasureHandle(int, False, False, False, aggregator)
+        handle = metrics.MeasureHandle(int, False, aggregator)
         handle.record(3)
         self.assertEqual(handle.aggregator.current, 0)
 
     def test_record_disabled(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.MeasureHandle(int, False, False, False, aggregator)
+        handle = metrics.MeasureHandle(int, False, aggregator)
         handle.record(3)
         self.assertEqual(handle.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
-    def test_record_monotonic(self, logger_mock):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.MeasureHandle(int, True, False, True, aggregator)
-        handle.record(-3)
-        self.assertEqual(handle.aggregator.current, 0)
-        self.assertTrue(logger_mock.warning.called)
-
-    @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.MeasureHandle(int, True, False, False, aggregator)
+        handle = metrics.MeasureHandle(int, True, aggregator)
         handle.record(3.0)
         self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
@@ -312,7 +288,7 @@ class TestMeasureHandle(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.MeasureHandle(int, True, False, False, aggregator)
+        handle = metrics.MeasureHandle(int, True, aggregator)
         time_mock.return_value = 123
         handle.update(4.0)
         self.assertEqual(handle.last_update_timestamp, 123)

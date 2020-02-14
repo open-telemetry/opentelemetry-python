@@ -208,9 +208,7 @@ class Gauge(Metric):
 class Measure(Metric):
     """A measure type metric that represent raw stats that are recorded.
 
-    Measure metrics represent raw statistics that are recorded. By
-    default, measure metrics can accept both positive and negatives.
-    Negative inputs will be discarded when monotonic is True.
+    Measure metrics represent raw statistics that are recorded.
     """
 
     def get_handle(self, label_set: LabelSet) -> "MeasureHandle":
@@ -268,8 +266,6 @@ class Meter(abc.ABC):
         metric_type: Type[MetricT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = False,
-        absolute: bool = True,
     ) -> "Metric":
         """Creates a ``metric_kind`` metric with type ``value_type``.
 
@@ -281,10 +277,6 @@ class Meter(abc.ABC):
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
-            monotonic: Configure a counter or gauge that accepts only
-                monotonic/non-monotonic updates.
-            absolute: Configure a measure that does or does not accept negative
-                updates.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
 
@@ -318,8 +310,6 @@ class DefaultMeter(Meter):
         metric_type: Type[MetricT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = False,
-        absolute: bool = True,
     ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()
