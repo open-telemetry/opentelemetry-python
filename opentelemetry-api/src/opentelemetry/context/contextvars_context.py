@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 from sys import version_info
 
 from opentelemetry.context.context import Context, RuntimeContext
@@ -35,13 +35,19 @@ class ContextVarsRuntimeContext(RuntimeContext):
             self._CONTEXT_KEY, default=Context()
         )
 
-    def set_current(self, context: Context) -> None:
+    def set_current(self, context: Context) -> object:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
-        self._current_context.set(context)
+        return self._current_context.set(context)
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
         return self._current_context.get()
+
+    def reset(self, token: object) -> None:
+        """See `opentelemetry.context.RuntimeContext.reset`."""
+        if not isinstance(token, Token):
+            raise ValueError("invalid token")
+        self._current_context.reset(token)
 
 
 __all__ = ["ContextVarsRuntimeContext"]

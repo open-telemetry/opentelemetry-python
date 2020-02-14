@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from logging import ERROR
 from unittest.mock import patch
 
 from opentelemetry import context
@@ -20,7 +21,7 @@ from opentelemetry.context.threadlocal_context import ThreadLocalRuntimeContext
 
 
 def do_work() -> None:
-    context.set_current(context.set_value("say", "bar"))
+    context.attach(context.set_value("say", "bar"))
 
 
 class TestThreadLocalContext(unittest.TestCase):
@@ -28,10 +29,11 @@ class TestThreadLocalContext(unittest.TestCase):
         self.previous_context = context.get_current()
 
     def tearDown(self):
-        context.set_current(self.previous_context)
+        context.attach(self.previous_context)
 
     @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ThreadLocalRuntimeContext()  # type: ignore
+        "opentelemetry.context._RUNTIME_CONTEXT",  # type: ignore
+        ThreadLocalRuntimeContext(),
     )
     def test_context(self):
         self.assertIsNone(context.get_value("say"))
@@ -49,7 +51,8 @@ class TestThreadLocalContext(unittest.TestCase):
         self.assertEqual(context.get_value("say", context=third), "bar")
 
     @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ThreadLocalRuntimeContext()  # type: ignore
+        "opentelemetry.context._RUNTIME_CONTEXT",  # type: ignore
+        ThreadLocalRuntimeContext(),
     )
     def test_set_value(self):
         first = context.set_value("a", "yyy")
@@ -59,3 +62,19 @@ class TestThreadLocalContext(unittest.TestCase):
         self.assertEqual("zzz", context.get_value("a", context=second))
         self.assertEqual("---", context.get_value("a", context=third))
         self.assertEqual(None, context.get_value("a"))
+
+    @patch(
+        "opentelemetry.context._RUNTIME_CONTEXT",  # type: ignore
+        ThreadLocalRuntimeContext(),
+    )
+    def test_set_current(self):
+        context.attach(context.set_value("a", "yyy"))
+
+        token = context.attach(context.set_value("a", "zzz"))
+        self.assertEqual("zzz", context.get_value("a"))
+
+        context.detach(token)
+        self.assertEqual("yyy", context.get_value("a"))
+
+        with self.assertLogs(level=ERROR):
+            context.detach("some garbage")

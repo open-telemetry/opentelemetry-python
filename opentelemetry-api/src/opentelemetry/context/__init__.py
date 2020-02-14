@@ -57,24 +57,6 @@ def set_value(
     return Context(new_values)
 
 
-def remove_value(
-    key: str, context: typing.Optional[Context] = None
-) -> Context:
-    """To remove a value, this method returns a new context with the key
-    cleared. Note that the removed value still remains present in the old
-    context.
-
-    Args:
-        key: The key of the entry to remove
-        context: The context to copy, if None, the current context is used
-    """
-    if context is None:
-        context = get_current()
-    new_values = context.copy()
-    new_values.pop(key, None)
-    return Context(new_values)
-
-
 def get_current() -> Context:
     """To access the context associated with program execution,
     the RuntimeContext API provides a function which takes no arguments
@@ -104,16 +86,29 @@ def get_current() -> Context:
     return _RUNTIME_CONTEXT.get_current()  # type:ignore
 
 
-def set_current(context: Context) -> Context:
-    """To associate a context with program execution, the Context
-    API provides a function which takes a Context.
+def attach(context: Context) -> object:
+    """Associates a Context with the caller's current execution unit. Returns
+    a token that can be used to restore the previous Context.
 
     Args:
-        context: The context to use as current.
+        context: The Context to set as current.
     """
-    old_context = get_current()
-    _RUNTIME_CONTEXT.set_current(context)  # type:ignore
-    return old_context
+    get_current()
+
+    return _RUNTIME_CONTEXT.set_current(context)  # type:ignore
+
+
+def detach(token: object) -> None:
+    """Resets the Context associated with the caller's current execution unit
+    to the value it had before attaching a specified Context.
+
+    Args:
+        token: The Token that was returned by a previous call to attach a Context.
+    """
+    try:
+        _RUNTIME_CONTEXT.reset(token)  # type: ignore
+    except ValueError:
+        logger.error("Failed to detach context")
 
 
 def with_current_context(
@@ -127,10 +122,9 @@ def with_current_context(
         *args: "object", **kwargs: "object"
     ) -> "object":
         try:
-            backup = get_current()
-            set_current(caller_context)
+            token = attach(caller_context)
             return func(*args, **kwargs)
         finally:
-            set_current(backup)
+            detach(token)
 
     return call_with_current_context

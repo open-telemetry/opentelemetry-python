@@ -541,14 +541,13 @@ class Tracer(trace_api.Tracer):
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
-            context_snapshot = context_api.get_current()
-            context_api.set_current(
+            token = context_api.attach(
                 context_api.set_value(self.source.key, span)
             )
             try:
                 yield span
             finally:
-                context_api.set_current(context_snapshot)
+                context_api.detach(token)
 
         except Exception as error:  # pylint: disable=broad-except
             if (
