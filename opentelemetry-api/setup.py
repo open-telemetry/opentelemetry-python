@@ -46,7 +46,7 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     install_requires=[
         "typing; python_version<'3.5'",
-        "aiocontextvars; python_version<'3.7'",
+        "aiocontextvars; python_version<'3.7' and python_version>='3.5'",
     ],
     extras_require={},
     license="Apache-2.0",
