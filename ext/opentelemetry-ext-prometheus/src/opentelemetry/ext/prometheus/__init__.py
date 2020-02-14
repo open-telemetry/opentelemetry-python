@@ -44,7 +44,8 @@ class PrometheusMetricsExporter(MetricsExporter):
     Args:
         port: Port number to listen.
         address: Endpoint address (default is localhost).
-        prefix: single-word application prefix relevant to the domain the metric belongs to.
+        prefix: single-word application prefix relevant to the domain
+        the metric belongs to.
     """
 
     def __init__(self, port: int = 8000, address: str = "", prefix: str = ""):
@@ -99,12 +100,10 @@ class CustomCollector:
         prometheus_metric = None
         label_values = []
         label_keys = []
-        for label in metric_record.label_set.labels:
-            for label_tuple_value in label[1::2]:
-                label_values.append(label_tuple_value)
+        for label_tuple in metric_record.label_set.labels:
+            label_keys.append(self._sanitize(label_tuple[0]))
+            label_values.append(label_tuple[1])
 
-        for label_key in metric_record.metric.label_keys:
-            label_keys.append(self._sanitize(label_key))
         metric_name = ""
         if self._prefix != "":
             metric_name = self._prefix + "_"

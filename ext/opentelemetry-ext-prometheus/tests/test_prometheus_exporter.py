@@ -91,9 +91,9 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "unit",
             int,
             metrics.Counter,
-            ["environment@"],
+            ["environment@", "os"],
         )
-        kvp = {"environment@": "staging"}
+        kvp = {"environment@": "staging", "os": "Windows"}
         label_set = meter.get_label_set(kvp)
         aggregator = CounterAggregator()
         aggregator.update(123)
@@ -108,9 +108,12 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
-            self.assertTrue(len(prometheus_metric.samples[0].labels) == 1)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
             self.assertEqual(
                 prometheus_metric.samples[0].labels["environment_"], "staging"
+            )
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["os"], "Windows"
             )
 
     # TODO: Add unit test once GaugeAggregator is available
@@ -129,6 +132,16 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         collector.add_metrics_data([record])
         collector.collect()
         self.assertLogs("opentelemetry.ext.prometheus", level="WARNING")
+
+    def test_sanitize(self):
+        collector = CustomCollector("testprefix")
+        self.assertEqual(
+            collector._sanitize("1!2@3#4$5%6^7&8*9(0)_-"),
+            "1_2_3_4_5_6_7_8_9_0___",
+        )
+        self.assertEqual(collector._sanitize(",./?;:[]{}"), "__________")
+        self.assertEqual(collector._sanitize("TestString"), "TestString")
+        self.assertEqual(collector._sanitize("aAbBcC_12_oi"), "aAbBcC_12_oi")
 
 
 class TestMetric(metrics.Metric):
