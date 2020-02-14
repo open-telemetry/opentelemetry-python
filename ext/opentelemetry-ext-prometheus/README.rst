@@ -30,12 +30,11 @@ The **OpenTelemetry Prometheus Exporter** allows to export `OpenTelemetry`_ metr
     from opentelemetry import metrics
     from opentelemetry.ext.prometheus import PrometheusMetricsExporter
     from opentelemetry.sdk.metrics import Counter, Meter
-    from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
     from opentelemetry.sdk.metrics.export.controller import PushController
 
     # Meter is responsible for creating and recording metrics
-    meter = Meter()
-    metrics.set_preferred_meter_implementation(meter)
+    metrics.set_preferred_meter_implementation(lambda _: Meter())
+    meter = metrics.meter()
     # exporter to export metrics to Prometheus
     port = 8000
     address = "localhost"
@@ -46,22 +45,22 @@ The **OpenTelemetry Prometheus Exporter** allows to export `OpenTelemetry`_ metr
     controller = PushController(meter, exporter, 5)
 
     counter = meter.create_metric(
-        "incoming requests",
-        "incoming requests",
-        "bytes",
+        "requests",
+        "number of requests",
+        "requests",
         int,
         Counter,
         ("environment",),
     )
-    
+
     # Labelsets are used to identify key-values that are associated with a specific
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
     label_set = meter.get_label_set({"environment": "staging"})
 
     counter.add(25, label_set)
-    # We sleep for 5 seconds, exported value should be 25
-    time.sleep(5)
+    input("Press any key to exit...")
+
 
 
 References

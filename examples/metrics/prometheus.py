@@ -22,8 +22,8 @@ from opentelemetry.sdk.metrics import Counter, Meter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Meter is responsible for creating and recording metrics
-meter = Meter()
-metrics.set_preferred_meter_implementation(meter)
+metrics.set_preferred_meter_implementation(lambda _: Meter())
+meter = metrics.meter()
 # exporter to export metrics to Prometheus
 port = 8000
 address = "localhost"
@@ -34,9 +34,9 @@ exporter = PrometheusMetricsExporter(port, address, prefix)
 controller = PushController(meter, exporter, 5)
 
 counter = meter.create_metric(
-    "incoming requests",
-    "incoming requests",
-    "bytes",
+    "requests",
+    "number of requests",
+    "requests",
     int,
     Counter,
     ("environment",),
