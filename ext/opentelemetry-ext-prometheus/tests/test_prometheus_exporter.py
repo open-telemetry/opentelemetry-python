@@ -123,7 +123,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
 
         meter = metrics.Meter()
         metric = meter.create_metric(
-            "test@name", "testdesc", "unit", int, TestMetric
+            "tesname", "testdesc", "unit", int, TestMetric
         )
         kvp = {"environment": "staging"}
         label_set = meter.get_label_set(kvp)
@@ -154,8 +154,6 @@ class TestMetric(metrics.Metric):
         meter,
         label_keys,
         enabled: bool = True,
-        monotonic: bool = True,
-        absolute: bool = False,
     ):
         super().__init__(
             name,
@@ -165,6 +163,4 @@ class TestMetric(metrics.Metric):
             meter,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
-            absolute=absolute,
         )
