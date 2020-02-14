@@ -237,36 +237,35 @@ class TestCounterHandle(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 4.0)
 
 
-# TODO: fix tests once aggregator implemented
-class TestGaugeHandle(unittest.TestCase):
-    def test_set(self):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, True, aggregator)
-        handle.set(3)
-        self.assertEqual(handle.aggregator.current, 3)
+class TestMeasureHandle(unittest.TestCase):
+    def test_record(self):
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
+        handle = metrics.MeasureHandle(int, True, aggregator)
+        handle.record(3)
+        self.assertEqual(handle.aggregator.current, (3, 3, 3, 1))
 
-    def test_set_disabled(self):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, False, aggregator)
-        handle.set(3)
-        self.assertEqual(handle.aggregator.current, 0)
+    def test_record_disabled(self):
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
+        handle = metrics.MeasureHandle(int, False, aggregator)
+        handle.record(3)
+        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
-    def test_set_incorrect_type(self, logger_mock):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, True, aggregator)
-        handle.set(3.0)
-        self.assertEqual(handle.aggregator.current, 0)
+    def test_record_incorrect_type(self, logger_mock):
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
+        handle = metrics.MeasureHandle(int, True, aggregator)
+        handle.record(3.0)
+        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.GaugeHandle(int, True, aggregator)
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
+        handle = metrics.MeasureHandle(int, True, aggregator)
         time_mock.return_value = 123
         handle.update(4.0)
         self.assertEqual(handle.last_update_timestamp, 123)
-        self.assertEqual(handle.aggregator.current, 4.0)
+        self.assertEqual(handle.aggregator.current, (4.0, 4.0, 4.0, 1))
 
 
 class TestMeasureHandle(unittest.TestCase):
