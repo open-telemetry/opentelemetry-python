@@ -45,7 +45,7 @@ class Batcher(abc.ABC):
         Aggregators keep track of and updates values when metrics get updated.
         """
         # pylint:disable=R0201
-        if metric_type == Counter:
+        if issubclass(metric_type, Counter):
             return CounterAggregator()
         # TODO: Add other aggregators
         return CounterAggregator()
