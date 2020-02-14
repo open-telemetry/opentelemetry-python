@@ -11,34 +11,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from contextvars import ContextVar
+from sys import version_info
 
-import threading
+from opentelemetry.context.context import Context, RuntimeContext
 
-from opentelemetry.context import Context, RuntimeContext
+if (3, 5, 3) <= version_info < (3, 7):
+    import aiocontextvars  # type: ignore # pylint:disable=unused-import
+
+elif (3, 4) < version_info <= (3, 5, 2):
+    import opentelemetry.context.aiocontextvarsfix  # pylint:disable=unused-import
 
 
-class ThreadLocalRuntimeContext(RuntimeContext):
-    """An implementation of the RuntimeContext interface
-    which uses thread-local storage under the hood. This
-    implementation is available for usage with Python 3.4.
+class ContextVarsRuntimeContext(RuntimeContext):
+    """An implementation of the RuntimeContext interface which wraps ContextVar under
+    the hood. This is the prefered implementation for usage with Python 3.5+
     """
 
     _CONTEXT_KEY = "current_context"
 
     def __init__(self) -> None:
-        self._current_context = threading.local()
+        self._current_context = ContextVar(
+            self._CONTEXT_KEY, default=Context()
+        )
 
     def set_current(self, context: Context) -> None:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
-        setattr(self._current_context, self._CONTEXT_KEY, context)
+        self._current_context.set(context)
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
-        if not hasattr(self._current_context, self._CONTEXT_KEY):
-            setattr(
-                self._current_context, self._CONTEXT_KEY, Context(),
-            )
-        return getattr(self._current_context, self._CONTEXT_KEY)
+        return self._current_context.get()
 
 
-__all__ = ["ThreadLocalRuntimeContext"]
+__all__ = ["ContextVarsRuntimeContext"]
