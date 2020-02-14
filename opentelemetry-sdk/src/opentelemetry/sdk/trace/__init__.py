@@ -509,6 +509,8 @@ class Tracer(trace_api.Tracer):
         )
 
         if sampling_decision.sampled:
+            options = context.trace_options | trace_api.TraceOptions.SAMPLED
+            context.trace_options = trace_api.TraceOptions(options)
             if attributes is None:
                 span_attributes = sampling_decision.attributes
             else:
