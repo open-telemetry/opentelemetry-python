@@ -178,7 +178,38 @@ class Measure(Metric):
         """
 
 
-MetricT = TypeVar("MetricT", Counter, Measure)
+class Observer:
+    """An observer type metric instrument used to capture a current set of values.
+
+
+    Observer instruments are asynchronous, a callback is invoked with the
+    observer instrument as argument allowing the user to capture multiple
+    values per collection interval.
+    """
+
+    def observe(self, value: ValueT, label_set: LabelSet) -> None:
+        """Captures ``value`` to the observer.
+
+        Args:
+            value: The value to capture to this observer metric.
+            label_set: `LabelSet` associated to ``value``.
+        """
+
+
+class DefaultObserver(Observer):
+    """No-op implementation of ``Observer``."""
+
+    def observe(self, value: ValueT, label_set: LabelSet) -> None:
+        """Captures ``value`` to the observer.
+
+        Args:
+            value: The value to capture to this observer metric.
+            label_set: `LabelSet` associated to ``value``.
+        """
+
+
+MetricT = TypeVar("MetricT", Counter, Measure, Observer)
+ObserverCallbackT = Callable[[Observer], None]
 
 
 # pylint: disable=unused-argument
@@ -235,6 +266,31 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
+    def register_observer(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "Observer":
+        """Registers an ``Observer`` metric instrument.
+
+        Args:
+            callback: Callback invoked each collection interval with the
+                observer as argument.
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values.
+            value_type: The type of values being recorded by the metric.
+            label_keys: The keys for the labels with dynamic values.
+            enabled: Whether to report the metric by default.
+        Returns: A new ``Observer`` metric instrument.
+        """
+
+    @abc.abstractmethod
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given labels.
 
@@ -267,6 +323,18 @@ class DefaultMeter(Meter):
     ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()
+
+    def register_observer(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "Observer":
+        return DefaultObserver()
 
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         # pylint: disable=no-self-use

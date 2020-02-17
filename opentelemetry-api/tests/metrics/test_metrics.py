@@ -33,6 +33,13 @@ class TestMeter(unittest.TestCase):
         metric = self.meter.create_metric("", "", "", float, metrics.Counter)
         self.assertIsInstance(metric, metrics.DefaultMetric)
 
+    def test_register_observer(self):
+        callback = mock.Mock()
+        observer = self.meter.register_observer(
+            callback, "", "", "", int, (), True
+        )
+        self.assertIsInstance(observer, metrics.DefaultObserver)
+
     def test_get_label_set(self):
         metric = self.meter.get_label_set({})
         self.assertIsInstance(metric, metrics.DefaultLabelSet)

@@ -23,6 +23,7 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.metrics.export.aggregate import (
     CounterAggregator,
     MinMaxSumCountAggregator,
+    ObserverAggregator,
 )
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -317,6 +318,92 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         mmsc1.merge(mmsc2)
 
         self.assertEqual(mmsc1.checkpoint, checkpoint1)
+
+
+class TestObserverAggregator(unittest.TestCase):
+    def test_update(self):
+        observer = ObserverAggregator()
+        # test current values without any update
+        self.assertEqual(
+            observer.mmsc.current, (None, None, None, 0),
+        )
+        self.assertIsNone(observer.current)
+
+        # call update with some values
+        values = (3, 50, 3, 97, 27)
+        for val in values:
+            observer.update(val)
+
+        self.assertEqual(
+            observer.mmsc.current,
+            (min(values), max(values), sum(values), len(values)),
+        )
+
+        self.assertEqual(observer.current, values[-1])
+
+    def test_checkpoint(self):
+        observer = ObserverAggregator()
+
+        # take checkpoint wihtout any update
+        observer.take_checkpoint()
+        self.assertEqual(
+            observer.checkpoint, (None, None, None, 0, None),
+        )
+
+        # call update with some values
+        values = (3, 50, 3, 97)
+        for val in values:
+            observer.update(val)
+
+        observer.take_checkpoint()
+        self.assertEqual(
+            observer.checkpoint,
+            (min(values), max(values), sum(values), len(values), values[-1]),
+        )
+
+    def test_merge(self):
+        observer1 = ObserverAggregator()
+        observer2 = ObserverAggregator()
+
+        mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        mmsc_checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
+
+        checkpoint1 = ObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+
+        checkpoint2 = ObserverAggregator._TYPE(*(mmsc_checkpoint2 + (27,)))
+
+        observer1.mmsc.checkpoint = mmsc_checkpoint1
+        observer2.mmsc.checkpoint = mmsc_checkpoint2
+
+        observer1.checkpoint = checkpoint1
+        observer2.checkpoint = checkpoint2
+
+        observer1.merge(observer2)
+
+        self.assertEqual(
+            observer1.checkpoint,
+            (
+                min(checkpoint1.min, checkpoint2.min),
+                max(checkpoint1.max, checkpoint2.max),
+                checkpoint1.sum + checkpoint2.sum,
+                checkpoint1.count + checkpoint2.count,
+                checkpoint2.last,
+            ),
+        )
+
+    def test_merge_with_empty(self):
+        observer1 = ObserverAggregator()
+        observer2 = ObserverAggregator()
+
+        mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        checkpoint1 = ObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+
+        observer1.mmsc.checkpoint = mmsc_checkpoint1
+        observer1.checkpoint = checkpoint1
+
+        observer1.merge(observer2)
+
+        self.assertEqual(observer1.checkpoint, checkpoint1)
 
 
 class TestController(unittest.TestCase):
