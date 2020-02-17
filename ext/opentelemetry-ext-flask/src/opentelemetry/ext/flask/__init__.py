@@ -12,29 +12,76 @@ from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 
-_ENVIRON_STARTTIME_KEY = "opentelemetry-flask.starttime_key"
-_ENVIRON_SPAN_KEY = "opentelemetry-flask.span_key"
-_ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
-
 
 def instrument_app(flask):
     """Makes the passed-in Flask object traced by OpenTelemetry.
 
     You must not call this function multiple times on the same Flask object.
     """
-
     wsgi = flask.wsgi_app
-    flask.wsgi_app = otel_wsgi.OpenTelemetryMiddleware(wsgi)
+    tracer = trace.tracer_source().get_tracer(__name__, __version__)
+
+    def wrapped_app(environ, start_response):
+        def _start_response(status, response_headers, *args, **kwargs):
+            span = tracer.get_current_span()
+            if span:
+                otel_wsgi.add_response_attributes(
+                    span.status, response_headers
+                )
+            else:
+                logger.warning(
+                    "Flask environ's OpenTelemetry span missing at _start_response(%s)",
+                    status,
+                )
+            return start_response(status, response_headers, *args, **kwargs)
+
+        try:
+            iterable = wsgi(environ, _start_response)
+            for yielded in iterable:
+                yield yielded
+        except Exception as error:  # noqa
+            # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
+            span = tracer.get_current_span()
+            if span:
+                span.set_status(
+                    trace.status.Status(
+                        trace.status.StatusCanonicalCode.UNKNOWN,
+                        description="{}: {}".format(
+                            type(error).__name__, error
+                        ),
+                    )
+                )
+            raise
+        finally:
+            close = getattr(iterable, "close", None)
+            if close:
+                close()
+            span = tracer.get_current_span()
+            if span:
+                span.end()
+
+    def _before_flask_request():
+        environ = flask_request.environ
+        span_name = flask_request.endpoint or otel_wsgi.get_default_span_name(
+            environ
+        )
+        parent_span = propagators.extract(
+            otel_wsgi.get_header_from_environ, environ
+        )
+
+        span = tracer.start_span(
+            span_name,
+            parent_span,
+            kind=trace.SpanKind.SERVER,
+            attributes=otel_wsgi.collect_request_attributes(environ),
+        )
+
+        if flask_request.url_rule:
+            # For 404 that result from no route found, etc, we don't have a url_rule.
+            span.set_attribute("http.route", flask_request.url_rule.rule)
+
+        activation = tracer.use_span(span, end_on_exit=True)
+        activation.__enter__()
+
+    flask.wsgi_app = wrapped_app
     flask.before_request(_before_flask_request)
-
-
-def _before_flask_request():
-    wsgi_tracer = trace.tracer_source().get_tracer(
-        otel_wsgi.__name__, otel_wsgi.__version__
-    )
-    span = wsgi_tracer.get_current_span()
-    if flask_request.endpoint:
-        span.update_name(flask_request.endpoint)
-    if flask_request.url_rule:
-        # For 404 that result from no route found, etc, we don't have a url_rule.
-        span.set_attribute("http.route", flask_request.url_rule.rule)
