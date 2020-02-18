@@ -68,12 +68,15 @@ implicit or explicit context propagation consistently throughout.
 
 import abc
 import enum
+import logging
 import types as python_types
 import typing
 from contextlib import contextmanager
 
 from opentelemetry.trace.status import Status
 from opentelemetry.util import loader, types
+
+logger = logging.getLogger(__name__)
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -676,6 +679,10 @@ def tracer_source() -> TracerSource:
         except TypeError:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op tracer impl
+            logger.warning(
+                "Unable to instantiate TracerSource from tracer source factory.",
+                exc_info=True,
+            )
             _TRACER_SOURCE = DefaultTracerSource()
         del _TRACER_SOURCE_FACTORY
 
