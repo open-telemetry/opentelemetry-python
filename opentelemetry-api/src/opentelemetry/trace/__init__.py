@@ -36,7 +36,7 @@ can optionally become the new active span::
 
     from opentelemetry import trace
 
-    tracer = trace.tracer_source().get_tracer(__name__)
+    tracer = trace.get_tracer(__name__)
 
     # Create a new root span, set it as the current span in context
     with tracer.start_as_current_span("parent"):
@@ -645,6 +645,19 @@ ImplementationFactory = typing.Callable[
 
 _TRACER_SOURCE = None  # type: typing.Optional[TracerSource]
 _TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+
+
+def get_tracer(
+    instrumenting_module_name: str, instrumenting_library_version: str = ""
+) -> "Tracer":
+    """Returns a `Tracer` for use by the given instrumentation library.
+
+    This function is a convenience wrapper for
+    `opentelemetry.trace.tracer_source().get_tracer`
+    """
+    return tracer_source().get_tracer(
+        instrumenting_module_name, instrumenting_library_version
+    )
 
 
 def tracer_source() -> TracerSource:
