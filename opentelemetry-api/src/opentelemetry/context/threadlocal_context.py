@@ -38,7 +38,10 @@ class ThreadLocalRuntimeContext(RuntimeContext):
             setattr(
                 self._current_context, self._CONTEXT_KEY, Context(),
             )
-        return getattr(self._current_context, self._CONTEXT_KEY)  # type: ignore
+        context = getattr(
+            self._current_context, self._CONTEXT_KEY
+        )  # type: Context
+        return context
 
 
 __all__ = ["ThreadLocalRuntimeContext"]
