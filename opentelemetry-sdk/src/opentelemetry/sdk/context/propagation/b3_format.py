@@ -15,7 +15,17 @@
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
+from opentelemetry.context import Context
+from opentelemetry.trace.propagation import (
+    get_span_from_context,
+    set_span_in_context,
+)
+from opentelemetry.trace.propagation.httptextformat import (
+    _T,
+    Getter,
+    HTTPTextFormat,
+    Setter,
+)
 
 
 class B3Format(HTTPTextFormat):
@@ -33,7 +43,12 @@ class B3Format(HTTPTextFormat):
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
     @classmethod
-    def extract(cls, get_from_carrier, carrier):
+    def extract(
+        cls,
+        get_from_carrier: Getter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
         span_id = format_span_id(trace.INVALID_SPAN_ID)
         sampled = "0"
@@ -58,7 +73,7 @@ class B3Format(HTTPTextFormat):
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _ = fields
             else:
-                return trace.INVALID_SPAN_CONTEXT
+                return set_span_in_context(trace.INVALID_SPAN)
         else:
             trace_id = (
                 _extract_first_element(
@@ -92,21 +107,31 @@ class B3Format(HTTPTextFormat):
         # header is set to allow.
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceOptions.SAMPLED
-        return trace.SpanContext(
-            # trace an span ids are encoded in hex, so must be converted
-            trace_id=int(trace_id, 16),
-            span_id=int(span_id, 16),
-            trace_options=trace.TraceOptions(options),
-            trace_state=trace.TraceState(),
+        return set_span_in_context(
+            trace.DefaultSpan(
+                trace.SpanContext(
+                    # trace an span ids are encoded in hex, so must be converted
+                    trace_id=int(trace_id, 16),
+                    span_id=int(span_id, 16),
+                    trace_options=trace.TraceOptions(options),
+                    trace_state=trace.TraceState(),
+                )
+            )
         )
 
     @classmethod
-    def inject(cls, span, set_in_carrier, carrier):
+    def inject(
+        cls,
+        set_in_carrier: Setter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> None:
+        span = get_span_from_context(context=context)
         sampled = (
             trace.TraceOptions.SAMPLED & span.context.trace_options
         ) != 0
         set_in_carrier(
-            carrier, cls.TRACE_ID_KEY, format_trace_id(span.context.trace_id)
+            carrier, cls.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
         )
         set_in_carrier(
             carrier, cls.SPAN_ID_KEY, format_span_id(span.context.span_id)

@@ -25,6 +25,7 @@ from requests.sessions import Session
 from opentelemetry import context, propagators
 from opentelemetry.ext.http_requests.version import __version__
 from opentelemetry.trace import SpanKind
+from opentelemetry.trace.propagation import set_span_in_context
 
 
 # NOTE: Currently we force passing a tracer. But in turn, this forces the user
@@ -76,7 +77,8 @@ def enable(tracer_source):
             # to access propagators.
 
             headers = kwargs.setdefault("headers", {})
-            propagators.inject(tracer, type(headers).__setitem__, headers)
+            ctx = set_span_in_context(span)
+            propagators.inject(type(headers).__setitem__, headers, ctx)
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)

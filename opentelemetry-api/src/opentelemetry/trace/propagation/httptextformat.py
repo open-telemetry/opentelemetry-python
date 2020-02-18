@@ -15,10 +15,12 @@
 import abc
 import typing
 
-from opentelemetry.distributedcontext import DistributedContext
+from opentelemetry.context.context import Context
 
-Setter = typing.Callable[[object, str, str], None]
-Getter = typing.Callable[[object, str], typing.List[str]]
+_T = typing.TypeVar("_T")
+
+Setter = typing.Callable[[_T, str, str], None]
+Getter = typing.Callable[[_T, str], typing.List[str]]
 
 
 class HTTPTextFormat(abc.ABC):
@@ -38,6 +40,8 @@ class HTTPTextFormat(abc.ABC):
 
         PROPAGATOR = HTTPTextFormat()
 
+
+
         def get_header_from_flask_request(request, key):
             return request.headers.get_all(key)
 
@@ -46,7 +50,7 @@ class HTTPTextFormat(abc.ABC):
             request.headers[key] = value
 
         def example_route():
-            distributed_context = PROPAGATOR.extract(
+            span_context = PROPAGATOR.extract(
                 get_header_from_flask_request,
                 flask.request
             )
@@ -54,7 +58,7 @@ class HTTPTextFormat(abc.ABC):
                 "GET", "http://httpbin.org/get"
             )
             PROPAGATOR.inject(
-                distributed_context,
+                span_context,
                 set_header_into_requests_request,
                 request_to_downstream
             )
@@ -66,37 +70,42 @@ class HTTPTextFormat(abc.ABC):
        https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
     """
 
+    @classmethod
     @abc.abstractmethod
     def extract(
-        self, get_from_carrier: Getter, carrier: object
-    ) -> DistributedContext:
-        """Create a DistributedContext from values in the carrier.
+        cls,
+        get_from_carrier: Getter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
+        """Create a SpanContext from values in the carrier.
 
         The extract function should retrieve values from the carrier
         object using get_from_carrier, and use values to populate a
-        DistributedContext value and return it.
+        SpanContext value and return it.
 
         Args:
             get_from_carrier: a function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.
             carrier: and object which contains values that are
-                used to construct a DistributedContext. This object
+                used to construct a SpanContext. This object
                 must be paired with an appropriate get_from_carrier
                 which understands how to extract a value from it.
         Returns:
-            A DistributedContext with configuration found in the carrier.
+            A SpanContext with configuration found in the carrier.
 
         """
 
+    @classmethod
     @abc.abstractmethod
     def inject(
-        self,
-        context: DistributedContext,
-        set_in_carrier: Setter,
-        carrier: object,
+        cls,
+        set_in_carrier: Setter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
     ) -> None:
-        """Inject values from a DistributedContext into a carrier.
+        """Inject values from a Span into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
@@ -104,7 +113,7 @@ class HTTPTextFormat(abc.ABC):
         carrier.
 
         Args:
-            context: The DistributedContext to read values from.
+            context: The SpanContext to read values from.
             set_in_carrier: A setter function that can set values
                 on the carrier.
             carrier: An object that a place to define HTTP headers.

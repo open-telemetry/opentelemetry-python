@@ -16,7 +16,12 @@ import re
 import typing
 
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation import httptextformat
+from opentelemetry.context.context import Context
+from opentelemetry.trace.propagation import (
+    get_span_from_context,
+    httptextformat,
+    set_span_in_context,
+)
 
 _T = typing.TypeVar("_T")
 
@@ -61,18 +66,21 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
 
     @classmethod
     def extract(
-        cls, get_from_carrier: httptextformat.Getter[_T], carrier: _T
-    ) -> trace.SpanContext:
+        cls,
+        get_from_carrier: httptextformat.Getter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
         """Extracts a valid SpanContext from the carrier.
         """
         header = get_from_carrier(carrier, cls._TRACEPARENT_HEADER_NAME)
 
         if not header:
-            return trace.INVALID_SPAN_CONTEXT
+            return set_span_in_context(trace.INVALID_SPAN, context)
 
         match = re.search(cls._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
-            return trace.INVALID_SPAN_CONTEXT
+            return set_span_in_context(trace.INVALID_SPAN, context)
 
         version = match.group(1)
         trace_id = match.group(2)
@@ -80,13 +88,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         trace_options = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
-            return trace.INVALID_SPAN_CONTEXT
+            return set_span_in_context(trace.INVALID_SPAN, context)
 
         if version == "00":
             if match.group(5):
-                return trace.INVALID_SPAN_CONTEXT
+                return set_span_in_context(trace.INVALID_SPAN, context)
         if version == "ff":
-            return trace.INVALID_SPAN_CONTEXT
+            return set_span_in_context(trace.INVALID_SPAN, context)
 
         tracestate_headers = get_from_carrier(
             carrier, cls._TRACESTATE_HEADER_NAME
@@ -99,29 +107,29 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             trace_options=trace.TraceOptions(trace_options),
             trace_state=tracestate,
         )
-
-        return span_context
+        return set_span_in_context(trace.DefaultSpan(span_context), context)
 
     @classmethod
     def inject(
         cls,
-        span: trace.Span,
         set_in_carrier: httptextformat.Setter[_T],
         carrier: _T,
+        context: typing.Optional[Context] = None,
     ) -> None:
+        span_context = get_span_from_context(context).get_context()
 
-        context = span.get_context()
-
-        if context == trace.INVALID_SPAN_CONTEXT:
+        if span_context == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
-            context.trace_id, context.span_id, context.trace_options
+            span_context.trace_id,
+            span_context.span_id,
+            span_context.trace_options,
         )
         set_in_carrier(
             carrier, cls._TRACEPARENT_HEADER_NAME, traceparent_string
         )
-        if context.trace_state:
-            tracestate_string = _format_tracestate(context.trace_state)
+        if span_context.trace_state:
+            tracestate_string = _format_tracestate(span_context.trace_state)
             set_in_carrier(
                 carrier, cls._TRACESTATE_HEADER_NAME, tracestate_string
             )

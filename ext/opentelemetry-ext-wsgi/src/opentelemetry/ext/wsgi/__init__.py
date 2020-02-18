@@ -24,6 +24,7 @@ import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagators, trace
 from opentelemetry.ext.wsgi.version import __version__
+from opentelemetry.trace.propagation import get_span_from_context
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -181,7 +182,8 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        parent_span = propagators.extract(get_header_from_environ, environ)
+        context = propagators.extract(get_header_from_environ, environ)
+        parent_span = get_span_from_context(context)
         span_name = get_default_span_name(environ)
 
         span = self.tracer.start_span(

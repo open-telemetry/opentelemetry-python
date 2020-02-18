@@ -16,15 +16,26 @@
 # pylint:disable=no-member
 
 import time
+import typing
 from unittest import TestCase
 
 import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
-from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
+from opentelemetry.context import Context
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerSource
+from opentelemetry.trace.propagation import (
+    get_span_from_context,
+    set_span_in_context,
+)
+from opentelemetry.trace.propagation.httptextformat import (
+    _T,
+    Getter,
+    HTTPTextFormat,
+    Setter,
+)
 
 
 class TestShim(TestCase):
@@ -542,19 +553,35 @@ class MockHTTPTextFormat(HTTPTextFormat):
     SPAN_ID_KEY = "mock-spanid"
 
     @classmethod
-    def extract(cls, get_from_carrier, carrier):
+    def extract(
+        cls,
+        get_from_carrier: Getter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
         trace_id_list = get_from_carrier(carrier, cls.TRACE_ID_KEY)
         span_id_list = get_from_carrier(carrier, cls.SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
-            return trace.INVALID_SPAN_CONTEXT
+            return set_span_in_context(trace.INVALID_SPAN)
 
-        return trace.SpanContext(
-            trace_id=int(trace_id_list[0]), span_id=int(span_id_list[0])
+        return set_span_in_context(
+            trace.DefaultSpan(
+                trace.SpanContext(
+                    trace_id=int(trace_id_list[0]),
+                    span_id=int(span_id_list[0]),
+                )
+            )
         )
 
     @classmethod
-    def inject(cls, span, set_in_carrier, carrier):
+    def inject(
+        cls,
+        set_in_carrier: Setter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> None:
+        span = get_span_from_context(context)
         set_in_carrier(
             carrier, cls.TRACE_ID_KEY, str(span.get_context().trace_id)
         )

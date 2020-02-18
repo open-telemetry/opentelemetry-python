@@ -14,18 +14,48 @@
 
 import typing
 
-import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
+from opentelemetry.context import get_current
+from opentelemetry.context.context import Context
 from opentelemetry.context.propagation.tracecontexthttptextformat import (
     TraceContextHTTPTextFormat,
 )
+from opentelemetry.trace.propagation import httptextformat
 
 _T = typing.TypeVar("_T")
 
 
+class DefaultPropagator(httptextformat.HTTPTextFormat):
+    """The default Propagator used when no implementation is configured.
+    All operations are no-ops.
+    """
+
+    @classmethod
+    def extract(
+        cls,
+        get_from_carrier: httptextformat.Getter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
+        if context:
+            return context
+        return get_current()
+
+    @classmethod
+    def inject(
+        cls,
+        set_in_carrier: httptextformat.Setter[_T],
+        carrier: _T,
+        context: typing.Optional[Context] = None,
+    ) -> None:
+        pass
+
+
 def extract(
-    get_from_carrier: httptextformat.Getter[_T], carrier: _T
-) -> trace.SpanContext:
+    get_from_carrier: httptextformat.Getter[_T],
+    carrier: _T,
+    context: typing.Optional[Context] = None,
+) -> Context:
     """Load the parent SpanContext from values in the carrier.
 
     Using the specified HTTPTextFormatter, the propagator will
@@ -41,13 +71,15 @@ def extract(
             must be paired with an appropriate get_from_carrier
             which understands how to extract a value from it.
     """
-    return get_global_httptextformat().extract(get_from_carrier, carrier)
+    return get_global_httptextformat().extract(
+        get_from_carrier, carrier, context
+    )
 
 
 def inject(
-    tracer: trace.Tracer,
     set_in_carrier: httptextformat.Setter[_T],
     carrier: _T,
+    context: typing.Optional[Context] = None,
 ) -> None:
     """Inject values from the current context into the carrier.
 
@@ -63,9 +95,7 @@ def inject(
             headers. Should be paired with set_in_carrier, which
             should know how to set header values on the carrier.
     """
-    get_global_httptextformat().inject(
-        tracer.get_current_span(), set_in_carrier, carrier
-    )
+    get_global_httptextformat().inject(set_in_carrier, carrier, context)
 
 
 _HTTP_TEXT_FORMAT = (
