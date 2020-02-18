@@ -596,7 +596,8 @@ class TracerSource(trace_api.TracerSource):
             ),
         )
 
-    def get_current_span(self) -> Span:
+    @staticmethod
+    def get_current_span() -> Span:
         return context_api.get_value(SPAN_KEY)  # type: ignore
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
