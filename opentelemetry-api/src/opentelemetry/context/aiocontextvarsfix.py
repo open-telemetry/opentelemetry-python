@@ -55,7 +55,7 @@ if not hasattr(asyncio, "_get_running_loop"):
     asyncio._set_running_loop = asyncio.events._set_running_loop
 
 # noinspection PyUnresolvedReferences
-import aiocontextvars  # pylint: disable=unused-import,wrong-import-position # noqa # isort:skip
+import aiocontextvars  # pylint: disable=import-error,unused-import,wrong-import-position # noqa # isort:skip
 
 
 def _run_coroutine_threadsafe(coro, loop):

@@ -15,6 +15,7 @@
 import logging
 import typing
 from os import environ
+from sys import version_info
 
 from pkg_resources import iter_entry_points
 
@@ -84,9 +85,14 @@ def get_current() -> Context:
     if _RUNTIME_CONTEXT is None:
         # FIXME use a better implementation of a configuration manager to avoid having
         # to get configuration values straight from environment variables
+        if version_info < (3, 5):
+            # contextvars are not supported in 3.4, use thread-local storage
+            default_context = "threadlocal_context"
+        else:
+            default_context = "contextvars_context"
 
         configured_context = environ.get(
-            "OPENTELEMETRY_CONTEXT", "default_context"
+            "OPENTELEMETRY_CONTEXT", default_context
         )  # type: str
         try:
             _RUNTIME_CONTEXT = next(
