@@ -17,7 +17,6 @@
 import os
 
 from opentelemetry import trace
-from opentelemetry.context import Context
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
@@ -51,4 +50,4 @@ trace.tracer_source().add_span_processor(span_processor)
 with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
         with tracer.start_as_current_span("baz"):
-            print(Context)
+            print("Hello world from OpenTelemetry Python!")
