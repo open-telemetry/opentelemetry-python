@@ -202,7 +202,7 @@ class TestSpanCreation(unittest.TestCase):
         )
 
     def test_get_current_span_multiple_tracers(self):
-        """In the case where there are multiple tracers, 
+        """In the case where there are multiple tracers,
         get_current_span will return the same active span
         for both tracers.
         """
