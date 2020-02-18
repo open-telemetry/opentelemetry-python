@@ -542,9 +542,7 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             context_snapshot = context_api.get_current()
-            context_api.set_current(
-                context_api.set_value(SPAN_KEY, span)
-            )
+            context_api.set_current(context_api.set_value(SPAN_KEY, span))
             try:
                 yield span
             finally:
