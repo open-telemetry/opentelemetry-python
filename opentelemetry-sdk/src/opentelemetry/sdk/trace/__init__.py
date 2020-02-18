@@ -27,7 +27,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import SpanContext, sampling
-from opentelemetry.trace.propagation import get_span_key
+from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
 
@@ -543,7 +543,7 @@ class Tracer(trace_api.Tracer):
         try:
             context_snapshot = context_api.get_current()
             context_api.set_current(
-                context_api.set_value(self.source.key, span)
+                context_api.set_value(SPAN_KEY, span)
             )
             try:
                 yield span
@@ -577,9 +577,6 @@ class TracerSource(trace_api.TracerSource):
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
         shutdown_on_exit: bool = True,
     ):
-        # TODO: How should multiple TracerSources behave? Should they get their own contexts?
-        # This could be done by adding `str(id(self))` to the slot name.
-        self.key = get_span_key(tracer_source_id=str(id(self)))
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
         self._atexit_handler = None
@@ -602,7 +599,7 @@ class TracerSource(trace_api.TracerSource):
         )
 
     def get_current_span(self) -> Span:
-        return context_api.get_value(self.key)  # type: ignore
+        return context_api.get_value(SPAN_KEY)  # type: ignore
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerSource`.
