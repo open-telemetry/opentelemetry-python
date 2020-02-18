@@ -51,7 +51,6 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 
 ```python
 from opentelemetry import trace
-from opentelemetry.context import Context
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
@@ -64,7 +63,7 @@ tracer = trace.tracer_source().get_tracer(__name__)
 with tracer.start_as_current_span('foo'):
     with tracer.start_as_current_span('bar'):
         with tracer.start_as_current_span('baz'):
-            print(Context)
+            print("Hello world from OpenTelemetry Python!")
 ```
 
 ### Metrics
