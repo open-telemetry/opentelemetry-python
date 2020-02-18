@@ -25,7 +25,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 try:
     import contextvars  # pylint: disable=unused-import
-    from opentelemetry.sdk.context.contextvars_context import (
+    from opentelemetry.context.contextvars_context import (
         ContextVarsRuntimeContext,
     )
 except ImportError:
@@ -51,10 +51,6 @@ def stop_loop_when(loop, cond_func, timeout=5.0):
 
     timeout -= 0.1
     loop.call_later(0.1, stop_loop_when, loop, cond_func, timeout)
-
-
-def do_work() -> None:
-    context.set_current(context.set_value("say", "bar"))
 
 
 class TestAsyncio(unittest.TestCase):
@@ -114,41 +110,3 @@ class TestAsyncio(unittest.TestCase):
             if span is expected_parent:
                 continue
             self.assertEqual(span.parent, expected_parent)
-
-
-class TestContextVarsContext(unittest.TestCase):
-    def setUp(self):
-        self.previous_context = context.get_current()
-
-    def tearDown(self):
-        context.set_current(self.previous_context)
-
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()
-    )
-    def test_context(self):
-        self.assertIsNone(context.get_value("say"))
-        empty = context.get_current()
-        second = context.set_value("say", "foo")
-
-        self.assertEqual(context.get_value("say", context=second), "foo")
-
-        do_work()
-        self.assertEqual(context.get_value("say"), "bar")
-        third = context.get_current()
-
-        self.assertIsNone(context.get_value("say", context=empty))
-        self.assertEqual(context.get_value("say", context=second), "foo")
-        self.assertEqual(context.get_value("say", context=third), "bar")
-
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()
-    )
-    def test_set_value(self):
-        first = context.set_value("a", "yyy")
-        second = context.set_value("a", "zzz")
-        third = context.set_value("a", "---", first)
-        self.assertEqual("yyy", context.get_value("a", context=first))
-        self.assertEqual("zzz", context.get_value("a", context=second))
-        self.assertEqual("---", context.get_value("a", context=third))
-        self.assertEqual(None, context.get_value("a"))

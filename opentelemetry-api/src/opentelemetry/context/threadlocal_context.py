@@ -14,7 +14,7 @@
 
 import threading
 
-from opentelemetry.context import Context, RuntimeContext
+from opentelemetry.context.context import Context, RuntimeContext
 
 
 class ThreadLocalRuntimeContext(RuntimeContext):
@@ -38,7 +38,10 @@ class ThreadLocalRuntimeContext(RuntimeContext):
             setattr(
                 self._current_context, self._CONTEXT_KEY, Context(),
             )
-        return getattr(self._current_context, self._CONTEXT_KEY)
+        context = getattr(
+            self._current_context, self._CONTEXT_KEY
+        )  # type: Context
+        return context
 
 
 __all__ = ["ThreadLocalRuntimeContext"]
