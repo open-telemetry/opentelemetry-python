@@ -31,7 +31,7 @@ class TestGlobals(unittest.TestCase):
         )
 
     @staticmethod
-    def tearDown():
+    def tearDown() -> None:
         importlib.reload(trace)
 
     def test_get_tracer(self):
