@@ -284,11 +284,28 @@ class TestCounterAggregator(unittest.TestCase):
 
 
 class TestMinMaxSumCountAggregator(unittest.TestCase):
+    @classmethod
+    def call_update(cls, mmsc):
+        min_ = 2 ** 32
+        max_ = 0
+        sum_ = 0
+        count_ = 0
+        for _ in range(0, 100000):
+            val = random.getrandbits(32)
+            mmsc.update(val)
+            if val < min_:
+                min_ = val
+            if val > max_:
+                max_ = val
+            sum_ += val
+            count_ += 1
+        return MinMaxSumCountAggregator._TYPE(min_, max_, sum_, count_)
+
     def test_update(self):
         mmsc = MinMaxSumCountAggregator()
         # test current values without any update
         self.assertEqual(
-            mmsc.current, (None, None, None, 0),
+            mmsc.current, MinMaxSumCountAggregator._EMPTY,
         )
 
         # call update with some values
@@ -306,7 +323,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         # take checkpoint wihtout any update
         mmsc.take_checkpoint()
         self.assertEqual(
-            mmsc.checkpoint, (None, None, None, 0),
+            mmsc.checkpoint, MinMaxSumCountAggregator._EMPTY,
         )
 
         # call update with some values
@@ -321,7 +338,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         )
 
         self.assertEqual(
-            mmsc.current, (None, None, None, 0),
+            mmsc.current, MinMaxSumCountAggregator._EMPTY,
         )
 
     def test_merge(self):
@@ -338,13 +355,33 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
         self.assertEqual(
             mmsc1.checkpoint,
-            (
-                min(checkpoint1.min, checkpoint2.min),
-                max(checkpoint1.max, checkpoint2.max),
-                checkpoint1.sum + checkpoint2.sum,
-                checkpoint1.count + checkpoint2.count,
+            MinMaxSumCountAggregator._merge_checkpoint(
+                checkpoint1, checkpoint2
             ),
         )
+
+    def test_merge_checkpoint(self):
+        func = MinMaxSumCountAggregator._merge_checkpoint
+        _type = MinMaxSumCountAggregator._TYPE
+        empty = MinMaxSumCountAggregator._EMPTY
+
+        ret = func(empty, empty)
+        self.assertEqual(ret, empty)
+
+        ret = func(empty, _type(0, 0, 0, 0))
+        self.assertEqual(ret, _type(0, 0, 0, 0))
+
+        ret = func(_type(0, 0, 0, 0), empty)
+        self.assertEqual(ret, _type(0, 0, 0, 0))
+
+        ret = func(_type(0, 0, 0, 0), _type(0, 0, 0, 0))
+        self.assertEqual(ret, _type(0, 0, 0, 0))
+
+        ret = func(_type(44, 23, 55, 86), empty)
+        self.assertEqual(ret, _type(44, 23, 55, 86))
+
+        ret = func(_type(3, 150, 101, 3), _type(1, 33, 44, 2))
+        self.assertEqual(ret, _type(1, 150, 101 + 44, 2 + 3))
 
     def test_merge_with_empty(self):
         mmsc1 = MinMaxSumCountAggregator()
@@ -356,6 +393,42 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         mmsc1.merge(mmsc2)
 
         self.assertEqual(mmsc1.checkpoint, checkpoint1)
+
+    def test_concurrent_update(self):
+        mmsc = MinMaxSumCountAggregator()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+            fut1 = ex.submit(self.call_update, mmsc)
+            fut2 = ex.submit(self.call_update, mmsc)
+
+            ret1 = fut1.result()
+            ret2 = fut2.result()
+
+            update_total = MinMaxSumCountAggregator._merge_checkpoint(
+                ret1, ret2
+            )
+            mmsc.take_checkpoint()
+
+            self.assertEqual(update_total, mmsc.checkpoint)
+
+    def test_concurrent_update_and_checkpoint(self):
+        mmsc = MinMaxSumCountAggregator()
+        checkpoint_total = MinMaxSumCountAggregator._TYPE(2 ** 32, 0, 0, 0)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+            fut = ex.submit(self.call_update, mmsc)
+
+            while fut.running():
+                mmsc.take_checkpoint()
+                checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
+                    checkpoint_total, mmsc.checkpoint
+                )
+
+            mmsc.take_checkpoint()
+            checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
+                checkpoint_total, mmsc.checkpoint
+            )
+
+            self.assertEqual(checkpoint_total, fut.result())
 
 
 class TestController(unittest.TestCase):
