@@ -90,8 +90,10 @@ class TestMeter(unittest.TestCase):
         meter.record_batch(label_set, record_tuples)
         self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
         self.assertEqual(gauge.get_handle(label_set).aggregator.current, 5.0)
-        # TODO: Fix when aggregator implemented for measure
-        self.assertEqual(measure.get_handle(label_set).aggregator.current, 3.0)
+        self.assertEqual(
+            measure.get_handle(label_set).aggregator.current,
+            (3.0, 3.0, 3.0, 1),
+        )
 
     def test_record_batch_exists(self):
         meter = metrics.Meter()
@@ -195,9 +197,13 @@ class TestMeasure(unittest.TestCase):
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)
-        metric.record(3, label_set)
-        # TODO: Fix once other aggregators implemented
-        self.assertEqual(handle.aggregator.current, 3)
+        values = (37, 42, 7)
+        for val in values:
+            metric.record(val, label_set)
+        self.assertEqual(
+            handle.aggregator.current,
+            (min(values), max(values), sum(values), len(values)),
+        )
 
 
 class TestCounterHandle(unittest.TestCase):
@@ -263,33 +269,32 @@ class TestGaugeHandle(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 4.0)
 
 
-# TODO: fix tests once aggregator implemented
 class TestMeasureHandle(unittest.TestCase):
     def test_record(self):
-        aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.MeasureHandle(int, False, aggregator)
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
+        handle = metrics.MeasureHandle(int, True, aggregator)
         handle.record(3)
-        self.assertEqual(handle.aggregator.current, 0)
+        self.assertEqual(handle.aggregator.current, (3, 3, 3, 1))
 
     def test_record_disabled(self):
-        aggregator = export.aggregate.CounterAggregator()
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
         handle = metrics.MeasureHandle(int, False, aggregator)
         handle.record(3)
-        self.assertEqual(handle.aggregator.current, 0)
+        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
-        aggregator = export.aggregate.CounterAggregator()
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
         handle = metrics.MeasureHandle(int, True, aggregator)
         handle.record(3.0)
-        self.assertEqual(handle.aggregator.current, 0)
+        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
-        aggregator = export.aggregate.CounterAggregator()
+        aggregator = export.aggregate.MinMaxSumCountAggregator()
         handle = metrics.MeasureHandle(int, True, aggregator)
         time_mock.return_value = 123
         handle.update(4.0)
         self.assertEqual(handle.last_update_timestamp, 123)
-        self.assertEqual(handle.aggregator.current, 4.0)
+        self.assertEqual(handle.aggregator.current, (4.0, 4.0, 4.0, 1))
