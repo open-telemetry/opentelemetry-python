@@ -257,7 +257,8 @@ class Meter(abc.ABC):
         Args:
             name: The name of the metric.
             description: Human-readable description of the metric.
-            unit: Unit of the metric values.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
