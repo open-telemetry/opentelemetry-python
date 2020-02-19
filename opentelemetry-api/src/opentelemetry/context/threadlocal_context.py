@@ -23,6 +23,10 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     implementation is available for usage with Python 3.4.
     """
 
+    class _Token:
+        def __init__(self, context: Context) -> None:
+            self.context = context
+
     _CONTEXT_KEY = "current_context"
 
     def __init__(self) -> None:
@@ -31,9 +35,8 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     def set_current(self, context: Context) -> object:
         """See `opentelemetry.context.RuntimeContext.set_current`."""
         current = self.get_current()
-        setattr(self._current_context, str(id(current)), current)
         setattr(self._current_context, self._CONTEXT_KEY, context)
-        return str(id(current))
+        return self._Token(current)
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
@@ -48,10 +51,9 @@ class ThreadLocalRuntimeContext(RuntimeContext):
 
     def reset(self, token: object) -> None:
         """See `opentelemetry.context.RuntimeContext.reset`."""
-        if not hasattr(self._current_context, str(token)):
+        if not isinstance(token, self._Token):
             raise ValueError("invalid token")
-        context = getattr(self._current_context, str(token))  # type: Context
-        setattr(self._current_context, self._CONTEXT_KEY, context)
+        setattr(self._current_context, self._CONTEXT_KEY, token.context)
 
 
 __all__ = ["ThreadLocalRuntimeContext"]
