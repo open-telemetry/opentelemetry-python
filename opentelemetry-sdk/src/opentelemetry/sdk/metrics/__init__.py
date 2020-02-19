@@ -341,8 +341,8 @@ class MeterSource(metrics_api.MeterSource):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
         batcher: Batcher = UngroupedBatcher(True),
+        instrumenting_library_version: str = "",
     ) -> "metrics_api.Meter":
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = "ERROR:MISSING MODULE NAME"

@@ -15,6 +15,7 @@
 import unittest
 from unittest import mock
 
+from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricsExporter,
@@ -32,7 +33,7 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 class TestConsoleMetricsExporter(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_export(self):
-        meter = metrics.Meter()
+        meter = metrics_api.meter_source().get_meter(__name__)
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
             "available memory",
@@ -43,7 +44,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             ("environment",),
         )
         kvp = {"environment": "staging"}
-        label_set = meter.get_label_set(kvp)
+        label_set = metrics.LabelSet(kvp)
         aggregator = CounterAggregator()
         record = MetricRecord(aggregator, label_set, metric)
         result = '{}(data="{}", label_set="{}", value={})'.format(
@@ -69,7 +70,7 @@ class TestBatcher(unittest.TestCase):
     # TODO: Add other aggregator tests
 
     def test_checkpoint_set(self):
-        meter = metrics.Meter()
+        meter = metrics_api.meter_source().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -97,7 +98,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
-        meter = metrics.Meter()
+        meter = metrics_api.meter_source().get_meter(__name__)
         batcher = UngroupedBatcher(False)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -117,7 +118,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher._batch_map), 0)
 
     def test_finished_collection_stateful(self):
-        meter = metrics.Meter()
+        meter = metrics_api.meter_source().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -138,7 +139,7 @@ class TestBatcher(unittest.TestCase):
 
     # TODO: Abstract the logic once other batchers implemented
     def test_ungrouped_batcher_process_exists(self):
-        meter = metrics.Meter()
+        meter = metrics_api.meter_source().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         aggregator2 = CounterAggregator()
@@ -167,7 +168,7 @@ class TestBatcher(unittest.TestCase):
         )
 
     def test_ungrouped_batcher_process_not_exists(self):
-        meter = metrics.Meter()
+        meter = metrics_api.meter_source().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -194,7 +195,7 @@ class TestBatcher(unittest.TestCase):
         )
 
     def test_ungrouped_batcher_process_not_stateful(self):
-        meter = metrics.Meter()
+        meter = metrics_api.meter_source().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
