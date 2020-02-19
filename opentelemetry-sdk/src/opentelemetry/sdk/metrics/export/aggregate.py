@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import abc
+import threading
 from collections import namedtuple
 
 
@@ -47,13 +48,16 @@ class CounterAggregator(Aggregator):
         super().__init__()
         self.current = 0
         self.checkpoint = 0
+        self._lock = threading.Lock()
 
     def update(self, value):
-        self.current += value
+        with self._lock:
+            self.current += value
 
     def take_checkpoint(self):
-        self.checkpoint = self.current
-        self.current = 0
+        with self._lock:
+            self.checkpoint = self.current
+            self.current = 0
 
     def merge(self, other):
         self.checkpoint += other.checkpoint

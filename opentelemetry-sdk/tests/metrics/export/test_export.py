@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import concurrent.futures
+import random
 import unittest
 from unittest import mock
 
@@ -222,6 +224,15 @@ class TestBatcher(unittest.TestCase):
 
 
 class TestCounterAggregator(unittest.TestCase):
+    @classmethod
+    def call_update(cls, counter):
+        update_total = 0
+        for _ in range(0, 100000):
+            val = random.getrandbits(32)
+            counter.update(val)
+            update_total += val
+        return update_total
+
     def test_update(self):
         counter = CounterAggregator()
         counter.update(1.0)
@@ -242,6 +253,34 @@ class TestCounterAggregator(unittest.TestCase):
         counter2.checkpoint = 3.0
         counter.merge(counter2)
         self.assertEqual(counter.checkpoint, 4.0)
+
+    def test_concurrent_update(self):
+        counter = CounterAggregator()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            fut1 = executor.submit(self.call_update, counter)
+            fut2 = executor.submit(self.call_update, counter)
+
+            updapte_total = fut1.result() + fut2.result()
+
+        counter.take_checkpoint()
+        self.assertEqual(updapte_total, counter.checkpoint)
+
+    def test_concurrent_update_and_checkpoint(self):
+        counter = CounterAggregator()
+        checkpoint_total = 0
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            fut = executor.submit(self.call_update, counter)
+
+            while fut.running():
+                counter.take_checkpoint()
+                checkpoint_total += counter.checkpoint
+
+        counter.take_checkpoint()
+        checkpoint_total += counter.checkpoint
+
+        self.assertEqual(fut.result(), checkpoint_total)
 
 
 class TestMinMaxSumCountAggregator(unittest.TestCase):
