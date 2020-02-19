@@ -25,7 +25,7 @@ from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Configure a stateful batcher
-batcher = UngroupedBatcher(True)
+batcher = UngroupedBatcher(stateful=True)
 
 metrics.set_preferred_meter_implementation(lambda _: Meter(batcher))
 meter = metrics.meter()
@@ -34,7 +34,7 @@ meter = metrics.meter()
 exporter = ConsoleMetricsExporter()
 
 # Configure a push controller
-controller = PushController(meter, exporter, 2)
+controller = PushController(meter=meter, exporter=exporter, interval=2)
 
 
 # Callback to gather cpu usage
@@ -45,12 +45,12 @@ def get_cpu_usage_callback(observer):
 
 
 meter.register_observer(
-    get_cpu_usage_callback,
-    "cpu_percent",
-    "per-cpu usage",
-    1,
-    float,
-    ("cpu_number",),
+    callback=get_cpu_usage_callback,
+    name="cpu_percent",
+    description="per-cpu usage",
+    unit="1",
+    value_type=float,
+    label_keys=("cpu_number",),
 )
 
 
@@ -61,7 +61,12 @@ def get_ram_usage_callback(observer):
 
 
 meter.register_observer(
-    get_ram_usage_callback, "ram_percent", "RAM memory usage", 1, float, (),
+    callback=get_ram_usage_callback,
+    name="ram_percent",
+    description="RAM memory usage",
+    unit="1",
+    value_type=float,
+    label_keys=(),
 )
 
 input("Press a key to finish...\n")

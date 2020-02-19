@@ -30,15 +30,25 @@ meter = metrics.meter()
 exporter = ConsoleMetricsExporter()
 # controller collects metrics created from meter and exports it via the
 # exporter every interval
-controller = PushController(meter, exporter, 5)
+controller = PushController(meter=meter, exporter=exporter, interval=5)
 
 # Example to show how to record using the meter
 counter = meter.create_metric(
-    "requests", "number of requests", 1, int, Counter, ("environment",)
+    name="requests",
+    description="number of requests",
+    unit="1",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
 counter2 = meter.create_metric(
-    "clicks", "number of clicks", 1, int, Counter, ("environment",)
+    name="clicks",
+    description="number of clicks",
+    unit="1",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
 # Labelsets are used to identify key-values that are associated with a specific
