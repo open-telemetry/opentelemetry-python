@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from contextvars import ContextVar, Token
+from contextvars import ContextVar
 from sys import version_info
 
 from opentelemetry.context.context import Context, RuntimeContext
