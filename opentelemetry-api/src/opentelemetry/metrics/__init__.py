@@ -223,9 +223,49 @@ class Measure(Metric):
             label_set: `LabelSet` to associate with the returned handle.
         """
 
+class MeterSource(abc.ABC):
+
+    @abc.abstractmethod
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "Meter":
+        """Returns a `Meter` for use by the given instrumentation library.
+
+        This function may return different `Meter` types (e.g. a no-op meter
+        vs. a functional meter).
+
+        Args:
+            instrumenting_module_name: The name of the instrumenting module
+                (usually just ``__name__``).
+
+                This should *not* be the name of the module that is
+                instrumented but the name of the module doing the instrumentation.
+                E.g., instead of ``"requests"``, use
+                ``"opentelemetry.ext.http_requests"``.
+
+            instrumenting_library_version: Optional. The version string of the
+                instrumenting library.  Usually this should be the same as
+                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+        """
+
+class DefaultMeterSource(MeterSource):
+    """The default MeterSource, used when no implementation is available.
+
+    All operations are no-op.
+    """
+
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "Meter":
+        # pylint:disable=no-self-use,unused-argument
+        return DefaultMeter()
+
 
 MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
-
 
 # pylint: disable=unused-argument
 class Meter(abc.ABC):
@@ -322,45 +362,49 @@ class DefaultMeter(Meter):
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = Callable[[Type[Meter]], Optional[Meter]]
+ImplementationFactory = Callable[[Type[MeterSource]], Optional[MeterSource]]
 
-_METER = None
-_METER_FACTORY = None
+_METER_SOURCE = None
+_METER_SOURCE_FACTORY = None
 
 
-def meter() -> Meter:
-    """Gets the current global :class:`~.Meter` object.
+def meter_source() -> MeterSource:
+    """Gets the current global :class:`~.MeterSource` object.
 
     If there isn't one set yet, a default will be loaded.
     """
-    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+    global _METER_SOURCE, _METER_SOURCE_FACTORY  # pylint:disable=global-statement
 
-    if _METER is None:
+    if _METER_SOURCE is None:
         # pylint:disable=protected-access
         try:
-            _METER = loader._load_impl(Meter, _METER_FACTORY)  # type: ignore
+            _METER_SOURCE = loader._load_impl(
+                MeterSource, _METER_SOURCE_FACTORY  # type: ignore
+            )
         except TypeError:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op tracer impl
-            _METER = DefaultMeter()
-        del _METER_FACTORY
+            _METER_SOURCE = DefaultMeterSource()
+        del _METER_SOURCE_FACTORY
 
-    return _METER
+    return _METER_SOURCE
 
 
-def set_preferred_meter_implementation(factory: ImplementationFactory) -> None:
-    """Set the factory to be used to create the meter.
+def set_preferred_meter_source_implementation(
+    factory: ImplementationFactory
+) -> None:
+    """Set the factory to be used to create the meter source.
 
     See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a meter is already loaded.
 
     Args:
-        factory: Callback that should create a new :class:`Meter` instance.
+        factory: Callback that should create a new :class:`MeterSource` instance.
     """
-    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+    global _METER_SOURCE_FACTORY  # pylint:disable=global-statement
 
-    if _METER:
-        raise RuntimeError("Meter already loaded.")
+    if _METER_SOURCE:
+        raise RuntimeError("MeterSource already loaded.")
 
-    _METER_FACTORY = factory
+    _METER_SOURCE_FACTORY = factory

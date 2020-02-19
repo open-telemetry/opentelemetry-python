@@ -140,3 +140,44 @@ class BoundedDict(MutableMapping):
         # pylint: disable=protected-access
         bounded_dict._dict = mapping
         return bounded_dict
+
+
+class InstrumentationInfo:
+    """Immutable information about an instrumentation library module.
+
+    See `TracerSource.get_tracer` or `MeterSource.get_meter` for the meaning of
+    the properties.
+    """
+
+    __slots__ = ("_name", "_version")
+
+    def __init__(self, name: str, version: str):
+        self._name = name
+        self._version = version
+
+    def __repr__(self):
+        return "{}({}, {})".format(
+            type(self).__name__, self._name, self._version
+        )
+
+    def __hash__(self):
+        return hash((self._name, self._version))
+
+    def __eq__(self, value):
+        return type(value) is type(self) and (self._name, self._version) == (
+            value._name,
+            value._version,
+        )
+
+    def __lt__(self, value):
+        if type(value) is not type(self):
+            return NotImplemented
+        return (self._name, self._version) < (value._name, value._version)
+
+    @property
+    def version(self) -> str:
+        return self._version
+
+    @property
+    def name(self) -> str:
+        return self._name

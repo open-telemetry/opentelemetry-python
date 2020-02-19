@@ -19,6 +19,7 @@ from typing import Dict, Sequence, Tuple, Type
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher, UngroupedBatcher
+from opentelemetry.sdk.util import InstrumentationInfo
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -261,11 +262,17 @@ class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`.
 
     Args:
+        instrumentation_info: The `InstrumentationInfo` for this meter.
         batcher: The `Batcher` used for this meter.
     """
 
-    def __init__(self, batcher: Batcher = UngroupedBatcher(True)):
+    def __init__(
+        self,
+        instrumentation_info: InstrumentationInfo,
+        batcher: Batcher
+    ):
         self.batcher = batcher
+        self.instrumentation_info = instrumentation_info
         self.metrics = set()
 
     def collect(self) -> None:
@@ -328,3 +335,21 @@ class Meter(metrics_api.Meter):
         if len(labels) == 0:
             return EMPTY_LABEL_SET
         return LabelSet(labels=labels)
+
+class MeterSource(metrics_api.MeterSource):
+    
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+        batcher: Batcher = UngroupedBatcher(True),
+    ) -> "metrics_api.Meter":
+        if not instrumenting_module_name:  # Reject empty strings too.
+            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
+            logger.error("get_meter called with missing module name.")
+        return Meter(
+            InstrumentationInfo(
+                instrumenting_module_name, instrumenting_library_version
+            ),
+            batcher,
+        )

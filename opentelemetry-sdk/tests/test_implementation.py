@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry.metrics import DefaultMetric
+from opentelemetry.metrics import DefaultLabelSet, DefaultMeter, DefaultMetric
 from opentelemetry.sdk import metrics, trace
 from opentelemetry.trace import INVALID_SPAN, INVALID_SPAN_CONTEXT
 
@@ -48,6 +48,9 @@ class TestSDKImplementation(unittest.TestCase):
         self.assertIs(span.is_recording_events(), True)
 
     def test_meter(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterSource().get_meter(__name__)
         metric = meter.create_metric("", "", "", float, metrics.Counter)
+        label_set = meter.get_label_set({'key1':'val1'})
+        self.assertNotIsInstance(meter, DefaultMeter)
         self.assertNotIsInstance(metric, DefaultMetric)
+        self.assertNotIsInstance(label_set, DefaultLabelSet)
