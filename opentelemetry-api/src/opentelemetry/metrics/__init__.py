@@ -383,7 +383,7 @@ def meter_source() -> MeterSource:
             )
         except TypeError:
             # if we raised an exception trying to instantiate an
-            # abstract class, default to no-op tracer impl
+            # abstract class, default to no-op meter impl
             _METER_SOURCE = DefaultMeterSource()
         del _METER_SOURCE_FACTORY
 
