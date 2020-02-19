@@ -335,7 +335,7 @@ class Meter(metrics_api.Meter):
         return LabelSet(labels=labels)
 
 
-class MeterSource(metrics_api.MeterSource):
+class MeterProvider(metrics_api.MeterProvider):
     def get_meter(
         self,
         instrumenting_module_name: str,

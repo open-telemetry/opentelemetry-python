@@ -227,7 +227,7 @@ class Measure(Metric):
         """
 
 
-class MeterSource(abc.ABC):
+class MeterProvider(abc.ABC):
     @abc.abstractmethod
     def get_meter(
         self,
@@ -254,8 +254,8 @@ class MeterSource(abc.ABC):
         """
 
 
-class DefaultMeterSource(MeterSource):
-    """The default MeterSource, used when no implementation is available.
+class DefaultMeterProvider(MeterProvider):
+    """The default MeterProvider, used when no implementation is available.
 
     All operations are no-op.
     """
@@ -366,7 +366,9 @@ class DefaultMeter(Meter):
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = Callable[[Type[MeterSource]], Optional[MeterSource]]
+ImplementationFactory = Callable[
+    [Type[MeterProvider]], Optional[MeterProvider]
+]
 
 _METER_SOURCE = None
 _METER_SOURCE_FACTORY = None
@@ -384,8 +386,8 @@ def get_meter(
     )
 
 
-def meter_source() -> MeterSource:
-    """Gets the current global :class:`~.MeterSource` object.
+def meter_source() -> MeterProvider:
+    """Gets the current global :class:`~.MeterProvider` object.
 
     If there isn't one set yet, a default will be loaded.
     """
@@ -395,16 +397,16 @@ def meter_source() -> MeterSource:
         # pylint:disable=protected-access
         try:
             _METER_SOURCE = loader._load_impl(
-                MeterSource, _METER_SOURCE_FACTORY  # type: ignore
+                MeterProvider, _METER_SOURCE_FACTORY  # type: ignore
             )
         except TypeError:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op meter impl
             logger.warning(
-                "Unable to instantiate MeterSource from meter source factory.",
+                "Unable to instantiate MeterProvider from meter source factory.",
                 exc_info=True,
             )
-            _METER_SOURCE = DefaultMeterSource()
+            _METER_SOURCE = DefaultMeterProvider()
         del _METER_SOURCE_FACTORY
 
     return _METER_SOURCE
@@ -420,11 +422,11 @@ def set_preferred_meter_source_implementation(
     This function may not be called after a meter is already loaded.
 
     Args:
-        factory: Callback that should create a new :class:`MeterSource` instance.
+        factory: Callback that should create a new :class:`MeterProvider` instance.
     """
     global _METER_SOURCE_FACTORY  # pylint:disable=global-statement
 
     if _METER_SOURCE:
-        raise RuntimeError("MeterSource already loaded.")
+        raise RuntimeError("MeterProvider already loaded.")
 
     _METER_SOURCE_FACTORY = factory

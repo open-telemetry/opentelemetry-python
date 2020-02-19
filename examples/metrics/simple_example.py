@@ -23,7 +23,7 @@ import sys
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure, MeterSource
+from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -54,7 +54,7 @@ batcher = UngroupedBatcher(batcher_mode == "stateful")
 
 # If a batcher is not provided, a default batcher is used
 # Meter is responsible for creating and recording metrics
-metrics.set_preferred_meter_source_implementation(lambda _: MeterSource())
+metrics.set_preferred_meter_source_implementation(lambda _: MeterProvider())
 meter = metrics.meter_source().get_meter(__name__, batcher)
 
 # Exporter to export metrics to the console

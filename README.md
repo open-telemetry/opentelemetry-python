@@ -70,11 +70,11 @@ with tracer.start_as_current_span('foo'):
 
 ```python
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterSource
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-metrics.set_preferred_meter_source_implementation(lambda _: MeterSource())
+metrics.set_preferred_meter_source_implementation(lambda _: MeterProvider())
 meter = metrics.meter_source().get_meter(__name__)
 exporter = ConsoleMetricsExporter()
 controller = PushController(meter, exporter, 5)

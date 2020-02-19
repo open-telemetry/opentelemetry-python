@@ -64,7 +64,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
             metrics.Meter()  # type:ignore
 
     def test_default_meter(self):
-        meter_source = metrics.DefaultMeterSource()
+        meter_source = metrics.DefaultMeterProvider()
         meter = meter_source.get_meter(__name__)
         self.assertIsInstance(meter, metrics.DefaultMeter)
 
