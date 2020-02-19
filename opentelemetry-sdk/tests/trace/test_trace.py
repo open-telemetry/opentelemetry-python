@@ -213,6 +213,10 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(tracer_1.get_current_span(), root)
             self.assertIs(tracer_2.get_current_span(), root)
 
+        # outside of the loop, both should not reference a span.
+        self.assertIs(tracer_1.get_current_span(), None)
+        self.assertIs(tracer_2.get_current_span(), None)
+
     def test_start_span_implicit(self):
         tracer = new_tracer()
 
