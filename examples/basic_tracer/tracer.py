@@ -27,12 +27,23 @@ from opentelemetry.sdk.trace.export import (
 if os.getenv("EXPORTER") == "jaeger":
     from opentelemetry.ext.jaeger import JaegerSpanExporter
 
+    print("Using JaegerSpanExporter")
     exporter = JaegerSpanExporter(
         service_name="basic-service",
         agent_host_name="localhost",
         agent_port=6831,
     )
+elif os.getenv("EXPORTER") == "collector":
+    from opentelemetry.ext.otcollector.trace_exporter import (
+        CollectorSpanExporter,
+    )
+
+    print("Using CollectorSpanExporter")
+    exporter = CollectorSpanExporter(
+        service_name="basic-service", endpoint="localhost:55678"
+    )
 else:
+    print("Using ConsoleSpanExporter")
     exporter = ConsoleSpanExporter()
 
 # The preferred tracer implementation must be set, as the opentelemetry-api

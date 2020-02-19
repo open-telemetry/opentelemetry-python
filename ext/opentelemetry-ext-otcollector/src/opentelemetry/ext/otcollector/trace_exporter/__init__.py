@@ -29,7 +29,7 @@ from opentelemetry.sdk.trace import Span, SpanContext
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import SpanKind, TraceState
 
-DEFAULT_ENDPOINT = "http://localhost:55678"
+DEFAULT_ENDPOINT = "localhost:55678"
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +61,13 @@ class CollectorSpanExporter(SpanExporter):
         self.node = utils.get_node(service_name, host_name)
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
-        collector_spans = translate_to_collector(spans)
-        export_request = trace_service_pb2.ExportTraceServiceRequest(
-            node=self.node, spans=collector_spans
-        )
         try:
-            self.client.Export(export_request)
+            responses = self.client.Export(self.generate_span_requests(spans))
+
+            #  # read response
+            for _ in responses:
+                pass
+
         except grpc.RpcError:
             return SpanExportResult.FAILED_NOT_RETRYABLE
 
@@ -74,6 +75,13 @@ class CollectorSpanExporter(SpanExporter):
 
     def shutdown(self) -> None:
         pass
+
+    def generate_span_requests(self, spans):
+        collector_spans = translate_to_collector(spans)
+        service_request = trace_service_pb2.ExportTraceServiceRequest(
+            node=self.node, spans=collector_spans
+        )
+        yield service_request
 
 
 # pylint: disable=too-many-branches
@@ -95,7 +103,7 @@ def translate_to_collector(spans: Sequence[Span]):
             else None,
         )
 
-        if span.parent is not None:
+        if span.parent is not None and getattr(span.parent, "span_id", None):
             collector_span.parent_span_id = span.parent.span_id.to_bytes(
                 8, "big"
             )

@@ -53,6 +53,24 @@ Click on the trace to view its details.
 
 <p align="center"><img src="./images/jaeger-ui-detail.png?raw=true"/></p>
 
+### Collector
+
+* Start Collector
+
+```sh
+$ pip install docker-compose
+$ cd docker
+$ docker-compose up
+
+* Run the sample
+
+$ pip install opentelemetry-ext-otcollector
+$ # from this directory
+$ EXPORTER=collector python tracer.py
+
+
+
+
 ## Useful links
 - For more information on OpenTelemetry, visit: <https://opentelemetry.io/>
 - For more information on tracing in Python, visit: <https://github.com/open-telemetry/opentelemetry-python>

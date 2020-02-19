@@ -116,9 +116,10 @@ class TestCollectorSpanExporter(unittest.TestCase):
         result_status = collector_exporter.export(otel_spans)
         self.assertEqual(SpanExportResult.SUCCESS, result_status)
 
-        node_arg = mock_export.call_args[0]
-        output_spans = getattr(node_arg[0], "spans")
-        output_node = getattr(node_arg[0], "node")
+        export_arg = mock_export.call_args[0]
+        service_request = next(export_arg[0])
+        output_spans = getattr(service_request, "spans")
+        output_node = getattr(service_request, "node")
         self.assertTrue(len(output_spans) == 1)
         self.assertEqual(
             output_spans[0].trace_id, b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''."
