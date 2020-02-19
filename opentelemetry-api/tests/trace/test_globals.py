@@ -35,7 +35,7 @@ class TestGlobals(unittest.TestCase):
         importlib.reload(trace)
 
     def test_get_tracer(self):
-        """trace.get_tracer should proxy to the
+        """trace.get_tracer should proxy to the global tracer source."""
         global tracer sourceA
         """
         from_global_api = trace.get_tracer("foo")
