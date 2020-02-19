@@ -36,7 +36,7 @@ can optionally become the new active span::
 
     from opentelemetry import trace
 
-    tracer = trace.tracer_source().get_tracer(__name__)
+    tracer = trace.get_tracer(__name__)
 
     # Create a new root span, set it as the current span in context
     with tracer.start_as_current_span("parent"):
@@ -68,12 +68,15 @@ implicit or explicit context propagation consistently throughout.
 
 import abc
 import enum
+import logging
 import types as python_types
 import typing
 from contextlib import contextmanager
 
 from opentelemetry.trace.status import Status
 from opentelemetry.util import loader, types
+
+logger = logging.getLogger(__name__)
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -647,6 +650,19 @@ _TRACER_SOURCE = None  # type: typing.Optional[TracerSource]
 _TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
+def get_tracer(
+    instrumenting_module_name: str, instrumenting_library_version: str = ""
+) -> "Tracer":
+    """Returns a `Tracer` for use by the given instrumentation library.
+
+    This function is a convenience wrapper for
+    opentelemetry.trace.tracer_source().get_tracer
+    """
+    return tracer_source().get_tracer(
+        instrumenting_module_name, instrumenting_library_version
+    )
+
+
 def tracer_source() -> TracerSource:
     """Gets the current global :class:`~.TracerSource` object.
 
@@ -663,6 +679,10 @@ def tracer_source() -> TracerSource:
         except TypeError:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op tracer impl
+            logger.warning(
+                "Unable to instantiate TracerSource from tracer source factory.",
+                exc_info=True,
+            )
             _TRACER_SOURCE = DefaultTracerSource()
         del _TRACER_SOURCE_FACTORY
 
