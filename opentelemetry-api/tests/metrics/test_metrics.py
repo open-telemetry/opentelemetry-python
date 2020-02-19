@@ -48,7 +48,8 @@ class TestMetrics(unittest.TestCase):
         measure.record(1, label_set)
 
     def test_default_handle(self):
-        metrics.DefaultMetricHandle()
+        handle = metrics.DefaultMetricHandle()
+        handle.release()
 
     def test_counter_handle(self):
         handle = metrics.CounterHandle()
@@ -57,3 +58,8 @@ class TestMetrics(unittest.TestCase):
     def test_measure_handle(self):
         handle = metrics.MeasureHandle()
         handle.record(1)
+
+    def test_observer(self):
+        observer = metrics.DefaultObserver()
+        label_set = metrics.LabelSet()
+        observer.observe(1, label_set)

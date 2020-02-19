@@ -35,7 +35,7 @@ class TestMeter(unittest.TestCase):
         )
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
-        counter.add(label_set, 1.0)
+        counter.add(1.0, label_set)
         meter.metrics.add(counter)
         meter.collect()
         self.assertTrue(batcher_mock.process.called)
@@ -163,6 +163,18 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(observer.label_keys, ())
         self.assertTrue(observer.enabled)
 
+    def test_unregister_observer(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+
+        callback = mock.Mock()
+
+        observer = meter.register_observer(
+            callback, "name", "desc", "unit", int, (), True
+        )
+
+        meter.unregister_observer(observer)
+        self.assertEqual(len(meter.observers), 0)
+
     def test_get_label_set(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         kvp = {"environment": "staging", "a": "z"}
@@ -176,6 +188,64 @@ class TestMeter(unittest.TestCase):
         kvp = {}
         label_set = meter.get_label_set(kvp)
         self.assertEqual(label_set, metrics.EMPTY_LABEL_SET)
+
+    def test_direct_call_release_handle(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+        label_keys = ("key1",)
+        kvp = {"key1": "value1"}
+        label_set = meter.get_label_set(kvp)
+
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(counter)
+        counter.add(4.0, label_set)
+
+        measure = metrics.Measure(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(measure)
+        measure.record(42.0, label_set)
+
+        self.assertEqual(len(counter.handles), 1)
+        self.assertEqual(len(measure.handles), 1)
+
+        meter.collect()
+
+        self.assertEqual(len(counter.handles), 0)
+        self.assertEqual(len(measure.handles), 0)
+
+    def test_release_handle(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+        label_keys = ("key1",)
+        kvp = {"key1": "value1"}
+        label_set = meter.get_label_set(kvp)
+
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(counter)
+        counter_handle = counter.get_handle(label_set)
+        counter_handle.add(4.0)
+
+        measure = metrics.Measure(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(measure)
+        measure_handle = measure.get_handle(label_set)
+        measure_handle.record(42)
+
+        counter_handle.release()
+        measure_handle.release()
+
+        # be sure that handles are only released after collection
+        self.assertEqual(len(counter.handles), 1)
+        self.assertEqual(len(measure.handles), 1)
+
+        meter.collect()
+
+        self.assertEqual(len(counter.handles), 0)
+        self.assertEqual(len(measure.handles), 0)
 
 
 class TestMetric(unittest.TestCase):

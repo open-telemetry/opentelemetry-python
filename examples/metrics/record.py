@@ -65,8 +65,14 @@ label_set = meter.get_label_set({"environment": "staging"})
 # a labelset. A handle is essentially metric data that corresponds to a specific
 # set of labels. Therefore, getting a handle using the same set of labels will
 # yield the same metric handle.
+# Get a handle when you have to perform multiple operations using the same
+# labelset
 counter_handle = counter.get_handle(label_set)
-counter_handle.add(100)
+for i in range(1000):
+    counter_handle.add(i)
+
+# You can release the handle we you are done
+counter_handle.release()
 
 # Direct metric usage
 # You can record metrics directly using the metric instrument. You pass in a
@@ -78,4 +84,5 @@ counter.add(25, label_set)
 # (metric, value) pairs. The value would be recorded for each metric using the
 # specified labelset for each.
 meter.record_batch(label_set, [(counter, 50), (counter2, 70)])
-time.sleep(100)
+
+time.sleep(10)

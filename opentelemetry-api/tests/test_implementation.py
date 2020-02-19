@@ -87,6 +87,11 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         observer = meter.register_observer(callback, "", "", "", int, (), True)
         self.assertIsInstance(observer, metrics.DefaultObserver)
 
+    def test_unregister_observer(self):
+        meter = metrics.DefaultMeter()
+        observer = metrics.DefaultObserver()
+        meter.unregister_observer(observer)
+
     def test_get_label_set(self):
         meter = metrics.DefaultMeter()
         label_set = meter.get_label_set({})
