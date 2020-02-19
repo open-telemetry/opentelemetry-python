@@ -19,7 +19,7 @@ from typing import Dict, Sequence, Tuple, Type
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher, UngroupedBatcher
-from opentelemetry.sdk.util import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -267,9 +267,7 @@ class Meter(metrics_api.Meter):
     """
 
     def __init__(
-        self,
-        instrumentation_info: InstrumentationInfo,
-        batcher: Batcher
+        self, instrumentation_info: "InstrumentationInfo", batcher: Batcher
     ):
         self.batcher = batcher
         self.instrumentation_info = instrumentation_info
@@ -336,8 +334,8 @@ class Meter(metrics_api.Meter):
             return EMPTY_LABEL_SET
         return LabelSet(labels=labels)
 
+
 class MeterSource(metrics_api.MeterSource):
-    
     def get_meter(
         self,
         instrumenting_module_name: str,
@@ -345,8 +343,7 @@ class MeterSource(metrics_api.MeterSource):
         instrumenting_library_version: str = "",
     ) -> "metrics_api.Meter":
         if not instrumenting_module_name:  # Reject empty strings too.
-            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
-            logger.error("get_meter called with missing module name.")
+            raise ValueError("get_meter called with missing module name.")
         return Meter(
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version

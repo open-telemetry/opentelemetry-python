@@ -25,7 +25,8 @@ from typing import Iterator, Optional, Sequence, Tuple, Type
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
-from opentelemetry.sdk.util import BoundedDict, BoundedList, InstrumentationInfo
+from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext, sampling
 from opentelemetry.trace.propagation import get_span_key
 from opentelemetry.trace.status import Status, StatusCanonicalCode

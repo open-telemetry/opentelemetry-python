@@ -35,9 +35,7 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
         if not hasattr(self._current_context, self._CONTEXT_KEY):
-            setattr(
-                self._current_context, self._CONTEXT_KEY, Context(),
-            )
+            setattr(self._current_context, self._CONTEXT_KEY, Context())
         context = getattr(
             self._current_context, self._CONTEXT_KEY
         )  # type: Context

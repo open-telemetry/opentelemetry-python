@@ -78,10 +78,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
     def test_simple(self):
         expected_attrs = expected_attributes(
-            {
-                "http.target": "/hello/123",
-                "http.route": "/hello/<int:helloid>",
-            }
+            {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
         resp = self.client.get("/hello/123")
         self.assertEqual(200, resp.status_code)

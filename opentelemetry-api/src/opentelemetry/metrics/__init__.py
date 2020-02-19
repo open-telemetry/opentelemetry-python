@@ -27,9 +27,12 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 import abc
+import logging
 from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
+
+logger = logging.getLogger(__name__)
 
 ValueT = TypeVar("ValueT", int, float)
 
@@ -223,8 +226,8 @@ class Measure(Metric):
             label_set: `LabelSet` to associate with the returned handle.
         """
 
-class MeterSource(abc.ABC):
 
+class MeterSource(abc.ABC):
     @abc.abstractmethod
     def get_meter(
         self,
@@ -249,6 +252,7 @@ class MeterSource(abc.ABC):
                 instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
         """
+
 
 class DefaultMeterSource(MeterSource):
     """The default MeterSource, used when no implementation is available.
@@ -368,6 +372,18 @@ _METER_SOURCE = None
 _METER_SOURCE_FACTORY = None
 
 
+def get_meter(
+    instrumenting_module_name: str, instrumenting_library_version: str = ""
+) -> "Meter":
+    """Returns a `Meter` for use by the given instrumentation library.
+    This function is a convenience wrapper for
+    opentelemetry.metrics.meter_source().get_meter
+    """
+    return meter_source().get_meter(
+        instrumenting_module_name, instrumenting_library_version
+    )
+
+
 def meter_source() -> MeterSource:
     """Gets the current global :class:`~.MeterSource` object.
 
@@ -384,6 +400,10 @@ def meter_source() -> MeterSource:
         except TypeError:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op meter impl
+            logger.warning(
+                "Unable to instantiate MeterSource from meter source factory.",
+                exc_info=True,
+            )
             _METER_SOURCE = DefaultMeterSource()
         del _METER_SOURCE_FACTORY
 

@@ -81,5 +81,5 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_get_label_set(self):
         meter = metrics.DefaultMeter()
-        metric = meter.get_label_set({})
-        self.assertIsInstance(metric, metrics.DefaultLabelSet)
+        label_set = meter.get_label_set({})
+        self.assertIsInstance(label_set, metrics.DefaultLabelSet)

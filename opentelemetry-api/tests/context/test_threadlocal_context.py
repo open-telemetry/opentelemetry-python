@@ -31,7 +31,8 @@ class TestThreadLocalContext(unittest.TestCase):
         context.set_current(self.previous_context)
 
     @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ThreadLocalRuntimeContext()  # type: ignore
+        "opentelemetry.context._RUNTIME_CONTEXT",
+        ThreadLocalRuntimeContext(),  # type: ignore
     )
     def test_context(self):
         self.assertIsNone(context.get_value("say"))
@@ -49,7 +50,8 @@ class TestThreadLocalContext(unittest.TestCase):
         self.assertEqual(context.get_value("say", context=third), "bar")
 
     @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ThreadLocalRuntimeContext()  # type: ignore
+        "opentelemetry.context._RUNTIME_CONTEXT",
+        ThreadLocalRuntimeContext(),  # type: ignore
     )
     def test_set_value(self):
         first = context.set_value("a", "yyy")
