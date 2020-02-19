@@ -45,9 +45,7 @@ class ContextVarsRuntimeContext(RuntimeContext):
 
     def reset(self, token: object) -> None:
         """See `opentelemetry.context.RuntimeContext.reset`."""
-        if not isinstance(token, Token):
-            raise ValueError("invalid token")
-        self._current_context.reset(token)
+        self._current_context.reset(token)  # type: ignore
 
 
 __all__ = ["ContextVarsRuntimeContext"]

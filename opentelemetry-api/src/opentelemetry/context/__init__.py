@@ -107,7 +107,7 @@ def detach(token: object) -> None:
     """
     try:
         _RUNTIME_CONTEXT.reset(token)  # type: ignore
-    except ValueError:
+    except (TypeError, ValueError):
         logger.error("Failed to detach context")
 
 
