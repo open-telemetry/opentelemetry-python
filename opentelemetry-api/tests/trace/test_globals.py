@@ -31,12 +31,11 @@ class TestGlobals(unittest.TestCase):
         )
 
     @staticmethod
-    def teardown():
+    def tearDown():
         importlib.reload(trace)
 
     def test_get_tracer(self):
         """trace.get_tracer should proxy to the global tracer source."""
-        """
         from_global_api = trace.get_tracer("foo")
         from_tracer_api = trace.tracer_source().get_tracer("foo")
         self.assertEqual(from_global_api, from_tracer_api)
