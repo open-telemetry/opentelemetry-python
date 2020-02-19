@@ -20,7 +20,10 @@ from opentelemetry.sdk.metrics.export import (
     ConsoleMetricsExporter,
     MetricRecord,
 )
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    CounterAggregator,
+    MinMaxSumCountAggregator,
+)
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
 
@@ -218,28 +221,102 @@ class TestBatcher(unittest.TestCase):
         )
 
 
-class TestAggregator(unittest.TestCase):
-    # TODO: test other aggregators once implemented
-    def test_counter_update(self):
+class TestCounterAggregator(unittest.TestCase):
+    def test_update(self):
         counter = CounterAggregator()
         counter.update(1.0)
         counter.update(2.0)
         self.assertEqual(counter.current, 3.0)
 
-    def test_counter_checkpoint(self):
+    def test_checkpoint(self):
         counter = CounterAggregator()
         counter.update(2.0)
         counter.take_checkpoint()
         self.assertEqual(counter.current, 0)
         self.assertEqual(counter.checkpoint, 2.0)
 
-    def test_counter_merge(self):
+    def test_merge(self):
         counter = CounterAggregator()
         counter2 = CounterAggregator()
         counter.checkpoint = 1.0
         counter2.checkpoint = 3.0
         counter.merge(counter2)
         self.assertEqual(counter.checkpoint, 4.0)
+
+
+class TestMinMaxSumCountAggregator(unittest.TestCase):
+    def test_update(self):
+        mmsc = MinMaxSumCountAggregator()
+        # test current values without any update
+        self.assertEqual(
+            mmsc.current, (None, None, None, 0),
+        )
+
+        # call update with some values
+        values = (3, 50, 3, 97)
+        for val in values:
+            mmsc.update(val)
+
+        self.assertEqual(
+            mmsc.current, (min(values), max(values), sum(values), len(values)),
+        )
+
+    def test_checkpoint(self):
+        mmsc = MinMaxSumCountAggregator()
+
+        # take checkpoint wihtout any update
+        mmsc.take_checkpoint()
+        self.assertEqual(
+            mmsc.checkpoint, (None, None, None, 0),
+        )
+
+        # call update with some values
+        values = (3, 50, 3, 97)
+        for val in values:
+            mmsc.update(val)
+
+        mmsc.take_checkpoint()
+        self.assertEqual(
+            mmsc.checkpoint,
+            (min(values), max(values), sum(values), len(values)),
+        )
+
+        self.assertEqual(
+            mmsc.current, (None, None, None, 0),
+        )
+
+    def test_merge(self):
+        mmsc1 = MinMaxSumCountAggregator()
+        mmsc2 = MinMaxSumCountAggregator()
+
+        checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
+
+        mmsc1.checkpoint = checkpoint1
+        mmsc2.checkpoint = checkpoint2
+
+        mmsc1.merge(mmsc2)
+
+        self.assertEqual(
+            mmsc1.checkpoint,
+            (
+                min(checkpoint1.min, checkpoint2.min),
+                max(checkpoint1.max, checkpoint2.max),
+                checkpoint1.sum + checkpoint2.sum,
+                checkpoint1.count + checkpoint2.count,
+            ),
+        )
+
+    def test_merge_with_empty(self):
+        mmsc1 = MinMaxSumCountAggregator()
+        mmsc2 = MinMaxSumCountAggregator()
+
+        checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        mmsc1.checkpoint = checkpoint1
+
+        mmsc1.merge(mmsc2)
+
+        self.assertEqual(mmsc1.checkpoint, checkpoint1)
 
 
 class TestController(unittest.TestCase):
