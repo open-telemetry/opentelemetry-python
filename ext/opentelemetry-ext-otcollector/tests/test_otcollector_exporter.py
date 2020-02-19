@@ -116,6 +116,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         result_status = collector_exporter.export(otel_spans)
         self.assertEqual(SpanExportResult.SUCCESS, result_status)
 
+        # pylint: disable=unsubscriptable-object
         export_arg = mock_export.call_args[0]
         service_request = next(export_arg[0])
         output_spans = getattr(service_request, "spans")
