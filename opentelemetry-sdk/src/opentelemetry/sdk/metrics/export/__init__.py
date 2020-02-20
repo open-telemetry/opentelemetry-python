@@ -15,13 +15,18 @@
 from enum import Enum
 from typing import Sequence, Tuple
 
-from .. import Metric
-
 
 class MetricsExportResult(Enum):
     SUCCESS = 0
     FAILED_RETRYABLE = 1
     FAILED_NOT_RETRYABLE = 2
+
+
+class MetricRecord:
+    def __init__(self, aggregator, label_set, metric):
+        self.aggregator = aggregator
+        self.label_set = label_set
+        self.metric = metric
 
 
 class MetricsExporter:
@@ -32,15 +37,15 @@ class MetricsExporter:
     """
 
     def export(
-        self, metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
+        self, metric_records: Sequence[MetricRecord]
     ) -> "MetricsExportResult":
         """Exports a batch of telemetry data.
 
         Args:
-            metric_tuples: A sequence of metric pairs. A metric pair consists
-                of a `Metric` and a sequence of strings. The sequence of
-                strings will be used to get the corresponding `MetricHandle`
-                from the `Metric` to export.
+            metric_records: A sequence of `MetricRecord` s. A `MetricRecord`
+                contains the metric to be exported, the label set associated
+                with that metric, as well as the aggregator used to export the
+                current checkpointed value.
 
         Returns:
             The result of the export
@@ -57,17 +62,19 @@ class ConsoleMetricsExporter(MetricsExporter):
     """Implementation of `MetricsExporter` that prints metrics to the console.
 
     This class can be used for diagnostic purposes. It prints the exported
-    metric handles to the console STDOUT.
+    metrics to the console STDOUT.
     """
 
     def export(
-        self, metric_tuples: Sequence[Tuple[Metric, Sequence[str]]]
+        self, metric_records: Sequence[MetricRecord]
     ) -> "MetricsExportResult":
-        for metric, label_values in metric_tuples:
-            handle = metric.get_handle(label_values)
+        for record in metric_records:
             print(
-                '{}(data="{}", label_values="{}", metric_data={})'.format(
-                    type(self).__name__, metric, label_values, handle
+                '{}(data="{}", label_set="{}", value={})'.format(
+                    type(self).__name__,
+                    record.metric,
+                    record.label_set.labels,
+                    record.aggregator.checkpoint,
                 )
             )
         return MetricsExportResult.SUCCESS

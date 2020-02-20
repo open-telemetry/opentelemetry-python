@@ -16,7 +16,7 @@ Usage
     from opentelemetry.trace.ext.psycopg2 import trace_integration
 
     trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-    tracer = trace.tracer_source().get_tracer(__name__)
+    tracer = trace.get_tracer(__name__)
     trace_integration(tracer)
     cnx = psycopg2.connect(database='Database')
     cursor = cnx.cursor()
