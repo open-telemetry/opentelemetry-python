@@ -23,7 +23,9 @@ BASEDIR=$(dirname $(readlink -f $(dirname $0)))
      # are not intended to be packaged. Verify the
      # intent by looking for a setup.py
      if [ -f setup.py ]; then
-      python3 setup.py --verbose bdist_wheel --dist-dir "$BASEDIR/dist/" sdist --dist-dir "$BASEDIR/dist/"
+      python3 setup.py --verbose bdist_wheel --dist-dir "$BASEDIR/dist/" \
+        sdist --dist-dir "$BASEDIR/dist/" \
+        clean --all
      fi
    )
  done
