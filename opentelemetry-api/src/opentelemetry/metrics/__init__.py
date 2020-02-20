@@ -271,6 +271,7 @@ class DefaultMeterProvider(MeterProvider):
 
 MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 
+
 # pylint: disable=unused-argument
 class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
