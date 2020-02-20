@@ -201,6 +201,22 @@ class TestSpanCreation(unittest.TestCase):
             span2.span_processor, tracer_source._active_span_processor
         )
 
+    def test_get_current_span_multiple_tracers(self):
+        """In the case where there are multiple tracers,
+        get_current_span will return the same active span
+        for both tracers.
+        """
+        tracer_1 = new_tracer()
+        tracer_2 = new_tracer()
+        root = tracer_1.start_span("root")
+        with tracer_1.use_span(root, True):
+            self.assertIs(tracer_1.get_current_span(), root)
+            self.assertIs(tracer_2.get_current_span(), root)
+
+        # outside of the loop, both should not reference a span.
+        self.assertIs(tracer_1.get_current_span(), None)
+        self.assertIs(tracer_2.get_current_span(), None)
+
     def test_start_span_implicit(self):
         tracer = new_tracer()
 
