@@ -15,7 +15,7 @@ Usage
     from opentelemetry.ext.dbapi import trace_integration
 
     trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-    tracer = trace.tracer_source().get_tracer(__name__)
+    tracer = trace.get_tracer(__name__)
     # Ex: mysql.connector
     trace_integration(tracer_source(), mysql.connector, "connect", "mysql")
 

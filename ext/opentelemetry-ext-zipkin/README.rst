@@ -34,7 +34,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
     trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-    tracer = trace.tracer_source().get_tracer(__name__)
+    tracer = trace.get_tracer(__name__)
 
     # create a ZipkinSpanExporter
     zipkin_exporter = zipkin.ZipkinSpanExporter(

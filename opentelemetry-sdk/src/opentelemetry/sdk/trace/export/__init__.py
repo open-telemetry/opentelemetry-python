@@ -14,11 +14,12 @@
 
 import collections
 import logging
+import sys
 import threading
 import typing
 from enum import Enum
 
-from opentelemetry.context import Context
+from opentelemetry.context import get_current, set_current, set_value
 from opentelemetry.trace import DefaultSpan
 from opentelemetry.util import time_ns
 
@@ -74,12 +75,14 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        with Context.use(suppress_instrumentation=True):
-            try:
-                self.span_exporter.export((span,))
-            # pylint: disable=broad-except
-            except Exception:
-                logger.exception("Exception while exporting Span.")
+        backup_context = get_current()
+        set_current(set_value("suppress_instrumentation", True))
+        try:
+            self.span_exporter.export((span,))
+        # pylint: disable=broad-except
+        except Exception:
+            logger.exception("Exception while exporting Span.")
+        set_current(backup_context)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -199,16 +202,16 @@ class BatchExportSpanProcessor(SpanProcessor):
             else:
                 self.spans_list[idx] = span
                 idx += 1
-        with Context.use(suppress_instrumentation=True):
-            try:
-                # Ignore type b/c the Optional[None]+slicing is too "clever"
-                # for mypy
-                self.span_exporter.export(
-                    self.spans_list[:idx]
-                )  # type: ignore
-            # pylint: disable=broad-except
-            except Exception:
-                logger.exception("Exception while exporting Span batch.")
+        backup_context = get_current()
+        set_current(set_value("suppress_instrumentation", True))
+        try:
+            # Ignore type b/c the Optional[None]+slicing is too "clever"
+            # for mypy
+            self.span_exporter.export(self.spans_list[:idx])  # type: ignore
+        # pylint: disable=broad-except
+        except Exception:
+            logger.exception("Exception while exporting Span batch.")
+        set_current(backup_context)
 
         if notify_flush:
             with self.flush_condition:
@@ -266,7 +269,15 @@ class ConsoleSpanExporter(SpanExporter):
     spans to the console STDOUT.
     """
 
+    def __init__(
+        self,
+        out: typing.IO = sys.stdout,
+        formatter: typing.Callable[[Span], str] = str,
+    ):
+        self.out = out
+        self.formatter = formatter
+
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
-            print(span)
+            self.out.write(self.formatter(span))
         return SpanExportResult.SUCCESS
