@@ -30,6 +30,7 @@ from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import TraceOptions
 
 
+# pylint: disable=no-member
 class TestCollectorSpanExporter(unittest.TestCase):
     def test_constructor(self):
         mock_get_node = mock.Mock()
