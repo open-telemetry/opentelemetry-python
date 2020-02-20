@@ -284,7 +284,8 @@ class Meter(abc.ABC):
                 observer as argument.
             name: The name of the metric.
             description: Human-readable description of the metric.
-            unit: Unit of the metric values.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
