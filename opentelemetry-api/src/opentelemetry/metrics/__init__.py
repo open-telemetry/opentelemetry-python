@@ -413,7 +413,7 @@ def meter_source() -> MeterProvider:
 
 
 def set_preferred_meter_source_implementation(
-    factory: ImplementationFactory
+    factory: ImplementationFactory,
 ) -> None:
     """Set the factory to be used to create the meter source.
 
