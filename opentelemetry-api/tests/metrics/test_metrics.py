@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import unittest
-from contextlib import contextmanager
-from unittest import mock
 
 from opentelemetry import metrics
 

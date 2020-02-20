@@ -72,6 +72,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         meter = metrics.DefaultMeter()
         counter = metrics.Counter()
         label_set = metrics.LabelSet()
+        # pylint: disable=no-self-use
         meter.record_batch(label_set, ((counter, 1),))
 
     def test_create_metric(self):
