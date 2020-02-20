@@ -14,7 +14,7 @@ DISTDIR=dist
 (
   cd $BASEDIR
   mkdir -p $DISTDIR
-  rm -rf $DISTDIR/*
+  rm -r $DISTDIR/*
 
  for d in opentelemetry-api/ opentelemetry-sdk/ ext/*/ ; do
    (
