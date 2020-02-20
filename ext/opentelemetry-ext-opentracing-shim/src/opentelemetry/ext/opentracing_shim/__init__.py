@@ -36,7 +36,7 @@ following example::
     trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 
     # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.tracer_source().get_tracer(__name__)
+    otel_tracer = trace.get_tracer(__name__)
 
     # Create an OpenTracing shim.
     shim = create_tracer(otel_tracer)

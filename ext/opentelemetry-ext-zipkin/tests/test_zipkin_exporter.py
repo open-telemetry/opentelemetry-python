@@ -114,9 +114,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         span_context = trace_api.SpanContext(
-            trace_id,
-            span_id,
-            trace_options=TraceOptions(TraceOptions.SAMPLED),
+            trace_id, span_id, trace_options=TraceOptions(TraceOptions.SAMPLED)
         )
         parent_context = trace_api.SpanContext(trace_id, parent_id)
         other_context = trace_api.SpanContext(trace_id, other_id)
@@ -168,10 +166,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[2].end(end_time=end_times[2])
 
         service_name = "test-service"
-        local_endpoint = {
-            "serviceName": service_name,
-            "port": 9411,
-        }
+        local_endpoint = {"serviceName": service_name, "port": 9411}
 
         exporter = ZipkinSpanExporter(service_name)
         expected = [
