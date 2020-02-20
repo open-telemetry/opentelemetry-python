@@ -67,7 +67,9 @@ $ docker-compose up
 $ pip install opentelemetry-ext-otcollector
 $ # from this directory
 $ EXPORTER=collector python tracer.py
+```
 
+Collector is configured to export to Jaeger, follow Jaeger UI isntructions to find the traces.
 
 
 

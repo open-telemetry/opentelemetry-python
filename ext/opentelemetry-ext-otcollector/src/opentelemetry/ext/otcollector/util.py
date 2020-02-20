@@ -30,11 +30,11 @@ EXPORTER_VERSION = "0.0.1"
 def proto_timestamp_from_time_ns(time_ns):
     """Converts datetime to protobuf timestamp.
 
-    :type time_ns: int
-    :param time_ns: Time in nanoseconds
+    Args:
+        time_ns: Time in nanoseconds
 
-    :rtype: :class:`~google.protobuf.timestamp_pb2.Timestamp`
-    :returns: protobuf timestamp
+    Returns:
+        Returns protobuf timestamp.
     """
     ts = Timestamp()
     if time_ns is not None:
@@ -56,15 +56,10 @@ def add_proto_attribute_value(pb_attributes, key, value):
     """Sets string, int, boolean or float value on protobuf
         span, link or annotation attributes.
 
-    :type pb_attributes:
-        :class: `~opencensus.proto.trace.Span.Attributes`
-    :param pb_attributes: protobuf Span's attributes property
-
-    :type key: str
-    :param key: attribute key to set
-
-    :type value: str or int or bool or float
-    :param value: attribute value
+    Args:
+        pb_attributes: protobuf Span's attributes property.
+        key: attribute key to set.
+        value: attribute value
     """
 
     if isinstance(value, bool):
@@ -82,6 +77,10 @@ def add_proto_attribute_value(pb_attributes, key, value):
 # pylint: disable=no-member
 def get_node(service_name, host_name):
     """Generates Node message from params and system information.
+
+     Args:
+        service_name: Name of Collector service.
+        host_name: Host name.
     """
     return common_pb2.Node(
         identifier=common_pb2.ProcessIdentifier(

@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,15 @@ import unittest
 from unittest import mock
 
 import grpc
+from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.trace.v1 import trace_pb2
 
+import opentelemetry.ext.otcollector.util as utils
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
+from opentelemetry.ext.otcollector.trace_exporter import (
+    CollectorSpanExporter,
+    translate_to_collector,
+)
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import TraceOptions
@@ -48,17 +53,41 @@ class TestCollectorSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.endpoint, endpoint)
         mock_get_node.assert_called_with(service_name, host_name)
 
+    def test_get_collector_span_kind(self):
+        result = utils.get_collector_span_kind(trace_api.SpanKind.SERVER)
+        self.assertIs(result, trace_pb2.Span.SpanKind.SERVER)
+        result = utils.get_collector_span_kind(trace_api.SpanKind.CLIENT)
+        self.assertIs(result, trace_pb2.Span.SpanKind.CLIENT)
+        result = utils.get_collector_span_kind(trace_api.SpanKind.CONSUMER)
+        self.assertIs(result, trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED)
+        result = utils.get_collector_span_kind(trace_api.SpanKind.PRODUCER)
+        self.assertIs(result, trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED)
+        result = utils.get_collector_span_kind(trace_api.SpanKind.INTERNAL)
+        self.assertIs(result, trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED)
+
+    def test_proto_timestamp_from_time_ns(self):
+        result = utils.proto_timestamp_from_time_ns(12345)
+        self.assertIs(type(result), Timestamp)
+        self.assertEqual(result.nanos, 12345)
+
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
-    def test_export(self):
+    def test_translate_to_collector(self):
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
         parent_id = 0x1111111111111111
-        other_id = 0x2222222222222222
-        start_time = 683647322 * 10 ** 9  # in ns
-
-        duration = 50 * 10 ** 6
-        end_time = start_time + duration
+        base_time = 683647322 * 10 ** 9  # in ns
+        start_times = (
+            base_time,
+            base_time + 150 * 10 ** 6,
+            base_time + 300 * 10 ** 6,
+        )
+        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
+        end_times = (
+            start_times[0] + durations[0],
+            start_times[1] + durations[1],
+            start_times[2] + durations[2],
+        )
         span_context = trace_api.SpanContext(
             trace_id,
             span_id,
@@ -66,33 +95,44 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_state=trace_api.TraceState({"testKey": "testValue"}),
         )
         parent_context = trace_api.SpanContext(trace_id, parent_id)
-        other_context = trace_api.SpanContext(trace_id, other_id)
+        other_context = trace_api.SpanContext(trace_id, span_id)
         event_attributes = {
             "annotation_bool": True,
             "annotation_string": "annotation_test",
             "key_float": 0.3,
         }
-        event_timestamp = start_time + 50 * 10 ** 6
+        event_timestamp = base_time + 50 * 10 ** 6
         event = trace_api.Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
         )
         link_attributes = {"key_bool": True}
-        link = trace_api.Link(
+        link_1 = trace_api.Link(
             context=other_context, attributes=link_attributes
         )
-        otel_spans = [
-            trace.Span(
-                name="test1",
-                context=span_context,
-                parent=parent_context,
-                events=(event,),
-                links=(link,),
-                kind=trace_api.SpanKind.CLIENT,
-            )
-        ]
-        otel_spans[0].start(start_time=start_time)
+        link_2 = trace_api.Link(
+            context=parent_context, attributes=link_attributes
+        )
+        span_1 = trace.Span(
+            name="test1",
+            context=span_context,
+            parent=parent_context,
+            events=(event,),
+            links=(link_1,),
+            kind=trace_api.SpanKind.CLIENT,
+        )
+        span_2 = trace.Span(
+            name="test2",
+            context=parent_context,
+            parent=None,
+            kind=trace_api.SpanKind.SERVER,
+        )
+        span_3 = trace.Span(
+            name="test3", context=other_context, links=(link_2,), parent=span_2
+        )
+        otel_spans = [span_1, span_2, span_3]
+        otel_spans[0].start(start_time=start_times[0])
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
@@ -103,25 +143,14 @@ class TestCollectorSpanExporter(unittest.TestCase):
                 "test description",
             )
         )
-        otel_spans[0].end(end_time=end_time)
+        otel_spans[0].end(end_time=end_times[0])
+        otel_spans[1].start(start_time=start_times[1])
+        otel_spans[1].end(end_time=end_times[1])
+        otel_spans[2].start(start_time=start_times[2])
+        otel_spans[2].end(end_time=end_times[2])
+        output_spans = translate_to_collector(otel_spans)
 
-        mock_client = mock.MagicMock()
-        mock_export = mock.MagicMock()
-        mock_client.Export = mock_export
-        host_name = "testHostName"
-        collector_exporter = CollectorSpanExporter(
-            client=mock_client, host_name=host_name
-        )
-
-        result_status = collector_exporter.export(otel_spans)
-        self.assertEqual(SpanExportResult.SUCCESS, result_status)
-
-        # pylint: disable=unsubscriptable-object
-        export_arg = mock_export.call_args[0]
-        service_request = next(export_arg[0])
-        output_spans = getattr(service_request, "spans")
-        output_node = getattr(service_request, "node")
-        self.assertTrue(len(output_spans) == 1)
+        self.assertTrue(len(output_spans) == 3)
         self.assertEqual(
             output_spans[0].trace_id, b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''."
         )
@@ -132,15 +161,26 @@ class TestCollectorSpanExporter(unittest.TestCase):
             output_spans[0].name, trace_pb2.TruncatableString(value="test1")
         )
         self.assertEqual(
-            output_spans[0].start_time.seconds, int(start_time / 1000000000)
+            output_spans[1].name, trace_pb2.TruncatableString(value="test2")
         )
         self.assertEqual(
-            output_spans[0].end_time.seconds, int(end_time / 1000000000)
+            output_spans[2].name, trace_pb2.TruncatableString(value="test3")
+        )
+        self.assertEqual(
+            output_spans[0].start_time.seconds,
+            int(start_times[0] / 1000000000),
+        )
+        self.assertEqual(
+            output_spans[0].end_time.seconds, int(end_times[0] / 1000000000)
         )
         self.assertEqual(output_spans[0].kind, trace_api.SpanKind.CLIENT.value)
+        self.assertEqual(output_spans[1].kind, trace_api.SpanKind.SERVER.value)
 
         self.assertEqual(
             output_spans[0].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
+        )
+        self.assertEqual(
+            output_spans[2].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
         )
         self.assertEqual(
             output_spans[0].status.code,
@@ -206,10 +246,17 @@ class TestCollectorSpanExporter(unittest.TestCase):
             output_spans[0].links.link[0].trace_id,
             b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''.",
         )
-        self.assertEqual(output_spans[0].links.link[0].span_id, b'""""""""')
+        self.assertEqual(
+            output_spans[0].links.link[0].span_id,
+            b"4\xbf\x92\xde\xef\xc5\x8c\x92",
+        )
         self.assertEqual(
             output_spans[0].links.link[0].type,
             trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED,
+        )
+        self.assertEqual(
+            output_spans[2].links.link[0].type,
+            trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN,
         )
         self.assertEqual(
             output_spans[0]
@@ -219,6 +266,36 @@ class TestCollectorSpanExporter(unittest.TestCase):
             True,
         )
 
+    def test_export(self):
+        mock_client = mock.MagicMock()
+        mock_export = mock.MagicMock()
+        mock_client.Export = mock_export
+        host_name = "testHostName"
+        collector_exporter = CollectorSpanExporter(
+            client=mock_client, host_name=host_name
+        )
+
+        trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
+        span_id = 0x34BF92DEEFC58C92
+        span_context = trace_api.SpanContext(
+            trace_id, span_id, trace_options=TraceOptions(TraceOptions.SAMPLED)
+        )
+        otel_spans = [
+            trace.Span(
+                name="test1",
+                context=span_context,
+                kind=trace_api.SpanKind.CLIENT,
+            )
+        ]
+        result_status = collector_exporter.export(otel_spans)
+        self.assertEqual(SpanExportResult.SUCCESS, result_status)
+
+        # pylint: disable=unsubscriptable-object
+        export_arg = mock_export.call_args[0]
+        service_request = next(export_arg[0])
+        output_spans = getattr(service_request, "spans")
+        output_node = getattr(service_request, "node")
+        self.assertTrue(len(output_spans) == 1)
         self.assertIsNotNone(getattr(output_node, "library_info"))
         self.assertIsNotNone(getattr(output_node, "service_info"))
         output_identifier = getattr(output_node, "identifier")
