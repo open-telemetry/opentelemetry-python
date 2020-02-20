@@ -16,11 +16,4 @@ from typing import Optional
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, Span, SpanContext
 
 _SPAN_CONTEXT_KEY = "extracted-span-context"
-_SPAN_KEY = "current-span"
-
-
-def get_span_key(tracer_source_id: Optional[str] = None) -> str:
-    key = _SPAN_KEY
-    if tracer_source_id is not None:
-        key = "{}-{}".format(key, tracer_source_id)
-    return key
+SPAN_KEY = "current-span"
