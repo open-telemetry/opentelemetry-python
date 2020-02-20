@@ -42,18 +42,12 @@ class PrometheusMetricsExporter(MetricsExporter):
     """Prometheus metric exporter for OpenTelemetry.
 
     Args:
-        port: Port number to listen.
-        address: Endpoint address (default is localhost).
         prefix: single-word application prefix relevant to the domain
         the metric belongs to.
     """
 
-    def __init__(self, port: int = 8000, address: str = "", prefix: str = ""):
-        self._port = port
-        self._address = address
+    def __init__(self, prefix: str = ""):
         self._collector = CustomCollector(prefix)
-
-        start_http_server(port=self._port, addr=self._address)
         REGISTRY.register(self._collector)
 
     def export(

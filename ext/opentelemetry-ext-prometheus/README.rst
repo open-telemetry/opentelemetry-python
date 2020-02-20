@@ -31,15 +31,17 @@ The **OpenTelemetry Prometheus Exporter** allows to export `OpenTelemetry`_ metr
     from opentelemetry.ext.prometheus import PrometheusMetricsExporter
     from opentelemetry.sdk.metrics import Counter, Meter
     from opentelemetry.sdk.metrics.export.controller import PushController
+    from prometheus_client import start_http_server
+
+    # Start Prometheus client
+    start_http_server(port=8000, addr="localhost")
 
     # Meter is responsible for creating and recording metrics
     metrics.set_preferred_meter_implementation(lambda _: Meter())
     meter = metrics.meter()
     # exporter to export metrics to Prometheus
-    port = 8000
-    address = "localhost"
     prefix = "MyAppPrefix"
-    exporter = PrometheusMetricsExporter(port, address, prefix)
+    exporter = PrometheusMetricsExporter(prefix)
     # controller collects metrics created from meter and exports it via the
     # exporter every interval
     controller = PushController(meter, exporter, 5)

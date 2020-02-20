@@ -40,11 +40,6 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         kvp = {"environment": "staging"}
         self._test_label_set = self._meter.get_label_set(kvp)
 
-        self._mock_start_http_server = mock.Mock()
-        self._start_http_server_patch = mock.patch(
-            "prometheus_client.exposition._ThreadingSimpleServer",
-            side_effect=self._mock_start_http_server,
-        )
         self._mock_registry_register = mock.Mock()
         self._registry_register_patch = mock.patch(
             "prometheus_client.core.REGISTRY.register",
@@ -54,18 +49,13 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     # pylint: disable=protected-access
     def test_constructor(self):
         """Test the constructor."""
-        with self._registry_register_patch, self._start_http_server_patch:
-            exporter = PrometheusMetricsExporter(
-                1234, "testaddress", "testprefix"
-            )
-            self.assertEqual(exporter._port, 1234)
-            self.assertEqual(exporter._address, "testaddress")
+        with self._registry_register_patch:
+            exporter = PrometheusMetricsExporter("testprefix")
             self.assertEqual(exporter._collector._prefix, "testprefix")
-            self.assertTrue(self._mock_start_http_server.called)
             self.assertTrue(self._mock_registry_register.called)
 
     def test_shutdown(self):
-        with self._start_http_server_patch, mock.patch(
+        with mock.patch(
             "prometheus_client.core.REGISTRY.unregister"
         ) as registry_unregister_patch:
             exporter = PrometheusMetricsExporter()
@@ -73,7 +63,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             self.assertTrue(registry_unregister_patch.called)
 
     def test_export(self):
-        with self._registry_register_patch, self._start_http_server_patch:
+        with self._registry_register_patch:
             record = MetricRecord(
                 CounterAggregator(), self._test_label_set, self._test_metric
             )
