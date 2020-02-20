@@ -16,11 +16,13 @@
 This module serves as an example for a simple application using metrics
 Examples show how to recording affects the collection of metrics to be exported
 """
+
+from prometheus_client import start_http_server
+
 from opentelemetry import metrics
 from opentelemetry.ext.prometheus import PrometheusMetricsExporter
 from opentelemetry.sdk.metrics import Counter, Meter
 from opentelemetry.sdk.metrics.export.controller import PushController
-from prometheus_client import start_http_server
 
 # Start Prometheus client
 start_http_server(port=8000, addr="localhost")
