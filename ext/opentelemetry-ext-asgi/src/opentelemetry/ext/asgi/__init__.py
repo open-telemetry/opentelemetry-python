@@ -89,7 +89,6 @@ def collect_request_attributes(scope):
     result = {
         "component": scope.get("type"),
         "http.method": scope.get("method"),
-        "http.server_name": server[0],
         "http.scheme": scope.get("scheme"),
         "http.host": server_host,
         "host.port": port,
@@ -97,8 +96,11 @@ def collect_request_attributes(scope):
         "http.target": scope.get("path"),
         "http.url": http_url,
     }
+    http_host_value = ",".join(get_header_from_scope(scope, "host"))
+    if http_host_value:
+        result['http.server_name'] = http_host_value
 
-    if "client" in scope:
+    if "client" in scope and scope["client"] is not None:
         result["net.peer.ip"] = scope.get("client")[0]
         result["net.peer.port"] = scope.get("client")[1]
 

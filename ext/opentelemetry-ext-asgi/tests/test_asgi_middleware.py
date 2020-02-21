@@ -114,7 +114,6 @@ class TestAsgiApplication(AsgiTestBase):
                 "attributes": {
                     "component": "http",
                     "http.method": "GET",
-                    "http.server_name": "127.0.0.1",
                     "http.scheme": "http",
                     "host.port": 80,
                     "http.host": "127.0.0.1",
@@ -174,13 +173,27 @@ class TestAsgiApplication(AsgiTestBase):
         """Test that middleware is ok when server is none in scope."""
         def update_expected_server(expected):
             expected[3]['attributes'].update({
-                'http.server_name': '0.0.0.0',
                 'http.host': '0.0.0.0',
                 'host.port': 80,
                 'http.url': 'http://0.0.0.0/'
             })
             return expected
         self.scope["server"] = None
+        app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        self.validate_outputs(outputs, modifiers=[update_expected_server])
+
+    def test_host_header(self):
+        """Test that host header is converted to http.server_name."""
+        hostname = b"server_name_1"
+        def update_expected_server(expected):
+            expected[3]['attributes'].update({
+                'http.server_name': hostname.decode('utf8')
+            })
+            return expected
+        self.scope["headers"].append([b'host', hostname])
         app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
         self.seed_app(app)
         self.send_default_request()
@@ -209,7 +222,6 @@ class TestAsgiAttributes(unittest.TestCase):
                 "http.url": "http://127.0.0.1/?foo=bar",
                 "host.port": 80,
                 "http.scheme": "http",
-                "http.server_name": "127.0.0.1",
                 "http.flavor": "1.0",
                 "net.peer.ip": "127.0.0.1",
                 "net.peer.port": 32767,
