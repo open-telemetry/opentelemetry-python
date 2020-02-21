@@ -12,10 +12,10 @@ Usage
 .. code:: python
     import psycopg2
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerSource
+    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.trace.ext.psycopg2 import trace_integration
 
-    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+    trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
     tracer = trace.get_tracer(__name__)
     trace_integration(tracer)
     cnx = psycopg2.connect(database='Database')

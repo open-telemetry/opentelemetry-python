@@ -15,5 +15,5 @@
 import opentelemetry.trace
 
 
-def dummy_check_mypy_returntype() -> opentelemetry.trace.TracerSource:
-    return opentelemetry.trace.tracer_source()
+def dummy_check_mypy_returntype() -> opentelemetry.trace.TracerProvider:
+    return opentelemetry.trace.tracer_provider()
