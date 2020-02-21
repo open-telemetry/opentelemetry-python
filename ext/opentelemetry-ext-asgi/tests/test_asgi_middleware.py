@@ -91,12 +91,12 @@ class TestAsgiApplication(AsgiTestBase):
         self.assertEqual(len(span_list), 4)
         expected = [
             {
-                "name": "HTTP GET (http.request)",
+                "name": "HTTP GET (asgi.http.receive)",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {"type": "http.request"},
             },
             {
-                "name": "HTTP GET (http.response.start)",
+                "name": "HTTP GET (asgi.http.send)",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {
                     "http.status_code": 200,
@@ -104,12 +104,12 @@ class TestAsgiApplication(AsgiTestBase):
                 },
             },
             {
-                "name": "HTTP GET (http.response.body)",
+                "name": "HTTP GET (asgi.http.send)",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {"type": "http.response.body"},
             },
             {
-                "name": "HTTP GET (connection)",
+                "name": "HTTP GET (asgi.connection)",
                 "kind": trace_api.SpanKind.SERVER,
                 "attributes": {
                     "component": "http",
