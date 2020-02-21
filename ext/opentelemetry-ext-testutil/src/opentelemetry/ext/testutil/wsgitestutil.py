@@ -4,7 +4,7 @@ import wsgiref.util as wsgiref_util
 from importlib import reload
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk.trace import TracerSource, export
+from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
@@ -16,13 +16,13 @@ class WsgiTestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         global _MEMORY_EXPORTER  # pylint:disable=global-statement
-        trace_api.set_preferred_tracer_source_implementation(
-            lambda T: TracerSource()
+        trace_api.set_preferred_tracer_provider_implementation(
+            lambda T: TracerProvider()
         )
-        tracer_source = trace_api.tracer_source()
+        tracer_provider = trace_api.tracer_provider()
         _MEMORY_EXPORTER = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(_MEMORY_EXPORTER)
-        tracer_source.add_span_processor(span_processor)
+        tracer_provider.add_span_processor(span_processor)
 
     @classmethod
     def tearDownClass(cls):

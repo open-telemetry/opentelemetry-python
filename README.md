@@ -51,12 +51,12 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 
 ```python
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerSource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
-trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-trace.tracer_source().add_span_processor(
+trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+trace.tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 tracer = trace.get_tracer(__name__)

@@ -10,12 +10,12 @@ class TestGlobals(unittest.TestCase):
 
         # this class has to be declared after the importlib
         # reload, or else it will inherit from an old
-        # TracerSource, rather than the new TraceSource ABC.
+        # TracerProvider, rather than the new TraceSource ABC.
         # created from reload.
 
         static_tracer = trace.DefaultTracer()
 
-        class DummyTracerSource(trace.TracerSource):
+        class DummyTracerProvider(trace.TracerProvider):
             """TraceSource used for testing"""
 
             def get_tracer(
@@ -26,8 +26,8 @@ class TestGlobals(unittest.TestCase):
                 # pylint:disable=no-self-use,unused-argument
                 return static_tracer
 
-        trace.set_preferred_tracer_source_implementation(
-            lambda _: DummyTracerSource()
+        trace.set_preferred_tracer_provider_implementation(
+            lambda _: DummyTracerProvider()
         )
 
     @staticmethod
@@ -37,5 +37,5 @@ class TestGlobals(unittest.TestCase):
     def test_get_tracer(self):
         """trace.get_tracer should proxy to the global tracer source."""
         from_global_api = trace.get_tracer("foo")
-        from_tracer_api = trace.tracer_source().get_tracer("foo")
+        from_tracer_api = trace.tracer_provider().get_tracer("foo")
         self.assertIs(from_global_api, from_tracer_api)
