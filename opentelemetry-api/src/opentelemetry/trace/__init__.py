@@ -57,8 +57,8 @@ change, and the caller is responsible for managing the span's lifetime::
     finally:
         child.end()
 
-Applications should generally use a single global tracer source, and use either
-implicit or explicit context propagation consistently throughout.
+Applications should generally use a single global TracerProvider, and use
+either implicit or explicit context propagation consistently throughout.
 
 .. versionadded:: 0.1.0
 .. versionchanged:: 0.3.0
@@ -680,7 +680,7 @@ def tracer_provider() -> TracerProvider:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op tracer impl
             logger.warning(
-                "Unable to instantiate TracerProvider from tracer source factory.",
+                "Unable to instantiate TracerProvider from factory.",
                 exc_info=True,
             )
             _TRACER_PROVIDER = DefaultTracerProvider()
@@ -692,7 +692,7 @@ def tracer_provider() -> TracerProvider:
 def set_preferred_tracer_provider_implementation(
     factory: ImplementationFactory,
 ) -> None:
-    """Set the factory to be used to create the tracer source.
+    """Set the factory to be used to create the global TracerProvider.
 
     See :mod:`opentelemetry.util.loader` for details.
 
