@@ -74,7 +74,7 @@ def error_wsgi(environ, start_response):
 
 
 class TestWsgiApplication(WsgiTestBase):
-    def validate_response(self, response, error=None):
+    def validate_response(self, response, error=None, span_name="HTTP GET"):
         while True:
             try:
                 value = next(response)
@@ -95,7 +95,7 @@ class TestWsgiApplication(WsgiTestBase):
 
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "/")
+        self.assertEqual(span_list[0].name, span_name)
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
         self.assertEqual(
             span_list[0].attributes,
@@ -146,6 +146,17 @@ class TestWsgiApplication(WsgiTestBase):
         app = otel_wsgi.OpenTelemetryMiddleware(error_wsgi)
         response = app(self.environ, self.start_response)
         self.validate_response(response, error=ValueError)
+
+    def test_override_span_name(self):
+        """Test that span_names can be overwritten by our callback function."""
+        span_name = "Dymaxion"
+        def get_predefined_span_name(scope):
+            return span_name
+        app = otel_wsgi.OpenTelemetryMiddleware(
+            simple_wsgi, name_callback=get_predefined_span_name
+        )
+        response = app(self.environ, self.start_response)
+        self.validate_response(response, span_name=span_name)
 
 
 class TestWsgiAttributes(unittest.TestCase):

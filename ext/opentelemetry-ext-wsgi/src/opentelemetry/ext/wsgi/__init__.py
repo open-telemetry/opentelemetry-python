@@ -142,12 +142,8 @@ def add_response_attributes(
 
 
 def get_default_span_name(environ):
-    """Calculates a (generic) span name for an incoming HTTP request based on the PEP3333 conforming WSGI environ."""
-
-    # TODO: Update once
-    #  https://github.com/open-telemetry/opentelemetry-specification/issues/270
-    #  is resolved
-    return environ.get("PATH_INFO", "/")
+    """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
+    return "HTTP " + environ.get("REQUEST_METHOD")
 
 
 class OpenTelemetryMiddleware:
@@ -158,11 +154,15 @@ class OpenTelemetryMiddleware:
 
     Args:
         wsgi: The WSGI application callable to forward requests to.
+        name_callback: Callback which calculates a generic span name for an
+                       incoming HTTP request based on the PEP3333 WSGI environ.
+                       Optional: Defaults to get_default_span_name.
     """
 
-    def __init__(self, wsgi):
+    def __init__(self, wsgi, name_callback=None):
         self.wsgi = wsgi
         self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
+        self.name_callback = name_callback or get_default_span_name
 
     @staticmethod
     def _create_start_response(span, start_response):
@@ -182,7 +182,7 @@ class OpenTelemetryMiddleware:
         """
 
         parent_span = propagators.extract(get_header_from_environ, environ)
-        span_name = get_default_span_name(environ)
+        span_name = self.name_callback(environ)
 
         span = self.tracer.start_span(
             span_name,
