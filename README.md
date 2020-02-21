@@ -183,6 +183,7 @@ The v0.4 alpha release includes:
 - Zipkin Exporter
 - Added Examples
 - Additional and Improved Examples
+- Prometheus Metrics Exporter
 
 Thank you to the following individuals for contributing to this release:
 
@@ -211,6 +212,5 @@ Future releases targets include:
 | W3C Correlation Context Propagation | Alpha v0.5 | TBD          |
 | Support for Tags/Baggage            | Alpha v0.5 | TBD          |
 | gRPC Integrations                   | Alpha v0.5 | TBD          |
-| Prometheus Metrics Exporter         | Alpha v0.5 | TBD          |
 | OpenCensus Bridge                   | Alpha v0.5 | TBD          |
 | Metrics SDK (Complete)              | Alpha v0.5 | TBD          |
