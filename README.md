@@ -209,7 +209,7 @@ Future releases targets include:
 
 | Component                           | Version    | Target Date  |
 | ----------------------------------- | ---------- | ----         |
-| W3C Correlation Context Propagation | Alpha v0.5 | TBD          |
+| W3C Correlation Context Propagation | Beta v1 | March 16 2020 |
 | Support for Tags/Baggage            | Alpha v0.5 | TBD          |
 | gRPC Integrations                   | Alpha v0.5 | TBD          |
 | OpenCensus Bridge                   | Alpha v0.5 | TBD          |
