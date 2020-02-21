@@ -8,15 +8,14 @@ class TestGlobals(unittest.TestCase):
     def setUp(self):
         importlib.reload(trace)
 
-        # this class has to be declared after the importlib
-        # reload, or else it will inherit from an old
-        # TracerProvider, rather than the new TraceSource ABC.
-        # created from reload.
+        # This class has to be declared after the importlib reload, or else it
+        # will inherit from an old TracerProvider, rather than the new
+        # TracerProvider ABC created from reload.
 
         static_tracer = trace.DefaultTracer()
 
         class DummyTracerProvider(trace.TracerProvider):
-            """TraceSource used for testing"""
+            """TracerProvider used for testing"""
 
             def get_tracer(
                 self,
@@ -35,7 +34,7 @@ class TestGlobals(unittest.TestCase):
         importlib.reload(trace)
 
     def test_get_tracer(self):
-        """trace.get_tracer should proxy to the global tracer source."""
+        """trace.get_tracer should proxy to the global tracer provider."""
         from_global_api = trace.get_tracer("foo")
         from_tracer_api = trace.tracer_provider().get_tracer("foo")
         self.assertIs(from_global_api, from_tracer_api)
