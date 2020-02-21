@@ -36,7 +36,7 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ trace
         # optional:
         # endpoint="myCollectorUrl:55678",
         # service_name="test_service",
-        # host_name="http://localhost",
+        # host_name="machine/container name",
     )
 
     # Create a BatchExportSpanProcessor and add the exporter to it

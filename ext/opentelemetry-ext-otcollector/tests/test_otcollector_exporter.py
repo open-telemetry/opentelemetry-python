@@ -68,7 +68,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
 
     def test_proto_timestamp_from_time_ns(self):
         result = utils.proto_timestamp_from_time_ns(12345)
-        self.assertIs(type(result), Timestamp)
+        self.assertIsInstance(result, Timestamp)
         self.assertEqual(result.nanos, 12345)
 
     # pylint: disable=too-many-locals
@@ -151,7 +151,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[2].end(end_time=end_times[2])
         output_spans = translate_to_collector(otel_spans)
 
-        self.assertTrue(len(output_spans) == 3)
+        self.assertEqual(len(output_spans), 3)
         self.assertEqual(
             output_spans[0].trace_id, b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''."
         )
@@ -188,7 +188,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_api.status.StatusCanonicalCode.INTERNAL.value,
         )
         self.assertEqual(output_spans[0].status.message, "test description")
-        self.assertTrue(len(output_spans[0].tracestate.entries) == 1)
+        self.assertEqual(len(output_spans[0].tracestate.entries), 1)
         self.assertEqual(output_spans[0].tracestate.entries[0].key, "testKey")
         self.assertEqual(
             output_spans[0].tracestate.entries[0].value, "testValue"
@@ -296,7 +296,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         service_request = next(export_arg[0])
         output_spans = getattr(service_request, "spans")
         output_node = getattr(service_request, "node")
-        self.assertTrue(len(output_spans) == 1)
+        self.assertEqual(len(output_spans), 1)
         self.assertIsNotNone(getattr(output_node, "library_info"))
         self.assertIsNotNone(getattr(output_node, "service_info"))
         output_identifier = getattr(output_node, "identifier")
