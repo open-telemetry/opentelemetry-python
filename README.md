@@ -208,7 +208,7 @@ estimates, and subject to change.
 Future releases targets include:
 
 | Component                           | Version    | Target Date  |
-| ----------------------------------- | ---------- | ----         |
+| ----------------------------------- | ---------- | ------------ |
 | W3C Correlation Context Propagation | Beta v1 | March 16 2020 |
 | Support for Tags/Baggage            | Alpha v0.5 | TBD          |
 | gRPC Integrations                   | Alpha v0.5 | TBD          |
