@@ -273,7 +273,7 @@ class TestCounterAggregator(unittest.TestCase):
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             fut = executor.submit(self.call_update, counter)
 
-            while fut.running():
+            while not fut.done():
                 counter.take_checkpoint()
                 checkpoint_total += counter.checkpoint
 
@@ -417,7 +417,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
             fut = ex.submit(self.call_update, mmsc)
 
-            while fut.running():
+            while not fut.done():
                 mmsc.take_checkpoint()
                 checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
                     checkpoint_total, mmsc.checkpoint
