@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import unittest
 
 from opentelemetry import trace
@@ -137,7 +138,7 @@ class TestSampler(unittest.TestCase):
                 trace.SpanContext(
                     0xDEADBEF0, 0xDEADBEF1, trace_options=TO_DEFAULT
                 ),
-                0x8000000000000000,
+                0x7FFFFFFFFFFFFFFF,
                 0xDEADBEEF,
                 "span name",
             ).sampled
@@ -147,7 +148,7 @@ class TestSampler(unittest.TestCase):
                 trace.SpanContext(
                     0xDEADBEF0, 0xDEADBEF1, trace_options=TO_SAMPLED
                 ),
-                0x8000000000000001,
+                0x8000000000000000,
                 0xDEADBEEF,
                 "span name",
             ).sampled
@@ -189,14 +190,13 @@ class TestSampler(unittest.TestCase):
             sampling.ProbabilitySampler.get_bound_for_rate(2 ** -64), 0x1
         )
 
-        # Sample every trace with (last 8 bytes of) trace ID less than
-        # 0xffffffffffffffff. In principle this is the highest possible
-        # sampling rate less than 1, but we can't actually express this rate as
-        # a float!
+        # Sample every trace with trace ID less than 0xffffffffffffffff. In
+        # principle this is the highest possible sampling rate less than 1, but
+        # we can't actually express this rate as a float!
         #
         # In practice, the highest possible sampling rate is:
         #
-        #     round(sys.float_info.epsilon * 2 ** 64)
+        #     1 - sys.float_info.epsilon
 
         almost_always_on = sampling.ProbabilitySampler(1 - 2 ** -64)
         self.assertTrue(
@@ -212,12 +212,29 @@ class TestSampler(unittest.TestCase):
         # self.assertFalse(
         #     almost_always_on.should_sample(
         #         None,
-        #         0xffffffffffffffff,
-        #         0xdeadbeef,
+        #         0xFFFFFFFFFFFFFFFF,
+        #         0xDEADBEEF,
         #         "span name",
         #     ).sampled
         # )
         # self.assertEqual(
         #     sampling.ProbabilitySampler.get_bound_for_rate(1 - 2 ** -64)),
-        #     0xffffffffffffffff,
+        #     0xFFFFFFFFFFFFFFFF,
         # )
+
+        # Check that a sampler with the highest effective sampling rate < 1
+        # refuses to sample traces with trace ID 0xffffffffffffffff.
+        almost_almost_always_on = sampling.ProbabilitySampler(
+            1 - sys.float_info.epsilon
+        )
+        self.assertFalse(
+            almost_almost_always_on.should_sample(
+                None, 0xFFFFFFFFFFFFFFFF, 0xDEADBEEF, "span name"
+            ).sampled
+        )
+        # Check that the higest effective sampling rate is actually lower than
+        # the highest theoretical sampling rate. If this test fails the test
+        # above is wrong.
+        self.assertLess(
+            almost_almost_always_on.bound, 0xFFFFFFFFFFFFFFFF,
+        )

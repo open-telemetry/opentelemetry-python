@@ -17,6 +17,9 @@ import string
 import typing
 from contextlib import contextmanager
 
+from opentelemetry.context import get_value, set_current, set_value
+from opentelemetry.context.context import Context
+
 PRINTABLE = frozenset(
     itertools.chain(
         string.ascii_letters, string.digits, string.punctuation, " "
@@ -100,7 +103,9 @@ class DistributedContext:
 
 
 class DistributedContextManager:
-    def get_current_context(self) -> typing.Optional[DistributedContext]:
+    def get_current_context(
+        self, context: typing.Optional[Context] = None
+    ) -> typing.Optional[DistributedContext]:
         """Gets the current DistributedContext.
 
         Returns:
@@ -123,3 +128,18 @@ class DistributedContextManager:
         """
         # pylint: disable=no-self-use
         yield context
+
+
+_DISTRIBUTED_CONTEXT_KEY = "DistributedContext"
+
+
+def distributed_context_from_context(
+    context: typing.Optional[Context] = None,
+) -> DistributedContext:
+    return get_value(_DISTRIBUTED_CONTEXT_KEY, context)  # type: ignore
+
+
+def with_distributed_context(
+    dctx: DistributedContext, context: typing.Optional[Context] = None
+) -> None:
+    set_current(set_value(_DISTRIBUTED_CONTEXT_KEY, dctx, context=context))

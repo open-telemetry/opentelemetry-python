@@ -28,7 +28,7 @@ opentracing_tracer = opentracing_shim.create_tracer(tracer_source)
 redis_cache = RedisCache(opentracing_tracer)
 
 # Appication code uses an OpenTelemetry Tracer as usual.
-tracer = trace.tracer_source().get_tracer(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 @redis_cache
