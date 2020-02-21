@@ -186,7 +186,7 @@ class OpenTelemetryMiddleware:
             @wraps(send)
             async def wrapped_send(payload):
                 with self.tracer.start_as_current_span(
-                    span_name + " (unknown-send)"
+                    span_name + " (" + payload["type"] + ")"
                 ) as send_span:
                     if payload["type"] == "http.response.start":
                         status_code = payload["status"]
@@ -197,9 +197,6 @@ class OpenTelemetryMiddleware:
                             "http.status_text", payload["text"]
                         )
 
-                    send_span.update_name(
-                        span_name + " (" + payload["type"] + ")"
-                    )
                     send_span.set_attribute("type", payload["type"])
                     await send(payload)
 
