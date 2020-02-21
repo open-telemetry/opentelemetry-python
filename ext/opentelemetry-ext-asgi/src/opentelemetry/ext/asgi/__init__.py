@@ -124,12 +124,8 @@ def set_status_code(span, status_code):
 
 
 def get_default_span_name(scope):
-    """Calculates a (generic) span name for an incoming HTTP request based on the ASGI scope."""
-
-    # TODO: Update once
-    #  https://github.com/open-telemetry/opentelemetry-specification/issues/270
-    #  is resolved
-    return scope.get("path", "/")
+    """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
+    return "HTTP " + scope.get("method")
 
 
 class OpenTelemetryMiddleware:
@@ -140,11 +136,15 @@ class OpenTelemetryMiddleware:
 
     Args:
         app: The ASGI application callable to forward requests to.
+        name_callback: Callback which calculates a generic span name for an
+                       incoming HTTP request based on the ASGI scope.
+                       Optional: Defaults to get_default_span_name.
     """
 
-    def __init__(self, app):
+    def __init__(self, app, name_callback=None):
         self.app = guarantee_single_callable(app)
         self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
+        self.name_callback = name_callback or get_default_span_name
 
     async def __call__(self, scope, receive, send):
         """The ASGI application
@@ -156,10 +156,10 @@ class OpenTelemetryMiddleware:
         """
 
         parent_span = propagators.extract(get_header_from_scope, scope)
-        span_name = get_default_span_name(scope)
+        span_name = self.name_callback(scope)
 
         with self.tracer.start_as_current_span(
-            span_name,
+            span_name + " (connection)",
             parent_span,
             kind=trace.SpanKind.SERVER,
             attributes=collect_request_attributes(scope),
