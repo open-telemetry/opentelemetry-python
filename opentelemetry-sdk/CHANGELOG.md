@@ -9,7 +9,8 @@ Released 2020-02-21
 - Added named Tracers
   ([#301](https://github.com/open-telemetry/opentelemetry-python/pull/301))
 - Set status for ended spans 
-  ([#297](https://github.com/open-telemetry/opentelemetry-python/pull/297) and ([#358](https://github.com/open-telemetry/opentelemetry-python/pull/358))
+  ([#297](https://github.com/open-telemetry/opentelemetry-python/pull/297) and
+  ([#358](https://github.com/open-telemetry/opentelemetry-python/pull/358))
 - Use module loggers
   ([#351](https://github.com/open-telemetry/opentelemetry-python/pull/351))
 - Protect start_time and end_time from being set manually by the user
