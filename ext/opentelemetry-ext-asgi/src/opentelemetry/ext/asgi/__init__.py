@@ -159,7 +159,7 @@ class OpenTelemetryMiddleware:
         span_name = self.name_callback(scope)
 
         with self.tracer.start_as_current_span(
-            span_name + " (connection)",
+            span_name + " (asgi.connection)",
             parent_span,
             kind=trace.SpanKind.SERVER,
             attributes=collect_request_attributes(scope),
@@ -168,7 +168,7 @@ class OpenTelemetryMiddleware:
             @wraps(receive)
             async def wrapped_receive():
                 with self.tracer.start_as_current_span(
-                    span_name + " (unknown-receive)"
+                    span_name + " (asgi." + scope["type"] + ".receive)"
                 ) as receive_span:
                     payload = await receive()
                     if payload["type"] == "websocket.receive":
@@ -176,17 +176,13 @@ class OpenTelemetryMiddleware:
                         receive_span.set_attribute(
                             "http.status_text", payload["text"]
                         )
-
-                    receive_span.update_name(
-                        span_name + " (" + payload["type"] + ")"
-                    )
                     receive_span.set_attribute("type", payload["type"])
                 return payload
 
             @wraps(send)
             async def wrapped_send(payload):
                 with self.tracer.start_as_current_span(
-                    span_name + " (" + payload["type"] + ")"
+                    span_name + " (asgi." + scope["type"] + ".send)"
                 ) as send_span:
                     if payload["type"] == "http.response.start":
                         status_code = payload["status"]
@@ -196,7 +192,6 @@ class OpenTelemetryMiddleware:
                         send_span.set_attribute(
                             "http.status_text", payload["text"]
                         )
-
                     send_span.set_attribute("type", payload["type"])
                     await send(payload)
 
