@@ -59,7 +59,9 @@ async def error_asgi(scope, receive, send):
 
 
 class TestAsgiApplication(AsgiTestBase):
-    def validate_outputs(self, outputs, error=None):
+    def validate_outputs(self, outputs, error=None, modifiers=None):
+        # Ensure modifiers is a list
+        modifiers = modifiers or []
         # Check for expected outputs
         self.assertEqual(len(outputs), 2)
         response_start = outputs[0]
@@ -89,12 +91,12 @@ class TestAsgiApplication(AsgiTestBase):
         self.assertEqual(len(span_list), 4)
         expected = [
             {
-                "name": "/ (http.request)",
+                "name": "HTTP GET (http.request)",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {"type": "http.request"},
             },
             {
-                "name": "/ (http.response.start)",
+                "name": "HTTP GET (http.response.start)",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {
                     "http.status_code": 200,
@@ -102,12 +104,12 @@ class TestAsgiApplication(AsgiTestBase):
                 },
             },
             {
-                "name": "/ (http.response.body)",
+                "name": "HTTP GET (http.response.body)",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {"type": "http.response.body"},
             },
             {
-                "name": "/",
+                "name": "HTTP GET (connection)",
                 "kind": trace_api.SpanKind.SERVER,
                 "attributes": {
                     "component": "http",
@@ -124,12 +126,17 @@ class TestAsgiApplication(AsgiTestBase):
                 },
             },
         ]
+        # Run our expected modifiers
+        for modifier in modifiers:
+            expected = modifier(expected)
+        # Check that output matches
         for span, expected in zip(span_list, expected):
             self.assertEqual(span.name, expected["name"])
             self.assertEqual(span.kind, expected["kind"])
             self.assertEqual(span.attributes, expected["attributes"])
 
     def test_basic_asgi_call(self):
+        """Test that spans are emitted as expected."""
         app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
         self.seed_app(app)
         self.send_default_request()
@@ -137,11 +144,31 @@ class TestAsgiApplication(AsgiTestBase):
         self.validate_outputs(outputs)
 
     def test_asgi_exc_info(self):
+        """Test that exception information is emitted as expected."""
         app = otel_asgi.OpenTelemetryMiddleware(error_asgi)
         self.seed_app(app)
         self.send_default_request()
         outputs = self.get_all_output()
         self.validate_outputs(outputs, error=ValueError)
+
+    def test_override_span_name(self):
+        """Test that span_names can be overwritten by our callback function."""
+        span_name = "Dymaxion"
+        def get_predefined_span_name(scope):
+            return span_name
+        def update_expected_span_name(expected):
+            for entry in expected:
+                entry['name'] = " ".join(
+                    [span_name] + entry['name'].split(' ')[-1:]
+                )
+            return expected
+        app = otel_asgi.OpenTelemetryMiddleware(
+            simple_asgi, name_callback=get_predefined_span_name
+        )
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        self.validate_outputs(outputs, modifiers=[update_expected_span_name])
 
 
 class TestAsgiAttributes(unittest.TestCase):
