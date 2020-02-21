@@ -181,9 +181,8 @@ The v0.4 alpha release includes:
 - MySQL Integration
 - Psycopg2 Integration
 - Zipkin Exporter
-- Added Examples
-- Additional and Improved Examples
 - Prometheus Metrics Exporter
+- New Examples and Improvements to Existing Examples
 
 Thank you to the following individuals for contributing to this release:
 
@@ -209,8 +208,9 @@ Future releases targets include:
 
 | Component                           | Version    | Target Date  |
 | ----------------------------------- | ---------- | ------------ |
-| W3C Correlation Context Propagation | Beta v1 | March 16 2020 |
-| Support for Tags/Baggage            | Alpha v0.5 | TBD          |
-| gRPC Integrations                   | Alpha v0.5 | TBD          |
-| OpenCensus Bridge                   | Alpha v0.5 | TBD          |
-| Metrics SDK (Complete)              | Alpha v0.5 | TBD          |
+| W3C Correlation Context Propagation | Beta v1    | March 16 2020|
+| Support for Tags/Baggage            | Beta v1    | March 16 2020|
+| gRPC Integrations                   | Beta v1    | March 16 2020|
+| OpenTelemetry Collector Exporter    | Beta v1    | March 16 2020|
+| OpenCensus Bridge                   | Beta v1    | March 16 2020|
+| Metrics SDK (Complete)              | Beta v1    | March 16 2020|
