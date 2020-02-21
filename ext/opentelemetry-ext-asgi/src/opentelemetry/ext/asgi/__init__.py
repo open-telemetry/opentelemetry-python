@@ -79,11 +79,9 @@ def http_status_to_canonical_code(code: int, allow_redirect: bool = True):
 def collect_request_attributes(scope):
     """Collects HTTP request attributes from the ASGI scope and returns a
     dictionary to be used as span creation attributes."""
-
-    port = scope.get("server")[1]
-    server_host = scope.get("server")[0] + (
-        ":" + str(port) if port != 80 else ""
-    )
+    server = scope.get("server") or ['0.0.0.0', 80]
+    port = server[1]
+    server_host = server[0] + (":" + str(port) if port != 80 else "")
     http_url = scope.get("scheme") + "://" + server_host + scope.get("path")
     if scope.get("query_string"):
         http_url = http_url + ("?" + scope.get("query_string").decode("utf8"))
@@ -91,7 +89,7 @@ def collect_request_attributes(scope):
     result = {
         "component": scope.get("type"),
         "http.method": scope.get("method"),
-        "http.server_name": scope.get("server")[0],
+        "http.server_name": server[0],
         "http.scheme": scope.get("scheme"),
         "http.host": server_host,
         "host.port": port,

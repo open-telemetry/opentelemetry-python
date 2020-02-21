@@ -133,7 +133,7 @@ class TestAsgiApplication(AsgiTestBase):
         for span, expected in zip(span_list, expected):
             self.assertEqual(span.name, expected["name"])
             self.assertEqual(span.kind, expected["kind"])
-            self.assertEqual(span.attributes, expected["attributes"])
+            self.assertDictEqual(dict(span.attributes), expected["attributes"])
 
     def test_basic_asgi_call(self):
         """Test that spans are emitted as expected."""
@@ -169,6 +169,24 @@ class TestAsgiApplication(AsgiTestBase):
         self.send_default_request()
         outputs = self.get_all_output()
         self.validate_outputs(outputs, modifiers=[update_expected_span_name])
+
+    def test_behavior_with_scope_server_as_none(self):
+        """Test that middleware is ok when server is none in scope."""
+        def update_expected_server(expected):
+            expected[3]['attributes'].update({
+                'http.server_name': '0.0.0.0',
+                'http.host': '0.0.0.0',
+                'host.port': 80,
+                'http.url': 'http://0.0.0.0/'
+            })
+            return expected
+        self.scope["server"] = None
+        app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        self.validate_outputs(outputs, modifiers=[update_expected_server])
+
 
 
 class TestAsgiAttributes(unittest.TestCase):
