@@ -143,7 +143,7 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, app, name_callback=None):
         self.app = guarantee_single_callable(app)
-        self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
+        self.tracer = trace.get_tracer(__name__, __version__)
         self.name_callback = name_callback or get_default_span_name
 
     async def __call__(self, scope, receive, send):

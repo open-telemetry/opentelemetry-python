@@ -1,7 +1,7 @@
-opentelemetry.context.base\_context module
+opentelemetry.sdk.metrics.export
 ==========================================
 
-.. automodule:: opentelemetry.context.base_context
+.. automodule:: opentelemetry.sdk.metrics.export
     :members:
     :undoc-members:
     :show-inheritance:

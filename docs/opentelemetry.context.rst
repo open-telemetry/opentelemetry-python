@@ -6,7 +6,7 @@ Submodules
 
 .. toctree::
 
-   opentelemetry.context.base_context
+   opentelemetry.context.context
 
 Module contents
 ---------------
