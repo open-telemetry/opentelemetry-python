@@ -27,7 +27,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.trace import SpanContext, sampling
-from opentelemetry.trace.propagation import get_span_key
+from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
 
@@ -43,7 +43,7 @@ class SpanProcessor:
     invocations.
 
     Span processors can be registered directly using
-    :func:`TracerSource.add_span_processor` and they are invoked
+    :func:`TracerProvider.add_span_processor` and they are invoked
     in the same order as they were registered.
     """
 
@@ -388,7 +388,7 @@ def generate_trace_id() -> int:
 class InstrumentationInfo:
     """Immutable information about an instrumentation library module.
 
-    See `TracerSource.get_tracer` for the meaning of the properties.
+    See `TracerProvider.get_tracer` for the meaning of the properties.
     """
 
     __slots__ = ("_name", "_version")
@@ -435,7 +435,9 @@ class Tracer(trace_api.Tracer):
     """
 
     def __init__(
-        self, source: "TracerSource", instrumentation_info: InstrumentationInfo
+        self,
+        source: "TracerProvider",
+        instrumentation_info: InstrumentationInfo,
     ) -> None:
         self.source = source
         self.instrumentation_info = instrumentation_info
@@ -542,7 +544,7 @@ class Tracer(trace_api.Tracer):
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             token = context_api.attach(
-                context_api.set_value(self.source.key, span)
+                context_api.set_value(SPAN_KEY, span)
             )
             try:
                 yield span
@@ -570,15 +572,12 @@ class Tracer(trace_api.Tracer):
                 span.end()
 
 
-class TracerSource(trace_api.TracerSource):
+class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
         shutdown_on_exit: bool = True,
     ):
-        # TODO: How should multiple TracerSources behave? Should they get their own contexts?
-        # This could be done by adding `str(id(self))` to the slot name.
-        self.key = get_span_key(tracer_source_id=str(id(self)))
         self._active_span_processor = MultiSpanProcessor()
         self.sampler = sampler
         self._atexit_handler = None
@@ -600,11 +599,12 @@ class TracerSource(trace_api.TracerSource):
             ),
         )
 
-    def get_current_span(self) -> Span:
-        return context_api.get_value(self.key)  # type: ignore
+    @staticmethod
+    def get_current_span() -> Span:
+        return context_api.get_value(SPAN_KEY)  # type: ignore
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
-        """Registers a new :class:`SpanProcessor` for this `TracerSource`.
+        """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
 
         The span processors are invoked in the same order they are registered.
         """
