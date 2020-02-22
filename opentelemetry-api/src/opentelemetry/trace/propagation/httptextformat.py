@@ -17,10 +17,10 @@ import typing
 
 from opentelemetry.context.context import Context
 
-_T = typing.TypeVar("_T")
+HTTPTextFormatT = typing.TypeVar("HTTPTextFormatT")
 
-Setter = typing.Callable[[_T, str, str], None]
-Getter = typing.Callable[[_T, str], typing.List[str]]
+Setter = typing.Callable[[HTTPTextFormatT, str, str], None]
+Getter = typing.Callable[[HTTPTextFormatT, str], typing.List[str]]
 
 
 class HTTPTextFormat(abc.ABC):
@@ -74,8 +74,8 @@ class HTTPTextFormat(abc.ABC):
     @abc.abstractmethod
     def extract(
         cls,
-        get_from_carrier: Getter[_T],
-        carrier: _T,
+        get_from_carrier: Getter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Create a SpanContext from values in the carrier.
@@ -101,8 +101,8 @@ class HTTPTextFormat(abc.ABC):
     @abc.abstractmethod
     def inject(
         cls,
-        set_in_carrier: Setter[_T],
-        carrier: _T,
+        set_in_carrier: Setter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Inject values from a Span into a carrier.

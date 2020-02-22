@@ -21,9 +21,9 @@ from opentelemetry.trace.propagation import (
     set_span_in_context,
 )
 from opentelemetry.trace.propagation.httptextformat import (
-    _T,
     Getter,
     HTTPTextFormat,
+    HTTPTextFormatT,
     Setter,
 )
 
@@ -45,8 +45,8 @@ class B3Format(HTTPTextFormat):
     @classmethod
     def extract(
         cls,
-        get_from_carrier: Getter[_T],
-        carrier: _T,
+        get_from_carrier: Getter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
@@ -122,8 +122,8 @@ class B3Format(HTTPTextFormat):
     @classmethod
     def inject(
         cls,
-        set_in_carrier: Setter[_T],
-        carrier: _T,
+        set_in_carrier: Setter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = get_span_from_context(context=context)
@@ -155,10 +155,9 @@ def format_span_id(span_id: int) -> str:
     return format(span_id, "016x")
 
 
-_T = typing.TypeVar("_T")
-
-
-def _extract_first_element(items: typing.Iterable[_T]) -> typing.Optional[_T]:
+def _extract_first_element(
+    items: typing.Iterable[HTTPTextFormatT],
+) -> typing.Optional[HTTPTextFormatT]:
     if items is None:
         return None
     return next(iter(items), None)

@@ -23,8 +23,6 @@ from opentelemetry.trace.propagation import (
     set_span_in_context,
 )
 
-_T = typing.TypeVar("_T")
-
 #    Keys and values are strings of up to 256 printable US-ASCII characters.
 #    Implementations should conform to the `W3C Trace Context - Tracestate`_
 #    spec, which describes additional restrictions on valid field values.
@@ -67,8 +65,10 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     @classmethod
     def extract(
         cls,
-        get_from_carrier: httptextformat.Getter[_T],
-        carrier: _T,
+        get_from_carrier: httptextformat.Getter[
+            httptextformat.HTTPTextFormatT
+        ],
+        carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Extracts a valid SpanContext from the carrier.
@@ -112,8 +112,8 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     @classmethod
     def inject(
         cls,
-        set_in_carrier: httptextformat.Setter[_T],
-        carrier: _T,
+        set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
+        carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span_context = get_span_from_context(context).get_context()

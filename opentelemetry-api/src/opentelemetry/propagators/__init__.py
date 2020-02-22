@@ -22,38 +22,10 @@ from opentelemetry.context.propagation.tracecontexthttptextformat import (
 )
 from opentelemetry.trace.propagation import httptextformat
 
-_T = typing.TypeVar("_T")
-
-
-class DefaultPropagator(httptextformat.HTTPTextFormat):
-    """The default Propagator used when no implementation is configured.
-    All operations are no-ops.
-    """
-
-    @classmethod
-    def extract(
-        cls,
-        get_from_carrier: httptextformat.Getter[_T],
-        carrier: _T,
-        context: typing.Optional[Context] = None,
-    ) -> Context:
-        if context:
-            return context
-        return get_current()
-
-    @classmethod
-    def inject(
-        cls,
-        set_in_carrier: httptextformat.Setter[_T],
-        carrier: _T,
-        context: typing.Optional[Context] = None,
-    ) -> None:
-        pass
-
 
 def extract(
-    get_from_carrier: httptextformat.Getter[_T],
-    carrier: _T,
+    get_from_carrier: httptextformat.Getter[httptextformat.HTTPTextFormatT],
+    carrier: httptextformat.HTTPTextFormatT,
     context: typing.Optional[Context] = None,
 ) -> Context:
     """Load the parent SpanContext from values in the carrier.
@@ -77,8 +49,8 @@ def extract(
 
 
 def inject(
-    set_in_carrier: httptextformat.Setter[_T],
-    carrier: _T,
+    set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
+    carrier: httptextformat.HTTPTextFormatT,
     context: typing.Optional[Context] = None,
 ) -> None:
     """Inject values from the current context into the carrier.

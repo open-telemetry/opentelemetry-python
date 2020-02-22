@@ -31,9 +31,9 @@ from opentelemetry.trace.propagation import (
     set_span_in_context,
 )
 from opentelemetry.trace.propagation.httptextformat import (
-    _T,
     Getter,
     HTTPTextFormat,
+    HTTPTextFormatT,
     Setter,
 )
 
@@ -555,8 +555,8 @@ class MockHTTPTextFormat(HTTPTextFormat):
     @classmethod
     def extract(
         cls,
-        get_from_carrier: Getter[_T],
-        carrier: _T,
+        get_from_carrier: Getter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         trace_id_list = get_from_carrier(carrier, cls.TRACE_ID_KEY)
@@ -577,8 +577,8 @@ class MockHTTPTextFormat(HTTPTextFormat):
     @classmethod
     def inject(
         cls,
-        set_in_carrier: Setter[_T],
-        carrier: _T,
+        set_in_carrier: Setter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = get_span_from_context(context)
