@@ -26,7 +26,7 @@ from opentelemetry.util import time_ns
 
 
 def new_tracer() -> trace_api.Tracer:
-    return trace.TracerSource().get_tracer(__name__)
+    return trace.TracerProvider().get_tracer(__name__)
 
 
 class TestTracer(unittest.TestCase):
@@ -36,15 +36,15 @@ class TestTracer(unittest.TestCase):
         self.assertIsInstance(tracer, trace_api.Tracer)
 
     def test_shutdown(self):
-        tracer_source = trace.TracerSource()
+        tracer_provider = trace.TracerProvider()
 
         mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
-        tracer_source.add_span_processor(mock_processor1)
+        tracer_provider.add_span_processor(mock_processor1)
 
         mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
-        tracer_source.add_span_processor(mock_processor2)
+        tracer_provider.add_span_processor(mock_processor2)
 
-        tracer_source.shutdown()
+        tracer_provider.shutdown()
 
         self.assertEqual(mock_processor1.shutdown.call_count, 1)
         self.assertEqual(mock_processor2.shutdown.call_count, 1)
@@ -64,8 +64,8 @@ def print_shutdown_count():
 # creating the tracer
 atexit.register(print_shutdown_count)
 
-tracer_source = trace.TracerSource({tracer_parameters})
-tracer_source.add_span_processor(mock_processor)
+tracer_provider = trace.TracerProvider({tracer_parameters})
+tracer_provider.add_span_processor(mock_processor)
 
 {tracer_shutdown}
 """
@@ -78,7 +78,7 @@ tracer_source.add_span_processor(mock_processor)
                 tracer_parameters = "shutdown_on_exit=False"
 
             if explicit_shutdown:
-                tracer_shutdown = "tracer_source.shutdown()"
+                tracer_shutdown = "tracer_provider.shutdown()"
 
             return subprocess.check_output(
                 [
@@ -120,8 +120,8 @@ class TestTracerSampling(unittest.TestCase):
         self.assertTrue(root_span.context.trace_options.sampled)
 
     def test_sampler_no_sampling(self):
-        tracer_source = trace.TracerSource(sampling.ALWAYS_OFF)
-        tracer = tracer_source.get_tracer(__name__)
+        tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
+        tracer = tracer_provider.get_tracer(__name__)
 
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
@@ -147,9 +147,9 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNone(new_span.parent)
 
     def test_instrumentation_info(self):
-        tracer_source = trace.TracerSource()
-        tracer1 = tracer_source.get_tracer("instr1")
-        tracer2 = tracer_source.get_tracer("instr2", "1.3b3")
+        tracer_provider = trace.TracerProvider()
+        tracer1 = tracer_provider.get_tracer("instr1")
+        tracer2 = tracer_provider.get_tracer("instr2", "1.3b3")
         span1 = tracer1.start_span("s1")
         span2 = tracer2.start_span("s2")
         self.assertEqual(
@@ -168,11 +168,11 @@ class TestSpanCreation(unittest.TestCase):
         )  # Check sortability.
 
     def test_invalid_instrumentation_info(self):
-        tracer_source = trace.TracerSource()
+        tracer_provider = trace.TracerProvider()
         with self.assertLogs(level=ERROR):
-            tracer1 = tracer_source.get_tracer("")
+            tracer1 = tracer_provider.get_tracer("")
         with self.assertLogs(level=ERROR):
-            tracer2 = tracer_source.get_tracer(None)
+            tracer2 = tracer_provider.get_tracer(None)
         self.assertEqual(
             tracer1.instrumentation_info, tracer2.instrumentation_info
         )
@@ -187,18 +187,18 @@ class TestSpanCreation(unittest.TestCase):
         )
 
     def test_span_processor_for_source(self):
-        tracer_source = trace.TracerSource()
-        tracer1 = tracer_source.get_tracer("instr1")
-        tracer2 = tracer_source.get_tracer("instr2", "1.3b3")
+        tracer_provider = trace.TracerProvider()
+        tracer1 = tracer_provider.get_tracer("instr1")
+        tracer2 = tracer_provider.get_tracer("instr2", "1.3b3")
         span1 = tracer1.start_span("s1")
         span2 = tracer2.start_span("s2")
 
         # pylint:disable=protected-access
         self.assertIs(
-            span1.span_processor, tracer_source._active_span_processor
+            span1.span_processor, tracer_provider._active_span_processor
         )
         self.assertIs(
-            span2.span_processor, tracer_source._active_span_processor
+            span2.span_processor, tracer_provider._active_span_processor
         )
 
     def test_get_current_span_multiple_tracers(self):
@@ -472,13 +472,13 @@ class TestSpan(unittest.TestCase):
             "sampler-attr": "sample-val",
             "attr-in-both": "decision-attr",
         }
-        tracer_source = trace.TracerSource(
+        tracer_provider = trace.TracerProvider(
             sampling.StaticSampler(
                 sampling.Decision(sampled=True, attributes=decision_attributes)
             )
         )
 
-        self.tracer = tracer_source.get_tracer(__name__)
+        self.tracer = tracer_provider.get_tracer(__name__)
 
         with self.tracer.start_as_current_span("root2") as root:
             self.assertEqual(len(root.attributes), 2)
@@ -673,10 +673,10 @@ class TestSpan(unittest.TestCase):
             )
 
         error_status_test(
-            trace.TracerSource().get_tracer(__name__).start_span("root")
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
         )
         error_status_test(
-            trace.TracerSource()
+            trace.TracerProvider()
             .get_tracer(__name__)
             .start_as_current_span("root")
         )
@@ -704,8 +704,8 @@ class MySpanProcessor(trace.SpanProcessor):
 
 class TestSpanProcessor(unittest.TestCase):
     def test_span_processor(self):
-        tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer(__name__)
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
 
         spans_calls_list = []  # filled by MySpanProcessor
         expected_list = []  # filled by hand
@@ -723,7 +723,7 @@ class TestSpanProcessor(unittest.TestCase):
         self.assertEqual(len(spans_calls_list), 0)
 
         # add single span processor
-        tracer_source.add_span_processor(sp1)
+        tracer_provider.add_span_processor(sp1)
 
         with tracer.start_as_current_span("foo"):
             expected_list.append(span_event_start_fmt("SP1", "foo"))
@@ -746,7 +746,7 @@ class TestSpanProcessor(unittest.TestCase):
         expected_list.clear()
 
         # go for multiple span processors
-        tracer_source.add_span_processor(sp2)
+        tracer_provider.add_span_processor(sp2)
 
         with tracer.start_as_current_span("foo"):
             expected_list.append(span_event_start_fmt("SP1", "foo"))
@@ -773,8 +773,8 @@ class TestSpanProcessor(unittest.TestCase):
         self.assertListEqual(spans_calls_list, expected_list)
 
     def test_add_span_processor_after_span_creation(self):
-        tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer(__name__)
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
 
         spans_calls_list = []  # filled by MySpanProcessor
         expected_list = []  # filled by hand
@@ -786,7 +786,7 @@ class TestSpanProcessor(unittest.TestCase):
             with tracer.start_as_current_span("bar"):
                 with tracer.start_as_current_span("baz"):
                     # add span processor after spans have been created
-                    tracer_source.add_span_processor(sp)
+                    tracer_provider.add_span_processor(sp)
 
                 expected_list.append(span_event_end_fmt("SP1", "baz"))
 

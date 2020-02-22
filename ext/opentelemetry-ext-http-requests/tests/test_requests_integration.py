@@ -29,10 +29,10 @@ class TestRequestsIntegration(unittest.TestCase):
     # TODO: Copy & paste from test_wsgi_middleware
     def setUp(self):
         self.span_attrs = {}
-        self.tracer_source = trace.DefaultTracerSource()
+        self.tracer_provider = trace.DefaultTracerProvider()
         self.tracer = trace.DefaultTracer()
         self.get_tracer_patcher = mock.patch.object(
-            self.tracer_source,
+            self.tracer_provider,
             "get_tracer",
             autospec=True,
             spec_set=True,
@@ -71,7 +71,7 @@ class TestRequestsIntegration(unittest.TestCase):
         self.start_as_current_span = self.start_span_patcher.start()
         self.send = self.send_patcher.start()
 
-        opentelemetry.ext.http_requests.enable(self.tracer_source)
+        opentelemetry.ext.http_requests.enable(self.tracer_provider)
         distver = pkg_resources.get_distribution(
             "opentelemetry-ext-http-requests"
         ).version

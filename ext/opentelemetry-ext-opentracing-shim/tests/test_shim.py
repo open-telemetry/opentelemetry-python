@@ -25,7 +25,7 @@ import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
 from opentelemetry.context import Context
 from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.sdk.trace import TracerSource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace.propagation import (
     get_span_from_context,
     set_span_in_context,
@@ -44,7 +44,7 @@ class TestShim(TestCase):
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
 
-        self.shim = opentracingshim.create_tracer(trace.tracer_source())
+        self.shim = opentracingshim.create_tracer(trace.tracer_provider())
 
     @classmethod
     def setUpClass(cls):
@@ -52,8 +52,8 @@ class TestShim(TestCase):
         every test method.
         """
 
-        trace.set_preferred_tracer_source_implementation(
-            lambda T: TracerSource()
+        trace.set_preferred_tracer_provider_implementation(
+            lambda T: TracerProvider()
         )
 
         # Save current propagator to be restored on teardown.

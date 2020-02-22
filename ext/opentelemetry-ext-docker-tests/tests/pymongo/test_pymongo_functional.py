@@ -20,7 +20,7 @@ from pymongo import MongoClient
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.pymongo import trace_integration
-from opentelemetry.sdk.trace import Span, Tracer, TracerSource
+from opentelemetry.sdk.trace import Span, Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -35,11 +35,11 @@ MONGODB_COLLECTION_NAME = "test"
 class TestFunctionalPymongo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._tracer_source = TracerSource()
-        cls._tracer = Tracer(cls._tracer_source, None)
+        cls._tracer_provider = TracerProvider()
+        cls._tracer = Tracer(cls._tracer_provider, None)
         cls._span_exporter = InMemorySpanExporter()
         cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
-        cls._tracer_source.add_span_processor(cls._span_processor)
+        cls._tracer_provider.add_span_processor(cls._span_processor)
         trace_integration(cls._tracer)
         client = MongoClient(
             MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000
