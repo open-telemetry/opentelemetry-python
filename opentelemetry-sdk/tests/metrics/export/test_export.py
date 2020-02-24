@@ -286,8 +286,8 @@ class TestCounterAggregator(unittest.TestCase):
 class TestMinMaxSumCountAggregator(unittest.TestCase):
     @classmethod
     def call_update(cls, mmsc):
-        min_ = 2 ** 32
-        max_ = 0
+        min_ = float("inf")
+        max_ = float("-inf")
         sum_ = 0
         count_ = 0
         for _ in range(0, 100000):
