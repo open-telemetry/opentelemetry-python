@@ -1,5 +1,5 @@
 OpenTelemetry Database API integration
-=================================
+======================================
 
 The trace integration with Database API supports libraries following the specification.
 
@@ -8,7 +8,7 @@ The trace integration with Database API supports libraries following the specifi
 Usage
 -----
 
-.. code:: python
+.. code-block:: python
 
     import mysql.connector
     from opentelemetry.trace import tracer_provider
