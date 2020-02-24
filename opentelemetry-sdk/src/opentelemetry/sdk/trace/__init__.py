@@ -543,9 +543,7 @@ class Tracer(trace_api.Tracer):
     ) -> Iterator[trace_api.Span]:
         """See `opentelemetry.trace.Tracer.use_span`."""
         try:
-            token = context_api.attach(
-                context_api.set_value(SPAN_KEY, span)
-            )
+            token = context_api.attach(context_api.set_value(SPAN_KEY, span))
             try:
                 yield span
             finally:
