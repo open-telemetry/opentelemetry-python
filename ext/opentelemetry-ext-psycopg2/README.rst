@@ -4,12 +4,13 @@ OpenTelemetry Psycopg integration
 The integration with PostgreSQL supports the `Psycopg`_ library and is specified
 to ``trace_integration`` using ``'PostgreSQL'``.
 
-.. Psycopg: http://initd.org/psycopg/
+.. _Psycopg: http://initd.org/psycopg/
 
 Usage
 -----
 
-.. code:: python
+.. code-block:: python
+
     import psycopg2
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerSource
