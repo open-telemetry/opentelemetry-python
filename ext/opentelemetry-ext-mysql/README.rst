@@ -1,10 +1,10 @@
 OpenTelemetry MySQL integration
-=================================
+===============================
 
 The integration with MySQL supports the `mysql-connector`_ library and is specified
 to ``trace_integration`` using ``'MySQL'``.
 
-.. mysql-connector: https://pypi.org/project/mysql-connector/
+.. _mysql-connector: https://pypi.org/project/mysql-connector/
 
 Usage
 -----
