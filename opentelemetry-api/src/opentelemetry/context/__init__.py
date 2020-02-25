@@ -33,7 +33,7 @@ def _load_runtime_context(func: _F) -> _F:
     """Initializes the global RuntimeContext
     """
 
-    @wraps(func)
+    @wraps(func)  # type: ignore
     def wrapper(
         *args: typing.Tuple[typing.Any, typing.Any],
         **kwargs: typing.Dict[typing.Any, typing.Any]
