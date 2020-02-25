@@ -60,7 +60,8 @@ class CounterAggregator(Aggregator):
             self.current = 0
 
     def merge(self, other):
-        self.checkpoint += other.checkpoint
+        with self._lock:
+            self.checkpoint += other.checkpoint
 
 
 class MinMaxSumCountAggregator(Aggregator):
@@ -106,6 +107,7 @@ class MinMaxSumCountAggregator(Aggregator):
             self.current = self._EMPTY
 
     def merge(self, other):
-        self.checkpoint = self._merge_checkpoint(
-            self.checkpoint, other.checkpoint
-        )
+        with self._lock:
+            self.checkpoint = self._merge_checkpoint(
+                self.checkpoint, other.checkpoint
+            )
