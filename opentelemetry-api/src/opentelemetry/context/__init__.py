@@ -112,6 +112,8 @@ def attach(context: Context) -> object:
 
     Args:
         context: The Context to set as current.
+    Returns:
+            A token that can be used with `detach` to reset the context.
     """
     return _RUNTIME_CONTEXT.attach(context)  # type:ignore
 

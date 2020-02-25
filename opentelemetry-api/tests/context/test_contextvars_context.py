@@ -74,7 +74,7 @@ class TestContextVarsContext(unittest.TestCase):
         "opentelemetry.context._RUNTIME_CONTEXT",  # type: ignore
         ContextVarsRuntimeContext(),
     )
-    def test_set_current(self):
+    def test_attach(self):
         context.attach(context.set_value("a", "yyy"))
 
         token = context.attach(context.set_value("a", "zzz"))
