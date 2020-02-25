@@ -224,8 +224,8 @@ class TestBatcher(unittest.TestCase):
 
 
 class TestCounterAggregator(unittest.TestCase):
-    @classmethod
-    def call_update(cls, counter):
+    @staticmethod
+    def call_update(counter):
         update_total = 0
         for _ in range(0, 100000):
             val = random.getrandbits(32)
@@ -284,8 +284,8 @@ class TestCounterAggregator(unittest.TestCase):
 
 
 class TestMinMaxSumCountAggregator(unittest.TestCase):
-    @classmethod
-    def call_update(cls, mmsc):
+    @staticmethod
+    def call_update(mmsc):
         min_ = float("inf")
         max_ = float("-inf")
         sum_ = 0
