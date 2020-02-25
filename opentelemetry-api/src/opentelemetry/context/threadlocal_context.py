@@ -23,9 +23,9 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     implementation is available for usage with Python 3.4.
     """
 
-    class _Token:
+    class Token:
         def __init__(self, context: Context) -> None:
-            self.context = context
+            self._context = context
 
     _CONTEXT_KEY = "current_context"
 
@@ -36,7 +36,7 @@ class ThreadLocalRuntimeContext(RuntimeContext):
         """See `opentelemetry.context.RuntimeContext.attach`."""
         current = self.get_current()
         setattr(self._current_context, self._CONTEXT_KEY, context)
-        return self._Token(current)
+        return self.Token(current)
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
@@ -51,9 +51,10 @@ class ThreadLocalRuntimeContext(RuntimeContext):
 
     def detach(self, token: object) -> None:
         """See `opentelemetry.context.RuntimeContext.detach`."""
-        if not isinstance(token, self._Token):
+        if not isinstance(token, self.Token):
             raise ValueError("invalid token")
-        setattr(self._current_context, self._CONTEXT_KEY, token.context)
+        # pylint: disable=protected-access
+        setattr(self._current_context, self._CONTEXT_KEY, token._context)
 
 
 __all__ = ["ThreadLocalRuntimeContext"]
