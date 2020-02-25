@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import unittest
-from logging import ERROR
 from unittest.mock import patch
 
 from opentelemetry import context
+
+from .base_context import ContextTestCases
 
 try:
     import contextvars  # pylint: disable=unused-import
@@ -27,61 +28,14 @@ except ImportError:
     raise unittest.SkipTest("contextvars not available")
 
 
-def do_work() -> None:
-    context.attach(context.set_value("say", "bar"))
-
-
-class TestContextVarsContext(unittest.TestCase):
+class TestContextVarsContext(ContextTestCases.BaseTest):
     def setUp(self):
-        self.previous_context = context.get_current()
+        super(TestContextVarsContext, self).setUp()
+        self.mock_runtime = patch.object(
+            context, "_RUNTIME_CONTEXT", ContextVarsRuntimeContext(),
+        )
+        self.mock_runtime.start()
 
     def tearDown(self):
-        context.attach(self.previous_context)
-
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT",  # type: ignore
-        ContextVarsRuntimeContext(),
-    )
-    def test_context(self):
-        self.assertIsNone(context.get_value("say"))
-        empty = context.get_current()
-        second = context.set_value("say", "foo")
-
-        self.assertEqual(context.get_value("say", context=second), "foo")
-
-        do_work()
-        self.assertEqual(context.get_value("say"), "bar")
-        third = context.get_current()
-
-        self.assertIsNone(context.get_value("say", context=empty))
-        self.assertEqual(context.get_value("say", context=second), "foo")
-        self.assertEqual(context.get_value("say", context=third), "bar")
-
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT",  # type: ignore
-        ContextVarsRuntimeContext(),
-    )
-    def test_set_value(self):
-        first = context.set_value("a", "yyy")
-        second = context.set_value("a", "zzz")
-        third = context.set_value("a", "---", first)
-        self.assertEqual("yyy", context.get_value("a", context=first))
-        self.assertEqual("zzz", context.get_value("a", context=second))
-        self.assertEqual("---", context.get_value("a", context=third))
-        self.assertEqual(None, context.get_value("a"))
-
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT",  # type: ignore
-        ContextVarsRuntimeContext(),
-    )
-    def test_attach(self):
-        context.attach(context.set_value("a", "yyy"))
-
-        token = context.attach(context.set_value("a", "zzz"))
-        self.assertEqual("zzz", context.get_value("a"))
-
-        context.detach(token)
-        self.assertEqual("yyy", context.get_value("a"))
-
-        with self.assertLogs(level=ERROR):
-            context.detach("some garbage")
+        super(TestContextVarsContext, self).tearDown()
+        self.mock_runtime.stop()
