@@ -266,9 +266,7 @@ class Meter(metrics_api.Meter):
     """
 
     def __init__(
-        self,
-        instrumentation_info: "InstrumentationInfo",
-        stateful: bool,
+        self, instrumentation_info: "InstrumentationInfo", stateful: bool,
     ):
         self.instrumentation_info = instrumentation_info
         self.metrics = set()
@@ -340,7 +338,7 @@ class MeterProvider(metrics_api.MeterProvider):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful = True,
+        stateful=True,
         instrumenting_library_version: str = "",
     ) -> "metrics_api.Meter":
         if not instrumenting_module_name:  # Reject empty strings too.
@@ -349,5 +347,5 @@ class MeterProvider(metrics_api.MeterProvider):
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
             ),
-            stateful = stateful
+            stateful=stateful,
         )
