@@ -30,11 +30,11 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     def test_tracer(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
-            trace.TracerSource()  # type:ignore
+            trace.TracerProvider()  # type:ignore
 
     def test_default_tracer(self):
-        tracer_source = trace.DefaultTracerSource()
-        tracer = tracer_source.get_tracer(__name__)
+        tracer_provider = trace.DefaultTracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
             self.assertEqual(span, trace.INVALID_SPAN)

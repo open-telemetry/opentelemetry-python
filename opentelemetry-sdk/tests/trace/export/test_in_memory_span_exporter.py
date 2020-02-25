@@ -25,11 +25,11 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 class TestInMemorySpanExporter(unittest.TestCase):
     def setUp(self):
-        self.tracer_source = trace.TracerSource()
-        self.tracer = self.tracer_source.get_tracer(__name__)
+        self.tracer_provider = trace.TracerProvider()
+        self.tracer = self.tracer_provider.get_tracer(__name__)
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
-        self.tracer_source.add_span_processor(span_processor)
+        self.tracer_provider.add_span_processor(span_processor)
         self.exec_scenario()
 
     def exec_scenario(self):

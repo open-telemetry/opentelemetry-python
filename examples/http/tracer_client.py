@@ -20,7 +20,7 @@ import requests
 
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
-from opentelemetry.sdk.trace import TracerSource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
     ConsoleSpanExporter,
@@ -39,15 +39,15 @@ else:
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
-trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-tracer_source = trace.tracer_source()
+trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+tracer_provider = trace.tracer_provider()
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
-tracer_source.add_span_processor(span_processor)
+tracer_provider.add_span_processor(span_processor)
 
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
-http_requests.enable(tracer_source)
+http_requests.enable(tracer_provider)
 response = requests.get(url="http://127.0.0.1:5000/")

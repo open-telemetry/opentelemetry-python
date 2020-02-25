@@ -29,14 +29,14 @@ following example::
     import time
 
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerSource
+    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.ext.opentracing_shim import create_tracer
 
     # Tell OpenTelemetry which Tracer implementation to use.
-    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+    trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
 
     # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.tracer_source().get_tracer(__name__)
+    otel_tracer = trace.get_tracer(__name__)
 
     # Create an OpenTracing shim.
     shim = create_tracer(otel_tracer)
@@ -97,15 +97,15 @@ from opentelemetry.trace import DefaultSpan
 logger = logging.getLogger(__name__)
 
 
-def create_tracer(otel_tracer_source):
+def create_tracer(otel_tracer_provider):
     """Creates a :class:`TracerShim` object from the provided OpenTelemetry
-    :class:`opentelemetry.trace.TracerSource`.
+    :class:`opentelemetry.trace.TracerProvider`.
 
     The returned :class:`TracerShim` is an implementation of
     :class:`opentracing.Tracer` using OpenTelemetry under the hood.
 
     Args:
-        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be
+        otel_tracer_provider: A :class:`opentelemetry.trace.TracerProvider` to be
             used for constructing the :class:`TracerShim`. A tracer from this
             source will be used to perform the actual tracing when user code is
             instrumented using the OpenTracing API.
@@ -114,7 +114,7 @@ def create_tracer(otel_tracer_source):
         The created :class:`TracerShim`.
     """
 
-    return TracerShim(otel_tracer_source.get_tracer(__name__, __version__))
+    return TracerShim(otel_tracer_provider.get_tracer(__name__, __version__))
 
 
 class SpanContextShim(opentracing.SpanContext):
