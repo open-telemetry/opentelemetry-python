@@ -21,13 +21,13 @@ from .base_context import ContextTestCases
 
 
 class TestThreadLocalContext(ContextTestCases.BaseTest):
-    def setUp(self):
+    def setUp(self) -> None:
         super(TestThreadLocalContext, self).setUp()
         self.mock_runtime = patch.object(
             context, "_RUNTIME_CONTEXT", ThreadLocalRuntimeContext(),
         )
         self.mock_runtime.start()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         super(TestThreadLocalContext, self).tearDown()
         self.mock_runtime.stop()

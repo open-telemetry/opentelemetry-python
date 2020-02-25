@@ -29,13 +29,13 @@ except ImportError:
 
 
 class TestContextVarsContext(ContextTestCases.BaseTest):
-    def setUp(self):
+    def setUp(self) -> None:
         super(TestContextVarsContext, self).setUp()
         self.mock_runtime = patch.object(
             context, "_RUNTIME_CONTEXT", ContextVarsRuntimeContext(),
         )
         self.mock_runtime.start()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         super(TestContextVarsContext, self).tearDown()
         self.mock_runtime.stop()

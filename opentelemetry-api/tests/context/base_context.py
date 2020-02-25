@@ -24,10 +24,10 @@ def do_work() -> None:
 
 class ContextTestCases:
     class BaseTest(unittest.TestCase):
-        def setUp(self):
+        def setUp(self) -> None:
             self.previous_context = context.get_current()
 
-        def tearDown(self):
+        def tearDown(self) -> None:
             context.attach(self.previous_context)
 
         def test_context(self):
