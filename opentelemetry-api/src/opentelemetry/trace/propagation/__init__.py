@@ -11,9 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Optional
-
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, Span, SpanContext
 
 _SPAN_CONTEXT_KEY = "extracted-span-context"
 SPAN_KEY = "current-span"

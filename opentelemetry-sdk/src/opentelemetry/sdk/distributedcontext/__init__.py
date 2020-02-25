@@ -16,7 +16,7 @@ import typing
 from contextlib import contextmanager
 
 from opentelemetry import distributedcontext as dctx_api
-from opentelemetry.context import Context, get_value, set_value
+from opentelemetry.context import Context
 from opentelemetry.distributedcontext import (
     distributed_context_from_context,
     with_distributed_context,

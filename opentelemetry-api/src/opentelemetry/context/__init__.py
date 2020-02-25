@@ -19,6 +19,7 @@ from sys import version_info
 
 from pkg_resources import iter_entry_points
 
+# pylint: disable=unused-import
 from opentelemetry.context.context import Context, RuntimeContext
 
 logger = logging.getLogger(__name__)

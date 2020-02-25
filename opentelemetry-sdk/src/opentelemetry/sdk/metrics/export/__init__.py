@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import Sequence, Tuple
+from typing import Sequence
 
 
 class MetricsExportResult(Enum):

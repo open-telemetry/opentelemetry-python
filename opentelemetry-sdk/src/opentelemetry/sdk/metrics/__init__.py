@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-from collections import OrderedDict
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
