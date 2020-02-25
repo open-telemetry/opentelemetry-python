@@ -263,15 +263,16 @@ class Meter(metrics_api.Meter):
 
     Args:
         instrumentation_info: The `InstrumentationInfo` for this meter.
-        batcher: The `Batcher` used for this meter.
     """
 
     def __init__(
-        self, instrumentation_info: "InstrumentationInfo", batcher: Batcher
+        self,
+        instrumentation_info: "InstrumentationInfo",
+        stateful: bool,
     ):
-        self.batcher = batcher
         self.instrumentation_info = instrumentation_info
         self.metrics = set()
+        self.batcher = UngroupedBatcher(stateful)
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -339,7 +340,7 @@ class MeterProvider(metrics_api.MeterProvider):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        batcher: Batcher = UngroupedBatcher(True),
+        stateful = True,
         instrumenting_library_version: str = "",
     ) -> "metrics_api.Meter":
         if not instrumenting_module_name:  # Reject empty strings too.
@@ -348,5 +349,5 @@ class MeterProvider(metrics_api.MeterProvider):
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
             ),
-            batcher,
+            stateful = stateful
         )

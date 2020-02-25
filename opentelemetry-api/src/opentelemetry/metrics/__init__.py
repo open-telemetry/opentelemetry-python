@@ -232,6 +232,7 @@ class MeterProvider(abc.ABC):
     def get_meter(
         self,
         instrumenting_module_name: str,
+        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
@@ -248,6 +249,12 @@ class MeterProvider(abc.ABC):
                 E.g., instead of ``"requests"``, use
                 ``"opentelemetry.ext.http_requests"``.
 
+            stateful: True/False to indicate whether the meter will be 
+                    stateful. True indicates the meter computes checkpoints
+                    from over the process lifetime. False indicates the meter
+                    computes checkpoints which describe the updates of a single
+                    collection period (deltas).
+
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
@@ -263,6 +270,7 @@ class DefaultMeterProvider(MeterProvider):
     def get_meter(
         self,
         instrumenting_module_name: str,
+        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         # pylint:disable=no-self-use,unused-argument
@@ -376,18 +384,20 @@ _METER_SOURCE_FACTORY = None
 
 
 def get_meter(
-    instrumenting_module_name: str, instrumenting_library_version: str = ""
+    instrumenting_module_name: str,
+    stateful = True,
+    instrumenting_library_version: str = "",
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
     This function is a convenience wrapper for
-    opentelemetry.metrics.meter_source().get_meter
+    opentelemetry.metrics.meter_provider().get_meter
     """
-    return meter_source().get_meter(
-        instrumenting_module_name, instrumenting_library_version
+    return meter_provider().get_meter(
+        instrumenting_module_name, stateful, instrumenting_library_version
     )
 
 
-def meter_source() -> MeterProvider:
+def meter_provider() -> MeterProvider:
     """Gets the current global :class:`~.MeterProvider` object.
 
     If there isn't one set yet, a default will be loaded.
@@ -404,7 +414,7 @@ def meter_source() -> MeterProvider:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op meter impl
             logger.warning(
-                "Unable to instantiate MeterProvider from meter source factory.",
+                "Unable to instantiate MeterProvider from meter provider factory.",
                 exc_info=True,
             )
             _METER_SOURCE = DefaultMeterProvider()
@@ -413,10 +423,10 @@ def meter_source() -> MeterProvider:
     return _METER_SOURCE
 
 
-def set_preferred_meter_source_implementation(
+def set_preferred_meter_provider_implementation(
     factory: ImplementationFactory,
 ) -> None:
-    """Set the factory to be used to create the meter source.
+    """Set the factory to be used to create the meter provider.
 
     See :mod:`opentelemetry.util.loader` for details.
 

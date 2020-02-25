@@ -25,7 +25,6 @@ import time
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 batcher_mode = "stateful"
@@ -44,18 +43,15 @@ if len(sys.argv) >= 2:
         usage(sys.argv)
         sys.exit(1)
 
-# Batcher used to collect all created metrics from meter ready for exporting
-# Pass in True/False to indicate whether the batcher is stateful.
-# True indicates the batcher computes checkpoints from over the process
-# lifetime.
-# False indicates the batcher computes checkpoints which describe the updates
-# of a single collection period (deltas)
-batcher = UngroupedBatcher(batcher_mode == "stateful")
-
-# If a batcher is not provided, a default batcher is used
 # Meter is responsible for creating and recording metrics
-metrics.set_preferred_meter_source_implementation(lambda _: MeterProvider())
-meter = metrics.meter_source().get_meter(__name__, batcher)
+metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+
+# Meter's namespace corresponds to the string passed as the first argument Pass
+# in True/False to indicate whether the batcher is stateful. True indicates the
+# batcher computes checkpoints from over the process lifetime. False indicates
+# the batcher computes checkpoints which describe the updates of a single
+# collection period (deltas)
+meter = metrics.meter_provider().get_meter(__name__, batcher_mode == "stateful")
 
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
