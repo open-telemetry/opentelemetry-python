@@ -30,7 +30,10 @@ _F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
 
 
 def _load_runtime_context(func: _F) -> _F:
-    """Initializes the global RuntimeContext
+    """A decorator used to initialize the global RuntimeContext
+
+    Returns:
+        A wrapper of the decorated method.
     """
 
     @wraps(func)  # type: ignore
@@ -72,6 +75,9 @@ def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
     Args:
         key: The key of the value to retrieve.
         context: The context from which to retrieve the value, if None, the current context is used.
+
+    Returns:
+        The value associated with the key.
     """
     return context.get(key) if context is not None else get_current().get(key)
 
@@ -85,9 +91,12 @@ def set_value(
     which contains the new value.
 
     Args:
-        key: The key of the entry to set
-        value: The value of the entry to set
-        context: The context to copy, if None, the current context is used
+        key: The key of the entry to set.
+        value: The value of the entry to set.
+        context: The context to copy, if None, the current context is used.
+
+    Returns:
+        A new `Context` containing the value set.
     """
     if context is None:
         context = get_current()
@@ -99,8 +108,11 @@ def set_value(
 @_load_runtime_context  # type: ignore
 def get_current() -> Context:
     """To access the context associated with program execution,
-    the RuntimeContext API provides a function which takes no arguments
-    and returns a RuntimeContext.
+    the Context API provides a function which takes no arguments
+    and returns a Context.
+
+    Returns:
+        The current `Context` object.
     """
     return _RUNTIME_CONTEXT.get_current()  # type:ignore
 
@@ -112,8 +124,9 @@ def attach(context: Context) -> object:
 
     Args:
         context: The Context to set as current.
+
     Returns:
-            A token that can be used with `detach` to reset the context.
+        A token that can be used with `detach` to reset the context.
     """
     return _RUNTIME_CONTEXT.attach(context)  # type:ignore
 
@@ -130,22 +143,3 @@ def detach(token: object) -> None:
         _RUNTIME_CONTEXT.detach(token)  # type: ignore
     except Exception:  # pylint: disable=broad-except
         logger.error("Failed to detach context")
-
-
-def with_current_context(
-    func: typing.Callable[..., "object"]
-) -> typing.Callable[..., "object"]:
-    """Capture the current context and apply it to the provided func."""
-
-    caller_context = get_current()
-
-    def call_with_current_context(
-        *args: "object", **kwargs: "object"
-    ) -> "object":
-        try:
-            token = attach(caller_context)
-            return func(*args, **kwargs)
-        finally:
-            detach(token)
-
-    return call_with_current_context
