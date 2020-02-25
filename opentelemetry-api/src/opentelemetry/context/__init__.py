@@ -14,6 +14,7 @@
 
 import logging
 import typing
+from functools import wraps
 from os import environ
 from sys import version_info
 
@@ -32,6 +33,7 @@ def _load_runtime_context(func: _F) -> _F:
     """Initializes the global RuntimeContext
     """
 
+    @wraps(func)
     def wrapper(
         *args: typing.Tuple[typing.Any, typing.Any],
         **kwargs: typing.Dict[typing.Any, typing.Any]
