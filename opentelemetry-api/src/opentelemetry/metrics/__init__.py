@@ -385,7 +385,7 @@ _METER_SOURCE_FACTORY = None
 
 def get_meter(
     instrumenting_module_name: str,
-    stateful = True,
+    stateful: bool = True,
     instrumenting_library_version: str = "",
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
