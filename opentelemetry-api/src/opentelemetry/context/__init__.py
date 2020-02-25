@@ -25,6 +25,43 @@ logger = logging.getLogger(__name__)
 _RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
 
 
+_F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
+
+
+def _load_runtime_context(func: _F) -> _F:
+    """Initializes the global RuntimeContext
+    """
+
+    def wrapper(
+        *args: typing.Tuple[typing.Any, typing.Any],
+        **kwargs: typing.Dict[typing.Any, typing.Any],
+    ) -> typing.Optional[typing.Any]:
+        global _RUNTIME_CONTEXT  # pylint: disable=global-statement
+        if _RUNTIME_CONTEXT is None:
+            # FIXME use a better implementation of a configuration manager to avoid having
+            # to get configuration values straight from environment variables
+            if version_info < (3, 5):
+                # contextvars are not supported in 3.4, use thread-local storage
+                default_context = "threadlocal_context"
+            else:
+                default_context = "contextvars_context"
+
+            configured_context = environ.get(
+                "OPENTELEMETRY_CONTEXT", default_context
+            )  # type: str
+            try:
+                _RUNTIME_CONTEXT = next(
+                    iter_entry_points(
+                        "opentelemetry_context", configured_context
+                    )
+                ).load()()
+            except Exception:  # pylint: disable=broad-except
+                logger.error("Failed to load context: %s", configured_context)
+        return func(*args, **kwargs)  # type: ignore
+
+    return wrapper  # type:ignore
+
+
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
     """To access the local state of a concern, the RuntimeContext API
     provides a function which takes a context and a key as input,
@@ -57,35 +94,16 @@ def set_value(
     return Context(new_values)
 
 
+@_load_runtime_context  # type: ignore
 def get_current() -> Context:
     """To access the context associated with program execution,
     the RuntimeContext API provides a function which takes no arguments
     and returns a RuntimeContext.
     """
-
-    global _RUNTIME_CONTEXT  # pylint: disable=global-statement
-    if _RUNTIME_CONTEXT is None:
-        # FIXME use a better implementation of a configuration manager to avoid having
-        # to get configuration values straight from environment variables
-        if version_info < (3, 5):
-            # contextvars are not supported in 3.4, use thread-local storage
-            default_context = "threadlocal_context"
-        else:
-            default_context = "contextvars_context"
-
-        configured_context = environ.get(
-            "OPENTELEMETRY_CONTEXT", default_context
-        )  # type: str
-        try:
-            _RUNTIME_CONTEXT = next(
-                iter_entry_points("opentelemetry_context", configured_context)
-            ).load()()
-        except Exception:  # pylint: disable=broad-except
-            logger.error("Failed to load context: %s", configured_context)
-
     return _RUNTIME_CONTEXT.get_current()  # type:ignore
 
 
+@_load_runtime_context  # type: ignore
 def attach(context: Context) -> object:
     """Associates a Context with the caller's current execution unit. Returns
     a token that can be used to restore the previous Context.
@@ -93,11 +111,10 @@ def attach(context: Context) -> object:
     Args:
         context: The Context to set as current.
     """
-    get_current()
-
     return _RUNTIME_CONTEXT.attach(context)  # type:ignore
 
 
+@_load_runtime_context  # type: ignore
 def detach(token: object) -> None:
     """Resets the Context associated with the caller's current execution unit
     to the value it had before attaching a specified Context.
