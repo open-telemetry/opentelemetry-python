@@ -32,8 +32,8 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     def __init__(self) -> None:
         self._current_context = threading.local()
 
-    def set_current(self, context: Context) -> object:
-        """See `opentelemetry.context.RuntimeContext.set_current`."""
+    def attach(self, context: Context) -> object:
+        """See `opentelemetry.context.RuntimeContext.attach`."""
         current = self.get_current()
         setattr(self._current_context, self._CONTEXT_KEY, context)
         return self._Token(current)
@@ -49,8 +49,8 @@ class ThreadLocalRuntimeContext(RuntimeContext):
         )  # type: Context
         return context
 
-    def reset(self, token: object) -> None:
-        """See `opentelemetry.context.RuntimeContext.reset`."""
+    def detach(self, token: object) -> None:
+        """See `opentelemetry.context.RuntimeContext.detach`."""
         if not isinstance(token, self._Token):
             raise ValueError("invalid token")
         setattr(self._current_context, self._CONTEXT_KEY, token.context)

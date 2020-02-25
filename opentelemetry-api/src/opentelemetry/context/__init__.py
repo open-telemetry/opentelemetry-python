@@ -95,7 +95,7 @@ def attach(context: Context) -> object:
     """
     get_current()
 
-    return _RUNTIME_CONTEXT.set_current(context)  # type:ignore
+    return _RUNTIME_CONTEXT.attach(context)  # type:ignore
 
 
 def detach(token: object) -> None:
@@ -106,7 +106,7 @@ def detach(token: object) -> None:
         token: The Token that was returned by a previous call to attach a Context.
     """
     try:
-        _RUNTIME_CONTEXT.reset(token)  # type: ignore
+        _RUNTIME_CONTEXT.detach(token)  # type: ignore
     except (AttributeError, TypeError, ValueError):
         logger.error("Failed to detach context")
 

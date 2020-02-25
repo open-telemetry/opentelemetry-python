@@ -29,7 +29,7 @@ class RuntimeContext(ABC):
     """
 
     @abstractmethod
-    def set_current(self, context: Context) -> object:
+    def attach(self, context: Context) -> object:
         """ Sets the current `Context` object. Returns a
         token that can be used to reset to the previous `Context`.
 
@@ -42,7 +42,7 @@ class RuntimeContext(ABC):
         """ Returns the current `Context` object. """
 
     @abstractmethod
-    def reset(self, token: object) -> None:
+    def detach(self, token: object) -> None:
         """ Resets Context to a previous value
 
         Args:
