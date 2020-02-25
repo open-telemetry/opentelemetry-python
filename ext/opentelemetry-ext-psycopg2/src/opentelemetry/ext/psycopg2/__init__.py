@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The opentelemetry-ext-psycopg2 package allows tracing PostgreSQL queries made by the
-Psycopg2 library.
+The opentelemetry-ext-psycopg2 package allows tracing PostgreSQL queries made
+by the Psycopg2 library.
 """
 
 import logging
@@ -25,7 +25,6 @@ import wrapt
 from psycopg2.sql import Composable
 
 from opentelemetry.ext.dbapi import DatabaseApiIntegration, TracedCursor
-from opentelemetry.trace import Tracer
 
 logger = logging.getLogger(__name__)
 

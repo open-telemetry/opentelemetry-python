@@ -19,16 +19,14 @@ import logging
 import re
 from typing import Sequence
 
-from prometheus_client import start_http_server
 from prometheus_client.core import (
     REGISTRY,
-    CollectorRegistry,
     CounterMetricFamily,
     GaugeMetricFamily,
     UnknownMetricFamily,
 )
 
-from opentelemetry.metrics import Counter, Gauge, Measure, Metric
+from opentelemetry.metrics import Counter, Gauge, Measure
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
