@@ -65,11 +65,11 @@ class TestAsyncio(unittest.TestCase):
     def setUp(self):
         self.previous_context = context.get_current()
         context.set_current(context.Context())
-        self.tracer_source = trace.TracerSource()
-        self.tracer = self.tracer_source.get_tracer(__name__)
+        self.tracer_provider = trace.TracerProvider()
+        self.tracer = self.tracer_provider.get_tracer(__name__)
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
-        self.tracer_source.add_span_processor(span_processor)
+        self.tracer_provider.add_span_processor(span_processor)
         self.loop = asyncio.get_event_loop()
 
     def tearDown(self):

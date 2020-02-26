@@ -43,7 +43,7 @@ class SpanProcessor:
     invocations.
 
     Span processors can be registered directly using
-    :func:`TracerSource.add_span_processor` and they are invoked
+    :func:`TracerProvider.add_span_processor` and they are invoked
     in the same order as they were registered.
     """
 
@@ -388,7 +388,7 @@ def generate_trace_id() -> int:
 class InstrumentationInfo:
     """Immutable information about an instrumentation library module.
 
-    See `TracerSource.get_tracer` for the meaning of the properties.
+    See `TracerProvider.get_tracer` for the meaning of the properties.
     """
 
     __slots__ = ("_name", "_version")
@@ -435,7 +435,9 @@ class Tracer(trace_api.Tracer):
     """
 
     def __init__(
-        self, source: "TracerSource", instrumentation_info: InstrumentationInfo
+        self,
+        source: "TracerProvider",
+        instrumentation_info: InstrumentationInfo,
     ) -> None:
         self.source = source
         self.instrumentation_info = instrumentation_info
@@ -569,7 +571,7 @@ class Tracer(trace_api.Tracer):
                 span.end()
 
 
-class TracerSource(trace_api.TracerSource):
+class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
@@ -601,7 +603,7 @@ class TracerSource(trace_api.TracerSource):
         return context_api.get_value(SPAN_KEY)  # type: ignore
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
-        """Registers a new :class:`SpanProcessor` for this `TracerSource`.
+        """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
 
         The span processors are invoked in the same order they are registered.
         """
