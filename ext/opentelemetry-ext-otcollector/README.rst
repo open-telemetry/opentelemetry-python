@@ -25,11 +25,9 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ trace
 
     from opentelemetry import trace
     from opentelemetry.ext.otcollector.trace_exporter  import CollectorSpanExporter
-    from opentelemetry.sdk.trace import TracerSource
+    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-    tracer = trace.get_tracer(__name__)
 
     # create a CollectorSpanExporter
     collector_exporter = CollectorSpanExporter(
@@ -42,8 +40,10 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ trace
     # Create a BatchExportSpanProcessor and add the exporter to it
     span_processor = BatchExportSpanProcessor(collector_exporter)
 
-    # add to the tracer
-    trace.tracer_source().add_span_processor(span_processor)
+    # Configure the tracer to use the collector exporter
+    tracer_provider = TracerProvider()
+    tracer_provider.add_span_processor(span_processor)
+    tracer = TracerProvider().get_tracer(__name__)
 
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
