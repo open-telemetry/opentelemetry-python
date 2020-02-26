@@ -1,0 +1,4 @@
+{
+    "tracer": "default_tracer",
+    "exporter": "default_exporter"
+}
