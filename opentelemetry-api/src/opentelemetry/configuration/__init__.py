@@ -31,6 +31,8 @@ from os import environ
 class Configuration:
     _instance = None
 
+    __slots__ = ["tracer", "exporter", "context"]
+
     def __new__(cls):
         if Configuration._instance is None:
 
@@ -58,15 +60,18 @@ class Configuration:
                 )
 
             for key, value in configuration.items():
-                pass
-
-                underscored_key = "_{}".join(key)
+                underscored_key = "_{}".format(key)
 
                 setattr(Configuration, underscored_key, value)
                 setattr(
                     Configuration,
                     key,
-                    property(lambda self: getattr(self, underscored_key))
+                    property(
+                        (
+                            lambda underscored_key:
+                                lambda self: getattr(self, underscored_key)
+                        )(underscored_key)
+                    )
                 )
 
             Configuration._instance = object.__new__(cls)
