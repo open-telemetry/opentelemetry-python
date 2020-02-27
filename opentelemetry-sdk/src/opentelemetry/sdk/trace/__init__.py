@@ -20,7 +20,7 @@ import threading
 from contextlib import contextmanager
 from numbers import Number
 from types import TracebackType
-from typing import Iterator, Optional, Sequence, Tuple, Type
+from typing import Iterator, MutableSequence, Optional, Sequence, Tuple, Type
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
@@ -237,6 +237,9 @@ class Span(trace_api.Span):
             if error_message is not None:
                 logger.warning("%s in attribute value sequence", error_message)
                 return
+            # Freeze mutable sequences defensively
+            if isinstance(value, MutableSequence):
+                value = tuple(value)
         elif not isinstance(value, (bool, str, Number, Sequence)):
             logger.warning("invalid type for attribute value")
             return

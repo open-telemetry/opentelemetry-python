@@ -406,12 +406,12 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["http.status_text"], "OK")
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
-            self.assertEqual(root.attributes["empty-list"], [])
+            self.assertEqual(root.attributes["empty-list"], ())
             self.assertEqual(
-                root.attributes["list-of-bools"], [True, True, False]
+                root.attributes["list-of-bools"], (True, True, False)
             )
             self.assertEqual(
-                root.attributes["list-of-numerics"], [123, 3.14, 0]
+                root.attributes["list-of-numerics"], (123, 3.14, 0)
             )
 
         attributes = {
