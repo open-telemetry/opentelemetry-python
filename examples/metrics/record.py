@@ -27,7 +27,7 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 # defines the interface with a no-op implementation.
 metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
 # Meter is responsible for creating and recording metrics
-meter = metrics.meter_provider().get_meter(__name__)
+meter = metrics.get_meter(__name__)
 # exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 # controller collects metrics created from meter and exports it via the

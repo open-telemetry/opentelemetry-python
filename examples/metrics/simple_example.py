@@ -51,7 +51,7 @@ metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
 # batcher computes checkpoints from over the process lifetime. False indicates
 # the batcher computes checkpoints which describe the updates of a single
 # collection period (deltas)
-meter = metrics.meter_provider().get_meter(
+meter = metrics.get_meter(
     __name__, batcher_mode == "stateful"
 )
 
