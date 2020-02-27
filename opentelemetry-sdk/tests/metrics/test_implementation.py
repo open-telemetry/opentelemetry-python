@@ -14,7 +14,6 @@
 
 import unittest
 
-from opentelemetry import metrics as metrics_api
 from opentelemetry.metrics import DefaultLabelSet, DefaultMeter, DefaultMetric
 from opentelemetry.sdk import metrics
 
@@ -28,7 +27,7 @@ class TestMeterImplementation(unittest.TestCase):
     """
 
     def test_meter(self):
-        meter = metrics_api.get_meter(__name__)
+        meter = metrics.MeterProvider().get_meter(__name__)
         metric = meter.create_metric("", "", "", float, metrics.Counter)
         label_set = meter.get_label_set({"key1": "val1"})
         self.assertNotIsInstance(meter, DefaultMeter)
