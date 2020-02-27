@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -379,8 +379,8 @@ ImplementationFactory = Callable[
     [Type[MeterProvider]], Optional[MeterProvider]
 ]
 
-_METER_SOURCE = None
-_METER_SOURCE_FACTORY = None
+_METER_PROVIDER = None
+_METER_PROVIDER_FACTORY = None
 
 
 def get_meter(
@@ -402,13 +402,13 @@ def meter_provider() -> MeterProvider:
 
     If there isn't one set yet, a default will be loaded.
     """
-    global _METER_SOURCE, _METER_SOURCE_FACTORY  # pylint:disable=global-statement
+    global _METER_PROVIDER, _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
 
-    if _METER_SOURCE is None:
+    if _METER_PROVIDER is None:
         # pylint:disable=protected-access
         try:
-            _METER_SOURCE = loader._load_impl(
-                MeterProvider, _METER_SOURCE_FACTORY  # type: ignore
+            _METER_PROVIDER = loader._load_impl(
+                MeterProvider, _METER_PROVIDER_FACTORY  # type: ignore
             )
         except TypeError:
             # if we raised an exception trying to instantiate an
@@ -417,10 +417,10 @@ def meter_provider() -> MeterProvider:
                 "Unable to instantiate MeterProvider from meter provider factory.",
                 exc_info=True,
             )
-            _METER_SOURCE = DefaultMeterProvider()
-        del _METER_SOURCE_FACTORY
+            _METER_PROVIDER = DefaultMeterProvider()
+        del _METER_PROVIDER_FACTORY
 
-    return _METER_SOURCE
+    return _METER_PROVIDER
 
 
 def set_preferred_meter_provider_implementation(
@@ -435,9 +435,9 @@ def set_preferred_meter_provider_implementation(
     Args:
         factory: Callback that should create a new :class:`MeterProvider` instance.
     """
-    global _METER_SOURCE_FACTORY  # pylint:disable=global-statement
+    global _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
 
-    if _METER_SOURCE:
+    if _METER_PROVIDER:
         raise RuntimeError("MeterProvider already loaded.")
 
-    _METER_SOURCE_FACTORY = factory
+    _METER_PROVIDER_FACTORY = factory
