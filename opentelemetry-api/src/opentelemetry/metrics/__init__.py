@@ -249,7 +249,7 @@ class MeterProvider(abc.ABC):
                 E.g., instead of ``"requests"``, use
                 ``"opentelemetry.ext.http_requests"``.
 
-            stateful: True/False to indicate whether the meter will be 
+            stateful: True/False to indicate whether the meter will be
                     stateful. True indicates the meter computes checkpoints
                     from over the process lifetime. False indicates the meter
                     computes checkpoints which describe the updates of a single
