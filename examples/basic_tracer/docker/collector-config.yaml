@@ -5,6 +5,7 @@ receivers:
 exporters:
   jaeger_grpc:
     endpoint: jaeger-all-in-one:14250
+  logging: {}
 
 processors:
   batch:
@@ -14,5 +15,5 @@ service:
   pipelines:
     traces:
       receivers: [opencensus]
-      exporters: [jaeger_grpc]
+      exporters: [jaeger_grpc, logging]
       processors: [batch, queued_retry]

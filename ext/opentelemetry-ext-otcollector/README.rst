@@ -1,5 +1,5 @@
 OpenTelemetry Collector Exporter
-=============================
+================================
 
 |pypi|
 
