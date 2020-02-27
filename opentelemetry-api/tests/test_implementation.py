@@ -68,11 +68,11 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         meter = meter_provider.get_meter(__name__)
         self.assertIsInstance(meter, metrics.DefaultMeter)
 
+    # pylint: disable=no-self-use
     def test_record_batch(self):
         meter = metrics.DefaultMeter()
         counter = metrics.Counter()
         label_set = metrics.LabelSet()
-        # pylint: disable=no-self-use
         meter.record_batch(label_set, ((counter, 1),))
 
     def test_create_metric(self):
