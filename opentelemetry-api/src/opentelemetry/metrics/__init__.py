@@ -178,7 +178,7 @@ class Measure(Metric):
         """
 
 
-class Observer:
+class Observer(abc.ABC):
     """An observer type metric instrument used to capture a current set of values.
 
 
@@ -187,6 +187,7 @@ class Observer:
     values per collection interval.
     """
 
+    @abc.abstractmethod
     def observe(self, value: ValueT, label_set: LabelSet) -> None:
         """Captures ``value`` to the observer.
 
