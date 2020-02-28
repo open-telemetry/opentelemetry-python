@@ -304,9 +304,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
     def test_update(self):
         mmsc = MinMaxSumCountAggregator()
         # test current values without any update
-        self.assertEqual(
-            mmsc.current, MinMaxSumCountAggregator._EMPTY,
-        )
+        self.assertEqual(mmsc.current, MinMaxSumCountAggregator._EMPTY)
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -314,7 +312,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             mmsc.update(val)
 
         self.assertEqual(
-            mmsc.current, (min(values), max(values), sum(values), len(values)),
+            mmsc.current, (min(values), max(values), sum(values), len(values))
         )
 
     def test_checkpoint(self):
@@ -322,9 +320,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
         # take checkpoint wihtout any update
         mmsc.take_checkpoint()
-        self.assertEqual(
-            mmsc.checkpoint, MinMaxSumCountAggregator._EMPTY,
-        )
+        self.assertEqual(mmsc.checkpoint, MinMaxSumCountAggregator._EMPTY)
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -337,9 +333,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             (min(values), max(values), sum(values), len(values)),
         )
 
-        self.assertEqual(
-            mmsc.current, MinMaxSumCountAggregator._EMPTY,
-        )
+        self.assertEqual(mmsc.current, MinMaxSumCountAggregator._EMPTY)
 
     def test_merge(self):
         mmsc1 = MinMaxSumCountAggregator()
