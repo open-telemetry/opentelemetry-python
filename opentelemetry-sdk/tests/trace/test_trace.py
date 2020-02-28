@@ -117,7 +117,7 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(root_span, trace.Span)
         child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace.Span)
-        self.assertTrue(root_span.context.trace_options.sampled)
+        self.assertTrue(root_span.context.trace_flags.sampled)
 
     def test_sampler_no_sampling(self):
         tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
@@ -251,7 +251,7 @@ class TestSpanCreation(unittest.TestCase):
                     root_context.trace_state, child_context.trace_state
                 )
                 self.assertEqual(
-                    root_context.trace_options, child_context.trace_options
+                    root_context.trace_flags, child_context.trace_flags
                 )
 
                 # Verify start_span() did not set the current span.
@@ -268,9 +268,7 @@ class TestSpanCreation(unittest.TestCase):
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
-            trace_options=trace_api.TraceOptions(
-                trace_api.TraceOptions.SAMPLED
-            ),
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
         self.assertIsNone(tracer.get_current_span())
@@ -303,7 +301,7 @@ class TestSpanCreation(unittest.TestCase):
                     other_parent.trace_state, child_context.trace_state
                 )
                 self.assertEqual(
-                    other_parent.trace_options, child_context.trace_options
+                    other_parent.trace_flags, child_context.trace_flags
                 )
 
                 # Verify start_span() did not set the current span.

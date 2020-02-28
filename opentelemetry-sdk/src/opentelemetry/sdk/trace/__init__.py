@@ -486,15 +486,15 @@ class Tracer(trace_api.Tracer):
         if parent_context is None or not parent_context.is_valid():
             parent = parent_context = None
             trace_id = generate_trace_id()
-            trace_options = None
+            trace_flags = None
             trace_state = None
         else:
             trace_id = parent_context.trace_id
-            trace_options = parent_context.trace_options
+            trace_flags = parent_context.trace_flags
             trace_state = parent_context.trace_state
 
         context = trace_api.SpanContext(
-            trace_id, generate_span_id(), trace_options, trace_state
+            trace_id, generate_span_id(), trace_flags, trace_state
         )
 
         # The sampler decides whether to create a real or no-op span at the
@@ -512,8 +512,8 @@ class Tracer(trace_api.Tracer):
         )
 
         if sampling_decision.sampled:
-            options = context.trace_options | trace_api.TraceOptions.SAMPLED
-            context.trace_options = trace_api.TraceOptions(options)
+            options = context.trace_flags | trace_api.TraceFlags.SAMPLED
+            context.trace_flags = trace_api.TraceFlags(options)
             if attributes is None:
                 span_attributes = sampling_decision.attributes
             else:
