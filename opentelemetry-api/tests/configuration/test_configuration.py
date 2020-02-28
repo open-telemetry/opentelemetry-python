@@ -34,6 +34,9 @@ class TestConfiguration(TestCase):
             )
         )
 
+    def tearDown(self):
+        Configuration._instance = None
+
     def test_singleton(self):
         self.assertIs(Configuration(), Configuration())
 
@@ -51,6 +54,19 @@ class TestConfiguration(TestCase):
     def test_environment_variables(self):
         self.assertEqual(Configuration().tracer, "default_tracer")
         self.assertEqual(Configuration().exporter, "overridden_exporter")
+        self.assertEqual(Configuration().context, "default_context")
+
+    @patch("pathlib.Path.home")
+    @patch.dict(
+        "os.environ", {
+            "OPENTELEMETRY_PYTHON_EXPORTER": "reoverridden_exporter"
+        }
+    )
+    def test_configuration_file_environment_variables(self, mock_home_path):
+        mock_home_path.return_value = getcwd()
+
+        self.assertEqual(Configuration().tracer, "default_tracer")
+        self.assertEqual(Configuration().exporter, "reoverridden_exporter")
         self.assertEqual(Configuration().context, "default_context")
 
     def test_property(self):
