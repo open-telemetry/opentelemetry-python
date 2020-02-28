@@ -58,9 +58,8 @@ class TestConfiguration(TestCase):
 
     @patch("pathlib.Path.home")
     @patch.dict(
-        "os.environ", {
-            "OPENTELEMETRY_PYTHON_EXPORTER": "reoverridden_exporter"
-        }
+        "os.environ",
+        {"OPENTELEMETRY_PYTHON_EXPORTER": "reoverridden_exporter"},
     )
     def test_configuration_file_environment_variables(self, mock_home_path):
         mock_home_path.return_value = getcwd()

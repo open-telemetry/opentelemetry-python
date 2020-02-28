@@ -23,9 +23,9 @@ powerful one, Dynaconf, for example.
 """
 
 from json import load
-from pathlib import Path
-from os.path import join, exists
 from os import environ
+from os.path import exists, join
+from pathlib import Path
 
 
 class Configuration:
@@ -66,10 +66,11 @@ class Configuration:
                     key,
                     property(
                         (
-                            lambda underscored_key:
-                                lambda self: getattr(self, underscored_key)
+                            lambda underscored_key: lambda self: getattr(
+                                self, underscored_key
+                            )
                         )(underscored_key)
-                    )
+                    ),
                 )
 
             Configuration._instance = object.__new__(cls)
