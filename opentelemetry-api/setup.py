@@ -91,6 +91,9 @@ setuptools.setup(
             "threadlocal_context = "
             "opentelemetry.context.threadlocal_context:"
             "ThreadLocalRuntimeContext",
+        ],
+        "opentelemetry_meter": [
+            "default_meter = opentelemetry.metrics:DefaultMeter"
         ]
     },
     data_files=data_files,
