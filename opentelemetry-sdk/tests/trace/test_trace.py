@@ -392,8 +392,10 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value2")
 
             root.set_attribute("empty-list", [])
-            root.set_attribute("list-of-bools", [True, True, False])
-            root.set_attribute("list-of-numerics", [123, 3.14, 0])
+            list_of_bools = [True, True, False]
+            root.set_attribute("list-of-bools", list_of_bools)
+            list_of_numerics = [123, 3.14, 0]
+            root.set_attribute("list-of-numerics", list_of_numerics)
 
             self.assertEqual(len(root.attributes), 10)
             self.assertEqual(root.attributes["component"], "http")
@@ -410,6 +412,14 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.attributes["list-of-bools"], (True, True, False)
             )
+            list_of_bools.append(False)
+            self.assertEqual(
+                root.attributes["list-of-bools"], (True, True, False)
+            )
+            self.assertEqual(
+                root.attributes["list-of-numerics"], (123, 3.14, 0)
+            )
+            list_of_numerics.append(22 / 7)
             self.assertEqual(
                 root.attributes["list-of-numerics"], (123, 3.14, 0)
             )
