@@ -132,7 +132,7 @@ class ZipkinSpanExporter(SpanExporter):
                 "annotations": _extract_annotations_from_events(span.events),
             }
 
-            if context.trace_options.sampled:
+            if context.trace_flags.sampled:
                 zipkin_span["debug"] = 1
 
             if isinstance(span.parent, Span):

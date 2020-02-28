@@ -59,7 +59,7 @@ class TestFlaskExample(unittest.TestCase):
                 "traceparent": "00-{:032x}-{:016x}-{:02x}".format(
                     trace_id,
                     trace_sdk.generate_span_id(),
-                    trace.TraceOptions.SAMPLED,
+                    trace.TraceFlags.SAMPLED,
                 )
             },
         )

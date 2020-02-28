@@ -77,7 +77,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         version = match.group(1)
         trace_id = match.group(2)
         span_id = match.group(3)
-        trace_options = match.group(4)
+        trace_flags = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
             return trace.INVALID_SPAN_CONTEXT
@@ -96,7 +96,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),
-            trace_options=trace.TraceOptions(trace_options),
+            trace_flags=trace.TraceFlags(trace_flags),
             trace_state=tracestate,
         )
 
@@ -115,7 +115,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         if context == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
-            context.trace_id, context.span_id, context.trace_options
+            context.trace_id, context.span_id, context.trace_flags
         )
         set_in_carrier(
             carrier, cls._TRACEPARENT_HEADER_NAME, traceparent_string

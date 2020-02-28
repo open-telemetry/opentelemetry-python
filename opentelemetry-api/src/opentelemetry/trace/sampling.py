@@ -113,7 +113,7 @@ class ProbabilitySampler(Sampler):
         links: Sequence["Link"] = (),
     ) -> "Decision":
         if parent_context is not None:
-            return Decision(parent_context.trace_options.sampled)
+            return Decision(parent_context.trace_flags.sampled)
 
         return Decision(trace_id & self.TRACE_ID_LIMIT < self.bound)
 
