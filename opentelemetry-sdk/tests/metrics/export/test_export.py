@@ -45,7 +45,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             ("environment",),
         )
         kvp = {"environment": "staging"}
-        label_set = meter.LabelSet(kvp)
+        label_set = metrics.LabelSet(kvp)
         aggregator = CounterAggregator()
         record = MetricRecord(aggregator, label_set, metric)
         result = '{}(data="{}", label_set="{}", value={})'.format(
