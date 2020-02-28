@@ -37,9 +37,7 @@ class Configuration:
         if Configuration._instance is None:
 
             configuration = {
-                "tracer": "default_tracer",
-                "exporter": "default_exporter",
-                "context": "default_context"
+                key: "default_{}".format(key) for key in cls.__slots__
             }
 
             configuration_file_path = join(
