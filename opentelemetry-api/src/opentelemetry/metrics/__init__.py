@@ -418,7 +418,7 @@ def meter_provider() -> MeterProvider:
                 exc_info=True,
             )
             _METER_PROVIDER = DefaultMeterProvider()
-        del _METER_PROVIDER_FACTORY
+        _METER_PROVIDER_FACTORY = None
 
     return _METER_PROVIDER
 
