@@ -140,7 +140,7 @@ def get_collector_metric_type(metric: Metric):
     if isinstance(metric, Counter):
         if metric.value_type == int:
             return metrics_pb2.MetricDescriptor.CUMULATIVE_INT64
-        elif metric.value_type == float: 
+        elif metric.value_type == float:
             return metrics_pb2.MetricDescriptor.CUMULATIVE_DOUBLE
     if isinstance(metric, Gauge):
         if metric.value_type == int:
