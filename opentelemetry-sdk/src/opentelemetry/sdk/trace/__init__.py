@@ -26,6 +26,7 @@ from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext, sampling
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCanonicalCode
@@ -152,7 +153,7 @@ class Span(trace_api.Span):
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
-        instrumentation_info: "InstrumentationInfo" = None,
+        instrumentation_info: InstrumentationInfo = None,
         set_status_on_exception: bool = True,
     ) -> None:
 
@@ -383,46 +384,6 @@ def generate_trace_id() -> int:
         A random 128-bit int for use as a trace ID
     """
     return random.getrandbits(128)
-
-
-class InstrumentationInfo:
-    """Immutable information about an instrumentation library module.
-
-    See `TracerProvider.get_tracer` for the meaning of the properties.
-    """
-
-    __slots__ = ("_name", "_version")
-
-    def __init__(self, name: str, version: str):
-        self._name = name
-        self._version = version
-
-    def __repr__(self):
-        return "{}({}, {})".format(
-            type(self).__name__, self._name, self._version
-        )
-
-    def __hash__(self):
-        return hash((self._name, self._version))
-
-    def __eq__(self, value):
-        return type(value) is type(self) and (self._name, self._version) == (
-            value._name,
-            value._version,
-        )
-
-    def __lt__(self, value):
-        if type(value) is not type(self):
-            return NotImplemented
-        return (self._name, self._version) < (value._name, value._version)
-
-    @property
-    def version(self) -> str:
-        return self._version
-
-    @property
-    def name(self) -> str:
-        return self._name
 
 
 class Tracer(trace_api.Tracer):
