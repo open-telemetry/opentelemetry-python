@@ -20,6 +20,7 @@ from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import sampling
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
@@ -153,11 +154,10 @@ class TestSpanCreation(unittest.TestCase):
         span1 = tracer1.start_span("s1")
         span2 = tracer2.start_span("s2")
         self.assertEqual(
-            span1.instrumentation_info, trace.InstrumentationInfo("instr1", "")
+            span1.instrumentation_info, InstrumentationInfo("instr1", "")
         )
         self.assertEqual(
-            span2.instrumentation_info,
-            trace.InstrumentationInfo("instr2", "1.3b3"),
+            span2.instrumentation_info, InstrumentationInfo("instr2", "1.3b3")
         )
 
         self.assertEqual(span2.instrumentation_info.version, "1.3b3")
@@ -177,7 +177,7 @@ class TestSpanCreation(unittest.TestCase):
             tracer1.instrumentation_info, tracer2.instrumentation_info
         )
         self.assertIsInstance(
-            tracer1.instrumentation_info, trace.InstrumentationInfo
+            tracer1.instrumentation_info, InstrumentationInfo
         )
         span1 = tracer1.start_span("foo")
         self.assertTrue(span1.is_recording_events())

@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,9 +27,12 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 import abc
+import logging
 from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import loader
+
+logger = logging.getLogger(__name__)
 
 ValueT = TypeVar("ValueT", int, float)
 
@@ -224,6 +227,56 @@ class Measure(Metric):
         """
 
 
+class MeterProvider(abc.ABC):
+    @abc.abstractmethod
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        stateful: bool = True,
+        instrumenting_library_version: str = "",
+    ) -> "Meter":
+        """Returns a `Meter` for use by the given instrumentation library.
+
+        This function may return different `Meter` types (e.g. a no-op meter
+        vs. a functional meter).
+
+        Args:
+            instrumenting_module_name: The name of the instrumenting module
+                (usually just ``__name__``).
+
+                This should *not* be the name of the module that is
+                instrumented but the name of the module doing the instrumentation.
+                E.g., instead of ``"requests"``, use
+                ``"opentelemetry.ext.http_requests"``.
+
+            stateful: True/False to indicate whether the meter will be
+                    stateful. True indicates the meter computes checkpoints
+                    from over the process lifetime. False indicates the meter
+                    computes checkpoints which describe the updates of a single
+                    collection period (deltas).
+
+            instrumenting_library_version: Optional. The version string of the
+                instrumenting library.  Usually this should be the same as
+                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+        """
+
+
+class DefaultMeterProvider(MeterProvider):
+    """The default MeterProvider, used when no implementation is available.
+
+    All operations are no-op.
+    """
+
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        stateful: bool = True,
+        instrumenting_library_version: str = "",
+    ) -> "Meter":
+        # pylint:disable=no-self-use,unused-argument
+        return DefaultMeter()
+
+
 MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
 
 
@@ -322,45 +375,69 @@ class DefaultMeter(Meter):
 # Once https://github.com/python/mypy/issues/7092 is resolved,
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = Callable[[Type[Meter]], Optional[Meter]]
+ImplementationFactory = Callable[
+    [Type[MeterProvider]], Optional[MeterProvider]
+]
 
-_METER = None
-_METER_FACTORY = None
+_METER_PROVIDER = None
+_METER_PROVIDER_FACTORY = None
 
 
-def meter() -> Meter:
-    """Gets the current global :class:`~.Meter` object.
+def get_meter(
+    instrumenting_module_name: str,
+    stateful: bool = True,
+    instrumenting_library_version: str = "",
+) -> "Meter":
+    """Returns a `Meter` for use by the given instrumentation library.
+    This function is a convenience wrapper for
+    opentelemetry.metrics.meter_provider().get_meter
+    """
+    return meter_provider().get_meter(
+        instrumenting_module_name, stateful, instrumenting_library_version
+    )
+
+
+def meter_provider() -> MeterProvider:
+    """Gets the current global :class:`~.MeterProvider` object.
 
     If there isn't one set yet, a default will be loaded.
     """
-    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+    global _METER_PROVIDER, _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
 
-    if _METER is None:
+    if _METER_PROVIDER is None:
         # pylint:disable=protected-access
         try:
-            _METER = loader._load_impl(Meter, _METER_FACTORY)  # type: ignore
+            _METER_PROVIDER = loader._load_impl(
+                MeterProvider, _METER_PROVIDER_FACTORY  # type: ignore
+            )
         except TypeError:
             # if we raised an exception trying to instantiate an
-            # abstract class, default to no-op tracer impl
-            _METER = DefaultMeter()
-        del _METER_FACTORY
+            # abstract class, default to no-op meter impl
+            logger.warning(
+                "Unable to instantiate MeterProvider from meter provider factory.",
+                exc_info=True,
+            )
+            _METER_PROVIDER = DefaultMeterProvider()
+        _METER_PROVIDER_FACTORY = None
 
-    return _METER
+    return _METER_PROVIDER
 
 
-def set_preferred_meter_implementation(factory: ImplementationFactory) -> None:
-    """Set the factory to be used to create the meter.
+def set_preferred_meter_provider_implementation(
+    factory: ImplementationFactory,
+) -> None:
+    """Set the factory to be used to create the meter provider.
 
     See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a meter is already loaded.
 
     Args:
-        factory: Callback that should create a new :class:`Meter` instance.
+        factory: Callback that should create a new :class:`MeterProvider` instance.
     """
-    global _METER, _METER_FACTORY  # pylint:disable=global-statement
+    global _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
 
-    if _METER:
-        raise RuntimeError("Meter already loaded.")
+    if _METER_PROVIDER:
+        raise RuntimeError("MeterProvider already loaded.")
 
-    _METER_FACTORY = factory
+    _METER_PROVIDER_FACTORY = factory

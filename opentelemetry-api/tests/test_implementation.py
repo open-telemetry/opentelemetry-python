@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     different expected results. See issue for more details:
     https://github.com/open-telemetry/opentelemetry-python/issues/142
     """
+
+    # TRACER
 
     def test_tracer(self):
         with self.assertRaises(TypeError):
@@ -54,12 +56,31 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording_events(), False)
 
+    # METER
+
     def test_meter(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             metrics.Meter()  # type:ignore
 
     def test_default_meter(self):
+        meter_provider = metrics.DefaultMeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        self.assertIsInstance(meter, metrics.DefaultMeter)
+
+    # pylint: disable=no-self-use
+    def test_record_batch(self):
+        meter = metrics.DefaultMeter()
+        counter = metrics.Counter()
+        label_set = metrics.LabelSet()
+        meter.record_batch(label_set, ((counter, 1),))
+
+    def test_create_metric(self):
         meter = metrics.DefaultMeter()
         metric = meter.create_metric("", "", "", float, metrics.Counter)
         self.assertIsInstance(metric, metrics.DefaultMetric)
+
+    def test_get_label_set(self):
+        meter = metrics.DefaultMeter()
+        label_set = meter.get_label_set({})
+        self.assertIsInstance(label_set, metrics.DefaultLabelSet)
