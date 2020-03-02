@@ -2,13 +2,19 @@
 
 ## Unreleased
 
-## 0.4a0 
+## 0.4a1
+
+Released 2020-03-02
+
+- Update docs
+
+## 0.4a0
 
 Released 2020-02-21
 
 - Added named Tracers
   ([#301](https://github.com/open-telemetry/opentelemetry-python/pull/301))
-- Set status for ended spans 
+- Set status for ended spans
   ([#297](https://github.com/open-telemetry/opentelemetry-python/pull/297) and
   [#358](https://github.com/open-telemetry/opentelemetry-python/pull/358))
 - Use module loggers
@@ -37,7 +43,6 @@ Released 2020-02-21
   ([#410](https://github.com/open-telemetry/opentelemetry-python/pull/410))
 - Implement MinMaxSumCount aggregator
   ([#422](https://github.com/open-telemetry/opentelemetry-python/pull/422))
-
 
 ## 0.3a0
 

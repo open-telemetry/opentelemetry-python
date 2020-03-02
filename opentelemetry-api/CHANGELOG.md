@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.4a1
+
+Released 2020-03-02
+
+- Update docs
+
 ## 0.4a0
 
 Released 2020-02-21
@@ -22,9 +28,6 @@ Released 2020-02-21
   ([#410](https://github.com/open-telemetry/opentelemetry-python/pull/410))
 - Adding trace.get_tracer function
   ([#430](https://github.com/open-telemetry/opentelemetry-python/pull/430))
-
-
-
 
 ## 0.3a0
 
