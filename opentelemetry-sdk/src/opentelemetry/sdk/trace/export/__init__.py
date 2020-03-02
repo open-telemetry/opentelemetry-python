@@ -270,7 +270,8 @@ class ConsoleSpanExporter(SpanExporter):
     def __init__(
         self,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[Span], str] = str,
+        formatter: typing.Callable[[Span], str] = lambda span: str(span)
+        + "\n",
     ):
         self.out = out
         self.formatter = formatter
@@ -278,4 +279,5 @@ class ConsoleSpanExporter(SpanExporter):
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
+        self.out.flush()
         return SpanExportResult.SUCCESS

@@ -288,8 +288,9 @@ class TestConsoleSpanExporter(unittest.TestCase):
         span = trace.Span("span name", mock.Mock())
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
-        mock_stdout.write.assert_called_once_with(str(span))
+        mock_stdout.write.assert_called_once_with(str(span) + "\n")
         self.assertEqual(mock_stdout.write.call_count, 1)
+        self.assertEqual(mock_stdout.flush.call_count, 1)
 
     def test_export_custom(self):  # pylint: disable=no-self-use
         """Check that console exporter uses custom io, formatter."""
