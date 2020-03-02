@@ -171,7 +171,7 @@ def _translate_to_jaeger(spans: Span):
         refs = _extract_refs_from_span(span)
         logs = _extract_logs_from_span(span)
 
-        flags = int(ctx.trace_options)
+        flags = int(ctx.trace_flags)
 
         jaeger_span = jaeger.Span(
             traceIdHigh=_get_trace_id_high(trace_id),

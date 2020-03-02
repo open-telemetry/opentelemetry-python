@@ -26,7 +26,7 @@ tracing, and a concrete no-op :class:`.DefaultSpan` that allows applications
 to use the API package alone without a supporting implementation.
 
 To get a tracer, you need to provide the package name from which you are
-calling the tracer APIs to OpenTelemetry by calling `TracerSource.get_tracer`
+calling the tracer APIs to OpenTelemetry by calling `TracerProvider.get_tracer`
 with the calling module name and the version of your package.
 
 The tracer supports creating spans that are "attached" or "detached" from the
@@ -36,7 +36,7 @@ can optionally become the new active span::
 
     from opentelemetry import trace
 
-    tracer = trace.tracer_source().get_tracer(__name__)
+    tracer = trace.get_tracer(__name__)
 
     # Create a new root span, set it as the current span in context
     with tracer.start_as_current_span("parent"):
@@ -57,23 +57,26 @@ change, and the caller is responsible for managing the span's lifetime::
     finally:
         child.end()
 
-Applications should generally use a single global tracer source, and use either
-implicit or explicit context propagation consistently throughout.
+Applications should generally use a single global TracerProvider, and use
+either implicit or explicit context propagation consistently throughout.
 
 .. versionadded:: 0.1.0
 .. versionchanged:: 0.3.0
-    `TracerSource` was introduced and the global ``tracer`` getter was replaced
-    by `tracer_source`.
+    `TracerProvider` was introduced and the global ``tracer`` getter was replaced
+    by `tracer_provider`.
 """
 
 import abc
 import enum
+import logging
 import types as python_types
 import typing
 from contextlib import contextmanager
 
 from opentelemetry.trace.status import Status
 from opentelemetry.util import loader, types
+
+logger = logging.getLogger(__name__)
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -246,7 +249,7 @@ class Span(abc.ABC):
         self.end()
 
 
-class TraceOptions(int):
+class TraceFlags(int):
     """A bitmask that represents options specific to the trace.
 
     The only supported option is the "sampled" flag (``0x01``). If set, this
@@ -262,15 +265,15 @@ class TraceOptions(int):
     SAMPLED = 0x01
 
     @classmethod
-    def get_default(cls) -> "TraceOptions":
+    def get_default(cls) -> "TraceFlags":
         return cls(cls.DEFAULT)
 
     @property
     def sampled(self) -> bool:
-        return bool(self & TraceOptions.SAMPLED)
+        return bool(self & TraceFlags.SAMPLED)
 
 
-DEFAULT_TRACE_OPTIONS = TraceOptions.get_default()
+DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
 class TraceState(typing.Dict[str, str]):
@@ -309,7 +312,7 @@ class SpanContext:
     Args:
         trace_id: The ID of the trace that this span belongs to.
         span_id: This span's ID.
-        trace_options: Trace options to propagate.
+        trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
     """
 
@@ -317,16 +320,16 @@ class SpanContext:
         self,
         trace_id: int,
         span_id: int,
-        trace_options: "TraceOptions" = DEFAULT_TRACE_OPTIONS,
+        trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
-        if trace_options is None:
-            trace_options = DEFAULT_TRACE_OPTIONS
+        if trace_flags is None:
+            trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
             trace_state = DEFAULT_TRACE_STATE
         self.trace_id = trace_id
         self.span_id = span_id
-        self.trace_options = trace_options
+        self.trace_flags = trace_flags
         self.trace_state = trace_state
 
     def __repr__(self) -> str:
@@ -402,7 +405,7 @@ INVALID_SPAN_CONTEXT = SpanContext(
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
-class TracerSource(abc.ABC):
+class TracerProvider(abc.ABC):
     @abc.abstractmethod
     def get_tracer(
         self,
@@ -432,8 +435,8 @@ class TracerSource(abc.ABC):
         """
 
 
-class DefaultTracerSource(TracerSource):
-    """The default TracerSource, used when no implementation is available.
+class DefaultTracerProvider(TracerProvider):
+    """The default TracerProvider, used when no implementation is available.
 
     All operations are no-op.
     """
@@ -640,51 +643,68 @@ class DefaultTracer(Tracer):
 # the following type definition should be replaced with
 # from opentelemetry.util.loader import ImplementationFactory
 ImplementationFactory = typing.Callable[
-    [typing.Type[TracerSource]], typing.Optional[TracerSource]
+    [typing.Type[TracerProvider]], typing.Optional[TracerProvider]
 ]
 
-_TRACER_SOURCE = None  # type: typing.Optional[TracerSource]
-_TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+_TRACER_PROVIDER = None  # type: typing.Optional[TracerProvider]
+_TRACER_PROVIDER_FACTORY = None  # type: typing.Optional[ImplementationFactory]
 
 
-def tracer_source() -> TracerSource:
-    """Gets the current global :class:`~.TracerSource` object.
+def get_tracer(
+    instrumenting_module_name: str, instrumenting_library_version: str = ""
+) -> "Tracer":
+    """Returns a `Tracer` for use by the given instrumentation library.
+
+    This function is a convenience wrapper for
+    opentelemetry.trace.tracer_provider().get_tracer
+    """
+    return tracer_provider().get_tracer(
+        instrumenting_module_name, instrumenting_library_version
+    )
+
+
+def tracer_provider() -> TracerProvider:
+    """Gets the current global :class:`~.TracerProvider` object.
 
     If there isn't one set yet, a default will be loaded.
     """
-    global _TRACER_SOURCE, _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
+    global _TRACER_PROVIDER, _TRACER_PROVIDER_FACTORY  # pylint:disable=global-statement
 
-    if _TRACER_SOURCE is None:
+    if _TRACER_PROVIDER is None:
         # pylint:disable=protected-access
         try:
-            _TRACER_SOURCE = loader._load_impl(
-                TracerSource, _TRACER_SOURCE_FACTORY  # type: ignore
+            _TRACER_PROVIDER = loader._load_impl(
+                TracerProvider, _TRACER_PROVIDER_FACTORY  # type: ignore
             )
         except TypeError:
             # if we raised an exception trying to instantiate an
             # abstract class, default to no-op tracer impl
-            _TRACER_SOURCE = DefaultTracerSource()
-        del _TRACER_SOURCE_FACTORY
+            logger.warning(
+                "Unable to instantiate TracerProvider from factory.",
+                exc_info=True,
+            )
+            _TRACER_PROVIDER = DefaultTracerProvider()
+        del _TRACER_PROVIDER_FACTORY
 
-    return _TRACER_SOURCE
+    return _TRACER_PROVIDER
 
 
-def set_preferred_tracer_source_implementation(
+def set_preferred_tracer_provider_implementation(
     factory: ImplementationFactory,
 ) -> None:
-    """Set the factory to be used to create the tracer source.
+    """Set the factory to be used to create the global TracerProvider.
 
     See :mod:`opentelemetry.util.loader` for details.
 
     This function may not be called after a tracer is already loaded.
 
     Args:
-        factory: Callback that should create a new :class:`TracerSource`
+        factory: Callback that should create a new :class:`TracerProvider`
             instance.
     """
-    global _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
+    global _TRACER_PROVIDER_FACTORY  # pylint:disable=global-statement
 
-    if _TRACER_SOURCE:
-        raise RuntimeError("TracerSource already loaded.")
+    if _TRACER_PROVIDER:
+        raise RuntimeError("TracerProvider already loaded.")
 
-    _TRACER_SOURCE_FACTORY = factory
+    _TRACER_PROVIDER_FACTORY = factory

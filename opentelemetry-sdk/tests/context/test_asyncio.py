@@ -63,17 +63,16 @@ class TestAsyncio(unittest.TestCase):
         self.loop.create_task(self.task(name))
 
     def setUp(self):
-        self.previous_context = context.get_current()
-        context.set_current(context.Context())
-        self.tracer_source = trace.TracerSource()
-        self.tracer = self.tracer_source.get_tracer(__name__)
+        self.token = context.attach(context.Context())
+        self.tracer_provider = trace.TracerProvider()
+        self.tracer = self.tracer_provider.get_tracer(__name__)
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
-        self.tracer_source.add_span_processor(span_processor)
+        self.tracer_provider.add_span_processor(span_processor)
         self.loop = asyncio.get_event_loop()
 
     def tearDown(self):
-        context.set_current(self.previous_context)
+        context.detach(self.token)
 
     @patch(
         "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()

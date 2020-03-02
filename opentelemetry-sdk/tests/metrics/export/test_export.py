@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import concurrent.futures
+import random
 import unittest
 from unittest import mock
 
@@ -33,7 +35,7 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 class TestConsoleMetricsExporter(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_export(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
             "available memory",
@@ -44,7 +46,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             ("environment",),
         )
         kvp = {"environment": "staging"}
-        label_set = meter.get_label_set(kvp)
+        label_set = metrics.LabelSet(kvp)
         aggregator = CounterAggregator()
         record = MetricRecord(aggregator, label_set, metric)
         result = '{}(data="{}", label_set="{}", value={})'.format(
@@ -70,7 +72,7 @@ class TestBatcher(unittest.TestCase):
     # TODO: Add other aggregator tests
 
     def test_checkpoint_set(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -98,7 +100,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(False)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -118,7 +120,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher._batch_map), 0)
 
     def test_finished_collection_stateful(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -139,7 +141,7 @@ class TestBatcher(unittest.TestCase):
 
     # TODO: Abstract the logic once other batchers implemented
     def test_ungrouped_batcher_process_exists(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         aggregator2 = CounterAggregator()
@@ -168,7 +170,7 @@ class TestBatcher(unittest.TestCase):
         )
 
     def test_ungrouped_batcher_process_not_exists(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -195,7 +197,7 @@ class TestBatcher(unittest.TestCase):
         )
 
     def test_ungrouped_batcher_process_not_stateful(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -223,6 +225,15 @@ class TestBatcher(unittest.TestCase):
 
 
 class TestCounterAggregator(unittest.TestCase):
+    @staticmethod
+    def call_update(counter):
+        update_total = 0
+        for _ in range(0, 100000):
+            val = random.getrandbits(32)
+            counter.update(val)
+            update_total += val
+        return update_total
+
     def test_update(self):
         counter = CounterAggregator()
         counter.update(1.0)
@@ -244,14 +255,57 @@ class TestCounterAggregator(unittest.TestCase):
         counter.merge(counter2)
         self.assertEqual(counter.checkpoint, 4.0)
 
+    def test_concurrent_update(self):
+        counter = CounterAggregator()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            fut1 = executor.submit(self.call_update, counter)
+            fut2 = executor.submit(self.call_update, counter)
+
+            updapte_total = fut1.result() + fut2.result()
+
+        counter.take_checkpoint()
+        self.assertEqual(updapte_total, counter.checkpoint)
+
+    def test_concurrent_update_and_checkpoint(self):
+        counter = CounterAggregator()
+        checkpoint_total = 0
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            fut = executor.submit(self.call_update, counter)
+
+            while not fut.done():
+                counter.take_checkpoint()
+                checkpoint_total += counter.checkpoint
+
+        counter.take_checkpoint()
+        checkpoint_total += counter.checkpoint
+
+        self.assertEqual(fut.result(), checkpoint_total)
+
 
 class TestMinMaxSumCountAggregator(unittest.TestCase):
+    @staticmethod
+    def call_update(mmsc):
+        min_ = float("inf")
+        max_ = float("-inf")
+        sum_ = 0
+        count_ = 0
+        for _ in range(0, 100000):
+            val = random.getrandbits(32)
+            mmsc.update(val)
+            if val < min_:
+                min_ = val
+            if val > max_:
+                max_ = val
+            sum_ += val
+            count_ += 1
+        return MinMaxSumCountAggregator._TYPE(min_, max_, sum_, count_)
+
     def test_update(self):
         mmsc = MinMaxSumCountAggregator()
         # test current values without any update
-        self.assertEqual(
-            mmsc.current, (None, None, None, 0),
-        )
+        self.assertEqual(mmsc.current, MinMaxSumCountAggregator._EMPTY)
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -259,7 +313,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             mmsc.update(val)
 
         self.assertEqual(
-            mmsc.current, (min(values), max(values), sum(values), len(values)),
+            mmsc.current, (min(values), max(values), sum(values), len(values))
         )
 
     def test_checkpoint(self):
@@ -267,9 +321,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
         # take checkpoint wihtout any update
         mmsc.take_checkpoint()
-        self.assertEqual(
-            mmsc.checkpoint, (None, None, None, 0),
-        )
+        self.assertEqual(mmsc.checkpoint, MinMaxSumCountAggregator._EMPTY)
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -282,9 +334,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             (min(values), max(values), sum(values), len(values)),
         )
 
-        self.assertEqual(
-            mmsc.current, (None, None, None, 0),
-        )
+        self.assertEqual(mmsc.current, MinMaxSumCountAggregator._EMPTY)
 
     def test_merge(self):
         mmsc1 = MinMaxSumCountAggregator()
@@ -300,13 +350,33 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
         self.assertEqual(
             mmsc1.checkpoint,
-            (
-                min(checkpoint1.min, checkpoint2.min),
-                max(checkpoint1.max, checkpoint2.max),
-                checkpoint1.sum + checkpoint2.sum,
-                checkpoint1.count + checkpoint2.count,
+            MinMaxSumCountAggregator._merge_checkpoint(
+                checkpoint1, checkpoint2
             ),
         )
+
+    def test_merge_checkpoint(self):
+        func = MinMaxSumCountAggregator._merge_checkpoint
+        _type = MinMaxSumCountAggregator._TYPE
+        empty = MinMaxSumCountAggregator._EMPTY
+
+        ret = func(empty, empty)
+        self.assertEqual(ret, empty)
+
+        ret = func(empty, _type(0, 0, 0, 0))
+        self.assertEqual(ret, _type(0, 0, 0, 0))
+
+        ret = func(_type(0, 0, 0, 0), empty)
+        self.assertEqual(ret, _type(0, 0, 0, 0))
+
+        ret = func(_type(0, 0, 0, 0), _type(0, 0, 0, 0))
+        self.assertEqual(ret, _type(0, 0, 0, 0))
+
+        ret = func(_type(44, 23, 55, 86), empty)
+        self.assertEqual(ret, _type(44, 23, 55, 86))
+
+        ret = func(_type(3, 150, 101, 3), _type(1, 33, 44, 2))
+        self.assertEqual(ret, _type(1, 150, 101 + 44, 2 + 3))
 
     def test_merge_with_empty(self):
         mmsc1 = MinMaxSumCountAggregator()
@@ -318,6 +388,42 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         mmsc1.merge(mmsc2)
 
         self.assertEqual(mmsc1.checkpoint, checkpoint1)
+
+    def test_concurrent_update(self):
+        mmsc = MinMaxSumCountAggregator()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+            fut1 = ex.submit(self.call_update, mmsc)
+            fut2 = ex.submit(self.call_update, mmsc)
+
+            ret1 = fut1.result()
+            ret2 = fut2.result()
+
+            update_total = MinMaxSumCountAggregator._merge_checkpoint(
+                ret1, ret2
+            )
+            mmsc.take_checkpoint()
+
+            self.assertEqual(update_total, mmsc.checkpoint)
+
+    def test_concurrent_update_and_checkpoint(self):
+        mmsc = MinMaxSumCountAggregator()
+        checkpoint_total = MinMaxSumCountAggregator._TYPE(2 ** 32, 0, 0, 0)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+            fut = ex.submit(self.call_update, mmsc)
+
+            while not fut.done():
+                mmsc.take_checkpoint()
+                checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
+                    checkpoint_total, mmsc.checkpoint
+                )
+
+            mmsc.take_checkpoint()
+            checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
+                checkpoint_total, mmsc.checkpoint
+            )
+
+            self.assertEqual(checkpoint_total, fut.result())
 
 
 class TestObserverAggregator(unittest.TestCase):

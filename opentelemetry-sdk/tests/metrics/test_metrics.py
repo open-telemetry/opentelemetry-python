@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,11 +22,11 @@ from opentelemetry.sdk.metrics import export
 
 class TestMeter(unittest.TestCase):
     def test_extends_api(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         self.assertIsInstance(meter, metrics_api.Meter)
 
     def test_collect(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
         meter.batcher = batcher_mock
         label_keys = ("key1",)
@@ -41,14 +41,14 @@ class TestMeter(unittest.TestCase):
         self.assertTrue(batcher_mock.process.called)
 
     def test_collect_no_metrics(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
         meter.batcher = batcher_mock
         meter.collect()
         self.assertFalse(batcher_mock.process.called)
 
     def test_collect_disabled_metric(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
         meter.batcher = batcher_mock
         label_keys = ("key1",)
@@ -63,7 +63,7 @@ class TestMeter(unittest.TestCase):
         self.assertFalse(batcher_mock.process.called)
 
     def test_collect_observers(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
         meter.batcher = batcher_mock
 
@@ -80,7 +80,7 @@ class TestMeter(unittest.TestCase):
         self.assertTrue(batcher_mock.process.called)
 
     def test_record_batch(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         label_keys = ("key1",)
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
@@ -92,7 +92,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
 
     def test_record_batch_multiple(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         label_keys = ("key1", "key2", "key3")
         kvp = {"key1": "value1", "key2": "value2", "key3": "value3"}
         label_set = meter.get_label_set(kvp)
@@ -111,7 +111,7 @@ class TestMeter(unittest.TestCase):
         )
 
     def test_record_batch_exists(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         label_keys = ("key1",)
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
@@ -126,7 +126,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 2.0)
 
     def test_create_metric(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         counter = meter.create_metric(
             "name", "desc", "unit", int, metrics.Counter, ()
         )
@@ -135,7 +135,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(counter.name, "name")
 
     def test_create_measure(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         measure = meter.create_metric(
             "name", "desc", "unit", float, metrics.Measure, ()
         )
@@ -144,7 +144,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(measure.name, "name")
 
     def test_register_observer(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
 
         callback = mock.Mock()
 
@@ -164,7 +164,7 @@ class TestMeter(unittest.TestCase):
         self.assertTrue(observer.enabled)
 
     def test_get_label_set(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         kvp = {"environment": "staging", "a": "z"}
         label_set = meter.get_label_set(kvp)
         label_set2 = meter.get_label_set(kvp)
@@ -172,7 +172,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(len(labels), 1)
 
     def test_get_label_set_empty(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         kvp = {}
         label_set = meter.get_label_set(kvp)
         self.assertEqual(label_set, metrics.EMPTY_LABEL_SET)
@@ -180,7 +180,7 @@ class TestMeter(unittest.TestCase):
 
 class TestMetric(unittest.TestCase):
     def test_get_handle(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         metric_types = [metrics.Counter, metrics.Measure]
         for _type in metric_types:
             metric = _type("name", "desc", "unit", int, meter, ("key",))
@@ -192,7 +192,7 @@ class TestMetric(unittest.TestCase):
 
 class TestCounter(unittest.TestCase):
     def test_add(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
@@ -204,7 +204,7 @@ class TestCounter(unittest.TestCase):
 
 class TestMeasure(unittest.TestCase):
     def test_record(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
@@ -220,7 +220,7 @@ class TestMeasure(unittest.TestCase):
 
 class TestObserver(unittest.TestCase):
     def test_observe(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         observer = metrics.Observer(
             None, "name", "desc", "unit", int, meter, ("key",), True
         )
@@ -237,7 +237,7 @@ class TestObserver(unittest.TestCase):
         self.assertEqual(observer.aggregators[label_set].current, values[-1])
 
     def test_observe_disabled(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         observer = metrics.Observer(
             None, "name", "desc", "unit", int, meter, ("key",), False
         )
@@ -248,7 +248,7 @@ class TestObserver(unittest.TestCase):
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         observer = metrics.Observer(
             None, "name", "desc", "unit", int, meter, ("key",), True
         )
@@ -259,7 +259,7 @@ class TestObserver(unittest.TestCase):
         self.assertTrue(logger_mock.warning.called)
 
     def test_run(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
 
         callback = mock.Mock()
         observer = metrics.Observer(
@@ -271,7 +271,7 @@ class TestObserver(unittest.TestCase):
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_run_exception(self, logger_mock):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
 
         callback = mock.Mock()
         callback.side_effect = Exception("We have a problem!")

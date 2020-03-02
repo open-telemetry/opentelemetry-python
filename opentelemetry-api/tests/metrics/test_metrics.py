@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,38 +13,11 @@
 # limitations under the License.
 
 import unittest
-from contextlib import contextmanager
-from unittest import mock
 
 from opentelemetry import metrics
 
 
 # pylint: disable=no-self-use
-class TestMeter(unittest.TestCase):
-    def setUp(self):
-        self.meter = metrics.DefaultMeter()
-
-    def test_record_batch(self):
-        counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        self.meter.record_batch(label_set, ((counter, 1),))
-
-    def test_create_metric(self):
-        metric = self.meter.create_metric("", "", "", float, metrics.Counter)
-        self.assertIsInstance(metric, metrics.DefaultMetric)
-
-    def test_register_observer(self):
-        callback = mock.Mock()
-        observer = self.meter.register_observer(
-            callback, "", "", "", int, (), True
-        )
-        self.assertIsInstance(observer, metrics.DefaultObserver)
-
-    def test_get_label_set(self):
-        metric = self.meter.get_label_set({})
-        self.assertIsInstance(metric, metrics.DefaultLabelSet)
-
-
 class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
@@ -84,34 +57,3 @@ class TestMetrics(unittest.TestCase):
     def test_measure_handle(self):
         handle = metrics.MeasureHandle()
         handle.record(1)
-
-
-@contextmanager
-# type: ignore
-def patch_metrics_globals(meter=None, meter_factory=None):
-    """Mock metrics._METER and metrics._METER_FACTORY.
-
-    This prevents previous changes to these values from affecting the code in
-    this scope, and prevents changes in this scope from leaking out and
-    affecting other tests.
-    """
-    with mock.patch("opentelemetry.metrics._METER", meter):
-        with mock.patch("opentelemetry.metrics._METER_FACTORY", meter_factory):
-            yield
-
-
-class TestGlobals(unittest.TestCase):
-    def test_meter_default_factory(self):
-        """Check that the default meter is a DefaultMeter."""
-        with patch_metrics_globals():
-            meter = metrics.meter()
-            self.assertIsInstance(meter, metrics.DefaultMeter)
-            # Check that we don't create a new instance on each call
-            self.assertIs(meter, metrics.meter())
-
-    def test_meter_custom_factory(self):
-        """Check that we use the provided factory for custom global meters."""
-        mock_meter = mock.Mock(metrics.Meter)
-        with patch_metrics_globals(meter_factory=lambda _: mock_meter):
-            meter = metrics.meter()
-            self.assertIs(meter, mock_meter)

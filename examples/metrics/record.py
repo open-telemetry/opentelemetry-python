@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,13 +19,15 @@ It demonstrates the different ways you can record metrics via the meter.
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Meter
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
+# The preferred tracer implementation must be set, as the opentelemetry-api
+# defines the interface with a no-op implementation.
+metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
 # Meter is responsible for creating and recording metrics
-metrics.set_preferred_meter_implementation(lambda _: Meter())
-meter = metrics.meter()
+meter = metrics.get_meter(__name__)
 # exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 # controller collects metrics created from meter and exports it via the
