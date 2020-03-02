@@ -21,7 +21,7 @@ from opencensus.proto.metrics.v1 import metrics_pb2
 
 from opentelemetry import metrics
 from opentelemetry.ext.otcollector import metrics_exporter
-from opentelemetry.sdk.metrics import Counter, Gauge, Measure, Meter
+from opentelemetry.sdk.metrics import Counter, Gauge, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExportResult,
@@ -33,8 +33,10 @@ from opentelemetry.sdk.metrics.export import (
 class TestCollectorMetricsExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        metrics.set_preferred_meter_implementation(lambda _: Meter())
-        cls._meter = metrics.meter()
+        metrics.set_preferred_meter_provider_implementation(
+            lambda _: MeterProvider()
+        )
+        cls._meter = metrics.get_meter(__name__)
         kvp = {"environment": "staging"}
         cls._test_label_set = cls._meter.get_label_set(kvp)
 
