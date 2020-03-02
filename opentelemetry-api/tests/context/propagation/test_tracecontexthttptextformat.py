@@ -16,7 +16,7 @@ import typing
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.context.propagation import tracecontexthttptextformat
+from opentelemetry.trace.propagation import tracecontexthttptextformat
 from opentelemetry.trace.propagation import (
     get_span_from_context,
     set_span_in_context,
