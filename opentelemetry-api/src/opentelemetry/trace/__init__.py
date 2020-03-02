@@ -249,7 +249,7 @@ class Span(abc.ABC):
         self.end()
 
 
-class TraceOptions(int):
+class TraceFlags(int):
     """A bitmask that represents options specific to the trace.
 
     The only supported option is the "sampled" flag (``0x01``). If set, this
@@ -265,15 +265,15 @@ class TraceOptions(int):
     SAMPLED = 0x01
 
     @classmethod
-    def get_default(cls) -> "TraceOptions":
+    def get_default(cls) -> "TraceFlags":
         return cls(cls.DEFAULT)
 
     @property
     def sampled(self) -> bool:
-        return bool(self & TraceOptions.SAMPLED)
+        return bool(self & TraceFlags.SAMPLED)
 
 
-DEFAULT_TRACE_OPTIONS = TraceOptions.get_default()
+DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
 class TraceState(typing.Dict[str, str]):
@@ -312,7 +312,7 @@ class SpanContext:
     Args:
         trace_id: The ID of the trace that this span belongs to.
         span_id: This span's ID.
-        trace_options: Trace options to propagate.
+        trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
     """
 
@@ -320,16 +320,16 @@ class SpanContext:
         self,
         trace_id: int,
         span_id: int,
-        trace_options: "TraceOptions" = DEFAULT_TRACE_OPTIONS,
+        trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
-        if trace_options is None:
-            trace_options = DEFAULT_TRACE_OPTIONS
+        if trace_flags is None:
+            trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
             trace_state = DEFAULT_TRACE_STATE
         self.trace_id = trace_id
         self.span_id = span_id
-        self.trace_options = trace_options
+        self.trace_flags = trace_flags
         self.trace_state = trace_state
 
     def __repr__(self) -> str:

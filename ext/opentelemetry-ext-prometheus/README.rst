@@ -1,5 +1,5 @@
 OpenTelemetry Prometheus Exporter
-=============================
+=================================
 
 |pypi|
 

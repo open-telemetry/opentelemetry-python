@@ -12,50 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest.mock import patch
 
 from opentelemetry import context
 from opentelemetry.context.threadlocal_context import ThreadLocalRuntimeContext
 
-
-def do_work() -> None:
-    context.set_current(context.set_value("say", "bar"))
+from .base_context import ContextTestCases
 
 
-class TestThreadLocalContext(unittest.TestCase):
-    def setUp(self):
-        self.previous_context = context.get_current()
+class TestThreadLocalContext(ContextTestCases.BaseTest):
+    def setUp(self) -> None:
+        super(TestThreadLocalContext, self).setUp()
+        self.mock_runtime = patch.object(
+            context, "_RUNTIME_CONTEXT", ThreadLocalRuntimeContext(),
+        )
+        self.mock_runtime.start()
 
-    def tearDown(self):
-        context.set_current(self.previous_context)
-
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ThreadLocalRuntimeContext()  # type: ignore
-    )
-    def test_context(self):
-        self.assertIsNone(context.get_value("say"))
-        empty = context.get_current()
-        second = context.set_value("say", "foo")
-
-        self.assertEqual(context.get_value("say", context=second), "foo")
-
-        do_work()
-        self.assertEqual(context.get_value("say"), "bar")
-        third = context.get_current()
-
-        self.assertIsNone(context.get_value("say", context=empty))
-        self.assertEqual(context.get_value("say", context=second), "foo")
-        self.assertEqual(context.get_value("say", context=third), "bar")
-
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ThreadLocalRuntimeContext()  # type: ignore
-    )
-    def test_set_value(self):
-        first = context.set_value("a", "yyy")
-        second = context.set_value("a", "zzz")
-        third = context.set_value("a", "---", first)
-        self.assertEqual("yyy", context.get_value("a", context=first))
-        self.assertEqual("zzz", context.get_value("a", context=second))
-        self.assertEqual("---", context.get_value("a", context=third))
-        self.assertEqual(None, context.get_value("a"))
+    def tearDown(self) -> None:
+        super(TestThreadLocalContext, self).tearDown()
+        self.mock_runtime.stop()

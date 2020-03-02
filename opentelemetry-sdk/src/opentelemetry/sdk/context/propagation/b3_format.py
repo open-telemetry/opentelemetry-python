@@ -106,14 +106,14 @@ class B3Format(HTTPTextFormat):
         # the desire for some form of sampling, propagate if either
         # header is set to allow.
         if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
-            options |= trace.TraceOptions.SAMPLED
+            options |= trace.TraceFlags.SAMPLED
         return set_span_in_context(
             trace.DefaultSpan(
                 trace.SpanContext(
                     # trace an span ids are encoded in hex, so must be converted
                     trace_id=int(trace_id, 16),
                     span_id=int(span_id, 16),
-                    trace_options=trace.TraceOptions(options),
+                    trace_flags=trace.TraceFlags(options),
                     trace_state=trace.TraceState(),
                 )
             )
@@ -127,9 +127,7 @@ class B3Format(HTTPTextFormat):
         context: typing.Optional[Context] = None,
     ) -> None:
         span = get_span_from_context(context=context)
-        sampled = (
-            trace.TraceOptions.SAMPLED & span.context.trace_options
-        ) != 0
+        sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
         set_in_carrier(
             carrier, cls.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
         )

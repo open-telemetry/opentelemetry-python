@@ -14,12 +14,11 @@
 
 import unittest
 
-from opentelemetry.metrics import DefaultMetric
-from opentelemetry.sdk import metrics, trace
+from opentelemetry.sdk import trace
 from opentelemetry.trace import INVALID_SPAN, INVALID_SPAN_CONTEXT
 
 
-class TestSDKImplementation(unittest.TestCase):
+class TestTracerImplementation(unittest.TestCase):
     """
     This test is in place to ensure the SDK implementation of the API
     is returning values that are valid. The same tests have been added
@@ -46,8 +45,3 @@ class TestSDKImplementation(unittest.TestCase):
         span = trace.Span("name", INVALID_SPAN_CONTEXT)
         self.assertEqual(span.get_context(), INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording_events(), True)
-
-    def test_meter(self):
-        meter = metrics.Meter()
-        metric = meter.create_metric("", "", "", float, metrics.Counter)
-        self.assertNotIsInstance(metric, DefaultMetric)

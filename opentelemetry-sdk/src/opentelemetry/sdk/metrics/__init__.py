@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ from typing import Dict, Sequence, Tuple, Type
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher, UngroupedBatcher
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -261,12 +262,16 @@ class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`.
 
     Args:
-        batcher: The `Batcher` used for this meter.
+        instrumentation_info: The `InstrumentationInfo` for this meter.
+        stateful: Indicates whether the meter is stateful.
     """
 
-    def __init__(self, batcher: Batcher = UngroupedBatcher(True)):
-        self.batcher = batcher
+    def __init__(
+        self, instrumentation_info: "InstrumentationInfo", stateful: bool,
+    ):
+        self.instrumentation_info = instrumentation_info
         self.metrics = set()
+        self.batcher = UngroupedBatcher(stateful)
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -328,3 +333,20 @@ class Meter(metrics_api.Meter):
         if len(labels) == 0:
             return EMPTY_LABEL_SET
         return LabelSet(labels=labels)
+
+
+class MeterProvider(metrics_api.MeterProvider):
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        stateful=True,
+        instrumenting_library_version: str = "",
+    ) -> "metrics_api.Meter":
+        if not instrumenting_module_name:  # Reject empty strings too.
+            raise ValueError("get_meter called with missing module name.")
+        return Meter(
+            InstrumentationInfo(
+                instrumenting_module_name, instrumenting_library_version
+            ),
+            stateful=stateful,
+        )
