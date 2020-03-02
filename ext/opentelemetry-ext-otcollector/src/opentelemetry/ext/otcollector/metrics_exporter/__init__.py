@@ -97,7 +97,7 @@ class CollectorMetricsExporter(MetricsExporter):
 
 # pylint: disable=too-many-branches
 def translate_to_collector(
-    metric_records: Sequence[MetricRecord]
+    metric_records: Sequence[MetricRecord],
 ) -> Sequence[metrics_pb2.Metric]:
     collector_metrics = []
     for metric_record in metric_records:
