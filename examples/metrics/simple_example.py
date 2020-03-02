@@ -62,15 +62,30 @@ controller = PushController(meter, exporter, 5)
 
 # Metric instruments allow to capture measurements
 requests_counter = meter.create_metric(
-    "requests", "number of requests", 1, int, Counter, ("environment",)
+    name="requests",
+    description="number of requests",
+    unit="1",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
 clicks_counter = meter.create_metric(
-    "clicks", "number of clicks", 1, int, Counter, ("environment",)
+    name="clicks",
+    description="number of clicks",
+    unit="1",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
 requests_size = meter.create_metric(
-    "requests_size", "size of requests", 1, int, Measure, ("environment",)
+    name="requests_size",
+    description="size of requests",
+    unit="1",
+    value_type=int,
+    metric_type=Measure,
+    label_keys=("environment",),
 )
 
 # Labelsets are used to identify key-values that are associated with a specific
@@ -82,21 +97,15 @@ testing_label_set = meter.get_label_set({"environment": "testing"})
 # Update the metric instruments using the direct calling convention
 requests_size.record(100, staging_label_set)
 requests_counter.add(25, staging_label_set)
-# Sleep for 5 seconds, exported value should be 25
 time.sleep(5)
 
 requests_size.record(5000, staging_label_set)
 requests_counter.add(50, staging_label_set)
-# Exported value should be 75
 time.sleep(5)
 
 requests_size.record(2, testing_label_set)
 requests_counter.add(35, testing_label_set)
-# There should be two exported values 75 and 35, one for each labelset
 time.sleep(5)
 
 clicks_counter.add(5, staging_label_set)
-# There should be three exported values, labelsets can be reused for different
-# metrics but will be recorded seperately, 75, 35 and 5
-
 time.sleep(5)

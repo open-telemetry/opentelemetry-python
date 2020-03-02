@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from unittest import mock
 
 from opentelemetry import metrics, trace
 
@@ -79,6 +80,12 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         meter = metrics.DefaultMeter()
         metric = meter.create_metric("", "", "", float, metrics.Counter)
         self.assertIsInstance(metric, metrics.DefaultMetric)
+
+    def test_register_observer(self):
+        meter = metrics.DefaultMeter()
+        callback = mock.Mock()
+        observer = meter.register_observer(callback, "", "", "", int, (), True)
+        self.assertIsInstance(observer, metrics.DefaultObserver)
 
     def test_get_label_set(self):
         meter = metrics.DefaultMeter()

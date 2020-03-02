@@ -36,17 +36,6 @@ class TestMetrics(unittest.TestCase):
         label_set = metrics.LabelSet()
         counter.add(1, label_set)
 
-    def test_gauge(self):
-        gauge = metrics.Gauge()
-        label_set = metrics.LabelSet()
-        handle = gauge.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.GaugeHandle)
-
-    def test_gauge_set(self):
-        gauge = metrics.Gauge()
-        label_set = metrics.LabelSet()
-        gauge.set(1, label_set)
-
     def test_measure(self):
         measure = metrics.Measure()
         label_set = metrics.LabelSet()
@@ -64,10 +53,6 @@ class TestMetrics(unittest.TestCase):
     def test_counter_handle(self):
         handle = metrics.CounterHandle()
         handle.add(1)
-
-    def test_gauge_handle(self):
-        handle = metrics.GaugeHandle()
-        handle.set(1)
 
     def test_measure_handle(self):
         handle = metrics.MeasureHandle()
