@@ -25,7 +25,7 @@ from opencensus.proto.agent.metrics.v1 import (
 from opencensus.proto.metrics.v1 import metrics_pb2
 
 import opentelemetry.ext.otcollector.util as utils
-from opentelemetry.sdk.metrics import Counter, Gauge, Measure, Meter, Metric
+from opentelemetry.sdk.metrics import Counter, Measure, Meter, Metric
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -139,12 +139,6 @@ def get_collector_metric_type(metric: Metric) -> metrics_pb2.MetricDescriptor:
             return metrics_pb2.MetricDescriptor.CUMULATIVE_INT64
         elif metric.value_type == float:
             return metrics_pb2.MetricDescriptor.CUMULATIVE_DOUBLE
-    if isinstance(metric, Gauge):
-        if metric.value_type == int:
-            return metrics_pb2.MetricDescriptor.GAUGE_INT64
-        elif metric.value_type == float:
-            return metrics_pb2.MetricDescriptor.GAUGE_DOUBLE
-
     return metrics_pb2.MetricDescriptor.UNSPECIFIED
 
 

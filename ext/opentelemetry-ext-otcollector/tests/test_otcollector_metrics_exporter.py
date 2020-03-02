@@ -21,7 +21,7 @@ from opencensus.proto.metrics.v1 import metrics_pb2
 
 from opentelemetry import metrics
 from opentelemetry.ext.otcollector import metrics_exporter
-from opentelemetry.sdk.metrics import Counter, Gauge, Measure, MeterProvider
+from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExportResult,
@@ -71,14 +71,6 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             Counter("testName", "testDescription", "unit", float, None)
         )
         self.assertIs(result, metrics_pb2.MetricDescriptor.CUMULATIVE_DOUBLE)
-        result = metrics_exporter.get_collector_metric_type(
-            Gauge("testName", "testDescription", "unit", int, None)
-        )
-        self.assertIs(result, metrics_pb2.MetricDescriptor.GAUGE_INT64)
-        result = metrics_exporter.get_collector_metric_type(
-            Gauge("testName", "testDescription", "unit", float, None)
-        )
-        self.assertIs(result, metrics_pb2.MetricDescriptor.GAUGE_DOUBLE)
         result = metrics_exporter.get_collector_metric_type(
             Measure("testName", "testDescription", "unit", None, None)
         )
