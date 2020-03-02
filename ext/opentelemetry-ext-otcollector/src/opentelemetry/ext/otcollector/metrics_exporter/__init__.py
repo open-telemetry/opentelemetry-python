@@ -96,7 +96,9 @@ class CollectorMetricsExporter(MetricsExporter):
 
 
 # pylint: disable=too-many-branches
-def translate_to_collector(metric_records: Sequence[MetricRecord]):
+def translate_to_collector(
+    metric_records: Sequence[MetricRecord]
+) -> Sequence[metrics_pb2.Metric]:
     collector_metrics = []
     for metric_record in metric_records:
 
@@ -119,11 +121,6 @@ def translate_to_collector(metric_records: Sequence[MetricRecord]):
         )
 
         timeseries = metrics_pb2.TimeSeries(
-            start_timestamp=utils.proto_timestamp_from_time_ns(
-                metric_record.metric.get_handle(
-                    metric_record.label_set
-                ).last_update_timestamp
-            ),
             label_values=label_values,
             points=[get_collector_point(metric_record)],
         )
@@ -136,7 +133,7 @@ def translate_to_collector(metric_records: Sequence[MetricRecord]):
 
 
 # pylint: disable=no-else-return
-def get_collector_metric_type(metric: Metric):
+def get_collector_metric_type(metric: Metric) -> metrics_pb2.MetricDescriptor:
     if isinstance(metric, Counter):
         if metric.value_type == int:
             return metrics_pb2.MetricDescriptor.CUMULATIVE_INT64
@@ -151,7 +148,7 @@ def get_collector_metric_type(metric: Metric):
     return metrics_pb2.MetricDescriptor.UNSPECIFIED
 
 
-def get_collector_point(metric_record: MetricRecord):
+def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
     point = metrics_pb2.Point(
         timestamp=utils.proto_timestamp_from_time_ns(
             metric_record.metric.get_handle(

@@ -172,9 +172,6 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "environment",
         )
         self.assertEqual(len(output_metrics[0].timeseries), 1)
-        self.assertGreater(
-            output_metrics[0].timeseries[0].start_timestamp.nanos, 0
-        )
         self.assertEqual(len(output_metrics[0].timeseries[0].label_values), 1)
         self.assertEqual(
             output_metrics[0].timeseries[0].label_values[0].has_value, True
