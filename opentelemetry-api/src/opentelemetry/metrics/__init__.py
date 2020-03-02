@@ -212,10 +212,6 @@ class DefaultObserver(Observer):
         """
 
 
-MetricT = TypeVar("MetricT", Counter, Measure, Observer)
-ObserverCallbackT = Callable[[Observer], None]
-
-
 class MeterProvider(abc.ABC):
     @abc.abstractmethod
     def get_meter(
@@ -266,7 +262,8 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, Measure)
+MetricT = TypeVar("MetricT", Counter, Measure, Observer)
+ObserverCallbackT = Callable[[Observer], None]
 
 
 # pylint: disable=unused-argument

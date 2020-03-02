@@ -28,7 +28,6 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 batcher_mode = "stateful"
-stateful_bacher = False
 
 
 def usage(argv):
