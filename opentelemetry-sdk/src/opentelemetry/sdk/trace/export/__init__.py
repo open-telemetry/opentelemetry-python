@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import collections
+import os
 import logging
 import sys
 import threading
@@ -271,7 +272,7 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[[Span], str] = lambda span: str(span)
-        + "\n",
+        + os.linesep,
     ):
         self.out = out
         self.formatter = formatter
