@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import collections
-import os
 import logging
+import os
 import sys
 import threading
 import typing
