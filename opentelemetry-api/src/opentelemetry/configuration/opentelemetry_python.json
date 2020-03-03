@@ -1,4 +1,6 @@
 {
     "tracer": "default_tracer",
-    "exporter": "default_exporter"
+    "exporter": "default_exporter",
+    "context": "default_context",
+    "meter": "default_meter"
 }

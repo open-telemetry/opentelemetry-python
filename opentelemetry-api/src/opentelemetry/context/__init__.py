@@ -15,12 +15,12 @@
 import logging
 import typing
 from functools import wraps
-from os import environ
 from sys import version_info
 
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context, RuntimeContext
+from opentelemetry.configuration import Configuration
 
 logger = logging.getLogger(__name__)
 _RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
@@ -43,21 +43,32 @@ def _load_runtime_context(func: _F) -> _F:
     ) -> typing.Optional[typing.Any]:
         global _RUNTIME_CONTEXT  # pylint: disable=global-statement
         if _RUNTIME_CONTEXT is None:
-            # FIXME use a better implementation of a configuration manager to avoid having
-            # to get configuration values straight from environment variables
             if version_info < (3, 5):
                 # contextvars are not supported in 3.4, use thread-local storage
                 default_context = "threadlocal_context"
             else:
                 default_context = "contextvars_context"
 
-            configured_context = environ.get(
-                "OPENTELEMETRY_CONTEXT", default_context
-            )  # type: str
+            configured_context = Configuration().context
+
+            # FIXME This check could be seen as defeating the purpose of
+            # having a configuration object. A cleaner approach would be to
+            # have both thread local and contextvars implementations moved into
+            # the SDK and to let the configuration mechanism decide which one
+            # to use (if using one of them at all) depending on the Python
+            # version. This approach has the downside of making it necessary
+            # for the user to be aware of the need to do configuration for the
+            # handling of the context classes beforehand. This could be made
+            # easier by providing default example configuration files for each
+            # Python version situation or to mention in the documentation that
+            # it is necessary to set up an environment variable.
+            if configured_context == "default_context":
+                configured_context = default_context
+
             try:
                 _RUNTIME_CONTEXT = next(
                     iter_entry_points(
-                        "opentelemetry_context", configured_context
+                        "opentelemetry_context", name=configured_context
                     )
                 ).load()()
             except Exception:  # pylint: disable=broad-except

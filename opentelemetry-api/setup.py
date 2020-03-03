@@ -42,7 +42,7 @@ if not exists(configuration_file_path):
                     "src",
                     "opentelemetry",
                     "configuration",
-                    "opentelemetry_python.jsonss",
+                    "opentelemetry_python.json",
                 )
             ],
         )
@@ -85,6 +85,8 @@ setuptools.setup(
     zip_safe=False,
     entry_points={
         "opentelemetry_context": [
+            "default_context = "
+            "opentelemetry.context:DefaultContext",
             "contextvars_context = "
             "opentelemetry.context.contextvars_context:"
             "ContextVarsRuntimeContext",
@@ -94,6 +96,9 @@ setuptools.setup(
         ],
         "opentelemetry_meter": [
             "default_meter = opentelemetry.metrics:DefaultMeter"
+        ],
+        "opentelemetry_tracer": [
+            "default_tracer = opentelemetry.trace:DefaultTracer"
         ]
     },
     data_files=data_files,

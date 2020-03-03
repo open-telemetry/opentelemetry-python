@@ -211,57 +211,6 @@ class DefaultObserver(Observer):
             label_set: `LabelSet` associated to ``value``.
         """
 
-
-class MeterProvider(abc.ABC):
-    @abc.abstractmethod
-    def get_meter(
-        self,
-        instrumenting_module_name: str,
-        stateful: bool = True,
-        instrumenting_library_version: str = "",
-    ) -> "Meter":
-        """Returns a `Meter` for use by the given instrumentation library.
-
-        This function may return different `Meter` types (e.g. a no-op meter
-        vs. a functional meter).
-
-        Args:
-            instrumenting_module_name: The name of the instrumenting module
-                (usually just ``__name__``).
-
-                This should *not* be the name of the module that is
-                instrumented but the name of the module doing the instrumentation.
-                E.g., instead of ``"requests"``, use
-                ``"opentelemetry.ext.http_requests"``.
-
-            stateful: True/False to indicate whether the meter will be
-                    stateful. True indicates the meter computes checkpoints
-                    from over the process lifetime. False indicates the meter
-                    computes checkpoints which describe the updates of a single
-                    collection period (deltas).
-
-            instrumenting_library_version: Optional. The version string of the
-                instrumenting library.  Usually this should be the same as
-                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
-        """
-
-
-class DefaultMeterProvider(MeterProvider):
-    """The default MeterProvider, used when no implementation is available.
-
-    All operations are no-op.
-    """
-
-    def get_meter(
-        self,
-        instrumenting_module_name: str,
-        stateful: bool = True,
-        instrumenting_library_version: str = "",
-    ) -> "Meter":
-        # pylint:disable=no-self-use,unused-argument
-        return DefaultMeter()
-
-
 MetricT = TypeVar("MetricT", Counter, Measure, Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
@@ -399,11 +348,8 @@ class DefaultMeter(Meter):
 _METER = None
 
 
-def meter_provider() -> MeterProvider:
-    """Gets the current global :class:`~.MeterProvider` object.
-
-    If there isn't one set yet, a default will be loaded.
-    """
+def get_meter() -> Meter:
+    """Returns a `Meter` for use by the given instrumentation library."""
 
     global _METER
 

@@ -34,6 +34,9 @@ class TestConfiguration(TestCase):
             )
         )
 
+    def setUp(self):
+        Configuration._instance = None
+
     def tearDown(self):
         Configuration._instance = None
 

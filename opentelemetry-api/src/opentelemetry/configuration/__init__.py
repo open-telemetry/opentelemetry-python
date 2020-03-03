@@ -31,7 +31,7 @@ from pathlib import Path
 class Configuration:
     _instance = None
 
-    __slots__ = ["tracer", "exporter", "context"]
+    __slots__ = ["tracer", "exporter", "context", "meter"]
 
     def __new__(cls):
         if Configuration._instance is None:

@@ -50,4 +50,12 @@ class RuntimeContext(ABC):
         """
 
 
-__all__ = ["Context", "RuntimeContext"]
+class DefaultRuntimeContext(RuntimeContext):
+    def attach(self, context: Context) -> object:
+        pass
+
+    def get_current(self) -> Context:
+        pass
+
+    def detach(self, token: object) -> None:
+        pass

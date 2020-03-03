@@ -65,9 +65,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
             metrics.Meter()  # type:ignore
 
     def test_default_meter(self):
-        meter_provider = metrics.DefaultMeterProvider()
-        meter = meter_provider.get_meter(__name__)
-        self.assertIsInstance(meter, metrics.DefaultMeter)
+        self.assertIsInstance(metrics.get_meter(), metrics.DefaultMeter)
 
     # pylint: disable=no-self-use
     def test_record_batch(self):
