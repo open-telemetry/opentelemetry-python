@@ -56,7 +56,7 @@ gRPC is still not supported by this implementation.
     span_processor = BatchExportSpanProcessor(jaeger_exporter)
 
     # add to the tracer
-    tracer.add_span_processor(span_processor)
+    trace.tracer_source().add_span_processor(span_processor)
 
     with tracer.start_as_current_span('foo'):
         print('Hello world!')
