@@ -111,3 +111,32 @@ class MinMaxSumCountAggregator(Aggregator):
             self.checkpoint = self._merge_checkpoint(
                 self.checkpoint, other.checkpoint
             )
+
+
+class ObserverAggregator(Aggregator):
+    """Same as MinMaxSumCount but also with last value."""
+
+    _TYPE = namedtuple("minmaxsumcountlast", "min max sum count last")
+
+    def __init__(self):
+        super().__init__()
+        self.mmsc = MinMaxSumCountAggregator()
+        self.current = None
+        self.checkpoint = self._TYPE(None, None, None, 0, None)
+
+    def update(self, value):
+        self.mmsc.update(value)
+        self.current = value
+
+    def take_checkpoint(self):
+        self.mmsc.take_checkpoint()
+        self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (self.current,)))
+
+    def merge(self, other):
+        self.mmsc.merge(other.mmsc)
+        self.checkpoint = self._TYPE(
+            *(
+                self.mmsc.checkpoint
+                + (other.checkpoint.last or self.checkpoint.last,)
+            )
+        )

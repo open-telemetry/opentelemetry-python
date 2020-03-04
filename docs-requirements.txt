@@ -1,0 +1,10 @@
+sphinx~=2.4
+sphinx-rtd-theme~=0.4
+sphinx-autodoc-typehints~=1.10.2
+
+# Required by ext packages
+opentracing~=2.2.0
+Deprecated>=1.2.6
+thrift>=0.10.0
+pymongo~=3.1
+flask~=1.0
