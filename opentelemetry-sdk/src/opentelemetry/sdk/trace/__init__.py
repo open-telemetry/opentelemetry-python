@@ -25,6 +25,7 @@ from typing import Iterator, Optional, Sequence, Tuple, Type
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext, sampling
@@ -127,7 +128,7 @@ class Span(trace_api.Span):
             remote, null if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
-        resource: TODO
+        resource: Entity producing telemetry
         attributes: The span's attributes to be exported
         events: Timestamped events to be exported
         links: Links to other spans to be exported
@@ -147,7 +148,7 @@ class Span(trace_api.Span):
         parent: trace_api.ParentSpan = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: None = None,  # TODO
+        resource: None = None,
         attributes: types.Attributes = None,  # TODO
         events: Sequence[trace_api.Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
@@ -486,6 +487,7 @@ class Tracer(trace_api.Tracer):
                 context=context,
                 parent=parent,
                 sampler=self.source.sampler,
+                resource=self.source.resource,
                 attributes=span_attributes,
                 span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
                 kind=kind,
@@ -535,9 +537,11 @@ class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        resource: Resource = Resource.create_empty(),
         shutdown_on_exit: bool = True,
     ):
         self._active_span_processor = MultiSpanProcessor()
+        self.resource = resource
         self.sampler = sampler
         self._atexit_handler = None
         if shutdown_on_exit:
