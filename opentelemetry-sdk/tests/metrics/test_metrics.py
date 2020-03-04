@@ -69,7 +69,6 @@ class TestMeter(TestCase):
     def test_collect_disabled_metric(self):
         meter = metrics.get_meter()
         batcher_mock = Mock()
-        batcher_mock = Mock()
         meter.batcher = batcher_mock
         label_keys = ("key1",)
         counter = Counter(
@@ -102,7 +101,7 @@ class TestMeter(TestCase):
     def test_record_batch(self):
         meter = metrics.get_meter()
         label_keys = ("key1",)
-        counter = metrics.Counter(
+        counter = Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
         kvp = {"key1": "value1"}
@@ -116,7 +115,7 @@ class TestMeter(TestCase):
         label_keys = ("key1", "key2", "key3")
         kvp = {"key1": "value1", "key2": "value2", "key3": "value3"}
         label_set = meter.get_label_set(kvp)
-        counter = metrics.Counter(
+        counter = Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
         measure = Measure(
@@ -135,7 +134,7 @@ class TestMeter(TestCase):
         label_keys = ("key1",)
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
-        counter = metrics.Counter(
+        counter = Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
         counter.add(1.0, label_set)
@@ -148,9 +147,9 @@ class TestMeter(TestCase):
     def test_create_metric(self):
         meter = metrics.get_meter()
         counter = meter.create_metric(
-            "name", "desc", "unit", int, metrics.Counter, ()
+            "name", "desc", "unit", int, Counter, ()
         )
-        self.assertIsInstance(counter, metrics.Counter)
+        self.assertIsInstance(counter, Counter)
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
 
@@ -201,7 +200,7 @@ class TestMeter(TestCase):
 class TestMetric(TestCase):
     def test_get_handle(self):
         meter = metrics.get_meter()
-        metric_types = [metrics.Counter, Measure]
+        metric_types = [Counter, Measure]
         for _type in metric_types:
             metric = _type("name", "desc", "unit", int, meter, ("key",))
             kvp = {"key": "value"}
@@ -213,7 +212,7 @@ class TestMetric(TestCase):
 class TestCounter(TestCase):
     def test_add(self):
         meter = metrics.get_meter()
-        metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
+        metric = Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
         handle = metric.get_handle(label_set)

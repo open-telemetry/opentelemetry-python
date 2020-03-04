@@ -13,8 +13,11 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import patch, Mock
 
-from opentelemetry.metrics import DefaultLabelSet, DefaultMeter, DefaultMetric
+from opentelemetry.metrics import (
+    DefaultLabelSet, DefaultMeter, DefaultMetric, get_meter
+)
 from opentelemetry.sdk import metrics
 
 
@@ -26,8 +29,20 @@ class TestMeterImplementation(unittest.TestCase):
     https://github.com/open-telemetry/opentelemetry-python/issues/142
     """
 
+    @classmethod
+    def setUpClass(cls):
+        cls.configuration_patcher = patch(
+            "opentelemetry.metrics.Configuration",
+            **{"return_value": Mock(meter="sdk_meter")}
+        )
+        cls.configuration_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.configuration_patcher.stop()
+
     def test_meter(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
+        meter = get_meter()
         metric = meter.create_metric("", "", "", float, metrics.Counter)
         label_set = meter.get_label_set({"key1": "val1"})
         self.assertNotIsInstance(meter, DefaultMeter)
