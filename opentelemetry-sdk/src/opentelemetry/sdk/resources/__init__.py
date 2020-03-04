@@ -12,26 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.resources as resources
+import typing
+
+LabelValue = typing.Union[str, bool, int, float]
+Labels = typing.Optional[typing.Dict[str, LabelValue]]
 
 
-class Resource(resources.Resource):
-    def __init__(self, labels):
+class Resource:
+    def __init__(self, labels: Labels):
         self._labels = labels
 
     @staticmethod
-    def create(labels):
+    def create(labels: Labels) -> "Resource":
+        if not labels:
+            return _EMPTY_RESOURCE
         return Resource(labels)
 
+    @staticmethod
+    def create_empty() -> "Resource":
+        return _EMPTY_RESOURCE
+
     @property
-    def labels(self):
+    def labels(self) -> Labels:
         return self._labels
 
-    def merge(self, other):
-        if other is None:
-            return self
-        if not self._labels:
-            return other
+    def merge(self, other: "Resource") -> "Resource":
         merged_labels = self.labels.copy()
         for key, value in other.labels.items():
             if key not in merged_labels or merged_labels[key] == "":
@@ -42,3 +47,6 @@ class Resource(resources.Resource):
         if not isinstance(other, Resource):
             return False
         return self.labels == other.labels
+
+
+_EMPTY_RESOURCE = Resource({})
