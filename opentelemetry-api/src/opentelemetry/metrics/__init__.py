@@ -359,10 +359,7 @@ def get_meter() -> Meter:
         try:
             _METER = next(
                 iter_entry_points("opentelemetry_meter", configured_meter)
-            ).load()
-            from ipdb import set_trace
-            set_trace()
-            True
+            ).load()()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to load meter implementation: %s", configured_meter

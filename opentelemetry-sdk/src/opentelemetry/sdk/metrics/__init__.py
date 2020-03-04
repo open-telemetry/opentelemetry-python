@@ -281,20 +281,15 @@ EMPTY_LABEL_SET = LabelSet()
 
 
 class Meter(metrics_api.Meter):
-    """See `opentelemetry.metrics.Meter`.
+    """See `opentelemetry.metrics.Meter`."""
 
-    Args:
-        instrumentation_info: The `InstrumentationInfo` for this meter.
-        stateful: Indicates whether the meter is stateful.
-    """
-
-    def __init__(
-        self, instrumentation_info: "InstrumentationInfo", stateful: bool,
-    ):
-        self.instrumentation_info = instrumentation_info
+    def __init__(self):
         self.metrics = set()
         self.observers = set()
-        self.batcher = UngroupedBatcher(stateful)
+        # FIXME Removing instrumentation_info and hardcoding stateful as True.
+        # This might need some design refactoring for the case where an entry-
+        # point-loaded component (as Meter)
+        self.batcher = UngroupedBatcher(True)
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
