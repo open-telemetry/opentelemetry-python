@@ -6,7 +6,7 @@ import logging
 from flask import request as flask_request
 
 import opentelemetry.ext.wsgi as otel_wsgi
-from opentelemetry import propagators, trace
+from opentelemetry import context, propagators, trace
 from opentelemetry.ext.flask.version import __version__
 from opentelemetry.trace.propagation import get_span_from_context
 from opentelemetry.util import time_ns
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 _ENVIRON_STARTTIME_KEY = "opentelemetry-flask.starttime_key"
 _ENVIRON_SPAN_KEY = "opentelemetry-flask.span_key"
 _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
+_ENVIRON_TOKEN = "opentelemetry-flask.token"
 
 
 def instrument_app(flask):
@@ -58,8 +59,9 @@ def _before_flask_request():
     span_name = flask_request.endpoint or otel_wsgi.get_default_span_name(
         environ
     )
-    context = propagators.extract(otel_wsgi.get_header_from_environ, environ)
-    parent_span = get_span_from_context(context).get_context()
+    token = context.attach(
+        propagators.extract(otel_wsgi.get_header_from_environ, environ)
+    )
 
     tracer = trace.get_tracer(__name__, __version__)
 
@@ -69,7 +71,6 @@ def _before_flask_request():
         attributes["http.route"] = flask_request.url_rule.rule
     span = tracer.start_span(
         span_name,
-        parent_span,
         kind=trace.SpanKind.SERVER,
         attributes=attributes,
         start_time=environ.get(_ENVIRON_STARTTIME_KEY),
@@ -78,6 +79,7 @@ def _before_flask_request():
     activation.__enter__()
     environ[_ENVIRON_ACTIVATION_KEY] = activation
     environ[_ENVIRON_SPAN_KEY] = span
+    environ[_ENVIRON_TOKEN] = token
 
 
 def _teardown_flask_request(exc):
@@ -95,3 +97,4 @@ def _teardown_flask_request(exc):
         activation.__exit__(
             type(exc), exc, getattr(exc, "__traceback__", None)
         )
+    context.detach(flask_request.environ.get(_ENVIRON_TOKEN))
