@@ -17,10 +17,10 @@ import typing
 import opentelemetry.trace as trace
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
+from opentelemetry.trace.propagation import httptextformat
 from opentelemetry.trace.propagation.tracecontexthttptextformat import (
     TraceContextHTTPTextFormat,
 )
-from opentelemetry.trace.propagation import httptextformat
 
 
 def extract(
