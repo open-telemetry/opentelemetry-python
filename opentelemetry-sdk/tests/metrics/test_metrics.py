@@ -27,19 +27,19 @@ from opentelemetry.sdk.metrics import (
 )
 
 
-class TestMeter(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.configuration_patcher = patch(
+class BaseTest(TestCase):
+    def setUp(self):
+        self.configuration_patcher = patch(
             "opentelemetry.metrics.Configuration",
             **{"return_value": Mock(meter="sdk_meter")}
         )
-        cls.configuration_patcher.start()
+        self.configuration_patcher.start()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.configuration_patcher.stop()
+    def tearDown(self):
+        self.configuration_patcher.stop()
+
+
+class TestMeter(BaseTest):
 
     def test_extends_api(self):
         self.assertIsInstance(metrics.get_meter(), metrics.Meter)
@@ -57,6 +57,8 @@ class TestMeter(TestCase):
         counter.add(label_set, 1.0)
         meter.metrics.add(counter)
         meter.collect()
+        from ipdb import set_trace
+        set_trace()
         self.assertTrue(batcher_mock.process.called)
 
     def test_collect_no_metrics(self):
@@ -197,7 +199,7 @@ class TestMeter(TestCase):
         self.assertEqual(label_set, EMPTY_LABEL_SET)
 
 
-class TestMetric(TestCase):
+class TestMetric(BaseTest):
     def test_get_handle(self):
         meter = metrics.get_meter()
         metric_types = [Counter, Measure]
@@ -209,7 +211,7 @@ class TestMetric(TestCase):
             self.assertEqual(metric.handles.get(label_set), handle)
 
 
-class TestCounter(TestCase):
+class TestCounter(BaseTest):
     def test_add(self):
         meter = metrics.get_meter()
         metric = Counter("name", "desc", "unit", int, meter, ("key",))
@@ -221,7 +223,7 @@ class TestCounter(TestCase):
         self.assertEqual(handle.aggregator.current, 5)
 
 
-class TestMeasure(TestCase):
+class TestMeasure(BaseTest):
     def test_record(self):
         meter = metrics.get_meter()
         metric = Measure("name", "desc", "unit", int, meter, ("key",))
@@ -237,7 +239,7 @@ class TestMeasure(TestCase):
         )
 
 
-class TestObserver(TestCase):
+class TestObserver(BaseTest):
     def test_observe(self):
         meter = metrics.get_meter()
         observer = Observer(
@@ -303,7 +305,7 @@ class TestObserver(TestCase):
         self.assertTrue(logger_mock.warning.called)
 
 
-class TestCounterHandle(TestCase):
+class TestCounterHandle(BaseTest):
     def test_add(self):
         aggregator = export.aggregate.CounterAggregator()
         handle = CounterHandle(int, True, aggregator)
@@ -334,7 +336,7 @@ class TestCounterHandle(TestCase):
         self.assertEqual(handle.aggregator.current, 4.0)
 
 
-class TestMeasureHandle(TestCase):
+class TestMeasureHandle(BaseTest):
     def test_record(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         handle = MeasureHandle(int, True, aggregator)
