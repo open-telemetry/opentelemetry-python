@@ -12,22 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-from unittest import mock
+from unittest import TestCase
+from unittest.mock import patch, Mock
 
-from opentelemetry import metrics as metrics_api
-from opentelemetry.sdk import metrics
+from opentelemetry import metrics
 from opentelemetry.sdk.metrics import export
 
 
-class TestMeter(unittest.TestCase):
+class TestMeter(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.configuration_patcher = patch(
+            "opentelemetry.metrics.Configuration",
+            **{"return_value": Mock(meter="sdk_meter")}
+        )
+        cls.configuration_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.configuration_patcher.stop()
+
     def test_extends_api(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        self.assertIsInstance(meter, metrics_api.Meter)
+        self.assertIsInstance(metrics.get_meter(), metrics.Meter)
 
     def test_collect(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
+        from ipdb import set_trace
+        set_trace()
+        meter = metrics.get_meter()
+        batcher_mock = Mock()
         meter.batcher = batcher_mock
         label_keys = ("key1",)
         counter = metrics.Counter(
@@ -41,15 +54,16 @@ class TestMeter(unittest.TestCase):
         self.assertTrue(batcher_mock.process.called)
 
     def test_collect_no_metrics(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
+        meter = metrics.get_meter()
+        batcher_mock = Mock()
         meter.batcher = batcher_mock
         meter.collect()
         self.assertFalse(batcher_mock.process.called)
 
     def test_collect_disabled_metric(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
+        meter = metrics.get_meter()
+        batcher_mock = Mock()
+        batcher_mock = Mock()
         meter.batcher = batcher_mock
         label_keys = ("key1",)
         counter = metrics.Counter(
@@ -64,11 +78,11 @@ class TestMeter(unittest.TestCase):
 
     def test_collect_observers(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
+        batcher_mock = Mock()
         meter.batcher = batcher_mock
 
         def callback(observer):
-            self.assertIsInstance(observer, metrics_api.Observer)
+            self.assertIsInstance(observer, metrics.Observer)
             observer.observe(45, meter.get_label_set(()))
 
         observer = metrics.Observer(
@@ -146,13 +160,13 @@ class TestMeter(unittest.TestCase):
     def test_register_observer(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
-        callback = mock.Mock()
+        callback = Mock()
 
         observer = meter.register_observer(
             callback, "name", "desc", "unit", int, (), True
         )
 
-        self.assertIsInstance(observer, metrics_api.Observer)
+        self.assertIsInstance(observer, metrics.Observer)
         self.assertEqual(len(meter.observers), 1)
 
         self.assertEqual(observer.callback, callback)
@@ -178,7 +192,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(label_set, metrics.EMPTY_LABEL_SET)
 
 
-class TestMetric(unittest.TestCase):
+class TestMetric(TestCase):
     def test_get_handle(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric_types = [metrics.Counter, metrics.Measure]
@@ -190,7 +204,7 @@ class TestMetric(unittest.TestCase):
             self.assertEqual(metric.handles.get(label_set), handle)
 
 
-class TestCounter(unittest.TestCase):
+class TestCounter(TestCase):
     def test_add(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
@@ -202,7 +216,7 @@ class TestCounter(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 5)
 
 
-class TestMeasure(unittest.TestCase):
+class TestMeasure(TestCase):
     def test_record(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
@@ -218,7 +232,7 @@ class TestMeasure(unittest.TestCase):
         )
 
 
-class TestObserver(unittest.TestCase):
+class TestObserver(TestCase):
     def test_observe(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         observer = metrics.Observer(
@@ -246,7 +260,7 @@ class TestObserver(unittest.TestCase):
         observer.observe(37, label_set)
         self.assertEqual(len(observer.aggregators), 0)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
         observer = metrics.Observer(
@@ -261,7 +275,7 @@ class TestObserver(unittest.TestCase):
     def test_run(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
-        callback = mock.Mock()
+        callback = Mock()
         observer = metrics.Observer(
             callback, "name", "desc", "unit", int, meter, (), True
         )
@@ -269,11 +283,11 @@ class TestObserver(unittest.TestCase):
         self.assertTrue(observer.run())
         callback.assert_called_once_with(observer)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_run_exception(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
 
-        callback = mock.Mock()
+        callback = Mock()
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.Observer(
@@ -284,7 +298,7 @@ class TestObserver(unittest.TestCase):
         self.assertTrue(logger_mock.warning.called)
 
 
-class TestCounterHandle(unittest.TestCase):
+class TestCounterHandle(TestCase):
     def test_add(self):
         aggregator = export.aggregate.CounterAggregator()
         handle = metrics.CounterHandle(int, True, aggregator)
@@ -297,7 +311,7 @@ class TestCounterHandle(unittest.TestCase):
         handle.add(3)
         self.assertEqual(handle.aggregator.current, 0)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.CounterAggregator()
         handle = metrics.CounterHandle(int, True, aggregator)
@@ -305,7 +319,7 @@ class TestCounterHandle(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
-    @mock.patch("opentelemetry.sdk.metrics.time_ns")
+    @patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.CounterAggregator()
         handle = metrics.CounterHandle(int, True, aggregator)
@@ -315,7 +329,7 @@ class TestCounterHandle(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, 4.0)
 
 
-class TestMeasureHandle(unittest.TestCase):
+class TestMeasureHandle(TestCase):
     def test_record(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         handle = metrics.MeasureHandle(int, True, aggregator)
@@ -328,7 +342,7 @@ class TestMeasureHandle(unittest.TestCase):
         handle.record(3)
         self.assertEqual(handle.aggregator.current, (None, None, None, 0))
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         handle = metrics.MeasureHandle(int, True, aggregator)
@@ -336,7 +350,7 @@ class TestMeasureHandle(unittest.TestCase):
         self.assertEqual(handle.aggregator.current, (None, None, None, 0))
         self.assertTrue(logger_mock.warning.called)
 
-    @mock.patch("opentelemetry.sdk.metrics.time_ns")
+    @patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         handle = metrics.MeasureHandle(int, True, aggregator)

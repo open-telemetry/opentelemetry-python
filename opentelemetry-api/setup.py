@@ -99,6 +99,9 @@ setuptools.setup(
         ],
         "opentelemetry_tracer": [
             "default_tracer = opentelemetry.trace:DefaultTracer"
+        ],
+        "opentelemetry_exporter": [
+            "default_exporter = opentelemetry.trace:DefaultExporter"
         ]
     },
     data_files=data_files,

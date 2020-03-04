@@ -397,20 +397,3 @@ class Meter(metrics_api.Meter):
         if len(labels) == 0:
             return EMPTY_LABEL_SET
         return LabelSet(labels=labels)
-
-
-class MeterProvider(metrics_api.MeterProvider):
-    def get_meter(
-        self,
-        instrumenting_module_name: str,
-        stateful=True,
-        instrumenting_library_version: str = "",
-    ) -> "metrics_api.Meter":
-        if not instrumenting_module_name:  # Reject empty strings too.
-            raise ValueError("get_meter called with missing module name.")
-        return Meter(
-            InstrumentationInfo(
-                instrumenting_module_name, instrumenting_library_version
-            ),
-            stateful=stateful,
-        )

@@ -56,4 +56,9 @@ setuptools.setup(
         "/tree/master/opentelemetry-sdk"
     ),
     zip_safe=False,
+    entry_points={
+        "opentelemetry_meter": [
+            "sdk_meter = opentelemetry.sdk.metrics:Meter"
+        ],
+    },
 )
