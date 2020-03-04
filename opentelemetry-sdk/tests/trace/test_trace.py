@@ -440,6 +440,9 @@ class TestSpan(unittest.TestCase):
                 "list-with-non-primitive-data-type", [dict(), 123]
             )
 
+            root.set_attribute("", 123)
+            root.set_attribute(None, 123)
+
             self.assertEqual(len(root.attributes), 0)
 
     def test_check_sequence_helper(self):

@@ -232,6 +232,10 @@ class Span(trace_api.Span):
             logger.warning("Setting attribute on ended span.")
             return
 
+        if not key:
+            logger.warning("invalid key (empty or null)")
+            return
+
         if isinstance(value, Sequence):
             error_message = self._check_attribute_value_sequence(value)
             if error_message is not None:
