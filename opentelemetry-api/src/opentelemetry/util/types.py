@@ -22,7 +22,6 @@ AttributeValue = Union[
     float,
     Sequence[str],
     Sequence[bool],
-    Sequence[int],
-    Sequence[float],
+    Sequence[Union[int, float]],
 ]
 Attributes = Optional[Dict[str, AttributeValue]]

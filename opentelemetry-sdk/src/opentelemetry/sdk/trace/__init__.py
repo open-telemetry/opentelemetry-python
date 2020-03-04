@@ -18,7 +18,6 @@ import logging
 import random
 import threading
 from contextlib import contextmanager
-from numbers import Number
 from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
 
@@ -238,7 +237,7 @@ class Span(trace_api.Span):
             if error_message is not None:
                 logger.warning("%s in attribute value sequence", error_message)
                 return
-        elif not isinstance(value, (bool, str, Number, Sequence)):
+        elif not isinstance(value, (bool, str, int, float)):
             logger.warning("invalid type for attribute value")
             return
 
@@ -254,11 +253,12 @@ class Span(trace_api.Span):
 
         first_element_type = type(sequence[0])
 
-        if issubclass(first_element_type, Number):
-            first_element_type = Number
-
-        if first_element_type not in (bool, str, Number):
+        if first_element_type not in (bool, str, int, float):
             return "invalid type"
+
+        # int and float are both numeric types, allow mixed arrays of those
+        if first_element_type in (int, float):
+            first_element_type = (int, float)
 
         for element in sequence:
             if not isinstance(element, first_element_type):
