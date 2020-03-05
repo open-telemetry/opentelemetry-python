@@ -23,7 +23,6 @@ import typing
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import propagators, trace
-from opentelemetry.ext.wsgi.version import __version__
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -111,7 +110,7 @@ def collect_request_attributes(environ):
     setifnotnone(result, "net.peer.port", environ.get("REMOTE_PORT"))
     flavor = environ.get("SERVER_PROTOCOL", "")
     if flavor.upper().startswith(_HTTP_VERSION_PREFIX):
-        flavor = flavor[len(_HTTP_VERSION_PREFIX) :]
+        flavor = flavor[len(_HTTP_VERSION_PREFIX):]
     if flavor:
         result["http.flavor"] = flavor
 
@@ -162,7 +161,7 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
-        self.tracer = trace.get_tracer(__name__, __version__)
+        self.tracer = trace.get_tracer()
 
     @staticmethod
     def _create_start_response(span, start_response):
