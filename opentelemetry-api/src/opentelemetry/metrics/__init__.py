@@ -27,9 +27,10 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 import abc
-from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
-from pkg_resources import iter_entry_points
 from logging import getLogger
+from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
+
+from pkg_resources import iter_entry_points
 
 from opentelemetry.configuration import Configuration
 
@@ -211,6 +212,7 @@ class DefaultObserver(Observer):
             label_set: `LabelSet` associated to ``value``.
         """
 
+
 MetricT = TypeVar("MetricT", Counter, Measure, Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
@@ -345,15 +347,16 @@ class DefaultMeter(Meter):
         # pylint: disable=no-self-use
         return DefaultLabelSet()
 
+
 _METER_CLASS = None
 
 
 def get_meter() -> Meter:
     """Returns a `Meter` for use by the given instrumentation library."""
 
-    global _METER_CLASS
+    global _METER_CLASS  # pylint: disable=global-statement
 
-    configured_meter = Configuration().meter
+    configured_meter = Configuration().meter  # pylint: disable=no-member
 
     if _METER_CLASS is None:
         try:

@@ -19,8 +19,8 @@ from sys import version_info
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.context.context import Context, RuntimeContext
 from opentelemetry.configuration import Configuration
+from opentelemetry.context.context import Context, RuntimeContext
 
 logger = logging.getLogger(__name__)
 _RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
@@ -49,7 +49,9 @@ def _load_runtime_context(func: _F) -> _F:
             else:
                 default_context = "contextvars_context"
 
-            configured_context = Configuration().context
+            configured_context = (
+                Configuration().context  # pylint: disable=no-member
+            )
 
             # FIXME This check could be seen as defeating the purpose of
             # having a configuration object. A cleaner approach would be to

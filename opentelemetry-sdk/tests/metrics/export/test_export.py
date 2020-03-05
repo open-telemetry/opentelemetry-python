@@ -15,7 +15,7 @@
 import concurrent.futures
 import random
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import get_meter
 from opentelemetry.sdk import metrics

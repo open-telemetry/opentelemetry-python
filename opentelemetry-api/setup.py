@@ -18,9 +18,7 @@ from pathlib import Path
 import setuptools
 
 BASE_DIR = dirname(__file__)
-VERSION_FILENAME = join(
-    BASE_DIR, "src", "opentelemetry", "util", "version.py"
-)
+VERSION_FILENAME = join(BASE_DIR, "src", "opentelemetry", "util", "version.py")
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
@@ -85,8 +83,7 @@ setuptools.setup(
     zip_safe=False,
     entry_points={
         "opentelemetry_context": [
-            "default_context = "
-            "opentelemetry.context:DefaultContext",
+            "default_context = opentelemetry.context:DefaultContext",
             "contextvars_context = "
             "opentelemetry.context.contextvars_context:"
             "ContextVarsRuntimeContext",
@@ -102,7 +99,7 @@ setuptools.setup(
         ],
         "opentelemetry_exporter": [
             "default_exporter = opentelemetry.trace:DefaultExporter"
-        ]
+        ],
     },
     data_files=data_files,
 )

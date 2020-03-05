@@ -18,12 +18,12 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry.configuration import Configuration
-from pytest import fixture
+from pytest import fixture  # pylint: disable=import-error
 
 
 class TestConfiguration(TestCase):
     @fixture(autouse=True)
-    def configdir(self, tmpdir):
+    def configdir(self, tmpdir):  # pylint: disable=no-self-use
         tmpdir.chdir()
         tmpdir.mkdir(".config").join("opentelemetry_python.json").write(
             dumps(
@@ -35,10 +35,10 @@ class TestConfiguration(TestCase):
         )
 
     def setUp(self):
-        Configuration._instance = None
+        Configuration._instance = None  # pylint: disable=protected-access
 
     def tearDown(self):
-        Configuration._instance = None
+        Configuration._instance = None  # pylint: disable=protected-access
 
     def test_singleton(self):
         self.assertIs(Configuration(), Configuration())
@@ -47,17 +47,29 @@ class TestConfiguration(TestCase):
     def test_configuration_file(self, mock_home_path):
         mock_home_path.return_value = getcwd()
 
-        self.assertEqual(Configuration().tracer, "default_tracer")
-        self.assertEqual(Configuration().exporter, "overridden_exporter")
-        self.assertEqual(Configuration().context, "default_context")
+        self.assertEqual(
+            Configuration().tracer, "default_tracer"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().exporter, "overridden_exporter"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().context, "default_context"
+        )  # pylint: disable=no-member
 
     @patch.dict(
         "os.environ", {"OPENTELEMETRY_PYTHON_EXPORTER": "overridden_exporter"}
     )
     def test_environment_variables(self):
-        self.assertEqual(Configuration().tracer, "default_tracer")
-        self.assertEqual(Configuration().exporter, "overridden_exporter")
-        self.assertEqual(Configuration().context, "default_context")
+        self.assertEqual(
+            Configuration().tracer, "default_tracer"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().exporter, "overridden_exporter"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().context, "default_context"
+        )  # pylint: disable=no-member
 
     @patch("pathlib.Path.home")
     @patch.dict(
@@ -77,4 +89,4 @@ class TestConfiguration(TestCase):
 
     def test_slots(self):
         with self.assertRaises(AttributeError):
-            Configuration().xyz = "xyz"
+            Configuration().xyz = "xyz"  # pylint: disable=assigning-non-slot

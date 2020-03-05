@@ -71,8 +71,9 @@ import enum
 import types as python_types
 import typing
 from contextlib import contextmanager
-from pkg_resources import iter_entry_points
 from logging import getLogger
+
+from pkg_resources import iter_entry_points
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.trace.status import Status
@@ -647,9 +648,9 @@ _TRACER = None
 def get_tracer() -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library."""
 
-    global _TRACER
+    global _TRACER  # pylint: disable=global-statement
 
-    configured_tracer = Configuration().tracer
+    configured_tracer = Configuration().tracer  # pylint:  disable=no-member
 
     if _TRACER is None:
         try:

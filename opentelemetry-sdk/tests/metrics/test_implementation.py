@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import (
-    DefaultLabelSet, DefaultMeter, DefaultMetric, get_meter
+    DefaultLabelSet,
+    DefaultMeter,
+    DefaultMetric,
+    get_meter,
 )
 from opentelemetry.sdk import metrics
 

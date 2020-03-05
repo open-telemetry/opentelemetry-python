@@ -57,8 +57,6 @@ setuptools.setup(
     ),
     zip_safe=False,
     entry_points={
-        "opentelemetry_meter": [
-            "sdk_meter = opentelemetry.sdk.metrics:Meter"
-        ],
+        "opentelemetry_meter": ["sdk_meter = opentelemetry.sdk.metrics:Meter"],
     },
 )

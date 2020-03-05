@@ -13,17 +13,17 @@
 # limitations under the License.
 
 from unittest import TestCase
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import (
-    export,
-    Counter,
-    Observer,
-    Measure,
     EMPTY_LABEL_SET,
+    Counter,
     CounterHandle,
+    Measure,
     MeasureHandle,
+    Observer,
+    export,
 )
 
 
@@ -40,7 +40,6 @@ class BaseTest(TestCase):
 
 
 class TestMeter(BaseTest):
-
     def test_extends_api(self):
         self.assertIsInstance(metrics.get_meter(), metrics.Meter)
 
@@ -49,16 +48,12 @@ class TestMeter(BaseTest):
         batcher_mock = Mock()
         meter.batcher = batcher_mock
         label_keys = ("key1",)
-        counter = Counter(
-            "name", "desc", "unit", float, meter, label_keys
-        )
+        counter = Counter("name", "desc", "unit", float, meter, label_keys)
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
         counter.add(label_set, 1.0)
         meter.metrics.add(counter)
         meter.collect()
-        from ipdb import set_trace
-        set_trace()
         self.assertTrue(batcher_mock.process.called)
 
     def test_collect_no_metrics(self):
@@ -103,9 +98,7 @@ class TestMeter(BaseTest):
     def test_record_batch(self):
         meter = metrics.get_meter()
         label_keys = ("key1",)
-        counter = Counter(
-            "name", "desc", "unit", float, meter, label_keys
-        )
+        counter = Counter("name", "desc", "unit", float, meter, label_keys)
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
         record_tuples = [(counter, 1.0)]
@@ -117,12 +110,8 @@ class TestMeter(BaseTest):
         label_keys = ("key1", "key2", "key3")
         kvp = {"key1": "value1", "key2": "value2", "key3": "value3"}
         label_set = meter.get_label_set(kvp)
-        counter = Counter(
-            "name", "desc", "unit", float, meter, label_keys
-        )
-        measure = Measure(
-            "name", "desc", "unit", float, meter, label_keys
-        )
+        counter = Counter("name", "desc", "unit", float, meter, label_keys)
+        measure = Measure("name", "desc", "unit", float, meter, label_keys)
         record_tuples = [(counter, 1.0), (measure, 3.0)]
         meter.record_batch(label_set, record_tuples)
         self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
@@ -136,9 +125,7 @@ class TestMeter(BaseTest):
         label_keys = ("key1",)
         kvp = {"key1": "value1"}
         label_set = meter.get_label_set(kvp)
-        counter = Counter(
-            "name", "desc", "unit", float, meter, label_keys
-        )
+        counter = Counter("name", "desc", "unit", float, meter, label_keys)
         counter.add(1.0, label_set)
         handle = counter.get_handle(label_set)
         record_tuples = [(counter, 1.0)]
@@ -148,9 +135,7 @@ class TestMeter(BaseTest):
 
     def test_create_metric(self):
         meter = metrics.get_meter()
-        counter = meter.create_metric(
-            "name", "desc", "unit", int, Counter, ()
-        )
+        counter = meter.create_metric("name", "desc", "unit", int, Counter, ())
         self.assertIsInstance(counter, Counter)
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
