@@ -1,5 +1,5 @@
 opentelemetry.ext.jaeger package
-==========================================
+================================
 
 
 Submodules
@@ -7,7 +7,7 @@ Submodules
 
 .. toctree::
 
-   opentelemetry.ext.jaeger.gen.jaeger.ttypes
+   jaeger.gen.jaeger.ttypes
 
 
 Module contents

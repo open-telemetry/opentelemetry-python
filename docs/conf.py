@@ -30,8 +30,8 @@ sys.path[:0] = source_dirs + ext_dirs
 
 # -- Project information -----------------------------------------------------
 
-project = "OpenTelemetry"
-copyright = "2019, OpenTelemetry Authors"  # pylint: disable=redefined-builtin
+project = "OpenTelemetry Python"
+copyright = "OpenTelemetry Authors"  # pylint: disable=redefined-builtin
 author = "OpenTelemetry Authors"
 
 
@@ -57,6 +57,8 @@ extensions = [
     # Add a .nojekyll file to the generated HTML docs
     # https://help.github.com/en/articles/files-that-start-with-an-underscore-are-missing
     "sphinx.ext.githubpages",
+    # Support external links to different versions in the Github repo
+    "sphinx.ext.extlinks",
 ]
 
 intersphinx_mapping = {
@@ -106,3 +108,22 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
+
+# Support external links to specific versions of the files in the Github repo
+branch = os.environ.get('READTHEDOCS_VERSION')
+if branch == None or branch == 'latest':
+    branch = 'master'
+
+scm_raw_web = 'https://raw.githubusercontent.com/mauriciovasquezbernal/opentelemetry-python/' + branch
+scm_web = 'https://github.com/mauriciovasquezbernal/opentelemetry-python/blob/' + branch
+
+# Store variables in the epilogue so they are globally available.
+rst_epilog = """
+.. |SCM_WEB| replace:: \{s}
+.. |SCM_RAW_WEB| replace:: \{sr}
+.. |SCM_BRANCH| replace:: \{b}
+""".format(s = scm_web, sr = scm_raw_web, b = branch)
+
+# used to have links to repo files
+extlinks = {"scm_raw_web": (scm_raw_web + "/%s", "scm_raw_web"),
+            "scm_web": (scm_web + "/%s", "scm_web")}

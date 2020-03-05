@@ -1,5 +1,5 @@
 opentelemetry.ext.http_requests package
-==========================================
+=======================================
 
 Module contents
 ---------------

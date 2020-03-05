@@ -6,8 +6,8 @@ Submodules
 
 .. toctree::
 
-   opentelemetry.trace.sampling
-   opentelemetry.trace.status
+   trace.sampling
+   trace.status
 
 Module contents
 ---------------

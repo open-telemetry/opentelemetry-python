@@ -3,7 +3,7 @@ opentelemetry.sdk.metrics.export.batcher
 
 .. toctree::
 
-   opentelemetry.sdk.metrics.export
+   metrics.export
 
 .. automodule:: opentelemetry.sdk.metrics.export.batcher
     :members:

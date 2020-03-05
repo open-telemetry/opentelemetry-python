@@ -6,8 +6,8 @@ Submodules
 
 .. toctree::
 
-   opentelemetry.sdk.trace.export
-   opentelemetry.sdk.util.instrumentation
+   trace.export
+   util.instrumentation
 
 .. automodule:: opentelemetry.sdk.trace
     :members:
