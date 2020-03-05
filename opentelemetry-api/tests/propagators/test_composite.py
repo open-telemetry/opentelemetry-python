@@ -65,53 +65,46 @@ class TestCompositePropagator(unittest.TestCase):
         )
 
     def test_no_propagators(self):
-        CompositeHTTPPropagator.propagators = []
+        propagator = CompositeHTTPPropagator([])
         new_carrier = {}
-        CompositeHTTPPropagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {})
-        CompositeHTTPPropagator.extract(get_as_list, carrier=new_carrier)
+        propagator.extract(get_as_list, carrier=new_carrier)
         self.assertEqual(new_carrier, {})
 
     def test_single_propagator(self):
+        propagator = CompositeHTTPPropagator([self.mock_propagator_0])
+
         new_carrier = {}
-        CompositeHTTPPropagator.propagators = [self.mock_propagator_0]
-        CompositeHTTPPropagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data"})
 
         context = {}
-        CompositeHTTPPropagator.extract(
-            get_as_list, carrier=new_carrier, context=context
-        )
+        propagator.extract(get_as_list, carrier=new_carrier, context=context)
         self.assertEqual(context, {"mock-0": "context"})
 
     def test_multiple_propagators(self):
-        CompositeHTTPPropagator.propagators = [
-            self.mock_propagator_0,
-            self.mock_propagator_1,
-        ]
+        propagator = CompositeHTTPPropagator(
+            [self.mock_propagator_0, self.mock_propagator_1]
+        )
 
         new_carrier = {}
-        CompositeHTTPPropagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data", "mock-1": "data"})
 
         context = {}
-        CompositeHTTPPropagator.extract(
-            get_as_list, carrier=new_carrier, context=context
-        )
+        propagator.extract(get_as_list, carrier=new_carrier, context=context)
         self.assertEqual(context, {"mock-0": "context", "mock-1": "context"})
 
     def test_broken_propagator(self):
-        CompositeHTTPPropagator.propagators = [
-            self.mock_broken_extract,
-            self.mock_broken_inject,
-        ]
+        propagator = CompositeHTTPPropagator(
+            [self.mock_broken_extract, self.mock_broken_inject]
+        )
 
         new_carrier = {}
-        CompositeHTTPPropagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-broken-extract": "data"})
 
         context = {}
-        CompositeHTTPPropagator.extract(
-            get_as_list, carrier=new_carrier, context=context
-        )
+        propagator.extract(get_as_list, carrier=new_carrier, context=context)
         self.assertEqual(context, {"mock-broken-inject": "context"})

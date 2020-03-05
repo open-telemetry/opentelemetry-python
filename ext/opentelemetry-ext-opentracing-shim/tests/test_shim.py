@@ -60,7 +60,7 @@ class TestShim(TestCase):
         cls._previous_propagator = propagators.get_global_httptextformat()
 
         # Set mock propagator for testing.
-        propagators.set_global_httptextformat(MockHTTPTextFormat)
+        propagators.set_global_httptextformat(MockHTTPTextFormat())
 
     @classmethod
     def tearDownClass(cls):
@@ -552,15 +552,14 @@ class MockHTTPTextFormat(HTTPTextFormat):
     TRACE_ID_KEY = "mock-traceid"
     SPAN_ID_KEY = "mock-spanid"
 
-    @classmethod
     def extract(
-        cls,
+        self,
         get_from_carrier: Getter[HTTPTextFormatT],
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        trace_id_list = get_from_carrier(carrier, cls.TRACE_ID_KEY)
-        span_id_list = get_from_carrier(carrier, cls.SPAN_ID_KEY)
+        trace_id_list = get_from_carrier(carrier, self.TRACE_ID_KEY)
+        span_id_list = get_from_carrier(carrier, self.SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
             return set_span_in_context(trace.INVALID_SPAN)
@@ -574,17 +573,16 @@ class MockHTTPTextFormat(HTTPTextFormat):
             )
         )
 
-    @classmethod
     def inject(
-        cls,
+        self,
         set_in_carrier: Setter[HTTPTextFormatT],
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = get_span_from_context(context)
         set_in_carrier(
-            carrier, cls.TRACE_ID_KEY, str(span.get_context().trace_id)
+            carrier, self.TRACE_ID_KEY, str(span.get_context().trace_id)
         )
         set_in_carrier(
-            carrier, cls.SPAN_ID_KEY, str(span.get_context().span_id)
+            carrier, self.SPAN_ID_KEY, str(span.get_context().span_id)
         )

@@ -25,11 +25,13 @@ class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
     propagators into a single one.
     """
 
-    propagators = []  # type: typing.List[httptextformat.HTTPTextFormat]
+    def __init__(
+        self, propagators: typing.List[httptextformat.HTTPTextFormat]
+    ) -> None:
+        self._propagators = propagators
 
-    @classmethod
     def extract(
-        cls,
+        self,
         get_from_carrier: httptextformat.Getter[
             httptextformat.HTTPTextFormatT
         ],
@@ -43,13 +45,12 @@ class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
 
         See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
         """
-        for propagator in cls.propagators:
+        for propagator in self._propagators:
             context = propagator.extract(get_from_carrier, carrier, context)
         return context  # type: ignore
 
-    @classmethod
     def inject(
-        cls,
+        self,
         set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
         carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
@@ -61,5 +62,5 @@ class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
 
         See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
         """
-        for propagator in cls.propagators:
+        for propagator in self._propagators:
             propagator.inject(set_in_carrier, carrier, context)

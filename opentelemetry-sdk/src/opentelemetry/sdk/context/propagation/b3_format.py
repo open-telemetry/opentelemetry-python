@@ -42,9 +42,8 @@ class B3Format(HTTPTextFormat):
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
 
-    @classmethod
     def extract(
-        cls,
+        self,
         get_from_carrier: Getter[HTTPTextFormatT],
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
@@ -55,7 +54,7 @@ class B3Format(HTTPTextFormat):
         flags = None
 
         single_header = _extract_first_element(
-            get_from_carrier(carrier, cls.SINGLE_HEADER_KEY)
+            get_from_carrier(carrier, self.SINGLE_HEADER_KEY)
         )
         if single_header:
             # The b3 spec calls for the sampling state to be
@@ -77,25 +76,25 @@ class B3Format(HTTPTextFormat):
         else:
             trace_id = (
                 _extract_first_element(
-                    get_from_carrier(carrier, cls.TRACE_ID_KEY)
+                    get_from_carrier(carrier, self.TRACE_ID_KEY)
                 )
                 or trace_id
             )
             span_id = (
                 _extract_first_element(
-                    get_from_carrier(carrier, cls.SPAN_ID_KEY)
+                    get_from_carrier(carrier, self.SPAN_ID_KEY)
                 )
                 or span_id
             )
             sampled = (
                 _extract_first_element(
-                    get_from_carrier(carrier, cls.SAMPLED_KEY)
+                    get_from_carrier(carrier, self.SAMPLED_KEY)
                 )
                 or sampled
             )
             flags = (
                 _extract_first_element(
-                    get_from_carrier(carrier, cls.FLAGS_KEY)
+                    get_from_carrier(carrier, self.FLAGS_KEY)
                 )
                 or flags
             )
@@ -105,7 +104,7 @@ class B3Format(HTTPTextFormat):
         # flag values set. Since the setting of at least one implies
         # the desire for some form of sampling, propagate if either
         # header is set to allow.
-        if sampled in cls._SAMPLE_PROPAGATE_VALUES or flags == "1":
+        if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
         return set_span_in_context(
             trace.DefaultSpan(
@@ -119,9 +118,8 @@ class B3Format(HTTPTextFormat):
             )
         )
 
-    @classmethod
     def inject(
-        cls,
+        self,
         set_in_carrier: Setter[HTTPTextFormatT],
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
@@ -129,18 +127,18 @@ class B3Format(HTTPTextFormat):
         span = get_span_from_context(context=context)
         sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
         set_in_carrier(
-            carrier, cls.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
+            carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
         )
         set_in_carrier(
-            carrier, cls.SPAN_ID_KEY, format_span_id(span.context.span_id)
+            carrier, self.SPAN_ID_KEY, format_span_id(span.context.span_id)
         )
         if span.parent is not None:
             set_in_carrier(
                 carrier,
-                cls.PARENT_SPAN_ID_KEY,
+                self.PARENT_SPAN_ID_KEY,
                 format_span_id(span.parent.context.span_id),
             )
-        set_in_carrier(carrier, cls.SAMPLED_KEY, "1" if sampled else "0")
+        set_in_carrier(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
 
 def format_trace_id(trace_id: int) -> str:

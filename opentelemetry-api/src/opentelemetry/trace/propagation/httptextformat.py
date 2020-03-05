@@ -70,10 +70,9 @@ class HTTPTextFormat(abc.ABC):
        https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
     """
 
-    @classmethod
     @abc.abstractmethod
     def extract(
-        cls,
+        self,
         get_from_carrier: Getter[HTTPTextFormatT],
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
@@ -97,10 +96,9 @@ class HTTPTextFormat(abc.ABC):
 
         """
 
-    @classmethod
     @abc.abstractmethod
     def inject(
-        cls,
+        self,
         set_in_carrier: Setter[HTTPTextFormatT],
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,

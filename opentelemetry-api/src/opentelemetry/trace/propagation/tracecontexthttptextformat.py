@@ -62,9 +62,8 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     )
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
 
-    @classmethod
     def extract(
-        cls,
+        self,
         get_from_carrier: httptextformat.Getter[
             httptextformat.HTTPTextFormatT
         ],
@@ -73,12 +72,12 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
     ) -> Context:
         """Extracts a valid SpanContext from the carrier.
         """
-        header = get_from_carrier(carrier, cls._TRACEPARENT_HEADER_NAME)
+        header = get_from_carrier(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
             return set_span_in_context(trace.INVALID_SPAN, context)
 
-        match = re.search(cls._TRACEPARENT_HEADER_FORMAT_RE, header[0])
+        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
             return set_span_in_context(trace.INVALID_SPAN, context)
 
@@ -97,7 +96,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             return set_span_in_context(trace.INVALID_SPAN, context)
 
         tracestate_headers = get_from_carrier(
-            carrier, cls._TRACESTATE_HEADER_NAME
+            carrier, self._TRACESTATE_HEADER_NAME
         )
         tracestate = _parse_tracestate(tracestate_headers)
 
@@ -109,9 +108,8 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         )
         return set_span_in_context(trace.DefaultSpan(span_context), context)
 
-    @classmethod
     def inject(
-        cls,
+        self,
         set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
         carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
@@ -126,12 +124,12 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             span_context.trace_flags,
         )
         set_in_carrier(
-            carrier, cls._TRACEPARENT_HEADER_NAME, traceparent_string
+            carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
         )
         if span_context.trace_state:
             tracestate_string = _format_tracestate(span_context.trace_state)
             set_in_carrier(
-                carrier, cls._TRACESTATE_HEADER_NAME, tracestate_string
+                carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )
 
 
