@@ -24,50 +24,12 @@ Getter = typing.Callable[[HTTPTextFormatT, str], typing.List[str]]
 
 
 class HTTPTextFormat(abc.ABC):
-    """API for propagation of span context via headers.
-
-    This class provides an interface that enables extracting and injecting
-    span context into headers of HTTP requests. HTTP frameworks and clients
+    """This class provides an interface that enables extracting and injecting
+    context into headers of HTTP requests. HTTP frameworks and clients
     can integrate with HTTPTextFormat by providing the object containing the
     headers, and a getter and setter function for the extraction and
     injection of values, respectively.
 
-    Example::
-
-        import flask
-        import requests
-        from opentelemetry.context.propagation import HTTPTextFormat
-
-        PROPAGATOR = HTTPTextFormat()
-
-
-
-        def get_header_from_flask_request(request, key):
-            return request.headers.get_all(key)
-
-        def set_header_into_requests_request(request: requests.Request,
-                                             key: str, value: str):
-            request.headers[key] = value
-
-        def example_route():
-            span_context = PROPAGATOR.extract(
-                get_header_from_flask_request,
-                flask.request
-            )
-            request_to_downstream = requests.Request(
-                "GET", "http://httpbin.org/get"
-            )
-            PROPAGATOR.inject(
-                span_context,
-                set_header_into_requests_request,
-                request_to_downstream
-            )
-            session = requests.Session()
-            session.send(request_to_downstream.prepare())
-
-
-    .. _Propagation API Specification:
-       https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
     """
 
     @abc.abstractmethod
@@ -77,22 +39,24 @@ class HTTPTextFormat(abc.ABC):
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        """Create a SpanContext from values in the carrier.
+        """Create a Context from values in the carrier.
 
         The extract function should retrieve values from the carrier
         object using get_from_carrier, and use values to populate a
-        SpanContext value and return it.
+        Context value and return it.
 
         Args:
             get_from_carrier: a function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.
             carrier: and object which contains values that are
-                used to construct a SpanContext. This object
+                used to construct a Context. This object
                 must be paired with an appropriate get_from_carrier
                 which understands how to extract a value from it.
+            context: an optional Context to use. Defaults to current
+                context if not set.
         Returns:
-            A SpanContext with configuration found in the carrier.
+            A Context with configuration found in the carrier.
 
         """
 
@@ -103,7 +67,7 @@ class HTTPTextFormat(abc.ABC):
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        """Inject values from a Span into a carrier.
+        """Inject values from a Context into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
@@ -111,11 +75,12 @@ class HTTPTextFormat(abc.ABC):
         carrier.
 
         Args:
-            context: The SpanContext to read values from.
             set_in_carrier: A setter function that can set values
                 on the carrier.
             carrier: An object that a place to define HTTP headers.
                 Should be paired with set_in_carrier, which should
                 know how to set header values on the carrier.
+            context: an optional Context to use. Defaults to current
+                context if not set.
 
         """

@@ -23,10 +23,13 @@ logger = logging.getLogger(__name__)
 class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
     """ CompositeHTTPPropagator provides a mechanism for combining multiple
     propagators into a single one.
+
+    Args:
+        propagators: the list of propagators to use
     """
 
     def __init__(
-        self, propagators: typing.List[httptextformat.HTTPTextFormat]
+        self, propagators: typing.Sequence[httptextformat.HTTPTextFormat]
     ) -> None:
         self._propagators = propagators
 

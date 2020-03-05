@@ -70,7 +70,9 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        """Extracts a valid SpanContext from the carrier.
+        """Extracts SpanContext from the carrier.
+
+        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
         """
         header = get_from_carrier(carrier, self._TRACEPARENT_HEADER_NAME)
 
@@ -114,6 +116,10 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
+        """Injects SpanContext into the carrier.
+
+        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
+        """
         span_context = get_span_from_context(context).get_context()
 
         if span_context == trace.INVALID_SPAN_CONTEXT:
