@@ -20,8 +20,8 @@ from opentelemetry.trace.propagation import httptextformat
 logger = logging.getLogger(__name__)
 
 
-class CompositePropagator(httptextformat.HTTPTextFormat):
-    """ CompositePropagator provides a mechanism for combining multiple
+class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
+    """ CompositeHTTPPropagator provides a mechanism for combining multiple
     propagators into a single one.
     """
 
@@ -44,13 +44,7 @@ class CompositePropagator(httptextformat.HTTPTextFormat):
         See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
         """
         for propagator in cls.propagators:
-            try:
-                context = propagator.extract(
-                    get_from_carrier, carrier, context
-                )
-            # pylint: disable=broad-except
-            except Exception:
-                logging.exception("Exception during extract")
+            context = propagator.extract(get_from_carrier, carrier, context)
         return context  # type: ignore
 
     @classmethod
@@ -68,8 +62,4 @@ class CompositePropagator(httptextformat.HTTPTextFormat):
         See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
         """
         for propagator in cls.propagators:
-            try:
-                propagator.inject(set_in_carrier, carrier, context)
-            # pylint: disable=broad-except
-            except Exception:
-                logging.exception("Exception during inject")
+            propagator.inject(set_in_carrier, carrier, context)
