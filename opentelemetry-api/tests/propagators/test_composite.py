@@ -33,8 +33,9 @@ def mock_inject(name):
 
 def mock_extract(name):
     def wrapped(getter, carrier=None, context=None):
-        context[name] = "context"
-        return context
+        new_context = context.copy()
+        new_context[name] = "context"
+        return new_context
 
     return wrapped
 
@@ -47,21 +48,6 @@ class TestCompositePropagator(unittest.TestCase):
         )
         cls.mock_propagator_1 = Mock(
             inject=mock_inject("mock-1"), extract=mock_extract("mock-1")
-        )
-
-        def mock_broken_extract(getter, carrier=None, context=None):
-            return context
-
-        def mock_broken_inject(setter, carrier=None, context=None):
-            return
-
-        cls.mock_broken_extract = Mock(
-            inject=mock_inject("mock-broken-extract"),
-            extract=mock_broken_extract,
-        )
-        cls.mock_broken_inject = Mock(
-            inject=mock_broken_inject,
-            extract=mock_extract("mock-broken-inject"),
         )
 
     def test_no_propagators(self):
@@ -100,17 +86,3 @@ class TestCompositePropagator(unittest.TestCase):
             get_as_list, carrier=new_carrier, context={}
         )
         self.assertEqual(context, {"mock-0": "context", "mock-1": "context"})
-
-    def test_broken_propagator(self):
-        propagator = CompositeHTTPPropagator(
-            [self.mock_broken_extract, self.mock_broken_inject]
-        )
-
-        new_carrier = {}
-        propagator.inject(dict.__setitem__, carrier=new_carrier)
-        self.assertEqual(new_carrier, {"mock-broken-extract": "data"})
-
-        context = propagator.extract(
-            get_as_list, carrier=new_carrier, context={}
-        )
-        self.assertEqual(context, {"mock-broken-inject": "context"})
