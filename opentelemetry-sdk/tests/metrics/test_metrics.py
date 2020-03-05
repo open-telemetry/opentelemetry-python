@@ -22,7 +22,7 @@ from opentelemetry.sdk.metrics import export
 
 class TestMeterProvider(unittest.TestCase):
     def test_resource(self):
-        resource = mock.Mock(spec=resources.Resource)
+        resource = resources.Resource.create({})
         meter_provider = metrics.MeterProvider(resource=resource)
         meter = meter_provider.get_meter(__name__)
         self.assertIs(meter.resource, resource)

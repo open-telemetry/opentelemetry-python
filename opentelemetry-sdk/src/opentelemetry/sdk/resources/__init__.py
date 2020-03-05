@@ -34,11 +34,12 @@ class Resource:
 
     @property
     def labels(self) -> Labels:
-        return self._labels
+        return self._labels.copy()
 
     def merge(self, other: "Resource") -> "Resource":
-        merged_labels = self.labels.copy()
-        for key, value in other.labels.items():
+        merged_labels = self.labels
+        # pylint: disable=protected-access
+        for key, value in other._labels.items():
             if key not in merged_labels or merged_labels[key] == "":
                 merged_labels[key] = value
         return Resource(merged_labels)
@@ -46,7 +47,7 @@ class Resource:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self.labels == other.labels
+        return self._labels == other._labels
 
 
 _EMPTY_RESOURCE = Resource({})

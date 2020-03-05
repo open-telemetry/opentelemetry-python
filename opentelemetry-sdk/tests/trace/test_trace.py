@@ -365,7 +365,7 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIsNotNone(child.end_time)
 
     def test_explicit_span_resource(self):
-        resource = mock.Mock(spec=resources.Resource)
+        resource = resources.Resource.create({})
         tracer_provider = trace.TracerProvider(resource=resource)
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")

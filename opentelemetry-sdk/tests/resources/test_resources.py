@@ -21,12 +21,12 @@ from opentelemetry.sdk import resources
 
 class TestResources(unittest.TestCase):
     def test_create(self):
-        labels = (
-            {"service": "ui"},
-            {"version": 1},
-            {"has_bugs", True},
-            {"cost", 112.12},
-        )
+        labels = {
+            "service": "ui",
+            "version": 1,
+            "has_bugs": True,
+            "cost": 112.12,
+        }
 
         resource = resources.Resource.create(labels)
         self.assertIsInstance(resource, resources.Resource)
@@ -64,3 +64,17 @@ class TestResources(unittest.TestCase):
             left.merge(right),
             resources.Resource({"service": "ui", "host": "service-host"}),
         )
+
+    def test_immutability(self):
+        labels = {
+            "service": "ui",
+            "version": 1,
+            "has_bugs": True,
+            "cost": 112.12,
+        }
+
+        resource = resources.Resource.create(labels)
+        self.assertEqual(resource.labels, labels)
+
+        resource.labels["has_bugs"] = False
+        self.assertEqual(resource.labels, labels)
