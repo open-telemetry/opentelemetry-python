@@ -69,8 +69,11 @@ class TestCompositePropagator(unittest.TestCase):
         new_carrier = {}
         propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {})
-        propagator.extract(get_as_list, carrier=new_carrier)
-        self.assertEqual(new_carrier, {})
+
+        context = propagator.extract(
+            get_as_list, carrier=new_carrier, context={}
+        )
+        self.assertEqual(context, {})
 
     def test_single_propagator(self):
         propagator = CompositeHTTPPropagator([self.mock_propagator_0])
@@ -79,8 +82,9 @@ class TestCompositePropagator(unittest.TestCase):
         propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data"})
 
-        context = {}
-        propagator.extract(get_as_list, carrier=new_carrier, context=context)
+        context = propagator.extract(
+            get_as_list, carrier=new_carrier, context={}
+        )
         self.assertEqual(context, {"mock-0": "context"})
 
     def test_multiple_propagators(self):
@@ -92,8 +96,9 @@ class TestCompositePropagator(unittest.TestCase):
         propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data", "mock-1": "data"})
 
-        context = {}
-        propagator.extract(get_as_list, carrier=new_carrier, context=context)
+        context = propagator.extract(
+            get_as_list, carrier=new_carrier, context={}
+        )
         self.assertEqual(context, {"mock-0": "context", "mock-1": "context"})
 
     def test_broken_propagator(self):
@@ -105,6 +110,7 @@ class TestCompositePropagator(unittest.TestCase):
         propagator.inject(dict.__setitem__, carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-broken-extract": "data"})
 
-        context = {}
-        propagator.extract(get_as_list, carrier=new_carrier, context=context)
+        context = propagator.extract(
+            get_as_list, carrier=new_carrier, context={}
+        )
         self.assertEqual(context, {"mock-broken-inject": "context"})
