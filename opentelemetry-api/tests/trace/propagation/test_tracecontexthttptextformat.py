@@ -47,7 +47,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
         span = get_span_from_context(FORMAT.extract(get_as_list, output))
-        self.assertTrue(isinstance(span.get_context(), trace.SpanContext))
+        self.assertIsInstance(span.get_context(), trace.SpanContext)
 
     def test_headers_with_tracestate(self):
         """When there is a traceparent and tracestate header, data from
@@ -188,7 +188,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """Do not propagate invalid trace context."""
         output = {}  # type:typing.Dict[str, str]
         ctx = set_span_in_context(
-            trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
+            trace.INVALID_SPAN
         )
         FORMAT.inject(dict.__setitem__, output, context=ctx)
         self.assertFalse("traceparent" in output)
