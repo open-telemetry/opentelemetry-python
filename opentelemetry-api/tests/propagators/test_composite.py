@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-from logging import ERROR
 from unittest.mock import Mock
 
 from opentelemetry.propagators.composite import CompositeHTTPPropagator
@@ -24,17 +23,17 @@ def get_as_list(dict_object, key):
     return [value] if value is not None else []
 
 
-def mock_inject(name):
+def mock_inject(name, value="data"):
     def wrapped(setter, carrier=None, context=None):
-        carrier[name] = "data"
+        carrier[name] = value
 
     return wrapped
 
 
-def mock_extract(name):
+def mock_extract(name, value="context"):
     def wrapped(getter, carrier=None, context=None):
         new_context = context.copy()
-        new_context[name] = "context"
+        new_context[name] = value
         return new_context
 
     return wrapped
@@ -48,6 +47,10 @@ class TestCompositePropagator(unittest.TestCase):
         )
         cls.mock_propagator_1 = Mock(
             inject=mock_inject("mock-1"), extract=mock_extract("mock-1")
+        )
+        cls.mock_propagator_2 = Mock(
+            inject=mock_inject("mock-0", value="data2"),
+            extract=mock_extract("mock-0", value="context2"),
         )
 
     def test_no_propagators(self):
@@ -86,3 +89,19 @@ class TestCompositePropagator(unittest.TestCase):
             get_as_list, carrier=new_carrier, context={}
         )
         self.assertEqual(context, {"mock-0": "context", "mock-1": "context"})
+
+    def test_multiple_propagators_same_key(self):
+        # test that when multiple propagators extract/inject the same
+        # key, the later propagator values are extracted/injected
+        propagator = CompositeHTTPPropagator(
+            [self.mock_propagator_0, self.mock_propagator_2]
+        )
+
+        new_carrier = {}
+        propagator.inject(dict.__setitem__, carrier=new_carrier)
+        self.assertEqual(new_carrier, {"mock-0": "data2"})
+
+        context = propagator.extract(
+            get_as_list, carrier=new_carrier, context={}
+        )
+        self.assertEqual(context, {"mock-0": "context2"})
