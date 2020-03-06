@@ -76,7 +76,7 @@ def enable(tracer_provider):
             # to access propagators.
 
             headers = kwargs.setdefault("headers", {})
-            propagators.inject(tracer, type(headers).__setitem__, headers)
+            propagators.inject(type(headers).__setitem__, headers)
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)

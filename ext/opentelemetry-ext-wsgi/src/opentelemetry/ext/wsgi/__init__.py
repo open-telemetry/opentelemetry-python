@@ -22,8 +22,9 @@ import functools
 import typing
 import wsgiref.util as wsgiref_util
 
-from opentelemetry import propagators, trace
+from opentelemetry import context, propagators, trace
 from opentelemetry.ext.wsgi.version import __version__
+from opentelemetry.trace.propagation import get_span_from_context
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -181,12 +182,13 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        parent_span = propagators.extract(get_header_from_environ, environ)
+        token = context.attach(
+            propagators.extract(get_header_from_environ, environ)
+        )
         span_name = get_default_span_name(environ)
 
         span = self.tracer.start_span(
             span_name,
-            parent_span,
             kind=trace.SpanKind.SERVER,
             attributes=collect_request_attributes(environ),
         )
@@ -197,17 +199,20 @@ class OpenTelemetryMiddleware:
                     span, start_response
                 )
                 iterable = self.wsgi(environ, start_response)
-                return _end_span_after_iterating(iterable, span, self.tracer)
+                return _end_span_after_iterating(
+                    iterable, span, self.tracer, token
+                )
         except:  # noqa
             # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
             span.end()
+            context.detach(token)
             raise
 
 
 # Put this in a subfunction to not delay the call to the wrapped
 # WSGI application (instrumentation should change the application
 # behavior as little as possible).
-def _end_span_after_iterating(iterable, span, tracer):
+def _end_span_after_iterating(iterable, span, tracer, token):
     try:
         with tracer.use_span(span):
             for yielded in iterable:
@@ -217,3 +222,4 @@ def _end_span_after_iterating(iterable, span, tracer):
         if close:
             close()
         span.end()
+        context.detach(token)
