@@ -679,6 +679,32 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
+    def test_override_error_status(self):
+        def error_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    root.set_status(
+                        trace_api.status.Status(
+                            StatusCanonicalCode.UNAVAILABLE,
+                            "Error: Unavailable",
+                        )
+                    )
+                    raise AssertionError("unknown")
+
+            self.assertIs(
+                root.status.canonical_code, StatusCanonicalCode.UNAVAILABLE
+            )
+            self.assertEqual(root.status.description, "Error: Unavailable")
+
+        error_status_test(
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
+        )
+        error_status_test(
+            trace.TracerProvider()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
+
 
 def span_event_start_fmt(span_processor_name, span_name):
     return span_processor_name + ":" + span_name + ":start"
