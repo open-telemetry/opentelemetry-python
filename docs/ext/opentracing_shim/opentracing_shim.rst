@@ -1,8 +1,5 @@
-opentelemetry.ext.opentracing_shim package
-==========================================
-
-Module contents
----------------
+OpenTracing Shim for OpenTelemetry
+==================================
 
 .. automodule:: opentelemetry.ext.opentracing_shim
    :no-show-inheritance:

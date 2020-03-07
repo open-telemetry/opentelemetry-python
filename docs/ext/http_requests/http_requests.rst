@@ -1,5 +1,4 @@
-opentelemetry.ext.http_requests package
-=======================================
+.. include:: ../../../ext/opentelemetry-ext-http-requests/README.rst
 
 Module contents
 ---------------

@@ -1,5 +1,5 @@
-opentelemetry.ext.flask package
-===============================
+.. include:: ../../../ext/opentelemetry-ext-flask/README.rst
+
 
 Module contents
 ---------------

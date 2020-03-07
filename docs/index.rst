@@ -1,59 +1,65 @@
-OpenTelemetry Python
+OpenTelemetry-Python
 ====================
 
-Welcome to OpenTelemetry Python documentation!
+The Python `OpenTelemetry <https://opentelemetry.io/>`_ client.
 
-This documentation describes the ``opentelemetry-api``, ``opentelemetry-sdk``
-and integration packages.
+.. image:: https://img.shields.io/gitter/room/opentelemetry/opentelemetry-python
+   :target: https://gitter.im/open-telemetry/opentelemetry-python
+   :alt: Gitter Chat
 
-TODO: intro with link to opentelemetry.io
+
+This documentation describes the opentelemetry-api, opentelemetry-sdk,
+and several integration packages.
+
+**Please note** that this library is currently in alpha, and shouldn't be
+used in production environments.
 
 Installation
 ------------
 
-This repository includes multiple installable packages. The ``opentelemetry-api``
-package includes abstract classes and no-op implementations that comprise the OpenTelemetry API following
-`the specification <https://github.com/open-telemetry/opentelemetry-specification>`_.
-The ``opentelemetry-sdk`` package is the reference implementation of the API.
-
-Libraries that produce telemetry data should only depend on ``opentelemetry-api``,
-and defer the choice of the SDK to the application developer. Applications may
-depend on ``opentelemetry-sdk`` or another package that implements the API.
-
-**Please note** that this library is currently in _alpha_, and shouldn't be
-used in production environments.
-
-The API and SDK packages are available on PyPI, and can installed via ``pip``:
+The API and SDK packages are available on PyPI, and can installed via pip:
 
 .. code-block:: sh
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
 
-
-Different integration packages can be installed separately as:
-
-.. code-block:: sh
+In addition, there are several extension packages which can be installed separately as::
 
     pip install opentelemetry-ext-{integration}
 
+The extension packages can be found in
+:scm_web:`ext/ directory of the repository <ext/>`.
 
-To install the development versions of these packages instead, clone or fork
-this repo and do an `editable
+In addition, third party exporters are available:
+
+* `Azure Monitor <https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor>`_
+
+Installing Cutting Edge Packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+While the project is pre-1.0, there may be significant functionality that
+has not yet been released to PyPI. In that situation, you may want to
+install the packages directly from the repo. This can be done by cloning the
+repositry and doing an `editable
 install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_:
 
 .. code-block:: sh
 
+    git clone https://github.com/open-telemetry/opentelemetry-python.git
+    cd opentelemetry-python
     pip install -e ./opentelemetry-api
     pip install -e ./opentelemetry-sdk
     pip install -e ./ext/opentelemetry-ext-{integration}
 
 
-Examples
---------
+Quick Start
+-----------
 
-TODO: Link to complete and better examples
-The following are two basic examples. For a most complex examples please see.
+opentelemetry can be used to emit distributed traces and metrics from your application.
+The following are examples using the API and SDK:
+
+.. TODO: Link to complete and better examples
 
 Tracing
 *******
@@ -77,13 +83,9 @@ Metrics
 .. toctree::
     :maxdepth: 1
     :caption: OpenTelemetry Integrations
+    :glob:
 
-    ext/flask/flask
-    ext/http_requests/http_requests
-    ext/jaeger/jaeger
-    ext/opentracing_shim/opentracing_shim
-    ext/pymongo/pymongo
-    ext/wsgi/wsgi
+    ext/**
 
 .. toctree::
     :maxdepth: 1

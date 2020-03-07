@@ -1,5 +1,5 @@
-opentelemetry.ext.wsgi package
-==============================
+.. include:: ../../../ext/opentelemetry-ext-wsgi/README.rst
+
 
 Module contents
 ---------------

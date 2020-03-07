@@ -1,6 +1,7 @@
 .. toctree::
     :maxdepth: 1
-    :caption: examples
+    :caption: Examples
+    :glob:
 
-    basic_tracer/README
+    **/**
 

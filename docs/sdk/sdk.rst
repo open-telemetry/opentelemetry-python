@@ -1,7 +1,7 @@
 OpenTelemetry Python SDK
 ========================
 
-TODO: what is the SDK
+.. TODO: what is the SDK
 
 .. toctree::
     :maxdepth: 1

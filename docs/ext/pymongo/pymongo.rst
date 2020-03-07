@@ -1,5 +1,4 @@
-opentelemetry.ext.pymongo package
-=================================
+.. include:: ../../../ext/opentelemetry-ext-pymongo/README.rst
 
 Module contents
 ---------------
