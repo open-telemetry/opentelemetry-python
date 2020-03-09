@@ -37,42 +37,42 @@ logger = logging.getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
-class DefaultMetricHandle:
-    """The default MetricHandle.
+class DefaultBoundMetric:
+    """The default BoundMetric.
 
-    Used when no MetricHandle implementation is available.
+    Used when no BoundMetric implementation is available.
     """
 
     def add(self, value: ValueT) -> None:
-        """No-op implementation of `CounterHandle` add.
+        """No-op implementation of `BoundCounter` add.
 
         Args:
-            value: The value to add to the handle.
+            value: The value to add to the bound metric.
         """
 
     def record(self, value: ValueT) -> None:
-        """No-op implementation of `MeasureHandle` record.
+        """No-op implementation of `BoundMeasure` record.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to record to the bound metric.
         """
 
 
-class CounterHandle:
+class BoundCounter:
     def add(self, value: ValueT) -> None:
-        """Increases the value of the handle by ``value``.
+        """Increases the value of the bound counter by ``value``.
 
         Args:
-            value: The value to add to the handle.
+            value: The value to add to the bound counter.
         """
 
 
-class MeasureHandle:
+class BoundMeasure:
     def record(self, value: ValueT) -> None:
-        """Records the given ``value`` to this handle.
+        """Records the given ``value`` to this bound measure.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to record to the bound measure.
         """
 
 
@@ -80,11 +80,11 @@ class LabelSet(abc.ABC):
     """A canonicalized set of labels useful for preaggregation
 
     Re-usable LabelSet objects provide a potential optimization for scenarios
-    where handles might not be effective. For example, if the LabelSet will be
-    re-used but only used once per metrics, handles do not offer any
-    optimization. It may best to pre-compute a canonicalized LabelSet once and
-    re-use it with the direct calling convention. LabelSets are immutable and
-    should be opaque in implementation.
+    where bound metrics might not be effective. For example, if the LabelSet
+    will be re-used but only used once per metrics, bound metrics do not offer
+    any optimization. It may best to pre-compute a canonicalized LabelSet once
+    and re-use it with the direct calling convention. LabelSets are immutable
+    and should be opaque in implementation.
     """
 
 
@@ -99,42 +99,42 @@ class Metric(abc.ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
-    handle that the metric holds.
+    bound metric that the metric holds.
     """
 
     @abc.abstractmethod
-    def get_handle(self, label_set: LabelSet) -> "object":
-        """Gets a handle, used for repeated-use of metrics instruments.
+    def bind(self, label_set: LabelSet) -> "object":
+        """Gets a bound metric, used for repeated-use of metrics instruments.
 
-        Handles are useful to reduce the cost of repeatedly recording a metric
-        with a pre-defined set of label values. All metric kinds (counter,
-        measure) support declaring a set of required label keys. The
-        values corresponding to these keys should be specified in every handle.
-        "Unspecified" label values, in cases where a handle is requested but
-        a value was not provided are permitted.
+        Bound metrics are useful to reduce the cost of repeatedly recording a
+        metric with a pre-defined set of label values. All metric kinds
+        (counter, measure) support declaring a set of required label keys. The
+        values corresponding to these keys should be specified in every bound
+        metric. "Unspecified" label values, in cases where a bound metric is
+        requested but a value was not provided are permitted.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound metric.
         """
 
 
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def get_handle(self, label_set: LabelSet) -> "DefaultMetricHandle":
-        """Gets a `DefaultMetricHandle`.
+    def bind(self, label_set: LabelSet) -> "DefaultBoundMetric":
+        """Gets a `DefaultBoundMetric`.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound metric.
         """
-        return DefaultMetricHandle()
+        return DefaultBoundMetric()
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Counter` add.
 
         Args:
             value: The value to add to the counter metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound metric.
         """
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
@@ -142,23 +142,23 @@ class DefaultMetric(Metric):
 
         Args:
             value: The value to record to this measure metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound metric.
         """
 
 
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def get_handle(self, label_set: LabelSet) -> "CounterHandle":
-        """Gets a `CounterHandle`."""
-        return CounterHandle()
+    def bind(self, label_set: LabelSet) -> "BoundCounter":
+        """Gets a `BoundCounter`."""
+        return BoundCounter()
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
             value: The value to add to the counter metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound counter.
         """
 
 
@@ -168,16 +168,16 @@ class Measure(Metric):
     Measure metrics represent raw statistics that are recorded.
     """
 
-    def get_handle(self, label_set: LabelSet) -> "MeasureHandle":
-        """Gets a `MeasureHandle` with a float value."""
-        return MeasureHandle()
+    def bind(self, label_set: LabelSet) -> "BoundMeasure":
+        """Gets a `BoundMeasure` with a float value."""
+        return BoundMeasure()
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
         """Records the ``value`` to the measure.
 
         Args:
             value: The value to record to this measure metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound measure.
         """
 
 
@@ -284,8 +284,8 @@ class Meter(abc.ABC):
         """Atomically records a batch of `Metric` and value pairs.
 
         Allows the functionality of acting upon multiple metrics with
-        a single API call. Implementations should find metric and handles that
-        match the key-value pairs in the label tuples.
+        a single API call. Implementations should find metric and bound metrics
+        that match the key-value pairs in the label tuples.
 
         Args:
             label_set: The `LabelSet` associated with all measurements in

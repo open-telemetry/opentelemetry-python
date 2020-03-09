@@ -89,7 +89,7 @@ class TestMeter(unittest.TestCase):
         label_set = meter.get_label_set(kvp)
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
+        self.assertEqual(counter.bind(label_set).aggregator.current, 1.0)
 
     def test_record_batch_multiple(self):
         meter = metrics.MeterProvider().get_meter(__name__)
@@ -104,9 +104,9 @@ class TestMeter(unittest.TestCase):
         )
         record_tuples = [(counter, 1.0), (measure, 3.0)]
         meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.get_handle(label_set).aggregator.current, 1.0)
+        self.assertEqual(counter.bind(label_set).aggregator.current, 1.0)
         self.assertEqual(
-            measure.get_handle(label_set).aggregator.current,
+            measure.bind(label_set).aggregator.current,
             (3.0, 3.0, 3.0, 1),
         )
 
@@ -119,11 +119,11 @@ class TestMeter(unittest.TestCase):
             "name", "desc", "unit", float, meter, label_keys
         )
         counter.add(1.0, label_set)
-        handle = counter.get_handle(label_set)
+        bound_metric = counter.bind(label_set)
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.get_handle(label_set), handle)
-        self.assertEqual(handle.aggregator.current, 2.0)
+        self.assertEqual(counter.bind(label_set), bound_metric)
+        self.assertEqual(bound_metric.aggregator.current, 2.0)
 
     def test_create_metric(self):
         meter = metrics.MeterProvider().get_meter(__name__)
@@ -179,15 +179,15 @@ class TestMeter(unittest.TestCase):
 
 
 class TestMetric(unittest.TestCase):
-    def test_get_handle(self):
+    def test_bind(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric_types = [metrics.Counter, metrics.Measure]
         for _type in metric_types:
             metric = _type("name", "desc", "unit", int, meter, ("key",))
             kvp = {"key": "value"}
             label_set = meter.get_label_set(kvp)
-            handle = metric.get_handle(label_set)
-            self.assertEqual(metric.handles.get(label_set), handle)
+            bound_metric = metric.bind(label_set)
+            self.assertEqual(metric.bound_metrics.get(label_set), bound_metric)
 
 
 class TestCounter(unittest.TestCase):
@@ -196,10 +196,10 @@ class TestCounter(unittest.TestCase):
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
-        handle = metric.get_handle(label_set)
+        bound_metric = metric.bind(label_set)
         metric.add(3, label_set)
         metric.add(2, label_set)
-        self.assertEqual(handle.aggregator.current, 5)
+        self.assertEqual(bound_metric.aggregator.current, 5)
 
 
 class TestMeasure(unittest.TestCase):
@@ -208,12 +208,12 @@ class TestMeasure(unittest.TestCase):
         metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
-        handle = metric.get_handle(label_set)
+        bound_metric = metric.bind(label_set)
         values = (37, 42, 7)
         for val in values:
             metric.record(val, label_set)
         self.assertEqual(
-            handle.aggregator.current,
+            bound_metric.aggregator.current,
             (min(values), max(values), sum(values), len(values)),
         )
 
@@ -284,63 +284,63 @@ class TestObserver(unittest.TestCase):
         self.assertTrue(logger_mock.warning.called)
 
 
-class TestCounterHandle(unittest.TestCase):
+class TestBoundCounter(unittest.TestCase):
     def test_add(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, True, aggregator)
-        handle.add(3)
-        self.assertEqual(handle.aggregator.current, 3)
+        bound_metric = metrics.BoundCounter(int, True, aggregator)
+        bound_metric.add(3)
+        self.assertEqual(bound_metric.aggregator.current, 3)
 
     def test_add_disabled(self):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, False, aggregator)
-        handle.add(3)
-        self.assertEqual(handle.aggregator.current, 0)
+        bound_metric = metrics.BoundCounter(int, False, aggregator)
+        bound_metric.add(3)
+        self.assertEqual(bound_metric.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, True, aggregator)
-        handle.add(3.0)
-        self.assertEqual(handle.aggregator.current, 0)
+        bound_metric = metrics.BoundCounter(int, True, aggregator)
+        bound_metric.add(3.0)
+        self.assertEqual(bound_metric.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.CounterAggregator()
-        handle = metrics.CounterHandle(int, True, aggregator)
+        bound_metric = metrics.BoundCounter(int, True, aggregator)
         time_mock.return_value = 123
-        handle.update(4.0)
-        self.assertEqual(handle.last_update_timestamp, 123)
-        self.assertEqual(handle.aggregator.current, 4.0)
+        bound_metric.update(4.0)
+        self.assertEqual(bound_metric.last_update_timestamp, 123)
+        self.assertEqual(bound_metric.aggregator.current, 4.0)
 
 
-class TestMeasureHandle(unittest.TestCase):
+class TestBoundMeasure(unittest.TestCase):
     def test_record(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, True, aggregator)
-        handle.record(3)
-        self.assertEqual(handle.aggregator.current, (3, 3, 3, 1))
+        bound_metric = metrics.BoundMeasure(int, True, aggregator)
+        bound_metric.record(3)
+        self.assertEqual(bound_metric.aggregator.current, (3, 3, 3, 1))
 
     def test_record_disabled(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, False, aggregator)
-        handle.record(3)
-        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
+        bound_metric = metrics.BoundMeasure(int, False, aggregator)
+        bound_metric.record(3)
+        self.assertEqual(bound_metric.aggregator.current, (None, None, None, 0))
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, True, aggregator)
-        handle.record(3.0)
-        self.assertEqual(handle.aggregator.current, (None, None, None, 0))
+        bound_metric = metrics.BoundMeasure(int, True, aggregator)
+        bound_metric.record(3.0)
+        self.assertEqual(bound_metric.aggregator.current, (None, None, None, 0))
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        handle = metrics.MeasureHandle(int, True, aggregator)
+        bound_metric = metrics.BoundMeasure(int, True, aggregator)
         time_mock.return_value = 123
-        handle.update(4.0)
-        self.assertEqual(handle.last_update_timestamp, 123)
-        self.assertEqual(handle.aggregator.current, (4.0, 4.0, 4.0, 1))
+        bound_metric.update(4.0)
+        self.assertEqual(bound_metric.last_update_timestamp, 123)
+        self.assertEqual(bound_metric.aggregator.current, (4.0, 4.0, 4.0, 1))

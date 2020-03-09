@@ -47,17 +47,16 @@ class LabelSet(metrics_api.LabelSet):
         return self._encoded == other._encoded
 
 
-class BaseHandle:
-    """The base handle class containing common behavior for all handles.
+class BaseBoundMetric:
+    """Class containing common behavior for all bound metrics.
 
-    Handles are responsible for operating on data for metric instruments for a
-    specific set of labels.
+    Bound metrics are responsible for operating on data for metric instruments
+    for a specific set of labels.
 
-    Args:
-        value_type: The type of values this handle holds (int, float).
-        enabled: True if the originating instrument is enabled.
-        aggregator: The aggregator for this handle. Will handle aggregation
-            upon updates and checkpointing of values for exporting.
+    Args: value_type: The type of values this bound metric holds (int, float).
+        enabled: True if the originating instrument is enabled. aggregator: The
+        aggregator for this bound metric. Will handle aggregation upon updates
+        and checkpointing of values for exporting.
     """
 
     def __init__(
@@ -93,16 +92,16 @@ class BaseHandle:
         )
 
 
-class CounterHandle(metrics_api.CounterHandle, BaseHandle):
+class BoundCounter(metrics_api.BoundCounter, BaseBoundMetric):
     def add(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.CounterHandle.add`."""
+        """See `opentelemetry.metrics.BoundCounter.add`."""
         if self._validate_update(value):
             self.update(value)
 
 
-class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
+class BoundMeasure(metrics_api.BoundMeasure, BaseBoundMetric):
     def record(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.MeasureHandle.record`."""
+        """See `opentelemetry.metrics.BoundMeasure.record`."""
         if self._validate_update(value):
             self.update(value)
 
@@ -112,11 +111,11 @@ class Metric(metrics_api.Metric):
 
     Also known as metric instrument. This is the class that is used to
     represent a metric that is to be continuously recorded and tracked. Each
-    metric has a set of handles that are created from the metric. See
-    `BaseHandle` for information on handles.
+    metric has a set of bound metrics that are created from the metric. See
+    `BaseBoundMetric` for information on bound metrics.
     """
 
-    HANDLE_TYPE = BaseHandle
+    BOUND_METRIC_TYPE = BaseBoundMetric
 
     def __init__(
         self,
@@ -135,20 +134,20 @@ class Metric(metrics_api.Metric):
         self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
-        self.handles = {}
+        self.bound_metrics = {}
 
-    def get_handle(self, label_set: LabelSet) -> BaseHandle:
-        """See `opentelemetry.metrics.Metric.get_handle`."""
-        handle = self.handles.get(label_set)
-        if not handle:
-            handle = self.HANDLE_TYPE(
+    def bind(self, label_set: LabelSet) -> BaseBoundMetric:
+        """See `opentelemetry.metrics.Metric.bind`."""
+        bound_metric = self.bound_metrics.get(label_set)
+        if not bound_metric:
+            bound_metric = self.BOUND_METRIC_TYPE(
                 self.value_type,
                 self.enabled,
                 # Aggregator will be created based off type of metric
                 self.meter.batcher.aggregator_for(self.__class__),
             )
-            self.handles[label_set] = handle
-        return handle
+            self.bound_metrics[label_set] = bound_metric
+        return bound_metric
 
     def __repr__(self):
         return '{}(name="{}", description="{}")'.format(
@@ -162,31 +161,11 @@ class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
     """
 
-    HANDLE_TYPE = CounterHandle
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
-        label_keys: Sequence[str] = (),
-        enabled: bool = True,
-    ):
-        super().__init__(
-            name,
-            description,
-            unit,
-            value_type,
-            meter,
-            label_keys=label_keys,
-            enabled=enabled,
-        )
+    BOUND_METRIC_TYPE = BoundCounter
 
     def add(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
-        self.get_handle(label_set).add(value)
+        self.bind(label_set).add(value)
 
     UPDATE_FUNCTION = add
 
@@ -194,11 +173,11 @@ class Counter(Metric, metrics_api.Counter):
 class Measure(Metric, metrics_api.Measure):
     """See `opentelemetry.metrics.Measure`."""
 
-    HANDLE_TYPE = MeasureHandle
+    BOUND_METRIC_TYPE = BoundMeasure
 
     def record(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
-        self.get_handle(label_set).record(value)
+        self.bind(label_set).record(value)
 
     UPDATE_FUNCTION = record
 
@@ -310,9 +289,9 @@ class Meter(metrics_api.Meter):
     def _collect_metrics(self) -> None:
         for metric in self.metrics:
             if metric.enabled:
-                for label_set, handle in metric.handles.items():
+                for label_set, bound_metric in metric.bound_metrics.items():
                     # TODO: Consider storing records in memory?
-                    record = Record(metric, label_set, handle.aggregator)
+                    record = Record(metric, label_set, bound_metric.aggregator)
                     # Checkpoints the current aggregators
                     # Applies different batching logic based on type of batcher
                     self.batcher.process(record)

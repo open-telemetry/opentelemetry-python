@@ -22,14 +22,14 @@ class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
         default_ls = metrics.DefaultLabelSet()
-        handle = default.get_handle(default_ls)
-        self.assertIsInstance(handle, metrics.DefaultMetricHandle)
+        bound_metric = default.bind(default_ls)
+        self.assertIsInstance(bound_metric, metrics.DefaultBoundMetric)
 
     def test_counter(self):
         counter = metrics.Counter()
         label_set = metrics.LabelSet()
-        handle = counter.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.CounterHandle)
+        bound_metric = counter.bind(label_set)
+        self.assertIsInstance(bound_metric, metrics.BoundCounter)
 
     def test_counter_add(self):
         counter = metrics.Counter()
@@ -39,21 +39,21 @@ class TestMetrics(unittest.TestCase):
     def test_measure(self):
         measure = metrics.Measure()
         label_set = metrics.LabelSet()
-        handle = measure.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.MeasureHandle)
+        bound_metric = measure.bind(label_set)
+        self.assertIsInstance(bound_metric, metrics.BoundMeasure)
 
     def test_measure_record(self):
         measure = metrics.Measure()
         label_set = metrics.LabelSet()
         measure.record(1, label_set)
 
-    def test_default_handle(self):
-        metrics.DefaultMetricHandle()
+    def test_default_bound_metric(self):
+        metrics.DefaultBoundMetric()
 
-    def test_counter_handle(self):
-        handle = metrics.CounterHandle()
-        handle.add(1)
+    def test_bound_counter(self):
+        bound_metric = metrics.BoundCounter()
+        bound_metric.add(1)
 
-    def test_measure_handle(self):
-        handle = metrics.MeasureHandle()
-        handle.record(1)
+    def test_bound_measure(self):
+        bound_metric = metrics.BoundMeasure()
+        bound_metric.record(1)
