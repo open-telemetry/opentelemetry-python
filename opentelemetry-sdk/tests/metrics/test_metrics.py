@@ -106,8 +106,7 @@ class TestMeter(unittest.TestCase):
         meter.record_batch(label_set, record_tuples)
         self.assertEqual(counter.bind(label_set).aggregator.current, 1.0)
         self.assertEqual(
-            measure.bind(label_set).aggregator.current,
-            (3.0, 3.0, 3.0, 1),
+            measure.bind(label_set).aggregator.current, (3.0, 3.0, 3.0, 1)
         )
 
     def test_record_batch_exists(self):
@@ -326,14 +325,18 @@ class TestBoundMeasure(unittest.TestCase):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_metric = metrics.BoundMeasure(int, False, aggregator)
         bound_metric.record(3)
-        self.assertEqual(bound_metric.aggregator.current, (None, None, None, 0))
+        self.assertEqual(
+            bound_metric.aggregator.current, (None, None, None, 0)
+        )
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_metric = metrics.BoundMeasure(int, True, aggregator)
         bound_metric.record(3.0)
-        self.assertEqual(bound_metric.aggregator.current, (None, None, None, 0))
+        self.assertEqual(
+            bound_metric.aggregator.current, (None, None, None, 0)
+        )
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.time_ns")

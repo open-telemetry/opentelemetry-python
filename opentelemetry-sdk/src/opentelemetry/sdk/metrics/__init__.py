@@ -268,7 +268,7 @@ class Meter(metrics_api.Meter):
     """
 
     def __init__(
-        self, instrumentation_info: "InstrumentationInfo", stateful: bool,
+        self, instrumentation_info: "InstrumentationInfo", stateful: bool
     ):
         self.instrumentation_info = instrumentation_info
         self.metrics = set()
