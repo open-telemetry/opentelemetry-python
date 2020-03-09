@@ -8,15 +8,16 @@ meter = metrics.get_meter(__name__)
 exporter = ConsoleMetricsExporter()
 controller = PushController(meter, exporter, 5)
 
-counter = meter.create_metric(
-    "available memory",
-    "available memory",
-    "bytes",
-    int,
-    Counter,
-    ("environment",),
+requests_counter = meter.create_metric(
+    name="requests",
+    description="number of requests",
+    unit="1",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
-label_values = ("staging",)
-counter_handle = counter.get_handle(label_values)
-counter_handle.add(100)
+staging_label_set = meter.get_label_set({"environment": "staging"})
+requests_counter.add(25, staging_label_set)
+
+input("Press a key to finish...\n")
