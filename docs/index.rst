@@ -9,7 +9,7 @@ The Python `OpenTelemetry <https://opentelemetry.io/>`_ client.
 
 
 This documentation describes the :doc:`opentelemetry-api <api/api>`,
-:doc:`opentelemetry-sdk <sdk/sdk>`, and several `integration packages <#integrations>`_
+:doc:`opentelemetry-sdk <sdk/sdk>`, and several `integration packages <#integrations>`_.
 
 **Please note** that this library is currently in alpha, and shouldn't be
 used in production environments.
