@@ -174,8 +174,15 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             output_metrics[0].timeseries[0].label_values[0].value, "staging"
         )
         self.assertEqual(len(output_metrics[0].timeseries[0].points), 1)
-        self.assertGreater(
-            output_metrics[0].timeseries[0].points[0].timestamp.nanos, 0
+        self.assertEqual(
+            output_metrics[0].timeseries[0].points[0].timestamp.seconds,
+            record.metric.get_handle(record.label_set).last_update_timestamp
+            // 1000000000,
+        )
+        self.assertEqual(
+            output_metrics[0].timeseries[0].points[0].timestamp.nanos,
+            record.metric.get_handle(record.label_set).last_update_timestamp
+            % 1000000000,
         )
         self.assertEqual(
             output_metrics[0].timeseries[0].points[0].int64_value, 123
