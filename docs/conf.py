@@ -114,7 +114,7 @@ branch = os.environ.get("READTHEDOCS_VERSION")
 if branch is None or branch == "latest":
     branch = "master"
 
-REPO = "mauriciovasquezbernal/opentelemetry-python/"
+REPO = "open-telemetry/opentelemetry-python/"
 scm_raw_web = "https://raw.githubusercontent.com/" + REPO + branch
 scm_web = "https://github.com/" + REPO + "blob/" + branch
 
