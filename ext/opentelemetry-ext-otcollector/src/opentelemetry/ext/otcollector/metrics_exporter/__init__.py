@@ -15,7 +15,7 @@
 """OpenTelemetry Collector Metrics Exporter."""
 
 import logging
-from typing import Optional, Sequence
+from typing import Sequence
 
 import grpc
 from opencensus.proto.agent.metrics.v1 import (
@@ -25,7 +25,7 @@ from opencensus.proto.agent.metrics.v1 import (
 from opencensus.proto.metrics.v1 import metrics_pb2
 
 import opentelemetry.ext.otcollector.util as utils
-from opentelemetry.sdk.metrics import Counter, Measure, Meter, Metric
+from opentelemetry.sdk.metrics import Counter, Metric
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,

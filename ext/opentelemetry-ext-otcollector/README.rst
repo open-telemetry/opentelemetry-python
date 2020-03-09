@@ -17,7 +17,7 @@ Installation
 
 
 Traces Usage
------
+------------
 
 The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ traces to `OpenTelemetry Collector`_.
 
@@ -49,7 +49,7 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ trace
         print("Hello world!")
 
 Metrics Usage
------
+-------------
 
 The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ metrics to `OpenTelemetry Collector`_.
 
@@ -74,7 +74,7 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ metri
     meter = metrics.get_meter(__name__)
     # controller collects metrics created from meter and exports it via the
     # exporter every interval
-    controller = PushController(meter, exporter, 5)
+    controller = PushController(meter, collector_exporter, 5)
     counter = meter.create_metric(
         "requests",
         "number of requests",
