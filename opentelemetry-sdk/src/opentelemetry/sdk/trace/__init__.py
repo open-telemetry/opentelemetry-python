@@ -524,7 +524,7 @@ class Tracer(trace_api.Tracer):
                     )
                 )
 
-                raise
+            raise
 
         finally:
             if end_on_exit:
