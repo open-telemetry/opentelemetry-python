@@ -132,11 +132,11 @@ class TestMeter(unittest.TestCase):
             "name", "desc", "unit", float, meter, label_keys
         )
         counter.add(1.0, label_set)
-        bound_metric = counter.bind(label_set)
+        bound_counter = counter.bind(label_set)
         record_tuples = [(counter, 1.0)]
         meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.bind(label_set), bound_metric)
-        self.assertEqual(bound_metric.aggregator.current, 2.0)
+        self.assertEqual(counter.bind(label_set), bound_counter)
+        self.assertEqual(bound_counter.aggregator.current, 2.0)
 
     def test_create_metric(self):
         resource = mock.Mock(spec=resources.Resource)
@@ -202,8 +202,8 @@ class TestMetric(unittest.TestCase):
             metric = _type("name", "desc", "unit", int, meter, ("key",))
             kvp = {"key": "value"}
             label_set = meter.get_label_set(kvp)
-            bound_metric = metric.bind(label_set)
-            self.assertEqual(metric.bound_metrics.get(label_set), bound_metric)
+            bound_instrument = metric.bind(label_set)
+            self.assertEqual(metric.bound_metrics.get(label_set), bound_instrument)
 
 
 class TestCounter(unittest.TestCase):
@@ -212,10 +212,10 @@ class TestCounter(unittest.TestCase):
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
-        bound_metric = metric.bind(label_set)
+        bound_counter = metric.bind(label_set)
         metric.add(3, label_set)
         metric.add(2, label_set)
-        self.assertEqual(bound_metric.aggregator.current, 5)
+        self.assertEqual(bound_counter.aggregator.current, 5)
 
 
 class TestMeasure(unittest.TestCase):
@@ -224,12 +224,12 @@ class TestMeasure(unittest.TestCase):
         metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
         kvp = {"key": "value"}
         label_set = meter.get_label_set(kvp)
-        bound_metric = metric.bind(label_set)
+        bound_measure = metric.bind(label_set)
         values = (37, 42, 7)
         for val in values:
             metric.record(val, label_set)
         self.assertEqual(
-            bound_metric.aggregator.current,
+            bound_measure.aggregator.current,
             (min(values), max(values), sum(values), len(values)),
         )
 
@@ -309,58 +309,58 @@ class TestBoundCounter(unittest.TestCase):
 
     def test_add_disabled(self):
         aggregator = export.aggregate.CounterAggregator()
-        bound_metric = metrics.BoundCounter(int, False, aggregator)
-        bound_metric.add(3)
-        self.assertEqual(bound_metric.aggregator.current, 0)
+        bound_counter = metrics.BoundCounter(int, False, aggregator)
+        bound_counter.add(3)
+        self.assertEqual(bound_counter.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.CounterAggregator()
-        bound_metric = metrics.BoundCounter(int, True, aggregator)
-        bound_metric.add(3.0)
-        self.assertEqual(bound_metric.aggregator.current, 0)
+        bound_counter = metrics.BoundCounter(int, True, aggregator)
+        bound_counter.add(3.0)
+        self.assertEqual(bound_counter.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.CounterAggregator()
-        bound_metric = metrics.BoundCounter(int, True, aggregator)
+        bound_counter = metrics.BoundCounter(int, True, aggregator)
         time_mock.return_value = 123
-        bound_metric.update(4.0)
-        self.assertEqual(bound_metric.last_update_timestamp, 123)
-        self.assertEqual(bound_metric.aggregator.current, 4.0)
+        bound_counter.update(4.0)
+        self.assertEqual(bound_counter.last_update_timestamp, 123)
+        self.assertEqual(bound_counter.aggregator.current, 4.0)
 
 
 class TestBoundMeasure(unittest.TestCase):
     def test_record(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_metric = metrics.BoundMeasure(int, True, aggregator)
-        bound_metric.record(3)
-        self.assertEqual(bound_metric.aggregator.current, (3, 3, 3, 1))
+        bound_measure = metrics.BoundMeasure(int, True, aggregator)
+        bound_measure.record(3)
+        self.assertEqual(bound_measure.aggregator.current, (3, 3, 3, 1))
 
     def test_record_disabled(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_metric = metrics.BoundMeasure(int, False, aggregator)
-        bound_metric.record(3)
+        bound_measure = metrics.BoundMeasure(int, False, aggregator)
+        bound_measure.record(3)
         self.assertEqual(
-            bound_metric.aggregator.current, (None, None, None, 0)
+            bound_measure.aggregator.current, (None, None, None, 0)
         )
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_metric = metrics.BoundMeasure(int, True, aggregator)
-        bound_metric.record(3.0)
+        bound_measure = metrics.BoundMeasure(int, True, aggregator)
+        bound_measure.record(3.0)
         self.assertEqual(
-            bound_metric.aggregator.current, (None, None, None, 0)
+            bound_measure.aggregator.current, (None, None, None, 0)
         )
         self.assertTrue(logger_mock.warning.called)
 
     @mock.patch("opentelemetry.sdk.metrics.time_ns")
     def test_update(self, time_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_metric = metrics.BoundMeasure(int, True, aggregator)
+        bound_measure = metrics.BoundMeasure(int, True, aggregator)
         time_mock.return_value = 123
-        bound_metric.update(4.0)
-        self.assertEqual(bound_metric.last_update_timestamp, 123)
-        self.assertEqual(bound_metric.aggregator.current, (4.0, 4.0, 4.0, 1))
+        bound_measure.update(4.0)
+        self.assertEqual(bound_measure.last_update_timestamp, 123)
+        self.assertEqual(bound_measure.aggregator.current, (4.0, 4.0, 4.0, 1))

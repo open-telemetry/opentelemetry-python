@@ -48,16 +48,18 @@ class LabelSet(metrics_api.LabelSet):
         return self._encoded == other._encoded
 
 
-class BaseBoundMetric:
-    """Class containing common behavior for all bound metrics.
+class BaseBoundInstrument:
+    """Class containing common behavior for all bound metric instruments.
 
-    Bound metrics are responsible for operating on data for metric instruments
-    for a specific set of labels.
+    Bound metric instruments are responsible for operating on data for metric
+    instruments for a specific set of labels.
 
-    Args: value_type: The type of values this bound metric holds (int, float).
-        enabled: True if the originating instrument is enabled. aggregator: The
-        aggregator for this bound metric. Will handle aggregation upon updates
-        and checkpointing of values for exporting.
+    Args:
+        value_type: The type of values for this bound instrument (int, float).
+        enabled: True if the originating instrument is enabled.
+        aggregator: The aggregator for this bound metric instrument. Will
+        handle aggregation upon updates and checkpointing of values for
+        exporting.
     """
 
     def __init__(
@@ -93,14 +95,14 @@ class BaseBoundMetric:
         )
 
 
-class BoundCounter(metrics_api.BoundCounter, BaseBoundMetric):
+class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
     def add(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.BoundCounter.add`."""
         if self._validate_update(value):
             self.update(value)
 
 
-class BoundMeasure(metrics_api.BoundMeasure, BaseBoundMetric):
+class BoundMeasure(metrics_api.BoundMeasure, BaseBoundInstrument):
     def record(self, value: metrics_api.ValueT) -> None:
         """See `opentelemetry.metrics.BoundMeasure.record`."""
         if self._validate_update(value):
@@ -113,10 +115,10 @@ class Metric(metrics_api.Metric):
     Also known as metric instrument. This is the class that is used to
     represent a metric that is to be continuously recorded and tracked. Each
     metric has a set of bound metrics that are created from the metric. See
-    `BaseBoundMetric` for information on bound metrics.
+    `BaseBoundInstrument` for information on bound metric instruments.
     """
 
-    BOUND_METRIC_TYPE = BaseBoundMetric
+    BOUND_INSTR_TYPE = BaseBoundInstrument
 
     def __init__(
         self,
@@ -135,20 +137,20 @@ class Metric(metrics_api.Metric):
         self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
-        self.bound_metrics = {}
+        self.bound_instruments = {}
 
-    def bind(self, label_set: LabelSet) -> BaseBoundMetric:
+    def bind(self, label_set: LabelSet) -> BaseBoundInstrument:
         """See `opentelemetry.metrics.Metric.bind`."""
-        bound_metric = self.bound_metrics.get(label_set)
-        if not bound_metric:
-            bound_metric = self.BOUND_METRIC_TYPE(
+        bound_instrument = self.bound_instruments.get(label_set)
+        if not bound_instrument:
+            bound_instrument = self.BOUND_INSTR_TYPE(
                 self.value_type,
                 self.enabled,
                 # Aggregator will be created based off type of metric
                 self.meter.batcher.aggregator_for(self.__class__),
             )
-            self.bound_metrics[label_set] = bound_metric
-        return bound_metric
+            self.bound_instruments[label_set] = bound_instrument
+        return bound_instrument
 
     def __repr__(self):
         return '{}(name="{}", description="{}")'.format(
@@ -162,7 +164,7 @@ class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
     """
 
-    BOUND_METRIC_TYPE = BoundCounter
+    BOUND_INSTR_TYPE = BoundCounter
 
     def add(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
@@ -174,7 +176,7 @@ class Counter(Metric, metrics_api.Counter):
 class Measure(Metric, metrics_api.Measure):
     """See `opentelemetry.metrics.Measure`."""
 
-    BOUND_METRIC_TYPE = BoundMeasure
+    BOUND_INSTR_TYPE = BoundMeasure
 
     def record(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
@@ -294,9 +296,9 @@ class Meter(metrics_api.Meter):
     def _collect_metrics(self) -> None:
         for metric in self.metrics:
             if metric.enabled:
-                for label_set, bound_metric in metric.bound_metrics.items():
+                for label_set, bound_instr in metric.bound_instruments.items():
                     # TODO: Consider storing records in memory?
-                    record = Record(metric, label_set, bound_metric.aggregator)
+                    record = Record(metric, label_set, bound_instr.aggregator)
                     # Checkpoints the current aggregators
                     # Applies different batching logic based on type of batcher
                     self.batcher.process(record)

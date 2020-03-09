@@ -37,10 +37,10 @@ logger = logging.getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
-class DefaultBoundMetric:
-    """The default BoundMetric.
+class DefaultBoundInstrument:
+    """The default bound metric instrument.
 
-    Used when no BoundMetric implementation is available.
+    Used when no bound instrument implementation is available.
     """
 
     def add(self, value: ValueT) -> None:
@@ -80,11 +80,11 @@ class LabelSet(abc.ABC):
     """A canonicalized set of labels useful for preaggregation
 
     Re-usable LabelSet objects provide a potential optimization for scenarios
-    where bound metrics might not be effective. For example, if the LabelSet
-    will be re-used but only used once per metrics, bound metrics do not offer
-    any optimization. It may best to pre-compute a canonicalized LabelSet once
-    and re-use it with the direct calling convention. LabelSets are immutable
-    and should be opaque in implementation.
+    where bound metric instruments might not be effective. For example, if the
+    LabelSet will be re-used but only used once per metrics, bound metric
+    instruments do not offer any optimization. It may best to pre-compute a
+    canonicalized LabelSet once and re-use it with the direct calling
+    convention. LabelSets are immutable and should be opaque in implementation.
     """
 
 
@@ -99,35 +99,34 @@ class Metric(abc.ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
-    bound metric that the metric holds.
+    bound metric instrument that the metric holds.
     """
 
     @abc.abstractmethod
     def bind(self, label_set: LabelSet) -> "object":
         """Gets a bound metric, used for repeated-use of metrics instruments.
 
-        Bound metrics are useful to reduce the cost of repeatedly recording a
-        metric with a pre-defined set of label values. All metric kinds
-        (counter, measure) support declaring a set of required label keys. The
-        values corresponding to these keys should be specified in every bound
-        metric. "Unspecified" label values, in cases where a bound metric is
-        requested but a value was not provided are permitted.
+        Bound metric instruments are useful to reduce the cost of repeatedly
+        recording a metric with a pre-defined set of label values. All metric
+        kinds (counter, measure) support declaring a set of required label keys.
+        The values corresponding to these keys should be specified in every
+        bound metric. "Unspecified" label values, in cases where a bound metric
+        instrument is requested but a value was not provided are permitted.
 
-        Args:
-            label_set: `LabelSet` to associate with the returned bound metric.
+        Args: label_set: `LabelSet` to associate with the returned bound metric.
         """
 
 
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def bind(self, label_set: LabelSet) -> "DefaultBoundMetric":
-        """Gets a `DefaultBoundMetric`.
+    def bind(self, label_set: LabelSet) -> "DefaultBoundInstrument":
+        """Gets a `DefaultBoundInstrument`.
 
         Args:
             label_set: `LabelSet` to associate with the returned bound metric.
         """
-        return DefaultBoundMetric()
+        return DefaultBoundInstrument()
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Counter` add.
@@ -283,16 +282,15 @@ class Meter(abc.ABC):
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
-        Allows the functionality of acting upon multiple metrics with
-        a single API call. Implementations should find metric and bound metrics
-        that match the key-value pairs in the label tuples.
+        Allows the functionality of acting upon multiple metrics with a single
+        API call. Implementations should find bound metric instruments that
+        match the key-value pairs in the labelset.
 
-        Args:
-            label_set: The `LabelSet` associated with all measurements in
-                the batch. A measurement is a tuple, representing the `Metric`
-                being recorded and the corresponding value to record.
-            record_tuples: A sequence of pairs of `Metric` s and the
-                corresponding value to record for that metric.
+        Args: label_set: The `LabelSet` associated with all measurements in the
+            batch. A measurement is a tuple, representing the `Metric` being
+            recorded and the corresponding value to record. record_tuples: A
+            sequence of pairs of `Metric` s and the corresponding value to
+            record for that metric.
         """
 
     @abc.abstractmethod
