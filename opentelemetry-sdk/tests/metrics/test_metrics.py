@@ -16,8 +16,22 @@ import unittest
 from unittest import mock
 
 from opentelemetry import metrics as metrics_api
-from opentelemetry.sdk import metrics
+from opentelemetry.sdk import metrics, resources
 from opentelemetry.sdk.metrics import export
+
+
+class TestMeterProvider(unittest.TestCase):
+    def test_resource(self):
+        resource = resources.Resource.create({})
+        meter_provider = metrics.MeterProvider(resource=resource)
+        meter = meter_provider.get_meter(__name__)
+        self.assertIs(meter.resource, resource)
+
+    def test_resource_empty(self):
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        # pylint: disable=protected-access
+        self.assertIs(meter.resource, resources._EMPTY_RESOURCE)
 
 
 class TestMeter(unittest.TestCase):
@@ -125,13 +139,16 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(bound_metric.aggregator.current, 2.0)
 
     def test_create_metric(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
+        resource = mock.Mock(spec=resources.Resource)
+        meter_provider = metrics.MeterProvider(resource=resource)
+        meter = meter_provider.get_meter(__name__)
         counter = meter.create_metric(
             "name", "desc", "unit", int, metrics.Counter, ()
         )
         self.assertIsInstance(counter, metrics.Counter)
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
+        self.assertIs(counter.meter.resource, resource)
 
     def test_create_measure(self):
         meter = metrics.MeterProvider().get_meter(__name__)

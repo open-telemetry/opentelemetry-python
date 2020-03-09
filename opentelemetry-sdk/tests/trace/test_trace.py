@@ -19,7 +19,7 @@ from logging import ERROR, WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk import trace
+from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import sampling
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -364,6 +364,20 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(tracer.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
+    def test_explicit_span_resource(self):
+        resource = resources.Resource.create({})
+        tracer_provider = trace.TracerProvider(resource=resource)
+        tracer = tracer_provider.get_tracer(__name__)
+        span = tracer.start_span("root")
+        self.assertIs(span.resource, resource)
+
+    def test_default_span_resource(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
+        span = tracer.start_span("root")
+        # pylint: disable=protected-access
+        self.assertIs(span.resource, resources._EMPTY_RESOURCE)
+
 
 class TestSpan(unittest.TestCase):
     def setUp(self):
@@ -669,6 +683,32 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
             )
+
+        error_status_test(
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
+        )
+        error_status_test(
+            trace.TracerProvider()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
+
+    def test_override_error_status(self):
+        def error_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    root.set_status(
+                        trace_api.status.Status(
+                            StatusCanonicalCode.UNAVAILABLE,
+                            "Error: Unavailable",
+                        )
+                    )
+                    raise AssertionError("unknown")
+
+            self.assertIs(
+                root.status.canonical_code, StatusCanonicalCode.UNAVAILABLE
+            )
+            self.assertEqual(root.status.description, "Error: Unavailable")
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")
