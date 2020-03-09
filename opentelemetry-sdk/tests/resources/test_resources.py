@@ -12,12 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 import unittest
 
 from opentelemetry.sdk import resources
 
 
 class TestResources(unittest.TestCase):
+    def test_create(self):
+        labels = {
+            "service": "ui",
+            "version": 1,
+            "has_bugs": True,
+            "cost": 112.12,
+        }
+
+        resource = resources.Resource.create(labels)
+        self.assertIsInstance(resource, resources.Resource)
+        self.assertEqual(resource.labels, labels)
+
+        resource = resources.Resource.create_empty()
+        self.assertIs(resource, resources._EMPTY_RESOURCE)
+
+        resource = resources.Resource.create(None)
+        self.assertIs(resource, resources._EMPTY_RESOURCE)
+
+        resource = resources.Resource.create({})
+        self.assertIs(resource, resources._EMPTY_RESOURCE)
+
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
         right = resources.Resource({"host": "service-host"})
@@ -41,3 +64,22 @@ class TestResources(unittest.TestCase):
             left.merge(right),
             resources.Resource({"service": "ui", "host": "service-host"}),
         )
+
+    def test_immutability(self):
+        labels = {
+            "service": "ui",
+            "version": 1,
+            "has_bugs": True,
+            "cost": 112.12,
+        }
+
+        labels_copy = labels.copy()
+
+        resource = resources.Resource.create(labels)
+        self.assertEqual(resource.labels, labels_copy)
+
+        resource.labels["has_bugs"] = False
+        self.assertEqual(resource.labels, labels_copy)
+
+        labels["cost"] = 999.91
+        self.assertEqual(resource.labels, labels_copy)
