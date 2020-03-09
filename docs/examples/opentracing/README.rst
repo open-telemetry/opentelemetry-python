@@ -1,4 +1,4 @@
-OpenTracing Bridge Example
+OpenTracing Shim Example
 ==========================
 
 This example shows how to use the `opentelemetry-ext-opentracing-shim
