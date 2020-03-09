@@ -19,6 +19,7 @@ from typing import Dict, Sequence, Tuple, Type
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher, UngroupedBatcher
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util import time_ns
 
@@ -289,12 +290,16 @@ class Meter(metrics_api.Meter):
     """
 
     def __init__(
-        self, instrumentation_info: "InstrumentationInfo", stateful: bool,
+        self,
+        instrumentation_info: "InstrumentationInfo",
+        stateful: bool,
+        resource: Resource = Resource.create_empty(),
     ):
         self.instrumentation_info = instrumentation_info
         self.metrics = set()
         self.observers = set()
         self.batcher = UngroupedBatcher(stateful)
+        self.resource = resource
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -400,6 +405,11 @@ class Meter(metrics_api.Meter):
 
 
 class MeterProvider(metrics_api.MeterProvider):
+    def __init__(
+        self, resource: Resource = Resource.create_empty(),
+    ):
+        self.resource = resource
+
     def get_meter(
         self,
         instrumenting_module_name: str,
@@ -413,4 +423,5 @@ class MeterProvider(metrics_api.MeterProvider):
                 instrumenting_module_name, instrumenting_library_version
             ),
             stateful=stateful,
+            resource=self.resource,
         )
