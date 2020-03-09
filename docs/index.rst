@@ -55,7 +55,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 Quick Start
 -----------
 
-opentelemetry can be used to emit distributed traces and metrics from your application.
+OpenTelemetry can be used to emit distributed traces and metrics from your application.
 The following are two simple examples using the API and SDK, you can find more
 elaborated examples in `Examples`_.
 
