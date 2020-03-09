@@ -15,12 +15,12 @@
 import typing
 
 LabelValue = typing.Union[str, bool, int, float]
-Labels = typing.Optional[typing.Dict[str, LabelValue]]
+Labels = typing.Dict[str, LabelValue]
 
 
 class Resource:
     def __init__(self, labels: Labels):
-        self._labels = labels
+        self._labels = labels.copy()
 
     @staticmethod
     def create(labels: Labels) -> "Resource":

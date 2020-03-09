@@ -73,8 +73,13 @@ class TestResources(unittest.TestCase):
             "cost": 112.12,
         }
 
+        labels_copy = labels.copy()
+
         resource = resources.Resource.create(labels)
-        self.assertEqual(resource.labels, labels)
+        self.assertEqual(resource.labels, labels_copy)
 
         resource.labels["has_bugs"] = False
-        self.assertEqual(resource.labels, labels)
+        self.assertEqual(resource.labels, labels_copy)
+
+        labels["cost"] = 999.91
+        self.assertEqual(resource.labels, labels_copy)
