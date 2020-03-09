@@ -51,16 +51,16 @@ class CollectorMetricsExporter(MetricsExporter):
 
     def __init__(
         self,
-        endpoint=DEFAULT_ENDPOINT,
-        service_name=None,
-        host_name=None,
-        client=None,
+        endpoint: str = DEFAULT_ENDPOINT,
+        service_name: str = None,
+        host_name: str = None,
+        client: metrics_service_pb2_grpc.MetricsServiceStub = None,
     ):
         self.endpoint = endpoint
         if client is None:
-            self.channel = grpc.insecure_channel(self.endpoint)
+            channel = grpc.insecure_channel(self.endpoint)
             self.client = metrics_service_pb2_grpc.MetricsServiceStub(
-                channel=self.channel
+                channel=channel
             )
         else:
             self.client = client
@@ -87,7 +87,9 @@ class CollectorMetricsExporter(MetricsExporter):
     def shutdown(self) -> None:
         pass
 
-    def generate_metrics_requests(self, metrics):
+    def generate_metrics_requests(
+        self, metrics: Sequence[MetricRecord]
+    ) -> metrics_service_pb2.ExportMetricsServiceRequest:
         collector_metrics = translate_to_collector(metrics)
         service_request = metrics_service_pb2.ExportMetricsServiceRequest(
             node=self.node, metrics=collector_metrics

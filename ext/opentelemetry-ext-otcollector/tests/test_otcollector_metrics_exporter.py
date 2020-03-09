@@ -33,12 +33,22 @@ from opentelemetry.sdk.metrics.export import (
 class TestCollectorMetricsExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls._meter_defaults = (
+            metrics._METER_PROVIDER,
+            metrics._METER_PROVIDER_FACTORY,
+        )
         metrics.set_preferred_meter_provider_implementation(
             lambda _: MeterProvider()
         )
         cls._meter = metrics.get_meter(__name__)
         kvp = {"environment": "staging"}
         cls._test_label_set = cls._meter.get_label_set(kvp)
+
+    @classmethod
+    def tearDownClass(cls):
+        metrics._METER_PROVIDER, metrics._METER_PROVIDER_FACTORY = (
+            cls._meter_defaults
+        )
 
     def test_constructor(self):
         mock_get_node = mock.Mock()
