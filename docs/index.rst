@@ -8,8 +8,8 @@ The Python `OpenTelemetry <https://opentelemetry.io/>`_ client.
    :alt: Gitter Chat
 
 
-This documentation describes the opentelemetry-api, opentelemetry-sdk,
-and several integration packages.
+This documentation describes the :doc:`opentelemetry-api <api/api>`,
+:doc:`opentelemetry-sdk <sdk/sdk>`, and several `integration packages <#integrations>`_
 
 **Please note** that this library is currently in alpha, and shouldn't be
 used in production environments.
@@ -28,8 +28,7 @@ In addition, there are several extension packages which can be installed separat
 
     pip install opentelemetry-ext-{integration}
 
-The extension packages can be found in
-:scm_web:`ext/ directory of the repository <ext/>`.
+The extension packages can be found in :scm_web:`ext/ directory of the repository <ext/>`.
 
 In addition, third party exporters are available:
 
@@ -57,18 +56,19 @@ Quick Start
 -----------
 
 opentelemetry can be used to emit distributed traces and metrics from your application.
-The following are examples using the API and SDK:
+The following are two simple examples using the API and SDK, you can find more
+elaborated examples in `Examples`_.
 
 .. TODO: Link to complete and better examples
 
 Tracing
-*******
+~~~~~~~
 
 .. literalinclude:: trace_example.py
   :language: python
 
 Metrics
-*******
+~~~~~~~
 
 .. literalinclude:: metrics_example.py
   :language: python
@@ -76,6 +76,7 @@ Metrics
 .. toctree::
     :maxdepth: 1
     :caption: OpenTelemetry Python Packages
+    :name: packages
 
     api/api
     sdk/sdk
@@ -83,6 +84,7 @@ Metrics
 .. toctree::
     :maxdepth: 1
     :caption: OpenTelemetry Integrations
+    :name: integrations
     :glob:
 
     ext/**
@@ -90,8 +92,10 @@ Metrics
 .. toctree::
     :maxdepth: 1
     :caption: Examples
+    :name: examples
+    :glob:
 
-    examples/index
+    examples/**
 
 Indices and tables
 ------------------
