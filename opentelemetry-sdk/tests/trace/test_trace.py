@@ -391,7 +391,7 @@ class TestSpan(unittest.TestCase):
 
             root.set_attribute("empty-list", [])
             root.set_attribute("list-of-bools", [True, True, False])
-            root.set_attribute("list-of-numerics", [123, 3.14, 0])
+            root.set_attribute("list-of-numerics", [123, 314, 0])
 
             self.assertEqual(len(root.attributes), 10)
             self.assertEqual(root.attributes["component"], "http")
@@ -409,7 +409,7 @@ class TestSpan(unittest.TestCase):
                 root.attributes["list-of-bools"], [True, True, False]
             )
             self.assertEqual(
-                root.attributes["list-of-numerics"], [123, 3.14, 0]
+                root.attributes["list-of-numerics"], [123, 314, 0]
             )
 
         attributes = {
@@ -461,8 +461,18 @@ class TestSpan(unittest.TestCase):
             ),
             "different type",
         )
+        self.assertEqual(
+            trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5]),
+            "different type",
+        )
         self.assertIsNone(
-            trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5])
+            trace.Span._check_attribute_value_sequence([1, 2, 3, 5])
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence([1.2, 2.3, 3.4, 4.5])
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence([True, False])
         )
         self.assertIsNone(
             trace.Span._check_attribute_value_sequence(["ss", "dw", "fw"])

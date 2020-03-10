@@ -260,10 +260,6 @@ class Span(trace_api.Span):
         if first_element_type not in (bool, str, int, float):
             return "invalid type"
 
-        # int and float are both numeric types, allow mixed arrays of those
-        if first_element_type in (int, float):
-            first_element_type = (int, float)
-
         for element in sequence:
             if not isinstance(element, first_element_type):
                 return "different type"
