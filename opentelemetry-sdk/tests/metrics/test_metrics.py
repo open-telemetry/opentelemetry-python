@@ -203,8 +203,9 @@ class TestMetric(unittest.TestCase):
             kvp = {"key": "value"}
             label_set = meter.get_label_set(kvp)
             bound_instrument = metric.bind(label_set)
-            self.assertEqual(metric.bound_instruments. \
-                             get(label_set), bound_instrument)
+            self.assertEqual(
+                metric.bound_instruments.get(label_set), bound_instrument
+            )
 
 
 class TestCounter(unittest.TestCase):

@@ -60,7 +60,7 @@ counter2 = meter.create_metric(
 # The meter takes a dictionary of key value pairs
 label_set = meter.get_label_set({"environment": "staging"})
 
-# Handle usage
+# Bound instrument usage
 
 # You can record metrics with bound metric instruments. Bound metric instruments
 # are created by passing in a labelset. A bound metric  is essentially metric
