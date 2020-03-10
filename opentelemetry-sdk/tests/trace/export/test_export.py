@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import time
 import unittest
 from logging import WARNING
@@ -288,8 +289,9 @@ class TestConsoleSpanExporter(unittest.TestCase):
         span = trace.Span("span name", mock.Mock())
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
-        mock_stdout.write.assert_called_once_with(str(span))
+        mock_stdout.write.assert_called_once_with(str(span) + os.linesep)
         self.assertEqual(mock_stdout.write.call_count, 1)
+        self.assertEqual(mock_stdout.flush.call_count, 1)
 
     def test_export_custom(self):  # pylint: disable=no-self-use
         """Check that console exporter uses custom io, formatter."""

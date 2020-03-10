@@ -41,6 +41,7 @@ class TestRequestsIntegration(unittest.TestCase):
         self.get_tracer = self.get_tracer_patcher.start()
         self.span_context_manager = mock.MagicMock()
         self.span = mock.create_autospec(trace.Span, spec_set=True)
+        self.span.get_context.return_value = trace.INVALID_SPAN_CONTEXT
         self.span_context_manager.__enter__.return_value = self.span
 
         def setspanattr(key, value):

@@ -50,13 +50,6 @@ class DefaultMetricHandle:
             value: The value to add to the handle.
         """
 
-    def set(self, value: ValueT) -> None:
-        """No-op implementation of `GaugeHandle` set.
-
-        Args:
-            value: The value to set to the handle.
-        """
-
     def record(self, value: ValueT) -> None:
         """No-op implementation of `MeasureHandle` record.
 
@@ -71,15 +64,6 @@ class CounterHandle:
 
         Args:
             value: The value to add to the handle.
-        """
-
-
-class GaugeHandle:
-    def set(self, value: ValueT) -> None:
-        """Sets the current value of the handle to ``value``.
-
-        Args:
-            value: The value to set to the handle.
         """
 
 
@@ -124,7 +108,7 @@ class Metric(abc.ABC):
 
         Handles are useful to reduce the cost of repeatedly recording a metric
         with a pre-defined set of label values. All metric kinds (counter,
-        gauge, measure) support declaring a set of required label keys. The
+        measure) support declaring a set of required label keys. The
         values corresponding to these keys should be specified in every handle.
         "Unspecified" label values, in cases where a handle is requested but
         a value was not provided are permitted.
@@ -153,14 +137,6 @@ class DefaultMetric(Metric):
             label_set: `LabelSet` to associate with the returned handle.
         """
 
-    def set(self, value: ValueT, label_set: LabelSet) -> None:
-        """No-op implementation of `Gauge` set.
-
-        Args:
-            value: The value to set the gauge metric to.
-            label_set: `LabelSet` to associate with the returned handle.
-        """
-
     def record(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Measure` record.
 
@@ -186,28 +162,6 @@ class Counter(Metric):
         """
 
 
-class Gauge(Metric):
-    """A gauge type metric that expresses a pre-calculated value.
-
-    Gauge metrics have a value that is either ``Set`` by explicit
-    instrumentation or observed through a callback. This kind of metric
-    should be used when the metric cannot be expressed as a sum or because
-    the measurement interval is arbitrary.
-    """
-
-    def get_handle(self, label_set: LabelSet) -> "GaugeHandle":
-        """Gets a `GaugeHandle`."""
-        return GaugeHandle()
-
-    def set(self, value: ValueT, label_set: LabelSet) -> None:
-        """Sets the value of the gauge to ``value``.
-
-        Args:
-            value: The value to set the gauge metric to.
-            label_set: `LabelSet` to associate with the returned handle.
-        """
-
-
 class Measure(Metric):
     """A measure type metric that represent raw stats that are recorded.
 
@@ -224,6 +178,37 @@ class Measure(Metric):
         Args:
             value: The value to record to this measure metric.
             label_set: `LabelSet` to associate with the returned handle.
+        """
+
+
+class Observer(abc.ABC):
+    """An observer type metric instrument used to capture a current set of values.
+
+
+    Observer instruments are asynchronous, a callback is invoked with the
+    observer instrument as argument allowing the user to capture multiple
+    values per collection interval.
+    """
+
+    @abc.abstractmethod
+    def observe(self, value: ValueT, label_set: LabelSet) -> None:
+        """Captures ``value`` to the observer.
+
+        Args:
+            value: The value to capture to this observer metric.
+            label_set: `LabelSet` associated to ``value``.
+        """
+
+
+class DefaultObserver(Observer):
+    """No-op implementation of ``Observer``."""
+
+    def observe(self, value: ValueT, label_set: LabelSet) -> None:
+        """Captures ``value`` to the observer.
+
+        Args:
+            value: The value to capture to this observer metric.
+            label_set: `LabelSet` associated to ``value``.
         """
 
 
@@ -277,15 +262,16 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, Gauge, Measure)
+MetricT = TypeVar("MetricT", Counter, Measure, Observer)
+ObserverCallbackT = Callable[[Observer], None]
 
 
 # pylint: disable=unused-argument
 class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
 
-    `Metric` s are used for recording pre-defined aggregation (gauge and
-    counter), or raw values (measure) in which the aggregation and labels
+    `Metric` s are used for recording pre-defined aggregation (counter),
+    or raw values (measure) in which the aggregation and labels
     for the exported metric are deferred.
     """
 
@@ -325,12 +311,39 @@ class Meter(abc.ABC):
         Args:
             name: The name of the metric.
             description: Human-readable description of the metric.
-            unit: Unit of the metric values.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
+        """
+
+    @abc.abstractmethod
+    def register_observer(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "Observer":
+        """Registers an ``Observer`` metric instrument.
+
+        Args:
+            callback: Callback invoked each collection interval with the
+                observer as argument.
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            label_keys: The keys for the labels with dynamic values.
+            enabled: Whether to report the metric by default.
+        Returns: A new ``Observer`` metric instrument.
         """
 
     @abc.abstractmethod
@@ -366,6 +379,18 @@ class DefaultMeter(Meter):
     ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()
+
+    def register_observer(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "Observer":
+        return DefaultObserver()
 
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         # pylint: disable=no-self-use
