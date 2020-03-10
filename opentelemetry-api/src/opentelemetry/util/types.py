@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, Optional, Sequence, Union
+from typing import Callable, Dict, Optional, Sequence, Union
 
 AttributeValue = Union[
     str,
@@ -26,3 +26,4 @@ AttributeValue = Union[
     Sequence[float],
 ]
 Attributes = Optional[Dict[str, AttributeValue]]
+AttributesFormatter = Callable[[], Optional[Dict[str, AttributeValue]]]

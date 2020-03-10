@@ -126,7 +126,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         }
 
         event_timestamp = base_time + 50 * 10 ** 6
-        event = trace_api.Event(
+        event = trace.Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
