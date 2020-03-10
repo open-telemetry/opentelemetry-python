@@ -430,9 +430,7 @@ class TestObserverAggregator(unittest.TestCase):
     def test_update(self):
         observer = ObserverAggregator()
         # test current values without any update
-        self.assertEqual(
-            observer.mmsc.current, (None, None, None, 0),
-        )
+        self.assertEqual(observer.mmsc.current, (None, None, None, 0))
         self.assertIsNone(observer.current)
 
         # call update with some values
@@ -452,9 +450,7 @@ class TestObserverAggregator(unittest.TestCase):
 
         # take checkpoint wihtout any update
         observer.take_checkpoint()
-        self.assertEqual(
-            observer.checkpoint, (None, None, None, 0, None),
-        )
+        self.assertEqual(observer.checkpoint, (None, None, None, 0, None))
 
         # call update with some values
         values = (3, 50, 3, 97)
