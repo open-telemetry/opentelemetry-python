@@ -34,7 +34,7 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry.configuration import Configuration
 
-_LOGGER = getLogger(__name__)
+logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
@@ -435,7 +435,7 @@ def get_meter_provider() -> MeterProvider:
             # FIXME Decide on how to handle this. Should an exception be
             # raised here, or only a message should be logged and should
             # we fall back to the default meter provider?
-            _LOGGER.error(
+            logger.error(
                 "Failed to load configured meter provider %s",
                 configured_meter_provider,
             )

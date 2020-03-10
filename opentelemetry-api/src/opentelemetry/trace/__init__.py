@@ -79,7 +79,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
 
-_LOGGER = getLogger(__name__)
+logger = getLogger(__name__)
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -678,7 +678,7 @@ def get_tracer_provider() -> TracerProvider:
             # FIXME Decide on how to handle this. Should an exception be
             # raised here, or only a message should be logged and should
             # we fall back to the default tracer provider?
-            _LOGGER.error(
+            logger.error(
                 "Failed to load tracer implementation: %s",
                 configured_tracer_provider,
             )
