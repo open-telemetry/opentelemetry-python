@@ -47,14 +47,14 @@ class DefaultBoundInstrument:
         """No-op implementation of `BoundCounter` add.
 
         Args:
-            value: The value to add to the bound metric.
+            value: The value to add to the bound metric instrument.
         """
 
     def record(self, value: ValueT) -> None:
         """No-op implementation of `BoundMeasure` record.
 
         Args:
-            value: The value to record to the bound metric.
+            value: The value to record to the bound metric instrument.
         """
 
 
@@ -104,16 +104,18 @@ class Metric(abc.ABC):
 
     @abc.abstractmethod
     def bind(self, label_set: LabelSet) -> "object":
-        """Gets a bound metric, used for repeated-use of metrics instruments.
+        """Gets a bound metric instrument.
 
         Bound metric instruments are useful to reduce the cost of repeatedly
         recording a metric with a pre-defined set of label values. All metric
         kinds (counter, measure) support declaring a set of required label keys.
         The values corresponding to these keys should be specified in every
-        bound metric. "Unspecified" label values, in cases where a bound metric
-        instrument is requested but a value was not provided are permitted.
+        bound metric instrument. "Unspecified" label values, in cases where a
+        bound metric instrument is requested but a value was not provided are
+        permitted.
 
-        Args: label_set: `LabelSet` to associate with the returned bound metric.
+        Args:
+            label_set: `LabelSet` to associate with the bound instrument.
         """
 
 
@@ -124,7 +126,7 @@ class DefaultMetric(Metric):
         """Gets a `DefaultBoundInstrument`.
 
         Args:
-            label_set: `LabelSet` to associate with the returned bound metric.
+            label_set: `LabelSet` to associate with the bound instrument.
         """
         return DefaultBoundInstrument()
 
@@ -133,7 +135,7 @@ class DefaultMetric(Metric):
 
         Args:
             value: The value to add to the counter metric.
-            label_set: `LabelSet` to associate with the returned bound metric.
+            label_set: `LabelSet` to associate with the bound instrument.
         """
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
@@ -141,7 +143,7 @@ class DefaultMetric(Metric):
 
         Args:
             value: The value to record to this measure metric.
-            label_set: `LabelSet` to associate with the returned bound metric.
+            label_set: `LabelSet` to associate with the bound instrument.
         """
 
 
@@ -168,7 +170,7 @@ class Measure(Metric):
     """
 
     def bind(self, label_set: LabelSet) -> "BoundMeasure":
-        """Gets a `BoundMeasure` with a float value."""
+        """Gets a `BoundMeasure`."""
         return BoundMeasure()
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
