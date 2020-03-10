@@ -24,7 +24,9 @@ class CorrelationContext(abc.ABC):
     """A container for correlation context"""
 
     @abc.abstractmethod
-    def get_correlations(self, context: typing.Optional[Context] = None):
+    def get_correlations(
+        self, context: typing.Optional[Context] = None
+    ) -> typing.Optional[object]:
         """ Returns the name/value pairs in the CorrelationContext
 
         Args:
@@ -36,7 +38,7 @@ class CorrelationContext(abc.ABC):
 
     @abc.abstractmethod
     def get_correlation(
-        self, name, context: typing.Optional[Context] = None
+        self, name: str, context: typing.Optional[Context] = None
     ) -> typing.Optional[object]:
         """ Provides access to the value for a name/value pair by a prior event
 
@@ -51,7 +53,7 @@ class CorrelationContext(abc.ABC):
 
     @abc.abstractmethod
     def set_correlation(
-        self, name, value, context: typing.Optional[Context] = None
+        self, name: str, value: object, context: typing.Optional[Context] = None
     ) -> Context:
         """
 
@@ -66,7 +68,7 @@ class CorrelationContext(abc.ABC):
 
     @abc.abstractmethod
     def remove_correlation(
-        self, name, context: typing.Optional[Context] = None
+        self, name: str, context: typing.Optional[Context] = None
     ) -> Context:
         """
 
@@ -96,25 +98,23 @@ class DefaultCorrelationContext(CorrelationContext):
 
     def get_correlations(
         self, context: typing.Optional[Context] = None
-    ) -> typing.Dict:
+    ) -> typing.Dict[object, object]:
         return {}
 
     def get_correlation(
-        self, name, context: typing.Optional[Context] = None
+        self, name: str, context: typing.Optional[Context] = None
     ) -> typing.Optional[object]:
         return None
 
     def set_correlation(
-        self, name, value, context: typing.Optional[Context] = None
+        self, name: str, value: object, context: typing.Optional[Context] = None
     ) -> Context:
-        return context
+        return context  # type: ignore
 
     def remove_correlation(
-        self, name, context: typing.Optional[Context] = None
+        self, name: str, context: typing.Optional[Context] = None
     ) -> Context:
-        return context
+        return context  # type: ignore
 
-    def clear_correlations(
-        self, context: typing.Optional[Context] = None
-    ) -> Context:
-        return context
+    def clear_correlations(self, context: typing.Optional[Context] = None) -> Context:
+        return context  # type: ignore
