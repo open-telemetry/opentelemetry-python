@@ -23,7 +23,9 @@ class TestMetrics(unittest.TestCase):
         default = metrics.DefaultMetric()
         default_ls = metrics.DefaultLabelSet()
         bound_metric_instr = default.bind(default_ls)
-        self.assertIsInstance(bound_metric_instr, metrics.DefaultBoundInstrument)
+        self.assertIsInstance(
+            bound_metric_instr, metrics.DefaultBoundInstrument
+        )
 
     def test_counter(self):
         counter = metrics.Counter()

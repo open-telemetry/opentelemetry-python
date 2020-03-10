@@ -58,8 +58,8 @@ class BaseBoundInstrument:
         value_type: The type of values for this bound instrument (int, float).
         enabled: True if the originating instrument is enabled.
         aggregator: The aggregator for this bound metric instrument. Will
-        handle aggregation upon updates and checkpointing of values for
-        exporting.
+            handle aggregation upon updates and checkpointing of values for
+            exporting.
     """
 
     def __init__(
