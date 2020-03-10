@@ -19,7 +19,7 @@ from logging import ERROR, WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk import trace
+from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import sampling
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -364,6 +364,20 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(tracer.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
+    def test_explicit_span_resource(self):
+        resource = resources.Resource.create({})
+        tracer_provider = trace.TracerProvider(resource=resource)
+        tracer = tracer_provider.get_tracer(__name__)
+        span = tracer.start_span("root")
+        self.assertIs(span.resource, resource)
+
+    def test_default_span_resource(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
+        span = tracer.start_span("root")
+        # pylint: disable=protected-access
+        self.assertIs(span.resource, resources._EMPTY_RESOURCE)
+
 
 class TestSpan(unittest.TestCase):
     def setUp(self):
@@ -391,7 +405,7 @@ class TestSpan(unittest.TestCase):
 
             root.set_attribute("empty-list", [])
             root.set_attribute("list-of-bools", [True, True, False])
-            root.set_attribute("list-of-numerics", [123, 3.14, 0])
+            root.set_attribute("list-of-numerics", [123, 314, 0])
 
             self.assertEqual(len(root.attributes), 10)
             self.assertEqual(root.attributes["component"], "http")
@@ -409,7 +423,7 @@ class TestSpan(unittest.TestCase):
                 root.attributes["list-of-bools"], [True, True, False]
             )
             self.assertEqual(
-                root.attributes["list-of-numerics"], [123, 3.14, 0]
+                root.attributes["list-of-numerics"], [123, 314, 0]
             )
 
         attributes = {
@@ -440,6 +454,9 @@ class TestSpan(unittest.TestCase):
                 "list-with-non-primitive-data-type", [dict(), 123]
             )
 
+            root.set_attribute("", 123)
+            root.set_attribute(None, 123)
+
             self.assertEqual(len(root.attributes), 0)
 
     def test_check_sequence_helper(self):
@@ -458,8 +475,18 @@ class TestSpan(unittest.TestCase):
             ),
             "different type",
         )
+        self.assertEqual(
+            trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5]),
+            "different type",
+        )
         self.assertIsNone(
-            trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5])
+            trace.Span._check_attribute_value_sequence([1, 2, 3, 5])
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence([1.2, 2.3, 3.4, 4.5])
+        )
+        self.assertIsNone(
+            trace.Span._check_attribute_value_sequence([True, False])
         )
         self.assertIsNone(
             trace.Span._check_attribute_value_sequence(["ss", "dw", "fw"])
@@ -669,6 +696,32 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
             )
+
+        error_status_test(
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
+        )
+        error_status_test(
+            trace.TracerProvider()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
+
+    def test_override_error_status(self):
+        def error_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    root.set_status(
+                        trace_api.status.Status(
+                            StatusCanonicalCode.UNAVAILABLE,
+                            "Error: Unavailable",
+                        )
+                    )
+                    raise AssertionError("unknown")
+
+            self.assertIs(
+                root.status.canonical_code, StatusCanonicalCode.UNAVAILABLE
+            )
+            self.assertEqual(root.status.description, "Error: Unavailable")
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")

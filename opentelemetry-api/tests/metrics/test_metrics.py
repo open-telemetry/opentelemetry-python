@@ -22,14 +22,16 @@ class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
         default_ls = metrics.DefaultLabelSet()
-        handle = default.get_handle(default_ls)
-        self.assertIsInstance(handle, metrics.DefaultMetricHandle)
+        bound_metric_instr = default.bind(default_ls)
+        self.assertIsInstance(
+            bound_metric_instr, metrics.DefaultBoundInstrument
+        )
 
     def test_counter(self):
         counter = metrics.Counter()
         label_set = metrics.LabelSet()
-        handle = counter.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.CounterHandle)
+        bound_counter = counter.bind(label_set)
+        self.assertIsInstance(bound_counter, metrics.BoundCounter)
 
     def test_counter_add(self):
         counter = metrics.Counter()
@@ -39,25 +41,25 @@ class TestMetrics(unittest.TestCase):
     def test_measure(self):
         measure = metrics.Measure()
         label_set = metrics.LabelSet()
-        handle = measure.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.MeasureHandle)
+        bound_measure = measure.bind(label_set)
+        self.assertIsInstance(bound_measure, metrics.BoundMeasure)
 
     def test_measure_record(self):
         measure = metrics.Measure()
         label_set = metrics.LabelSet()
         measure.record(1, label_set)
 
-    def test_default_handle(self):
-        handle = metrics.DefaultMetricHandle()
-        handle.release()
+    def test_default_bound_metric(self):
+        bound_instrument = metrics.DefaultBoundInstrument()
+        bound_instrument.release()
 
-    def test_counter_handle(self):
-        handle = metrics.CounterHandle()
-        handle.add(1)
+    def test_bound_counter(self):
+        bound_counter = metrics.BoundCounter()
+        bound_counter.add(1)
 
-    def test_measure_handle(self):
-        handle = metrics.MeasureHandle()
-        handle.record(1)
+    def test_bound_measure(self):
+        bound_measure = metrics.BoundMeasure()
+        bound_measure.record(1)
 
     def test_observer(self):
         observer = metrics.DefaultObserver()

@@ -13,7 +13,22 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, Span, SpanContext
+from opentelemetry import trace as trace_api
+from opentelemetry.context import get_value, set_value
+from opentelemetry.context.context import Context
 
-_SPAN_CONTEXT_KEY = "extracted-span-context"
 SPAN_KEY = "current-span"
+
+
+def set_span_in_context(
+    span: trace_api.Span, context: Optional[Context] = None
+) -> Context:
+    ctx = set_value(SPAN_KEY, span, context=context)
+    return ctx
+
+
+def get_span_from_context(context: Optional[Context] = None) -> trace_api.Span:
+    span = get_value(SPAN_KEY, context=context)
+    if not isinstance(span, trace_api.Span):
+        return trace_api.INVALID_SPAN
+    return span

@@ -1,47 +1,104 @@
-.. OpenTelemetry documentation master file, created by
-   sphinx-quickstart on Mon Jun  3 22:48:38 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+OpenTelemetry-Python
+====================
 
-OpenTelemetry
-=============
+The Python `OpenTelemetry <https://opentelemetry.io/>`_ client.
 
-Welcome to OpenTelemetry's documentation!
+.. image:: https://img.shields.io/gitter/room/opentelemetry/opentelemetry-python
+   :target: https://gitter.im/open-telemetry/opentelemetry-python
+   :alt: Gitter Chat
 
-This documentation describes the ``opentelemetry-api``, ``opentelemetry-sdk``
-and integration packages.
 
-.. toctree::
-   :maxdepth: 1
-   :caption: OpenTelemetry API:
+This documentation describes the :doc:`opentelemetry-api <api/api>`,
+:doc:`opentelemetry-sdk <sdk/sdk>`, and several `integration packages <#integrations>`_.
 
-   opentelemetry.context
-   opentelemetry.metrics
-   opentelemetry.trace
-   opentelemetry.util.loader
+**Please note** that this library is currently in alpha, and shouldn't be
+used in production environments.
+
+Installation
+------------
+
+The API and SDK packages are available on PyPI, and can installed via pip:
+
+.. code-block:: sh
+
+    pip install opentelemetry-api
+    pip install opentelemetry-sdk
+
+In addition, there are several extension packages which can be installed separately as::
+
+    pip install opentelemetry-ext-{integration}
+
+The extension packages can be found in :scm_web:`ext/ directory of the repository <ext/>`.
+
+In addition, third party exporters are available:
+
+* `Azure Monitor <https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor>`_
+
+Installing Cutting Edge Packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+While the project is pre-1.0, there may be significant functionality that
+has not yet been released to PyPI. In that situation, you may want to
+install the packages directly from the repo. This can be done by cloning the
+repositry and doing an `editable
+install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_:
+
+.. code-block:: sh
+
+    git clone https://github.com/open-telemetry/opentelemetry-python.git
+    cd opentelemetry-python
+    pip install -e ./opentelemetry-api
+    pip install -e ./opentelemetry-sdk
+    pip install -e ./ext/opentelemetry-ext-{integration}
+
+
+Quick Start
+-----------
+
+OpenTelemetry can be used to emit distributed traces and metrics from your application.
+The following are two simple examples using the API and SDK, you can find more
+elaborated examples in `Examples`_.
+
+.. TODO: Link to complete and better examples
+
+Tracing
+~~~~~~~
+
+.. literalinclude:: trace_example.py
+  :language: python
+
+Metrics
+~~~~~~~
+
+.. literalinclude:: metrics_example.py
+  :language: python
 
 .. toctree::
     :maxdepth: 1
-    :caption: OpenTelemetry SDK:
+    :caption: OpenTelemetry Python Packages
+    :name: packages
 
-    opentelemetry.sdk.context
-    opentelemetry.sdk.metrics
-    opentelemetry.sdk.trace
-
+    api/api
+    sdk/sdk
 
 .. toctree::
     :maxdepth: 1
-    :caption: OpenTelemetry Integrations:
+    :caption: OpenTelemetry Integrations
+    :name: integrations
+    :glob:
 
-    opentelemetry.ext.flask
-    opentelemetry.ext.http_requests
-    opentelemetry.ext.jaeger
-    opentelemetry.ext.opentracing_shim
-    opentelemetry.ext.pymongo
-    opentelemetry.ext.wsgi
+    ext/**
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Examples
+    :name: examples
+    :glob:
+
+    examples/**
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

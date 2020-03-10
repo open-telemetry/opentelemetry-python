@@ -14,12 +14,12 @@
 
 import logging
 import threading
-from collections import OrderedDict
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
-from opentelemetry.sdk.metrics.export.batcher import Batcher, UngroupedBatcher
+from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util import time_ns
 
@@ -48,17 +48,18 @@ class LabelSet(metrics_api.LabelSet):
         return self._encoded == other._encoded
 
 
-class BaseHandle:
-    """The base handle class containing common behavior for all handles.
+class BaseBoundInstrument:
+    """Class containing common behavior for all bound metric instruments.
 
-    Handles are responsible for operating on data for metric instruments for a
-    specific set of labels.
+    Bound metric instruments are responsible for operating on data for metric
+    instruments for a specific set of labels.
 
     Args:
-        value_type: The type of values this handle holds (int, float).
+        value_type: The type of values for this bound instrument (int, float).
         enabled: True if the originating instrument is enabled.
-        aggregator: The aggregator for this handle. Will handle aggregation
-            upon updates and checkpointing of values for exporting.
+        aggregator: The aggregator for this bound metric instrument. Will
+            handle aggregation upon updates and checkpointing of values for
+            exporting.
     """
 
     def __init__(
@@ -111,16 +112,16 @@ class BaseHandle:
         )
 
 
-class CounterHandle(metrics_api.CounterHandle, BaseHandle):
+class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
     def add(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.CounterHandle.add`."""
+        """See `opentelemetry.metrics.BoundCounter.add`."""
         if self._validate_update(value):
             self.update(value)
 
 
-class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
+class BoundMeasure(metrics_api.BoundMeasure, BaseBoundInstrument):
     def record(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.MeasureHandle.record`."""
+        """See `opentelemetry.metrics.BoundMeasure.record`."""
         if self._validate_update(value):
             self.update(value)
 
@@ -130,11 +131,11 @@ class Metric(metrics_api.Metric):
 
     Also known as metric instrument. This is the class that is used to
     represent a metric that is to be continuously recorded and tracked. Each
-    metric has a set of handles that are created from the metric. See
-    `BaseHandle` for information on handles.
+    metric has a set of bound metrics that are created from the metric. See
+    `BaseBoundInstrument` for information on bound metric instruments.
     """
 
-    HANDLE_TYPE = BaseHandle
+    BOUND_INSTR_TYPE = BaseBoundInstrument
 
     def __init__(
         self,
@@ -153,23 +154,23 @@ class Metric(metrics_api.Metric):
         self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
-        self.handles = {}
-        self.handles_lock = threading.Lock()
+        self.bound_instruments = {}
+        self.bound_instruments_lock = threading.Lock()
 
-    def get_handle(self, label_set: LabelSet) -> BaseHandle:
-        """See `opentelemetry.metrics.Metric.get_handle`."""
-        with self.handles_lock:
-            handle = self.handles.get(label_set)
-            if handle is None:
-                handle = self.HANDLE_TYPE(
+    def bind(self, label_set: LabelSet) -> BaseBoundInstrument:
+        """See `opentelemetry.metrics.Metric.bind`."""
+        with self.bound_instruments_lock:
+            bound_instrument = self.bound_instruments.get(label_set)
+            if bound_instrument is None:
+                bound_instrument = self.BOUND_INSTR_TYPE(
                     self.value_type,
                     self.enabled,
                     # Aggregator will be created based off type of metric
                     self.meter.batcher.aggregator_for(self.__class__),
                 )
-                self.handles[label_set] = handle
-        handle.increase_ref_count()
-        return handle
+                self.bound_instruments[label_set] = bound_instrument
+        bound_instrument.increase_ref_count()
+        return bound_instrument
 
     def __repr__(self):
         return '{}(name="{}", description="{}")'.format(
@@ -183,33 +184,13 @@ class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
     """
 
-    HANDLE_TYPE = CounterHandle
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
-        label_keys: Sequence[str] = (),
-        enabled: bool = True,
-    ):
-        super().__init__(
-            name,
-            description,
-            unit,
-            value_type,
-            meter,
-            label_keys=label_keys,
-            enabled=enabled,
-        )
+    BOUND_INSTR_TYPE = BoundCounter
 
     def add(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
-        handle = self.get_handle(label_set)
-        handle.add(value)
-        handle.release()
+        bound_intrument = self.bind(label_set)
+        bound_intrument.add(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = add
 
@@ -217,13 +198,13 @@ class Counter(Metric, metrics_api.Counter):
 class Measure(Metric, metrics_api.Measure):
     """See `opentelemetry.metrics.Measure`."""
 
-    HANDLE_TYPE = MeasureHandle
+    BOUND_INSTR_TYPE = BoundMeasure
 
     def record(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
-        handle = self.get_handle(label_set)
-        handle.record(value)
-        handle.release()
+        bound_intrument = self.bind(label_set)
+        bound_intrument.record(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = record
 
@@ -314,13 +295,17 @@ class Meter(metrics_api.Meter):
     """
 
     def __init__(
-        self, instrumentation_info: "InstrumentationInfo", stateful: bool,
+        self,
+        instrumentation_info: "InstrumentationInfo",
+        stateful: bool,
+        resource: Resource = Resource.create_empty(),
     ):
         self.instrumentation_info = instrumentation_info
         self.metrics = set()
         self.observers = set()
         self.batcher = UngroupedBatcher(stateful)
         self.observers_lock = threading.Lock()
+        self.resource = resource
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -340,20 +325,20 @@ class Meter(metrics_api.Meter):
 
             to_remove = []
 
-            with metric.handles_lock:
-                for label_set, handle in metric.handles.items():
+            with metric.bound_instruments_lock:
+                for label_set, bound_instr in metric.bound_instruments.items():
                     # TODO: Consider storing records in memory?
-                    record = Record(metric, label_set, handle.aggregator)
+                    record = Record(metric, label_set, bound_instr.aggregator)
                     # Checkpoints the current aggregators
                     # Applies different batching logic based on type of batcher
                     self.batcher.process(record)
 
-                    if handle.ref_count() == 0:
+                    if bound_instr.ref_count() == 0:
                         to_remove.append(label_set)
 
                 # Remove handles that were released
                 for label_set in to_remove:
-                    del metric.handles[label_set]
+                    del metric.bound_instruments[label_set]
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
@@ -444,6 +429,11 @@ class Meter(metrics_api.Meter):
 
 
 class MeterProvider(metrics_api.MeterProvider):
+    def __init__(
+        self, resource: Resource = Resource.create_empty(),
+    ):
+        self.resource = resource
+
     def get_meter(
         self,
         instrumenting_module_name: str,
@@ -457,4 +447,5 @@ class MeterProvider(metrics_api.MeterProvider):
                 instrumenting_module_name, instrumenting_library_version
             ),
             stateful=stateful,
+            resource=self.resource,
         )
