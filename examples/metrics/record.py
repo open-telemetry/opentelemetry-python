@@ -62,11 +62,11 @@ label_set = meter.get_label_set({"environment": "staging"})
 
 # Bound instrument usage
 
-# You can record metrics with bound metric instruments. Bound metric instruments
-# are created by passing in a labelset. A bound metric instrument  is
-# essentially metric data that corresponds to a specific set of labels.
-# Therefore, getting a bound metric instrument using the same set of labels will
-# yield the same bound metric instrument.
+# You can record metrics with bound metric instruments. Bound metric
+# instruments are created by passing in a labelset. A bound metric instrument
+# is essentially metric data that corresponds to a specific set of labels.
+# Therefore, getting a bound metric instrument using the same set of labels
+# will yield the same bound metric instrument.
 bound_counter = counter.bind(label_set)
 bound_counter.add(100)
 

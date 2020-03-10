@@ -108,11 +108,11 @@ class Metric(abc.ABC):
 
         Bound metric instruments are useful to reduce the cost of repeatedly
         recording a metric with a pre-defined set of label values. All metric
-        kinds (counter, measure) support declaring a set of required label keys.
-        The values corresponding to these keys should be specified in every
-        bound metric instrument. "Unspecified" label values, in cases where a
-        bound metric instrument is requested but a value was not provided are
-        permitted.
+        kinds (counter, measure) support declaring a set of required label
+        keys. The values corresponding to these keys should be specified in
+        every bound metric instrument. "Unspecified" label values, in cases
+        where a bound metric instrument is requested but a value was not
+        provided are permitted.
 
         Args:
             label_set: `LabelSet` to associate with the bound instrument.
@@ -183,7 +183,8 @@ class Measure(Metric):
 
 
 class Observer(abc.ABC):
-    """An observer type metric instrument used to capture a current set of values.
+    """An observer type metric instrument used to capture a current set of
+    values.
 
 
     Observer instruments are asynchronous, a callback is invoked with the
