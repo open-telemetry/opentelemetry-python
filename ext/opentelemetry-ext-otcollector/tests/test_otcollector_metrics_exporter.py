@@ -33,6 +33,7 @@ from opentelemetry.sdk.metrics.export import (
 class TestCollectorMetricsExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # pylint: disable=protected-access
         cls._meter_defaults = (
             metrics._METER_PROVIDER,
             metrics._METER_PROVIDER_FACTORY,
@@ -46,6 +47,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        # pylint: disable=protected-access
         metrics._METER_PROVIDER, metrics._METER_PROVIDER_FACTORY = (
             cls._meter_defaults
         )
