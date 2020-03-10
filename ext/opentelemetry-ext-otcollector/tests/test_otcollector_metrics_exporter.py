@@ -48,9 +48,10 @@ class TestCollectorMetricsExporter(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         # pylint: disable=protected-access
-        metrics._METER_PROVIDER, metrics._METER_PROVIDER_FACTORY = (
-            cls._meter_defaults
-        )
+        (
+            metrics._METER_PROVIDER,
+            metrics._METER_PROVIDER_FACTORY,
+        ) = cls._meter_defaults
 
     def test_constructor(self):
         mock_get_node = mock.Mock()
