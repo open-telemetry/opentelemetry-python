@@ -13,10 +13,9 @@
 # limitations under the License.
 
 import typing
-from contextlib import contextmanager
 
 from opentelemetry import correlationcontext as cctx_api
-from opentelemetry.context import get_value, set_value, get_current
+from opentelemetry.context import get_value, set_value
 from opentelemetry.context.context import Context
 
 

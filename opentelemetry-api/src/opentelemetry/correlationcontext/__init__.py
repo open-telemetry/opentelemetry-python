@@ -13,12 +13,8 @@
 # limitations under the License.
 
 import abc
-import itertools
-import string
 import typing
-from contextlib import contextmanager
 
-from opentelemetry.context import attach, get_value, set_value
 from opentelemetry.context.context import Context
 
 CORRELATION_CONTEXT_KEY = "correlation-context"
@@ -30,7 +26,7 @@ class CorrelationContext(abc.ABC):
     @abc.abstractmethod
     def get_correlations(self, context: typing.Optional[Context] = None):
         """ Returns the name/value pairs in the CorrelationContext
-        
+
         Args:
             context: the Context to use. If not set, uses current Context
 
@@ -43,7 +39,7 @@ class CorrelationContext(abc.ABC):
         self, name, context: typing.Optional[Context] = None
     ) -> typing.Optional[object]:
         """ Provides access to the value for a name/value pair by a prior event
-        
+
         Args:
             name: the name of the value to retrieve
             context: the Context to use. If not set, uses current Context
