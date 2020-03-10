@@ -21,6 +21,7 @@ from opentelemetry.ext.prometheus import (
     CustomCollector,
     PrometheusMetricsExporter,
 )
+from opentelemetry.metrics import get_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
@@ -28,7 +29,7 @@ from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 
 class TestPrometheusMetricExporter(unittest.TestCase):
     def setUp(self):
-        self._meter = metrics.MeterProvider().get_meter(__name__)
+        self._meter = get_meter_provider().get_meter(__name__)
         self._test_metric = self._meter.create_metric(
             "testname",
             "testdesc",
@@ -74,7 +75,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             self.assertIs(result, MetricsExportResult.SUCCESS)
 
     def test_counter_to_prometheus(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
+        meter = get_meter_provider().get_meter(__name__)
         metric = meter.create_metric(
             "test@name",
             "testdesc",
@@ -110,8 +111,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     # TODO: Add unit test once Measure Aggregators are available
 
     def test_invalid_metric(self):
-
-        meter = metrics.MeterProvider().get_meter(__name__)
+        meter = get_meter_provider().get_meter(__name__)
         metric = meter.create_metric(
             "tesname", "testdesc", "unit", int, TestMetric
         )

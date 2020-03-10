@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.trace
+from os import environ
 
 
-def dummy_check_mypy_returntype() -> opentelemetry.trace.TracerProvider:
-    return opentelemetry.trace.get_tracer_provider()
+def pytest_sessionstart(session):  # pylint: disable=unused-argument
+    environ["OPENTELEMETRY_PYTHON_TRACER_PROVIDER"] = "sdk_tracer_provider"
+    environ["OPENTELEMETRY_PYTHON_METER_PROVIDER"] = "sdk_meter_provider"
+
+
+def pytest_sessionfinish(session):  # pylint: disable=unused-argument
+    environ.pop("OPENTELEMETRY_PYTHON_TRACER_PROVIDER")
+    environ.pop("OPENTELEMETRY_PYTHON_METER_PROVIDER")

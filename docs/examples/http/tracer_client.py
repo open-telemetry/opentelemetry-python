@@ -20,7 +20,6 @@ import requests
 
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
     ConsoleSpanExporter,
@@ -37,10 +36,7 @@ if os.getenv("EXPORTER") == "jaeger":
 else:
     exporter = ConsoleSpanExporter()
 
-# The preferred tracer implementation must be set, as the opentelemetry-api
-# defines the interface with a no-op implementation.
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-tracer_provider = trace.tracer_provider()
+tracer_provider = trace.get_tracer_provider()
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)

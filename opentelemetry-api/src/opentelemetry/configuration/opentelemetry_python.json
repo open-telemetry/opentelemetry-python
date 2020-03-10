@@ -1,0 +1,4 @@
+{
+    "tracer_provider": "default_tracer_provider",
+    "meter_provider": "default_meter_provider"
+}

@@ -12,17 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+from os.path import dirname, exists, join
+from pathlib import Path
 
 import setuptools
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "util", "version.py"
-)
+BASE_DIR = dirname(__file__)
+VERSION_FILENAME = join(BASE_DIR, "src", "opentelemetry", "util", "version.py")
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
+
+# FIXME Make this script install the configuration file in
+# ~/.config/opentelemetry_python.json
+configuration_file_path = join(
+    Path.home(), ".config", "opentelemetry_python.json"
+)
+
+data_files = []
+
+if not exists(configuration_file_path):
+    data_files.append(
+        (
+            dirname(configuration_file_path),
+            [
+                join(
+                    "src",
+                    "opentelemetry",
+                    "configuration",
+                    "opentelemetry_python.json",
+                )
+            ],
+        )
+    )
 
 setuptools.setup(
     name="opentelemetry-api",
@@ -61,12 +83,22 @@ setuptools.setup(
     zip_safe=False,
     entry_points={
         "opentelemetry_context": [
+            "default_context = opentelemetry.context:DefaultContext",
             "contextvars_context = "
             "opentelemetry.context.contextvars_context:"
             "ContextVarsRuntimeContext",
             "threadlocal_context = "
             "opentelemetry.context.threadlocal_context:"
             "ThreadLocalRuntimeContext",
-        ]
+        ],
+        "opentelemetry_meter_provider": [
+            "default_meter_provider = "
+            "opentelemetry.metrics:DefaultMeterProvider"
+        ],
+        "opentelemetry_tracer_provider": [
+            "default_tracer_provider = "
+            "opentelemetry.trace:DefaultTracerProvider"
+        ],
     },
+    data_files=data_files,
 )

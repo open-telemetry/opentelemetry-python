@@ -23,7 +23,7 @@ import sys
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics import Counter, Measure
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
@@ -44,7 +44,6 @@ if len(sys.argv) >= 2:
         sys.exit(1)
 
 # Meter is responsible for creating and recording metrics
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
 
 # Meter's namespace corresponds to the string passed as the first argument Pass
 # in True/False to indicate whether the batcher is stateful. True indicates the
