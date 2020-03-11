@@ -77,20 +77,20 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
 meter = metrics.get_meter(__name__)
 exporter = ConsoleMetricsExporter()
-controller = PushController(meter, exporter, 5)
+controller = PushController(meter=meter, exporter=exporter, interval=5)
 
 counter = meter.create_metric(
-    "available memory",
-    "available memory",
-    "bytes",
-    int,
-    Counter,
-    ("environment",),
+    name="available memory",
+    description="available memory",
+    unit="bytes",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
-label_values = ("staging",)
-counter_handle = counter.get_handle(label_values)
-counter_handle.add(100)
+label_set = meter.get_label_set({"environment": "staging"})
+bound_counter = counter.bind(label_set)
+bound_counter.add(100)
 ```
 
 See the [API documentation](https://open-telemetry.github.io/opentelemetry-python/) for more detail, and the [examples folder](./examples) for a more sample code.
