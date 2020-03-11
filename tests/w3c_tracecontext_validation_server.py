@@ -19,22 +19,25 @@ Service. It implements the APIs needed to be exercised by the test bed.
 """
 
 import json
+from os import environ
 
 import flask
 import requests
 
-from os import environ
-
 # FIXME This could likely be avoided by integrating this script into the
 # standard test running mechanisms.
 
-environ["OPENTELEMETRY_PYTHON_TRACER_PROVIDER"] = "sdk_tracer_provider"
-environ["OPENTELEMETRY_PYTHON_METER_PROVIDER"] ="sdk_meter_provider"
+environ[
+    "OPENTELEMETRY_PYTHON_TRACER_PROVIDER"
+] = "sdk_tracer_provider"  # isort:skip
+environ[
+    "OPENTELEMETRY_PYTHON_METER_PROVIDER"
+] = "sdk_meter_provider"  # isort:skip
 
-from opentelemetry import trace
-from opentelemetry.ext import http_requests
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
-from opentelemetry.sdk.trace.export import (
+from opentelemetry import trace  # noqa # isort:skip
+from opentelemetry.ext import http_requests  # noqa # isort:skip"
+from opentelemetry.ext.wsgi import OpenTelemetryMiddleware  # noqa # isort:skip
+from opentelemetry.sdk.trace.export import (  # noqa # isort:skip
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
