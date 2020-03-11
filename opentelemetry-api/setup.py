@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os.path import dirname, exists, join
-from pathlib import Path
+from os.path import dirname, join
 
 import setuptools
 
@@ -22,29 +21,6 @@ VERSION_FILENAME = join(BASE_DIR, "src", "opentelemetry", "util", "version.py")
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
-
-# FIXME Make this script install the configuration file in
-# ~/.config/opentelemetry_python.json
-configuration_file_path = join(
-    Path.home(), ".config", "opentelemetry_python.json"
-)
-
-data_files = []
-
-if not exists(configuration_file_path):
-    data_files.append(
-        (
-            dirname(configuration_file_path),
-            [
-                join(
-                    "src",
-                    "opentelemetry",
-                    "configuration",
-                    "opentelemetry_python.json",
-                )
-            ],
-        )
-    )
 
 setuptools.setup(
     name="opentelemetry-api",
@@ -100,5 +76,4 @@ setuptools.setup(
             "opentelemetry.trace:DefaultTracerProvider"
         ],
     },
-    data_files=data_files,
 )
