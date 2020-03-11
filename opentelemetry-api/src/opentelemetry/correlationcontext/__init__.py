@@ -53,7 +53,10 @@ class CorrelationContext(abc.ABC):
 
     @abc.abstractmethod
     def set_correlation(
-        self, name: str, value: object, context: typing.Optional[Context] = None
+        self,
+        name: str,
+        value: object,
+        context: typing.Optional[Context] = None,
     ) -> Context:
         """
 
@@ -107,7 +110,10 @@ class DefaultCorrelationContext(CorrelationContext):
         return None
 
     def set_correlation(
-        self, name: str, value: object, context: typing.Optional[Context] = None
+        self,
+        name: str,
+        value: object,
+        context: typing.Optional[Context] = None,
     ) -> Context:
         return context  # type: ignore
 
@@ -116,5 +122,7 @@ class DefaultCorrelationContext(CorrelationContext):
     ) -> Context:
         return context  # type: ignore
 
-    def clear_correlations(self, context: typing.Optional[Context] = None) -> Context:
+    def clear_correlations(
+        self, context: typing.Optional[Context] = None
+    ) -> Context:
         return context  # type: ignore
