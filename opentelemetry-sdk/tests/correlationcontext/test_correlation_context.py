@@ -58,4 +58,3 @@ class TestCorrelationContextManager(unittest.TestCase):
 
         ctx = cctx.clear_correlations(context=ctx)
         self.assertEqual(cctx.get_correlation("test", context=ctx), None)
-
