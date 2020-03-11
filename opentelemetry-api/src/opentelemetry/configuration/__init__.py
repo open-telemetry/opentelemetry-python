@@ -60,19 +60,10 @@ class Configuration:
                 )
 
             for key, value in configuration.items():
-                underscored_key = "_{}".format(key)
-
-                setattr(Configuration, underscored_key, value)
                 setattr(
                     Configuration,
                     key,
-                    property(
-                        (
-                            lambda underscored_key: lambda self: getattr(
-                                self, underscored_key
-                            )
-                        )(underscored_key)
-                    ),
+                    property(lambda self, local_value=value: local_value),
                 )
 
             Configuration._instance = object.__new__(cls)
