@@ -38,9 +38,9 @@ class TestConfiguration(TestCase):
     def test_singleton(self):
         self.assertIs(Configuration(), Configuration())
 
-    @patch("pathlib.Path.home")
-    def test_configuration_file(self, mock_home_path):  # type: ignore
-        mock_home_path.return_value = getcwd()
+    @patch("os.path.expanduser")
+    def test_configuration_file(self, mock_expanduser):  # type: ignore
+        mock_expanduser.return_value = getcwd()
 
         self.assertEqual(
             Configuration().tracer_provider, "default_tracer_provider"
@@ -61,13 +61,13 @@ class TestConfiguration(TestCase):
             Configuration().meter_provider, "overridden_meter_provider"
         )  # pylint: disable=no-member
 
-    @patch("pathlib.Path.home")
+    @patch("os.path.expanduser")
     @patch.dict(
         "os.environ",
         {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "reoverridden_meter_provider"},
     )
-    def test_configuration_file_environment_variables(self, mock_home_path):  # type: ignore
-        mock_home_path.return_value = getcwd()
+    def test_configuration_file_environment_variables(self, mock_expanduser):  # type: ignore
+        mock_expanduser.return_value = getcwd()
 
         self.assertEqual(
             Configuration().tracer_provider, "default_tracer_provider"

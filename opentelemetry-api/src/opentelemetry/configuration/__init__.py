@@ -27,8 +27,7 @@ powerful one, Dynaconf, for example.
 
 from json import load
 from os import environ
-from os.path import exists, join
-from pathlib import Path
+from os.path import exists, join, expanduser
 
 
 class Configuration:
@@ -44,7 +43,7 @@ class Configuration:
             }
 
             configuration_file_path = join(
-                Path.home(), ".config", "opentelemetry_python.json"
+                expanduser("~"), ".config", "opentelemetry_python.json"
             )
 
             if exists(configuration_file_path):
