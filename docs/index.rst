@@ -82,7 +82,7 @@ Metrics
     sdk/sdk
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: OpenTelemetry Integrations
     :name: integrations
     :glob:
