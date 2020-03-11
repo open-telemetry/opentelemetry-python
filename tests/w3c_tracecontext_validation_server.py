@@ -23,6 +23,14 @@ import json
 import flask
 import requests
 
+from os import environ
+
+# FIXME This could likely be avoided by integrating this script into the
+# standard test running mechanisms.
+
+environ["OPENTELEMETRY_PYTHON_TRACER_PROVIDER"] = "sdk_tracer_provider"
+environ["OPENTELEMETRY_PYTHON_METER_PROVIDER"] ="sdk_meter_provider"
+
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
