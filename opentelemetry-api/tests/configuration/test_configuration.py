@@ -17,13 +17,13 @@ from os import getcwd
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.configuration import Configuration
-from pytest import fixture  # pylint: disable=import-error
+from opentelemetry.configuration import Configuration  # type: ignore
+from pytest import fixture  # type: ignore # pylint: disable=import-error
 
 
 class TestConfiguration(TestCase):
     @fixture(autouse=True)
-    def configdir(self, tmpdir):  # pylint: disable=no-self-use
+    def configdir(self, tmpdir):  # type: ignore # pylint: disable=no-self-use
         tmpdir.chdir()
         tmpdir.mkdir(".config").join("opentelemetry_python.json").write(
             dumps({"tracer_provider": "default_tracer_provider"})
@@ -39,7 +39,7 @@ class TestConfiguration(TestCase):
         self.assertIs(Configuration(), Configuration())
 
     @patch("pathlib.Path.home")
-    def test_configuration_file(self, mock_home_path):
+    def test_configuration_file(self, mock_home_path):  # type: ignore
         mock_home_path.return_value = getcwd()
 
         self.assertEqual(
@@ -53,7 +53,7 @@ class TestConfiguration(TestCase):
         "os.environ",
         {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "overridden_meter_provider"},
     )
-    def test_environment_variables(self):
+    def test_environment_variables(self):  # type: ignore
         self.assertEqual(
             Configuration().tracer_provider, "default_tracer_provider"
         )  # pylint: disable=no-member
@@ -66,7 +66,7 @@ class TestConfiguration(TestCase):
         "os.environ",
         {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "reoverridden_meter_provider"},
     )
-    def test_configuration_file_environment_variables(self, mock_home_path):
+    def test_configuration_file_environment_variables(self, mock_home_path):  # type: ignore
         mock_home_path.return_value = getcwd()
 
         self.assertEqual(

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# FIXME find a better way to avoid all those "Expression has type "Any"" errors
+# type: ignore
+
 """
 Simple configuration manager
 
@@ -33,7 +36,7 @@ class Configuration:
 
     __slots__ = ["tracer_provider", "meter_provider"]
 
-    def __new__(cls):
+    def __new__(cls) -> "Configuration":
         if Configuration._instance is None:
 
             configuration = {

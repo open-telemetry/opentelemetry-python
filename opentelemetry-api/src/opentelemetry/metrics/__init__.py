@@ -32,7 +32,7 @@ from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration
+from opentelemetry.configuration import Configuration  # type: ignore
 
 logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
@@ -422,13 +422,13 @@ def get_meter_provider() -> MeterProvider:
 
     if _METER_PROVIDER is None:
         configured_meter_provider = (
-            Configuration().meter_provider  # pylint: disable=no-member
+            Configuration().meter_provider  # type: ignore # pylint: disable=no-member
         )
 
         try:
-            _METER_PROVIDER = next(
+            _METER_PROVIDER = next(  # type: ignore
                 iter_entry_points(
-                    "opentelemetry_meter_provider", configured_meter_provider
+                    "opentelemetry_meter_provider", configured_meter_provider  # type: ignore
                 )
             ).load()()
         except Exception:  # pylint: disable=broad-except
@@ -437,8 +437,8 @@ def get_meter_provider() -> MeterProvider:
             # we fall back to the default meter provider?
             logger.error(
                 "Failed to load configured meter provider %s",
-                configured_meter_provider,
+                configured_meter_provider,  # type: ignore
             )
             raise
 
-    return _METER_PROVIDER
+    return _METER_PROVIDER  # type: ignore

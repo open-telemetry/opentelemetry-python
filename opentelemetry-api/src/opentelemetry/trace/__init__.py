@@ -75,7 +75,7 @@ from logging import getLogger
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration
+from opentelemetry.configuration import Configuration  # type: ignore
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
 
@@ -664,14 +664,14 @@ def get_tracer_provider() -> TracerProvider:
 
     if _TRACER_PROVIDER is None:
         configured_tracer_provider = (
-            Configuration().tracer_provider  # pylint: disable=no-member
+            Configuration().tracer_provider  # type: ignore # pylint: disable=no-member
         )
 
         try:
-            _TRACER_PROVIDER = next(
+            _TRACER_PROVIDER = next(  # type: ignore
                 iter_entry_points(
                     "opentelemetry_tracer_provider",
-                    name=configured_tracer_provider,
+                    name=configured_tracer_provider,  # type: ignore
                 )
             ).load()()
         except Exception:  # pylint: disable=broad-except
@@ -680,8 +680,8 @@ def get_tracer_provider() -> TracerProvider:
             # we fall back to the default tracer provider?
             logger.error(
                 "Failed to load tracer implementation: %s",
-                configured_tracer_provider,
+                configured_tracer_provider,  # type: ignore
             )
             raise
 
-    return _TRACER_PROVIDER
+    return _TRACER_PROVIDER  # type: ignore
