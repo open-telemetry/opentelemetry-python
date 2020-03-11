@@ -27,7 +27,7 @@ powerful one, Dynaconf, for example.
 
 from json import load
 from os import environ
-from os.path import exists, join, expanduser
+from os.path import exists, expanduser, join
 
 
 class Configuration:
