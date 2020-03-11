@@ -33,7 +33,7 @@ from os.path import exists, expanduser, join
 class Configuration:
     _instance = None
 
-    __slots__ = ["tracer_provider", "meter_provider"]
+    __slots__ = ("tracer_provider", "meter_provider")
 
     def __new__(cls) -> "Configuration":
         if Configuration._instance is None:
