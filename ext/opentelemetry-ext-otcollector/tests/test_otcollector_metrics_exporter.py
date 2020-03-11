@@ -189,12 +189,12 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         self.assertEqual(len(output_metrics[0].timeseries[0].points), 1)
         self.assertEqual(
             output_metrics[0].timeseries[0].points[0].timestamp.seconds,
-            record.metric.get_handle(record.label_set).last_update_timestamp
+            record.metric.bind(record.label_set).last_update_timestamp
             // 1000000000,
         )
         self.assertEqual(
             output_metrics[0].timeseries[0].points[0].timestamp.nanos,
-            record.metric.get_handle(record.label_set).last_update_timestamp
+            record.metric.bind(record.label_set).last_update_timestamp
             % 1000000000,
         )
         self.assertEqual(
