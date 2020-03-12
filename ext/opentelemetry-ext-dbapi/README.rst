@@ -11,6 +11,7 @@ Usage
 .. code-block:: python
 
     import mysql.connector
+    import pyodbc
     from opentelemetry.trace import tracer_provider
     from opentelemetry.ext.dbapi import trace_integration
 
