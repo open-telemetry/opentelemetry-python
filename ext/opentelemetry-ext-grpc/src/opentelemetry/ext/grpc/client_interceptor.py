@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from grpc.framework.foundation import future
-from grpc.framework.interfaces.face import face
 import collections
 
 import grpc
+from grpc.framework.foundation import future
+from grpc.framework.interfaces.face import face
 
 
 class _ClientCallDetails(
@@ -28,6 +28,7 @@ class _ClientCallDetails(
     pass
 
 
+# TODO
 # https://github.com/c24t/grpc/blob/50619a562f50ef7ee680ed5ce35de94b5a3b1539/src/python/grpcio/grpc/__init__.py#L561
 # https://github.com/census-instrumentation/opencensus-python/pull/617/files#diff-16ff5c7896222cfa69b7aed98860f7d3R50
 class WrappedResponseIterator(future.Future, face.Call):
@@ -44,6 +45,7 @@ class WrappedResponseIterator(future.Future, face.Call):
     :type span: opencensus.trace.Span
     :param span: rpc span
     """
+
     def __init__(self, iterator, span):
         self._iterator = iterator
         self._span = span
@@ -136,13 +138,12 @@ class OpenTelemetryClientInterceptor(
         request_streaming,
         response_streaming,
     ):
-        span = "span"
-        print('intercepted client: start span "{}"'.format(span))
-        return client_call_details, request_iterator,  "span"
+        # TODO
+        return client_call_details, request_iterator, None
 
     def _callback(self, span):
         def callback(future_response):
-            print('intercepted client: end span "{}"'.format(span))
+            pass
 
             # TODO
             # grpc_utils.add_message_event(
