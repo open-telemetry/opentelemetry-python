@@ -33,7 +33,7 @@ def get_correlations(
         name/value pairs in the CorrelationContext
     """
     correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
-    if correlations:
+    if isinstance(correlations, dict):
         return correlations
     return {}
 
@@ -51,14 +51,11 @@ def get_correlation(
         the value associated with the given name, or null if the given name is
         not present.
     """
-    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
-    if correlations:
-        return correlations.get(name)
-    return None
+    return get_correlations(context=context).get(name)
 
 
 def set_correlation(
-    name: str, value, context: typing.Optional[Context] = None
+    name: str, value: object, context: typing.Optional[Context] = None
 ) -> Context:
     """Sets a value in the CorrelationContext
 
@@ -70,11 +67,8 @@ def set_correlation(
     Returns:
         a Context with the value updated
     """
-    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
-    if correlations:
-        correlations[name] = value
-    else:
-        correlations = {name: value}
+    correlations = get_correlations(context=context)
+    correlations[name] = value
     return set_value(CORRELATION_CONTEXT_KEY, correlations, context=context)
 
 
@@ -89,8 +83,8 @@ def remove_correlation(
     Returns:
         a Context with the name/value removed
     """
-    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
-    if correlations and name in correlations:
+    correlations = get_correlations(context=context)
+    if name in correlations:
         del correlations[name]
 
     return set_value(CORRELATION_CONTEXT_KEY, correlations, context=context)

@@ -48,7 +48,6 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
             "traceparent": [traceparent_value],
             "tracestate": [tracestate_value],
         }
-        # create a valid request with both trace and correlation
         ctx = extract(get_as_list, headers)
         correlations = correlationcontext.get_correlations(context=ctx)
         expected = {"key1": "val1", "key2": "val2"}
@@ -59,7 +58,6 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         self.assertEqual(span_context.span_id, self.SPAN_ID)
 
         span = trace.DefaultSpan(span_context)
-        # create a valid request with both trace and correlation
         ctx = correlationcontext.set_correlation("key3", "val3")
         ctx = correlationcontext.set_correlation("key4", "val4", context=ctx)
         ctx = set_span_in_context(span, context=ctx)
