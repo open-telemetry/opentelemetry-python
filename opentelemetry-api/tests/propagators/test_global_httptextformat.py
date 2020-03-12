@@ -16,7 +16,6 @@ import typing
 import unittest
 
 from opentelemetry import correlationcontext, trace
-from opentelemetry.context import set_value
 from opentelemetry.propagators import extract, inject
 from opentelemetry.trace.propagation import (
     get_span_from_context,
@@ -66,9 +65,9 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         ctx = set_span_in_context(span, context=ctx)
         output = {}
         inject(dict.__setitem__, output, context=ctx)
-        expected = {
-            "otcorrelationcontext": "key3=val3,key4=val4",
-            "traceparent": traceparent_value,
-            "tracestate": tracestate_value,
-        }
-        self.assertEqual(output, expected)
+        self.assertEqual(traceparent_value, output["traceparent"])
+        self.assertIn("key3=val3", output["otcorrelationcontext"])
+        self.assertIn("key4=val4", output["otcorrelationcontext"])
+        self.assertIn("foo=1", output["tracestate"])
+        self.assertIn("bar=2", output["tracestate"])
+        self.assertIn("baz=3", output["tracestate"])
