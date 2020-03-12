@@ -14,10 +14,43 @@
 
 import unittest
 
-from opentelemetry import correlationcontext
+from opentelemetry import correlationcontext as cctx
 
 
-class TestCorrelationContext(unittest.TestCase):
-    def test_correlation_context(self):
-        default_context = correlationcontext.DefaultCorrelationContext()
-        self.assertEqual(default_context.get_correlations(), {})
+class TestCorrelationContextManager(unittest.TestCase):
+    def test_set_correlation(self):
+        self.assertEqual({}, cctx.get_correlations())
+
+        ctx = cctx.set_correlation("test", "value")
+        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
+
+        ctx = cctx.set_correlation("test", "value2", context=ctx)
+        self.assertEqual(cctx.get_correlation("test", context=ctx), "value2")
+
+    def test_set_multiple_correlations(self):
+        ctx = cctx.set_correlation("test", "value")
+        ctx = cctx.set_correlation("test2", "value2", context=ctx)
+        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
+        self.assertEqual(cctx.get_correlation("test2", context=ctx), "value2")
+        self.assertEqual(
+            cctx.get_correlations(context=ctx),
+            {"test": "value", "test2": "value2"},
+        )
+
+    def test_remove_correlations(self):
+        self.assertEqual({}, cctx.get_correlations())
+
+        ctx = cctx.set_correlation("test", "value")
+        ctx = cctx.set_correlation("test2", "value2", context=ctx)
+        ctx = cctx.remove_correlation("test", context=ctx)
+        self.assertEqual(cctx.get_correlation("test", context=ctx), None)
+        self.assertEqual(cctx.get_correlation("test2", context=ctx), "value2")
+
+    def test_clear_correlations(self):
+        self.assertEqual({}, cctx.get_correlations())
+
+        ctx = cctx.set_correlation("test", "value")
+        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
+
+        ctx = cctx.clear_correlations(context=ctx)
+        self.assertEqual(cctx.get_correlation("test", context=ctx), None)

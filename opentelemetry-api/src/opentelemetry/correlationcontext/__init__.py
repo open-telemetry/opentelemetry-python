@@ -15,114 +15,93 @@
 import abc
 import typing
 
+from opentelemetry.context import get_value, set_value
 from opentelemetry.context.context import Context
 
 CORRELATION_CONTEXT_KEY = "correlation-context"
 
 
-class CorrelationContext(abc.ABC):
-    """A container for correlation context"""
+def get_correlations(
+    context: typing.Optional[Context] = None,
+) -> typing.Dict[str, object]:
+    """ Returns the name/value pairs in the CorrelationContext
 
-    @abc.abstractmethod
-    def get_correlations(
-        self, context: typing.Optional[Context] = None
-    ) -> typing.Optional[object]:
-        """ Returns the name/value pairs in the CorrelationContext
+    Args:
+        context: the Context to use. If not set, uses current Context
 
-        Args:
-            context: the Context to use. If not set, uses current Context
-
-        Returns:
-            name/value pairs in the CorrelationContext
-        """
-
-    @abc.abstractmethod
-    def get_correlation(
-        self, name: str, context: typing.Optional[Context] = None
-    ) -> typing.Optional[object]:
-        """ Provides access to the value for a name/value pair by a prior event
-
-        Args:
-            name: the name of the value to retrieve
-            context: the Context to use. If not set, uses current Context
-
-        Returns:
-            the value associated with the given name, or null if the given name is
-            not present.
-        """
-
-    @abc.abstractmethod
-    def set_correlation(
-        self,
-        name: str,
-        value: object,
-        context: typing.Optional[Context] = None,
-    ) -> Context:
-        """
-
-        Args:
-            name: the name of the value to set
-            value: the value to set
-            context: the Context to use. If not set, uses current Context
-
-        Returns:
-            a Context with the value updated
-        """
-
-    @abc.abstractmethod
-    def remove_correlation(
-        self, name: str, context: typing.Optional[Context] = None
-    ) -> Context:
-        """
-
-        Args:
-            name: the name of the value to remove
-            context: the Context to use. If not set, uses current Context
-
-        Returns:
-            a Context with the name/value removed
-        """
-
-    @abc.abstractmethod
-    def clear_correlations(
-        self, context: typing.Optional[Context] = None
-    ) -> Context:
-        """
-        Args:
-            context: the Context to use. If not set, uses current Context
-
-        Returns:
-            a Context with all correlations removed
-        """
+    Returns:
+        name/value pairs in the CorrelationContext
+    """
+    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
+    if correlations:
+        return correlations
+    return {}
 
 
-class DefaultCorrelationContext(CorrelationContext):
-    """ Default no-op implementation of CorrelationContext """
+def get_correlation(
+    name: str, context: typing.Optional[Context] = None
+) -> typing.Optional[object]:
+    """ Provides access to the value for a name/value pair in the CorrelationContext
 
-    def get_correlations(
-        self, context: typing.Optional[Context] = None
-    ) -> typing.Dict[object, object]:
-        return {}
+    Args:
+        name: the name of the value to retrieve
+        context: the Context to use. If not set, uses current Context
 
-    def get_correlation(
-        self, name: str, context: typing.Optional[Context] = None
-    ) -> typing.Optional[object]:
-        return None
+    Returns:
+        the value associated with the given name, or null if the given name is
+        not present.
+    """
+    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
+    if correlations:
+        return correlations.get(name)
+    return None
 
-    def set_correlation(
-        self,
-        name: str,
-        value: object,
-        context: typing.Optional[Context] = None,
-    ) -> Context:
-        return context  # type: ignore
 
-    def remove_correlation(
-        self, name: str, context: typing.Optional[Context] = None
-    ) -> Context:
-        return context  # type: ignore
+def set_correlation(
+    name: str, value, context: typing.Optional[Context] = None
+) -> Context:
+    """Sets a value in the CorrelationContext
 
-    def clear_correlations(
-        self, context: typing.Optional[Context] = None
-    ) -> Context:
-        return context  # type: ignore
+    Args:
+        name: the name of the value to set
+        value: the value to set
+        context: the Context to use. If not set, uses current Context
+
+    Returns:
+        a Context with the value updated
+    """
+    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
+    if correlations:
+        correlations[name] = value
+    else:
+        correlations = {name: value}
+    return set_value(CORRELATION_CONTEXT_KEY, correlations, context=context)
+
+
+def remove_correlation(
+    name: str, context: typing.Optional[Context] = None
+) -> Context:
+    """Removes a value from the CorrelationContext
+    Args:
+        name: the name of the value to remove
+        context: the Context to use. If not set, uses current Context
+
+    Returns:
+        a Context with the name/value removed
+    """
+    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
+    if correlations and name in correlations:
+        del correlations[name]
+
+    return set_value(CORRELATION_CONTEXT_KEY, correlations, context=context)
+
+
+def clear_correlations(context: typing.Optional[Context] = None) -> Context:
+    """Removes all values from the CorrelationContext
+    Args:
+        context: the Context to use. If not set, uses current Context
+
+    Returns:
+        a Context with all correlations removed
+    """
+    return set_value(CORRELATION_CONTEXT_KEY, {}, context=context)
