@@ -19,10 +19,11 @@ from time import sleep
 
 
 class TestHttpExample(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         dirpath = os.path.dirname(os.path.realpath(__file__))
         server_script = "{}/../server.py".format(dirpath)
-        self.server = subprocess.Popen([sys.executable, server_script])
+        cls.server = subprocess.Popen([sys.executable, server_script])
         sleep(1)
 
     def test_http(self):
@@ -33,5 +34,6 @@ class TestHttpExample(unittest.TestCase):
         ).decode()
         self.assertIn('name="/"', output)
 
-    def tearDown(self):
-        self.server.terminate()
+    @classmethod
+    def teardown_class(cls):
+        cls.server.terminate()
