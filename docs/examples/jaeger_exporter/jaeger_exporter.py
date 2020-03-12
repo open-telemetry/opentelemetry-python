@@ -16,41 +16,31 @@
 
 import os
 
-import flask
-import requests
-
 from opentelemetry import trace
-from opentelemetry.ext import http_requests
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.ext.jaeger import JaegerSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchExportSpanProcessor,
-    ConsoleSpanExporter,
-)
+from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-# The preferred tracer implementation must be set, as the opentelemetry-api
-# defines the interface with a no-op implementation.
 trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
 tracer = trace.get_tracer(__name__)
 
-exporter = ConsoleSpanExporter()
+exporter = JaegerSpanExporter(
+    service_name="my-helloworld-service",
+    # configure agent
+    agent_host_name="localhost",
+    agent_port=6831,
+    # optional: configure also collector
+    # collector_host_name="localhost",
+    # collector_port=14268,
+    # collector_endpoint="/api/traces?format=jaeger.thrift",
+    # username=xxxx, # optional
+    # password=xxxx, # optional
+)
+
 span_processor = BatchExportSpanProcessor(exporter)
 trace.tracer_provider().add_span_processor(span_processor)
 
-# Integrations are the glue that binds the OpenTelemetry API and the
-# frameworks and libraries that are used together, automatically creating
-# Spans and propagating context as appropriate.
-http_requests.enable(trace.tracer_provider())
-app = flask.Flask(__name__)
-app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
-
-
-@app.route("/")
-def hello():
-    with tracer.start_as_current_span("parent"):
-        requests.get("https://www.wikipedia.org/wiki/Rabbit")
-    return "hello"
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+with tracer.start_as_current_span("foo"):
+    with tracer.start_as_current_span("bar"):
+        with tracer.start_as_current_span("baz"):
+            print("Hello world from OpenTelemetry Python!")

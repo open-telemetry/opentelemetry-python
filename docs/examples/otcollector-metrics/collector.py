@@ -13,8 +13,7 @@
 # limitations under the License.
 #
 """
-This module serves as an example for a simple application using metrics
-exporting to Collector
+This example shows how to export metrics to the OT collector.
 """
 
 from opentelemetry import metrics
@@ -24,30 +23,25 @@ from opentelemetry.ext.otcollector.metrics_exporter import (
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-# Meter is responsible for creating and recording metrics
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
-meter = metrics.get_meter(__name__)
-# exporter to export metrics to OT Collector
 exporter = CollectorMetricsExporter(
     service_name="basic-service", endpoint="localhost:55678"
 )
-# controller collects metrics created from meter and exports it via the
-# exporter every interval
+
+metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+meter = metrics.get_meter(__name__)
 controller = PushController(meter, exporter, 5)
 
-counter = meter.create_metric(
-    "requests",
-    "number of requests",
-    "requests",
-    int,
-    Counter,
-    ("environment",),
+requests_counter = meter.create_metric(
+    name="requests",
+    description="number of requests",
+    unit="1",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
-# Labelsets are used to identify key-values that are associated with a specific
-# metric that you want to record. These are useful for pre-aggregation and can
-# be used to store custom dimensions pertaining to a metric
-label_set = meter.get_label_set({"environment": "staging"})
+staging_label_set = meter.get_label_set({"environment": "staging"})
+requests_counter.add(25, staging_label_set)
 
-counter.add(25, label_set)
+print("Metrics are available now at http://localhost:9090/graph")
 input("Press any key to exit...")
