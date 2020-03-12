@@ -90,26 +90,30 @@ class TestCorrelationContextPropagation(unittest.TestCase):
         self.assertEqual(self._extract(header), expected)
 
     def test_inject(self):
-        expected = "key1=val1,key2=val2"
         values = {
             "key1": "val1",
             "key2": "val2",
         }
-        self.assertEqual(self._inject(values), expected)
+        output = self._inject(values)
+        self.assertIn("key1=val1", output)
+        self.assertIn("key2=val2", output)
 
     def test_inject_escaped_values(self):
-        expected = "key1=val1%2Cval2,key2=val3%3D4"
         values = {
             "key1": "val1,val2",
             "key2": "val3=4",
         }
-        self.assertEqual(self._inject(values), expected)
+        output = self._inject(values)
+        self.assertIn("key1=val1%2Cval2", output)
+        self.assertIn("key2=val3%3D4", output)
 
     def test_inject_non_string_values(self):
-        expected = "key1=true,key2=123,key3=123.567"
         values = {
             "key1": True,
             "key2": 123,
             "key3": 123.567,
         }
-        self.assertEqual(self._inject(values), expected)
+        output = self._inject(values)
+        self.assertIn("key1=true", output)
+        self.assertIn("key2=123", output)
+        self.assertIn("key3=123.567", output)
