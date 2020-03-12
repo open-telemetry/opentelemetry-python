@@ -428,7 +428,8 @@ def get_meter_provider() -> MeterProvider:
         try:
             _METER_PROVIDER = next(  # type: ignore
                 iter_entry_points(
-                    "opentelemetry_meter_provider", configured_meter_provider  # type: ignore
+                    "opentelemetry_meter_provider",
+                    name=configured_meter_provider,  # type: ignore
                 )
             ).load()()
         except Exception:  # pylint: disable=broad-except
