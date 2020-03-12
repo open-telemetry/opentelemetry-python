@@ -23,28 +23,39 @@ import grpc
 
 import helloworld_pb2
 import helloworld_pb2_grpc
+from opentelemetry import trace
 from opentelemetry.ext.grpc import server_interceptor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleExportSpanProcessor,
+)
+
+trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+trace.tracer_provider().add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
+tracer = trace.get_tracer(__name__)
 
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
-
     def SayHello(self, request, context):
-        return helloworld_pb2.HelloReply(message='Hello, %s!' % request.name)
+        return helloworld_pb2.HelloReply(message="Hello, %s!" % request.name)
 
 
 def serve():
 
-    interceptor = server_interceptor.OpenTelemetryServerInterceptor()
-    # server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
-                         interceptors=(interceptor,))
+    interceptor = server_interceptor.OpenTelemetryServerInterceptor(tracer)
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=10), interceptors=(interceptor,)
+    )
 
     helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port("[::]:50051")
     server.start()
     server.wait_for_termination()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig()
     serve()
