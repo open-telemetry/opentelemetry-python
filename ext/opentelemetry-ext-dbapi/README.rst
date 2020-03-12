@@ -17,7 +17,9 @@ Usage
     trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
     tracer = trace.get_tracer(__name__)
     # Ex: mysql.connector
-    trace_integration(tracer_provider(), mysql.connector, "connect", "mysql")
+    trace_integration(tracer_provider(), mysql.connector, "connect", "mysql", "sql")
+    # Ex: pyodbc
+    trace_integration(tracer_provider(), pyodbc, "Connection", "odbc", "sql")
 
 
 References
