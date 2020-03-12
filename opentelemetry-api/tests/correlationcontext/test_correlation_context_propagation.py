@@ -35,7 +35,7 @@ class TestCorrelationContextPropagation(unittest.TestCase):
 
     def _extract(self, header_value):
         """Test helper"""
-        header = {"otcorrelationcontext": header_value}
+        header = {"otcorrelationcontext": [header_value]}
         return correlationcontext.get_correlations(
             self.propagator.extract(get_as_list, header)
         )
@@ -51,7 +51,7 @@ class TestCorrelationContextPropagation(unittest.TestCase):
         return output.get("otcorrelationcontext")
 
     def test_no_context_header(self):
-        header = {}  # type:typing.Dict[str, typing.List[str]]
+        header = ""
         self.assertEqual(self._extract(header), {})
 
     def test_valid_header(self):

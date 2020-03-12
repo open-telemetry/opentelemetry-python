@@ -44,7 +44,7 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         headers = {
-            "otcorrelationcontext": "key1=val1,key2=val2",
+            "otcorrelationcontext": ["key1=val1,key2=val2"],
             "traceparent": [traceparent_value],
             "tracestate": [tracestate_value],
         }

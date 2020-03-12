@@ -41,8 +41,8 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
         if not context:
             context = get_current()
 
-        header = get_from_carrier(
-            carrier, self._CORRELATION_CONTEXT_HEADER_NAME
+        header = _extract_first_element(
+            get_from_carrier(carrier, self._CORRELATION_CONTEXT_HEADER_NAME)
         )
 
         if not header:
@@ -99,3 +99,11 @@ def _format_correlations(correlations: typing.Dict[str, object]) -> str:
         key + "=" + urllib.parse.quote_plus(str(value).lower())
         for key, value in correlations.items()
     )
+
+
+def _extract_first_element(
+    items: typing.Iterable[httptextformat.HTTPTextFormatT],
+) -> typing.Optional[httptextformat.HTTPTextFormatT]:
+    if items is None:
+        return None
+    return next(iter(items), None)
