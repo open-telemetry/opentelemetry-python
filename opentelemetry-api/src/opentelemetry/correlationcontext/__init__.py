@@ -34,7 +34,7 @@ def get_correlations(
     """
     correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
     if isinstance(correlations, dict):
-        return correlations
+        return correlations.copy()
     return {}
 
 
