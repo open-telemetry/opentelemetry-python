@@ -24,8 +24,8 @@ import opentracing
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace.propagation import (
     get_span_from_context,
     set_span_in_context,

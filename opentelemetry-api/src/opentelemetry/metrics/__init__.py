@@ -30,7 +30,6 @@ import abc
 from logging import getLogger
 from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
-
 from opentelemetry.configuration import Configuration  # type: ignore
 
 logger = getLogger(__name__)

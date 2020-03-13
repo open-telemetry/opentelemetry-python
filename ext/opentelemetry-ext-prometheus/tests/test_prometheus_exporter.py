@@ -21,7 +21,7 @@ from opentelemetry.ext.prometheus import (
     CustomCollector,
     PrometheusMetricsExporter,
 )
-from opentelemetry.metrics import set_meter_provider, get_meter_provider
+from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator

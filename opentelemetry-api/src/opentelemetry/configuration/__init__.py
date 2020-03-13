@@ -26,10 +26,11 @@ powerful one, Dynaconf, for example.
 """
 
 from json import load
+from logging import getLogger
 from os import environ
 from os.path import exists, expanduser, join
+
 from pkg_resources import iter_entry_points
-from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -71,8 +72,9 @@ class Configuration:
                     Configuration,
                     key,
                     property(
-                        fget=lambda cls, local_key=key, local_value=value:
-                        cls._load(key=local_key, value=local_value)
+                        fget=lambda cls, local_key=key, local_value=value: cls._load(
+                            key=local_key, value=local_value
+                        )
                     ),
                 )
 
@@ -94,7 +96,7 @@ class Configuration:
                             "opentelemetry_{}".format(key),
                             name=value,  # type: ignore
                         )
-                    ).load()()
+                    ).load()(),
                 )
             except Exception:  # pylint: disable=broad-except
                 # FIXME Decide on how to handle this. Should an exception be

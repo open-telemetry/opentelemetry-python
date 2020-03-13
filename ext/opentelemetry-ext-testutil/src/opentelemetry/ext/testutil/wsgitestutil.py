@@ -4,7 +4,7 @@ import wsgiref.util as wsgiref_util
 from importlib import reload
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk.trace import export, TracerProvider
+from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )

@@ -20,9 +20,9 @@ import flask
 import requests
 
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
     ConsoleSpanExporter,

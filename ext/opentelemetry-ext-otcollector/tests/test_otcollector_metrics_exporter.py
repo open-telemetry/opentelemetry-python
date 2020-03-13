@@ -20,9 +20,8 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.metrics.v1 import metrics_pb2
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.ext.otcollector import metrics_exporter
-from opentelemetry.sdk.metrics import Counter, Measure
+from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExportResult,
