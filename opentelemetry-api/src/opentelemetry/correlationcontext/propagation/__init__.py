@@ -23,6 +23,9 @@ from opentelemetry.trace.propagation import httptextformat
 
 
 class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
+    MAX_HEADER_LENGTH = 8192
+    MAX_PAIR_LENGTH = 4096
+    MAX_PAIRS = 180
     _CORRELATION_CONTEXT_HEADER_NAME = "otcorrelationcontext"
 
     def extract(
@@ -45,18 +48,23 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
             get_from_carrier(carrier, self._CORRELATION_CONTEXT_HEADER_NAME)
         )
 
-        if not header:
+        if not header or len(header) > self.MAX_HEADER_LENGTH:
             return context
 
         correlations = header.split(",")
-
+        total_correlations = self.MAX_PAIRS
         for correlation in correlations:
+            if total_correlations <= 0:
+                return context
+            total_correlations -= 1
+            if len(correlation) > self.MAX_PAIR_LENGTH:
+                continue
             try:
                 name, value = correlation.split("=", 1)
             except Exception:  # pylint: disable=broad-except
                 continue
             context = correlationcontext.set_correlation(
-                name.strip(),
+                urllib.parse.unquote(name).strip(),
                 urllib.parse.unquote(value).strip(),
                 context=context,
             )

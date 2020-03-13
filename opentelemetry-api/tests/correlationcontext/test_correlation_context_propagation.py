@@ -74,8 +74,8 @@ class TestCorrelationContextPropagation(unittest.TestCase):
         self.assertEqual(self._extract(header), expected)
 
     def test_valid_header_with_url_escaped_comma(self):
-        header = "key1=val1,key2=val2%2Cval3"
-        expected = {"key1": "val1", "key2": "val2,val3"}
+        header = "key%2C1=val1,key2=val2%2Cval3"
+        expected = {"key,1": "val1", "key2": "val2,val3"}
         self.assertEqual(self._extract(header), expected)
 
     def test_valid_header_with_invalid_value(self):
@@ -91,6 +91,29 @@ class TestCorrelationContextPropagation(unittest.TestCase):
     def test_invalid_header(self):
         header = "header1"
         expected = {}
+        self.assertEqual(self._extract(header), expected)
+
+    def test_header_too_long(self):
+        long_value = "s" * (CorrelationContextPropagator.MAX_HEADER_LENGTH + 1)
+        header = "key1={}".format(long_value)
+        expected = {}
+        self.assertEqual(self._extract(header), expected)
+
+    def test_header_contains_too_many_entries(self):
+        header = ",".join(
+            [
+                "key{}=val".format(k)
+                for k in range(CorrelationContextPropagator.MAX_PAIRS + 1)
+            ]
+        )
+        self.assertEqual(
+            len(self._extract(header)), CorrelationContextPropagator.MAX_PAIRS
+        )
+
+    def test_header_contains_pair_too_long(self):
+        long_value = "s" * (CorrelationContextPropagator.MAX_PAIR_LENGTH + 1)
+        header = "key1=value1,key2={},key3=value3".format(long_value)
+        expected = {"key1": "value1", "key3": "value3"}
         self.assertEqual(self._extract(header), expected)
 
     def test_inject(self):
