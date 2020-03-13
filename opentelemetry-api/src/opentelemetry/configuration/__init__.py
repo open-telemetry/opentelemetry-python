@@ -91,10 +91,9 @@ class Configuration:
                 setattr(
                     cls,
                     underscored_key,
-                    next(  # type: ignore
+                    next(
                         iter_entry_points(
-                            "opentelemetry_{}".format(key),
-                            name=value,  # type: ignore
+                            "opentelemetry_{}".format(key), name=value,
                         )
                     ).load()(),
                 )
@@ -103,8 +102,7 @@ class Configuration:
                 # raised here, or only a message should be logged and should
                 # we fall back to the default meter provider?
                 logger.error(
-                    "Failed to load configured provider %s",
-                    value,  # type: ignore
+                    "Failed to load configured provider %s", value,
                 )
                 raise
 

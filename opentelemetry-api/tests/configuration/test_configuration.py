@@ -55,9 +55,9 @@ class TestConfiguration(TestCase):
 
     @patch(
         "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}
+        **{"side_effect": IterEntryPointsMock}  # type: ignore
     )
-    def test_lazy(
+    def test_lazy(  # type: ignore
         self, mock_iter_entry_points,  # pylint: disable=unused-argument
     ):
         configuration = Configuration()
@@ -75,9 +75,9 @@ class TestConfiguration(TestCase):
 
     @patch(
         "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}
+        **{"side_effect": IterEntryPointsMock}  # type: ignore
     )
-    def test_default_values(
+    def test_default_values(  # type: ignore
         self, mock_iter_entry_points  # pylint: disable=unused-argument
     ):
         self.assertEqual(
@@ -89,10 +89,10 @@ class TestConfiguration(TestCase):
 
     @patch(
         "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}
+        **{"side_effect": IterEntryPointsMock}  # type: ignore
     )
     @patch("opentelemetry.configuration.expanduser")
-    def test_configuration_file(
+    def test_configuration_file(  # type: ignore
         self,
         mock_expanduser,
         mock_iter_entry_points,  # pylint: disable=unused-argument
@@ -108,13 +108,13 @@ class TestConfiguration(TestCase):
 
     @patch(
         "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}
+        **{"side_effect": IterEntryPointsMock}  # type: ignore
     )
     @patch.dict(
         "os.environ",
         {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "overridden_meter_provider"},
     )
-    def test_environment_variables(
+    def test_environment_variables(  # type: ignore
         self, mock_iter_entry_points  # pylint: disable=unused-argument
     ):  # type: ignore
         self.assertEqual(
@@ -126,7 +126,7 @@ class TestConfiguration(TestCase):
 
     @patch(
         "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}
+        **{"side_effect": IterEntryPointsMock}  # type: ignore
     )
     @patch("opentelemetry.configuration.expanduser")
     @patch.dict(
@@ -137,7 +137,7 @@ class TestConfiguration(TestCase):
             )
         },
     )
-    def test_configuration_file_environment_variables(
+    def test_configuration_file_environment_variables(  # type: ignore
         self,
         mock_expanduser,
         mock_iter_entry_points,  # pylint: disable=unused-argument

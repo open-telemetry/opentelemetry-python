@@ -426,7 +426,7 @@ def get_meter_provider() -> MeterProvider:
 
     if _METER_PROVIDER is None:
         _METER_PROVIDER = (
-            Configuration().meter_provider  # pylint: disable=no-member
+            Configuration().meter_provider  # type: ignore # pylint: disable=no-member
         )
 
     return _METER_PROVIDER  # type: ignore

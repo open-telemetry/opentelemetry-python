@@ -668,7 +668,7 @@ def get_tracer_provider() -> TracerProvider:
 
     if _TRACER_PROVIDER is None:
         _TRACER_PROVIDER = (
-            Configuration().tracer_provider  # pylint: disable=no-member
+            Configuration().tracer_provider  # type: ignore # pylint: disable=no-member
         )
 
     return _TRACER_PROVIDER  # type: ignore
