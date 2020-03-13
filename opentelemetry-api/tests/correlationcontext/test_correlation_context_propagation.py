@@ -25,8 +25,7 @@ from opentelemetry.correlationcontext.propagation import (
 def get_as_list(
     dict_object: typing.Dict[str, typing.List[str]], key: str
 ) -> typing.List[str]:
-    value = dict_object.get(key)
-    return value if value is not None else []
+    return dict_object.get(key, [])
 
 
 class TestCorrelationContextPropagation(unittest.TestCase):
@@ -47,10 +46,15 @@ class TestCorrelationContextPropagation(unittest.TestCase):
             ctx = correlationcontext.set_correlation(k, v, context=ctx)
         output = {}
         self.propagator.inject(dict.__setitem__, output, context=ctx)
-        print(output)
         return output.get("otcorrelationcontext")
 
     def test_no_context_header(self):
+        correlations = correlationcontext.get_correlations(
+            self.propagator.extract(get_as_list, {})
+        )
+        self.assertEqual(correlations, {})
+
+    def test_empty_context_header(self):
         header = ""
         self.assertEqual(self._extract(header), {})
 

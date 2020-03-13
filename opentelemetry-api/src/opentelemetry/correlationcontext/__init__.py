@@ -27,10 +27,10 @@ def get_correlations(
     """ Returns the name/value pairs in the CorrelationContext
 
     Args:
-        context: the Context to use. If not set, uses current Context
+        context: The Context to use. If not set, uses current Context
 
     Returns:
-        name/value pairs in the CorrelationContext
+        Name/value pairs in the CorrelationContext
     """
     correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
     if isinstance(correlations, dict):
@@ -44,11 +44,11 @@ def get_correlation(
     """ Provides access to the value for a name/value pair in the CorrelationContext
 
     Args:
-        name: the name of the value to retrieve
-        context: the Context to use. If not set, uses current Context
+        name: The name of the value to retrieve
+        context: The Context to use. If not set, uses current Context
 
     Returns:
-        the value associated with the given name, or null if the given name is
+        The value associated with the given name, or null if the given name is
         not present.
     """
     return get_correlations(context=context).get(name)
@@ -60,12 +60,12 @@ def set_correlation(
     """Sets a value in the CorrelationContext
 
     Args:
-        name: the name of the value to set
-        value: the value to set
-        context: the Context to use. If not set, uses current Context
+        name: The name of the value to set
+        value: The value to set
+        context: The Context to use. If not set, uses current Context
 
     Returns:
-        a Context with the value updated
+        A Context with the value updated
     """
     correlations = get_correlations(context=context)
     correlations[name] = value
@@ -77,15 +77,14 @@ def remove_correlation(
 ) -> Context:
     """Removes a value from the CorrelationContext
     Args:
-        name: the name of the value to remove
-        context: the Context to use. If not set, uses current Context
+        name: The name of the value to remove
+        context: The Context to use. If not set, uses current Context
 
     Returns:
-        a Context with the name/value removed
+        A Context with the name/value removed
     """
     correlations = get_correlations(context=context)
-    if name in correlations:
-        del correlations[name]
+    correlations.pop(name, None)
 
     return set_value(CORRELATION_CONTEXT_KEY, correlations, context=context)
 
@@ -93,9 +92,9 @@ def remove_correlation(
 def clear_correlations(context: typing.Optional[Context] = None) -> Context:
     """Removes all values from the CorrelationContext
     Args:
-        context: the Context to use. If not set, uses current Context
+        context: The Context to use. If not set, uses current Context
 
     Returns:
-        a Context with all correlations removed
+        A Context with all correlations removed
     """
     return set_value(CORRELATION_CONTEXT_KEY, {}, context=context)

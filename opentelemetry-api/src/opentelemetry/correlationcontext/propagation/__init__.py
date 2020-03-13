@@ -89,7 +89,7 @@ def _format_correlations(correlations: typing.Dict[str, object]) -> str:
     """Format correlations into a string.
 
     Args:
-        correlations: the correlations to format
+        correlations: The correlations to format
 
     Returns:
         A string that adheres to the w3c correlationcontext
