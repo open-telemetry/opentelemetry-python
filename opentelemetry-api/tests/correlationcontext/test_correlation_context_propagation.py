@@ -141,6 +141,6 @@ class TestCorrelationContextPropagation(unittest.TestCase):
             "key3": 123.567,
         }
         output = self._inject(values)
-        self.assertIn("key1=true", output)
+        self.assertIn("key1=True", output)
         self.assertIn("key2=123", output)
         self.assertIn("key3=123.567", output)

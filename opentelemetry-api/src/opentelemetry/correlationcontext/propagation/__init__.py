@@ -104,7 +104,7 @@ def _format_correlations(correlations: typing.Dict[str, object]) -> str:
         header format.
     """
     return ",".join(
-        key + "=" + urllib.parse.quote_plus(str(value).lower())
+        key + "=" + urllib.parse.quote_plus(str(value))
         for key, value in correlations.items()
     )
 
