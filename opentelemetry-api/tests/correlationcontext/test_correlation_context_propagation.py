@@ -116,6 +116,11 @@ class TestCorrelationContextPropagation(unittest.TestCase):
         expected = {"key1": "value1", "key3": "value3"}
         self.assertEqual(self._extract(header), expected)
 
+    def test_inject_no_correlations(self):
+        values = {}
+        output = self._inject(values)
+        self.assertEqual(None, output)
+
     def test_inject(self):
         values = {
             "key1": "val1",
