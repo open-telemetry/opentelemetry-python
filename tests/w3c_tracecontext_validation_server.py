@@ -23,11 +23,12 @@ import json
 import flask
 import requests
 
+from opentelemetry.sdk.trace import TracerProvider
+
 # FIXME This could likely be avoided by integrating this script into the
 # standard test running mechanisms.
 
 from opentelemetry import trace  # noqa # isort:skip
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.ext import http_requests  # noqa # isort:skip"
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware  # noqa # isort:skip
 from opentelemetry.sdk.trace.export import (  # noqa # isort:skip
