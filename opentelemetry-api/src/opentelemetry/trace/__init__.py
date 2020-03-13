@@ -73,8 +73,6 @@ import typing
 from contextlib import contextmanager
 from logging import getLogger
 
-from pkg_resources import iter_entry_points
-
 from opentelemetry.configuration import Configuration  # type: ignore
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
@@ -658,30 +656,17 @@ def get_tracer(
     )
 
 
+def set_tracer_provider(tracer_provider: TracerProvider) -> None:
+    """Sets the current global :class:`~.TracerProvider` object."""
+    global _TRACER_PROVIDER
+    _TRACER_PROVIDER = tracer_provider
+
+
 def get_tracer_provider() -> TracerProvider:
     """Gets the current global :class:`~.TracerProvider` object."""
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        configured_tracer_provider = (
-            Configuration().tracer_provider  # type: ignore # pylint: disable=no-member
-        )
-
-        try:
-            _TRACER_PROVIDER = next(  # type: ignore
-                iter_entry_points(
-                    "opentelemetry_tracer_provider",
-                    name=configured_tracer_provider,  # type: ignore
-                )
-            ).load()()
-        except Exception:  # pylint: disable=broad-except
-            # FIXME Decide on how to handle this. Should an exception be
-            # raised here, or only a message should be logged and should
-            # we fall back to the default tracer provider?
-            logger.error(
-                "Failed to load tracer implementation: %s",
-                configured_tracer_provider,  # type: ignore
-            )
-            raise
+        _TRACER_PROVIDER = Configuration().tracer_provider
 
     return _TRACER_PROVIDER  # type: ignore

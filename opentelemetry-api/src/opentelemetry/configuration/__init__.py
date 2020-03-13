@@ -28,6 +28,10 @@ powerful one, Dynaconf, for example.
 from json import load
 from os import environ
 from os.path import exists, expanduser, join
+from pkg_resources import iter_entry_points
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class Configuration:
@@ -60,12 +64,46 @@ class Configuration:
                 )
 
             for key, value in configuration.items():
+                underscored_key = "_{}".format(key)
+
+                setattr(Configuration, underscored_key, None)
                 setattr(
                     Configuration,
                     key,
-                    property(lambda self, local_value=value: local_value),
+                    property(
+                        fget=lambda cls, local_key=key, local_value=value:
+                        cls._load(key=local_key, value=local_value)
+                    ),
                 )
 
             Configuration._instance = object.__new__(cls)
 
         return cls._instance
+
+    @classmethod
+    def _load(cls, key=None, value=None):
+        underscored_key = "_{}".format(key)
+
+        if getattr(cls, underscored_key) is None:
+            try:
+                setattr(
+                    cls,
+                    underscored_key,
+                    next(  # type: ignore
+                        iter_entry_points(
+                            "opentelemetry_{}".format(key),
+                            name=value,  # type: ignore
+                        )
+                    ).load()()
+                )
+            except Exception:  # pylint: disable=broad-except
+                # FIXME Decide on how to handle this. Should an exception be
+                # raised here, or only a message should be logged and should
+                # we fall back to the default meter provider?
+                logger.error(
+                    "Failed to load configured provider %s",
+                    value,  # type: ignore
+                )
+                raise
+
+        return getattr(cls, underscored_key)

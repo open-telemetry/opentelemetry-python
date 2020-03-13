@@ -30,7 +30,6 @@ import abc
 from logging import getLogger
 from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
-from pkg_resources import iter_entry_points
 
 from opentelemetry.configuration import Configuration  # type: ignore
 
@@ -416,30 +415,17 @@ def get_meter(
     )
 
 
+def set_meter_provider(meter_provider: MeterProvider) -> None:
+    """Sets the current global :class:`~.MeterProvider` object."""
+    global _METER_PROVIDER
+    _METER_PROVIDER = meter_provider
+
+
 def get_meter_provider() -> MeterProvider:
     """Gets the current global :class:`~.MeterProvider` object."""
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        configured_meter_provider = (
-            Configuration().meter_provider  # type: ignore # pylint: disable=no-member
-        )
-
-        try:
-            _METER_PROVIDER = next(  # type: ignore
-                iter_entry_points(
-                    "opentelemetry_meter_provider",
-                    name=configured_meter_provider,  # type: ignore
-                )
-            ).load()()
-        except Exception:  # pylint: disable=broad-except
-            # FIXME Decide on how to handle this. Should an exception be
-            # raised here, or only a message should be logged and should
-            # we fall back to the default meter provider?
-            logger.error(
-                "Failed to load configured meter provider %s",
-                configured_meter_provider,  # type: ignore
-            )
-            raise
+        _METER_PROVIDER = Configuration().meter_provider
 
     return _METER_PROVIDER  # type: ignore

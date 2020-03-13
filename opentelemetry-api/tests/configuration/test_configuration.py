@@ -22,6 +22,19 @@ from pytest import fixture  # type: ignore # pylint: disable=import-error
 
 
 class TestConfiguration(TestCase):
+    class IterEntryPointsMock:
+        def __init__(self, argument, name=None):
+            self._name = name
+
+        def __next__(self):
+            return self
+
+        def __call__(self):
+            return self._name
+
+        def load(self):
+            return self
+
     @fixture(autouse=True)
     def configdir(self, tmpdir):  # type: ignore # pylint: disable=no-self-use
         tmpdir.chdir()
@@ -38,7 +51,26 @@ class TestConfiguration(TestCase):
     def test_singleton(self):
         self.assertIs(Configuration(), Configuration())
 
-    def test_default_values(self):
+    @patch(
+        "opentelemetry.configuration.iter_entry_points",
+        **{"side_effect": IterEntryPointsMock}
+    )
+    def test_lazy(self, mock_iter_entry_points):
+        configuration = Configuration()
+
+        self.assertIsNone(configuration._tracer_provider)
+
+        configuration.tracer_provider
+
+        self.assertEqual(
+            configuration._tracer_provider, "default_tracer_provider"
+        )
+
+    @patch(
+        "opentelemetry.configuration.iter_entry_points",
+        **{"side_effect": IterEntryPointsMock}
+    )
+    def test_default_values(self, mock_iter_entry_points):
         self.assertEqual(
             Configuration().tracer_provider, "default_tracer_provider"
         )  # pylint: disable=no-member
@@ -46,8 +78,14 @@ class TestConfiguration(TestCase):
             Configuration().meter_provider, "default_meter_provider"
         )  # pylint: disable=no-member
 
+    @patch(
+        "opentelemetry.configuration.iter_entry_points",
+        **{"side_effect": IterEntryPointsMock}
+    )
     @patch("opentelemetry.configuration.expanduser")
-    def test_configuration_file(self, mock_expanduser):  # type: ignore
+    def test_configuration_file(
+        self, mock_expanduser, mock_iter_entry_points
+    ):  # type: ignore
         mock_expanduser.return_value = getcwd()
 
         self.assertEqual(
@@ -57,11 +95,17 @@ class TestConfiguration(TestCase):
             Configuration().meter_provider, "default_meter_provider"
         )  # pylint: disable=no-member
 
+    @patch(
+        "opentelemetry.configuration.iter_entry_points",
+        **{"side_effect": IterEntryPointsMock}
+    )
     @patch.dict(
         "os.environ",
         {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "overridden_meter_provider"},
     )
-    def test_environment_variables(self):  # type: ignore
+    def test_environment_variables(
+        self, mock_iter_entry_points
+    ):  # type: ignore
         self.assertEqual(
             Configuration().tracer_provider, "default_tracer_provider"
         )  # pylint: disable=no-member
@@ -69,6 +113,10 @@ class TestConfiguration(TestCase):
             Configuration().meter_provider, "overridden_meter_provider"
         )  # pylint: disable=no-member
 
+    @patch(
+        "opentelemetry.configuration.iter_entry_points",
+        **{"side_effect": IterEntryPointsMock}
+    )
     @patch("opentelemetry.configuration.expanduser")
     @patch.dict(
         "os.environ",
@@ -78,7 +126,9 @@ class TestConfiguration(TestCase):
             )
         },
     )
-    def test_configuration_file_environment_variables(self, mock_expanduser):  # type: ignore
+    def test_configuration_file_environment_variables(
+        self, mock_expanduser, mock_iter_entry_points
+    ):  # type: ignore
         mock_expanduser.return_value = getcwd()
 
         self.assertEqual(
