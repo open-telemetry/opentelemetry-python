@@ -17,6 +17,7 @@
 import os
 
 from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
     ConsoleSpanExporter,
@@ -52,6 +53,7 @@ tracer = trace.get_tracer(__name__)
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
 
+trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(span_processor)
 with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):

@@ -20,6 +20,7 @@ import flask
 import requests
 
 from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace.export import (
@@ -42,6 +43,7 @@ tracer = trace.get_tracer(__name__)
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
+trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 # Integrations are the glue that binds the OpenTelemetry API and the
