@@ -1,9 +1,20 @@
+# Copyright 2020, OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import abc
-import enum
 
 import six
-
-import grpc
 
 
 class ActiveSpanSource(six.with_metaclass(abc.ABCMeta)):
@@ -23,7 +34,8 @@ class RpcInfo(six.with_metaclass(abc.ABCMeta)):
     """Provides information for an RPC call.
 
   Attributes:
-    full_method: A string of the full RPC method, i.e., /package.service/method.
+    full_method: A string of the full RPC method, i.e.,
+        /package.service/method.
     metadata: The initial :term:`metadata`.
     timeout: The length of time in seconds to wait for the computation to
       terminate or be cancelled.
@@ -48,10 +60,9 @@ class SpanDecorator(six.with_metaclass(abc.ABCMeta)):
         raise NotImplementedError()
 
 
-def open_tracing_client_interceptor(tracer,
-                                    active_span_source=None,
-                                    log_payloads=False,
-                                    span_decorator=None):
+def open_tracing_client_interceptor(
+    tracer, active_span_source=None, log_payloads=False, span_decorator=None
+):
     """Creates an invocation-side interceptor that can be use with gRPC to add
     OpenTracing information.
 
@@ -66,13 +77,15 @@ def open_tracing_client_interceptor(tracer,
     An invocation-side interceptor object.
   """
     from grpc_opentracing import _client
-    return _client.OpenTracingClientInterceptor(tracer, active_span_source,
-                                                log_payloads, span_decorator)
+
+    return _client.OpenTracingClientInterceptor(
+        tracer, active_span_source, log_payloads, span_decorator
+    )
 
 
-def open_tracing_server_interceptor(tracer,
-                                    log_payloads=False,
-                                    span_decorator=None):
+def open_tracing_server_interceptor(
+    tracer, log_payloads=False, span_decorator=None
+):
     """Creates a service-side interceptor that can be use with gRPC to add
     OpenTracing information.
 
@@ -85,12 +98,7 @@ def open_tracing_server_interceptor(tracer,
     A service-side interceptor object.
   """
     from grpc_opentracing import _server
-    return _server.OpenTracingServerInterceptor(tracer, log_payloads,
-                                                span_decorator)
 
-
-###################################  __all__  #################################
-
-__all__ = ('ActiveSpanSource', 'RpcInfo', 'SpanDecorator',
-           'open_tracing_client_interceptor',
-           'open_tracing_server_interceptor',)
+    return _server.OpenTracingServerInterceptor(
+        tracer, log_payloads, span_decorator
+    )
