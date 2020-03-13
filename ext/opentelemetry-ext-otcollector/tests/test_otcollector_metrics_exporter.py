@@ -20,6 +20,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.metrics.v1 import metrics_pb2
 
 from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.ext.otcollector import metrics_exporter
 from opentelemetry.sdk.metrics import Counter, Measure
 from opentelemetry.sdk.metrics.export import (
@@ -34,15 +35,10 @@ class TestCollectorMetricsExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # pylint: disable=protected-access
-        cls._meter_defaults = metrics._METER_PROVIDER
+        metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
         kvp = {"environment": "staging"}
         cls._test_label_set = cls._meter.get_label_set(kvp)
-
-    @classmethod
-    def tearDownClass(cls):
-        # pylint: disable=protected-access
-        metrics._METER_PROVIDER = cls._meter_defaults
 
     def test_constructor(self):
         mock_get_node = mock.Mock()

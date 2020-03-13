@@ -21,7 +21,7 @@ from opentelemetry.ext.prometheus import (
     CustomCollector,
     PrometheusMetricsExporter,
 )
-from opentelemetry.metrics import get_meter_provider
+from opentelemetry.metrics import set_meter_provider, get_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
@@ -29,6 +29,7 @@ from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 
 class TestPrometheusMetricExporter(unittest.TestCase):
     def setUp(self):
+        set_meter_provider(metrics.MeterProvider())
         self._meter = get_meter_provider().get_meter(__name__)
         self._test_metric = self._meter.create_metric(
             "testname",
