@@ -33,9 +33,8 @@ The extension packages can be found in :scm_web:`ext/ directory of the repositor
 Extensions
 ----------
 
-OpenTelemetry supports integration with the following third party exporters:
-
-* `Azure Monitor <https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor>`_
+Visit `OpenTelemetry Registry <https://opentelemetry.io/registry/?s=python>`_ to find
+related projects like exporters, instrumentation libraries, tracer implementations, etc.
 
 Installing Cutting Edge Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
