@@ -23,7 +23,9 @@ from pytest import fixture  # type: ignore # pylint: disable=import-error
 
 class TestConfiguration(TestCase):
     class IterEntryPointsMock:
-        def __init__(self, argument, name=None):
+        def __init__(
+            self, argument, name=None
+        ):  # pylint: disable=unused-argument
             self._name = name
 
         def __next__(self):
@@ -55,22 +57,29 @@ class TestConfiguration(TestCase):
         "opentelemetry.configuration.iter_entry_points",
         **{"side_effect": IterEntryPointsMock}
     )
-    def test_lazy(self, mock_iter_entry_points):
+    def test_lazy(
+        self, mock_iter_entry_points,  # pylint: disable=unused-argument
+    ):
         configuration = Configuration()
 
-        self.assertIsNone(configuration._tracer_provider)
+        self.assertIsNone(
+            configuration._tracer_provider  # pylint: disable=no-member,protected-access
+        )
 
-        configuration.tracer_provider
+        configuration.tracer_provider  # pylint: disable=pointless-statement
 
         self.assertEqual(
-            configuration._tracer_provider, "default_tracer_provider"
+            configuration._tracer_provider,  # pylint: disable=no-member,protected-access
+            "default_tracer_provider",
         )
 
     @patch(
         "opentelemetry.configuration.iter_entry_points",
         **{"side_effect": IterEntryPointsMock}
     )
-    def test_default_values(self, mock_iter_entry_points):
+    def test_default_values(
+        self, mock_iter_entry_points  # pylint: disable=unused-argument
+    ):
         self.assertEqual(
             Configuration().tracer_provider, "default_tracer_provider"
         )  # pylint: disable=no-member
@@ -84,7 +93,9 @@ class TestConfiguration(TestCase):
     )
     @patch("opentelemetry.configuration.expanduser")
     def test_configuration_file(
-        self, mock_expanduser, mock_iter_entry_points
+        self,
+        mock_expanduser,
+        mock_iter_entry_points,  # pylint: disable=unused-argument
     ):  # type: ignore
         mock_expanduser.return_value = getcwd()
 
@@ -104,7 +115,7 @@ class TestConfiguration(TestCase):
         {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "overridden_meter_provider"},
     )
     def test_environment_variables(
-        self, mock_iter_entry_points
+        self, mock_iter_entry_points  # pylint: disable=unused-argument
     ):  # type: ignore
         self.assertEqual(
             Configuration().tracer_provider, "default_tracer_provider"
@@ -127,7 +138,9 @@ class TestConfiguration(TestCase):
         },
     )
     def test_configuration_file_environment_variables(
-        self, mock_expanduser, mock_iter_entry_points
+        self,
+        mock_expanduser,
+        mock_iter_entry_points,  # pylint: disable=unused-argument
     ):  # type: ignore
         mock_expanduser.return_value = getcwd()
 

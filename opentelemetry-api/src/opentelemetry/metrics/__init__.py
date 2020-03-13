@@ -416,7 +416,7 @@ def get_meter(
 
 def set_meter_provider(meter_provider: MeterProvider) -> None:
     """Sets the current global :class:`~.MeterProvider` object."""
-    global _METER_PROVIDER
+    global _METER_PROVIDER  # pylint: disable=global-statement
     _METER_PROVIDER = meter_provider
 
 
@@ -425,6 +425,8 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = Configuration().meter_provider
+        _METER_PROVIDER = (
+            Configuration().meter_provider  # pylint: disable=no-member
+        )
 
     return _METER_PROVIDER  # type: ignore
