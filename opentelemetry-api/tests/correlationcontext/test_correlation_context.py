@@ -14,6 +14,7 @@
 
 import unittest
 
+from opentelemetry import context
 from opentelemetry import correlationcontext as cctx
 
 
@@ -26,6 +27,11 @@ class TestCorrelationContextManager(unittest.TestCase):
 
         ctx = cctx.set_correlation("test", "value2", context=ctx)
         self.assertEqual(cctx.get_correlation("test", context=ctx), "value2")
+
+    def test_correlations_current_context(self):
+        token = context.attach(cctx.set_correlation("test", "value"))
+        self.assertEqual(cctx.get_correlation("test"), "value")
+        context.detach(token)
 
     def test_set_multiple_correlations(self):
         ctx = cctx.set_correlation("test", "value")
