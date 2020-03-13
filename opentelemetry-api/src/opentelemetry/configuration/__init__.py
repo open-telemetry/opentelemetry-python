@@ -25,10 +25,8 @@ It would probably be better to replace this configuration manager with a more
 powerful one, Dynaconf, for example.
 """
 
-from json import load
 from logging import getLogger
 from os import environ
-from os.path import exists, expanduser, join
 
 from pkg_resources import iter_entry_points
 
@@ -46,18 +44,6 @@ class Configuration:
             configuration = {
                 key: "default_{}".format(key) for key in cls.__slots__
             }
-
-            configuration_file_path = join(
-                expanduser("~"), ".config", "opentelemetry_python.json"
-            )
-
-            if exists(configuration_file_path):
-
-                with open(configuration_file_path) as configuration_file:
-                    file_configuration = load(configuration_file)
-
-                for key, value in configuration.items():
-                    configuration[key] = file_configuration.get(key, value)
 
             for key, value in configuration.items():
                 configuration[key] = environ.get(

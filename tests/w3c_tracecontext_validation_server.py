@@ -19,7 +19,6 @@ Service. It implements the APIs needed to be exercised by the test bed.
 """
 
 import json
-from os import environ
 
 import flask
 import requests
@@ -27,14 +26,8 @@ import requests
 # FIXME This could likely be avoided by integrating this script into the
 # standard test running mechanisms.
 
-environ[
-    "OPENTELEMETRY_PYTHON_TRACER_PROVIDER"
-] = "sdk_tracer_provider"  # isort:skip
-environ[
-    "OPENTELEMETRY_PYTHON_METER_PROVIDER"
-] = "sdk_meter_provider"  # isort:skip
-
 from opentelemetry import trace  # noqa # isort:skip
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.ext import http_requests  # noqa # isort:skip"
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware  # noqa # isort:skip
 from opentelemetry.sdk.trace.export import (  # noqa # isort:skip
@@ -45,6 +38,7 @@ from opentelemetry.sdk.trace.export import (  # noqa # isort:skip
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
+trace.set_tracer_provider(TracerProvider())
 http_requests.enable(trace.get_tracer_provider())
 
 # SpanExporter receives the spans and send them to the target location.

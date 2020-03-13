@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from json import dumps
-from os import getcwd
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -91,25 +90,6 @@ class TestConfiguration(TestCase):
         "opentelemetry.configuration.iter_entry_points",
         **{"side_effect": IterEntryPointsMock}  # type: ignore
     )
-    @patch("opentelemetry.configuration.expanduser")
-    def test_configuration_file(  # type: ignore
-        self,
-        mock_expanduser,
-        mock_iter_entry_points,  # pylint: disable=unused-argument
-    ):  # type: ignore
-        mock_expanduser.return_value = getcwd()
-
-        self.assertEqual(
-            Configuration().tracer_provider, "overridden_tracer_provider"
-        )  # pylint: disable=no-member
-        self.assertEqual(
-            Configuration().meter_provider, "default_meter_provider"
-        )  # pylint: disable=no-member
-
-    @patch(
-        "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}  # type: ignore
-    )
     @patch.dict(
         "os.environ",
         {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "overridden_meter_provider"},
@@ -123,33 +103,6 @@ class TestConfiguration(TestCase):
         self.assertEqual(
             Configuration().meter_provider, "overridden_meter_provider"
         )  # pylint: disable=no-member
-
-    @patch(
-        "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}  # type: ignore
-    )
-    @patch("opentelemetry.configuration.expanduser")
-    @patch.dict(
-        "os.environ",
-        {
-            "OPENTELEMETRY_PYTHON_TRACER_PROVIDER": (
-                "reoverridden_tracer_provider"
-            )
-        },
-    )
-    def test_configuration_file_environment_variables(  # type: ignore
-        self,
-        mock_expanduser,
-        mock_iter_entry_points,  # pylint: disable=unused-argument
-    ):  # type: ignore
-        mock_expanduser.return_value = getcwd()
-
-        self.assertEqual(
-            Configuration().tracer_provider, "reoverridden_tracer_provider"
-        )
-        self.assertEqual(
-            Configuration().meter_provider, "default_meter_provider"
-        )
 
     def test_property(self):
         with self.assertRaises(AttributeError):
