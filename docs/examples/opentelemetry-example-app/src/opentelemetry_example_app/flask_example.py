@@ -23,7 +23,6 @@ import requests
 import opentelemetry.ext.http_requests
 from opentelemetry import trace
 from opentelemetry.ext.flask import instrument_app
-from opentelemetry.sdk.trace import TracerProvider
 
 
 def configure_opentelemetry(flask_app: flask.Flask):
@@ -42,12 +41,6 @@ def configure_opentelemetry(flask_app: flask.Flask):
     """
     # Start by configuring all objects required to ensure
     # a complete end to end workflow.
-    # The preferred implementation of these objects must be set,
-    # as the opentelemetry-api defines the interface with a no-op
-    # implementation.
-    trace.set_preferred_tracer_provider_implementation(
-        lambda _: TracerProvider()
-    )
 
     # Next, we need to configure how the values that are used by
     # traces and metrics are propagated (such as what specific headers
@@ -55,7 +48,7 @@ def configure_opentelemetry(flask_app: flask.Flask):
     # Integrations are the glue that binds the OpenTelemetry API
     # and the frameworks and libraries that are used together, automatically
     # creating Spans and propagating context as appropriate.
-    opentelemetry.ext.http_requests.enable(trace.tracer_provider())
+    opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
     instrument_app(flask_app)
 
 

@@ -9,4 +9,3 @@ OpenTelemetry Python API
     context
     metrics
     trace
-    util.loader

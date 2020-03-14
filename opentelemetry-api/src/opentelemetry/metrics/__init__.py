@@ -27,13 +27,12 @@ See the `metrics api`_ spec for terminology and context clarification.
 
 """
 import abc
-import logging
-from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
+from logging import getLogger
+from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
-from opentelemetry.util import loader
+from opentelemetry.configuration import Configuration  # type: ignore
 
-logger = logging.getLogger(__name__)
-
+logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
@@ -398,15 +397,7 @@ class DefaultMeter(Meter):
         return DefaultLabelSet()
 
 
-# Once https://github.com/python/mypy/issues/7092 is resolved,
-# the following type definition should be replaced with
-# from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = Callable[
-    [Type[MeterProvider]], Optional[MeterProvider]
-]
-
 _METER_PROVIDER = None
-_METER_PROVIDER_FACTORY = None
 
 
 def get_meter(
@@ -418,52 +409,24 @@ def get_meter(
     This function is a convenience wrapper for
     opentelemetry.metrics.meter_provider().get_meter
     """
-    return meter_provider().get_meter(
+    return get_meter_provider().get_meter(
         instrumenting_module_name, stateful, instrumenting_library_version
     )
 
 
-def meter_provider() -> MeterProvider:
-    """Gets the current global :class:`~.MeterProvider` object.
+def set_meter_provider(meter_provider: MeterProvider) -> None:
+    """Sets the current global :class:`~.MeterProvider` object."""
+    global _METER_PROVIDER  # pylint: disable=global-statement
+    _METER_PROVIDER = meter_provider
 
-    If there isn't one set yet, a default will be loaded.
-    """
-    global _METER_PROVIDER, _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
+
+def get_meter_provider() -> MeterProvider:
+    """Gets the current global :class:`~.MeterProvider` object."""
+    global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        # pylint:disable=protected-access
-        try:
-            _METER_PROVIDER = loader._load_impl(
-                MeterProvider, _METER_PROVIDER_FACTORY  # type: ignore
-            )
-        except TypeError:
-            # if we raised an exception trying to instantiate an
-            # abstract class, default to no-op meter impl
-            logger.warning(
-                "Unable to instantiate MeterProvider from meter provider factory.",
-                exc_info=True,
-            )
-            _METER_PROVIDER = DefaultMeterProvider()
-        _METER_PROVIDER_FACTORY = None
+        _METER_PROVIDER = (
+            Configuration().meter_provider  # type: ignore # pylint: disable=no-member
+        )
 
-    return _METER_PROVIDER
-
-
-def set_preferred_meter_provider_implementation(
-    factory: ImplementationFactory,
-) -> None:
-    """Set the factory to be used to create the meter provider.
-
-    See :mod:`opentelemetry.util.loader` for details.
-
-    This function may not be called after a meter is already loaded.
-
-    Args:
-        factory: Callback that should create a new :class:`MeterProvider` instance.
-    """
-    global _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
-
-    if _METER_PROVIDER:
-        raise RuntimeError("MeterProvider already loaded.")
-
-    _METER_PROVIDER_FACTORY = factory
+    return _METER_PROVIDER  # type: ignore

@@ -45,10 +45,7 @@ else:
     print("Using ConsoleSpanExporter")
     exporter = ConsoleSpanExporter()
 
-# The preferred tracer implementation must be set, as the opentelemetry-api
-# defines the interface with a no-op implementation.
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-
+trace.set_tracer_provider(TracerProvider())
 # We tell OpenTelemetry who it is that is creating spans. In this case, we have
 # no real name (no setup.py), so we make one up. If we had a version, we would
 # also specify it here.
@@ -56,8 +53,8 @@ tracer = trace.get_tracer(__name__)
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
 
-trace.tracer_provider().add_span_processor(span_processor)
 with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
         with tracer.start_as_current_span("baz"):
