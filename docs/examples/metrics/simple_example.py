@@ -23,7 +23,7 @@ import sys
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure
+from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
@@ -43,13 +43,13 @@ if len(sys.argv) >= 2:
         usage(sys.argv)
         sys.exit(1)
 
-# Meter is responsible for creating and recording metrics
 
-# Meter's namespace corresponds to the string passed as the first argument Pass
-# in True/False to indicate whether the batcher is stateful. True indicates the
-# batcher computes checkpoints from over the process lifetime. False indicates
-# the batcher computes checkpoints which describe the updates of a single
-# collection period (deltas)
+# The Meter is responsible for creating and recording metrics. Each meter has a
+# unique name, which we set as the module's name here. The second argument
+# determines whether how metrics are collected: if true, metrics accumulate
+# over the process lifetime. If false, metrics are reset at the beginning of
+# each collection interval.
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__, batcher_mode == "stateful")
 
 # Exporter to export metrics to the console

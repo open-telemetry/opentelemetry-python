@@ -23,6 +23,7 @@ import requests
 import opentelemetry.ext.http_requests
 from opentelemetry import trace
 from opentelemetry.ext.flask import instrument_app
+from opentelemetry.sdk.trace import TracerProvider
 
 
 def configure_opentelemetry(flask_app: flask.Flask):
@@ -33,21 +34,16 @@ def configure_opentelemetry(flask_app: flask.Flask):
     * sets tracer to the SDK's Tracer
     * enables requests integration on the Tracer
     * uses a WSGI middleware to enable configuration
-
-    TODO:
-
-    * processors?
-    * exporters?
     """
-    # Start by configuring all objects required to ensure
-    # a complete end to end workflow.
+    # Start by configuring all objects required to ensure a complete end to end
+    # workflow.
+    trace.set_tracer_provider(TracerProvider())
 
-    # Next, we need to configure how the values that are used by
-    # traces and metrics are propagated (such as what specific headers
-    # carry this value).
-    # Integrations are the glue that binds the OpenTelemetry API
-    # and the frameworks and libraries that are used together, automatically
-    # creating Spans and propagating context as appropriate.
+    # Next, we need to configure how the values that are used by traces and
+    # metrics are propagated (such as what specific headers carry this value).
+    # Integrations are the glue that binds the OpenTelemetry API and the
+    # frameworks and libraries that are used together, automatically creating
+    # Spans and propagating context as appropriate.
     opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
     instrument_app(flask_app)
 
@@ -57,8 +53,7 @@ app = flask.Flask(__name__)
 
 @app.route("/")
 def hello():
-    # emit a trace that measures how long the
-    # sleep takes
+    # Emit a trace that measures how long the sleep takes
     version = pkg_resources.get_distribution(
         "opentelemetry-example-app"
     ).version
