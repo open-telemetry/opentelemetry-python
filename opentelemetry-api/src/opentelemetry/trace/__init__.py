@@ -63,7 +63,11 @@ either implicit or explicit context propagation consistently throughout.
 .. versionadded:: 0.1.0
 .. versionchanged:: 0.3.0
     `TracerProvider` was introduced and the global ``tracer`` getter was
-    replaced by `tracer_provider`.
+    replaced by ``tracer_provider``.
+.. versionchanged:: 0.5.0
+    ``tracer_provider`` was replaced by `get_tracer_provider`,
+    ``set_preferred_tracer_provider_implementation`` was replaced by
+    `set_tracer_provider`.
 """
 
 import abc
