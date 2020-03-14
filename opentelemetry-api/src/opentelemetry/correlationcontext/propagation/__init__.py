@@ -41,7 +41,7 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
         See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
         """
 
-        if not context:
+        if context is None:
             context = get_current()
 
         header = _extract_first_element(
@@ -94,15 +94,6 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
 
 
 def _format_correlations(correlations: typing.Dict[str, object]) -> str:
-    """Format correlations into a string.
-
-    Args:
-        correlations: The correlations to format
-
-    Returns:
-        A string that adheres to the w3c correlationcontext
-        header format.
-    """
     return ",".join(
         key + "=" + urllib.parse.quote_plus(str(value))
         for key, value in correlations.items()

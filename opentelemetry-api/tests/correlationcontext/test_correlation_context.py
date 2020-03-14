@@ -32,6 +32,7 @@ class TestCorrelationContextManager(unittest.TestCase):
         token = context.attach(cctx.set_correlation("test", "value"))
         self.assertEqual(cctx.get_correlation("test"), "value")
         context.detach(token)
+        self.assertEqual(cctx.get_correlation("test"), None)
 
     def test_set_multiple_correlations(self):
         ctx = cctx.set_correlation("test", "value")

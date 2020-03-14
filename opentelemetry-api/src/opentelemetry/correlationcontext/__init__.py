@@ -18,7 +18,7 @@ import typing
 from opentelemetry.context import get_value, set_value
 from opentelemetry.context.context import Context
 
-CORRELATION_CONTEXT_KEY = "correlation-context"
+_CORRELATION_CONTEXT_KEY = "correlation-context"
 
 
 def get_correlations(
@@ -32,7 +32,7 @@ def get_correlations(
     Returns:
         Name/value pairs in the CorrelationContext
     """
-    correlations = get_value(CORRELATION_CONTEXT_KEY, context=context)
+    correlations = get_value(_CORRELATION_CONTEXT_KEY, context=context)
     if isinstance(correlations, dict):
         return correlations.copy()
     return {}
@@ -69,7 +69,7 @@ def set_correlation(
     """
     correlations = get_correlations(context=context)
     correlations[name] = value
-    return set_value(CORRELATION_CONTEXT_KEY, correlations, context=context)
+    return set_value(_CORRELATION_CONTEXT_KEY, correlations, context=context)
 
 
 def remove_correlation(
@@ -86,7 +86,7 @@ def remove_correlation(
     correlations = get_correlations(context=context)
     correlations.pop(name, None)
 
-    return set_value(CORRELATION_CONTEXT_KEY, correlations, context=context)
+    return set_value(_CORRELATION_CONTEXT_KEY, correlations, context=context)
 
 
 def clear_correlations(context: typing.Optional[Context] = None) -> Context:
@@ -97,4 +97,4 @@ def clear_correlations(context: typing.Optional[Context] = None) -> Context:
     Returns:
         A Context with all correlations removed
     """
-    return set_value(CORRELATION_CONTEXT_KEY, {}, context=context)
+    return set_value(_CORRELATION_CONTEXT_KEY, {}, context=context)
