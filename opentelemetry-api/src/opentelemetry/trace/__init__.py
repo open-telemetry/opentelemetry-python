@@ -63,20 +63,21 @@ either implicit or explicit context propagation consistently throughout.
 .. versionadded:: 0.1.0
 .. versionchanged:: 0.3.0
     `TracerProvider` was introduced and the global ``tracer`` getter was replaced
-    by `tracer_provider`.
+    by `get_tracer_provider`.
 """
 
 import abc
 import enum
-import logging
 import types as python_types
 import typing
 from contextlib import contextmanager
+from logging import getLogger
 
+from opentelemetry.configuration import Configuration  # type: ignore
 from opentelemetry.trace.status import Status
-from opentelemetry.util import loader, types
+from opentelemetry.util import types
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
@@ -639,15 +640,7 @@ class DefaultTracer(Tracer):
         yield
 
 
-# Once https://github.com/python/mypy/issues/7092 is resolved,
-# the following type definition should be replaced with
-# from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = typing.Callable[
-    [typing.Type[TracerProvider]], typing.Optional[TracerProvider]
-]
-
-_TRACER_PROVIDER = None  # type: typing.Optional[TracerProvider]
-_TRACER_PROVIDER_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+_TRACER_PROVIDER = None
 
 
 def get_tracer(
@@ -658,53 +651,24 @@ def get_tracer(
     This function is a convenience wrapper for
     opentelemetry.trace.tracer_provider().get_tracer
     """
-    return tracer_provider().get_tracer(
+    return get_tracer_provider().get_tracer(
         instrumenting_module_name, instrumenting_library_version
     )
 
 
-def tracer_provider() -> TracerProvider:
-    """Gets the current global :class:`~.TracerProvider` object.
+def set_tracer_provider(tracer_provider: TracerProvider) -> None:
+    """Sets the current global :class:`~.TracerProvider` object."""
+    global _TRACER_PROVIDER  # pylint: disable=global-statement
+    _TRACER_PROVIDER = tracer_provider
 
-    If there isn't one set yet, a default will be loaded.
-    """
-    global _TRACER_PROVIDER, _TRACER_PROVIDER_FACTORY  # pylint:disable=global-statement
+
+def get_tracer_provider() -> TracerProvider:
+    """Gets the current global :class:`~.TracerProvider` object."""
+    global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        # pylint:disable=protected-access
-        try:
-            _TRACER_PROVIDER = loader._load_impl(
-                TracerProvider, _TRACER_PROVIDER_FACTORY  # type: ignore
-            )
-        except TypeError:
-            # if we raised an exception trying to instantiate an
-            # abstract class, default to no-op tracer impl
-            logger.warning(
-                "Unable to instantiate TracerProvider from factory.",
-                exc_info=True,
-            )
-            _TRACER_PROVIDER = DefaultTracerProvider()
-        del _TRACER_PROVIDER_FACTORY
+        _TRACER_PROVIDER = (
+            Configuration().tracer_provider  # type: ignore # pylint: disable=no-member
+        )
 
-    return _TRACER_PROVIDER
-
-
-def set_preferred_tracer_provider_implementation(
-    factory: ImplementationFactory,
-) -> None:
-    """Set the factory to be used to create the global TracerProvider.
-
-    See :mod:`opentelemetry.util.loader` for details.
-
-    This function may not be called after a tracer is already loaded.
-
-    Args:
-        factory: Callback that should create a new :class:`TracerProvider`
-            instance.
-    """
-    global _TRACER_PROVIDER_FACTORY  # pylint:disable=global-statement
-
-    if _TRACER_PROVIDER:
-        raise RuntimeError("TracerProvider already loaded.")
-
-    _TRACER_PROVIDER_FACTORY = factory
+    return _TRACER_PROVIDER  # type: ignore

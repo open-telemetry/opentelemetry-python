@@ -19,7 +19,7 @@ asynchronous metrics data.
 import psutil
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import LabelSet, MeterProvider
+from opentelemetry.sdk.metrics import LabelSet
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -27,7 +27,6 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 # Configure a stateful batcher
 batcher = UngroupedBatcher(stateful=True)
 
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
 meter = metrics.get_meter(__name__)
 
 # Exporter to export metrics to the console

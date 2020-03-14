@@ -43,19 +43,11 @@ class TestShim(TestCase):
 
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
-
-        self.shim = opentracingshim.create_tracer(trace.tracer_provider())
+        trace.set_tracer_provider(TracerProvider())
+        self.shim = opentracingshim.create_tracer(trace.get_tracer_provider())
 
     @classmethod
     def setUpClass(cls):
-        """Set preferred tracer implementation only once rather than before
-        every test method.
-        """
-
-        trace.set_preferred_tracer_provider_implementation(
-            lambda T: TracerProvider()
-        )
-
         # Save current propagator to be restored on teardown.
         cls._previous_propagator = propagators.get_global_httptextformat()
 
