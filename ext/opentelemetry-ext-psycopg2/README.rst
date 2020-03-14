@@ -13,8 +13,10 @@ Usage
 
     import psycopg2
     from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.trace.ext.psycopg2 import trace_integration
 
+    trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
     trace_integration(tracer)
     cnx = psycopg2.connect(database='Database')
