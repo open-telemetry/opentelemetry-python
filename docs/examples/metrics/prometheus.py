@@ -21,13 +21,14 @@ from prometheus_client import start_http_server
 
 from opentelemetry import metrics
 from opentelemetry.ext.prometheus import PrometheusMetricsExporter
-from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Start Prometheus client
 start_http_server(port=8000, addr="localhost")
 
 # Meter is responsible for creating and recording metrics
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 # exporter to export metrics to Prometheus
 prefix = "MyAppPrefix"
