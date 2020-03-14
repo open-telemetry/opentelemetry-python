@@ -7,6 +7,7 @@ OpenTelemetry Python API
     :maxdepth: 1
 
     context
+    correlationcontext
     metrics
     trace
     util.loader
