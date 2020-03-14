@@ -19,30 +19,31 @@
 Simple configuration manager
 
 This is a configuration manager for the Tracer and Meter providers. It reads
-configuration from environment variables prefixed with OPENTELEMETRY_PYTHON_:
+configuration from environment variables prefixed with
+``OPENTELEMETRY_PYTHON_``:
 
-1. OPENTELEMETRY_PYTHON_TRACER_PROVIDER
-2. OPENTELEMETRY_PYTHON_METER_PROVIDER
+1. ``OPENTELEMETRY_PYTHON_TRACER_PROVIDER``
+2. ``OPENTELEMETRY_PYTHON_METER_PROVIDER``
 
 The value of these environment variables should be the name of the entry point
 that points to the class that implements either provider. This OpenTelemetry
 API package provides one entry point for each, which can be found in the
-setup.py file:
+setup.py file::
 
-entry_points={
-    ...
-    "opentelemetry_meter_provider": [
-        "default_meter_provider = "
-        "opentelemetry.metrics:DefaultMeterProvider"
-    ],
-    "opentelemetry_tracer_provider": [
-        "default_tracer_provider = "
-        "opentelemetry.trace:DefaultTracerProvider"
-    ],
-}
+    entry_points={
+        ...
+        "opentelemetry_meter_provider": [
+            "default_meter_provider = "
+            "opentelemetry.metrics:DefaultMeterProvider"
+        ],
+        "opentelemetry_tracer_provider": [
+            "default_tracer_provider = "
+            "opentelemetry.trace:DefaultTracerProvider"
+        ],
+    }
 
 To use the meter provider above, then the
-OPENTELEMETRY_PYTHON_METER_PROVIDER should be set to
+``OPENTELEMETRY_PYTHON_METER_PROVIDER`` should be set to
 "default_meter_provider" (this is not actually necessary since the
 OpenTelemetry API provided providers are the default ones used if no
 configuration is found in the environment variables).
@@ -52,11 +53,12 @@ it from opentelemetry.configuration.Configuration. This is a class that can
 be instantiated as many times as needed without concern because it will
 always produce the same instance. Its attributes are lazy loaded and they
 hold an instance of their corresponding provider. So, for example, to get
-the configured meter provider:
+the configured meter provider::
 
-from opentelemetry.configuration import Configuration
+    from opentelemetry.configuration import Configuration
 
-tracer_provider = Configuration().tracer_provider
+    tracer_provider = Configuration().tracer_provider
+
 """
 
 from logging import getLogger
