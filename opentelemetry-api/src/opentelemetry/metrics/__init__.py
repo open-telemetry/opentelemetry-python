@@ -24,7 +24,11 @@ See the `metrics api`_ spec for terminology and context clarification.
 .. _metrics api:
     https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
 
-
+.. versionadded:: 0.1.0
+.. versionchanged:: 0.5.0
+    ``meter_provider`` was replaced by `get_meter_provider`,
+    ``set_preferred_meter_provider_implementation`` was replaced by
+    `set_meter_provider`.
 """
 import abc
 from logging import getLogger
