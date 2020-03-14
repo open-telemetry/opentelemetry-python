@@ -19,7 +19,7 @@
 Simple configuration manager
 
 This is a configuration manager for the Tracer and Meter providers. It reads
-configuration from environment variables prefixed with OPENTELEMETRY_PYHTON_:
+configuration from environment variables prefixed with OPENTELEMETRY_PYTHON_:
 
 1. OPENTELEMETRY_PYTHON_TRACER_PROVIDER
 2. OPENTELEMETRY_PYTHON_METER_PROVIDER
