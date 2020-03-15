@@ -27,7 +27,7 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 # Configure a stateful batcher
 batcher = UngroupedBatcher(stateful=True)
 
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 
 # Exporter to export metrics to the console

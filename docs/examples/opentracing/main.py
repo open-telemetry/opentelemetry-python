@@ -8,8 +8,8 @@ from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from rediscache import RedisCache
 
 # Configure the tracer using the default implementation
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-tracer_provider = trace.tracer_provider()
+trace.set_tracer_provider(TracerProvider())
+tracer_provider = trace.get_tracer_provider()
 
 # Configure the tracer to export traces to Jaeger
 jaeger_exporter = JaegerSpanExporter(
