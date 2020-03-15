@@ -482,6 +482,12 @@ def lint_args(args):
             args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
         )
     )
+    execute_args(
+        parse_subargs(
+            args,
+            ("exec", "python tests/check_for_valid_readme.py {}", "--all",),
+        )
+    )
 
 
 def test_args(args):
