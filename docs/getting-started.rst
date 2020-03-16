@@ -52,9 +52,44 @@ We can run it, and see the traces print to your console:
 
     $ python tracing.py
     Hello world from OpenTelemetry Python!
-    Span(name="baz", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xfacbb82a4d0cf5dd, trace_state={}), kind=SpanKind.INTERNAL, parent=Span(name="bar", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xb1894e8d588f5f62, trace_state={})), start_time=2020-03-15T05:12:08.345394Z, end_time=2020-03-15T05:12:08.345450Z)
-    Span(name="bar", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xb1894e8d588f5f62, trace_state={}), kind=SpanKind.INTERNAL, parent=Span(name="foo", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xde5ea23d6a9e4180, trace_state={})), start_time=2020-03-15T05:12:08.345360Z, end_time=2020-03-15T05:12:08.345597Z)
-    Span(name="foo", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xde5ea23d6a9e4180, trace_state={}), kind=SpanKind.INTERNAL, parent=None, start_time=2020-03-15T05:12:08.345287Z, end_time=2020-03-15T05:12:08.345673Z)
+    Span(name="baz",
+         context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
+                             span_id=0xfacbb82a4d0cf5dd,
+                             trace_state={}
+         ),
+         kind=SpanKind.INTERNAL,
+         parent=Span(name="bar",
+                     context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
+                                         span_id=0xb1894e8d588f5f62,
+                                         trace_state={})
+         ),
+         start_time=2020-03-15T05:12:08.345394Z,
+         end_time=2020-03-15T05:12:08.345450Z
+     )
+    Span(name="bar",
+         context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
+                             span_id=0xb1894e8d588f5f62,
+                             trace_state={}
+         ),
+         kind=SpanKind.INTERNAL,
+         parent=Span(name="foo",
+                     context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
+                                         span_id=0xde5ea23d6a9e4180,
+                                         trace_state={})
+         ),
+         start_time=2020-03-15T05:12:08.345360Z,
+         end_time=2020-03-15T05:12:08.345597Z
+    )
+    Span(name="foo",
+         context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
+                             span_id=0xde5ea23d6a9e4180,
+                             trace_state={}
+         ),
+         kind=SpanKind.INTERNAL,
+         parent=None,
+         start_time=2020-03-15T05:12:08.345287Z,
+         end_time=2020-03-15T05:12:08.345673Z
+    )
 
 
 Each span typically represents a single operation or unit of work.
