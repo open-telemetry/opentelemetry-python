@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-This library allows tracing HTTP requests made by the popular
+This library allows tracing HTTP requests made by the
 `requests <https://requests.kennethreitz.org/en/master/>`_ library.
 
 Usage

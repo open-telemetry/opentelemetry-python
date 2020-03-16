@@ -22,7 +22,7 @@ Installation
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip instal psutil # needed to get ram and cpu usage in the observer example
+    pip install psutil # needed to get ram and cpu usage in the observer example
 
 Run the Example
 ---------------

@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 """
-This example shows how to export metricsto prometheus.
+This example shows how to export metrics to Prometheus.
 """
 
 from prometheus_client import start_http_server

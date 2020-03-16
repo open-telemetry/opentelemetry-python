@@ -1,7 +1,7 @@
 Prometheus Metrics Exporter Example
 ===================================
 
-This example shows how to export metrics to the prometheus exporter.
+This example shows how to export metrics to Prometheus.
 
 The source files of this example are available :scm_web:`here <docs/examples/prometheus/>`.
 

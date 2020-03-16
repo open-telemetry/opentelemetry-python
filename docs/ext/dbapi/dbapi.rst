@@ -1,4 +1,4 @@
-OpenTelemetry Database API integration
+OpenTelemetry Database API Integration
 ======================================
 
 .. automodule:: opentelemetry.ext.dbapi

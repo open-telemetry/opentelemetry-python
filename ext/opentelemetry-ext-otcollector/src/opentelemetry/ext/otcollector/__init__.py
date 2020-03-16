@@ -13,12 +13,12 @@
 # limitations under the License.
 
 """
-This library allows to export data to `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector/>`_ , currently using OpenCensus receiver in Collector side.
+This library allows export of data to the `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector/>`_ , currently using OpenCensus receiver on the Collector side.
 
 Traces Usage
 ------------
 
-The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ traces to `OpenTelemetry Collector`_.
+The **OpenTelemetry Collector Exporter** allows export of `OpenTelemetry`_ traces to the `OpenTelemetry Collector`_.
 
 .. code:: python
 

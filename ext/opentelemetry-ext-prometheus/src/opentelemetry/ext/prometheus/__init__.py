@@ -13,12 +13,12 @@
 # limitations under the License.
 
 """
-This library allows to export metrics data to `Prometheus <https://prometheus.io/>`_.
+This library allows export of metrics data to `Prometheus <https://prometheus.io/>`_.
 
 Usage
 -----
 
-The **OpenTelemetry Prometheus Exporter** allows to export `OpenTelemetry`_ metrics to `Prometheus`_.
+The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metrics to `Prometheus`_.
 
 
 .. _Prometheus: https://prometheus.io/
