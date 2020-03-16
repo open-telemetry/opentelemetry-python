@@ -397,7 +397,7 @@ To see how this works in practice, let's start the Collector locally. Write the 
 Start the docker container:
 
 .. code-block:: sh
- 
+
     docker run -p 55678:55678\
         -v ./otel-collector-config.yaml:/etc/otel-collector-config.yaml\
         omnition/opentelemetry-collector-contrib:latest \
