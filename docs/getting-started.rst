@@ -372,6 +372,7 @@ And execute the following script:
 .. code-block:: python
 
     #/tmp/otcollector.py
+    import time
     from opentelemetry import trace
     from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
@@ -383,15 +384,18 @@ And execute the following script:
 
 
     # create a CollectorSpanExporter
-    collector_exporter = CollectorSpanExporter(
+    span_exporter = CollectorSpanExporter(
         # optional:
         # endpoint="myCollectorUrl:55678",
         # service_name="test_service",
         # host_name="machine/container name",
     )
+    tracer_provider = TracerProvider()
+    trace.set_tracer_provider(tracer_provider)
+    tracer_provider.add_span_processor(span_processor)
 
     # create a CollectorMetricsExporter
-    collector_exporter = CollectorMetricsExporter(
+    metric_exporter = CollectorMetricsExporter(
         # optional:
         # endpoint="myCollectorUrl:55678",
         # service_name="test_service",
@@ -405,14 +409,8 @@ And execute the following script:
     # exporter every interval
     controller = PushController(meter, collector_exporter, 5)
 
-    # Create a BatchExportSpanProcessor and add the exporter to it
-    span_processor = BatchExportSpanProcessor(collector_exporter)
-
     # Configure the tracer to use the collector exporter
-    tracer_provider = TracerProvider()
-    trace.set_tracer_provider(TracerProvider())
-    tracer_provider.add_span_processor(span_processor)
-    tracer = TracerProvider().get_tracer(__name__)
+    tracer = trace.get_tracer_provider().get_tracer(__name__)
 
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
@@ -426,3 +424,4 @@ And execute the following script:
     label_set = meter.get_label_set({"environment": "staging"})
 
     counter.add(25, label_set)
+    time.sleep(10)  # give push_controller time to push metrics
