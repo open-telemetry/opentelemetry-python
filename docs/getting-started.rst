@@ -26,7 +26,7 @@ represents an action within your application that you want to instrument, such a
 or a database call. Once instrumented, the application owner can extract helpful information such as
 how long the action took, or add arbitrary attributes to the span that may provide more insight for debugging.
 
-Here's an example of a script that emits traces three actions, foo, bar, and baz:
+Here's an example of a script that emits a trace containing three named spans: "foo", "bar", and "baz":
 
 .. code-block:: python
 
@@ -57,16 +57,19 @@ We can run it, and see the traces print to your console:
     Span(name="foo", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xde5ea23d6a9e4180, trace_state={}), kind=SpanKind.INTERNAL, parent=None, start_time=2020-03-15T05:12:08.345287Z, end_time=2020-03-15T05:12:08.345673Z)
 
 
-Spans can be nested into each other. The top-level span is known by a special name, as the "trace".
-the top-level span creates a trace id, which is inherited by all child spans.
+Each span typically represents a single operation or unit of work.
+Spans can be nested, and have a parent-child relationship with other spans.
+While a given span is active, newly-created spans will inherit the active span's trace ID, options, and other attributes of its context.
+A span without a parent is called the "root span", and a trace is comprised of one root span and its descendants.
+
+In the example above, the OpenTelemetry Python library creates one trace containing three spans and prints it to STDOUT.
 
 Configure exporters to emit spans elsewhere
 -------------------------------------------
 
 The example above does emit information about all spans, but the output is a bit hard to read.
-In common cases, you would instead *export* this data to some consuming service, to be visualized and
-easily queryable. It is also common to aggregate span and trace information from multiple services into
-a single database, so that actions that require multiple services can still all be visualized together.
+In common cases, you would instead *export* this data to an application performance monitoring backend, to be visualized and queried.
+It is also common to aggregate span and trace information from multiple services into a single database, so that actions that require multiple services can still all be visualized together.
 
 This concept is known as distributed tracing. One such distributed tracing backend is known as Jaeger.
 
