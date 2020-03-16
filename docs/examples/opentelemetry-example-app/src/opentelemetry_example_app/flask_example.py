@@ -23,18 +23,25 @@ import opentelemetry.ext.http_requests
 from opentelemetry import trace
 from opentelemetry.ext.flask import instrument_app
 from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
+trace.set_tracer_provider(TracerProvider())
+trace.get_tracer_provider().add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
 
 app = flask.Flask(__name__)
-trace.set_tracer_provider(TracerProvider())
 opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
 instrument_app(app)
 
 
 @app.route("/")
 def hello():
-    # Emit a trace that measures how long the sleep takes
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("example-request"):
         requests.get("http://www.example.com")
     return "hello"
+
+
+app.run(debug=True)
