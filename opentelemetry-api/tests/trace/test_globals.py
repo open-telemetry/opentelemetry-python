@@ -1,40 +1,18 @@
-import importlib
 import unittest
+from unittest.mock import patch
 
 from opentelemetry import trace
 
 
 class TestGlobals(unittest.TestCase):
     def setUp(self):
-        importlib.reload(trace)
+        self._patcher = patch("opentelemetry.trace._TRACER_PROVIDER")
+        self._mock_tracer_provider = self._patcher.start()
 
-        # This class has to be declared after the importlib reload, or else it
-        # will inherit from an old TracerProvider, rather than the new
-        # TracerProvider ABC created from reload.
-
-        static_tracer = trace.DefaultTracer()
-
-        class DummyTracerProvider(trace.TracerProvider):
-            """TracerProvider used for testing"""
-
-            def get_tracer(
-                self,
-                instrumenting_module_name: str,
-                instrumenting_library_version: str = "",
-            ) -> trace.Tracer:
-                # pylint:disable=no-self-use,unused-argument
-                return static_tracer
-
-        trace.set_preferred_tracer_provider_implementation(
-            lambda _: DummyTracerProvider()
-        )
-
-    @staticmethod
-    def tearDown() -> None:
-        importlib.reload(trace)
+    def tearDown(self) -> None:
+        self._patcher.stop()
 
     def test_get_tracer(self):
         """trace.get_tracer should proxy to the global tracer provider."""
-        from_global_api = trace.get_tracer("foo")
-        from_tracer_api = trace.tracer_provider().get_tracer("foo")
-        self.assertIs(from_global_api, from_tracer_api)
+        trace.get_tracer("foo", "var")
+        self._mock_tracer_provider.get_tracer.assert_called_with("foo", "var")

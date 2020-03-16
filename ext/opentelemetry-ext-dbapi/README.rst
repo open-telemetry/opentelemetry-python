@@ -11,13 +11,18 @@ Usage
 .. code-block:: python
 
     import mysql.connector
-    from opentelemetry.trace import tracer_provider
-    from opentelemetry.ext.dbapi import trace_integration
+    import pyodbc
 
-    trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+    from opentelemetry.ext.dbapi import trace_integration
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.trace import tracer_provider
+
+    trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
     # Ex: mysql.connector
-    trace_integration(tracer_provider(), mysql.connector, "connect", "mysql")
+    trace_integration(tracer_provider(), mysql.connector, "connect", "mysql", "sql")
+    # Ex: pyodbc
+    trace_integration(tracer_provider(), pyodbc, "Connection", "odbc", "sql")
 
 
 References

@@ -25,7 +25,7 @@ from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Meter is responsible for creating and recording metrics
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 # exporter to export metrics to OT Collector
 exporter = CollectorMetricsExporter(
