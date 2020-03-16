@@ -15,6 +15,7 @@
 
 import atexit
 import logging
+import os
 import random
 import threading
 from contextlib import contextmanager
@@ -204,19 +205,120 @@ class Span(trace_api.Span):
             type(self).__name__, self.name, self.context
         )
 
-    def __str__(self):
-        return (
-            '{}(name="{}", context={}, kind={}, '
-            "parent={}, start_time={}, end_time={})"
-        ).format(
-            type(self).__name__,
-            self.name,
-            self.context,
-            self.kind,
-            repr(self.parent),
-            util.ns_to_iso_str(self.start_time) if self.start_time else "None",
-            util.ns_to_iso_str(self.end_time) if self.end_time else "None",
-        )
+    def __str__(self, indent=0):
+        def format_context(context, indent=0):
+            text = [
+                type(context).__name__ + "(",
+                "trace_id=" + trace_api.format_trace_id(context.trace_id),
+                "span_id=" + trace_api.format_span_id(context.span_id),
+                "trace_state=" + repr(context.trace_state),
+                ")",
+            ]
+
+            # add indentation
+            for index in range(1, len(text) - 1):
+                text[index] = " " * (2 + indent) + text[index]
+            text[-1] = " " * indent + text[-1]
+
+            return os.linesep.join(text)
+
+        def format_attributes(attributes, indent=0):
+            if not attributes:
+                return "None"
+            text = [
+                " " * (2 + indent) + k + "=" + str(v)
+                for (k, v) in attributes.items()
+            ]
+            return os.linesep + os.linesep.join(text)
+
+        def format_event(event, indent=0):
+            text = [
+                "Event(",
+                'name="' + event.name + '"',
+                "timestamp=" + util.ns_to_iso_str(event.timestamp),
+                "attributes="
+                + format_attributes(event.attributes, indent + 2),
+                ")",
+            ]
+
+            for index in range(1, len(text) - 1):
+                text[index] = " " * (2 + indent) + text[index]
+
+            text[0] = " " * indent + text[0]
+            text[-1] = " " * indent + text[-1]
+
+            return os.linesep.join(text)
+
+        def format_events(events, indent=0):
+            if not events:
+                return "None"
+            text = ""
+            for event in events:
+                text += os.linesep + format_event(event, indent)
+            return text
+
+        def format_link(link, indent=0):
+            text = [
+                "Link(",
+                "context="
+                + format_context(link.context, 2 + indent + len("context=")),
+                "attributes=" + format_attributes(link.attributes, indent + 2),
+                ")",
+            ]
+
+            # add indentation
+            for index in range(1, len(text) - 1):
+                text[index] = " " * (2 + indent) + text[index]
+            text[0] = " " * indent + text[0]
+            text[-1] = " " * indent + text[-1]
+
+            return os.linesep.join(text)
+
+        def format_links(links, indent=0):
+            if not links:
+                return "None"
+            text = ""
+            for link in links:
+                text += os.linesep + format_link(link, indent)
+            return text
+
+        parent_id = "None"
+        if self.parent is not None:
+            if isinstance(self.parent, Span):
+                ctx = self.parent.context
+                parent_id = trace_api.format_span_id(ctx.span_id)
+            elif isinstance(self.parent, SpanContext):
+                parent_id = trace_api.format_span_id(self.parent.span_id)
+
+        start_time = "None"
+        if self.start_time:
+            start_time = util.ns_to_iso_str(self.start_time)
+
+        end_time = "None"
+        if self.end_time:
+            end_time = util.ns_to_iso_str(self.end_time)
+
+        text = [
+            type(self).__name__ + "(",
+            'name="' + self.name + '"',
+            "context="
+            + format_context(self.context, 2 + indent + len("context=")),
+            "kind=" + str(self.kind),
+            "parent_id=" + parent_id,
+            "start_time=" + start_time,
+            "end_time=" + end_time,
+            "attributes=" + format_attributes(self.attributes, 2),
+            "events=" + format_events(self.events, indent + 4),
+            "links=" + format_links(self.links, indent + 4),
+            ")",
+        ]
+
+        # add indentation
+        for index in range(1, len(text) - 1):
+            text[index] = " " * (2 + indent) + text[index]
+        text[-1] = " " * indent + text[-1]
+
+        return os.linesep.join(text)
 
     def get_context(self):
         return self.context

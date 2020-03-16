@@ -286,7 +286,7 @@ class TestConsoleSpanExporter(unittest.TestCase):
 
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
-        span = trace.Span("span name", mock.Mock())
+        span = trace.Span("span name", trace_api.INVALID_SPAN_CONTEXT)
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
         mock_stdout.write.assert_called_once_with(str(span) + os.linesep)
