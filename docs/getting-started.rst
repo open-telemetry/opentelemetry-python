@@ -128,7 +128,7 @@ Once installed, update your code to import the Jaeger exporter, and use that ins
 
 .. code-block:: python
 
-    # jaeger.py
+    # jaeger-example.py
     from opentelemetry import trace
     from opentelemetry.ext import jaeger
     from opentelemetry.sdk.trace import TracerProvider
@@ -153,7 +153,7 @@ Run the script:
 
 .. code-block:: python
 
-    python jaeger.py
+    python jaeger-example.py
 
 You can then visit the jaeger UI, see you service under "services", and find your traces!
 
@@ -164,7 +164,7 @@ Integrations example with Flask
 
 The above is a great example, but it's very manual. Within the telemetry space, there are common actions that one wants to instrument:
 
-* HTTP respones from web services
+* HTTP responses from web services
 * HTTP requests from clients
 * Database calls
 
@@ -306,12 +306,8 @@ For our Python application, we will need to install an exporter specific to Prom
 
     pip install opentelemetry-ext-prometheus
 
-<<<<<<< HEAD
 
 And use that instead of the `ConsoleMetricsExporter`:
-=======
-And use that instead of the ConsoleMetricsExporter:
->>>>>>> docs: normalizing getting-started filenames
 
 .. code-block:: python
 
@@ -381,6 +377,9 @@ To see how this works in practice, let's start the Collector locally. Write the 
             endpoint: 0.0.0.0:55678
     exporters:
         logging:
+            loglevel: debug
+            sampling_initial: 10
+            sampling_thereafter: 50
     processors:
         batch:
         queued_retry:
