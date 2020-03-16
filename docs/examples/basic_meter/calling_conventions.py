@@ -23,7 +23,8 @@ from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+# Use the meter type provided by the SDK package
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 exporter = ConsoleMetricsExporter()
 controller = PushController(meter=meter, exporter=exporter, interval=5)

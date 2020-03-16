@@ -36,7 +36,7 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
     start_http_server(port=8000, addr="localhost")
 
     # Meter is responsible for creating and recording metrics
-    metrics.set_preferred_meter_implementation(lambda _: Meter())
+    metrics.set_meter_provider(MeterProvider())
     meter = metrics.meter()
     # exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"

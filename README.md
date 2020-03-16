@@ -45,63 +45,11 @@ pip install -e ./opentelemetry-sdk
 pip install -e ./ext/opentelemetry-ext-{integration}
 ```
 
-## Quick Start
+## Documentation
 
-### Tracing
-
-```python
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-trace.tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
-)
-tracer = trace.get_tracer(__name__)
-with tracer.start_as_current_span('foo'):
-    with tracer.start_as_current_span('bar'):
-        with tracer.start_as_current_span('baz'):
-            print("Hello world from OpenTelemetry Python!")
-```
-
-### Metrics
-
-```python
-from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.controller import PushController
-
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
-meter = metrics.get_meter(__name__)
-exporter = ConsoleMetricsExporter()
-controller = PushController(meter=meter, exporter=exporter, interval=5)
-
-counter = meter.create_metric(
-    name="available memory",
-    description="available memory",
-    unit="bytes",
-    value_type=int,
-    metric_type=Counter,
-    label_keys=("environment",),
-)
-
-label_set = meter.get_label_set({"environment": "staging"})
-bound_counter = counter.bind(label_set)
-bound_counter.add(100)
-```
-
-See the [API documentation](https://open-telemetry.github.io/opentelemetry-python/) for more detail, and the [examples folder](./examples) for a more sample code.
-
-## Extensions
-
-### Third-party exporters
-
-OpenTelemetry supports integration with the following third-party exporters.
-
--  [Azure Monitor](https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor)
+The online documentation is available at https://opentelemetry-python.readthedocs.io/,
+if you want to access the documentation for the latest version use
+https://opentelemetry-python.readthedocs.io/en/latest/.
 
 ## Contributing
 
@@ -170,11 +118,12 @@ includes:
 - Flask Integration
 - PyMongo Integration
 
-The v0.4 alpha release includes:
+The [v0.4 alpha
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.4.0) release includes:
 
 - Metrics MinMaxSumCount Aggregator
-- Context API 
-- Full Metrics SDK Pipeline 
+- Context API
+- Full Metrics SDK Pipeline
 - Metrics STDOUT Exporter
 - Dbapi2 Integration
 - MySQL Integration

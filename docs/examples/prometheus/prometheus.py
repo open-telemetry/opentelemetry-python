@@ -26,7 +26,7 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 # Start Prometheus client
 start_http_server(port=8000, addr="localhost")
 
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 
 exporter = PrometheusMetricsExporter(prefix="MyAppPrefix")

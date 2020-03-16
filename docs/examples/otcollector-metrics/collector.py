@@ -27,7 +27,7 @@ exporter = CollectorMetricsExporter(
     service_name="basic-service", endpoint="localhost:55678"
 )
 
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 controller = PushController(meter, exporter, 5)
 

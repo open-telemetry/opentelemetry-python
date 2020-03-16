@@ -28,8 +28,8 @@ from opentelemetry.sdk.trace.export import (
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-tracer_provider = trace.tracer_provider()
+trace.set_tracer_provider(TracerProvider())
+tracer_provider = trace.get_tracer_provider()
 
 exporter = ConsoleSpanExporter()
 span_processor = BatchExportSpanProcessor(exporter)

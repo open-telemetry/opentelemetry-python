@@ -6,7 +6,7 @@ OpenTelemetry Python API
 .. toctree::
     :maxdepth: 1
 
+    configuration
     context
     metrics
     trace
-    util.loader
