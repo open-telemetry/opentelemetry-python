@@ -36,7 +36,8 @@ Now, the example can be executed:
     python collector.py
 
 
-The metrics are available in the Prometheus dashboard at http://localhost:9090/graph.
+The metrics are available in the Prometheus dashboard at http://localhost:9090/graph,
+look for the "requests" metric on the list.
 
 Useful links
 ------------
