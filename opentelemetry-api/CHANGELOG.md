@@ -4,6 +4,8 @@
 
 ## 0.5b0
 
+Released 2020-03-16
+
 - Adding Correlation Context API and propagator
   ([#471](https://github.com/open-telemetry/opentelemetry-python/pull/471))
 - Adding a global configuration module to simplify setting and getting globals
