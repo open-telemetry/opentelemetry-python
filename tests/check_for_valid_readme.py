@@ -49,4 +49,5 @@ if __name__ == "__main__":
         sys.exit(1)
     if all_readmes_found:
         print("All clear.")
-    print("No errors found but not all packages have a README.rst")
+    else:
+        print("No errors found but not all packages have a README.rst")
