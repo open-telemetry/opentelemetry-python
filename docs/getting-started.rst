@@ -244,9 +244,8 @@ The following is an example of emitting metrics to console, in a similar fashion
     from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
     from opentelemetry.sdk.metrics.export.controller import PushController
 
-    batcher_mode = "stateful"
     metrics.set_meter_provider(MeterProvider())
-    meter = metrics.get_meter(__name__, batcher_mode == "stateful")
+    meter = metrics.get_meter(__name__, True)
     exporter = ConsoleMetricsExporter()
     controller = PushController(meter, exporter, 5)
 
