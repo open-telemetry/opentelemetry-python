@@ -10,7 +10,7 @@ Released 2020-03-16
   ([#471](https://github.com/open-telemetry/opentelemetry-python/pull/471))
 - Adding a global configuration module to simplify setting and getting globals
   ([#466](https://github.com/open-telemetry/opentelemetry-python/pull/466))
-- Rename metric handle to bound metric
+- Rename metric handle to bound metric instrument
   ([#470](https://github.com/open-telemetry/opentelemetry-python/pull/470))
 - Moving resources to sdk
   ([#464](https://github.com/open-telemetry/opentelemetry-python/pull/464))
