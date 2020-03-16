@@ -42,6 +42,3 @@ def hello():
     with tracer.start_as_current_span("example-request"):
         requests.get("http://www.example.com")
     return "hello"
-
-
-app.run(debug=True)
