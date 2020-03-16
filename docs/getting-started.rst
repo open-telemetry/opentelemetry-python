@@ -1,7 +1,7 @@
 Getting Started with OpenTelemetry Python
 =========================================
 
-This guide will walk you through instrumenting a python application with `opentelemetry-python`.
+This guide will walk you through instrumenting a python application with ``opentelemetry-python``.
 
 For more elaborate examples, see `examples`.
 
@@ -79,7 +79,7 @@ it up now:
 
 This will start Jaeger on port 16686 locally, and expose Jaeger thrift agent on port 6831. You can visit it at http://localhost:16686.
 
-With this backend up, your application will now need to export traces to this system. The opentelemetry-sdk does not provide an exporter
+With this backend up, your application will now need to export traces to this system. ``opentelemetry-sdk`` does not provide an exporter
 for Jaeger, but you can install that as a separate package:
 
 .. code-block:: sh
@@ -317,7 +317,7 @@ Now Prometheus will scrape your opentelemetry application, which is serving the 
 Prometheus UI (http://localhost:9090) to view your metrics.
 
 
-Using the opentelemetry-collector for traces and metrics
+Using the OpenTelemetry Collector for traces and metrics
 --------------------------------------------------------
 
 Although it's possible to directly export your telemetry to specific datastores, you may want to have more complex cases, including:
@@ -326,7 +326,7 @@ Although it's possible to directly export your telemetry to specific datastores,
 * aggregate metrics or traces across multiple services, running on multiple hosts.
 
 To enable a broad range of aggregation strategies, opentelemetry offers an `opentelemetry-collector <https://github.com/open-telemetry/opentelemetry-collector>`_:
-a flexible application that can consume trace and metric information, can export to multiple final backends, and even to another opentelemetry-collector, enabling
+a flexible application that can consume trace and metric information, can export to multiple final backends, and even to another ``opentelemetry-collector``, enabling
 a broad range of architectures.
 
 To see how this works in practice, let's start an opentelemetry collector locally. Write the following file:
