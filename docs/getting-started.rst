@@ -122,6 +122,8 @@ Run the script again:
 
 You can then visit the jaeger UI, see you service under "services", and find your traces!
 
+.. image:: images/jaeger_trace.png
+
 Integrations example with Flask
 -------------------------------
 
