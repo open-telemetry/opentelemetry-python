@@ -87,7 +87,7 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ metri
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
     label_set = meter.get_label_set({"environment": "staging"})
-    
+
     counter.add(25, label_set)
 
 
