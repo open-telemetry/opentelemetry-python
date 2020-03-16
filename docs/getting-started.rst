@@ -162,8 +162,7 @@ You can then visit the jaeger UI, see you service under "services", and find you
 Integrations example with Flask
 -------------------------------
 
-The above is a great example, but it's very manual. Within the telemetry space, there are common actions that one 
-wants to instrument:
+The above is a great example, but it's very manual. Within the telemetry space, there are common actions that one wants to instrument:
 
 * HTTP respones from web services
 * HTTP requests from clients
@@ -232,8 +231,7 @@ business metric such as transactions.
 All metrics can be annotated with labels: additional qualifiers that help describe what
 subdivision of the measurements the metric represents.
 
-The following is an example of emitting metrics to console, in a simlar fashion to 
-the trace example:
+The following is an example of emitting metrics to console, in a similar fashion to the trace example:
 
 .. code-block:: python
 
@@ -366,10 +364,10 @@ Visit the Prometheus UI (http://localhost:9090) to view your metrics.
 Using the OpenTelemetry Collector for traces and metrics
 --------------------------------------------------------
 
-Although it's possible to directly export your telemetry data to specific datastores, you may more complex use cases, including:
+Although it's possible to directly export your telemetry data to specific backends, you may more complex use cases, including:
 
-* having a single sync of telemetry shared by multiple services, to reduce overhead of switching exporters
-* aggregating metrics or traces across multiple services, running on multiple hosts.
+* having a single telemetry sink shared by multiple services, to reduce overhead of switching exporters
+* aggregating metrics or traces across multiple services, running on multiple hosts
 
 To enable a broad range of aggregation strategies, OpenTelemetry provides the `opentelemetry-collector <https://github.com/open-telemetry/opentelemetry-collector>`_.
 The Collector is a flexible application that can consume trace and metric data and export to multiple other backends, including to another instance of the Collector.
