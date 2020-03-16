@@ -132,7 +132,7 @@ wants to instrument:
 
 * HTTP respones from web services
 * HTTP requests from clients
-* database calls
+* Database calls
 
 To help instrument common scenarios, opentelemetry also has the concept of "instrumentations": packages that are designed to interface
 with a specific framework or library, such as Flask and psycopg2. A list of the currently curated extension packages can be found :scm_web:`here <ext/>`.
@@ -273,7 +273,7 @@ For our Python application, we will need to install an exporter specific to Prom
     pip install opentelemetry-ext-prometheus
 
 
-And use that instead of the ConsoleMetricsExporter:
+And use that instead of the `ConsoleMetricsExporter`:
 
 .. code-block:: python
 
@@ -314,27 +314,26 @@ And use that instead of the ConsoleMetricsExporter:
     requests_counter.add(20, staging_label_set)
     time.sleep(5)
 
-    # This line is added to keep the HTTP server up long # enough to scrape.
+    # This line is added to keep the HTTP server up long enough to scrape.
     input("Press any key to exit...")
 
 
-Now Prometheus will scrape your opentelemetry application, which is serving the metrics at port 8000. Visit the
-Prometheus UI (http://localhost:9090) to view your metrics.
+The Prometheus server will run locally on port 8000, and the instrumented code will make metrics available to Prometheus via the `PrometheusMetricsExporter`.
+Visit the Prometheus UI (http://localhost:9090) to view your metrics.
 
 
 Using the OpenTelemetry Collector for traces and metrics
 --------------------------------------------------------
 
-Although it's possible to directly export your telemetry to specific datastores, you may want to have more complex cases, including:
+Although it's possible to directly export your telemetry data to specific datastores, you may more complex use cases, including:
 
 * having a single sync of telemetry shared by multiple services, to reduce overhead of switching exporters
-* aggregate metrics or traces across multiple services, running on multiple hosts.
+* aggregating metrics or traces across multiple services, running on multiple hosts.
 
-To enable a broad range of aggregation strategies, opentelemetry offers an `opentelemetry-collector <https://github.com/open-telemetry/opentelemetry-collector>`_:
-a flexible application that can consume trace and metric information, can export to multiple final backends, and even to another ``opentelemetry-collector``, enabling
-a broad range of architectures.
+To enable a broad range of aggregation strategies, OpenTelemetry provides the `opentelemetry-collector <https://github.com/open-telemetry/opentelemetry-collector>`_.
+The Collector is a flexible application that can consume trace and metric data and export to multiple other backends, including to another instance of the Collector.
 
-To see how this works in practice, let's start an opentelemetry collector locally. Write the following file:
+To see how this works in practice, let's start the Collector locally. Write the following file:
 
 .. code-block:: yaml
 
