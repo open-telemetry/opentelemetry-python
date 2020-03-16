@@ -30,7 +30,7 @@ Here's an example of a script that emits a trace containing three named spans: "
 
 .. code-block:: python
 
-    # example.py
+    # tracing.py
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter
@@ -50,7 +50,7 @@ We can run it, and see the traces print to your console:
 
 .. code-block:: sh
 
-    $ python /tmp/example.py
+    $ python tracing.py
     Hello world from OpenTelemetry Python!
     Span(name="baz", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xfacbb82a4d0cf5dd, trace_state={}), kind=SpanKind.INTERNAL, parent=Span(name="bar", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xb1894e8d588f5f62, trace_state={})), start_time=2020-03-15T05:12:08.345394Z, end_time=2020-03-15T05:12:08.345450Z)
     Span(name="bar", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xb1894e8d588f5f62, trace_state={}), kind=SpanKind.INTERNAL, parent=Span(name="foo", context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400, span_id=0xde5ea23d6a9e4180, trace_state={})), start_time=2020-03-15T05:12:08.345360Z, end_time=2020-03-15T05:12:08.345597Z)
@@ -93,7 +93,7 @@ Once installed, update your code to import the Jaeger exporter, and use that ins
 
 .. code-block:: python
 
-    # /tmp/example.py
+    # jaeger.py
     from opentelemetry import trace
     from opentelemetry.ext import jaeger
     from opentelemetry.sdk.trace import TracerProvider
@@ -114,11 +114,11 @@ Once installed, update your code to import the Jaeger exporter, and use that ins
             with tracer.start_as_current_span('baz'):
                 print("Hello world from OpenTelemetry Python!")
 
-Run the script again:
+Run the script:
 
 .. code-block:: python
 
-    python /tmp/example.py
+    python jaeger.py
 
 You can then visit the jaeger UI, see you service under "services", and find your traces!
 
@@ -149,7 +149,7 @@ And let's write a small Flask application that sends an HTTP request, activating
 
 .. code-block:: python
 
-    # /tmp/flask_example.py
+    # flask_example.py
     import flask
     import requests
 
@@ -183,7 +183,7 @@ Now run the above script, hit the root url (http://localhost:5000/) a few times,
 
 .. code-block:: sh
 
-   python /tmp/flask_example.py
+   python flask_example.py
 
 
 Adding Metrics
@@ -202,6 +202,7 @@ the trace example:
 
 .. code-block:: python
 
+    # metrics.py
     import sys
     import time
 
@@ -238,7 +239,7 @@ The sleeps will cause the script to take a while, but running it should yield:
 
 .. code-block:: sh
 
-    $ python /tmp/metrics.py
+    $ python metrics.py
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", label_set="(('environment', 'staging'),)", value=25)
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", label_set="(('environment', 'staging'),)", value=45)
 
@@ -252,7 +253,7 @@ Let's start by bringing up a Prometheus instance ourselves, to scrape our applic
 
 .. code-block:: yaml
 
-    # /tmp/prometheus.yml
+    # prometheus.yml
     scrape_configs:
     - job_name: 'my-app'
         scrape_interval: 5s
@@ -264,7 +265,8 @@ And start a docker container for it:
 .. code-block:: sh
 
     # --net=host will not work properly outside of Linux.
-    docker run --net=host -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
+    docker run --net=host -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus\
+        --log.level=debug --config.file=/etc/prometheus/prometheus.yml
 
 For our Python application, we will need to install an exporter specific to Prometheus:
 
@@ -272,12 +274,16 @@ For our Python application, we will need to install an exporter specific to Prom
 
     pip install opentelemetry-ext-prometheus
 
+<<<<<<< HEAD
 
 And use that instead of the `ConsoleMetricsExporter`:
+=======
+And use that instead of the ConsoleMetricsExporter:
+>>>>>>> docs: normalizing getting-started filenames
 
 .. code-block:: python
 
-    # /tmp/prometheus.py
+    # prometheus.py
     import sys
     import time
 
@@ -337,7 +343,7 @@ To see how this works in practice, let's start the Collector locally. Write the 
 
 .. code-block:: yaml
 
-    # /tmp/otel-collector-config.yaml
+    # otel-collector-config.yaml
     receivers:
         opencensus:
             endpoint: 0.0.0.0:55678
@@ -361,7 +367,7 @@ Start the docker container:
 .. code-block:: sh
  
     docker run -p 55678:55678\
-        -v /tmp/otel-collector-config.yaml:/etc/otel-collector-config.yaml\
+        -v ./otel-collector-config.yaml:/etc/otel-collector-config.yaml\
         omnition/opentelemetry-collector-contrib:latest \
         --config=/etc/otel-collector-config.yaml
 
@@ -375,7 +381,7 @@ And execute the following script:
 
 .. code-block:: python
 
-    #/tmp/otcollector.py
+    # otcollector.py
     import time
     from opentelemetry import trace
     from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
