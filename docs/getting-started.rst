@@ -1,28 +1,28 @@
 Getting Started with OpenTelemetry Python
 =========================================
 
-This guide will walk you through instrumenting a python application with opentelemetry-python.
+This guide will walk you through instrumenting a python application with `opentelemetry-python`.
 
 For more elaborate examples, see `examples`.
 
 Hello world: emitting a trace to your console
 ---------------------------------------------
 
-To get started, install both the opentelemetry api and sdk:
+To get started, install both the opentelemetry API and SDK:
 
 .. code-block:: sh
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
 
-The api package provides the interfaces required by the application owner, as well
+The API package provides the interfaces required by the application owner, as well
 as some helper logic to load implementations.
 
-The sdk provides an implementation of those interfaces, designed to be generic and extensible enough
-that in many situations, the sdk will be sufficient.
+The SDK provides an implementation of those interfaces, designed to be generic and extensible enough
+that in many situations, the SDK will be sufficient.
 
-Once installed, we can now utilize the packages to emit spans from your application. A span 
-represents an action within your application that you want to instrument, such as an http request
+Once installed, we can now utilize the packages to emit spans from your application. A span
+represents an action within your application that you want to instrument, such as an HTTP request
 or a database call. Once instrumented, the application owner can extract helpful information such as
 how long the action took, or add arbitrary attributes to the span that may provide more insight for debugging.
 
@@ -68,25 +68,25 @@ In common cases, you would instead *export* this data to some consuming service,
 easily queryable. It is also common to aggregate span and trace information from multiple services into
 a single database, so that actions that require multiple services can still all be visualized together.
 
-This concept is known as distributed tracing. One such distributed tracing backend is known as jaeger.
+This concept is known as distributed tracing. One such distributed tracing backend is known as Jaeger.
 
-The jaeger project provides an all-in-one docker container that provides a UI, database, and consumer. Let's bring
+The Jaeger project provides an all-in-one docker container that provides a UI, database, and consumer. Let's bring
 it up now:
 
 .. code-block:: sh
 
     docker run -p 16686:16686 -p 6831:6831/udp jaegertracing/all-in-one
 
-This will start jaeger on port 16686 locally, and expose jaeger thrift agent on port 6831. You can visit it at http://localhost:16686:
+This will start Jaeger on port 16686 locally, and expose Jaeger thrift agent on port 6831. You can visit it at http://localhost:16686.
 
 With this backend up, your application will now need to export traces to this system. The opentelemetry-sdk does not provide an exporter
-for jaeger, but you can install that as a separate package:
+for Jaeger, but you can install that as a separate package:
 
 .. code-block:: sh
 
     pip install opentelemetry-ext-jaeger
 
-Once installed, update your code to import the jaeger exporter, and use that instead:
+Once installed, update your code to import the Jaeger exporter, and use that instead:
 
 .. code-block:: python
 
@@ -119,20 +119,20 @@ Run the script again:
 
 You can then visit the jaeger UI, see you service under "services", and find your traces!
 
-Integrations example with flask
+Integrations example with Flask
 -------------------------------
 
 The above is a great example, but it's very manual. Within the telemetry space, there are common actions that one 
 wants to instrument:
 
-* http respones from web services
-* http requests from clients
+* HTTP respones from web services
+* HTTP requests from clients
 * database calls
 
 To help instrument common scenarios, opentelemetry also has the concept of "instrumentations": packages that are designed to interface
-with a specific framework or library, such as flask and psycopg2. A list of the currently curated extension packages can be found :scm_web:`here <ext/>`.
+with a specific framework or library, such as Flask and psycopg2. A list of the currently curated extension packages can be found :scm_web:`here <ext/>`.
 
-We will now instrument a basic flask application that uses the requests library to send http requests. First, install the instrumentation packages themselves:
+We will now instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
 
 .. code-block:: sh
 
@@ -140,7 +140,7 @@ We will now instrument a basic flask application that uses the requests library 
     pip install opentelemetry-ext-http-requests
 
 
-And let's write a small flask application that sends an http request, activating each instrumentation during the initialization:
+And let's write a small Flask application that sends an HTTP request, activating each instrumentation during the initialization:
 
 .. code-block:: python
 
@@ -181,13 +181,12 @@ Now run the above script, hit the root url (http://localhost:5000/) a few times,
    python /tmp/flask_example.py
 
 
-
 Adding Metrics
 --------------
 
-Spans are a great way to get detailed information about what your application is doing, but 
+Spans are a great way to get detailed information about what your application is doing, but
 what about a more aggregated perspective? OpenTelemetry provides supports for metrics, a time series
-of numbers that might express things such as CPU utilization, request count for an http server, or a
+of numbers that might express things such as CPU utilization, request count for an HTTP server, or a
 business metric such as transactions.
 
 All metrics can be annotated with labels: additional qualifiers that help describe what
@@ -241,10 +240,10 @@ The sleeps will cause the script to take a while, but running it should yield:
 Using Prometheus
 ----------------
 
-Similar to traces, it is really valuable for metrics to have it's own data store to help visualize and query the data. A common solution for this is 
-`prometheus <https://prometheus.io/>`_.
+Similar to traces, it is really valuable for metrics to have its own data store to help visualize and query the data. A common solution for this is
+`Prometheus <https://prometheus.io/>`_.
 
-Let's start by bringing up a prometheus instance ourselves, to scrape our application. Write the following configuration:
+Let's start by bringing up a Prometheus instance ourselves, to scrape our application. Write the following configuration:
 
 .. code-block:: yaml
 
@@ -262,7 +261,7 @@ And start a docker container for it:
     # --net=host will not work properly outside of Linux.
     docker run --net=host -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
 
-For our python application, we will need to install an exporter specific to prometheus:
+For our python application, we will need to install an exporter specific to Prometheus:
 
 .. code-block:: sh
 
@@ -310,13 +309,12 @@ And use that instead of the ConsoleMetricsExporter:
     requests_counter.add(20, staging_label_set)
     time.sleep(5)
 
-    # this line is added to keep the http server up long 
-    # enough to scrape.
+    # This line is added to keep the HTTP server up long # enough to scrape.
     input("Press any key to exit...")
 
 
-Now prometheus will scrape your opentelemetry application, which is serving the metrics at port 8000. Visit the 
-prometheus UI (http://localhost:9090) to view your metrics.
+Now Prometheus will scrape your opentelemetry application, which is serving the metrics at port 8000. Visit the
+Prometheus UI (http://localhost:9090) to view your metrics.
 
 
 Using the opentelemetry-collector for traces and metrics
@@ -363,7 +361,7 @@ Start the docker container:
         omnition/opentelemetry-collector-contrib:latest \
         --config=/etc/otel-collector-config.yaml
 
-Install the opentelemetry exporter for the collector:
+Install the OpenTelemetry Collector exporter:
 
 .. code-block:: sh
 
