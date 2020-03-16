@@ -75,9 +75,9 @@ it up now:
 
 .. code-block:: sh
 
-    docker run -p 16686:16686 jaegertracing/all-in-one
+    docker run -p 16686:16686 -p 6831:6831/udp jaegertracing/all-in-one
 
-This will start jaeger on port 16686 locally. You can visit it at http://localhost:16686:
+This will start jaeger on port 16686 locally, and expose jaeger thrift agent on port 6831. You can visit it at http://localhost:16686:
 
 With this backend up, your application will now need to export traces to this system. The opentelemetry-sdk does not provide an exporter
 for jaeger, but you can install that as a separate package:
@@ -98,12 +98,8 @@ Once installed, update your code to import the jaeger exporter, and use that ins
 
     trace.set_tracer_provider(TracerProvider())
 
-    # create a JaegerSpanExporter
     jaeger_exporter = jaeger.JaegerSpanExporter(
-        service_name='my-helloworld-service',
-        collector_host_name='localhost',
-        collector_port=14268,
-        collector_endpoint='/api/traces?format=jaeger.thrift',
+        service_name="my-helloworld-service", agent_host_name="localhost", agent_port=6831
     )
 
     trace.get_tracer_provider().add_span_processor(
