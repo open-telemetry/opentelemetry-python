@@ -70,7 +70,7 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ metri
     )
 
     # Meter is responsible for creating and recording metrics
-    metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+    metrics.set_meter_provider(MeterProvider())
     meter = metrics.get_meter(__name__)
     # controller collects metrics created from meter and exports it via the
     # exporter every interval
@@ -87,7 +87,7 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ metri
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
     label_set = meter.get_label_set({"environment": "staging"})
-    
+
     counter.add(25, label_set)
 
 
