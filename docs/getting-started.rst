@@ -1,7 +1,7 @@
 Getting Started with OpenTelemetry Python
 =========================================
 
-This guide will walk you through instrumenting a python application with ``opentelemetry-python``.
+This guide will walk you through instrumenting a Python application with ``opentelemetry-python``.
 
 For more elaborate examples, see `examples`.
 
@@ -261,7 +261,7 @@ And start a docker container for it:
     # --net=host will not work properly outside of Linux.
     docker run --net=host -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
 
-For our python application, we will need to install an exporter specific to Prometheus:
+For our Python application, we will need to install an exporter specific to Prometheus:
 
 .. code-block:: sh
 
