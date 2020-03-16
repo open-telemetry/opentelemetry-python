@@ -30,9 +30,11 @@ In addition, there are several extension packages which can be installed separat
 
 The extension packages can be found in :scm_web:`ext/ directory of the repository <ext/>`.
 
-In addition, third party exporters are available:
+Extensions
+----------
 
-* `Azure Monitor <https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor>`_
+Visit `OpenTelemetry Registry <https://opentelemetry.io/registry/?s=python>`_ to find
+related projects like exporters, instrumentation libraries, tracer implementations, etc.
 
 Installing Cutting Edge Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,7 +42,7 @@ Installing Cutting Edge Packages
 While the project is pre-1.0, there may be significant functionality that
 has not yet been released to PyPI. In that situation, you may want to
 install the packages directly from the repo. This can be done by cloning the
-repositry and doing an `editable
+repository and doing an `editable
 install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_:
 
 .. code-block:: sh

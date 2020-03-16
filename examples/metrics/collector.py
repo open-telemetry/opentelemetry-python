@@ -14,25 +14,23 @@
 #
 """
 This module serves as an example for a simple application using metrics
-Examples show how to recording affects the collection of metrics to be exported
+exporting to Collector
 """
 
-from prometheus_client import start_http_server
-
 from opentelemetry import metrics
-from opentelemetry.ext.prometheus import PrometheusMetricsExporter
+from opentelemetry.ext.otcollector.metrics_exporter import (
+    CollectorMetricsExporter,
+)
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
-
-# Start Prometheus client
-start_http_server(port=8000, addr="localhost")
 
 # Meter is responsible for creating and recording metrics
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-# exporter to export metrics to Prometheus
-prefix = "MyAppPrefix"
-exporter = PrometheusMetricsExporter(prefix)
+# exporter to export metrics to OT Collector
+exporter = CollectorMetricsExporter(
+    service_name="basic-service", endpoint="localhost:55678"
+)
 # controller collects metrics created from meter and exports it via the
 # exporter every interval
 controller = PushController(meter, exporter, 5)

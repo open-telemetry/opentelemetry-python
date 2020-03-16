@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+from os.path import dirname, join
 
 import setuptools
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "util", "version.py"
-)
+BASE_DIR = dirname(__file__)
+VERSION_FILENAME = join(BASE_DIR, "src", "opentelemetry", "util", "version.py")
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
@@ -67,6 +65,14 @@ setuptools.setup(
             "threadlocal_context = "
             "opentelemetry.context.threadlocal_context:"
             "ThreadLocalRuntimeContext",
-        ]
+        ],
+        "opentelemetry_meter_provider": [
+            "default_meter_provider = "
+            "opentelemetry.metrics:DefaultMeterProvider"
+        ],
+        "opentelemetry_tracer_provider": [
+            "default_tracer_provider = "
+            "opentelemetry.trace:DefaultTracerProvider"
+        ],
     },
 )

@@ -16,10 +16,8 @@ class WsgiTestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         global _MEMORY_EXPORTER  # pylint:disable=global-statement
-        trace_api.set_preferred_tracer_provider_implementation(
-            lambda T: TracerProvider()
-        )
-        tracer_provider = trace_api.tracer_provider()
+        trace_api.set_tracer_provider(TracerProvider())
+        tracer_provider = trace_api.get_tracer_provider()
         _MEMORY_EXPORTER = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(_MEMORY_EXPORTER)
         tracer_provider.add_span_processor(span_processor)
