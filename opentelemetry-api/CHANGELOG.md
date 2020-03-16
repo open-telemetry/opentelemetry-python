@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+## 0.5b0
+
+- Adding Correlation Context API and propagator
+  ([#471](https://github.com/open-telemetry/opentelemetry-python/pull/471))
+- Adding a global configuration module to simplify setting and getting globals
+  ([#466](https://github.com/open-telemetry/opentelemetry-python/pull/466))
+- Rename metric handle to bound metric
+  ([#470](https://github.com/open-telemetry/opentelemetry-python/pull/470))
+- Moving resources to sdk
+  ([#464](https://github.com/open-telemetry/opentelemetry-python/pull/464))
+- Implementing propagators to API to use context
+  ([#446](https://github.com/open-telemetry/opentelemetry-python/pull/446))
+- Adding named meters, removing batchers
+  ([#431](https://github.com/open-telemetry/opentelemetry-python/pull/431))
+- Renaming TraceOptions to TraceFlags
+  ([#450](https://github.com/open-telemetry/opentelemetry-python/pull/450))
+- Renaming TracerSource to TraceProvider
+  ([#441](https://github.com/open-telemetry/opentelemetry-python/pull/441))
+- Adding attach/detach methods as per spec
+  ([#429](https://github.com/open-telemetry/opentelemetry-python/pull/450) 
+
 ## 0.4a0
 
 Released 2020-02-21
