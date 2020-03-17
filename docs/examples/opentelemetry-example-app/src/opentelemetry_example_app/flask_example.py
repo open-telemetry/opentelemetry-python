@@ -21,21 +21,21 @@ import requests
 
 import opentelemetry.ext.http_requests
 from opentelemetry import trace
-from opentelemetry.ext.flask import instrument_app
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+from opentelemetry.ext.flask import FlaskPatcher
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
+FlaskPatcher().patch()
 app = flask.Flask(__name__)
 opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
-instrument_app(app)
 
 
 @app.route("/")
