@@ -1,6 +1,7 @@
 sphinx~=2.4
 sphinx-rtd-theme~=0.4
 sphinx-autodoc-typehints~=1.10.2
+semver~=2.9
 
 # Required by ext packages
 opentracing~=2.2.0

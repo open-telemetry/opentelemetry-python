@@ -10,10 +10,38 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import functools
+import json
 import os
 import sys
 from os import listdir
 from os.path import isdir, join
+
+import requests
+
+import semver
+
+
+def get_latest_tag(repo):
+    # TODO: Use releases/latest once we have a non-prelease
+    # https://developer.github.com/v3/repos/releases/#get-the-latest-release
+    names = []
+    url = "https://api.github.com/repos/" + repo + "/tags"
+
+    result = requests.get(url)
+
+    if result.status_code != 200:
+        print("Error getting latest tag: " + result.text)
+        return None
+
+    for req in result.json():
+        n = req["name"][1:]  # remove leading "v"
+        if semver.VersionInfo.isvalid(n):  # ignore non semver tags
+            names.append(n)
+
+    k = functools.cmp_to_key(semver.compare)
+    return "v" + max(names, key=k)
+
 
 source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
@@ -109,14 +137,21 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
 
-# Support external links to specific versions of the files in the Github repo
-branch = os.environ.get("READTHEDOCS_VERSION")
-if branch is None or branch == "latest":
-    branch = "master"
+REPO = "open-telemetry/opentelemetry-python"
 
-REPO = "open-telemetry/opentelemetry-python/"
-scm_raw_web = "https://raw.githubusercontent.com/" + REPO + branch
-scm_web = "https://github.com/" + REPO + "blob/" + branch
+# Support external links to specific versions of the files in the Github repo
+
+branch = "master"  # by default point to master
+
+if os.environ.get("READTHEDOCS") == "True":
+    version = os.environ.get("READTHEDOCS_VERSION")
+    if version == "latest":
+        branch = "master"
+    elif version == "stable":
+        branch = get_latest_tag(REPO) or branch
+
+scm_raw_web = "https://raw.githubusercontent.com/{}/{}".format(REPO, branch)
+scm_web = "https://github.com/{}/blob/{}".format(REPO, branch)
 
 # Store variables in the epilogue so they are globally available.
 rst_epilog = """
