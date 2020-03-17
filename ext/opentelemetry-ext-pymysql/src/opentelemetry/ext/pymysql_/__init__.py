@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The opentelemetry-ext-mysql package allows tracing MySQL queries made by the
-MySQL Connector/Python library.
+The opentelemetry-ext-pymysql package allows tracing MySQL queries made by the
+PyMySQL library.
 """
 
 import pymysql

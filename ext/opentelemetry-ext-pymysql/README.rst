@@ -13,7 +13,7 @@ Usage
 
     import pymysql
     from opentelemetry import trace
-    from opentelemetry.ext.pymysql import trace_integration
+    from opentelemetry.ext.pymysql_ import trace_integration
     from opentelemetry.sdk.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
