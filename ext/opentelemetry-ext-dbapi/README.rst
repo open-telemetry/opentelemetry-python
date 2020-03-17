@@ -20,9 +20,9 @@ Usage
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
     # Ex: mysql.connector
-    trace_integration(tracer_provider(), mysql.connector, "connect", "mysql", "sql")
+    trace_integration(tracer, mysql.connector, "connect", "mysql", "sql")
     # Ex: pyodbc
-    trace_integration(tracer_provider(), pyodbc, "Connection", "odbc", "sql")
+    trace_integration(tracer, pyodbc, "Connection", "odbc", "sql")
 
 
 References

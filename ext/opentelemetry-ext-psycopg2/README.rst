@@ -14,7 +14,7 @@ Usage
     import psycopg2
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.trace.ext.psycopg2 import trace_integration
+    from opentelemetry.ext.psycopg2 import trace_integration
 
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
