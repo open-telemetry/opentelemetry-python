@@ -15,7 +15,7 @@
 from flask import Flask, request
 
 from opentelemetry import propagators, trace
-from opentelemetry.context.propagation.tracecontexthttptextformat import (
+from opentelemetry.trace.propagation.tracecontexthttptextformat import (
     TraceContextHTTPTextFormat,
 )
 from opentelemetry.propagators import set_global_httptextformat

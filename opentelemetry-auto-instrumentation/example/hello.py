@@ -18,7 +18,7 @@ from flask import Flask
 from requests import get
 
 from opentelemetry import propagators, trace
-from opentelemetry.context.propagation.tracecontexthttptextformat import (
+from opentelemetry.trace.propagation.tracecontexthttptextformat import (
     TraceContextHTTPTextFormat,
 )
 from opentelemetry.propagators import set_global_httptextformat
@@ -30,10 +30,10 @@ from opentelemetry.sdk.trace.export import (
 
 app = Flask(__name__)
 
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-tracer = trace.tracer_provider().get_tracer(__name__)
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer_provider().get_tracer(__name__)
 
-trace.tracer_provider().add_span_processor(
+trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 set_global_httptextformat(TraceContextHTTPTextFormat)
