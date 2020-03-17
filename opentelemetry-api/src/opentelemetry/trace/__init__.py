@@ -653,7 +653,7 @@ def get_tracer(
     """Returns a `Tracer` for use by the given instrumentation library.
 
     This function is a convenience wrapper for
-    opentelemetry.trace.tracer_provider().get_tracer
+    opentelemetry.trace.get_tracer_provider().get_tracer
     """
     return get_tracer_provider().get_tracer(
         instrumenting_module_name, instrumenting_library_version
