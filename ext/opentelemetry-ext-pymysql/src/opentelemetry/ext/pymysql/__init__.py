@@ -34,10 +34,5 @@ def trace_integration(tracer: Tracer):
         "user": "user",
     }
     db_integration(
-        tracer,
-        pymysql,
-        "connect",
-        "mysql",
-        "sql",
-        connection_attributes,
+        tracer, pymysql, "connect", "mysql", "sql", connection_attributes
     )
