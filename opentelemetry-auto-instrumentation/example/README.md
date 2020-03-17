@@ -73,7 +73,7 @@ This is done in 3 separate consoles, one to run each of the scripts that make up
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python3 opentelemetry-python/examples/auto_instrumentation/formatter.py
+$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/formatter.py
 ```
 
 ```sh
