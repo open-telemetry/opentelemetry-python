@@ -60,6 +60,9 @@ class DefaultBoundInstrument:
             value: The value to record to the bound metric instrument.
         """
 
+    def release(self) -> None:
+        """No-op implementation of release."""
+
 
 class BoundCounter:
     def add(self, value: ValueT) -> None:
@@ -351,6 +354,14 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
+    def unregister_observer(self, observer: "Observer") -> None:
+        """Unregisters an ``Observer`` metric instrument.
+
+        Args:
+            observer: The observer to unregister.
+        """
+
+    @abc.abstractmethod
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given labels.
 
@@ -395,6 +406,9 @@ class DefaultMeter(Meter):
         enabled: bool = True,
     ) -> "Observer":
         return DefaultObserver()
+
+    def unregister_observer(self, observer: "Observer") -> None:
+        pass
 
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         # pylint: disable=no-self-use
