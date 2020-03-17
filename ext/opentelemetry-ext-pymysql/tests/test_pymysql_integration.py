@@ -18,7 +18,7 @@ from unittest import mock
 import pymysql
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymysql_ import trace_integration
+from opentelemetry.ext.pymysql import trace_integration
 
 
 class TestPyMysqlIntegration(unittest.TestCase):
