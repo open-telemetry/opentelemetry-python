@@ -53,7 +53,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     span_processor = BatchExportSpanProcessor(zipkin_exporter)
 
     # add to the tracer
-    trace.tracer_provider().add_span_processor(span_processor)
+    trace.get_tracer_provider().add_span_processor(span_processor)
 
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
