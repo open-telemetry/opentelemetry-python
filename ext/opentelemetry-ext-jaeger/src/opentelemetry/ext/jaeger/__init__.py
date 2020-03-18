@@ -15,10 +15,10 @@
 
 """Jaeger Span Exporter for OpenTelemetry."""
 
-import base64
 import logging
 import socket
 
+import requests
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
@@ -342,49 +342,22 @@ class Collector:
     Args:
         thrift_url: URL of the Jaeger HTTP Thrift.
         auth: Auth tuple that contains username and password for Basic Auth.
-        client: Class for creating a Jaeger collector client.
-        http_transport: Class for creating new client for Thrift HTTP server.
     """
 
-    def __init__(
-        self,
-        thrift_url="",
-        auth=None,
-        client=jaeger.Client,
-        http_transport=THttpClient.THttpClient,
-    ):
+    HEADERS = {"Content-Type": "application/x-thrift"}
+
+    def __init__(self, thrift_url="", auth=None):
         self.thrift_url = thrift_url
         self.auth = auth
-        self.http_transport = http_transport(uri_or_host=thrift_url)
-        self.client = client(
-            iprot=TBinaryProtocol.TBinaryProtocol(trans=self.http_transport)
+
+    def submit(self, batch):
+        transport = TTransport.TMemoryBuffer()
+        protocol = TBinaryProtocol.TBinaryProtocol(transport)
+        batch.write(protocol)
+        body = transport.getvalue()
+        requests.post(
+            url=self.thrift_url,
+            data=body,
+            headers=self.HEADERS,
+            auth=self.auth,
         )
-
-        # set basic auth header
-        if auth is not None:
-            auth_header = "{}:{}".format(*auth)
-            decoded = base64.b64encode(auth_header.encode()).decode("ascii")
-            basic_auth = dict(Authorization="Basic {}".format(decoded))
-            self.http_transport.setCustomHeaders(basic_auth)
-
-    def submit(self, batch: jaeger.Batch):
-        """Submits batches to Thrift HTTP Server through Binary Protocol.
-
-        Args:
-            batch: Object to emit Jaeger spans.
-        """
-        try:
-            self.client.submitBatches([batch])
-            # it will call http_transport.flush() and
-            # status code and message will be updated
-            code = self.http_transport.code
-            msg = self.http_transport.message
-            if code >= 300 or code < 200:
-                logger.error(
-                    "Traces cannot be uploaded; HTTP status code: %s, message %s",
-                    code,
-                    msg,
-                )
-        finally:
-            if self.http_transport.isOpen():
-                self.http_transport.close()
