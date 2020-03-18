@@ -175,8 +175,9 @@ estimates, and subject to change.
 
 Future releases targets include:
 
-| Component                           | Version    | Target Date  |
-| ----------------------------------- | ---------- | ------------ |
-| Support for Tags/Baggage            | Beta v1    | March 30 2020|
-| gRPC Integrations                   | Beta v1    | March 30 2020|
-| OpenCensus Bridge                   | Beta v1    | March 30 2020|
+| Component                          | Version | Target Date   |
+| ---------------------------------- | ------- | ------------- |
+
+| Stable API for metrics and tracing | Beta v2 | March 31 2020 |
+| Support for Tags/Baggage           | Beta v2 | March 31 2020 |
+| gRPC Integration                   | Beta v2 | March 31 2020 |
