@@ -15,10 +15,10 @@
 
 """Jaeger Span Exporter for OpenTelemetry."""
 
+import base64
 import logging
 import socket
 
-import requests
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
@@ -344,20 +344,21 @@ class Collector:
         auth: Auth tuple that contains username and password for Basic Auth.
     """
 
-    HEADERS = {"Content-Type": "application/x-thrift"}
-
     def __init__(self, thrift_url="", auth=None):
         self.thrift_url = thrift_url
         self.auth = auth
+        self.http_transport = THttpClient.THttpClient(
+            uri_or_host=self.thrift_url
+        )
+        self.protocol = TBinaryProtocol.TBinaryProtocol(self.http_transport)
+
+        # set basic auth header
+        if auth is not None:
+            auth_header = "{}:{}".format(*auth)
+            decoded = base64.b64encode(auth_header.encode()).decode("ascii")
+            basic_auth = dict(Authorization="Basic {}".format(decoded))
+            self.http_transport.setCustomHeaders(basic_auth)
 
     def submit(self, batch):
-        transport = TTransport.TMemoryBuffer()
-        protocol = TBinaryProtocol.TBinaryProtocol(transport)
-        batch.write(protocol)
-        body = transport.getvalue()
-        requests.post(
-            url=self.thrift_url,
-            data=body,
-            headers=self.HEADERS,
-            auth=self.auth,
-        )
+        batch.write(self.protocol)
+        self.http_transport.flush()
