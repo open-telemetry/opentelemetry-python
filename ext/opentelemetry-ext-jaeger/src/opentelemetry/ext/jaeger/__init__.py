@@ -359,7 +359,7 @@ class Collector:
             basic_auth = dict(Authorization="Basic {}".format(decoded))
             self.http_transport.setCustomHeaders(basic_auth)
 
-    def submit(self, batch):
+    def submit(self, batch: jaeger.Batch):
         batch.write(self.protocol)
         self.http_transport.flush()
         code = self.http_transport.code
