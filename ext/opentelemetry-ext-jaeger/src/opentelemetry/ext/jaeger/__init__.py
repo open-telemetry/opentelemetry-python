@@ -360,6 +360,11 @@ class Collector:
             self.http_transport.setCustomHeaders(basic_auth)
 
     def submit(self, batch: jaeger.Batch):
+        """Submits batches to Thrift HTTP Server through Binary Protocol.
+
+        Args:
+            batch: Object to emit Jaeger spans.
+        """
         batch.write(self.protocol)
         self.http_transport.flush()
         code = self.http_transport.code
