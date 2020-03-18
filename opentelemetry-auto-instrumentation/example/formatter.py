@@ -15,14 +15,14 @@
 from flask import Flask, request
 
 from opentelemetry import propagators, trace
-from opentelemetry.trace.propagation.tracecontexthttptextformat import (
-    TraceContextHTTPTextFormat,
-)
 from opentelemetry.propagators import set_global_httptextformat
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
+)
+from opentelemetry.trace.propagation.tracecontexthttptextformat import (
+    TraceContextHTTPTextFormat,
 )
 from utils import get_as_list
 
@@ -42,9 +42,9 @@ def format_request():
 
     with tracer.start_as_current_span(
         "format_request",
-        parent=propagators.extract(
-            get_as_list, request.headers
-        )["current-span"],
+        parent=propagators.extract(get_as_list, request.headers)[
+            "current-span"
+        ],
     ):
         hello_to = request.args.get("helloTo")
         return "Hello, %s!" % hello_to

@@ -18,14 +18,14 @@ from flask import Flask
 from requests import get
 
 from opentelemetry import propagators, trace
-from opentelemetry.trace.propagation.tracecontexthttptextformat import (
-    TraceContextHTTPTextFormat,
-)
 from opentelemetry.propagators import set_global_httptextformat
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
+)
+from opentelemetry.trace.propagation.tracecontexthttptextformat import (
+    TraceContextHTTPTextFormat,
 )
 
 app = Flask(__name__)

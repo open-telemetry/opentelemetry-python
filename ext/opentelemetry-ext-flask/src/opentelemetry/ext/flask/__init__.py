@@ -63,9 +63,7 @@ class _PatchedFlask(flask.Flask):
                 or otel_wsgi.get_default_span_name(environ)
             )
             token = context.attach(
-                propagators.extract(
-                    otel_wsgi.get_header_from_environ, environ
-                )
+                propagators.extract(otel_wsgi.get_header_from_environ, environ)
             )
 
             tracer = trace.get_tracer(__name__, __version__)
