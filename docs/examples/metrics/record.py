@@ -67,7 +67,11 @@ label_set = meter.get_label_set({"environment": "staging"})
 # Therefore, getting a bound metric instrument using the same set of labels
 # will yield the same bound metric instrument.
 bound_counter = counter.bind(label_set)
-bound_counter.add(100)
+for i in range(1000):
+    bound_counter.add(i)
+
+# You can release the bound instrument we you are done
+bound_counter.release()
 
 # Direct metric usage
 # You can record metrics directly using the metric instrument. You pass in a
@@ -79,4 +83,5 @@ counter.add(25, label_set)
 # (metric, value) pairs. The value would be recorded for each metric using the
 # specified labelset for each.
 meter.record_batch(label_set, [(counter, 50), (counter2, 70)])
-time.sleep(100)
+
+time.sleep(10)
