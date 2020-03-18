@@ -28,13 +28,13 @@ from utils import get_as_list
 
 app = Flask(__name__)
 
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-tracer = trace.tracer_provider().get_tracer(__name__)
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer_provider().get_tracer(__name__)
 
-trace.tracer_provider().add_span_processor(
+trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
-set_global_httptextformat(TraceContextHTTPTextFormat)
+set_global_httptextformat(TraceContextHTTPTextFormat())
 
 
 @app.route("/publish_request")

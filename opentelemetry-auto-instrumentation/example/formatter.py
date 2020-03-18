@@ -34,7 +34,7 @@ tracer = trace.get_tracer_provider().get_tracer(__name__)
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
-set_global_httptextformat(TraceContextHTTPTextFormat)
+set_global_httptextformat(TraceContextHTTPTextFormat())
 
 
 @app.route("/format_request")

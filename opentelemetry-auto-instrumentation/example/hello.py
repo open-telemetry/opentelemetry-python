@@ -36,14 +36,13 @@ tracer = trace.get_tracer_provider().get_tracer(__name__)
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
-set_global_httptextformat(TraceContextHTTPTextFormat)
+set_global_httptextformat(TraceContextHTTPTextFormat())
 
 
 def http_get(port, path, param, value):
 
     headers = {}
-    propagators.inject(tracer, dict.__setitem__, headers)
-
+    propagators.inject(dict.__setitem__, headers)
     requested = get(
         "http://localhost:{}/{}".format(port, path),
         params={param: value},
