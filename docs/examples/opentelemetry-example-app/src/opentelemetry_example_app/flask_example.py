@@ -21,12 +21,12 @@ import requests
 
 import opentelemetry.ext.http_requests
 from opentelemetry import trace
+from opentelemetry.ext.flask import FlaskPatcher
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-from opentelemetry.ext.flask import FlaskPatcher
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
