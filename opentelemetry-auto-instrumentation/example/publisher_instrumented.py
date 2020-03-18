@@ -41,7 +41,10 @@ set_global_httptextformat(TraceContextHTTPTextFormat())
 def publish_request():
 
     with tracer.start_as_current_span(
-        "publish_request", propagators.extract(get_as_list, request.headers)
+        "publish_request",
+        parent=propagators.extract(
+            get_as_list, request.headers
+        )["current-span"]
     ):
         hello_str = request.args.get("helloStr")
         print(hello_str)

@@ -42,7 +42,9 @@ def format_request():
 
     with tracer.start_as_current_span(
         "format_request",
-        parent=propagators.extract(get_as_list, request.headers),
+        parent=propagators.extract(
+            get_as_list, request.headers
+        )["current-span"],
     ):
         hello_to = request.args.get("helloTo")
         return "Hello, %s!" % hello_to
