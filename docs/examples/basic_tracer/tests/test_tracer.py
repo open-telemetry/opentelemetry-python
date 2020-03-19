@@ -25,6 +25,6 @@ class TestBasicTracerExample(unittest.TestCase):
             (sys.executable, test_script)
         ).decode()
 
-        self.assertIn('name="foo"', output)
-        self.assertIn('name="bar"', output)
-        self.assertIn('name="baz"', output)
+        self.assertIn('"name": "foo"', output)
+        self.assertIn('"name": "bar"', output)
+        self.assertIn('"name": "baz"', output)
