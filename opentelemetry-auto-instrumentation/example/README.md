@@ -23,7 +23,10 @@ In order to understand this better, here is the relevant part of both scripts:
 def publish_request():
 
     with tracer.start_as_current_span(
-        "publish_request", propagators.extract(get_as_list, request.headers)
+        "publish_request",
+        parent=propagators.extract(get_as_list, request.headers)[
+            "current-span"
+        ],
     ):
         hello_str = request.args.get("helloStr")
         print(hello_str)
@@ -78,20 +81,20 @@ $ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/format
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python3 opentelemetry-python/examples/auto_instrumentation/publisher_instrumented.py
+$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/publisher_instrumented.py
 ```
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python3 opentelemetry-python/examples/auto_instrumentation/hello.py testing
+$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/hello.py testing
 ```
 
 The execution of `publisher_instrumented.py` should return an output similar to:
 
 ```sh
 Hello, testing!
-Span(name="publish", context=SpanContext(trace_id=0xd18be4c644d3be57a8623bbdbdbcef76, span_id=0x6162c475bab8d365, trace_state={}), kind=SpanKind.SERVER, parent=SpanContext(trace_id=0xd18be4c644d3be57a8623bbdbdbcef76, span_id=0xdafb264c5b1b6ed0, trace_state={}), start_time=2019-12-19T01:11:12.172866Z, end_time=2019-12-19T01:11:12.173383Z)
-127.0.0.1 - - [18/Dec/2019 19:11:12] "GET /publish?helloStr=Hello%2C+testing%21 HTTP/1.1" 200 -
+Span(name="publish_request", context=SpanContext(trace_id=0x9c0e0ce8f7b7dbb51d1d6e744a4dad49, span_id=0xd1ba3ec4c76a0d7f, trace_state={}), kind=SpanKind.INTERNAL, parent=None, start_time=2020-03-19T00:06:31.275719Z, end_time=2020-03-19T00:06:31.275920Z)
+127.0.0.1 - - [18/Mar/2020 18:06:31] "GET /publish_request?helloStr=Hello%2C+testing%21 HTTP/1.1" 200 -
 ```
 
 ## Execution of an automatically instrumented publisher
@@ -99,21 +102,21 @@ Span(name="publish", context=SpanContext(trace_id=0xd18be4c644d3be57a8623bbdbdbc
 Now, kill the execution of `publisher_instrumented.py` with `ctrl + c` and run this instead:
 
 ```sh
-$ opentelemetry-auto-instrumentation opentelemetry-python/examples/auto_instrumentation/publisher_uninstrumented.py
+$ opentelemetry-auto-instrumentation opentelemetry-python/opentelemetry-auto-instrumentation/example/publisher_uninstrumented.py
 ```
 
 In the console where you previously executed `hello.py`, run again this again:
 
 ```sh
-$ python3 opentelemetry-python/examples/auto_instrumentation/hello.py testing
+$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/hello.py testing
 ```
 
 The execution of `publisher_uninstrumented.py` should return an output similar to:
 
 ```sh
 Hello, testing!
-Span(name="publish", context=SpanContext(trace_id=0xd18be4c644d3be57a8623bbdbdbcef76, span_id=0x6162c475bab8d365, trace_state={}), kind=SpanKind.SERVER, parent=SpanContext(trace_id=0xd18be4c644d3be57a8623bbdbdbcef76, span_id=0xdafb264c5b1b6ed0, trace_state={}), start_time=2019-12-19T01:11:12.172866Z, end_time=2019-12-19T01:11:12.173383Z)
-127.0.0.1 - - [18/Dec/2019 19:11:12] "GET /publish?helloStr=Hello%2C+testing%21 HTTP/1.1" 200 -
+Span(name="publish_request", context=SpanContext(trace_id=0xf26b28b5243e48f5f96bfc753f95f3f0, span_id=0xbeb179a095d087ed, trace_state={}), kind=SpanKind.SERVER, parent=<opentelemetry.trace.DefaultSpan object at 0x7f1a20a54908>, start_time=2020-03-19T00:24:18.828561Z, end_time=2020-03-19T00:24:18.845127Z)
+127.0.0.1 - - [18/Mar/2020 18:24:18] "GET /publish_request?helloStr=Hello%2C+testing%21 HTTP/1.1" 200 -
 ```
 
 As you can see, both outputs are equal since the automatic instrumentation does what the manual instrumentation does too.
