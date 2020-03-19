@@ -13,12 +13,7 @@
 # limitations under the License.
 
 """
-This library allows export of data to the `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector/>`_ , currently using OpenCensus receiver on the Collector side.
-
-Traces Usage
-------------
-
-The **OpenTelemetry Collector Exporter** allows export of `OpenTelemetry`_ traces to the `OpenTelemetry Collector`_.
+The **OpenTelemetry Collector Exporter** allows to export OpenTelemetry traces to OpenTelemetry Collector.
 
 .. code:: python
 
@@ -50,7 +45,7 @@ The **OpenTelemetry Collector Exporter** allows export of `OpenTelemetry`_ trace
 Metrics Usage
 -------------
 
-The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ metrics to `OpenTelemetry Collector`_.
+The **OpenTelemetry Collector Exporter** allows to export OpenTelemetry metrics to OpenTelemetry Collector.
 
 .. code:: python
 
@@ -69,7 +64,7 @@ The **OpenTelemetry Collector Exporter** allows to export `OpenTelemetry`_ metri
     )
 
     # Meter is responsible for creating and recording metrics
-    metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
+    metrics.set_meter_provider(MeterProvider())
     meter = metrics.get_meter(__name__)
     # controller collects metrics created from meter and exports it via the
     # exporter every interval

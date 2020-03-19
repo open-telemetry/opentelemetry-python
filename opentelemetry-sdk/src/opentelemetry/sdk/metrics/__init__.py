@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import threading
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
@@ -71,6 +72,8 @@ class BaseBoundInstrument:
         self.enabled = enabled
         self.aggregator = aggregator
         self.last_update_timestamp = time_ns()
+        self._ref_count = 0
+        self._ref_count_lock = threading.Lock()
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
         if not self.enabled:
@@ -85,6 +88,21 @@ class BaseBoundInstrument:
     def update(self, value: metrics_api.ValueT):
         self.last_update_timestamp = time_ns()
         self.aggregator.update(value)
+
+    def release(self):
+        self.decrease_ref_count()
+
+    def decrease_ref_count(self):
+        with self._ref_count_lock:
+            self._ref_count -= 1
+
+    def increase_ref_count(self):
+        with self._ref_count_lock:
+            self._ref_count += 1
+
+    def ref_count(self):
+        with self._ref_count_lock:
+            return self._ref_count
 
     def __repr__(self):
         return '{}(data="{}", last_update_timestamp={})'.format(
@@ -137,18 +155,21 @@ class Metric(metrics_api.Metric):
         self.label_keys = label_keys
         self.enabled = enabled
         self.bound_instruments = {}
+        self.bound_instruments_lock = threading.Lock()
 
     def bind(self, label_set: LabelSet) -> BaseBoundInstrument:
         """See `opentelemetry.metrics.Metric.bind`."""
-        bound_instrument = self.bound_instruments.get(label_set)
-        if not bound_instrument:
-            bound_instrument = self.BOUND_INSTR_TYPE(
-                self.value_type,
-                self.enabled,
-                # Aggregator will be created based off type of metric
-                self.meter.batcher.aggregator_for(self.__class__),
-            )
-            self.bound_instruments[label_set] = bound_instrument
+        with self.bound_instruments_lock:
+            bound_instrument = self.bound_instruments.get(label_set)
+            if bound_instrument is None:
+                bound_instrument = self.BOUND_INSTR_TYPE(
+                    self.value_type,
+                    self.enabled,
+                    # Aggregator will be created based off type of metric
+                    self.meter.batcher.aggregator_for(self.__class__),
+                )
+                self.bound_instruments[label_set] = bound_instrument
+        bound_instrument.increase_ref_count()
         return bound_instrument
 
     def __repr__(self):
@@ -167,7 +188,9 @@ class Counter(Metric, metrics_api.Counter):
 
     def add(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
-        self.bind(label_set).add(value)
+        bound_intrument = self.bind(label_set)
+        bound_intrument.add(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = add
 
@@ -179,7 +202,9 @@ class Measure(Metric, metrics_api.Measure):
 
     def record(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
-        self.bind(label_set).record(value)
+        bound_intrument = self.bind(label_set)
+        bound_intrument.record(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = record
 
@@ -279,6 +304,7 @@ class Meter(metrics_api.Meter):
         self.metrics = set()
         self.observers = set()
         self.batcher = UngroupedBatcher(stateful)
+        self.observers_lock = threading.Lock()
         self.resource = resource
 
     def collect(self) -> None:
@@ -294,7 +320,12 @@ class Meter(metrics_api.Meter):
 
     def _collect_metrics(self) -> None:
         for metric in self.metrics:
-            if metric.enabled:
+            if not metric.enabled:
+                continue
+
+            to_remove = []
+
+            with metric.bound_instruments_lock:
                 for label_set, bound_instr in metric.bound_instruments.items():
                     # TODO: Consider storing records in memory?
                     record = Record(metric, label_set, bound_instr.aggregator)
@@ -302,18 +333,26 @@ class Meter(metrics_api.Meter):
                     # Applies different batching logic based on type of batcher
                     self.batcher.process(record)
 
+                    if bound_instr.ref_count() == 0:
+                        to_remove.append(label_set)
+
+                # Remove handles that were released
+                for label_set in to_remove:
+                    del metric.bound_instruments[label_set]
+
     def _collect_observers(self) -> None:
-        for observer in self.observers:
-            if not observer.enabled:
-                continue
+        with self.observers_lock:
+            for observer in self.observers:
+                if not observer.enabled:
+                    continue
 
-            # TODO: capture timestamp?
-            if not observer.run():
-                continue
+                # TODO: capture timestamp?
+                if not observer.run():
+                    continue
 
-            for label_set, aggregator in observer.aggregators.items():
-                record = Record(observer, label_set, aggregator)
-                self.batcher.process(record)
+                for label_set, aggregator in observer.aggregators.items():
+                    record = Record(observer, label_set, aggregator)
+                    self.batcher.process(record)
 
     def record_batch(
         self,
@@ -368,8 +407,13 @@ class Meter(metrics_api.Meter):
             label_keys,
             enabled,
         )
-        self.observers.add(ob)
+        with self.observers_lock:
+            self.observers.add(ob)
         return ob
+
+    def unregister_observer(self, observer: "Observer") -> None:
+        with self.observers_lock:
+            self.observers.remove(observer)
 
     def get_label_set(self, labels: Dict[str, str]):
         """See `opentelemetry.metrics.Meter.create_metric`.
