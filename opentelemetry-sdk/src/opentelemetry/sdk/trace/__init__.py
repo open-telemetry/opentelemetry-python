@@ -14,10 +14,12 @@
 
 
 import atexit
+import json
 import logging
 import os
 import random
 import threading
+from collections import OrderedDict
 from contextlib import contextmanager
 from types import TracebackType
 from typing import Iterator, Optional, Sequence, Tuple, Type
@@ -205,84 +207,39 @@ class Span(trace_api.Span):
             type(self).__name__, self.name, self.context
         )
 
-    def __str__(self, indent=0):
-        def format_context(context, indent=0):
-            text = [
-                type(context).__name__ + "(",
-                "trace_id=" + trace_api.format_trace_id(context.trace_id),
-                "span_id=" + trace_api.format_span_id(context.span_id),
-                "trace_state=" + repr(context.trace_state),
-                ")",
-            ]
+    def __str__(self):
+        def format_context(context):
+            x_ctx = OrderedDict()
+            x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
+            x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
+            x_ctx["trace_state"] = repr(context.trace_state)
+            return x_ctx
 
-            # add indentation
-            for index in range(1, len(text) - 1):
-                text[index] = " " * (2 + indent) + text[index]
-            text[-1] = " " * indent + text[-1]
+        def format_attributes(attributes):
+            if isinstance(attributes, BoundedDict):
+                return attributes._dict  # pylint: disable=protected-access
+            return attributes
 
-            return os.linesep.join(text)
-
-        def format_attributes(attributes, indent=0):
-            if not attributes:
-                return "None"
-            text = [
-                " " * (2 + indent) + k + "=" + str(v)
-                for (k, v) in attributes.items()
-            ]
-            return os.linesep + os.linesep.join(text)
-
-        def format_event(event, indent=0):
-            text = [
-                "Event(",
-                'name="' + event.name + '"',
-                "timestamp=" + util.ns_to_iso_str(event.timestamp),
-                "attributes="
-                + format_attributes(event.attributes, indent + 2),
-                ")",
-            ]
-
-            for index in range(1, len(text) - 1):
-                text[index] = " " * (2 + indent) + text[index]
-
-            text[0] = " " * indent + text[0]
-            text[-1] = " " * indent + text[-1]
-
-            return os.linesep.join(text)
-
-        def format_events(events, indent=0):
-            if not events:
-                return "None"
-            text = ""
+        def format_events(events):
+            f_events = []
             for event in events:
-                text += os.linesep + format_event(event, indent)
-            return text
+                f_event = OrderedDict()
+                f_event["name"] = event.name
+                f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
+                f_event["attributes"] = format_attributes(event.attributes)
+                f_events.append(f_event)
+            return f_events
 
-        def format_link(link, indent=0):
-            text = [
-                "Link(",
-                "context="
-                + format_context(link.context, 2 + indent + len("context=")),
-                "attributes=" + format_attributes(link.attributes, indent + 2),
-                ")",
-            ]
-
-            # add indentation
-            for index in range(1, len(text) - 1):
-                text[index] = " " * (2 + indent) + text[index]
-            text[0] = " " * indent + text[0]
-            text[-1] = " " * indent + text[-1]
-
-            return os.linesep.join(text)
-
-        def format_links(links, indent=0):
-            if not links:
-                return "None"
-            text = ""
+        def format_links(links):
+            f_links = []
             for link in links:
-                text += os.linesep + format_link(link, indent)
-            return text
+                f_link = OrderedDict()
+                f_link["context"] = format_context(link.context)
+                f_link["attributes"] = format_attributes(link.attributes)
+                f_links.append(f_link)
+            return f_links
 
-        parent_id = "None"
+        parent_id = None
         if self.parent is not None:
             if isinstance(self.parent, Span):
                 ctx = self.parent.context
@@ -290,35 +247,27 @@ class Span(trace_api.Span):
             elif isinstance(self.parent, SpanContext):
                 parent_id = trace_api.format_span_id(self.parent.span_id)
 
-        start_time = "None"
+        start_time = None
         if self.start_time:
             start_time = util.ns_to_iso_str(self.start_time)
 
-        end_time = "None"
+        end_time = None
         if self.end_time:
             end_time = util.ns_to_iso_str(self.end_time)
 
-        text = [
-            type(self).__name__ + "(",
-            'name="' + self.name + '"',
-            "context="
-            + format_context(self.context, 2 + indent + len("context=")),
-            "kind=" + str(self.kind),
-            "parent_id=" + parent_id,
-            "start_time=" + start_time,
-            "end_time=" + end_time,
-            "attributes=" + format_attributes(self.attributes, 2),
-            "events=" + format_events(self.events, indent + 4),
-            "links=" + format_links(self.links, indent + 4),
-            ")",
-        ]
+        f_span = OrderedDict()
 
-        # add indentation
-        for index in range(1, len(text) - 1):
-            text[index] = " " * (2 + indent) + text[index]
-        text[-1] = " " * indent + text[-1]
+        f_span["name"] = self.name
+        f_span["context"] = format_context(self.context)
+        f_span["kind"] = str(self.kind)
+        f_span["parent_id"] = parent_id
+        f_span["start_time"] = start_time
+        f_span["end_time"] = end_time
+        f_span["attributes"] = format_attributes(self.attributes)
+        f_span["events"] = format_events(self.events)
+        f_span["links"] = format_links(self.links)
 
-        return os.linesep.join(text)
+        return json.dumps(f_span, indent=4)
 
     def get_context(self):
         return self.context
