@@ -288,16 +288,16 @@ Let's start by bringing up a Prometheus instance ourselves, to scrape our applic
     # prometheus.yml
     scrape_configs:
     - job_name: 'my-app'
-        scrape_interval: 5s
-        static_configs:
-        - targets: ['localhost:8000']
+      scrape_interval: 5s
+      static_configs:
+      - targets: ['localhost:8000']
 
 And start a docker container for it:
 
 .. code-block:: sh
 
     # --net=host will not work properly outside of Linux.
-    docker run --net=host -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus\
+    docker run --net=host -v `pwd`/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus \
         --log.level=debug --config.file=/etc/prometheus/prometheus.yml
 
 For our Python application, we will need to install an exporter specific to Prometheus:
@@ -378,8 +378,6 @@ To see how this works in practice, let's start the Collector locally. Write the 
     exporters:
         logging:
             loglevel: debug
-            sampling_initial: 10
-            sampling_thereafter: 50
     processors:
         batch:
         queued_retry:
@@ -397,8 +395,8 @@ Start the docker container:
 
 .. code-block:: sh
 
-    docker run -p 55678:55678\
-        -v ./otel-collector-config.yaml:/etc/otel-collector-config.yaml\
+    docker run -p 55678:55678 \
+        -v `pwd`/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
         omnition/opentelemetry-collector-contrib:latest \
         --config=/etc/otel-collector-config.yaml
 
@@ -433,6 +431,7 @@ And execute the following script:
     )
     tracer_provider = TracerProvider()
     trace.set_tracer_provider(tracer_provider)
+    span_processor = BatchExportSpanProcessor(span_exporter)
     tracer_provider.add_span_processor(span_processor)
 
     # create a CollectorMetricsExporter
@@ -448,7 +447,7 @@ And execute the following script:
     meter = metrics.get_meter(__name__)
     # controller collects metrics created from meter and exports it via the
     # exporter every interval
-    controller = PushController(meter, collector_exporter, 5)
+    controller = PushController(meter, metric_exporter, 5)
 
     # Configure the tracer to use the collector exporter
     tracer = trace.get_tracer_provider().get_tracer(__name__)
@@ -456,13 +455,19 @@ And execute the following script:
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
 
-    counter = meter.create_metric(
-        "requests", "number of requests", "requests", int, Counter, ("environment",),
+    requests_counter = meter.create_metric(
+        name="requests",
+        description="number of requests",
+        unit="1",
+        value_type=int,
+        metric_type=Counter,
+        label_keys=("environment",),
     )
+
     # Labelsets are used to identify key-values that are associated with a specific
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
     label_set = meter.get_label_set({"environment": "staging"})
 
-    counter.add(25, label_set)
+    requests_counter.add(25, label_set)
     time.sleep(10)  # give push_controller time to push metrics
