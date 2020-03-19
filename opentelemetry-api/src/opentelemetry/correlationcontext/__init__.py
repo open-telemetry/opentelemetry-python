@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
 import typing
 
 from opentelemetry.context import get_value, set_value
@@ -24,7 +23,7 @@ _CORRELATION_CONTEXT_KEY = "correlation-context"
 def get_correlations(
     context: typing.Optional[Context] = None,
 ) -> typing.Dict[str, object]:
-    """ Returns the name/value pairs in the CorrelationContext
+    """Returns the name/value pairs in the CorrelationContext
 
     Args:
         context: The Context to use. If not set, uses current Context
@@ -41,7 +40,8 @@ def get_correlations(
 def get_correlation(
     name: str, context: typing.Optional[Context] = None
 ) -> typing.Optional[object]:
-    """ Provides access to the value for a name/value pair in the CorrelationContext
+    """Provides access to the value for a name/value pair in the
+    CorrelationContext
 
     Args:
         name: The name of the value to retrieve
@@ -76,6 +76,7 @@ def remove_correlation(
     name: str, context: typing.Optional[Context] = None
 ) -> Context:
     """Removes a value from the CorrelationContext
+
     Args:
         name: The name of the value to remove
         context: The Context to use. If not set, uses current Context
@@ -91,6 +92,7 @@ def remove_correlation(
 
 def clear_correlations(context: typing.Optional[Context] = None) -> Context:
     """Removes all values from the CorrelationContext
+
     Args:
         context: The Context to use. If not set, uses current Context
 

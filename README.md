@@ -51,6 +51,10 @@ The online documentation is available at https://opentelemetry-python.readthedoc
 if you want to access the documentation for the latest version use
 https://opentelemetry-python.readthedocs.io/en/latest/.
 
+## Compatible Exporters
+
+See the [OpenTelemetry registry](https://opentelemetry.io/registry/?s=python) for a list of exporters available.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
