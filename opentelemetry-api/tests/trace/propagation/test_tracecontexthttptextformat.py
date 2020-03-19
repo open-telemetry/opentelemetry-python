@@ -72,6 +72,7 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(
             span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
+        self.assertTrue(span_context.is_remote)
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(span_context)
 

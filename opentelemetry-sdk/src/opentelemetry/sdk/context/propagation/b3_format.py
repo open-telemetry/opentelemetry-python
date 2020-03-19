@@ -114,6 +114,7 @@ class B3Format(HTTPTextFormat):
                     span_id=int(span_id, 16),
                     trace_flags=trace.TraceFlags(options),
                     trace_state=trace.TraceState(),
+                    is_remote=True,
                 )
             )
         )

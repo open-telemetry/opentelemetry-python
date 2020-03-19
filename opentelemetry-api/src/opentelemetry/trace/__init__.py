@@ -319,6 +319,7 @@ class SpanContext:
         span_id: This span's ID.
         trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
+        is_remote: Indicator if propagated from a remote parent
     """
 
     def __init__(
@@ -327,6 +328,7 @@ class SpanContext:
         span_id: int,
         trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
+        is_remote: bool = False,
     ) -> None:
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
@@ -336,13 +338,17 @@ class SpanContext:
         self.span_id = span_id
         self.trace_flags = trace_flags
         self.trace_state = trace_state
+        self.is_remote = is_remote
 
     def __repr__(self) -> str:
-        return "{}(trace_id={}, span_id={}, trace_state={!r})".format(
+        return (
+            "{}(trace_id={}, span_id={}, trace_state={!r}, is_remote={})"
+        ).format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
             self.trace_state,
+            self.is_remote,
         )
 
     def is_valid(self) -> bool:

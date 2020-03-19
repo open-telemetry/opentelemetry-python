@@ -107,6 +107,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             span_id=int(span_id, 16),
             trace_flags=trace.TraceFlags(trace_flags),
             trace_state=tracestate,
+            is_remote=True,
         )
         return set_span_in_context(trace.DefaultSpan(span_context), context)
 

@@ -86,10 +86,12 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.SPAN_ID_KEY],
             b3_format.format_span_id(child.context.span_id),
         )
+        self.assertFalse(child.context.is_remote)
         self.assertEqual(
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
             b3_format.format_span_id(parent.context.span_id),
         )
+        self.assertTrue(parent.context.is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_single_header(self):
@@ -111,6 +113,8 @@ class TestB3Format(unittest.TestCase):
             b3_format.format_span_id(child.context.span_id),
         )
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertFalse(child.context.is_remote)
+        self.assertTrue(parent.context.is_remote)
 
         child, parent, new_carrier = get_child_parent_new_carrier(
             {
@@ -130,10 +134,12 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.SPAN_ID_KEY],
             b3_format.format_span_id(child.context.span_id),
         )
+        self.assertFalse(child.context.is_remote)
         self.assertEqual(
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
             b3_format.format_span_id(parent.context.span_id),
         )
+        self.assertTrue(parent.context.is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_header_precedence(self):

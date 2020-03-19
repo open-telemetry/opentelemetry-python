@@ -378,6 +378,12 @@ class TestSpanCreation(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertIs(span.resource, resources._EMPTY_RESOURCE)
 
+    def test_span_context_remote_flag(self):
+        tracer = new_tracer()
+
+        span = tracer.start_span("foo")
+        self.assertFalse(span.context.is_remote)
+
 
 class TestSpan(unittest.TestCase):
     def setUp(self):
