@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright 2020, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,3 +41,5 @@ class TestPyMysqlIntegration(unittest.TestCase):
             query = "SELECT * FROM test"
             cursor.execute(query)
             self.assertTrue(start_as_current_span.called)
+
+        start_current_span_patcher.stop()

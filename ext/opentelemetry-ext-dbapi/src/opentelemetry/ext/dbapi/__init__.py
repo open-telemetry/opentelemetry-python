@@ -126,10 +126,8 @@ class DatabaseApiIntegration:
         self.database = self.connection_props.get("database", "")
         if self.database:
             # PyMySQL encodes names with utf-8
-            try:
-                self.database = self.database.decode()
-            except AttributeError:
-                pass
+            if hasattr(self.database, "decode"):
+                self.database = self.database.decode(errors="ignore")
             self.name += "." + self.database
         user = self.connection_props.get("user")
         if user is not None:
