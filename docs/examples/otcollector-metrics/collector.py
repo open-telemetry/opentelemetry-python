@@ -40,8 +40,8 @@ requests_counter = meter.create_metric(
     label_keys=("environment",),
 )
 
-staging_label_set = meter.get_label_set({"environment": "staging"})
-requests_counter.add(25, staging_label_set)
+staging_labels = {"environment": "staging"}
+requests_counter.add(25, staging_labels)
 
 print("Metrics are available now at http://localhost:9090/graph")
 input("Press any key to exit...")

@@ -21,33 +21,28 @@ from opentelemetry import metrics
 class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
-        default_ls = metrics.DefaultLabelSet()
-        bound_metric_instr = default.bind(default_ls)
+        bound_metric_instr = default.bind({})
         self.assertIsInstance(
             bound_metric_instr, metrics.DefaultBoundInstrument
         )
 
     def test_counter(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        bound_counter = counter.bind(label_set)
+        bound_counter = counter.bind({})
         self.assertIsInstance(bound_counter, metrics.BoundCounter)
 
     def test_counter_add(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        counter.add(1, label_set)
+        counter.add(1, {})
 
     def test_measure(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        bound_measure = measure.bind(label_set)
+        bound_measure = measure.bind({})
         self.assertIsInstance(bound_measure, metrics.BoundMeasure)
 
     def test_measure_record(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        measure.record(1, label_set)
+        measure.record(1, {})
 
     def test_default_bound_metric(self):
         bound_instrument = metrics.DefaultBoundInstrument()
@@ -63,5 +58,4 @@ class TestMetrics(unittest.TestCase):
 
     def test_observer(self):
         observer = metrics.DefaultObserver()
-        label_set = metrics.LabelSet()
-        observer.observe(1, label_set)
+        observer.observe(1, {})

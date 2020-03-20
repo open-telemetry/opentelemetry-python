@@ -54,12 +54,12 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
         ("environment",),
     )
 
-    # Labelsets are used to identify key-values that are associated with a specific
+    # Labels are used to identify key-values that are associated with a specific
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
-    label_set = meter.get_label_set({"environment": "staging"})
+    labels = {"environment": "staging"}
 
-    counter.add(25, label_set)
+    counter.add(25, labels)
     input("Press any key to exit...")
 
 API
@@ -145,7 +145,7 @@ class CustomCollector:
         prometheus_metric = None
         label_values = []
         label_keys = []
-        for label_tuple in metric_record.label_set.labels:
+        for label_tuple in metric_record.labels:
             label_keys.append(self._sanitize(label_tuple[0]))
             label_values.append(label_tuple[1])
 

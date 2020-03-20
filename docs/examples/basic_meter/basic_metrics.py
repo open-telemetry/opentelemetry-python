@@ -87,18 +87,18 @@ requests_size = meter.create_metric(
 # Labelsets are used to identify key-values that are associated with a specific
 # metric that you want to record. These are useful for pre-aggregation and can
 # be used to store custom dimensions pertaining to a metric
-staging_label_set = meter.get_label_set({"environment": "staging"})
-testing_label_set = meter.get_label_set({"environment": "testing"})
+staging_labels = {"environment": "staging"}
+testing_labels = {"environment": "testing"}
 
 # Update the metric instruments using the direct calling convention
-requests_counter.add(25, staging_label_set)
-requests_size.record(100, staging_label_set)
+requests_counter.add(25, staging_labels)
+requests_size.record(100, staging_labels)
 time.sleep(5)
 
-requests_counter.add(50, staging_label_set)
-requests_size.record(5000, staging_label_set)
+requests_counter.add(50, staging_labels)
+requests_size.record(5000, staging_labels)
 time.sleep(5)
 
-requests_counter.add(35, testing_label_set)
-requests_size.record(2, testing_label_set)
+requests_counter.add(35, testing_labels)
+requests_size.record(2, testing_labels)
 time.sleep(5)
