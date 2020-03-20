@@ -12,10 +12,12 @@ Usage
 .. code:: python
 
     from pymongo import MongoClient
-    from opentelemetry.trace import tracer_provider
-    from opentelemetry.trace.ext.pymongo import trace_integration
+    from opentelemetry.trace import TracerProvider
 
-    trace_integration(tracer_provider())
+    trace.set_tracer_provider(TracerProvider())
+    tracer = trace.get_tracer(__name__)
+
+    trace_integration(tracer)
     client = MongoClient()
     db = client["MongoDB_Database"]
     collection = db["MongoDB_Collection"]
