@@ -224,7 +224,7 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(span.get_context().trace_state["foo"], "1")
 
     def test_tracestate_keys(self):
-        """Do not propagate invalid trace context.
+        """Test for valid key patterns in the tracestate
         """
         tracestate_value = ",".join(
             [
