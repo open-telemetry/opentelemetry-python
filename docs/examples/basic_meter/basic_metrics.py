@@ -46,7 +46,7 @@ if len(sys.argv) >= 2:
     stateful = batcher_mode == "stateful"
 
 print(
-    "Starting example, values will be printed to the console each 5 seconds."
+    "Starting example, values will be printed to the console every 5 seconds."
 )
 
 
