@@ -21,3 +21,18 @@ jobs:
       run: |
         pip install twine
         twine upload --skip-existing --verbose dist/*
+  generate_authors:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Generate Authors
+      run: sh ./scripts/generate-authors.sh
+    - name: Commit report
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git add AUTHORS
+        git commit -m "Update authors"
+        git push
+      continue-on-error: true
