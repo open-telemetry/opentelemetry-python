@@ -7,7 +7,7 @@ import flask
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import context, propagators, trace
-from opentelemetry.auto_instrumentation.patcher import BasePatcher
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import time_ns
 
@@ -19,7 +19,7 @@ _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
 _ENVIRON_TOKEN = "opentelemetry-flask.token"
 
 
-class _PatchedFlask(flask.Flask):
+class _InstrumentedFlask(flask.Flask):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -105,19 +105,19 @@ class _PatchedFlask(flask.Flask):
             context.detach(flask.request.environ.get(_ENVIRON_TOKEN))
 
 
-class FlaskPatcher(BasePatcher):
-    """A patcher for flask.Flask
+class FlaskInstrumentor(BaseInstrumentor):
+    """A instrumentor for flask.Flask
 
-    See `BasePatcher`
+    See `BaseInstrumentor`
     """
 
     def __init__(self):
         super().__init__()
         self._original_flask = None
 
-    def _patch(self):
+    def _instrument(self):
         self._original_flask = flask.Flask
-        flask.Flask = _PatchedFlask
+        flask.Flask = _InstrumentedFlask
 
-    def _unpatch(self):
+    def _uninstrument(self):
         flask.Flask = self._original_flask

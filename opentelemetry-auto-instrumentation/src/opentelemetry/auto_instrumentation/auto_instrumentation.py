@@ -26,13 +26,13 @@ _LOG = getLogger(__file__)
 def run() -> None:
 
     for entry_point in iter_entry_points(
-        "opentelemetry_auto_instrumentation_patcher"
+        "opentelemetry_auto_instrumentation_instrumentor"
     ):
         try:
-            entry_point.load()().patch()  # type: ignore
-            _LOG.debug("Patched %s", entry_point.name)
+            entry_point.load()().instrument()  # type: ignore
+            _LOG.debug("Instrumented %s", entry_point.name)
 
         except Exception:  # pylint: disable=broad-except
-            _LOG.exception("Patching of %s failed", entry_point.name)
+            _LOG.exception("Instrumenting of %s failed", entry_point.name)
 
     run_path(argv[1], run_name="__main__")  # type: ignore

@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from opentelemetry.ext.flask import FlaskPatcher
+from opentelemetry.ext.flask import FlaskInstrumentor
 
-_FLASK_PATCHER = FlaskPatcher()
+_FLASK_INSTRUMENTOR = FlaskInstrumentor()
 
 
 def pytest_sessionstart(session):  # pylint: disable=unused-argument
-    _FLASK_PATCHER.patch()
+    _FLASK_INSTRUMENTOR.instrument()
 
 
 def pytest_sessionfinish(session):  # pylint: disable=unused-argument
-    _FLASK_PATCHER.unpatch()
+    _FLASK_INSTRUMENTOR.uninstrument()

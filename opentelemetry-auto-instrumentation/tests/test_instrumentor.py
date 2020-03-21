@@ -16,29 +16,29 @@
 from logging import WARNING
 from unittest import TestCase
 
-from opentelemetry.auto_instrumentation.patcher import BasePatcher
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 
 
-class TestPatcher(TestCase):
+class TestInstrumentor(TestCase):
     def test_protect(self):
-        class Patcher(BasePatcher):
-            def _patch(self):
-                return "patched"
+        class Instrumentor(BaseInstrumentor):
+            def _instrument(self):
+                return "instrumented"
 
-            def _unpatch(self):
-                return "unpatched"
+            def _uninstrument(self):
+                return "uninstrumented"
 
-        patcher = Patcher()
-
-        with self.assertLogs(level=WARNING):
-            self.assertIs(patcher.unpatch(), None)
-
-        self.assertEqual(patcher.patch(), "patched")
+        instrumentor = Instrumentor()
 
         with self.assertLogs(level=WARNING):
-            self.assertIs(patcher.patch(), None)
+            self.assertIs(instrumentor.uninstrument(), None)
 
-        self.assertEqual(patcher.unpatch(), "unpatched")
+        self.assertEqual(instrumentor.instrument(), "instrumented")
 
         with self.assertLogs(level=WARNING):
-            self.assertIs(patcher.unpatch(), None)
+            self.assertIs(instrumentor.instrument(), None)
+
+        self.assertEqual(instrumentor.uninstrument(), "uninstrumented")
+
+        with self.assertLogs(level=WARNING):
+            self.assertIs(instrumentor.uninstrument(), None)

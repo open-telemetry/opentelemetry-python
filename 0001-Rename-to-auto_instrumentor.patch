@@ -1,0 +1,280 @@
+From 8586bdf43b03211b5e12b85430355bfb97b212bc Mon Sep 17 00:00:00 2001
+From: Diego Hurtado <ocelotl@users.noreply.github.com>
+Date: Fri, 20 Mar 2020 17:00:39 -0600
+Subject: [PATCH] Rename to auto_instrumentor
+
+---
+ .../flask_example.py                          |  4 +-
+ ext/opentelemetry-ext-flask/setup.py          |  4 +-
+ .../src/opentelemetry/ext/flask/__init__.py   | 16 +++----
+ ext/opentelemetry-ext-flask/tests/conftest.py |  8 ++--
+ .../auto_instrumentation.py                   |  8 ++--
+ .../{patcher.py => instrumentor.py}           | 42 +++++++++----------
+ .../{test_patcher.py => test_instrumentor.py} | 26 ++++++------
+ 7 files changed, 54 insertions(+), 54 deletions(-)
+ rename opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/{patcher.py => instrumentor.py} (52%)
+ rename opentelemetry-auto-instrumentation/tests/{test_patcher.py => test_instrumentor.py} (55%)
+
+diff --git a/docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/flask_example.py b/docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/flask_example.py
+index bf4b4646..544fe8cd 100644
+--- a/docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/flask_example.py
++++ b/docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/flask_example.py
+@@ -21,7 +21,7 @@ import requests
+ 
+ import opentelemetry.ext.http_requests
+ from opentelemetry import trace
+-from opentelemetry.ext.flask import FlaskPatcher
++from opentelemetry.ext.flask import FlaskInstrumentor
+ from opentelemetry.sdk.trace import TracerProvider
+ from opentelemetry.sdk.trace.export import (
+     ConsoleSpanExporter,
+@@ -33,7 +33,7 @@ trace.get_tracer_provider().add_span_processor(
+     SimpleExportSpanProcessor(ConsoleSpanExporter())
+ )
+ 
+-FlaskPatcher().patch()
++FlaskInstrumentor().instrument()
+ app = flask.Flask(__name__)
+ opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
+ 
+diff --git a/ext/opentelemetry-ext-flask/setup.py b/ext/opentelemetry-ext-flask/setup.py
+index 13313eca..75d2f277 100644
+--- a/ext/opentelemetry-ext-flask/setup.py
++++ b/ext/opentelemetry-ext-flask/setup.py
+@@ -26,8 +26,8 @@ with open(VERSION_FILENAME) as f:
+ setuptools.setup(
+     version=PACKAGE_INFO["__version__"],
+     entry_points={
+-        "opentelemetry_auto_instrumentation_patcher": [
+-            "flask = opentelemetry.ext.flask:FlaskPatcher"
++        "opentelemetry_auto_instrumentation_instrumentor": [
++            "flask = opentelemetry.ext.flask:FlaskInstrumentor"
+         ]
+     },
+ )
+diff --git a/ext/opentelemetry-ext-flask/src/opentelemetry/ext/flask/__init__.py b/ext/opentelemetry-ext-flask/src/opentelemetry/ext/flask/__init__.py
+index 7364b0fe..09e22b8d 100644
+--- a/ext/opentelemetry-ext-flask/src/opentelemetry/ext/flask/__init__.py
++++ b/ext/opentelemetry-ext-flask/src/opentelemetry/ext/flask/__init__.py
+@@ -7,7 +7,7 @@ import flask
+ 
+ import opentelemetry.ext.wsgi as otel_wsgi
+ from opentelemetry import context, propagators, trace
+-from opentelemetry.auto_instrumentation.patcher import BasePatcher
++from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+ from opentelemetry.ext.flask.version import __version__
+ from opentelemetry.util import time_ns
+ 
+@@ -19,7 +19,7 @@ _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
+ _ENVIRON_TOKEN = "opentelemetry-flask.token"
+ 
+ 
+-class _PatchedFlask(flask.Flask):
++class _InstrumentedFlask(flask.Flask):
+     def __init__(self, *args, **kwargs):
+ 
+         super().__init__(*args, **kwargs)
+@@ -105,19 +105,19 @@ class _PatchedFlask(flask.Flask):
+             context.detach(flask.request.environ.get(_ENVIRON_TOKEN))
+ 
+ 
+-class FlaskPatcher(BasePatcher):
+-    """A patcher for flask.Flask
++class FlaskInstrumentor(BaseInstrumentor):
++    """A instrumentor for flask.Flask
+ 
+-    See `BasePatcher`
++    See `BaseInstrumentor`
+     """
+ 
+     def __init__(self):
+         super().__init__()
+         self._original_flask = None
+ 
+-    def _patch(self):
++    def _instrument(self):
+         self._original_flask = flask.Flask
+-        flask.Flask = _PatchedFlask
++        flask.Flask = _InstrumentedFlask
+ 
+-    def _unpatch(self):
++    def _uninstrument(self):
+         flask.Flask = self._original_flask
+diff --git a/ext/opentelemetry-ext-flask/tests/conftest.py b/ext/opentelemetry-ext-flask/tests/conftest.py
+index e3c59b6d..22a587ab 100644
+--- a/ext/opentelemetry-ext-flask/tests/conftest.py
++++ b/ext/opentelemetry-ext-flask/tests/conftest.py
+@@ -11,14 +11,14 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-from opentelemetry.ext.flask import FlaskPatcher
++from opentelemetry.ext.flask import FlaskInstrumentor
+ 
+-_FLASK_PATCHER = FlaskPatcher()
++_FLASK_INSTRUMENTOR = FlaskInstrumentor()
+ 
+ 
+ def pytest_sessionstart(session):  # pylint: disable=unused-argument
+-    _FLASK_PATCHER.patch()
++    _FLASK_INSTRUMENTOR.instrument()
+ 
+ 
+ def pytest_sessionfinish(session):  # pylint: disable=unused-argument
+-    _FLASK_PATCHER.unpatch()
++    _FLASK_INSTRUMENTOR.uninstrument()
+diff --git a/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/auto_instrumentation.py b/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/auto_instrumentation.py
+index 44651e49..124f8694 100644
+--- a/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/auto_instrumentation.py
++++ b/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/auto_instrumentation.py
+@@ -26,13 +26,13 @@ _LOG = getLogger(__file__)
+ def run() -> None:
+ 
+     for entry_point in iter_entry_points(
+-        "opentelemetry_auto_instrumentation_patcher"
++        "opentelemetry_auto_instrumentation_instrumentor"
+     ):
+         try:
+-            entry_point.load()().patch()  # type: ignore
+-            _LOG.debug("Patched %s", entry_point.name)
++            entry_point.load()().instrument()  # type: ignore
++            _LOG.debug("Instrumented %s", entry_point.name)
+ 
+         except Exception:  # pylint: disable=broad-except
+-            _LOG.exception("Patching of %s failed", entry_point.name)
++            _LOG.exception("Instrumenting of %s failed", entry_point.name)
+ 
+     run_path(argv[1], run_name="__main__")  # type: ignore
+diff --git a/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/patcher.py b/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/instrumentor.py
+similarity index 52%
+rename from opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/patcher.py
+rename to opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/instrumentor.py
+index ee5d3c68..a5ee0b90 100644
+--- a/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/patcher.py
++++ b/opentelemetry-auto-instrumentation/src/opentelemetry/auto_instrumentation/instrumentor.py
+@@ -14,7 +14,7 @@
+ # type: ignore
+ 
+ """
+-OpenTelemetry Auto Instrumentation Patcher
++OpenTelemetry Base Instrumentor
+ """
+ 
+ from abc import ABC, abstractmethod
+@@ -23,43 +23,43 @@ from logging import getLogger
+ _LOG = getLogger(__name__)
+ 
+ 
+-class BasePatcher(ABC):
+-    """An ABC for patchers"""
++class BaseInstrumentor(ABC):
++    """An ABC for instrumentors"""
+ 
+     def __init__(self):
+-        self._is_patched = False
++        self._is_instrumented = False
+ 
+     @abstractmethod
+-    def _patch(self) -> None:
+-        """Patch"""
++    def _instrument(self) -> None:
++        """Instrument"""
+ 
+     @abstractmethod
+-    def _unpatch(self) -> None:
+-        """Unpatch"""
++    def _uninstrument(self) -> None:
++        """Uninstrument"""
+ 
+-    def patch(self) -> None:
+-        """Patch"""
++    def instrument(self) -> None:
++        """Instrument"""
+ 
+-        if not self._is_patched:
+-            result = self._patch()
+-            self._is_patched = True
++        if not self._is_instrumented:
++            result = self._instrument()
++            self._is_instrumented = True
+             return result
+ 
+-        _LOG.warning("Attempting to patch while already patched")
++        _LOG.warning("Attempting to instrument while already instrumented")
+ 
+         return None
+ 
+-    def unpatch(self) -> None:
+-        """Unpatch"""
++    def uninstrument(self) -> None:
++        """Uninstrument"""
+ 
+-        if self._is_patched:
+-            result = self._unpatch()
+-            self._is_patched = False
++        if self._is_instrumented:
++            result = self._uninstrument()
++            self._is_instrumented = False
+             return result
+ 
+-        _LOG.warning("Attempting to unpatch while already unpatched")
++        _LOG.warning("Attempting to uninstrument while already uninstrumented")
+ 
+         return None
+ 
+ 
+-__all__ = ["BasePatcher"]
++__all__ = ["BaseInstrumentor"]
+diff --git a/opentelemetry-auto-instrumentation/tests/test_patcher.py b/opentelemetry-auto-instrumentation/tests/test_instrumentor.py
+similarity index 55%
+rename from opentelemetry-auto-instrumentation/tests/test_patcher.py
+rename to opentelemetry-auto-instrumentation/tests/test_instrumentor.py
+index 8e9e45b5..cf887724 100644
+--- a/opentelemetry-auto-instrumentation/tests/test_patcher.py
++++ b/opentelemetry-auto-instrumentation/tests/test_instrumentor.py
+@@ -16,29 +16,29 @@
+ from logging import WARNING
+ from unittest import TestCase
+ 
+-from opentelemetry.auto_instrumentation.patcher import BasePatcher
++from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+ 
+ 
+-class TestPatcher(TestCase):
++class TestInstrumentor(TestCase):
+     def test_protect(self):
+-        class Patcher(BasePatcher):
+-            def _patch(self):
+-                return "patched"
++        class Instrumentor(BaseInstrumentor):
++            def _instrument(self):
++                return "instrumented"
+ 
+-            def _unpatch(self):
+-                return "unpatched"
++            def _uninstrument(self):
++                return "uninstrumented"
+ 
+-        patcher = Patcher()
++        instrumentor = Instrumentor()
+ 
+         with self.assertLogs(level=WARNING):
+-            self.assertIs(patcher.unpatch(), None)
++            self.assertIs(instrumentor.uninstrument(), None)
+ 
+-        self.assertEqual(patcher.patch(), "patched")
++        self.assertEqual(instrumentor.instrument(), "instrumented")
+ 
+         with self.assertLogs(level=WARNING):
+-            self.assertIs(patcher.patch(), None)
++            self.assertIs(instrumentor.instrument(), None)
+ 
+-        self.assertEqual(patcher.unpatch(), "unpatched")
++        self.assertEqual(instrumentor.uninstrument(), "uninstrumented")
+ 
+         with self.assertLogs(level=WARNING):
+-            self.assertIs(patcher.unpatch(), None)
++            self.assertIs(instrumentor.uninstrument(), None)
+-- 
+2.17.1
+

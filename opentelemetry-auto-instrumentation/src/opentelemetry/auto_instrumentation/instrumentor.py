@@ -14,7 +14,7 @@
 # type: ignore
 
 """
-OpenTelemetry Auto Instrumentation Patcher
+OpenTelemetry Base Instrumentor
 """
 
 from abc import ABC, abstractmethod
@@ -23,43 +23,43 @@ from logging import getLogger
 _LOG = getLogger(__name__)
 
 
-class BasePatcher(ABC):
-    """An ABC for patchers"""
+class BaseInstrumentor(ABC):
+    """An ABC for instrumentors"""
 
     def __init__(self):
-        self._is_patched = False
+        self._is_instrumented = False
 
     @abstractmethod
-    def _patch(self) -> None:
-        """Patch"""
+    def _instrument(self) -> None:
+        """Instrument"""
 
     @abstractmethod
-    def _unpatch(self) -> None:
-        """Unpatch"""
+    def _uninstrument(self) -> None:
+        """Uninstrument"""
 
-    def patch(self) -> None:
-        """Patch"""
+    def instrument(self) -> None:
+        """Instrument"""
 
-        if not self._is_patched:
-            result = self._patch()
-            self._is_patched = True
+        if not self._is_instrumented:
+            result = self._instrument()
+            self._is_instrumented = True
             return result
 
-        _LOG.warning("Attempting to patch while already patched")
+        _LOG.warning("Attempting to instrument while already instrumented")
 
         return None
 
-    def unpatch(self) -> None:
-        """Unpatch"""
+    def uninstrument(self) -> None:
+        """Uninstrument"""
 
-        if self._is_patched:
-            result = self._unpatch()
-            self._is_patched = False
+        if self._is_instrumented:
+            result = self._uninstrument()
+            self._is_instrumented = False
             return result
 
-        _LOG.warning("Attempting to unpatch while already unpatched")
+        _LOG.warning("Attempting to uninstrument while already uninstrumented")
 
         return None
 
 
-__all__ = ["BasePatcher"]
+__all__ = ["BaseInstrumentor"]
