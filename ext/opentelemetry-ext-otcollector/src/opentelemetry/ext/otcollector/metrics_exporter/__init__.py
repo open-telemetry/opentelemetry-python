@@ -147,9 +147,7 @@ def get_collector_metric_type(metric: Metric) -> metrics_pb2.MetricDescriptor:
 def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
     point = metrics_pb2.Point(
         timestamp=utils.proto_timestamp_from_time_ns(
-            metric_record.metric.bind(
-                metric_record.label_set
-            ).last_update_timestamp
+            metric_record.aggregator.last_update_timestamp
         )
     )
     if metric_record.metric.value_type == int:
