@@ -103,8 +103,7 @@ class BaseBoundInstrument:
 
     def __repr__(self):
         return '{}(data="{}")'.format(
-            type(self).__name__,
-            self.aggregator.current,
+            type(self).__name__, self.aggregator.current
         )
 
 
