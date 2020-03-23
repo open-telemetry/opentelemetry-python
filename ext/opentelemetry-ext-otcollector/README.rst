@@ -95,4 +95,4 @@ References
 ----------
 
 * `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector/>`_
-* `OpenTelemetry Project <https://opentelemetry.io/>`_
+* `OpenTelemetry <https://opentelemetry.io/>`_
