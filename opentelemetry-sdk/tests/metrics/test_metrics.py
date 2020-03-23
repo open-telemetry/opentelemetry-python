@@ -393,13 +393,10 @@ class TestBoundCounter(unittest.TestCase):
         self.assertEqual(bound_counter.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
-    @mock.patch("opentelemetry.sdk.metrics.time_ns")
-    def test_update(self, time_mock):
+    def test_update(self):
         aggregator = export.aggregate.CounterAggregator()
         bound_counter = metrics.BoundCounter(int, True, aggregator)
-        time_mock.return_value = 123
         bound_counter.update(4.0)
-        self.assertEqual(bound_counter.last_update_timestamp, 123)
         self.assertEqual(bound_counter.aggregator.current, 4.0)
 
 
@@ -428,11 +425,8 @@ class TestBoundMeasure(unittest.TestCase):
         )
         self.assertTrue(logger_mock.warning.called)
 
-    @mock.patch("opentelemetry.sdk.metrics.time_ns")
-    def test_update(self, time_mock):
+    def test_update(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_measure = metrics.BoundMeasure(int, True, aggregator)
-        time_mock.return_value = 123
         bound_measure.update(4.0)
-        self.assertEqual(bound_measure.last_update_timestamp, 123)
         self.assertEqual(bound_measure.aggregator.current, (4.0, 4.0, 4.0, 1))
