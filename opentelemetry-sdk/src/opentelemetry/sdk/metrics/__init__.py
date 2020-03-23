@@ -425,9 +425,7 @@ class Meter(metrics_api.Meter):
 
 
 class MeterProvider(metrics_api.MeterProvider):
-    def __init__(
-        self, resource: Resource = Resource.create_empty(),
-    ):
+    def __init__(self, resource: Resource = Resource.create_empty()):
         self.resource = resource
 
     def get_meter(

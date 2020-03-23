@@ -15,6 +15,7 @@
 import abc
 import threading
 from collections import namedtuple
+
 from opentelemetry.util import time_ns
 
 
@@ -65,8 +66,9 @@ class CounterAggregator(Aggregator):
     def merge(self, other):
         with self._lock:
             self.checkpoint += other.checkpoint
-            self.last_update_timestamp = other.last_update_timestamp \
-                or self.last_update_timestamp
+            self.last_update_timestamp = (
+                other.last_update_timestamp or self.last_update_timestamp
+            )
 
 
 class MinMaxSumCountAggregator(Aggregator):
@@ -118,8 +120,9 @@ class MinMaxSumCountAggregator(Aggregator):
             self.checkpoint = self._merge_checkpoint(
                 self.checkpoint, other.checkpoint
             )
-            self.last_update_timestamp = other.last_update_timestamp \
-                or self.last_update_timestamp
+            self.last_update_timestamp = (
+                other.last_update_timestamp or self.last_update_timestamp
+            )
 
 
 class ObserverAggregator(Aggregator):
@@ -151,5 +154,6 @@ class ObserverAggregator(Aggregator):
                 + (other.checkpoint.last or self.checkpoint.last or 0,)
             )
         )
-        self.last_update_timestamp = other.last_update_timestamp \
-            or self.last_update_timestamp
+        self.last_update_timestamp = (
+            other.last_update_timestamp or self.last_update_timestamp
+        )

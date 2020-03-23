@@ -17,7 +17,6 @@ import random
 import unittest
 from unittest import mock
 
-from opentelemetry.util import time_ns
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricsExporter,
@@ -30,6 +29,7 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 )
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.util import time_ns
 
 
 # pylint: disable=protected-access
@@ -439,7 +439,6 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
 
 class TestObserverAggregator(unittest.TestCase):
-
     @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_update(self, time_mock):
         time_mock.return_value = 123
