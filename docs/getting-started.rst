@@ -285,7 +285,7 @@ Let's start by bringing up a Prometheus instance ourselves, to scrape our applic
 
 .. code-block:: yaml
 
-    # prometheus.yml
+    # /tmp/prometheus.yml
     scrape_configs:
     - job_name: 'my-app'
       scrape_interval: 5s
@@ -297,7 +297,7 @@ And start a docker container for it:
 .. code-block:: sh
 
     # --net=host will not work properly outside of Linux.
-    docker run --net=host -v `pwd`/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus \
+    docker run --net=host -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus \
         --log.level=debug --config.file=/etc/prometheus/prometheus.yml
 
 For our Python application, we will need to install an exporter specific to Prometheus:
@@ -371,7 +371,7 @@ To see how this works in practice, let's start the Collector locally. Write the 
 
 .. code-block:: yaml
 
-    # otel-collector-config.yaml
+    # /tmp/otel-collector-config.yaml
     receivers:
         opencensus:
             endpoint: 0.0.0.0:55678
@@ -396,7 +396,7 @@ Start the docker container:
 .. code-block:: sh
 
     docker run -p 55678:55678 \
-        -v `pwd`/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
+        -v /tmp/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
         omnition/opentelemetry-collector-contrib:latest \
         --config=/etc/otel-collector-config.yaml
 
