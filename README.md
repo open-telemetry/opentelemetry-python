@@ -181,7 +181,6 @@ Future releases targets include:
 
 | Component                          | Version | Target Date   |
 | ---------------------------------- | ------- | ------------- |
-
 | Stable API for metrics and tracing | Beta v2 | March 31 2020 |
 | Support for Tags/Baggage           | Beta v2 | March 31 2020 |
 | gRPC Integration                   | Beta v2 | March 31 2020 |
