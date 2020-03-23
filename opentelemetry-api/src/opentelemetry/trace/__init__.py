@@ -319,7 +319,7 @@ class SpanContext:
         span_id: This span's ID.
         trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
-        is_remote: Indicator if propagated from a remote parent
+        is_remote: True if propagated from a remote parent.
     """
 
     def __init__(
