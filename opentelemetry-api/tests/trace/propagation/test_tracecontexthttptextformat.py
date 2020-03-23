@@ -222,3 +222,32 @@ class TestTraceContextFormat(unittest.TestCase):
             )
         )
         self.assertEqual(span.get_context().trace_state["foo"], "1")
+
+    def test_tracestate_keys(self):
+        """Test for valid key patterns in the tracestate
+        """
+        tracestate_value = ",".join(
+            [
+                "1a-2f@foo=bar1",
+                "1a-_*/2b@foo=bar2",
+                "foo=bar3",
+                "foo-_*/bar=bar4",
+            ]
+        )
+        span = get_span_from_context(
+            FORMAT.extract(
+                get_as_list,
+                {
+                    "traceparent": [
+                        "00-12345678901234567890123456789012-1234567890123456-00"
+                    ],
+                    "tracestate": [tracestate_value],
+                },
+            )
+        )
+        self.assertEqual(span.get_context().trace_state["1a-2f@foo"], "bar1")
+        self.assertEqual(
+            span.get_context().trace_state["1a-_*/2b@foo"], "bar2"
+        )
+        self.assertEqual(span.get_context().trace_state["foo"], "bar3")
+        self.assertEqual(span.get_context().trace_state["foo-_*/bar"], "bar4")
