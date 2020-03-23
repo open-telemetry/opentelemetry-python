@@ -29,7 +29,6 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 )
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
-from opentelemetry.util import time_ns
 
 
 # pylint: disable=protected-access

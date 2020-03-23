@@ -102,10 +102,9 @@ class BaseBoundInstrument:
             return self._ref_count
 
     def __repr__(self):
-        return '{}(data="{}", last_update_timestamp={})'.format(
+        return '{}(data="{}")'.format(
             type(self).__name__,
             self.aggregator.current,
-            self.last_update_timestamp,
         )
 
 
