@@ -129,7 +129,6 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             span_context.span_id,
             span_context.trace_flags,
         )
-        print(self)
         set_in_carrier(
             carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
         )
