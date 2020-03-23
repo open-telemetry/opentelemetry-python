@@ -21,4 +21,4 @@ References
 
 * `OpenTelemetry Collector Exporter <https://opentelemetry-python.readthedocs.io/en/latest/ext/otcollector/otcollector.html>`_
 * `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector/>`_
-* `OpenTelemetry Project <https://opentelemetry.io/>`_
+* `OpenTelemetry <https://opentelemetry.io/>`_
