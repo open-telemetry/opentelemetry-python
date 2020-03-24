@@ -13,28 +13,23 @@
 # limitations under the License.
 #
 """
-This module serves as an example for a simple application using metrics.
-It demonstrates the different ways you can record metrics via the meter.
+This example shows how to use the different modes to capture metrics.
+It shows the usage of the direct, bound and batch calling conventions.
 """
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Use the meter type provided by the SDK package
 metrics.set_meter_provider(MeterProvider())
-# Meter is responsible for creating and recording metrics
 meter = metrics.get_meter(__name__)
-# exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
-# controller collects metrics created from meter and exports it via the
-# exporter every interval
 controller = PushController(meter=meter, exporter=exporter, interval=5)
 
-# Example to show how to record using the meter
-counter = meter.create_metric(
+requests_counter = meter.create_metric(
     name="requests",
     description="number of requests",
     unit="1",
@@ -43,7 +38,16 @@ counter = meter.create_metric(
     label_keys=("environment",),
 )
 
-counter2 = meter.create_metric(
+requests_size = meter.create_metric(
+    name="requests_size",
+    description="size of requests",
+    unit="1",
+    value_type=int,
+    metric_type=Measure,
+    label_keys=("environment",),
+)
+
+clicks_counter = meter.create_metric(
     name="clicks",
     description="number of clicks",
     unit="1",
@@ -52,36 +56,27 @@ counter2 = meter.create_metric(
     label_keys=("environment",),
 )
 
-# Labelsets are used to identify key-values that are associated with a specific
-# metric that you want to record. These are useful for pre-aggregation and can
-# be used to store custom dimensions pertaining to a metric
-
-# The meter takes a dictionary of key value pairs
 label_set = meter.get_label_set({"environment": "staging"})
 
-# Bound instrument usage
+print("Updating using direct calling convention...")
+# You can record metrics directly using the metric instrument. You pass in a
+# labelset that you would like to record for.
+requests_counter.add(25, label_set)
+time.sleep(5)
 
+print("Updating using a bound instrument...")
 # You can record metrics with bound metric instruments. Bound metric
 # instruments are created by passing in a labelset. A bound metric instrument
 # is essentially metric data that corresponds to a specific set of labels.
 # Therefore, getting a bound metric instrument using the same set of labels
 # will yield the same bound metric instrument.
-bound_counter = counter.bind(label_set)
-for i in range(1000):
-    bound_counter.add(i)
+bound_requests_counter = requests_counter.bind(label_set)
+bound_requests_counter.add(100)
+time.sleep(5)
 
-# You can release the bound instrument we you are done
-bound_counter.release()
-
-# Direct metric usage
-# You can record metrics directly using the metric instrument. You pass in a
-# labelset that you would like to record for.
-counter.add(25, label_set)
-
-# Record batch usage
+print("Updating using batch calling convention...")
 # You can record metrics in a batch by passing in a labelset and a sequence of
 # (metric, value) pairs. The value would be recorded for each metric using the
 # specified labelset for each.
-meter.record_batch(label_set, [(counter, 50), (counter2, 70)])
-
-time.sleep(10)
+meter.record_batch(label_set, ((requests_counter, 50), (clicks_counter, 70)))
+time.sleep(5)
