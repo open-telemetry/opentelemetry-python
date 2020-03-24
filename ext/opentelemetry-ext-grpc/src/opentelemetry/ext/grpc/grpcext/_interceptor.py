@@ -365,6 +365,9 @@ class _InterceptorServer(grpc.Server):
     def stop(self, *args, **kwargs):
         return self._server.stop(*args, **kwargs)
 
+    def wait_for_termination(self, *args, **kwargs):
+        return self._server.wait_for_termination(*args, **kwargs)
+
 
 def intercept_server(server, *interceptors):
     result = server
