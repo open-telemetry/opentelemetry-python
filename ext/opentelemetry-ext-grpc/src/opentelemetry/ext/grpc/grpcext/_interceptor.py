@@ -3,7 +3,7 @@
 import collections
 
 import grpc
-from grpc_opentracing import grpcext
+from .. import grpcext
 
 
 class _UnaryClientInfo(
