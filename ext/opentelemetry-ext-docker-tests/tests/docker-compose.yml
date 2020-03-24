@@ -4,7 +4,7 @@ services:
   otmongo:
     ports:
      - "27017:27017"
-        image: mongo:latest
+    image: mongo:latest
   otmysql:
       ports:
        - "3306:3306"
