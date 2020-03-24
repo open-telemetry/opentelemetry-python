@@ -12,24 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of the service-side open-tracing interceptor."""
+"""Implementation of the service-side open-telemetry interceptor.
+
+This library borrows heavily from the OpenTelemetry gRPC integration:
+https://github.com/opentracing-contrib/python-grpc
+"""
 
 import logging
-import re
-import sys
+from typing import List
 
 import grpc
-import opentracing
-from opentracing.ext import tags as ot_tags
 
-from grpc_opentracing import ActiveSpanSource, grpcext
-from grpc_opentracing._utilities import (
-    RpcInfo,
-    log_or_wrap_request_or_iterator,
-)
+from opentelemetry import propagators, trace
+from opentelemetry.context import attach
+
+from . import grpcext
+from ._utilities import RpcInfo
 
 
-class _OpenTracingServicerContext(grpc.ServicerContext, ActiveSpanSource):
+class _OpenTelemetryServicerContext(grpc.ServicerContext):
     def __init__(self, servicer_context, active_span):
         self._servicer_context = servicer_context
         self._active_span = active_span
@@ -92,24 +93,21 @@ class _OpenTracingServicerContext(grpc.ServicerContext, ActiveSpanSource):
         self.details = details
         return self._servicer_context.set_details(details)
 
-    def get_active_span(self):
-        return self._active_span
 
-
-def _add_peer_tags(peer_str, tags):
-    ipv4_re = r"ipv4:(?P<address>.+):(?P<port>\d+)"
-    match = re.match(ipv4_re, peer_str)
-    if match:
-        tags[ot_tags.PEER_HOST_IPV4] = match.group("address")
-        tags[ot_tags.PEER_PORT] = match.group("port")
-        return
-    ipv6_re = r"ipv6:\[(?P<address>.+)\]:(?P<port>\d+)"
-    match = re.match(ipv6_re, peer_str)
-    if match:
-        tags[ot_tags.PEER_HOST_IPV6] = match.group("address")
-        tags[ot_tags.PEER_PORT] = match.group("port")
-        return
-    logging.warning('Unrecognized peer: "%s"', peer_str)
+# def _add_peer_tags(peer_str, tags):
+#     ipv4_re = r"ipv4:(?P<address>.+):(?P<port>\d+)"
+#     match = re.match(ipv4_re, peer_str)
+#     if match:
+#         tags[ot_tags.PEER_HOST_IPV4] = match.group("address")
+#         tags[ot_tags.PEER_PORT] = match.group("port")
+#         return
+#     ipv6_re = r"ipv6:\[(?P<address>.+)\]:(?P<port>\d+)"
+#     match = re.match(ipv6_re, peer_str)
+#     if match:
+#         tags[ot_tags.PEER_HOST_IPV6] = match.group("address")
+#         tags[ot_tags.PEER_PORT] = match.group("port")
+#         return
+#     logging.warning('Unrecognized peer: "%s"', peer_str)
 
 
 # On the service-side, errors can be signaled either by exceptions or by
@@ -117,54 +115,68 @@ def _add_peer_tags(peer_str, tags):
 # latter and updates the span accordingly.
 def _check_error_code(span, servicer_context, rpc_info):
     if servicer_context.code != grpc.StatusCode.OK:
-        span.set_tag("error", True)
-        error_log = {
-            "event": "error",
-            "error.kind": str(servicer_context.code),
-        }
-        if servicer_context.details is not None:
-            error_log["message"] = servicer_context.details
-        span.log_kv(error_log)
+        # span.set_tag("error", True)
+        # error_log = {
+        #     "event": "error",
+        #     "error.kind": str(servicer_context.code),
+        # }
+        # if servicer_context.details is not None:
+        #     error_log["message"] = servicer_context.details
+        # span.log_kv(error_log)
         rpc_info.error = servicer_context.code
 
 
-class OpenTracingServerInterceptor(
+class OpenTelemetryServerInterceptor(
     grpcext.UnaryServerInterceptor, grpcext.StreamServerInterceptor
 ):
-    def __init__(self, tracer, log_payloads, span_decorator):
+    def __init__(self, tracer):
         self._tracer = tracer
-        self._log_payloads = log_payloads
-        self._span_decorator = span_decorator
 
     def _start_span(self, servicer_context, method):
-        span_context = None
-        error = None
         metadata = servicer_context.invocation_metadata()
+        error = None
+
         try:
             if metadata:
-                span_context = self._tracer.extract(
-                    opentracing.Format.HTTP_HEADERS, dict(metadata)
-                )
-        except (
-            opentracing.UnsupportedFormatException,
-            opentracing.InvalidCarrierException,
-            opentracing.SpanContextCorruptedException,
-        ) as e:
+                md_dict = {md.key: md.value for md in metadata}
+
+                def get_from_grpc_metadata(metadata, key) -> List[str]:
+                    return [md_dict[key]] if key in md_dict else []
+
+                # set the request-global context!
+                ctx = propagators.extract(get_from_grpc_metadata, metadata)
+                attach(ctx)
+
+        except Exception as ex:
             logging.exception("tracer.extract() failed")
-            error = e
-        tags = {
-            ot_tags.COMPONENT: "grpc",
-            ot_tags.SPAN_KIND: ot_tags.SPAN_KIND_RPC_SERVER,
-        }
-        _add_peer_tags(servicer_context.peer(), tags)
-        span = self._tracer.start_span(
-            operation_name=method, child_of=span_context, tags=tags
+            error = ex
+
+        # TODO: set gRPC attributes
+        # tags = {
+        #     ot_tags.COMPONENT: "grpc",
+        #     ot_tags.SPAN_KIND: ot_tags.SPAN_KIND_RPC_SERVER,
+        # }
+
+        # TODO: set IP attributes
+        # _add_peer_tags(servicer_context.peer(), tags)
+
+        # span = self._tracer.start_span(
+        #     operation_name=method, child_of=span_context, tags=tags
+        # )
+
+        span = self._tracer.start_as_current_span(
+            name=method, kind=trace.SpanKind.SERVER
         )
+
+        # TODO: add error/stacktrace attribute
         if error is not None:
-            span.log_kv({"event": "error", "error.object": error})
+            pass
+            # span.log_kv({"event": "error", "error.object": error})
+
         return span
 
     def intercept_unary(self, request, servicer_context, server_info, handler):
+
         with self._start_span(
             servicer_context, server_info.full_method
         ) as span:
@@ -174,106 +186,80 @@ class OpenTracingServerInterceptor(
                 timeout=servicer_context.time_remaining(),
                 request=request,
             )
-            if self._log_payloads:
-                span.log_kv({"request": request})
-            servicer_context = _OpenTracingServicerContext(
+            servicer_context = _OpenTelemetryServicerContext(
                 servicer_context, span
             )
-            try:
-                response = handler(request, servicer_context)
-            except Exception:
-                e = sys.exc_info()[0]
-                span.set_tag("error", True)
-                span.log_kv({"event": "error", "error.object": e})
-                rpc_info.error = e
-                if self._span_decorator is not None:
-                    self._span_decorator(span, rpc_info)
-                raise
-            if self._log_payloads:
-                span.log_kv({"response": response})
+            response = handler(request, servicer_context)
+
             _check_error_code(span, servicer_context, rpc_info)
+
             rpc_info.response = response
-            if self._span_decorator is not None:
-                self._span_decorator(span, rpc_info)
+
             return response
 
-    # For RPCs that stream responses, the result can be a generator. To record
-    # the span across the generated responses and detect any errors, we wrap the
-    # result in a new generator that yields the response values.
-    def _intercept_server_stream(
-        self, request_or_iterator, servicer_context, server_info, handler
-    ):
-        with self._start_span(
-            servicer_context, server_info.full_method
-        ) as span:
-            rpc_info = RpcInfo(
-                full_method=server_info.full_method,
-                metadata=servicer_context.invocation_metadata(),
-                timeout=servicer_context.time_remaining(),
-            )
-            if not server_info.is_client_stream:
-                rpc_info.request = request_or_iterator
-            if self._log_payloads:
-                request_or_iterator = log_or_wrap_request_or_iterator(
-                    span, server_info.is_client_stream, request_or_iterator
-                )
-            servicer_context = _OpenTracingServicerContext(
-                servicer_context, span
-            )
-            try:
-                result = handler(request_or_iterator, servicer_context)
-                for response in result:
-                    if self._log_payloads:
-                        span.log_kv({"response": response})
-                    yield response
-            except Exception:
-                e = sys.exc_info()[0]
-                span.set_tag("error", True)
-                span.log_kv({"event": "error", "error.object": e})
-                rpc_info.error = e
-                if self._span_decorator is not None:
-                    self._span_decorator(span, rpc_info)
-                raise
-            _check_error_code(span, servicer_context, rpc_info)
-            if self._span_decorator is not None:
-                self._span_decorator(span, rpc_info)
+    # # For RPCs that stream responses, the result can be a generator. To record
+    # # the span across the generated responses and detect any errors, we wrap the
+    # # result in a new generator that yields the response values.
+    # def _intercept_server_stream(
+    #     self, request_or_iterator, servicer_context, server_info, handler
+    # ):
+    #     with self._start_span(
+    #         servicer_context, server_info.full_method
+    #     ) as span:
+    #         rpc_info = RpcInfo(
+    #             full_method=server_info.full_method,
+    #             metadata=servicer_context.invocation_metadata(),
+    #             timeout=servicer_context.time_remaining(),
+    #         )
+    #         if not server_info.is_client_stream:
+    #             rpc_info.request = request_or_iterator
+    #         servicer_context = _OpenTelemetryServicerContext(
+    #             servicer_context, span
+    #         )
+    #         try:
+    #             result = handler(request_or_iterator, servicer_context)
+    #             for response in result:
+    #                 yield response
+    #         except Exception:
+    #             e = sys.exc_info()[0]
+    #             span.set_tag("error", True)
+    #             span.log_kv({"event": "error", "error.object": e})
+    #             rpc_info.error = e
+    #             raise
+    #         _check_error_code(span, servicer_context, rpc_info)
 
     def intercept_stream(
         self, request_or_iterator, servicer_context, server_info, handler
     ):
-        if server_info.is_server_stream:
-            return self._intercept_server_stream(
-                request_or_iterator, servicer_context, server_info, handler
-            )
-        with self._start_span(
-            servicer_context, server_info.full_method
-        ) as span:
-            rpc_info = RpcInfo(
-                full_method=server_info.full_method,
-                metadata=servicer_context.invocation_metadata(),
-                timeout=servicer_context.time_remaining(),
-            )
-            if self._log_payloads:
-                request_or_iterator = log_or_wrap_request_or_iterator(
-                    span, server_info.is_client_stream, request_or_iterator
-                )
-            servicer_context = _OpenTracingServicerContext(
-                servicer_context, span
-            )
-            try:
-                response = handler(request_or_iterator, servicer_context)
-            except Exception:
-                e = sys.exc_info()[0]
-                span.set_tag("error", True)
-                span.log_kv({"event": "error", "error.object": e})
-                rpc_info.error = e
-                if self._span_decorator is not None:
-                    self._span_decorator(span, rpc_info)
-                raise
-            if self._log_payloads:
-                span.log_kv({"response": response})
-            _check_error_code(span, servicer_context, rpc_info)
-            rpc_info.response = response
-            if self._span_decorator is not None:
-                self._span_decorator(span, rpc_info)
-            return response
+        pass
+
+    # def intercept_stream(
+    #     self, request_or_iterator, servicer_context, server_info, handler
+    # ):
+    #     """TODO doc and types"""
+    #     if server_info.is_server_stream:
+    #         return self._intercept_server_stream(
+    #             request_or_iterator, servicer_context, server_info, handler
+    #         )
+    #     with self._start_span(
+    #         servicer_context, server_info.full_method
+    #     ) as span:
+    #         rpc_info = RpcInfo(
+    #             full_method=server_info.full_method,
+    #             metadata=servicer_context.invocation_metadata(),
+    #             timeout=servicer_context.time_remaining(),
+    #         )
+    #         servicer_context = _OpenTelemetryServicerContext(
+    #             servicer_context, span
+    #         )
+    #         try:
+    #             response = handler(request_or_iterator, servicer_context)
+    #         except Exception:
+    #             e = sys.exc_info()[0]
+    #             span.set_tag("error", True)
+    #             span.log_kv({"event": "error", "error.object": e})
+    #             rpc_info.error = e
+    #             raise
+    #         _check_error_code(span, servicer_context, rpc_info)
+    #         rpc_info.response = response
+    #         return response

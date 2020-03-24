@@ -23,9 +23,20 @@ import grpc
 
 import helloworld_pb2
 import helloworld_pb2_grpc
+from opentelemetry import trace
 from opentelemetry.ext.grpc import client_interceptor
+from opentelemetry.ext.grpc.grpcext import intercept_channel
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleExportSpanProcessor,
+)
 
-interceptor = client_interceptor.OpenTelemetryClientInterceptor()
+trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+trace.tracer_provider().add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
+tracer = trace.get_tracer(__name__)
 
 
 def run():
@@ -34,10 +45,13 @@ def run():
     # of the code.
     with grpc.insecure_channel("localhost:50051") as channel:
 
-        intercepted_channel = grpc.intercept_channel(channel, interceptor)
-        stub = helloworld_pb2_grpc.GreeterStub(intercepted_channel)
+        channel = intercept_channel(channel, client_interceptor(tracer))
 
+        stub = helloworld_pb2_grpc.GreeterStub(channel)
+
+        # stub.SayHello is a _InterceptorUnaryUnaryMultiCallable
         response = stub.SayHello(helloworld_pb2.HelloRequest(name="YOU"))
+
     print("Greeter client received: " + response.message)
 
 

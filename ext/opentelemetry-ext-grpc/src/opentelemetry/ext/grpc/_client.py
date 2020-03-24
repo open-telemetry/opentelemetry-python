@@ -12,21 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of the invocation-side open-tracing interceptor."""
+"""Implementation of the invocation-side open-telemetry interceptor."""
 
-import logging
-import sys
+from collections import OrderedDict
+from typing import MutableMapping
 
 import grpc
-import opentracing
-from opentracing.ext import tags as ot_tags
-from six import iteritems
 
-from grpc_opentracing import grpcext
-from grpc_opentracing._utilities import (
-    RpcInfo,
-    log_or_wrap_request_or_iterator,
-)
+from opentelemetry import propagators, trace
+
+from . import grpcext
+from ._utilities import RpcInfo
 
 
 class _GuardedSpan(object):
@@ -49,70 +45,38 @@ class _GuardedSpan(object):
         return self.span
 
 
-def _inject_span_context(tracer, span, metadata):
-    headers = {}
-    try:
-        tracer.inject(span.context, opentracing.Format.HTTP_HEADERS, headers)
-    except (
-        opentracing.UnsupportedFormatException,
-        opentracing.InvalidCarrierException,
-        opentracing.SpanContextCorruptedException,
-    ) as e:
-        logging.exception("tracer.inject() failed")
-        span.log_kv({"event": "error", "error.object": e})
-        return metadata
-    metadata = () if metadata is None else tuple(metadata)
-    return metadata + tuple((k.lower(), v) for (k, v) in iteritems(headers))
+def _inject_span_context(metadata: MutableMapping[str, str]) -> None:
+    def append_metadata(
+        carrier: MutableMapping[str, str], key: str, value: str
+    ):
+        metadata[key] = value
+
+    # Inject current active span from the context
+    propagators.inject(append_metadata, metadata)
 
 
-def _make_future_done_callback(span, rpc_info, log_payloads, span_decorator):
+def _make_future_done_callback(span, rpc_info):
     def callback(response_future):
         with span:
             code = response_future.code()
             if code != grpc.StatusCode.OK:
-                span.set_tag("error", True)
-                error_log = {"event": "error", "error.kind": str(code)}
-                details = response_future.details()
-                if details is not None:
-                    error_log["message"] = details
-                span.log_kv(error_log)
                 rpc_info.error = code
-                if span_decorator is not None:
-                    span_decorator(span, rpc_info)
                 return
             response = response_future.result()
             rpc_info.response = response
-            if log_payloads:
-                span.log_kv({"response": response})
-            if span_decorator is not None:
-                span_decorator(span, rpc_info)
 
     return callback
 
 
-class OpenTracingClientInterceptor(
+class OpenTelemetryClientInterceptor(
     grpcext.UnaryClientInterceptor, grpcext.StreamClientInterceptor
 ):
-    def __init__(
-        self, tracer, active_span_source, log_payloads, span_decorator
-    ):
+    def __init__(self, tracer):
         self._tracer = tracer
-        self._active_span_source = active_span_source
-        self._log_payloads = log_payloads
-        self._span_decorator = span_decorator
 
     def _start_span(self, method):
-        active_span_context = None
-        if self._active_span_source is not None:
-            active_span = self._active_span_source.get_active_span()
-            if active_span is not None:
-                active_span_context = active_span.context
-        tags = {
-            ot_tags.COMPONENT: "grpc",
-            ot_tags.SPAN_KIND: ot_tags.SPAN_KIND_RPC_CLIENT,
-        }
-        return self._tracer.start_span(
-            operation_name=method, child_of=active_span_context, tags=tags
+        return self._tracer.start_as_current_span(
+            name=method, kind=trace.SpanKind.CLIENT
         )
 
     def _trace_result(self, guarded_span, rpc_info, result):
@@ -120,12 +84,7 @@ class OpenTracingClientInterceptor(
         # callback so that the span can be finished once the future is done.
         if isinstance(result, grpc.Future):
             result.add_done_callback(
-                _make_future_done_callback(
-                    guarded_span.release(),
-                    rpc_info,
-                    self._log_payloads,
-                    self._span_decorator,
-                )
+                _make_future_done_callback(guarded_span.release(), rpc_info)
             )
             return result
         response = result
@@ -136,10 +95,6 @@ class OpenTracingClientInterceptor(
         if isinstance(result, tuple):
             response = result[0]
         rpc_info.response = response
-        if self._log_payloads:
-            guarded_span.span.log_kv({"response": response})
-        if self._span_decorator is not None:
-            self._span_decorator(guarded_span.span, rpc_info)
         return result
 
     def _start_guarded_span(self, *args, **kwargs):
@@ -147,27 +102,22 @@ class OpenTracingClientInterceptor(
 
     def intercept_unary(self, request, metadata, client_info, invoker):
         with self._start_guarded_span(client_info.full_method) as guarded_span:
-            metadata = _inject_span_context(
-                self._tracer, guarded_span.span, metadata
-            )
+
+            if not metadata:
+                mutable_metadata = OrderedDict()
+            else:
+                mutable_metadata = OrderedDict(metadata)
+
+            _inject_span_context(mutable_metadata)
+            metadata = tuple(mutable_metadata.items())
+
             rpc_info = RpcInfo(
                 full_method=client_info.full_method,
                 metadata=metadata,
                 timeout=client_info.timeout,
                 request=request,
             )
-            if self._log_payloads:
-                guarded_span.span.log_kv({"request": request})
-            try:
-                result = invoker(request, metadata)
-            except Exception:
-                e = sys.exc_info()[0]
-                guarded_span.span.set_tag("error", True)
-                guarded_span.span.log_kv({"event": "error", "error.object": e})
-                rpc_info.error = e
-                if self._span_decorator is not None:
-                    self._span_decorator(guarded_span.span, rpc_info)
-                raise
+            result = invoker(request, metadata)
             return self._trace_result(guarded_span, rpc_info, result)
 
     # For RPCs that stream responses, the result can be a generator. To record
@@ -185,26 +135,11 @@ class OpenTracingClientInterceptor(
             )
             if client_info.is_client_stream:
                 rpc_info.request = request_or_iterator
-            if self._log_payloads:
-                request_or_iterator = log_or_wrap_request_or_iterator(
-                    span, client_info.is_client_stream, request_or_iterator
-                )
-            try:
-                result = invoker(request_or_iterator, metadata)
-                for response in result:
-                    if self._log_payloads:
-                        span.log_kv({"response": response})
-                    yield response
-            except Exception:
-                e = sys.exc_info()[0]
-                span.set_tag("error", True)
-                span.log_kv({"event": "error", "error.object": e})
-                rpc_info.error = e
-                if self._span_decorator is not None:
-                    self._span_decorator(span, rpc_info)
-                raise
-            if self._span_decorator is not None:
-                self._span_decorator(span, rpc_info)
+            result = invoker(request_or_iterator, metadata)
+            for response in result:
+                if self._log_payloads:
+                    span.log_kv({"response": response})
+                yield response
 
     def intercept_stream(
         self, request_or_iterator, metadata, client_info, invoker
@@ -223,20 +158,5 @@ class OpenTracingClientInterceptor(
                 timeout=client_info.timeout,
                 request=request_or_iterator,
             )
-            if self._log_payloads:
-                request_or_iterator = log_or_wrap_request_or_iterator(
-                    guarded_span.span,
-                    client_info.is_client_stream,
-                    request_or_iterator,
-                )
-            try:
-                result = invoker(request_or_iterator, metadata)
-            except Exception:
-                e = sys.exc_info()[0]
-                guarded_span.span.set_tag("error", True)
-                guarded_span.span.log_kv({"event": "error", "error.object": e})
-                rpc_info.error = e
-                if self._span_decorator is not None:
-                    self._span_decorator(guarded_span.span, rpc_info)
-                raise
+            result = invoker(request_or_iterator, metadata)
             return self._trace_result(guarded_span, rpc_info, result)
