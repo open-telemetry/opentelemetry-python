@@ -45,63 +45,15 @@ pip install -e ./opentelemetry-sdk
 pip install -e ./ext/opentelemetry-ext-{integration}
 ```
 
-## Quick Start
+## Documentation
 
-### Tracing
+The online documentation is available at https://opentelemetry-python.readthedocs.io/,
+if you want to access the documentation for the latest version use
+https://opentelemetry-python.readthedocs.io/en/latest/.
 
-```python
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+## Compatible Exporters
 
-trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
-trace.tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
-)
-tracer = trace.get_tracer(__name__)
-with tracer.start_as_current_span('foo'):
-    with tracer.start_as_current_span('bar'):
-        with tracer.start_as_current_span('baz'):
-            print("Hello world from OpenTelemetry Python!")
-```
-
-### Metrics
-
-```python
-from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.controller import PushController
-
-metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
-meter = metrics.get_meter(__name__)
-exporter = ConsoleMetricsExporter()
-controller = PushController(meter, exporter, 5)
-
-counter = meter.create_metric(
-    "available memory",
-    "available memory",
-    "bytes",
-    int,
-    Counter,
-    ("environment",),
-)
-
-label_values = ("staging",)
-counter_handle = counter.get_handle(label_values)
-counter_handle.add(100)
-```
-
-See the [API documentation](https://open-telemetry.github.io/opentelemetry-python/) for more detail, and the [examples folder](./examples) for a more sample code.
-
-## Extensions
-
-### Third-party exporters
-
-OpenTelemetry supports integration with the following third-party exporters.
-
--  [Azure Monitor](https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor)
+See the [OpenTelemetry registry](https://opentelemetry.io/registry/?s=python) for a list of exporters available.
 
 ## Contributing
 
@@ -170,11 +122,12 @@ includes:
 - Flask Integration
 - PyMongo Integration
 
-The v0.4 alpha release includes:
+The [v0.4 alpha
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.4.0) release includes:
 
 - Metrics MinMaxSumCount Aggregator
-- Context API 
-- Full Metrics SDK Pipeline 
+- Context API
+- Full Metrics SDK Pipeline
 - Metrics STDOUT Exporter
 - Dbapi2 Integration
 - MySQL Integration
@@ -198,6 +151,27 @@ Thank you to the following individuals for contributing to this release:
 * Mauricio Vásquez
 * Yusuke Tsutsumi
 
+The [v0.5 beta
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.5.0) release includes:
+
+- W3C Correlation Context Propagation
+- OpenTelemetry Collector Exporter Integration for both metrics and traces
+- Metrics SDK
+- Global configuration module
+- Documentation improvements
+
+Thank you to the following individuals for contributing to this release:
+
+* Alex Boten
+* Chris Kleinknecht
+* Dave Grochowski
+* Diego Hurtado
+* Hector Hernandez
+* Leighton Chen
+* Liz Fong-Jones
+* Mauricio Vásquez
+* Yusuke Tsutsumi
+
 See the [project
 milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
 for details on upcoming releases. The dates and features described here are
@@ -205,11 +179,8 @@ estimates, and subject to change.
 
 Future releases targets include:
 
-| Component                           | Version    | Target Date  |
-| ----------------------------------- | ---------- | ------------ |
-| W3C Correlation Context Propagation | Beta v1    | March 16 2020|
-| Support for Tags/Baggage            | Beta v1    | March 16 2020|
-| gRPC Integrations                   | Beta v1    | March 16 2020|
-| OpenTelemetry Collector Exporter    | Beta v1    | March 16 2020|
-| OpenCensus Bridge                   | Beta v1    | March 16 2020|
-| Metrics SDK (Complete)              | Beta v1    | March 16 2020|
+| Component                          | Version | Target Date   |
+| ---------------------------------- | ------- | ------------- |
+| Stable API for metrics and tracing | Beta v2 | March 31 2020 |
+| Support for Tags/Baggage           | Beta v2 | March 31 2020 |
+| gRPC Integration                   | Beta v2 | March 31 2020 |

@@ -24,55 +24,61 @@ See the `metrics api`_ spec for terminology and context clarification.
 .. _metrics api:
     https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
 
-
+.. versionadded:: 0.1.0
+.. versionchanged:: 0.5.0
+    ``meter_provider`` was replaced by `get_meter_provider`,
+    ``set_preferred_meter_provider_implementation`` was replaced by
+    `set_meter_provider`.
 """
 import abc
-import logging
-from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
+from logging import getLogger
+from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
-from opentelemetry.util import loader
+from opentelemetry.configuration import Configuration  # type: ignore
 
-logger = logging.getLogger(__name__)
-
+logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
-class DefaultMetricHandle:
-    """The default MetricHandle.
+class DefaultBoundInstrument:
+    """The default bound metric instrument.
 
-    Used when no MetricHandle implementation is available.
+    Used when no bound instrument implementation is available.
     """
 
     def add(self, value: ValueT) -> None:
-        """No-op implementation of `CounterHandle` add.
+        """No-op implementation of `BoundCounter` add.
 
         Args:
-            value: The value to add to the handle.
+            value: The value to add to the bound metric instrument.
         """
 
     def record(self, value: ValueT) -> None:
-        """No-op implementation of `MeasureHandle` record.
+        """No-op implementation of `BoundMeasure` record.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to record to the bound metric instrument.
         """
 
+    def release(self) -> None:
+        """No-op implementation of release."""
 
-class CounterHandle:
+
+class BoundCounter:
     def add(self, value: ValueT) -> None:
-        """Increases the value of the handle by ``value``.
+        """Increases the value of the bound counter by ``value``.
 
         Args:
-            value: The value to add to the handle.
+            value: The value to add to the bound counter.
         """
 
 
-class MeasureHandle:
+class BoundMeasure:
     def record(self, value: ValueT) -> None:
-        """Records the given ``value`` to this handle.
+        """Records the given ``value`` to this bound measure.
 
         Args:
-            value: The value to record to the handle.
+            value: The value to record to the bound measure.
         """
 
 
@@ -80,11 +86,11 @@ class LabelSet(abc.ABC):
     """A canonicalized set of labels useful for preaggregation
 
     Re-usable LabelSet objects provide a potential optimization for scenarios
-    where handles might not be effective. For example, if the LabelSet will be
-    re-used but only used once per metrics, handles do not offer any
-    optimization. It may best to pre-compute a canonicalized LabelSet once and
-    re-use it with the direct calling convention. LabelSets are immutable and
-    should be opaque in implementation.
+    where bound metric instruments might not be effective. For example, if the
+    LabelSet will be re-used but only used once per metrics, bound metric
+    instruments do not offer any optimization. It may best to pre-compute a
+    canonicalized LabelSet once and re-use it with the direct calling
+    convention. LabelSets are immutable and should be opaque in implementation.
     """
 
 
@@ -99,42 +105,43 @@ class Metric(abc.ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
-    handle that the metric holds.
+    bound metric instrument that the metric holds.
     """
 
     @abc.abstractmethod
-    def get_handle(self, label_set: LabelSet) -> "object":
-        """Gets a handle, used for repeated-use of metrics instruments.
+    def bind(self, label_set: LabelSet) -> "object":
+        """Gets a bound metric instrument.
 
-        Handles are useful to reduce the cost of repeatedly recording a metric
-        with a pre-defined set of label values. All metric kinds (counter,
-        measure) support declaring a set of required label keys. The
-        values corresponding to these keys should be specified in every handle.
-        "Unspecified" label values, in cases where a handle is requested but
-        a value was not provided are permitted.
+        Bound metric instruments are useful to reduce the cost of repeatedly
+        recording a metric with a pre-defined set of label values. All metric
+        kinds (counter, measure) support declaring a set of required label
+        keys. The values corresponding to these keys should be specified in
+        every bound metric instrument. "Unspecified" label values, in cases
+        where a bound metric instrument is requested but a value was not
+        provided are permitted.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the bound instrument.
         """
 
 
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def get_handle(self, label_set: LabelSet) -> "DefaultMetricHandle":
-        """Gets a `DefaultMetricHandle`.
+    def bind(self, label_set: LabelSet) -> "DefaultBoundInstrument":
+        """Gets a `DefaultBoundInstrument`.
 
         Args:
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the bound instrument.
         """
-        return DefaultMetricHandle()
+        return DefaultBoundInstrument()
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """No-op implementation of `Counter` add.
 
         Args:
             value: The value to add to the counter metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the bound instrument.
         """
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
@@ -142,23 +149,23 @@ class DefaultMetric(Metric):
 
         Args:
             value: The value to record to this measure metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the bound instrument.
         """
 
 
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def get_handle(self, label_set: LabelSet) -> "CounterHandle":
-        """Gets a `CounterHandle`."""
-        return CounterHandle()
+    def bind(self, label_set: LabelSet) -> "BoundCounter":
+        """Gets a `BoundCounter`."""
+        return BoundCounter()
 
     def add(self, value: ValueT, label_set: LabelSet) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
             value: The value to add to the counter metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound counter.
         """
 
 
@@ -168,21 +175,22 @@ class Measure(Metric):
     Measure metrics represent raw statistics that are recorded.
     """
 
-    def get_handle(self, label_set: LabelSet) -> "MeasureHandle":
-        """Gets a `MeasureHandle` with a float value."""
-        return MeasureHandle()
+    def bind(self, label_set: LabelSet) -> "BoundMeasure":
+        """Gets a `BoundMeasure`."""
+        return BoundMeasure()
 
     def record(self, value: ValueT, label_set: LabelSet) -> None:
         """Records the ``value`` to the measure.
 
         Args:
             value: The value to record to this measure metric.
-            label_set: `LabelSet` to associate with the returned handle.
+            label_set: `LabelSet` to associate with the returned bound measure.
         """
 
 
 class Observer(abc.ABC):
-    """An observer type metric instrument used to capture a current set of values.
+    """An observer type metric instrument used to capture a current set of
+    values.
 
 
     Observer instruments are asynchronous, a callback is invoked with the
@@ -283,16 +291,15 @@ class Meter(abc.ABC):
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
-        Allows the functionality of acting upon multiple metrics with
-        a single API call. Implementations should find metric and handles that
-        match the key-value pairs in the label tuples.
+        Allows the functionality of acting upon multiple metrics with a single
+        API call. Implementations should find bound metric instruments that
+        match the key-value pairs in the labelset.
 
-        Args:
-            label_set: The `LabelSet` associated with all measurements in
-                the batch. A measurement is a tuple, representing the `Metric`
-                being recorded and the corresponding value to record.
-            record_tuples: A sequence of pairs of `Metric` s and the
-                corresponding value to record for that metric.
+        Args: label_set: The `LabelSet` associated with all measurements in the
+            batch. A measurement is a tuple, representing the `Metric` being
+            recorded and the corresponding value to record. record_tuples: A
+            sequence of pairs of `Metric` s and the corresponding value to
+            record for that metric.
         """
 
     @abc.abstractmethod
@@ -347,6 +354,14 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
+    def unregister_observer(self, observer: "Observer") -> None:
+        """Unregisters an ``Observer`` metric instrument.
+
+        Args:
+            observer: The observer to unregister.
+        """
+
+    @abc.abstractmethod
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         """Gets a `LabelSet` with the given labels.
 
@@ -392,20 +407,15 @@ class DefaultMeter(Meter):
     ) -> "Observer":
         return DefaultObserver()
 
+    def unregister_observer(self, observer: "Observer") -> None:
+        pass
+
     def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
         # pylint: disable=no-self-use
         return DefaultLabelSet()
 
 
-# Once https://github.com/python/mypy/issues/7092 is resolved,
-# the following type definition should be replaced with
-# from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = Callable[
-    [Type[MeterProvider]], Optional[MeterProvider]
-]
-
 _METER_PROVIDER = None
-_METER_PROVIDER_FACTORY = None
 
 
 def get_meter(
@@ -417,52 +427,24 @@ def get_meter(
     This function is a convenience wrapper for
     opentelemetry.metrics.meter_provider().get_meter
     """
-    return meter_provider().get_meter(
+    return get_meter_provider().get_meter(
         instrumenting_module_name, stateful, instrumenting_library_version
     )
 
 
-def meter_provider() -> MeterProvider:
-    """Gets the current global :class:`~.MeterProvider` object.
+def set_meter_provider(meter_provider: MeterProvider) -> None:
+    """Sets the current global :class:`~.MeterProvider` object."""
+    global _METER_PROVIDER  # pylint: disable=global-statement
+    _METER_PROVIDER = meter_provider
 
-    If there isn't one set yet, a default will be loaded.
-    """
-    global _METER_PROVIDER, _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
+
+def get_meter_provider() -> MeterProvider:
+    """Gets the current global :class:`~.MeterProvider` object."""
+    global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        # pylint:disable=protected-access
-        try:
-            _METER_PROVIDER = loader._load_impl(
-                MeterProvider, _METER_PROVIDER_FACTORY  # type: ignore
-            )
-        except TypeError:
-            # if we raised an exception trying to instantiate an
-            # abstract class, default to no-op meter impl
-            logger.warning(
-                "Unable to instantiate MeterProvider from meter provider factory.",
-                exc_info=True,
-            )
-            _METER_PROVIDER = DefaultMeterProvider()
-        _METER_PROVIDER_FACTORY = None
+        _METER_PROVIDER = (
+            Configuration().meter_provider  # type: ignore # pylint: disable=no-member
+        )
 
-    return _METER_PROVIDER
-
-
-def set_preferred_meter_provider_implementation(
-    factory: ImplementationFactory,
-) -> None:
-    """Set the factory to be used to create the meter provider.
-
-    See :mod:`opentelemetry.util.loader` for details.
-
-    This function may not be called after a meter is already loaded.
-
-    Args:
-        factory: Callback that should create a new :class:`MeterProvider` instance.
-    """
-    global _METER_PROVIDER_FACTORY  # pylint:disable=global-statement
-
-    if _METER_PROVIDER:
-        raise RuntimeError("MeterProvider already loaded.")
-
-    _METER_PROVIDER_FACTORY = factory
+    return _METER_PROVIDER  # type: ignore
