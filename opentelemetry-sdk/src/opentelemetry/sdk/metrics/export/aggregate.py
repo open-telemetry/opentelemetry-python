@@ -66,8 +66,10 @@ class CounterAggregator(Aggregator):
     def merge(self, other):
         with self._lock:
             self.checkpoint += other.checkpoint
-            if (other.last_update_timestamp is not None and
-                self.last_update_timestamp is not None):
+            if (
+                other.last_update_timestamp is not None
+                and self.last_update_timestamp is not None
+            ):
                 if self.last_update_timestamp < other.last_update_timestamp:
                     self.last_update_timestamp = other.last_update_timestamp
             elif self.last_update_timestamp is None:
@@ -123,8 +125,10 @@ class MinMaxSumCountAggregator(Aggregator):
             self.checkpoint = self._merge_checkpoint(
                 self.checkpoint, other.checkpoint
             )
-            if (other.last_update_timestamp is not None and
-                self.last_update_timestamp is not None):
+            if (
+                other.last_update_timestamp is not None
+                and self.last_update_timestamp is not None
+            ):
                 if self.last_update_timestamp < other.last_update_timestamp:
                     self.last_update_timestamp = other.last_update_timestamp
             elif self.last_update_timestamp is None:
@@ -155,17 +159,14 @@ class ObserverAggregator(Aggregator):
     def merge(self, other):
         self.mmsc.merge(other.mmsc)
         last = self.checkpoint.last
-        if (other.last_update_timestamp is not None and
-            self.last_update_timestamp is not None):
+        if (
+            other.last_update_timestamp is not None
+            and self.last_update_timestamp is not None
+        ):
             if self.last_update_timestamp < other.last_update_timestamp:
                 self.last_update_timestamp = other.last_update_timestamp
                 last = other.checkpoint.last
         elif self.last_update_timestamp is None:
             self.last_update_timestamp = other.last_update_timestamp
             last = other.checkpoint.last
-        self.checkpoint = self._TYPE(
-            *(
-                self.mmsc.checkpoint
-                + (last,)
-            )
-        )
+        self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (last,)))
