@@ -354,6 +354,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         mmsc1.checkpoint = checkpoint1
         mmsc2.checkpoint = checkpoint2
 
+        mmsc1.last_update_timestamp = 100
         mmsc2.last_update_timestamp = 123
 
         mmsc1.merge(mmsc2)
@@ -491,6 +492,7 @@ class TestObserverAggregator(unittest.TestCase):
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer2.mmsc.checkpoint = mmsc_checkpoint2
 
+        observer1.last_update_timestamp = 100
         observer2.last_update_timestamp = 123
 
         observer1.checkpoint = checkpoint1
@@ -519,6 +521,7 @@ class TestObserverAggregator(unittest.TestCase):
 
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer1.checkpoint = checkpoint1
+        observer1.last_update_timestamp = 100
 
         observer1.merge(observer2)
 
