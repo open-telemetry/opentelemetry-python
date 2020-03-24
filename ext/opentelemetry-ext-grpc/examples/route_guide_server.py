@@ -27,6 +27,20 @@ import grpc
 import route_guide_pb2
 import route_guide_pb2_grpc
 import route_guide_resources
+from opentelemetry import trace
+from opentelemetry.ext.grpc import server_interceptor
+from opentelemetry.ext.grpc.grpcext import intercept_server
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleExportSpanProcessor,
+)
+
+trace.set_tracer_provider(TracerProvider())
+trace.get_tracer_provider().add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
+tracer = trace.get_tracer(__name__)
 
 
 def get_feature(feature_db, point):
@@ -122,6 +136,8 @@ class RouteGuideServicer(route_guide_pb2_grpc.RouteGuideServicer):
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = intercept_server(server, server_interceptor(tracer))
+
     route_guide_pb2_grpc.add_RouteGuideServicer_to_server(
         RouteGuideServicer(), server
     )

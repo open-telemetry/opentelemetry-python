@@ -17,6 +17,7 @@
 
 """The Python implementation of the gRPC route guide client."""
 
+import logging
 import random
 
 import grpc
@@ -25,6 +26,8 @@ import route_guide_pb2
 import route_guide_pb2_grpc
 import route_guide_resources
 from opentelemetry import trace
+from opentelemetry.ext.grpc import client_interceptor
+from opentelemetry.ext.grpc.grpcext import intercept_channel
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -118,9 +121,6 @@ def guide_route_chat(stub):
 
 def run():
 
-    from opentelemetry.ext.grpc.grpcext import intercept_channel
-    from opentelemetry.ext.grpc import client_interceptor
-
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
@@ -128,15 +128,24 @@ def run():
         channel = intercept_channel(channel, client_interceptor(tracer))
 
         stub = route_guide_pb2_grpc.RouteGuideStub(channel)
+
+        # Unary
         print("-------------- GetFeature --------------")
         guide_get_feature(stub)
+
+        # Server streaming
         print("-------------- ListFeatures --------------")
         guide_list_features(stub)
+
+        # Client streaming
         print("-------------- RecordRoute --------------")
         guide_record_route(stub)
+
+        # Bidirectional streaming
         print("-------------- RouteChat --------------")
         guide_route_chat(stub)
 
 
 if __name__ == "__main__":
+    logging.basicConfig()
     run()
