@@ -18,7 +18,13 @@ from grpc_tools import protoc
 
 def main():
     return protoc.main(
-        ["-I.", "--python_out=.", "--grpc_python_out=.", "helloworld.proto"]
+        [
+            "-I.",
+            "--python_out=.",
+            "--grpc_python_out=.",
+            "helloworld.proto",
+            "route_guide.proto",
+        ]
     )
 
 
