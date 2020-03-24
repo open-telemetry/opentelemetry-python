@@ -197,69 +197,49 @@ class OpenTelemetryServerInterceptor(
 
             return response
 
-    # # For RPCs that stream responses, the result can be a generator. To record
-    # # the span across the generated responses and detect any errors, we wrap the
-    # # result in a new generator that yields the response values.
-    # def _intercept_server_stream(
-    #     self, request_or_iterator, servicer_context, server_info, handler
-    # ):
-    #     with self._start_span(
-    #         servicer_context, server_info.full_method
-    #     ) as span:
-    #         rpc_info = RpcInfo(
-    #             full_method=server_info.full_method,
-    #             metadata=servicer_context.invocation_metadata(),
-    #             timeout=servicer_context.time_remaining(),
-    #         )
-    #         if not server_info.is_client_stream:
-    #             rpc_info.request = request_or_iterator
-    #         servicer_context = _OpenTelemetryServicerContext(
-    #             servicer_context, span
-    #         )
-    #         try:
-    #             result = handler(request_or_iterator, servicer_context)
-    #             for response in result:
-    #                 yield response
-    #         except Exception:
-    #             e = sys.exc_info()[0]
-    #             span.set_tag("error", True)
-    #             span.log_kv({"event": "error", "error.object": e})
-    #             rpc_info.error = e
-    #             raise
-    #         _check_error_code(span, servicer_context, rpc_info)
+    # For RPCs that stream responses, the result can be a generator. To record
+    # the span across the generated responses and detect any errors, we wrap
+    # the result in a new generator that yields the response values.
+    def _intercept_server_stream(
+        self, request_or_iterator, servicer_context, server_info, handler
+    ):
+        with self._start_span(
+            servicer_context, server_info.full_method
+        ) as span:
+            rpc_info = RpcInfo(
+                full_method=server_info.full_method,
+                metadata=servicer_context.invocation_metadata(),
+                timeout=servicer_context.time_remaining(),
+            )
+            if not server_info.is_client_stream:
+                rpc_info.request = request_or_iterator
+            servicer_context = _OpenTelemetryServicerContext(
+                servicer_context, span
+            )
+            result = handler(request_or_iterator, servicer_context)
+            for response in result:
+                yield response
+            _check_error_code(span, servicer_context, rpc_info)
 
     def intercept_stream(
         self, request_or_iterator, servicer_context, server_info, handler
     ):
-        pass
-
-    # def intercept_stream(
-    #     self, request_or_iterator, servicer_context, server_info, handler
-    # ):
-    #     """TODO doc and types"""
-    #     if server_info.is_server_stream:
-    #         return self._intercept_server_stream(
-    #             request_or_iterator, servicer_context, server_info, handler
-    #         )
-    #     with self._start_span(
-    #         servicer_context, server_info.full_method
-    #     ) as span:
-    #         rpc_info = RpcInfo(
-    #             full_method=server_info.full_method,
-    #             metadata=servicer_context.invocation_metadata(),
-    #             timeout=servicer_context.time_remaining(),
-    #         )
-    #         servicer_context = _OpenTelemetryServicerContext(
-    #             servicer_context, span
-    #         )
-    #         try:
-    #             response = handler(request_or_iterator, servicer_context)
-    #         except Exception:
-    #             e = sys.exc_info()[0]
-    #             span.set_tag("error", True)
-    #             span.log_kv({"event": "error", "error.object": e})
-    #             rpc_info.error = e
-    #             raise
-    #         _check_error_code(span, servicer_context, rpc_info)
-    #         rpc_info.response = response
-    #         return response
+        if server_info.is_server_stream:
+            return self._intercept_server_stream(
+                request_or_iterator, servicer_context, server_info, handler
+            )
+        with self._start_span(
+            servicer_context, server_info.full_method
+        ) as span:
+            rpc_info = RpcInfo(
+                full_method=server_info.full_method,
+                metadata=servicer_context.invocation_metadata(),
+                timeout=servicer_context.time_remaining(),
+            )
+            servicer_context = _OpenTelemetryServicerContext(
+                servicer_context, span
+            )
+            response = handler(request_or_iterator, servicer_context)
+            _check_error_code(span, servicer_context, rpc_info)
+            rpc_info.response = response
+            return response
