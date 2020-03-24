@@ -101,13 +101,12 @@ class OpenTelemetryClientInterceptor(
         return _GuardedSpan(self._start_span(*args, **kwargs))
 
     def intercept_unary(self, request, metadata, client_info, invoker):
+        if not metadata:
+            mutable_metadata = OrderedDict()
+        else:
+            mutable_metadata = OrderedDict(metadata)
+
         with self._start_guarded_span(client_info.full_method) as guarded_span:
-
-            if not metadata:
-                mutable_metadata = OrderedDict()
-            else:
-                mutable_metadata = OrderedDict(metadata)
-
             _inject_span_context(mutable_metadata)
             metadata = tuple(mutable_metadata.items())
 
@@ -126,8 +125,14 @@ class OpenTelemetryClientInterceptor(
     def _intercept_server_stream(
         self, request_or_iterator, metadata, client_info, invoker
     ):
-        with self._start_span(client_info.full_method) as span:
-            metadata = _inject_span_context(self._tracer, span, metadata)
+        if not metadata:
+            mutable_metadata = OrderedDict()
+        else:
+            mutable_metadata = OrderedDict(metadata)
+
+        with self._start_span(client_info.full_method):
+            _inject_span_context(mutable_metadata)
+            metadata = tuple(mutable_metadata.items())
             rpc_info = RpcInfo(
                 full_method=client_info.full_method,
                 metadata=metadata,
@@ -137,8 +142,6 @@ class OpenTelemetryClientInterceptor(
                 rpc_info.request = request_or_iterator
             result = invoker(request_or_iterator, metadata)
             for response in result:
-                if self._log_payloads:
-                    span.log_kv({"response": response})
                 yield response
 
     def intercept_stream(
@@ -148,10 +151,15 @@ class OpenTelemetryClientInterceptor(
             return self._intercept_server_stream(
                 request_or_iterator, metadata, client_info, invoker
             )
+
+        if not metadata:
+            mutable_metadata = OrderedDict()
+        else:
+            mutable_metadata = OrderedDict(metadata)
+
         with self._start_guarded_span(client_info.full_method) as guarded_span:
-            metadata = _inject_span_context(
-                self._tracer, guarded_span.span, metadata
-            )
+            _inject_span_context(mutable_metadata)
+            metadata = tuple(mutable_metadata.items())
             rpc_info = RpcInfo(
                 full_method=client_info.full_method,
                 metadata=metadata,
