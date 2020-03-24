@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-dbapi/README.rst
-
-
-Module contents
----------------
+OpenTelemetry Database API Integration
+======================================
 
 .. automodule:: opentelemetry.ext.dbapi
     :members:
