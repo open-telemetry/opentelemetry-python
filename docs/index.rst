@@ -54,26 +54,13 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     pip install -e ./ext/opentelemetry-ext-{integration}
 
 
-Quick Start
------------
+.. toctree::
+    :maxdepth: 1
+    :caption: Getting Started
+    :name: getting-started
 
-OpenTelemetry can be used to emit distributed traces and metrics from your application.
-The following are two simple examples using the API and SDK, you can find more
-elaborated examples in `Examples`_.
+    getting-started
 
-.. TODO: Link to complete and better examples
-
-Tracing
-~~~~~~~
-
-.. literalinclude:: trace_example.py
-  :language: python
-
-Metrics
-~~~~~~~
-
-.. literalinclude:: metrics_example.py
-  :language: python
 
 .. toctree::
     :maxdepth: 1
@@ -84,7 +71,7 @@ Metrics
     sdk/sdk
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: OpenTelemetry Integrations
     :name: integrations
     :glob:

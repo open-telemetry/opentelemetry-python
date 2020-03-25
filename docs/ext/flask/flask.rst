@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-flask/README.rst
-
-
-Module contents
----------------
+OpenTelemetry Flask Integration
+===============================
 
 .. automodule:: opentelemetry.ext.flask
     :members:

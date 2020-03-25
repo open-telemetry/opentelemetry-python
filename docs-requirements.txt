@@ -11,3 +11,4 @@ flask~=1.0
 mysql-connector-python ~=  8.0
 wrapt >= 1.0.0, < 2.0.0
 psycopg2-binary >= 2.7.3.1
+prometheus_client >= 0.5.0, < 1.0.0
