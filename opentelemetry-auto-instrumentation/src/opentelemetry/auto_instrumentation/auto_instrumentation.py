@@ -20,7 +20,7 @@ from sys import argv
 
 from pkg_resources import iter_entry_points
 
-_LOG = getLogger(__file__)
+logger = getLogger(__file__)
 
 
 def run() -> None:
@@ -30,9 +30,9 @@ def run() -> None:
     ):
         try:
             entry_point.load()().instrument()  # type: ignore
-            _LOG.debug("Instrumented %s", entry_point.name)
+            logger.debug("Instrumented %s", entry_point.name)
 
         except Exception:  # pylint: disable=broad-except
-            _LOG.exception("Instrumenting of %s failed", entry_point.name)
+            logger.exception("Instrumenting of %s failed", entry_point.name)
 
     run_path(argv[1], run_name="__main__")  # type: ignore
