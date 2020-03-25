@@ -3,7 +3,7 @@ OpenTelemetry Auto Instrumentation
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-api.svg
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-auto-instrumentation.svg
    :target: https://pypi.org/project/opentelemetry-auto-instrumentation/
 
 Installation
