@@ -18,13 +18,13 @@ This library borrows heavily from the OpenTelemetry gRPC integration:
 https://github.com/opentracing-contrib/python-grpc
 """
 
-import logging
+from contextlib import contextmanager
 from typing import List
 
 import grpc
 
 from opentelemetry import propagators, trace
-from opentelemetry.context import attach
+from opentelemetry.context import attach, detach
 
 from . import grpcext
 from ._utilities import RpcInfo
@@ -132,70 +132,51 @@ class OpenTelemetryServerInterceptor(
     def __init__(self, tracer):
         self._tracer = tracer
 
-    def _start_span(self, servicer_context, method):
+    @contextmanager
+    def _set_remote_context(self, servicer_context):
         metadata = servicer_context.invocation_metadata()
-        error = None
+        if metadata:
+            md_dict = {md.key: md.value for md in metadata}
 
-        try:
-            if metadata:
-                md_dict = {md.key: md.value for md in metadata}
+            def get_from_grpc_metadata(metadata, key) -> List[str]:
+                return [md_dict[key]] if key in md_dict else []
 
-                def get_from_grpc_metadata(metadata, key) -> List[str]:
-                    return [md_dict[key]] if key in md_dict else []
+            # Update the context with the traceparent from the RPC metadata.
+            ctx = propagators.extract(get_from_grpc_metadata, metadata)
+            token = attach(ctx)
+            try:
+                yield
+            finally:
+                detach(token)
+        else:
+            yield
 
-                # set the request-global context!
-                ctx = propagators.extract(get_from_grpc_metadata, metadata)
-                attach(ctx)
-
-        except Exception as ex:
-            logging.exception("tracer.extract() failed")
-            error = ex
-
-        # TODO: set gRPC attributes
-        # tags = {
-        #     ot_tags.COMPONENT: "grpc",
-        #     ot_tags.SPAN_KIND: ot_tags.SPAN_KIND_RPC_SERVER,
-        # }
-
-        # TODO: set IP attributes
-        # _add_peer_tags(servicer_context.peer(), tags)
-
-        # span = self._tracer.start_span(
-        #     operation_name=method, child_of=span_context, tags=tags
-        # )
-
+    def _start_span(self, method):
         span = self._tracer.start_as_current_span(
             name=method, kind=trace.SpanKind.SERVER
         )
-
-        # TODO: add error/stacktrace attribute
-        if error is not None:
-            pass
-            # span.log_kv({"event": "error", "error.object": error})
-
         return span
 
     def intercept_unary(self, request, servicer_context, server_info, handler):
 
-        with self._start_span(
-            servicer_context, server_info.full_method
-        ) as span:
-            rpc_info = RpcInfo(
-                full_method=server_info.full_method,
-                metadata=servicer_context.invocation_metadata(),
-                timeout=servicer_context.time_remaining(),
-                request=request,
-            )
-            servicer_context = _OpenTelemetryServicerContext(
-                servicer_context, span
-            )
-            response = handler(request, servicer_context)
+        with self._set_remote_context(servicer_context):
+            with self._start_span(server_info.full_method) as span:
+                rpc_info = RpcInfo(
+                    full_method=server_info.full_method,
+                    metadata=servicer_context.invocation_metadata(),
+                    timeout=servicer_context.time_remaining(),
+                    request=request,
+                )
+                servicer_context = _OpenTelemetryServicerContext(
+                    servicer_context, span
+                )
+                response = handler(request, servicer_context)
 
-            _check_error_code(span, servicer_context, rpc_info)
+                _check_error_code(span, servicer_context, rpc_info)
 
-            rpc_info.response = response
+                rpc_info.response = response
 
-            return response
+                return response
 
     # For RPCs that stream responses, the result can be a generator. To record
     # the span across the generated responses and detect any errors, we wrap
