@@ -74,17 +74,17 @@ This is done in 3 separate consoles, one to run each of the scripts that make up
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/formatter.py
+$ python opentelemetry-python/opentelemetry-auto-instrumentation/example/formatter.py
 ```
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/publisher_instrumented.py
+$ python opentelemetry-python/opentelemetry-auto-instrumentation/example/publisher_instrumented.py
 ```
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/hello.py testing
+$ python opentelemetry-python/opentelemetry-auto-instrumentation/example/hello.py testing
 ```
 
 The execution of `publisher_instrumented.py` should return an output similar to:
@@ -106,7 +106,7 @@ $ opentelemetry-auto-instrumentation opentelemetry-python/opentelemetry-auto-ins
 In the console where you previously executed `hello.py`, run again this again:
 
 ```sh
-$ python3 opentelemetry-python/opentelemetry-auto-instrumentation/example/hello.py testing
+$ python opentelemetry-python/opentelemetry-auto-instrumentation/example/hello.py testing
 ```
 
 The execution of `publisher_uninstrumented.py` should return an output similar to:
