@@ -13,9 +13,28 @@
 # limitations under the License.
 
 """
-The opentelemetry-ext-dbapi package allows tracing queries made by the
-ibraries following Ptyhon Database API specification:
-https://www.python.org/dev/peps/pep-0249/
+The trace integration with Database API supports libraries following the
+`Python Database API Specification v2.0. <https://www.python.org/dev/peps/pep-0249/>`_
+
+Usage
+-----
+
+.. code-block:: python
+
+    import mysql.connector
+    import pyodbc
+    from opentelemetry.trace import tracer_provider
+    from opentelemetry.ext.dbapi import trace_integration
+
+    trace.set_tracer_provider(TracerProvider())
+    tracer = trace.get_tracer(__name__)
+    # Ex: mysql.connector
+    trace_integration(tracer_provider(), mysql.connector, "connect", "mysql", "sql")
+    # Ex: pyodbc
+    trace_integration(tracer_provider(), pyodbc, "Connection", "odbc", "sql")
+
+API
+---
 """
 
 import functools
@@ -40,6 +59,7 @@ def trace_integration(
 ):
     """Integrate with DB API library.
         https://www.python.org/dev/peps/pep-0249/
+
         Args:
             tracer: The :class:`Tracer` to use.
             connect_module: Module name where connect method is available.

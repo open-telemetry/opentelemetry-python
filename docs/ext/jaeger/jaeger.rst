@@ -1,12 +1,11 @@
-.. include:: ../../../ext/opentelemetry-ext-jaeger/README.rst
-
-Module contents
----------------
+Opentelemetry Jaeger Exporter
+=============================
 
 .. automodule:: opentelemetry.ext.jaeger
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 Submodules
 ----------
