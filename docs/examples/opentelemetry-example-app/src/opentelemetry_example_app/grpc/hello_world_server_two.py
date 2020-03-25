@@ -24,16 +24,15 @@ import grpc
 import helloworld_pb2
 import helloworld_pb2_grpc
 from opentelemetry import trace
-from opentelemetry.ext.grpc import server_interceptor
-from opentelemetry.ext.grpc.grpcext import intercept_server
+from opentelemetry.ext.grpc import _server
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
 
-trace.set_tracer_provider(TracerProvider())
-trace.get_tracer_provider().add_span_processor(
+trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+trace.tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 tracer = trace.get_tracer(__name__)
@@ -46,8 +45,10 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
 
 def serve():
 
-    server = grpc.server(futures.ThreadPoolExecutor())
-    server = intercept_server(server, server_interceptor(tracer))
+    interceptor = _server.OpenTelemetryServerInterceptor(tracer)
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=10), interceptors=(interceptor,)
+    )
 
     helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port("[::]:50051")

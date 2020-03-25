@@ -21,8 +21,6 @@ import logging
 
 import grpc
 
-import helloworld_pb2
-import helloworld_pb2_grpc
 from opentelemetry import trace
 from opentelemetry.ext.grpc import client_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_channel
@@ -31,6 +29,16 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+
+try:
+    # Relative imports should work in the context of the package, e.g.:
+    # `python -m opentelemetry_example_app.grpc.hello_world_client`.
+    from .gen import helloworld_pb2, helloworld_pb2_grpc
+except ImportError:
+    # This will fail when running the file as a script, e.g.:
+    # `./hello_world_client.py`
+    # fall back to importing from the same directory in this case.
+    from gen import helloworld_pb2, helloworld_pb2_grpc
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(

@@ -24,9 +24,7 @@ from concurrent import futures
 
 import grpc
 
-import route_guide_pb2
-import route_guide_pb2_grpc
-import route_guide_resources
+
 from opentelemetry import trace
 from opentelemetry.ext.grpc import server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server
@@ -35,6 +33,18 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+
+try:
+    # Relative imports should work in the context of the package, e.g.:
+    # `python -m opentelemetry_example_app.grpc.route_guide_server`.
+    from .gen import route_guide_pb2, route_guide_pb2_grpc
+    from . import route_guide_resources
+except ImportError:
+    # This will fail when running the file as a script, e.g.:
+    # `./route_guide_server.py`
+    # fall back to importing from the same directory in this case.
+    from gen import route_guide_pb2, route_guide_pb2_grpc
+    import route_guide_resources
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
