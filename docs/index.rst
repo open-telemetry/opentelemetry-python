@@ -68,6 +68,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
     api/api
     sdk/sdk
+    auto_instrumentation/auto_instrumentation
 
 .. toctree::
     :maxdepth: 1
@@ -82,9 +83,6 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     :caption: Examples
     :name: examples
     :glob:
-    :caption: OpenTelemetry Auto Instrumentation:
-
-    opentelemetry.auto_instrumentation.patcher
 
     examples/**
 
