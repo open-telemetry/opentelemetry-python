@@ -1,4 +1,4 @@
-# Copyright The OpenTelemetry Authors
+# Copyright 2019, OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 
 import atexit
 import threading
+
+from opentelemetry.context import attach, detach, set_value
 
 
 class PushController(threading.Thread):
@@ -50,7 +52,9 @@ class PushController(threading.Thread):
     def tick(self):
         # Collect all of the meter's metrics to be exported
         self.meter.collect()
+        token = attach(set_value("suppress_instrumentation", True))
         # Export the given metrics in the batcher
         self.exporter.export(self.meter.batcher.checkpoint_set())
+        detach(token)
         # Perform post-exporting logic based on batcher configuration
         self.meter.batcher.finished_collection()
