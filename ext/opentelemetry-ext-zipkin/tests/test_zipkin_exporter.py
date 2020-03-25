@@ -35,6 +35,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
         )
 
         self._test_span = trace.Span("test_span", context=context)
@@ -114,10 +115,17 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         span_context = trace_api.SpanContext(
-            trace_id, span_id, trace_flags=TraceFlags(TraceFlags.SAMPLED)
+            trace_id,
+            span_id,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
-        parent_context = trace_api.SpanContext(trace_id, parent_id)
-        other_context = trace_api.SpanContext(trace_id, other_id)
+        parent_context = trace_api.SpanContext(
+            trace_id, parent_id, is_remote=False
+        )
+        other_context = trace_api.SpanContext(
+            trace_id, other_id, is_remote=False
+        )
 
         event_attributes = {
             "annotation_bool": True,

@@ -41,6 +41,7 @@ def get_child_parent_new_carrier(old_carrier):
         trace_api.SpanContext(
             parent_context.trace_id,
             trace.generate_span_id(),
+            is_remote=False,
             trace_flags=parent_context.trace_flags,
             trace_state=parent_context.trace_state,
         ),

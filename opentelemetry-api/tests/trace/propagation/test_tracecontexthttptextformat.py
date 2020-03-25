@@ -156,7 +156,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(
-            trace.SpanContext(self.TRACE_ID, self.SPAN_ID)
+            trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
         ctx = set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)

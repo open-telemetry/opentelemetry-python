@@ -326,9 +326,9 @@ class SpanContext:
         self,
         trace_id: int,
         span_id: int,
+        is_remote: bool,
         trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
-        is_remote: bool = False,
     ) -> None:
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
@@ -408,10 +408,11 @@ class DefaultSpan(Span):
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
 INVALID_SPAN_CONTEXT = SpanContext(
-    INVALID_TRACE_ID,
-    INVALID_SPAN_ID,
-    DEFAULT_TRACE_OPTIONS,
-    DEFAULT_TRACE_STATE,
+    trace_id=INVALID_TRACE_ID,
+    span_id=INVALID_SPAN_ID,
+    is_remote=False,
+    trace_flags=DEFAULT_TRACE_OPTIONS,
+    trace_state=DEFAULT_TRACE_STATE,
 )
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
