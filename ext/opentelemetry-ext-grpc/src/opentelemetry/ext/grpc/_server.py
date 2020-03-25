@@ -14,7 +14,7 @@
 
 """Implementation of the service-side open-telemetry interceptor.
 
-This library borrows heavily from the OpenTelemetry gRPC integration:
+This library borrows heavily from the OpenTracing gRPC integration:
 https://github.com/opentracing-contrib/python-grpc
 """
 
