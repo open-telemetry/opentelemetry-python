@@ -184,23 +184,22 @@ class OpenTelemetryServerInterceptor(
     def _intercept_server_stream(
         self, request_or_iterator, servicer_context, server_info, handler
     ):
-        with self._start_span(
-            servicer_context, server_info.full_method
-        ) as span:
-            rpc_info = RpcInfo(
-                full_method=server_info.full_method,
-                metadata=servicer_context.invocation_metadata(),
-                timeout=servicer_context.time_remaining(),
-            )
-            if not server_info.is_client_stream:
-                rpc_info.request = request_or_iterator
-            servicer_context = _OpenTelemetryServicerContext(
-                servicer_context, span
-            )
-            result = handler(request_or_iterator, servicer_context)
-            for response in result:
-                yield response
-            _check_error_code(span, servicer_context, rpc_info)
+        with self._set_remote_context(servicer_context):
+            with self._start_span(server_info.full_method) as span:
+                rpc_info = RpcInfo(
+                    full_method=server_info.full_method,
+                    metadata=servicer_context.invocation_metadata(),
+                    timeout=servicer_context.time_remaining(),
+                )
+                if not server_info.is_client_stream:
+                    rpc_info.request = request_or_iterator
+                servicer_context = _OpenTelemetryServicerContext(
+                    servicer_context, span
+                )
+                result = handler(request_or_iterator, servicer_context)
+                for response in result:
+                    yield response
+                _check_error_code(span, servicer_context, rpc_info)
 
     def intercept_stream(
         self, request_or_iterator, servicer_context, server_info, handler
@@ -209,18 +208,17 @@ class OpenTelemetryServerInterceptor(
             return self._intercept_server_stream(
                 request_or_iterator, servicer_context, server_info, handler
             )
-        with self._start_span(
-            servicer_context, server_info.full_method
-        ) as span:
-            rpc_info = RpcInfo(
-                full_method=server_info.full_method,
-                metadata=servicer_context.invocation_metadata(),
-                timeout=servicer_context.time_remaining(),
-            )
-            servicer_context = _OpenTelemetryServicerContext(
-                servicer_context, span
-            )
-            response = handler(request_or_iterator, servicer_context)
-            _check_error_code(span, servicer_context, rpc_info)
-            rpc_info.response = response
-            return response
+        with self._set_remote_context(servicer_context):
+            with self._start_span(server_info.full_method) as span:
+                rpc_info = RpcInfo(
+                    full_method=server_info.full_method,
+                    metadata=servicer_context.invocation_metadata(),
+                    timeout=servicer_context.time_remaining(),
+                )
+                servicer_context = _OpenTelemetryServicerContext(
+                    servicer_context, span
+                )
+                response = handler(request_or_iterator, servicer_context)
+                _check_error_code(span, servicer_context, rpc_info)
+                rpc_info.response = response
+                return response
