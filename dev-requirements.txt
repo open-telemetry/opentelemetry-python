@@ -8,4 +8,4 @@ sphinx-rtd-theme~=0.4
 sphinx-autodoc-typehints~=1.10.2
 pytest!=5.2.3
 pytest-cov>=2.8
-readme-renderer==24.0
+readme-renderer~=24.0
