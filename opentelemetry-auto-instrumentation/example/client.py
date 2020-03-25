@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Flask, request
+from sys import argv
+
+from flask import Flask
+from requests import get
 
 from opentelemetry import propagators, trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -20,7 +23,6 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-from utils import get_as_list
 
 app = Flask(__name__)
 
@@ -32,18 +34,17 @@ trace.get_tracer_provider().add_span_processor(
 )
 
 
-@app.route("/format_request")
-def format_request():
+assert len(argv) == 2
 
-    with tracer.start_as_current_span(
-        "format_request",
-        parent=propagators.extract(get_as_list, request.headers)[
-            "current-span"
-        ],
-    ):
-        hello_to = request.args.get("helloTo")
-        return "Hello, %s!" % hello_to
+with tracer.start_as_current_span("client"):
 
+    with tracer.start_as_current_span("client-server"):
+        headers = {}
+        propagators.inject(dict.__setitem__, headers)
+        requested = get(
+            "http://localhost:8082/server_request",
+            params={"param": argv[1]},
+            headers=headers,
+        )
 
-if __name__ == "__main__":
-    app.run(port=8081)
+        assert requested.status_code == 200

@@ -20,7 +20,6 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-from utils import get_as_list
 
 app = Flask(__name__)
 
@@ -32,18 +31,17 @@ trace.get_tracer_provider().add_span_processor(
 )
 
 
-@app.route("/publish_request")
-def publish_request():
+@app.route("/server_request")
+def server_request():
 
     with tracer.start_as_current_span(
-        "publish_request",
-        parent=propagators.extract(get_as_list, request.headers)[
-            "current-span"
-        ],
+        "server_request",
+        parent=propagators.extract(
+            lambda dict_, key: dict_.get(key, []), request.headers
+        )["current-span"],
     ):
-        hello_str = request.args.get("helloStr")
-        print(hello_str)
-        return "published"
+        print(request.args.get("param"))
+        return "served"
 
 
 if __name__ == "__main__":
