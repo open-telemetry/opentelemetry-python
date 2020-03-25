@@ -14,3 +14,4 @@ services:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpassword
       POSTGRES_DB: opentelemetry-tests
+
