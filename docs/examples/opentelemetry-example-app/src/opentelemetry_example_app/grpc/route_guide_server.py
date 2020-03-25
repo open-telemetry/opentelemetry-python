@@ -24,7 +24,6 @@ from concurrent import futures
 
 import grpc
 
-
 from opentelemetry import trace
 from opentelemetry.ext.grpc import server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server

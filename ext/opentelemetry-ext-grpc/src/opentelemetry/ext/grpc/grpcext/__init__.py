@@ -55,8 +55,9 @@ class StreamClientInterceptor(six.with_metaclass(abc.ABCMeta)):
     """Affords intercepting stream RPCs on the invocation-side."""
 
     @abc.abstractmethod
-    def intercept_stream(self, request_or_iterator, metadata, client_info,
-                         invoker):
+    def intercept_stream(
+        self, request_or_iterator, metadata, client_info, invoker
+    ):
         """Intercepts stream RPCs on the invocation-side.
 
     Args:
@@ -92,6 +93,7 @@ def intercept_channel(channel, *interceptors):
       nor StreamClientInterceptor.
   """
     from . import _interceptor
+
     return _interceptor.intercept_channel(channel, *interceptors)
 
 
@@ -138,8 +140,9 @@ class StreamServerInterceptor(six.with_metaclass(abc.ABCMeta)):
     """Affords intercepting stream RPCs on the service-side."""
 
     @abc.abstractmethod
-    def intercept_stream(self, request_or_iterator, servicer_context,
-                         server_info, handler):
+    def intercept_stream(
+        self, request_or_iterator, servicer_context, server_info, handler
+    ):
         """Intercepts stream RPCs on the service-side.
 
     Args:
@@ -174,12 +177,18 @@ def intercept_server(server, *interceptors):
       nor StreamServerInterceptor.
   """
     from . import _interceptor
+
     return _interceptor.intercept_server(server, *interceptors)
 
 
-###################################  __all__  #################################
-
-__all__ = ('UnaryClientInterceptor', 'StreamClientInfo',
-           'StreamClientInterceptor', 'UnaryServerInfo', 'StreamServerInfo',
-           'UnaryServerInterceptor', 'StreamServerInterceptor',
-           'intercept_channel', 'intercept_server',)
+__all__ = (
+    "UnaryClientInterceptor",
+    "StreamClientInfo",
+    "StreamClientInterceptor",
+    "UnaryServerInfo",
+    "StreamServerInfo",
+    "UnaryServerInterceptor",
+    "StreamServerInterceptor",
+    "intercept_channel",
+    "intercept_server",
+)

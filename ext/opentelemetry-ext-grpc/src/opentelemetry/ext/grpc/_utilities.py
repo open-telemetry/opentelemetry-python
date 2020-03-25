@@ -16,14 +16,15 @@
 
 
 class RpcInfo:
-
-    def __init__(self,
-                 full_method=None,
-                 metadata=None,
-                 timeout=None,
-                 request=None,
-                 response=None,
-                 error=None):
+    def __init__(
+        self,
+        full_method=None,
+        metadata=None,
+        timeout=None,
+        request=None,
+        response=None,
+        error=None,
+    ):
         self.full_method = full_method
         self.metadata = metadata
         self.timeout = timeout
