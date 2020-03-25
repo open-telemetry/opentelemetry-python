@@ -58,14 +58,12 @@ $ source auto_instrumentation/bin/activate
 # Installation
 
 ```sh
-$ git clone git@github.com:open-telemetry/opentelemetry-python.git
-$ cd opentelemetry-python
-$ pip3 install -e opentelemetry-api
-$ pip3 install -e opentelemetry-sdk
-$ pip3 install -e opentelemetry-auto-instrumentation
-$ pip3 install -e ext/opentelemetry-ext-flask
-$ pip3 install flask
-$ pip3 install requests
+$ pip install opentelemetry-api
+$ pip install opentelemetry-sdk
+$ pip install opentelemetry-auto-instrumentation
+$ pip install ext/opentelemetry-ext-flask
+$ pip install flask
+$ pip install requests
 ```
 
 # Execution
