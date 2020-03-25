@@ -42,6 +42,8 @@ def expected_attributes(override_attributes):
 
 class TestFlaskIntegration(WsgiTestBase):
     def setUp(self):
+        # No instrumentation code is here because it is present in the
+        # conftest.py file next to this file.
         super().setUp()
 
         self.app = Flask(__name__)
