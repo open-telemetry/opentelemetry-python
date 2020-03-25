@@ -25,6 +25,7 @@ from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
+from pytest import fixture
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD ", "testpassword")
@@ -36,34 +37,41 @@ MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME ", "opentelemetry-tests")
 class TestFunctionalMysql(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls._connection = None
+        cls._cursor = None
         cls._tracer_provider = TracerProvider()
         cls._tracer = Tracer(cls._tracer_provider, None)
         cls._span_exporter = InMemorySpanExporter()
         cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
         cls._tracer_provider.add_span_processor(cls._span_processor)
         trace_integration(cls._tracer)
-        # Try to connect to DB
-        for i in range(5):
-            try:
-                cls._connection = mysql.connector.connect(
-                    user=MYSQL_USER,
-                    password=MYSQL_PASSWORD,
-                    host=MYSQL_HOST,
-                    port=MYSQL_PORT,
-                    database=MYSQL_DB_NAME,
-                )
-                cls._cursor = cls._connection.cursor()
-                break
-            except mysql.connector.Error as err:
-                print(err)
-            time.sleep(5)
 
     @classmethod
     def tearDownClass(cls):
-        cls._connection.close()
+        if cls._connection:
+            cls._connection.close()
 
     def setUp(self):
         self._span_exporter.clear()
+
+    @fixture(autouse=True)
+    def connect_to_db(self):
+        if self._connection is None:
+            # Try to connect to DB
+            for i in range(5):
+                try:
+                    self._connection = mysql.connector.connect(
+                        user=MYSQL_USER,
+                        password=MYSQL_PASSWORD,
+                        host=MYSQL_HOST,
+                        port=MYSQL_PORT,
+                        database=MYSQL_DB_NAME,
+                    )
+                    self._cursor = self._connection.cursor()
+                    break
+                except Exception as err:
+                    print(err)
+                time.sleep(5)
 
     def validate_spans(self):
         spans = self._span_exporter.get_finished_spans()
@@ -77,6 +85,8 @@ class TestFunctionalMysql(unittest.TestCase):
             self.assertIsInstance(span.end_time, int)
         self.assertIsNot(root_span, None)
         self.assertIsNot(db_span, None)
+        self.assertEqual(root_span.name, "rootSpan")
+        self.assertEqual(db_span.name, "mysql.opentelemetry-tests")
         self.assertIsNotNone(db_span.parent)
         self.assertEqual(db_span.parent.name, root_span.name)
         self.assertIs(db_span.kind, trace_api.SpanKind.CLIENT)
