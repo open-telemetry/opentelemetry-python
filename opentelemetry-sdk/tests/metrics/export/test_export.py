@@ -546,7 +546,7 @@ class TestObserverAggregator(unittest.TestCase):
         )
         self.assertEqual(observer1.last_update_timestamp, 123)
 
-    def test_merge_last_updated_None(self):
+    def test_merge_last_updated_none(self):
         observer1 = ObserverAggregator()
         observer2 = ObserverAggregator()
 
