@@ -33,7 +33,6 @@ trace.get_tracer_provider().add_span_processor(
 
 @app.route("/server_request")
 def server_request():
-
     with tracer.start_as_current_span(
         "server_request",
         parent=propagators.extract(

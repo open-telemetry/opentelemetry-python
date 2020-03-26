@@ -21,7 +21,6 @@ In order to understand this better, here is the relevant part of both scripts:
 ```python
 @app.route("/server_request")
 def server_request():
-
     with tracer.start_as_current_span(
         "server_request",
         parent=propagators.extract(
