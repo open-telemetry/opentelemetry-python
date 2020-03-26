@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-wsgi/README.rst
-
-
-Module contents
----------------
+OpenTelemetry WSGI Middleware
+=============================
 
 .. automodule:: opentelemetry.ext.wsgi
     :members:

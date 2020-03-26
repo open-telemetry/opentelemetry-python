@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ def get_child_parent_new_carrier(old_carrier):
         trace_api.SpanContext(
             parent_context.trace_id,
             trace.generate_span_id(),
+            is_remote=False,
             trace_flags=parent_context.trace_flags,
             trace_state=parent_context.trace_state,
         ),
@@ -90,6 +91,7 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
             b3_format.format_span_id(parent.context.span_id),
         )
+        self.assertTrue(parent.context.is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_single_header(self):
@@ -111,6 +113,7 @@ class TestB3Format(unittest.TestCase):
             b3_format.format_span_id(child.context.span_id),
         )
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertTrue(parent.context.is_remote)
 
         child, parent, new_carrier = get_child_parent_new_carrier(
             {
@@ -134,6 +137,7 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
             b3_format.format_span_id(parent.context.span_id),
         )
+        self.assertTrue(parent.context.is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_header_precedence(self):

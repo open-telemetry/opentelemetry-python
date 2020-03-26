@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-prometheus/README.rst
-
-
-Module contents
----------------
+OpenTelemetry Prometheus Exporter
+=================================
 
 .. automodule:: opentelemetry.ext.prometheus
     :members:

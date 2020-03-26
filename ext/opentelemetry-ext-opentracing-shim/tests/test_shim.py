@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -450,7 +450,7 @@ class TestShim(TestCase):
     def test_span_context(self):
         """Test construction of `SpanContextShim` objects."""
 
-        otel_context = trace.SpanContext(1234, 5678)
+        otel_context = trace.SpanContext(1234, 5678, is_remote=False)
         context = opentracingshim.SpanContextShim(otel_context)
 
         self.assertIsInstance(context, opentracing.SpanContext)
@@ -476,7 +476,9 @@ class TestShim(TestCase):
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""
 
-        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
         context = opentracingshim.SpanContextShim(otel_context)
 
         headers = {}
@@ -487,7 +489,9 @@ class TestShim(TestCase):
     def test_inject_text_map(self):
         """Test `inject()` method for Format.TEXT_MAP."""
 
-        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
         context = opentracingshim.SpanContextShim(otel_context)
 
         # Verify Format.TEXT_MAP
@@ -499,7 +503,9 @@ class TestShim(TestCase):
     def test_inject_binary(self):
         """Test `inject()` method for Format.BINARY."""
 
-        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
         context = opentracingshim.SpanContextShim(otel_context)
 
         # Verify exception for non supported binary format.
@@ -561,6 +567,7 @@ class MockHTTPTextFormat(HTTPTextFormat):
                 trace.SpanContext(
                     trace_id=int(trace_id_list[0]),
                     span_id=int(span_id_list[0]),
+                    is_remote=True,
                 )
             )
         )
