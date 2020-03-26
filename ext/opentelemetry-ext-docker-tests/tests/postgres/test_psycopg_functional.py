@@ -71,6 +71,8 @@ class TestFunctionalPsycopg(unittest.TestCase):
                 except Exception as err:
                     print(err)
                 time.sleep(5)
+            if self._connection is None:
+                raise Exception("Failed to connect to DB")
 
     def setUp(self):
         self._span_exporter.clear()
