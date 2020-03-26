@@ -485,7 +485,7 @@ def lint_args(args):
     execute_args(
         parse_subargs(
             args,
-            ("exec", "python tests/check_for_valid_readme.py {}", "--all",),
+            ("exec", "python scripts/check_for_valid_readme.py {}", "--all",),
         )
     )
 
