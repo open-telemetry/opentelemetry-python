@@ -17,7 +17,7 @@ import random
 import unittest
 from unittest import mock
 
-from opentelemetry.context import get_value, set_value
+from opentelemetry.context import get_value
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricsExporter,
@@ -523,6 +523,9 @@ class TestController(unittest.TestCase):
     def test_push_controller_suppress_instrumentation(self):
         meter = mock.Mock()
         exporter = mock.Mock()
+        exporter.export = lambda x: self.assertIsNotNone(
+            get_value("suppress_instrumentation")
+        )
         with mock.patch(
             "opentelemetry.context._RUNTIME_CONTEXT"
         ) as context_patch:
