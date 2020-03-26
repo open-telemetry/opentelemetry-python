@@ -32,7 +32,7 @@ and the client in another::
     python -m opentelemetry_example_app.grpc.route_guide_client
 
 See also:
-# https://github.com/grpc/grpc/tree/master/examples/python/route_guide
+https://github.com/grpc/grpc/tree/master/examples/python/route_guide
 """
 
 
