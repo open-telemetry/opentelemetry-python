@@ -10,9 +10,7 @@ def is_valid_rst(path):
     """Checks if RST can be rendered on PyPI."""
     with open(path) as f:
         markup = f.read()
-    if readme_renderer.rst.render(markup) is None:
-        return False
-    return True
+    return readme_renderer.rst.render(markup) is not None
 
 
 def parse_args():
@@ -32,7 +30,7 @@ if __name__ == "__main__":
     error = False
     all_readmes_found = True
 
-    for path in [Path(path) for path in args.paths]:
+    for path in map(Path, args.path):
         readme = path / "README.rst"
         if not readme.exists():
             all_readmes_found = False
