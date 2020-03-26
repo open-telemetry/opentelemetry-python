@@ -1,4 +1,4 @@
-"""Test script to check README.rst files for syntax errors."""
+"""Test script to check given paths for valid README.rst files."""
 import argparse
 import sys
 from pathlib import Path
@@ -24,28 +24,28 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
-
     error = False
-    all_readmes_found = True
 
-    for path in map(Path, args.path):
+    for path in map(Path, args.paths):
         readme = path / "README.rst"
-        if not readme.exists():
-            all_readmes_found = False
-            print("✗ No README.rst in", str(path))
-            continue
-        if not is_valid_rst(readme):
+        try:
+            if not is_valid_rst(readme):
+                error = True
+                print("FAILED: RST syntax errors in", readme)
+                continue
+        except FileNotFoundError:
             error = True
-            print("✗ RST syntax errors in", readme)
+            print("FAILED: README.rst not found in", path)
             continue
         if args.verbose:
-            print("✓", readme)
+            print("PASSED:", readme)
 
     if error:
         sys.exit(1)
-    if all_readmes_found:
-        print("All clear.")
-    else:
-        print("No errors found but not all packages have a README.rst")
+    print("All clear.")
+
+
+if __name__ == "__main__":
+    main()
