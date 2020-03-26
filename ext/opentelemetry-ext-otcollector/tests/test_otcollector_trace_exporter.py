@@ -92,11 +92,16 @@ class TestCollectorSpanExporter(unittest.TestCase):
         span_context = trace_api.SpanContext(
             trace_id,
             span_id,
+            is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
             trace_state=trace_api.TraceState({"testKey": "testValue"}),
         )
-        parent_context = trace_api.SpanContext(trace_id, parent_id)
-        other_context = trace_api.SpanContext(trace_id, span_id)
+        parent_context = trace_api.SpanContext(
+            trace_id, parent_id, is_remote=False
+        )
+        other_context = trace_api.SpanContext(
+            trace_id, span_id, is_remote=False
+        )
         event_attributes = {
             "annotation_bool": True,
             "annotation_string": "annotation_test",
@@ -279,7 +284,10 @@ class TestCollectorSpanExporter(unittest.TestCase):
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
         span_context = trace_api.SpanContext(
-            trace_id, span_id, trace_flags=TraceFlags(TraceFlags.SAMPLED)
+            trace_id,
+            span_id,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
         otel_spans = [
             trace.Span(

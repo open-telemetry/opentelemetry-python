@@ -112,6 +112,7 @@ class B3Format(HTTPTextFormat):
                     # trace an span ids are encoded in hex, so must be converted
                     trace_id=int(trace_id, 16),
                     span_id=int(span_id, 16),
+                    is_remote=True,
                     trace_flags=trace.TraceFlags(options),
                     trace_state=trace.TraceState(),
                 )
