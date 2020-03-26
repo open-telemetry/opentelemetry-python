@@ -13,9 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# https://github.com/grpc/grpc/tree/master/examples/python/route_guide
 
-"""The Python implementation of the gRPC route guide client."""
+"""The Python implementation of the gRPC route guide client.
+
+Note that you need ``opentelemetry-ext-grpc`` and ``protobuf`` to be installed
+to run these examples. To run this script in the context of the example app,
+install ``opentelemetry-example-app``::
+
+    pip install -e ext/opentelemetry-ext-grpc/
+    pip install -e docs/examples/opentelemetry-example-app
+
+Then run the server in one shell::
+
+    python -m opentelemetry_example_app.grpc.route_guide_server
+
+and the client in another::
+
+    python -m opentelemetry_example_app.grpc.route_guide_client
+
+See also:
+# https://github.com/grpc/grpc/tree/master/examples/python/route_guide
+"""
+
 
 import logging
 import random

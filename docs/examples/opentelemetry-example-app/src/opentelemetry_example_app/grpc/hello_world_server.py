@@ -13,8 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# https://github.com/grpc/grpc/blob/master/examples/python/helloworld/greeter_server.py
-"""The Python implementation of the GRPC helloworld.Greeter server."""
+"""The Python implementation of the GRPC helloworld.Greeter server.
+
+Note that you need ``opentelemetry-ext-grpc`` and ``protobuf`` to be installed
+to run these examples. To run this script in the context of the example app,
+install ``opentelemetry-example-app``::
+
+    pip install -e ext/opentelemetry-ext-grpc/
+    pip install -e docs/examples/opentelemetry-example-app
+
+Then run the server in one shell::
+
+    python -m opentelemetry_example_app.grpc.hello_world_client
+
+and the client in another::
+
+    python -m opentelemetry_example_app.grpc.hello_world_server
+
+See also:
+https://github.com/grpc/grpc/blob/master/examples/python/helloworld/greeter_server.py
+"""
 
 import logging
 from concurrent import futures

@@ -13,9 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# https://github.com/grpc/grpc/blob/master/examples/python/helloworld/greeter_client.py
-# https://github.com/grpc/grpc/blob/v1.16.x/examples/python/interceptors/default_value/greeter_client.py
-"""The Python implementation of the GRPC helloworld.Greeter client."""
+"""The Python implementation of the GRPC helloworld.Greeter client.
+
+Note that you need ``opentelemetry-ext-grpc`` and ``protobuf`` to be installed
+to run these examples. To run this script in the context of the example app,
+install ``opentelemetry-example-app``::
+
+    pip install -e ext/opentelemetry-ext-grpc/
+    pip install -e docs/examples/opentelemetry-example-app
+
+Then run the server in one shell::
+
+    python -m opentelemetry_example_app.grpc.hello_world_server
+
+and the client in another::
+
+    python -m opentelemetry_example_app.grpc.hello_world_client
+
+See also:
+https://github.com/grpc/grpc/blob/master/examples/python/helloworld/greeter_client.py
+https://github.com/grpc/grpc/blob/v1.16.x/examples/python/interceptors/default_value/greeter_client.py
+"""
 
 import logging
 
