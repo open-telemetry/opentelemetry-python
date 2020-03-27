@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-mysql/README.rst
-
-
-Module contents
----------------
+OpenTelemetry MySQL Integration
+===============================
 
 .. automodule:: opentelemetry.ext.mysql
     :members:

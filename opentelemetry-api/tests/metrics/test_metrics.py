@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,7 +50,8 @@ class TestMetrics(unittest.TestCase):
         measure.record(1, label_set)
 
     def test_default_bound_metric(self):
-        metrics.DefaultBoundInstrument()
+        bound_instrument = metrics.DefaultBoundInstrument()
+        bound_instrument.release()
 
     def test_bound_counter(self):
         bound_counter = metrics.BoundCounter()
@@ -59,3 +60,8 @@ class TestMetrics(unittest.TestCase):
     def test_bound_measure(self):
         bound_measure = metrics.BoundMeasure()
         bound_measure.record(1)
+
+    def test_observer(self):
+        observer = metrics.DefaultObserver()
+        label_set = metrics.LabelSet()
+        observer.observe(1, label_set)

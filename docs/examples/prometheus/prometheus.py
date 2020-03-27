@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,43 +13,36 @@
 # limitations under the License.
 #
 """
-This module serves as an example for a simple application using metrics
-Examples show how to recording affects the collection of metrics to be exported
+This example shows how to export metrics to Prometheus.
 """
 
 from prometheus_client import start_http_server
 
 from opentelemetry import metrics
 from opentelemetry.ext.prometheus import PrometheusMetricsExporter
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Start Prometheus client
 start_http_server(port=8000, addr="localhost")
 
-# Meter is responsible for creating and recording metrics
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-# exporter to export metrics to Prometheus
-prefix = "MyAppPrefix"
-exporter = PrometheusMetricsExporter(prefix)
-# controller collects metrics created from meter and exports it via the
-# exporter every interval
+
+exporter = PrometheusMetricsExporter(prefix="MyAppPrefix")
 controller = PushController(meter, exporter, 5)
 
-counter = meter.create_metric(
-    "requests",
-    "number of requests",
-    "requests",
-    int,
-    Counter,
-    ("environment",),
+requests_counter = meter.create_metric(
+    name="requests",
+    description="number of requests",
+    unit="1",
+    value_type=int,
+    metric_type=Counter,
+    label_keys=("environment",),
 )
 
-# Labelsets are used to identify key-values that are associated with a specific
-# metric that you want to record. These are useful for pre-aggregation and can
-# be used to store custom dimensions pertaining to a metric
-label_set = meter.get_label_set({"environment": "staging"})
+staging_label_set = meter.get_label_set({"environment": "staging"})
+requests_counter.add(25, staging_label_set)
 
-counter.add(25, label_set)
+print("Metrics are available now at http://localhost:8000/")
 input("Press any key to exit...")

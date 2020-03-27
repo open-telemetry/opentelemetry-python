@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -337,12 +337,14 @@ class SpanContext:
         span_id: This span's ID.
         trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
+        is_remote: True if propagated from a remote parent.
     """
 
     def __init__(
         self,
         trace_id: int,
         span_id: int,
+        is_remote: bool,
         trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
@@ -354,13 +356,17 @@ class SpanContext:
         self.span_id = span_id
         self.trace_flags = trace_flags
         self.trace_state = trace_state
+        self.is_remote = is_remote
 
     def __repr__(self) -> str:
-        return "{}(trace_id={}, span_id={}, trace_state={!r})".format(
+        return (
+            "{}(trace_id={}, span_id={}, trace_state={!r}, is_remote={})"
+        ).format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
             self.trace_state,
+            self.is_remote,
         )
 
     def is_valid(self) -> bool:
@@ -425,10 +431,11 @@ class DefaultSpan(Span):
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
 INVALID_SPAN_CONTEXT = SpanContext(
-    INVALID_TRACE_ID,
-    INVALID_SPAN_ID,
-    DEFAULT_TRACE_OPTIONS,
-    DEFAULT_TRACE_STATE,
+    trace_id=INVALID_TRACE_ID,
+    span_id=INVALID_SPAN_ID,
+    is_remote=False,
+    trace_flags=DEFAULT_TRACE_OPTIONS,
+    trace_state=DEFAULT_TRACE_STATE,
 )
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
