@@ -72,7 +72,7 @@ class TestFunctionalMysql(unittest.TestCase):
                 except Exception as err:
                     print(err)
                 time.sleep(5)
-            if self._connection is None:
+            else:
                 raise Exception("Failed to connect to DB")
 
     def validate_spans(self):
