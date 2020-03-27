@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -453,7 +453,11 @@ class Tracer(trace_api.Tracer):
             trace_state = parent_context.trace_state
 
         context = trace_api.SpanContext(
-            trace_id, generate_span_id(), trace_flags, trace_state
+            trace_id,
+            generate_span_id(),
+            is_remote=False,
+            trace_flags=trace_flags,
+            trace_state=trace_state,
         )
 
         # The sampler decides whether to create a real or no-op span at the
