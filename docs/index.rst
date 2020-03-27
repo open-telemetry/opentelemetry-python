@@ -71,7 +71,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     sdk/sdk
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: OpenTelemetry Integrations
     :name: integrations
     :glob:

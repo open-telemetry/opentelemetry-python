@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import re
 import typing
 import urllib.parse
 
@@ -36,9 +35,10 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
         carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        """ Extract CorrelationContext from the carrier.
+        """Extract CorrelationContext from the carrier.
 
-        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
+        See
+        `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
         """
 
         if context is None:
@@ -79,7 +79,8 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
     ) -> None:
         """Injects CorrelationContext into the carrier.
 
-        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
+        See
+        `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
         """
         correlations = correlationcontext.get_correlations(context=context)
         if not correlations:

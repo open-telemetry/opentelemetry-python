@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-otcollector/README.rst
-
-
-Module contents
----------------
+OpenTelemetry Collector Exporter
+================================
 
 .. automodule:: opentelemetry.ext.otcollector
     :members:

@@ -1,7 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-pymongo/README.rst
-
-Module contents
----------------
+OpenTelemetry pymongo Integration
+=================================
 
 .. automodule:: opentelemetry.ext.pymongo
     :members:
