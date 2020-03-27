@@ -459,7 +459,7 @@ And execute the following script:
     counter = meter.create_metric(
         "requests", "number of requests", "requests", int, Counter, ("environment",),
     )
-    # Labelsets are used to identify key-values that are associated with a specific
+    # Labels are used to identify key-values that are associated with a specific
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
     labels = {"environment": "staging"}

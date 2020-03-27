@@ -75,8 +75,8 @@ bound_requests_counter.add(100)
 time.sleep(5)
 
 print("Updating using batch calling convention...")
-# You can record metrics in a batch by passing in a labelset and a sequence of
+# You can record metrics in a batch by passing in labels and a sequence of
 # (metric, value) pairs. The value would be recorded for each metric using the
-# specified labelset for each.
+# specified labels for each.
 meter.record_batch(labels, ((requests_counter, 50), (clicks_counter, 70)))
 time.sleep(5)
