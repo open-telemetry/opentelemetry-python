@@ -121,7 +121,7 @@ class Link(LinkBase):
 
 
 class LazyLink(LinkBase):
-    """A link to a `Span`.
+    """A lazy link to a `Span`.
 
     Args:
         context: `SpanContext` of the `Span` to link to.
