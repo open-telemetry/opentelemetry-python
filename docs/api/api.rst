@@ -8,5 +8,6 @@ OpenTelemetry Python API
 
     configuration
     context
+    correlationcontext
     metrics
     trace

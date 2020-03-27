@@ -1,29 +1,21 @@
-OpenTelemetry pymongo integration
+OpenTelemetry pymongo Integration
 =================================
 
-The integration with MongoDB supports the `pymongo`_ library and is specified
-to ``trace_integration`` using ``'pymongo'``.
+|pypi|
 
-.. _pymongo: https://pypi.org/project/pymongo
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-pymongo.svg
+   :target: https://pypi.org/project/opentelemetry-ext-pymongo/
 
-Usage
------
+Installation
+------------
 
-.. code:: python
+::
 
-    from pymongo import MongoClient
-    from opentelemetry.trace import TracerProvider
+    pip install opentelemetry-ext-pymongo
 
-    trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
-
-    trace_integration(tracer)
-    client = MongoClient()
-    db = client["MongoDB_Database"]
-    collection = db["MongoDB_Collection"]
-    collection.find_one()
 
 References
 ----------
-
+* `OpenTelemetry pymongo Integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/pymongo/pymongo.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
+

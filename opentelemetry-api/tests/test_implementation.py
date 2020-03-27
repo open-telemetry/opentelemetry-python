@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -86,6 +86,11 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         callback = mock.Mock()
         observer = meter.register_observer(callback, "", "", "", int, (), True)
         self.assertIsInstance(observer, metrics.DefaultObserver)
+
+    def test_unregister_observer(self):
+        meter = metrics.DefaultMeter()
+        observer = metrics.DefaultObserver()
+        meter.unregister_observer(observer)
 
     def test_get_label_set(self):
         meter = metrics.DefaultMeter()
