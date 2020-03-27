@@ -66,7 +66,7 @@ time.sleep(5)
 
 print("Updating using a bound instrument...")
 # You can record metrics with bound metric instruments. Bound metric
-# instruments are created by passing in a labelset. A bound metric instrument
+# instruments are created by passing in labels. A bound metric instrument
 # is essentially metric data that corresponds to a specific set of labels.
 # Therefore, getting a bound metric instrument using the same set of labels
 # will yield the same bound metric instrument.

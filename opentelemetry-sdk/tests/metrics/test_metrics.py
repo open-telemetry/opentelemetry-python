@@ -247,10 +247,10 @@ class TestMetric(unittest.TestCase):
     def test_bind(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric_types = [metrics.Counter, metrics.Measure]
+        labels = {"key": "value"}
+        key_labels = tuple(sorted(labels.items()))
         for _type in metric_types:
             metric = _type("name", "desc", "unit", int, meter, ("key",))
-            labels = {"key": "value"}
-            key_labels = tuple(sorted(labels.items()))
             bound_instrument = metric.bind(labels)
             self.assertEqual(
                 metric.bound_instruments.get(key_labels), bound_instrument
