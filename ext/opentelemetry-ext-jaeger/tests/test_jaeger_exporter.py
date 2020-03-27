@@ -1,5 +1,5 @@
 # Copyright 2018, OpenCensus Authors
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
         )
 
         self._test_span = trace.Span("test_span", context=context)
@@ -133,9 +134,15 @@ class TestJaegerSpanExporter(unittest.TestCase):
             start_times[2] + durations[2],
         )
 
-        span_context = trace_api.SpanContext(trace_id, span_id)
-        parent_context = trace_api.SpanContext(trace_id, parent_id)
-        other_context = trace_api.SpanContext(trace_id, other_id)
+        span_context = trace_api.SpanContext(
+            trace_id, span_id, is_remote=False
+        )
+        parent_context = trace_api.SpanContext(
+            trace_id, parent_id, is_remote=False
+        )
+        other_context = trace_api.SpanContext(
+            trace_id, other_id, is_remote=False
+        )
 
         event_attributes = {
             "annotation_bool": True,
