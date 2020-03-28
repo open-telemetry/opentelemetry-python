@@ -15,6 +15,9 @@
 from enum import Enum
 from typing import Sequence, Tuple
 
+from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk.metrics.export.aggregate import Aggregator
+
 
 class MetricsExportResult(Enum):
     SUCCESS = 0
@@ -23,9 +26,14 @@ class MetricsExportResult(Enum):
 
 
 class MetricRecord:
-    def __init__(self, aggregator, label_set, metric):
+    def __init__(
+        self,
+        aggregator: Aggregator,
+        labels: Tuple[Tuple[str, str]],
+        metric: metrics_api.MetricT,
+    ):
         self.aggregator = aggregator
-        self.label_set = label_set
+        self.labels = labels
         self.metric = metric
 
 
@@ -43,7 +51,7 @@ class MetricsExporter:
 
         Args:
             metric_records: A sequence of `MetricRecord` s. A `MetricRecord`
-                contains the metric to be exported, the label set associated
+                contains the metric to be exported, the labels associated
                 with that metric, as well as the aggregator used to export the
                 current checkpointed value.
 
@@ -70,10 +78,10 @@ class ConsoleMetricsExporter(MetricsExporter):
     ) -> "MetricsExportResult":
         for record in metric_records:
             print(
-                '{}(data="{}", label_set="{}", value={})'.format(
+                '{}(data="{}", labels="{}", value={})'.format(
                     type(self).__name__,
                     record.metric,
-                    record.label_set.labels,
+                    record.labels,
                     record.aggregator.checkpoint,
                 )
             )
