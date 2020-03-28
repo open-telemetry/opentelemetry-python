@@ -77,10 +77,10 @@ The **OpenTelemetry Collector Exporter** allows to export OpenTelemetry metrics 
         Counter,
         ("environment",),
     )
-    # Labelsets are used to identify key-values that are associated with a specific
+    # Labels are used to identify key-values that are associated with a specific
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
-    label_set = meter.get_label_set({"environment": "staging"})
+    labels = {"environment": "staging"}
 
-    counter.add(25, label_set)
+    counter.add(25, labels)
 """

@@ -39,8 +39,8 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             metrics.Counter,
             ["environment"],
         )
-        kvp = {"environment": "staging"}
-        self._test_label_set = self._meter.get_label_set(kvp)
+        labels = {"environment": "staging"}
+        self._labels_key = metrics.get_labels_as_key(labels)
 
         self._mock_registry_register = mock.Mock()
         self._registry_register_patch = mock.patch(
@@ -67,7 +67,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     def test_export(self):
         with self._registry_register_patch:
             record = MetricRecord(
-                CounterAggregator(), self._test_label_set, self._test_metric
+                CounterAggregator(), self._labels_key, self._test_metric
             )
             exporter = PrometheusMetricsExporter()
             result = exporter.export([record])
@@ -85,12 +85,12 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             metrics.Counter,
             ["environment@", "os"],
         )
-        kvp = {"environment@": "staging", "os": "Windows"}
-        label_set = meter.get_label_set(kvp)
+        labels = {"environment@": "staging", "os": "Windows"}
+        key_labels = metrics.get_labels_as_key(labels)
         aggregator = CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, label_set, metric)
+        record = MetricRecord(aggregator, key_labels, metric)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
@@ -114,11 +114,11 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     def test_invalid_metric(self):
         meter = get_meter_provider().get_meter(__name__)
         metric = meter.create_metric(
-            "tesname", "testdesc", "unit", int, TestMetric
+            "tesname", "testdesc", "unit", int, StubMetric
         )
-        kvp = {"environment": "staging"}
-        label_set = meter.get_label_set(kvp)
-        record = MetricRecord(None, label_set, metric)
+        labels = {"environment": "staging"}
+        key_labels = metrics.get_labels_as_key(labels)
+        record = MetricRecord(None, key_labels, metric)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
         collector.collect()
@@ -135,7 +135,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         self.assertEqual(collector._sanitize("aAbBcC_12_oi"), "aAbBcC_12_oi")
 
 
-class TestMetric(metrics.Metric):
+class StubMetric(metrics.Metric):
     def __init__(
         self,
         name: str,

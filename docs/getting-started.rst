@@ -249,7 +249,7 @@ The following is an example of emitting metrics to console, in a similar fashion
     exporter = ConsoleMetricsExporter()
     controller = PushController(meter, exporter, 5)
 
-    staging_label_set = meter.get_label_set({"environment": "staging"})
+    staging_labels = {"environment": "staging"}
 
     requests_counter = meter.create_metric(
         name="requests",
@@ -260,10 +260,10 @@ The following is an example of emitting metrics to console, in a similar fashion
         label_keys=("environment",),
     )
 
-    requests_counter.add(25, staging_label_set)
+    requests_counter.add(25, staging_labels)
     time.sleep(5)
 
-    requests_counter.add(20, staging_label_set)
+    requests_counter.add(20, staging_labels)
     time.sleep(5)
 
 
@@ -272,8 +272,8 @@ The sleeps will cause the script to take a while, but running it should yield:
 .. code-block:: sh
 
     $ python metrics.py
-    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", label_set="(('environment', 'staging'),)", value=25)
-    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", label_set="(('environment', 'staging'),)", value=45)
+    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=25)
+    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
 
 Using Prometheus
 ----------------
@@ -331,7 +331,7 @@ And use that instead of the `ConsoleMetricsExporter`:
     exporter = PrometheusMetricsExporter("MyAppPrefix")
     controller = PushController(meter, exporter, 5)
 
-    staging_label_set = meter.get_label_set({"environment": "staging"})
+    staging_labels = {"environment": "staging"}
 
     requests_counter = meter.create_metric(
         name="requests",
@@ -342,10 +342,10 @@ And use that instead of the `ConsoleMetricsExporter`:
         label_keys=("environment",),
     )
 
-    requests_counter.add(25, staging_label_set)
+    requests_counter.add(25, staging_labels)
     time.sleep(5)
 
-    requests_counter.add(20, staging_label_set)
+    requests_counter.add(20, staging_labels)
     time.sleep(5)
 
     # This line is added to keep the HTTP server up long enough to scrape.
@@ -463,11 +463,9 @@ And execute the following script:
         metric_type=Counter,
         label_keys=("environment",),
     )
-
-    # Labelsets are used to identify key-values that are associated with a specific
+    # Labels are used to identify key-values that are associated with a specific
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
-    label_set = meter.get_label_set({"environment": "staging"})
-
-    requests_counter.add(25, label_set)
+    labels = {"environment": "staging"}
+    requests_counter.add(25, labels)
     time.sleep(10)  # give push_controller time to push metrics
