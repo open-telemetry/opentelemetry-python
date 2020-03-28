@@ -388,23 +388,15 @@ class Collector:
     Args:
         thrift_url: URL of the Jaeger HTTP Thrift.
         auth: Auth tuple that contains username and password for Basic Auth.
-        client: Class for creating a Jaeger collector client.
-        http_transport: Class for creating new client for Thrift HTTP server.
     """
 
-    def __init__(
-        self,
-        thrift_url="",
-        auth=None,
-        client=jaeger.Client,
-        http_transport=THttpClient.THttpClient,
-    ):
+    def __init__(self, thrift_url="", auth=None):
         self.thrift_url = thrift_url
         self.auth = auth
-        self.http_transport = http_transport(uri_or_host=thrift_url)
-        self.client = client(
-            iprot=TBinaryProtocol.TBinaryProtocol(trans=self.http_transport)
+        self.http_transport = THttpClient.THttpClient(
+            uri_or_host=self.thrift_url
         )
+        self.protocol = TBinaryProtocol.TBinaryProtocol(self.http_transport)
 
         # set basic auth header
         if auth is not None:
@@ -419,18 +411,13 @@ class Collector:
         Args:
             batch: Object to emit Jaeger spans.
         """
-        try:
-            self.client.submitBatches([batch])
-            # it will call http_transport.flush() and
-            # status code and message will be updated
-            code = self.http_transport.code
-            msg = self.http_transport.message
-            if code >= 300 or code < 200:
-                logger.error(
-                    "Traces cannot be uploaded; HTTP status code: %s, message %s",
-                    code,
-                    msg,
-                )
-        finally:
-            if self.http_transport.isOpen():
-                self.http_transport.close()
+        batch.write(self.protocol)
+        self.http_transport.flush()
+        code = self.http_transport.code
+        msg = self.http_transport.message
+        if code >= 300 or code < 200:
+            logger.error(
+                "Traces cannot be uploaded; HTTP status code: %s, message: %s",
+                code,
+                msg,
+            )
