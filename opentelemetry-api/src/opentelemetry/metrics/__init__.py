@@ -392,7 +392,7 @@ def get_meter(
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
     This function is a convenience wrapper for
-    opentelemetry.metrics.meter_provider().get_meter
+    opentelemetry.metrics.get_meter_provider().get_meter
     """
     return get_meter_provider().get_meter(
         instrumenting_module_name, stateful, instrumenting_library_version

@@ -23,9 +23,9 @@ Usage
 
     import requests
     import opentelemetry.ext.http_requests
-    from opentelemetry.trace import tracer_provider
+    from opentelemetry.trace import TracerProvider
 
-    opentelemetry.ext.http_requests.enable(tracer_provider())
+    opentelemetry.ext.http_requests.enable(TracerProvider())
     response = requests.get(url='https://www.example.org/')
 
 Limitations
