@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,29 +19,24 @@ asynchronous metrics data.
 import psutil
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import LabelSet, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Configure a stateful batcher
 batcher = UngroupedBatcher(stateful=True)
-
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-
-# Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
-
-# Configure a push controller
 controller = PushController(meter=meter, exporter=exporter, interval=2)
 
 
 # Callback to gather cpu usage
 def get_cpu_usage_callback(observer):
     for (number, percent) in enumerate(psutil.cpu_percent(percpu=True)):
-        label_set = meter.get_label_set({"cpu_number": str(number)})
-        observer.observe(percent, label_set)
+        labels = {"cpu_number": str(number)}
+        observer.observe(percent, labels)
 
 
 meter.register_observer(
@@ -57,7 +52,7 @@ meter.register_observer(
 # Callback to gather RAM memory usage
 def get_ram_usage_callback(observer):
     ram_percent = psutil.virtual_memory().percent
-    observer.observe(ram_percent, LabelSet())
+    observer.observe(ram_percent, {})
 
 
 meter.register_observer(
@@ -69,4 +64,4 @@ meter.register_observer(
     label_keys=(),
 )
 
-input("Press a key to finish...\n")
+input("Metrics will be printed soon. Press a key to finish...\n")

@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -268,6 +268,7 @@ class TestSpanCreation(unittest.TestCase):
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
@@ -337,6 +338,7 @@ class TestSpanCreation(unittest.TestCase):
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
         )
 
         self.assertIsNone(tracer.get_current_span())
@@ -377,6 +379,12 @@ class TestSpanCreation(unittest.TestCase):
         span = tracer.start_span("root")
         # pylint: disable=protected-access
         self.assertIs(span.resource, resources._EMPTY_RESOURCE)
+
+    def test_span_context_remote_flag(self):
+        tracer = new_tracer()
+
+        span = tracer.start_span("foo")
+        self.assertFalse(span.context.is_remote)
 
 
 class TestSpan(unittest.TestCase):
@@ -564,14 +572,17 @@ class TestSpan(unittest.TestCase):
         other_context1 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
+            is_remote=False,
         )
         other_context2 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
+            is_remote=False,
         )
         other_context3 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
+            is_remote=False,
         )
         links = [
             trace_api.Link(other_context1),

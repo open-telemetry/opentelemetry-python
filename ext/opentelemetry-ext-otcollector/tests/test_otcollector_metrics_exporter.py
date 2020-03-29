@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,12 @@ from opencensus.proto.metrics.v1 import metrics_pb2
 
 from opentelemetry import metrics
 from opentelemetry.ext.otcollector import metrics_exporter
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Measure,
+    MeterProvider,
+    get_labels_as_key,
+)
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExportResult,
@@ -36,8 +41,8 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         # pylint: disable=protected-access
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
-        kvp = {"environment": "staging"}
-        cls._test_label_set = cls._meter.get_label_set(kvp)
+        cls._labels = {"environment": "staging"}
+        cls._key_labels = get_labels_as_key(cls._labels)
 
     def test_constructor(self):
         mock_get_node = mock.Mock()
@@ -77,7 +82,6 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     def test_get_collector_point(self):
         aggregator = aggregate.CounterAggregator()
-        label_set = self._meter.get_label_set({"environment": "staging"})
         int_counter = self._meter.create_metric(
             "testName", "testDescription", "unit", int, Counter
         )
@@ -88,7 +92,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testName", "testDescription", "unit", float, Measure
         )
         result = metrics_exporter.get_collector_point(
-            MetricRecord(aggregator, label_set, int_counter)
+            MetricRecord(aggregator, self._key_labels, int_counter)
         )
         self.assertIsInstance(result, metrics_pb2.Point)
         self.assertIsInstance(result.timestamp, Timestamp)
@@ -96,13 +100,13 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator.update(123.5)
         aggregator.take_checkpoint()
         result = metrics_exporter.get_collector_point(
-            MetricRecord(aggregator, label_set, float_counter)
+            MetricRecord(aggregator, self._key_labels, float_counter)
         )
         self.assertEqual(result.double_value, 123.5)
         self.assertRaises(
             TypeError,
             metrics_exporter.get_collector_point(
-                MetricRecord(aggregator, label_set, measure)
+                MetricRecord(aggregator, self._key_labels, measure)
             ),
         )
 
@@ -118,7 +122,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
         record = MetricRecord(
-            aggregate.CounterAggregator(), self._test_label_set, test_metric
+            aggregate.CounterAggregator(), self._key_labels, test_metric
         )
 
         result = collector_exporter.export([record])
@@ -137,14 +141,13 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         )
 
     def test_translate_to_collector(self):
-
         test_metric = self._meter.create_metric(
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
         aggregator = aggregate.CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, self._test_label_set, test_metric)
+        record = MetricRecord(aggregator, self._key_labels, test_metric)
         output_metrics = metrics_exporter.translate_to_collector([record])
         self.assertEqual(len(output_metrics), 1)
         self.assertIsInstance(output_metrics[0], metrics_pb2.Metric)
@@ -175,12 +178,12 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         self.assertEqual(len(output_metrics[0].timeseries[0].points), 1)
         self.assertEqual(
             output_metrics[0].timeseries[0].points[0].timestamp.seconds,
-            record.metric.bind(record.label_set).last_update_timestamp
+            record.metric.bind(self._labels).last_update_timestamp
             // 1000000000,
         )
         self.assertEqual(
             output_metrics[0].timeseries[0].points[0].timestamp.nanos,
-            record.metric.bind(record.label_set).last_update_timestamp
+            record.metric.bind(self._labels).last_update_timestamp
             % 1000000000,
         )
         self.assertEqual(

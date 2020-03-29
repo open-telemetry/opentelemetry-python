@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ def translate_to_collector(
 
         label_values = []
         label_keys = []
-        for label_tuple in metric_record.label_set.labels:
+        for label_tuple in metric_record.labels:
             label_keys.append(metrics_pb2.LabelKey(key=label_tuple[0]))
             label_values.append(
                 metrics_pb2.LabelValue(
@@ -145,11 +145,12 @@ def get_collector_metric_type(metric: Metric) -> metrics_pb2.MetricDescriptor:
 
 
 def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
+    # TODO: horrible hack to get original list of keys to then get the bound
+    # instrument
+    key = dict(metric_record.labels)
     point = metrics_pb2.Point(
         timestamp=utils.proto_timestamp_from_time_ns(
-            metric_record.metric.bind(
-                metric_record.label_set
-            ).last_update_timestamp
+            metric_record.metric.bind(key).last_update_timestamp
         )
     )
     if metric_record.metric.value_type == int:

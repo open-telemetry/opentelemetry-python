@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-psycopg2/README.rst
-
-
-Module contents
----------------
+OpenTelemetry Psycopg Integration
+=================================
 
 .. automodule:: opentelemetry.ext.psycopg2
     :members:

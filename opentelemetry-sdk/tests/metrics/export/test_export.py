@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,14 +45,13 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             meter,
             ("environment",),
         )
-        kvp = {"environment": "staging"}
-        label_set = metrics.LabelSet(kvp)
+        labels = {"environment": "staging"}
         aggregator = CounterAggregator()
-        record = MetricRecord(aggregator, label_set, metric)
-        result = '{}(data="{}", label_set="{}", value={})'.format(
+        record = MetricRecord(aggregator, labels, metric)
+        result = '{}(data="{}", labels="{}", value={})'.format(
             ConsoleMetricsExporter.__name__,
             metric,
-            label_set.labels,
+            labels,
             aggregator.checkpoint,
         )
         with mock.patch("sys.stdout") as mock_stdout:
@@ -84,14 +83,14 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         batcher._batch_map = _batch_map
         records = batcher.checkpoint_set()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].metric, metric)
-        self.assertEqual(records[0].label_set, label_set)
+        self.assertEqual(records[0].labels, labels)
         self.assertEqual(records[0].aggregator, aggregator)
 
     def test_checkpoint_set_empty(self):
@@ -112,9 +111,9 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 0)
@@ -132,9 +131,9 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 1)
@@ -153,20 +152,18 @@ class TestBatcher(unittest.TestCase):
             meter,
             ("environment",),
         )
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         aggregator2.update(1.0)
         batcher._batch_map = _batch_map
-        record = metrics.Record(metric, label_set, aggregator2)
+        record = metrics.Record(metric, labels, aggregator2)
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
+        self.assertIsNotNone(batcher._batch_map.get((metric, labels)))
+        self.assertEqual(batcher._batch_map.get((metric, labels)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).current, 0
-        )
-        self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
+            batcher._batch_map.get((metric, labels)).checkpoint, 1.0
         )
 
     def test_ungrouped_batcher_process_not_exists(self):
@@ -181,19 +178,17 @@ class TestBatcher(unittest.TestCase):
             meter,
             ("environment",),
         )
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
-        record = metrics.Record(metric, label_set, aggregator)
+        record = metrics.Record(metric, labels, aggregator)
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
+        self.assertIsNotNone(batcher._batch_map.get((metric, labels)))
+        self.assertEqual(batcher._batch_map.get((metric, labels)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).current, 0
-        )
-        self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
+            batcher._batch_map.get((metric, labels)).checkpoint, 1.0
         )
 
     def test_ungrouped_batcher_process_not_stateful(self):
@@ -208,19 +203,17 @@ class TestBatcher(unittest.TestCase):
             meter,
             ("environment",),
         )
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
-        record = metrics.Record(metric, label_set, aggregator)
+        record = metrics.Record(metric, labels, aggregator)
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
+        self.assertIsNotNone(batcher._batch_map.get((metric, labels)))
+        self.assertEqual(batcher._batch_map.get((metric, labels)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).current, 0
-        )
-        self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
+            batcher._batch_map.get((metric, labels)).checkpoint, 1.0
         )
 
 
