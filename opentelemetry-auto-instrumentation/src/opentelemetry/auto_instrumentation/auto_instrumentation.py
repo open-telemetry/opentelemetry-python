@@ -25,9 +25,7 @@ logger = getLogger(__file__)
 
 def run() -> None:
 
-    for entry_point in iter_entry_points(
-        "opentelemetry_auto_instrumentation_instrumentor"
-    ):
+    for entry_point in iter_entry_points("opentelemetry_instrumentor"):
         try:
             entry_point.load()().instrument()  # type: ignore
             logger.debug("Instrumented %s", entry_point.name)

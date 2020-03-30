@@ -26,7 +26,7 @@ with open(VERSION_FILENAME) as f:
 setuptools.setup(
     version=PACKAGE_INFO["__version__"],
     entry_points={
-        "opentelemetry_auto_instrumentation_instrumentor": [
+        "opentelemetry_instrumentor": [
             "flask = opentelemetry.ext.flask:FlaskInstrumentor"
         ]
     },
