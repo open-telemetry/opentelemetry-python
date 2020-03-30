@@ -1,13 +1,13 @@
 import abc
 
-import six
 
-
-class UnaryClientInfo(six.with_metaclass(abc.ABCMeta)):
-    """Consists of various information about a unary RPC on the invocation-side.
+class UnaryClientInfo(abc.ABC):
+    """Consists of various information about a unary RPC on the
+    invocation-side.
 
   Attributes:
-    full_method: A string of the full RPC method, i.e., /package.service/method.
+    full_method: A string of the full RPC method, i.e.,
+        /package.service/method.
     timeout: The length of time in seconds to wait for the computation to
       terminate or be cancelled, or None if this method should block until
       the computation is terminated or is cancelled no matter how long that
@@ -15,11 +15,13 @@ class UnaryClientInfo(six.with_metaclass(abc.ABCMeta)):
   """
 
 
-class StreamClientInfo(six.with_metaclass(abc.ABCMeta)):
-    """Consists of various information about a stream RPC on the invocation-side.
+class StreamClientInfo(abc.ABC):
+    """Consists of various information about a stream RPC on the
+    invocation-side.
 
   Attributes:
-    full_method: A string of the full RPC method, i.e., /package.service/method.
+    full_method: A string of the full RPC method, i.e.,
+        /package.service/method.
     is_client_stream: Indicates whether the RPC is client-streaming.
     is_server_stream: Indicates whether the RPC is server-streaming.
     timeout: The length of time in seconds to wait for the computation to
@@ -29,7 +31,7 @@ class StreamClientInfo(six.with_metaclass(abc.ABCMeta)):
   """
 
 
-class UnaryClientInterceptor(six.with_metaclass(abc.ABCMeta)):
+class UnaryClientInterceptor(abc.ABC):
     """Affords intercepting unary-unary RPCs on the invocation-side."""
 
     @abc.abstractmethod
@@ -51,7 +53,7 @@ class UnaryClientInterceptor(six.with_metaclass(abc.ABCMeta)):
         raise NotImplementedError()
 
 
-class StreamClientInterceptor(six.with_metaclass(abc.ABCMeta)):
+class StreamClientInterceptor(abc.ABC):
     """Affords intercepting stream RPCs on the invocation-side."""
 
     @abc.abstractmethod
@@ -92,30 +94,33 @@ def intercept_channel(channel, *interceptors):
     TypeError: If an interceptor derives from neither UnaryClientInterceptor
       nor StreamClientInterceptor.
   """
+    # pylint: disable=import-outside-toplevel
     from . import _interceptor
 
     return _interceptor.intercept_channel(channel, *interceptors)
 
 
-class UnaryServerInfo(six.with_metaclass(abc.ABCMeta)):
+class UnaryServerInfo(abc.ABC):
     """Consists of various information about a unary RPC on the service-side.
 
   Attributes:
-    full_method: A string of the full RPC method, i.e., /package.service/method.
+    full_method: A string of the full RPC method, i.e.,
+        /package.service/method.
   """
 
 
-class StreamServerInfo(six.with_metaclass(abc.ABCMeta)):
+class StreamServerInfo(abc.ABC):
     """Consists of various information about a stream RPC on the service-side.
 
   Attributes:
-    full_method: A string of the full RPC method, i.e., /package.service/method.
+    full_method: A string of the full RPC method, i.e.,
+        /package.service/method.
     is_client_stream: Indicates whether the RPC is client-streaming.
     is_server_stream: Indicates whether the RPC is server-streaming.
   """
 
 
-class UnaryServerInterceptor(six.with_metaclass(abc.ABCMeta)):
+class UnaryServerInterceptor(abc.ABC):
     """Affords intercepting unary-unary RPCs on the service-side."""
 
     @abc.abstractmethod
@@ -136,7 +141,7 @@ class UnaryServerInterceptor(six.with_metaclass(abc.ABCMeta)):
         raise NotImplementedError()
 
 
-class StreamServerInterceptor(six.with_metaclass(abc.ABCMeta)):
+class StreamServerInterceptor(abc.ABC):
     """Affords intercepting stream RPCs on the service-side."""
 
     @abc.abstractmethod
@@ -176,6 +181,7 @@ def intercept_server(server, *interceptors):
     TypeError: If an interceptor derives from neither UnaryServerInterceptor
       nor StreamServerInterceptor.
   """
+    # pylint: disable=import-outside-toplevel
     from . import _interceptor
 
     return _interceptor.intercept_server(server, *interceptors)
