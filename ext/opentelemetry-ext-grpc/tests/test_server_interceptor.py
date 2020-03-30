@@ -17,12 +17,10 @@ import unittest
 from concurrent import futures
 from contextlib import contextmanager
 from unittest import mock
-from unittest.mock import patch
 
 import grpc
 
 from opentelemetry import context, trace
-from opentelemetry.context.threadlocal_context import ThreadLocalRuntimeContext
 from opentelemetry.ext.grpc import server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
@@ -49,19 +47,6 @@ class UnaryUnaryRpcHandler(grpc.GenericRpcHandler):
 
 
 class TestOpenTelemetryServerInterceptor(unittest.TestCase):
-
-    # FIXME: test_concurrent_server_spans fails with contextvars context.
-    def setUp(self) -> None:
-        super(TestOpenTelemetryServerInterceptor, self).setUp()
-        self.mock_runtime = patch.object(
-            context, "_RUNTIME_CONTEXT", ThreadLocalRuntimeContext()
-        )
-        self.mock_runtime.start()
-
-    def tearDown(self) -> None:
-        super(TestOpenTelemetryServerInterceptor, self).tearDown()
-        self.mock_runtime.stop()
-
     def test_create_span(self):
         """Check that the interceptor wraps calls with spans server-side."""
 
