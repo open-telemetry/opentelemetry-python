@@ -56,27 +56,27 @@ clicks_counter = meter.create_metric(
     label_keys=("environment",),
 )
 
-label_set = meter.get_label_set({"environment": "staging"})
+labels = {"environment": "staging"}
 
 print("Updating using direct calling convention...")
-# You can record metrics directly using the metric instrument. You pass in a
-# labelset that you would like to record for.
-requests_counter.add(25, label_set)
+# You can record metrics directly using the metric instrument. You pass in
+# labels that you would like to record for.
+requests_counter.add(25, labels)
 time.sleep(5)
 
 print("Updating using a bound instrument...")
 # You can record metrics with bound metric instruments. Bound metric
-# instruments are created by passing in a labelset. A bound metric instrument
+# instruments are created by passing in labels. A bound metric instrument
 # is essentially metric data that corresponds to a specific set of labels.
 # Therefore, getting a bound metric instrument using the same set of labels
 # will yield the same bound metric instrument.
-bound_requests_counter = requests_counter.bind(label_set)
+bound_requests_counter = requests_counter.bind(labels)
 bound_requests_counter.add(100)
 time.sleep(5)
 
 print("Updating using batch calling convention...")
-# You can record metrics in a batch by passing in a labelset and a sequence of
+# You can record metrics in a batch by passing in labels and a sequence of
 # (metric, value) pairs. The value would be recorded for each metric using the
-# specified labelset for each.
-meter.record_batch(label_set, ((requests_counter, 50), (clicks_counter, 70)))
+# specified labels for each.
+meter.record_batch(labels, ((requests_counter, 50), (clicks_counter, 70)))
 time.sleep(5)
