@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=import-error
+
 """The Python implementation of the GRPC helloworld.Greeter client.
 
 Note that you need ``opentelemetry-ext-grpc`` and ``protobuf`` to be installed

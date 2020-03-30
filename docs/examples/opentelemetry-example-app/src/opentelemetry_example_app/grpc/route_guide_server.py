@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=import-error
+# pylint: disable=invalid-name
+
 """The Python implementation of the gRPC route guide server.
 
 Note that you need ``opentelemetry-ext-grpc`` and ``protobuf`` to be installed
@@ -111,8 +114,7 @@ class RouteGuideServicer(route_guide_pb2_grpc.RouteGuideServicer):
         feature = get_feature(self.db, request)
         if feature is None:
             return route_guide_pb2.Feature(name="", location=request)
-        else:
-            return feature
+        return feature
 
     def ListFeatures(self, request, context):
         left = min(request.lo.longitude, request.hi.longitude)

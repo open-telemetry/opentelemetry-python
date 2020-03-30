@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of the invocation-side open-telemetry interceptor."""
-# pylint:disable=no-member
+# pylint: disable=relative-beyond-top-level
 # pylint:disable=arguments-differ
+# pylint:disable=no-member
 # pylint:disable=signature-differs
+
+"""Implementation of the invocation-side open-telemetry interceptor."""
 
 from collections import OrderedDict
 from typing import MutableMapping

@@ -14,6 +14,8 @@
 
 # https://github.com/grpc/grpc/tree/master/examples/python/route_guide
 
+# pylint: disable=import-error
+
 """Common resources used in the gRPC route guide example."""
 
 import json

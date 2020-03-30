@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=import-outside-toplevel
+# pylint: disable=import-self
+# pylint: disable=no-name-in-module
+# pylint: disable=relative-beyond-top-level
+
 
 def client_interceptor(tracer):
     """Create a gRPC client channel interceptor.
@@ -22,7 +27,7 @@ def client_interceptor(tracer):
     Returns:
         An invocation-side interceptor object.
     """
-    from . import _client  # pylint: disable=import-outside-toplevel
+    from . import _client
 
     return _client.OpenTelemetryClientInterceptor(tracer)
 
@@ -36,6 +41,6 @@ def server_interceptor(tracer):
     Returns:
         A service-side interceptor object.
     """
-    from . import _server  # pylint: disable=import-outside-toplevel
+    from . import _server
 
     return _server.OpenTelemetryServerInterceptor(tracer)

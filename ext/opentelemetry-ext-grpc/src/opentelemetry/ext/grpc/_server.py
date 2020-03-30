@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=relative-beyond-top-level
+# pylint:disable=arguments-differ
+# pylint:disable=no-member
+# pylint:disable=signature-differs
+
 """Implementation of the service-side open-telemetry interceptor.
 
 This library borrows heavily from the OpenTracing gRPC integration:
 https://github.com/opentracing-contrib/python-grpc
 """
-# pylint:disable=no-member
-# pylint:disable=arguments-differ
-# pylint:disable=signature-differs
 
 from contextlib import contextmanager
 from typing import List
