@@ -11,23 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 
 import setuptools
 
 BASE_DIR = os.path.dirname(__file__)
 VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "ext", "flask", "version.py"
+    BASE_DIR, "src", "opentelemetry", "auto_instrumentation", "version.py"
 )
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
 
-setuptools.setup(
-    version=PACKAGE_INFO["__version__"],
-    entry_points={
-        "opentelemetry_instrumentor": [
-            "flask = opentelemetry.ext.flask:FlaskInstrumentor"
-        ]
-    },
-)
+setuptools.setup(version=PACKAGE_INFO["__version__"],)
