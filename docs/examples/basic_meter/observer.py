@@ -17,6 +17,7 @@ This example shows how the Observer metric instrument can be used to capture
 asynchronous metrics data.
 """
 import psutil
+
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
