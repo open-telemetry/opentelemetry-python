@@ -11,23 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
 
-import setuptools
+"""
+Usage
+-----
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "ext", "flask", "version.py"
-)
-PACKAGE_INFO = {}
-with open(VERSION_FILENAME) as f:
-    exec(f.read(), PACKAGE_INFO)
+This package provides a command that automatically instruments a program:
 
-setuptools.setup(
-    version=PACKAGE_INFO["__version__"],
-    entry_points={
-        "opentelemetry_instrumentor": [
-            "flask = opentelemetry.ext.flask:FlaskInstrumentor"
-        ]
-    },
-)
+::
+
+    opentelemetry-auto-instrumentation program.py
+
+The code in ``program.py`` needs to use one of the packages for which there is
+an OpenTelemetry extension. For a list of the available extensions please check
+`here <https://opentelemetry-python.readthedocsio/>`_.
+"""
