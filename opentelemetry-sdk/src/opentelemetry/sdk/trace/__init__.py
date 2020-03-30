@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import abc
 import atexit
 import logging
 import random
@@ -114,6 +115,77 @@ class MultiSpanProcessor(SpanProcessor):
             sp.shutdown()
 
 
+class EventBase(abc.ABC):
+    def __init__(self, name: str, timestamp: Optional[int] = None) -> None:
+        self._name = name
+        if timestamp is None:
+            self._timestamp = time_ns()
+        else:
+            self._timestamp = timestamp
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def timestamp(self) -> int:
+        return self._timestamp
+
+    @property
+    @abc.abstractmethod
+    def attributes(self) -> types.Attributes:
+        pass
+
+
+class Event(EventBase):
+    """A text annotation with a set of attributes.
+
+    Args:
+        name: Name of the event.
+        attributes: Attributes of the event.
+        timestamp: Timestamp of the event. If `None` it will filled
+            automatically.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        super().__init__(name, timestamp)
+        self._attributes = attributes
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._attributes
+
+
+class LazyEvent(EventBase):
+    """A text annotation with a set of attributes.
+
+    Args:
+        name: Name of the event.
+        event_formatter: Callable object that returns the attributes of the
+            event.
+        timestamp: Timestamp of the event. If `None` it will filled
+            automatically.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        super().__init__(name, timestamp)
+        self._event_formatter = event_formatter
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._event_formatter()
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -149,7 +221,7 @@ class Span(trace_api.Span):
         trace_config: None = None,  # TODO
         resource: None = None,
         attributes: types.Attributes = None,  # TODO
-        events: Sequence[trace_api.Event] = None,  # TODO
+        events: Sequence[Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
@@ -266,21 +338,7 @@ class Span(trace_api.Span):
                 return "different type"
         return None
 
-    def add_event(
-        self,
-        name: str,
-        attributes: types.Attributes = None,
-        timestamp: Optional[int] = None,
-    ) -> None:
-        self.add_lazy_event(
-            trace_api.Event(
-                name,
-                Span._empty_attributes if attributes is None else attributes,
-                time_ns() if timestamp is None else timestamp,
-            )
-        )
-
-    def add_lazy_event(self, event: trace_api.Event) -> None:
+    def _add_event(self, event: EventBase) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
@@ -292,6 +350,36 @@ class Span(trace_api.Span):
             logger.warning("Calling add_event() on an ended span.")
             return
         self.events.append(event)
+
+    def add_event(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        if attributes is None:
+            attributes = Span._empty_attributes
+        self._add_event(
+            Event(
+                name=name,
+                attributes=attributes,
+                timestamp=time_ns() if timestamp is None else timestamp,
+            )
+        )
+
+    def add_lazy_event(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        self._add_event(
+            LazyEvent(
+                name=name,
+                event_formatter=event_formatter,
+                timestamp=time_ns() if timestamp is None else timestamp,
+            )
+        )
 
     def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
