@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.6b0
+
+Released 2020-03-30
+
+- Add support for lazy events and links
+  ([#474](https://github.com/open-telemetry/opentelemetry-python/pull/474))
+- Metrics API no longer uses LabelSet
+  ([#527](https://github.com/open-telemetry/opentelemetry-python/pull/527))
+- Adding is_remote flag to SpanContext, indicating when a span is remote
+  ([#516](https://github.com/open-telemetry/opentelemetry-python/pull/516))
+- Adding a solution to release metric handles and observers
+  ([#435](https://github.com/open-telemetry/opentelemetry-python/pull/435))
+
 ## 0.5b0
 
 Released 2020-03-16
