@@ -108,7 +108,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             "key_float": 0.3,
         }
         event_timestamp = base_time + 50 * 10 ** 6
-        event = trace_api.Event(
+        event = trace.Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
