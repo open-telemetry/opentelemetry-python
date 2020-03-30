@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=relative-beyond-top-level
+# pylint:disable=relative-beyond-top-level
 # pylint:disable=arguments-differ
 # pylint:disable=no-member
 # pylint:disable=signature-differs

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint:disable=unused-argument
+# pylint:disable=no-self-use
+
 import threading
 import unittest
 from concurrent import futures
@@ -153,6 +156,7 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
             server.stop(None)
 
         self.assertEqual(len(active_spans_in_handler), 2)
+        # pylint:disable=unbalanced-tuple-unpacking
         span1, span2 = active_spans_in_handler
         # Spans should belong to separate traces, and each should be a root
         # span
@@ -206,6 +210,7 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
             server.stop(None)
 
         self.assertEqual(len(active_spans_in_handler), 2)
+        # pylint:disable=unbalanced-tuple-unpacking
         span1, span2 = active_spans_in_handler
         # Spans should belong to separate traces, and each should be a root
         # span
@@ -215,7 +220,7 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
         self.assertIsNone(span1.parent)
 
 
-def get_latch(n):
+def get_latch(num):
     """Get a countdown latch function for use in n threads."""
     cv = threading.Condition()
     count = 0
@@ -228,7 +233,7 @@ def get_latch(n):
         cv.notify()
         cv.release()
         cv.acquire()
-        while count < n:
+        while count < num:
             cv.wait()
         cv.release()
 
