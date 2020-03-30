@@ -94,35 +94,11 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         return self._servicer_context.set_details(details)
 
 
-# def _add_peer_tags(peer_str, tags):
-#     ipv4_re = r"ipv4:(?P<address>.+):(?P<port>\d+)"
-#     match = re.match(ipv4_re, peer_str)
-#     if match:
-#         tags[ot_tags.PEER_HOST_IPV4] = match.group("address")
-#         tags[ot_tags.PEER_PORT] = match.group("port")
-#         return
-#     ipv6_re = r"ipv6:\[(?P<address>.+)\]:(?P<port>\d+)"
-#     match = re.match(ipv6_re, peer_str)
-#     if match:
-#         tags[ot_tags.PEER_HOST_IPV6] = match.group("address")
-#         tags[ot_tags.PEER_PORT] = match.group("port")
-#         return
-#     logging.warning('Unrecognized peer: "%s"', peer_str)
-
-
 # On the service-side, errors can be signaled either by exceptions or by
 # calling `set_code` on the `servicer_context`. This function checks for the
 # latter and updates the span accordingly.
 def _check_error_code(span, servicer_context, rpc_info):
     if servicer_context.code != grpc.StatusCode.OK:
-        # span.set_tag("error", True)
-        # error_log = {
-        #     "event": "error",
-        #     "error.kind": str(servicer_context.code),
-        # }
-        # if servicer_context.details is not None:
-        #     error_log["message"] = servicer_context.details
-        # span.log_kv(error_log)
         rpc_info.error = servicer_context.code
 
 
