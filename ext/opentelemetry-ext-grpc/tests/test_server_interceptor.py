@@ -20,7 +20,7 @@ from unittest import mock
 
 import grpc
 
-from opentelemetry import context, trace
+from opentelemetry import trace
 from opentelemetry.ext.grpc import server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
