@@ -547,10 +547,11 @@ class TestSpan(unittest.TestCase):
             now = time_ns()
             root.add_event("event2", {"name": "birthday"}, now)
 
+            def event_formatter():
+                return {"name": "hello"}
+
             # lazy event
-            root.add_lazy_event(
-                trace_api.Event("event3", {"name": "hello"}, now)
-            )
+            root.add_lazy_event("event3", event_formatter, now)
 
             self.assertEqual(len(root.events), 4)
 
@@ -584,11 +585,15 @@ class TestSpan(unittest.TestCase):
             span_id=trace.generate_span_id(),
             is_remote=False,
         )
-        links = [
+
+        def get_link_attributes():
+            return {"component": "http"}
+
+        links = (
             trace_api.Link(other_context1),
             trace_api.Link(other_context2, {"name": "neighbor"}),
-            trace_api.Link(other_context3, {"component": "http"}),
-        ]
+            trace_api.LazyLink(other_context3, get_link_attributes),
+        )
         with self.tracer.start_as_current_span("root", links=links) as root:
 
             self.assertEqual(len(root.links), 3)
@@ -598,7 +603,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.links[0].context.span_id, other_context1.span_id
             )
-            self.assertEqual(root.links[0].attributes, {})
+            self.assertEqual(root.links[0].attributes, None)
             self.assertEqual(
                 root.links[1].context.trace_id, other_context2.trace_id
             )

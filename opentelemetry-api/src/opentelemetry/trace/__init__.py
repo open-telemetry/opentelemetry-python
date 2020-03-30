@@ -87,48 +87,59 @@ logger = getLogger(__name__)
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
-class Link:
-    """A link to a `Span`."""
-
-    def __init__(
-        self, context: "SpanContext", attributes: types.Attributes = None
-    ) -> None:
+class LinkBase(abc.ABC):
+    def __init__(self, context: "SpanContext") -> None:
         self._context = context
-        if attributes is None:
-            self._attributes = {}  # type: types.Attributes
-        else:
-            self._attributes = attributes
 
     @property
     def context(self) -> "SpanContext":
         return self._context
 
     @property
+    @abc.abstractmethod
     def attributes(self) -> types.Attributes:
-        return self._attributes
+        pass
 
 
-class Event:
-    """A text annotation with a set of attributes."""
+class Link(LinkBase):
+    """A link to a `Span`.
+
+    Args:
+        context: `SpanContext` of the `Span` to link to.
+        attributes: Link's attributes.
+    """
 
     def __init__(
-        self, name: str, attributes: types.Attributes, timestamp: int
+        self, context: "SpanContext", attributes: types.Attributes = None,
     ) -> None:
-        self._name = name
+        super().__init__(context)
         self._attributes = attributes
-        self._timestamp = timestamp
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+
+class LazyLink(LinkBase):
+    """A lazy link to a `Span`.
+
+    Args:
+        context: `SpanContext` of the `Span` to link to.
+        link_formatter: Callable object that returns the attributes of the
+            Link.
+    """
+
+    def __init__(
+        self,
+        context: "SpanContext",
+        link_formatter: types.AttributesFormatter,
+    ) -> None:
+        super().__init__(context)
+        self._link_formatter = link_formatter
+
     @property
-    def timestamp(self) -> int:
-        return self._timestamp
+    def attributes(self) -> types.Attributes:
+        return self._link_formatter()
 
 
 class SpanKind(enum.Enum):
@@ -206,10 +217,17 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_lazy_event(self, event: Event) -> None:
+    def add_lazy_event(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         """Adds an `Event`.
 
-        Adds an `Event` that has previously been created.
+        Adds a single `Event` with the name, an event formatter that calculates
+        the attributes lazily and, optionally, a timestamp. Implementations
+        should generate a timestamp if the `timestamp` argument is omitted.
         """
 
     @abc.abstractmethod
@@ -395,7 +413,12 @@ class DefaultSpan(Span):
     ) -> None:
         pass
 
-    def add_lazy_event(self, event: Event) -> None:
+    def add_lazy_event(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         pass
 
     def update_name(self, name: str) -> None:
