@@ -13,6 +13,9 @@
 # limitations under the License.
 
 """Implementation of the invocation-side open-telemetry interceptor."""
+# pylint:disable=no-member
+# pylint:disable=arguments-differ
+# pylint:disable=signature-differs
 
 from collections import OrderedDict
 from typing import MutableMapping
@@ -25,7 +28,7 @@ from . import grpcext
 from ._utilities import RpcInfo
 
 
-class _GuardedSpan(object):
+class _GuardedSpan:
     def __init__(self, span):
         self.span = span
         self._engaged = True
@@ -37,8 +40,7 @@ class _GuardedSpan(object):
     def __exit__(self, *args, **kwargs):
         if self._engaged:
             return self.span.__exit__(*args, **kwargs)
-        else:
-            return False
+        return False
 
     def release(self):
         self._engaged = False
@@ -46,6 +48,7 @@ class _GuardedSpan(object):
 
 
 def _inject_span_context(metadata: MutableMapping[str, str]) -> None:
+    # pylint:disable=unused-argument
     def append_metadata(
         carrier: MutableMapping[str, str], key: str, value: str
     ):
@@ -79,6 +82,7 @@ class OpenTelemetryClientInterceptor(
             name=method, kind=trace.SpanKind.CLIENT
         )
 
+    # pylint:disable=no-self-use
     def _trace_result(self, guarded_span, rpc_info, result):
         # If the RPC is called asynchronously, release the guard and add a
         # callback so that the span can be finished once the future is done.

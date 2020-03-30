@@ -1,4 +1,7 @@
 """Implementation of gRPC Python interceptors."""
+# pylint:disable=no-member
+# pylint:disable=arguments-differ
+# pylint:disable=signature-differs
 
 import collections
 
@@ -8,7 +11,7 @@ from .. import grpcext
 
 
 class _UnaryClientInfo(
-    collections.namedtuple("_UnaryClientInfo", ("full_method", "timeout",))
+    collections.namedtuple("_UnaryClientInfo", ("full_method", "timeout"))
 ):
     pass
 
@@ -165,8 +168,7 @@ class _InterceptorChannel(grpc.Channel):
             return _InterceptorUnaryUnaryMultiCallable(
                 method, base_callable, self._interceptor
             )
-        else:
-            return base_callable
+        return base_callable
 
     def unary_stream(
         self, method, request_serializer=None, response_deserializer=None
@@ -178,8 +180,7 @@ class _InterceptorChannel(grpc.Channel):
             return _InterceptorUnaryStreamMultiCallable(
                 method, base_callable, self._interceptor
             )
-        else:
-            return base_callable
+        return base_callable
 
     def stream_unary(
         self, method, request_serializer=None, response_deserializer=None
@@ -191,8 +192,7 @@ class _InterceptorChannel(grpc.Channel):
             return _InterceptorStreamUnaryMultiCallable(
                 method, base_callable, self._interceptor
             )
-        else:
-            return base_callable
+        return base_callable
 
     def stream_stream(
         self, method, request_serializer=None, response_deserializer=None
@@ -204,8 +204,7 @@ class _InterceptorChannel(grpc.Channel):
             return _InterceptorStreamStreamMultiCallable(
                 method, base_callable, self._interceptor
             )
-        else:
-            return base_callable
+        return base_callable
 
     def close(self):
         if not hasattr(self._channel, "close"):

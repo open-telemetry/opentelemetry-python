@@ -94,8 +94,7 @@ def intercept_channel(channel, *interceptors):
     TypeError: If an interceptor derives from neither UnaryClientInterceptor
       nor StreamClientInterceptor.
   """
-    # pylint: disable=import-outside-toplevel
-    from . import _interceptor
+    from . import _interceptor  # pylint: disable=import-outside-toplevel
 
     return _interceptor.intercept_channel(channel, *interceptors)
 
@@ -181,8 +180,7 @@ def intercept_server(server, *interceptors):
     TypeError: If an interceptor derives from neither UnaryServerInterceptor
       nor StreamServerInterceptor.
   """
-    # pylint: disable=import-outside-toplevel
-    from . import _interceptor
+    from . import _interceptor  # pylint: disable=import-outside-toplevel
 
     return _interceptor.intercept_server(server, *interceptors)
 

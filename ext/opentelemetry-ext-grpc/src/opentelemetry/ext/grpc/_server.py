@@ -17,6 +17,9 @@
 This library borrows heavily from the OpenTracing gRPC integration:
 https://github.com/opentracing-contrib/python-grpc
 """
+# pylint:disable=no-member
+# pylint:disable=arguments-differ
+# pylint:disable=signature-differs
 
 from contextlib import contextmanager
 from typing import List
@@ -30,12 +33,14 @@ from . import grpcext
 from ._utilities import RpcInfo
 
 
+# pylint:disable=abstract-method
 class _OpenTelemetryServicerContext(grpc.ServicerContext):
     def __init__(self, servicer_context, active_span):
         self._servicer_context = servicer_context
         self._active_span = active_span
         self.code = grpc.StatusCode.OK
         self.details = None
+        super(_OpenTelemetryServicerContext, self).__init__()
 
     def is_active(self, *args, **kwargs):
         return self._servicer_context.is_active(*args, **kwargs)
@@ -97,6 +102,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
 # On the service-side, errors can be signaled either by exceptions or by
 # calling `set_code` on the `servicer_context`. This function checks for the
 # latter and updates the span accordingly.
+# pylint:disable=unused-argument
 def _check_error_code(span, servicer_context, rpc_info):
     if servicer_context.code != grpc.StatusCode.OK:
         rpc_info.error = servicer_context.code
@@ -109,6 +115,7 @@ class OpenTelemetryServerInterceptor(
         self._tracer = tracer
 
     @contextmanager
+    # pylint:disable=no-self-use
     def _set_remote_context(self, servicer_context):
         metadata = servicer_context.invocation_metadata()
         if metadata:

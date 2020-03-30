@@ -22,7 +22,7 @@ def client_interceptor(tracer):
     Returns:
         An invocation-side interceptor object.
     """
-    from . import _client
+    from . import _client  # pylint: disable=import-outside-toplevel
 
     return _client.OpenTelemetryClientInterceptor(tracer)
 
@@ -36,6 +36,6 @@ def server_interceptor(tracer):
     Returns:
         A service-side interceptor object.
     """
-    from . import _server
+    from . import _server  # pylint: disable=import-outside-toplevel
 
     return _server.OpenTelemetryServerInterceptor(tracer)
