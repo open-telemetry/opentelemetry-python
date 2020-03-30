@@ -50,6 +50,9 @@ Modify the application's ``wsgi.py`` file as shown below.
 
     application = get_wsgi_application()
     application = OpenTelemetryMiddleware(application)
+
+API
+---
 """
 
 import functools

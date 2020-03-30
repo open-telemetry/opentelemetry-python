@@ -15,14 +15,6 @@
 """
 This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
 
-Installation
-------------
-
-::
-
-     pip install opentelemetry-ext-zipkin
-
-
 Usage
 -----
 
