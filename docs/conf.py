@@ -18,6 +18,7 @@ from os.path import isdir, join
 source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
     os.path.abspath("../opentelemetry-sdk/src/"),
+    os.path.abspath("../opentelemetry-auto-instrumentation/src/"),
 ]
 
 ext = "../ext"
