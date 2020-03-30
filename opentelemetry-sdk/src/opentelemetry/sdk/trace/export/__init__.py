@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 import collections
 import logging
+import os
 import sys
 import threading
 import typing
@@ -270,7 +271,8 @@ class ConsoleSpanExporter(SpanExporter):
     def __init__(
         self,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[Span], str] = str,
+        formatter: typing.Callable[[Span], str] = lambda span: str(span)
+        + os.linesep,
     ):
         self.out = out
         self.formatter = formatter
@@ -278,4 +280,5 @@ class ConsoleSpanExporter(SpanExporter):
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
+        self.out.flush()
         return SpanExportResult.SUCCESS

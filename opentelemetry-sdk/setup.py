@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ setuptools.setup(
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
@@ -39,12 +39,13 @@ setuptools.setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     description="OpenTelemetry Python SDK",
     include_package_data=True,
     long_description=open("README.rst").read(),
     long_description_content_type="text/x-rst",
-    install_requires=["opentelemetry-api==0.5.dev0"],
+    install_requires=["opentelemetry-api==0.6.dev0"],
     extras_require={},
     license="Apache-2.0",
     package_dir={"": "src"},
@@ -56,4 +57,12 @@ setuptools.setup(
         "/tree/master/opentelemetry-sdk"
     ),
     zip_safe=False,
+    entry_points={
+        "opentelemetry_meter_provider": [
+            "sdk_meter_provider = opentelemetry.sdk.metrics:MeterProvider"
+        ],
+        "opentelemetry_tracer_provider": [
+            "sdk_tracer_provider = opentelemetry.sdk.trace:TracerProvider"
+        ],
+    },
 )

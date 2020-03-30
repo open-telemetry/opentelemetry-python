@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ class TestRequestsIntegration(unittest.TestCase):
         self.get_tracer = self.get_tracer_patcher.start()
         self.span_context_manager = mock.MagicMock()
         self.span = mock.create_autospec(trace.Span, spec_set=True)
+        self.span.get_context.return_value = trace.INVALID_SPAN_CONTEXT
         self.span_context_manager.__enter__.return_value = self.span
 
         def setspanattr(key, value):

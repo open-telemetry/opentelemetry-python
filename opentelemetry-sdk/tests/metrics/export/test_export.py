@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.metrics.export.aggregate import (
     CounterAggregator,
     MinMaxSumCountAggregator,
+    ObserverAggregator,
 )
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -34,7 +35,7 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 class TestConsoleMetricsExporter(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_export(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
             "available memory",
@@ -44,14 +45,13 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             meter,
             ("environment",),
         )
-        kvp = {"environment": "staging"}
-        label_set = meter.get_label_set(kvp)
+        labels = {"environment": "staging"}
         aggregator = CounterAggregator()
-        record = MetricRecord(aggregator, label_set, metric)
-        result = '{}(data="{}", label_set="{}", value={})'.format(
+        record = MetricRecord(aggregator, labels, metric)
+        result = '{}(data="{}", labels="{}", value={})'.format(
             ConsoleMetricsExporter.__name__,
             metric,
-            label_set.labels,
+            labels,
             aggregator.checkpoint,
         )
         with mock.patch("sys.stdout") as mock_stdout:
@@ -71,7 +71,7 @@ class TestBatcher(unittest.TestCase):
     # TODO: Add other aggregator tests
 
     def test_checkpoint_set(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -83,14 +83,14 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         batcher._batch_map = _batch_map
         records = batcher.checkpoint_set()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].metric, metric)
-        self.assertEqual(records[0].label_set, label_set)
+        self.assertEqual(records[0].labels, labels)
         self.assertEqual(records[0].aggregator, aggregator)
 
     def test_checkpoint_set_empty(self):
@@ -99,7 +99,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(False)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -111,15 +111,15 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 0)
 
     def test_finished_collection_stateful(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -131,16 +131,16 @@ class TestBatcher(unittest.TestCase):
             ("environment",),
         )
         aggregator.update(1.0)
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 1)
 
     # TODO: Abstract the logic once other batchers implemented
     def test_ungrouped_batcher_process_exists(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         aggregator2 = CounterAggregator()
@@ -152,24 +152,22 @@ class TestBatcher(unittest.TestCase):
             meter,
             ("environment",),
         )
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
-        _batch_map[(metric, label_set)] = aggregator
+        _batch_map[(metric, labels)] = aggregator
         aggregator2.update(1.0)
         batcher._batch_map = _batch_map
-        record = metrics.Record(metric, label_set, aggregator2)
+        record = metrics.Record(metric, labels, aggregator2)
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
+        self.assertIsNotNone(batcher._batch_map.get((metric, labels)))
+        self.assertEqual(batcher._batch_map.get((metric, labels)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).current, 0
-        )
-        self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
+            batcher._batch_map.get((metric, labels)).checkpoint, 1.0
         )
 
     def test_ungrouped_batcher_process_not_exists(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -180,23 +178,21 @@ class TestBatcher(unittest.TestCase):
             meter,
             ("environment",),
         )
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
-        record = metrics.Record(metric, label_set, aggregator)
+        record = metrics.Record(metric, labels, aggregator)
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
+        self.assertIsNotNone(batcher._batch_map.get((metric, labels)))
+        self.assertEqual(batcher._batch_map.get((metric, labels)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).current, 0
-        )
-        self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
+            batcher._batch_map.get((metric, labels)).checkpoint, 1.0
         )
 
     def test_ungrouped_batcher_process_not_stateful(self):
-        meter = metrics.Meter()
+        meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
         aggregator = CounterAggregator()
         metric = metrics.Counter(
@@ -207,19 +203,17 @@ class TestBatcher(unittest.TestCase):
             meter,
             ("environment",),
         )
-        label_set = metrics.LabelSet()
+        labels = ()
         _batch_map = {}
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
-        record = metrics.Record(metric, label_set, aggregator)
+        record = metrics.Record(metric, labels, aggregator)
         batcher.process(record)
         self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get((metric, label_set)))
+        self.assertIsNotNone(batcher._batch_map.get((metric, labels)))
+        self.assertEqual(batcher._batch_map.get((metric, labels)).current, 0)
         self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).current, 0
-        )
-        self.assertEqual(
-            batcher._batch_map.get((metric, label_set)).checkpoint, 1.0
+            batcher._batch_map.get((metric, labels)).checkpoint, 1.0
         )
 
 
@@ -304,9 +298,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
     def test_update(self):
         mmsc = MinMaxSumCountAggregator()
         # test current values without any update
-        self.assertEqual(
-            mmsc.current, MinMaxSumCountAggregator._EMPTY,
-        )
+        self.assertEqual(mmsc.current, MinMaxSumCountAggregator._EMPTY)
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -314,7 +306,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             mmsc.update(val)
 
         self.assertEqual(
-            mmsc.current, (min(values), max(values), sum(values), len(values)),
+            mmsc.current, (min(values), max(values), sum(values), len(values))
         )
 
     def test_checkpoint(self):
@@ -322,9 +314,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
         # take checkpoint wihtout any update
         mmsc.take_checkpoint()
-        self.assertEqual(
-            mmsc.checkpoint, MinMaxSumCountAggregator._EMPTY,
-        )
+        self.assertEqual(mmsc.checkpoint, MinMaxSumCountAggregator._EMPTY)
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -337,9 +327,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             (min(values), max(values), sum(values), len(values)),
         )
 
-        self.assertEqual(
-            mmsc.current, MinMaxSumCountAggregator._EMPTY,
-        )
+        self.assertEqual(mmsc.current, MinMaxSumCountAggregator._EMPTY)
 
     def test_merge(self):
         mmsc1 = MinMaxSumCountAggregator()
@@ -429,6 +417,88 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             )
 
             self.assertEqual(checkpoint_total, fut.result())
+
+
+class TestObserverAggregator(unittest.TestCase):
+    def test_update(self):
+        observer = ObserverAggregator()
+        # test current values without any update
+        self.assertEqual(observer.mmsc.current, (None, None, None, 0))
+        self.assertIsNone(observer.current)
+
+        # call update with some values
+        values = (3, 50, 3, 97, 27)
+        for val in values:
+            observer.update(val)
+
+        self.assertEqual(
+            observer.mmsc.current,
+            (min(values), max(values), sum(values), len(values)),
+        )
+
+        self.assertEqual(observer.current, values[-1])
+
+    def test_checkpoint(self):
+        observer = ObserverAggregator()
+
+        # take checkpoint wihtout any update
+        observer.take_checkpoint()
+        self.assertEqual(observer.checkpoint, (None, None, None, 0, None))
+
+        # call update with some values
+        values = (3, 50, 3, 97)
+        for val in values:
+            observer.update(val)
+
+        observer.take_checkpoint()
+        self.assertEqual(
+            observer.checkpoint,
+            (min(values), max(values), sum(values), len(values), values[-1]),
+        )
+
+    def test_merge(self):
+        observer1 = ObserverAggregator()
+        observer2 = ObserverAggregator()
+
+        mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        mmsc_checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
+
+        checkpoint1 = ObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+
+        checkpoint2 = ObserverAggregator._TYPE(*(mmsc_checkpoint2 + (27,)))
+
+        observer1.mmsc.checkpoint = mmsc_checkpoint1
+        observer2.mmsc.checkpoint = mmsc_checkpoint2
+
+        observer1.checkpoint = checkpoint1
+        observer2.checkpoint = checkpoint2
+
+        observer1.merge(observer2)
+
+        self.assertEqual(
+            observer1.checkpoint,
+            (
+                min(checkpoint1.min, checkpoint2.min),
+                max(checkpoint1.max, checkpoint2.max),
+                checkpoint1.sum + checkpoint2.sum,
+                checkpoint1.count + checkpoint2.count,
+                checkpoint2.last,
+            ),
+        )
+
+    def test_merge_with_empty(self):
+        observer1 = ObserverAggregator()
+        observer2 = ObserverAggregator()
+
+        mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        checkpoint1 = ObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+
+        observer1.mmsc.checkpoint = mmsc_checkpoint1
+        observer1.checkpoint = checkpoint1
+
+        observer1.merge(observer2)
+
+        self.assertEqual(observer1.checkpoint, checkpoint1)
 
 
 class TestController(unittest.TestCase):

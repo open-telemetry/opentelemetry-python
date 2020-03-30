@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +13,21 @@
 # limitations under the License.
 
 
+import abc
 import atexit
 import logging
 import random
 import threading
 from contextlib import contextmanager
-from numbers import Number
 from types import TracebackType
 from typing import Iterator, MutableSequence, Optional, Sequence, Tuple, Type
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext, sampling
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCanonicalCode
@@ -113,6 +115,77 @@ class MultiSpanProcessor(SpanProcessor):
             sp.shutdown()
 
 
+class EventBase(abc.ABC):
+    def __init__(self, name: str, timestamp: Optional[int] = None) -> None:
+        self._name = name
+        if timestamp is None:
+            self._timestamp = time_ns()
+        else:
+            self._timestamp = timestamp
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def timestamp(self) -> int:
+        return self._timestamp
+
+    @property
+    @abc.abstractmethod
+    def attributes(self) -> types.Attributes:
+        pass
+
+
+class Event(EventBase):
+    """A text annotation with a set of attributes.
+
+    Args:
+        name: Name of the event.
+        attributes: Attributes of the event.
+        timestamp: Timestamp of the event. If `None` it will filled
+            automatically.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        super().__init__(name, timestamp)
+        self._attributes = attributes
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._attributes
+
+
+class LazyEvent(EventBase):
+    """A text annotation with a set of attributes.
+
+    Args:
+        name: Name of the event.
+        event_formatter: Callable object that returns the attributes of the
+            event.
+        timestamp: Timestamp of the event. If `None` it will filled
+            automatically.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        super().__init__(name, timestamp)
+        self._event_formatter = event_formatter
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._event_formatter()
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -126,7 +199,7 @@ class Span(trace_api.Span):
             remote, null if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
-        resource: TODO
+        resource: Entity producing telemetry
         attributes: The span's attributes to be exported
         events: Timestamped events to be exported
         links: Links to other spans to be exported
@@ -135,9 +208,9 @@ class Span(trace_api.Span):
     """
 
     # Initialize these lazily assuming most spans won't have them.
-    empty_attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
-    empty_events = BoundedList(MAX_NUM_EVENTS)
-    empty_links = BoundedList(MAX_NUM_LINKS)
+    _empty_attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+    _empty_events = BoundedList(MAX_NUM_EVENTS)
+    _empty_links = BoundedList(MAX_NUM_LINKS)
 
     def __init__(
         self,
@@ -146,13 +219,13 @@ class Span(trace_api.Span):
         parent: trace_api.ParentSpan = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: None = None,  # TODO
+        resource: None = None,
         attributes: types.Attributes = None,  # TODO
-        events: Sequence[trace_api.Event] = None,  # TODO
+        events: Sequence[Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
-        instrumentation_info: "InstrumentationInfo" = None,
+        instrumentation_info: InstrumentationInfo = None,
         set_status_on_exception: bool = True,
     ) -> None:
 
@@ -170,19 +243,19 @@ class Span(trace_api.Span):
         self._lock = threading.Lock()
 
         if attributes is None:
-            self.attributes = Span.empty_attributes
+            self.attributes = Span._empty_attributes
         else:
             self.attributes = BoundedDict.from_map(
                 MAX_NUM_ATTRIBUTES, attributes
             )
 
         if events is None:
-            self.events = Span.empty_events
+            self.events = Span._empty_events
         else:
             self.events = BoundedList.from_seq(MAX_NUM_EVENTS, events)
 
         if links is None:
-            self.links = Span.empty_links
+            self.links = Span._empty_links
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
@@ -226,10 +299,14 @@ class Span(trace_api.Span):
                 return
             has_ended = self.end_time is not None
             if not has_ended:
-                if self.attributes is Span.empty_attributes:
+                if self.attributes is Span._empty_attributes:
                     self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         if has_ended:
             logger.warning("Setting attribute on ended span.")
+            return
+
+        if not key:
+            logger.warning("invalid key (empty or null)")
             return
 
         if isinstance(value, Sequence):
@@ -240,7 +317,7 @@ class Span(trace_api.Span):
             # Freeze mutable sequences defensively
             if isinstance(value, MutableSequence):
                 value = tuple(value)
-        elif not isinstance(value, (bool, str, Number, Sequence)):
+        elif not isinstance(value, (bool, str, int, float)):
             logger.warning("invalid type for attribute value")
             return
 
@@ -256,10 +333,7 @@ class Span(trace_api.Span):
 
         first_element_type = type(sequence[0])
 
-        if issubclass(first_element_type, Number):
-            first_element_type = Number
-
-        if first_element_type not in (bool, str, Number):
+        if first_element_type not in (bool, str, int, float):
             return "invalid type"
 
         for element in sequence:
@@ -267,32 +341,48 @@ class Span(trace_api.Span):
                 return "different type"
         return None
 
+    def _add_event(self, event: EventBase) -> None:
+        with self._lock:
+            if not self.is_recording_events():
+                return
+            has_ended = self.end_time is not None
+            if not has_ended:
+                if self.events is Span._empty_events:
+                    self.events = BoundedList(MAX_NUM_EVENTS)
+        if has_ended:
+            logger.warning("Calling add_event() on an ended span.")
+            return
+        self.events.append(event)
+
     def add_event(
         self,
         name: str,
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        self.add_lazy_event(
-            trace_api.Event(
-                name,
-                Span.empty_attributes if attributes is None else attributes,
-                time_ns() if timestamp is None else timestamp,
+        if attributes is None:
+            attributes = Span._empty_attributes
+        self._add_event(
+            Event(
+                name=name,
+                attributes=attributes,
+                timestamp=time_ns() if timestamp is None else timestamp,
             )
         )
 
-    def add_lazy_event(self, event: trace_api.Event) -> None:
-        with self._lock:
-            if not self.is_recording_events():
-                return
-            has_ended = self.end_time is not None
-            if not has_ended:
-                if self.events is Span.empty_events:
-                    self.events = BoundedList(MAX_NUM_EVENTS)
-        if has_ended:
-            logger.warning("Calling add_event() on an ended span.")
-            return
-        self.events.append(event)
+    def add_lazy_event(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        self._add_event(
+            LazyEvent(
+                name=name,
+                event_formatter=event_formatter,
+                timestamp=time_ns() if timestamp is None else timestamp,
+            )
+        )
 
     def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
@@ -374,6 +464,7 @@ class Span(trace_api.Span):
 
 def generate_span_id() -> int:
     """Get a new random span ID.
+
     Returns:
         A random 64-bit int for use as a span ID
     """
@@ -382,50 +473,11 @@ def generate_span_id() -> int:
 
 def generate_trace_id() -> int:
     """Get a new random trace ID.
+
     Returns:
         A random 128-bit int for use as a trace ID
     """
     return random.getrandbits(128)
-
-
-class InstrumentationInfo:
-    """Immutable information about an instrumentation library module.
-
-    See `TracerProvider.get_tracer` for the meaning of the properties.
-    """
-
-    __slots__ = ("_name", "_version")
-
-    def __init__(self, name: str, version: str):
-        self._name = name
-        self._version = version
-
-    def __repr__(self):
-        return "{}({}, {})".format(
-            type(self).__name__, self._name, self._version
-        )
-
-    def __hash__(self):
-        return hash((self._name, self._version))
-
-    def __eq__(self, value):
-        return type(value) is type(self) and (self._name, self._version) == (
-            value._name,
-            value._version,
-        )
-
-    def __lt__(self, value):
-        if type(value) is not type(self):
-            return NotImplemented
-        return (self._name, self._version) < (value._name, value._version)
-
-    @property
-    def version(self) -> str:
-        return self._version
-
-    @property
-    def name(self) -> str:
-        return self._name
 
 
 class Tracer(trace_api.Tracer):
@@ -446,7 +498,6 @@ class Tracer(trace_api.Tracer):
         self.instrumentation_info = instrumentation_info
 
     def get_current_span(self):
-        """See `opentelemetry.trace.Tracer.get_current_span`."""
         return self.source.get_current_span()
 
     def start_as_current_span(
@@ -457,8 +508,6 @@ class Tracer(trace_api.Tracer):
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
-        """See `opentelemetry.trace.Tracer.start_as_current_span`."""
-
         span = self.start_span(name, parent, kind, attributes, links)
         return self.use_span(span, end_on_exit=True)
 
@@ -472,8 +521,6 @@ class Tracer(trace_api.Tracer):
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        """See `opentelemetry.trace.Tracer.start_span`."""
-
         if parent is Tracer.CURRENT_SPAN:
             parent = self.get_current_span()
 
@@ -489,15 +536,19 @@ class Tracer(trace_api.Tracer):
         if parent_context is None or not parent_context.is_valid():
             parent = parent_context = None
             trace_id = generate_trace_id()
-            trace_options = None
+            trace_flags = None
             trace_state = None
         else:
             trace_id = parent_context.trace_id
-            trace_options = parent_context.trace_options
+            trace_flags = parent_context.trace_flags
             trace_state = parent_context.trace_state
 
         context = trace_api.SpanContext(
-            trace_id, generate_span_id(), trace_options, trace_state
+            trace_id,
+            generate_span_id(),
+            is_remote=False,
+            trace_flags=trace_flags,
+            trace_state=trace_state,
         )
 
         # The sampler decides whether to create a real or no-op span at the
@@ -515,8 +566,8 @@ class Tracer(trace_api.Tracer):
         )
 
         if sampling_decision.sampled:
-            options = context.trace_options | trace_api.TraceOptions.SAMPLED
-            context.trace_options = trace_api.TraceOptions(options)
+            options = context.trace_flags | trace_api.TraceFlags.SAMPLED
+            context.trace_flags = trace_api.TraceFlags(options)
             if attributes is None:
                 span_attributes = sampling_decision.attributes
             else:
@@ -528,6 +579,7 @@ class Tracer(trace_api.Tracer):
                 context=context,
                 parent=parent,
                 sampler=self.source.sampler,
+                resource=self.source.resource,
                 attributes=span_attributes,
                 span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
                 kind=kind,
@@ -544,7 +596,6 @@ class Tracer(trace_api.Tracer):
     def use_span(
         self, span: trace_api.Span, end_on_exit: bool = False
     ) -> Iterator[trace_api.Span]:
-        """See `opentelemetry.trace.Tracer.use_span`."""
         try:
             token = context_api.attach(context_api.set_value(SPAN_KEY, span))
             try:
@@ -566,7 +617,7 @@ class Tracer(trace_api.Tracer):
                     )
                 )
 
-                raise
+            raise
 
         finally:
             if end_on_exit:
@@ -577,9 +628,11 @@ class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        resource: Resource = Resource.create_empty(),
         shutdown_on_exit: bool = True,
     ):
         self._active_span_processor = MultiSpanProcessor()
+        self.resource = resource
         self.sampler = sampler
         self._atexit_handler = None
         if shutdown_on_exit:

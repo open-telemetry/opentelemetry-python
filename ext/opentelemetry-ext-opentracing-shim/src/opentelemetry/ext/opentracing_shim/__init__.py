@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ following example::
     from opentelemetry.ext.opentracing_shim import create_tracer
 
     # Tell OpenTelemetry which Tracer implementation to use.
-    trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+    trace.set_tracer_provider(TracerProvider())
 
     # Create an OpenTelemetry Tracer.
     otel_tracer = trace.get_tracer(__name__)
@@ -93,6 +93,10 @@ from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
 from opentelemetry.trace import DefaultSpan
+from opentelemetry.trace.propagation import (
+    get_span_from_context,
+    set_span_in_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -677,11 +681,8 @@ class TracerShim(opentracing.Tracer):
 
         propagator = propagators.get_global_httptextformat()
 
-        propagator.inject(
-            DefaultSpan(span_context.unwrap()),
-            type(carrier).__setitem__,
-            carrier,
-        )
+        ctx = set_span_in_context(DefaultSpan(span_context.unwrap()))
+        propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
 
     def extract(self, format, carrier):
         """Implements the ``extract`` method from the base class."""
@@ -700,6 +701,7 @@ class TracerShim(opentracing.Tracer):
             return [value] if value is not None else []
 
         propagator = propagators.get_global_httptextformat()
-        otel_context = propagator.extract(get_as_list, carrier)
+        ctx = propagator.extract(get_as_list, carrier)
+        otel_context = get_span_from_context(ctx).get_context()
 
         return SpanContextShim(otel_context)

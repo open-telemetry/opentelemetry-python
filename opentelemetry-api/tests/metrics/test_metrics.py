@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,113 +13,49 @@
 # limitations under the License.
 
 import unittest
-from contextlib import contextmanager
-from unittest import mock
 
 from opentelemetry import metrics
 
 
 # pylint: disable=no-self-use
-class TestMeter(unittest.TestCase):
-    def setUp(self):
-        self.meter = metrics.DefaultMeter()
-
-    def test_record_batch(self):
-        counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        self.meter.record_batch(label_set, ((counter, 1),))
-
-    def test_create_metric(self):
-        metric = self.meter.create_metric("", "", "", float, metrics.Counter)
-        self.assertIsInstance(metric, metrics.DefaultMetric)
-
-    def test_get_label_set(self):
-        metric = self.meter.get_label_set({})
-        self.assertIsInstance(metric, metrics.DefaultLabelSet)
-
-
 class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
-        default_ls = metrics.DefaultLabelSet()
-        handle = default.get_handle(default_ls)
-        self.assertIsInstance(handle, metrics.DefaultMetricHandle)
+        bound_metric_instr = default.bind({})
+        self.assertIsInstance(
+            bound_metric_instr, metrics.DefaultBoundInstrument
+        )
 
     def test_counter(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        handle = counter.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.CounterHandle)
+        bound_counter = counter.bind({})
+        self.assertIsInstance(bound_counter, metrics.BoundCounter)
 
     def test_counter_add(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        counter.add(1, label_set)
-
-    def test_gauge(self):
-        gauge = metrics.Gauge()
-        label_set = metrics.LabelSet()
-        handle = gauge.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.GaugeHandle)
-
-    def test_gauge_set(self):
-        gauge = metrics.Gauge()
-        label_set = metrics.LabelSet()
-        gauge.set(1, label_set)
+        counter.add(1, {})
 
     def test_measure(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        handle = measure.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.MeasureHandle)
+        bound_measure = measure.bind({})
+        self.assertIsInstance(bound_measure, metrics.BoundMeasure)
 
     def test_measure_record(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        measure.record(1, label_set)
+        measure.record(1, {})
 
-    def test_default_handle(self):
-        metrics.DefaultMetricHandle()
+    def test_default_bound_metric(self):
+        bound_instrument = metrics.DefaultBoundInstrument()
+        bound_instrument.release()
 
-    def test_counter_handle(self):
-        handle = metrics.CounterHandle()
-        handle.add(1)
+    def test_bound_counter(self):
+        bound_counter = metrics.BoundCounter()
+        bound_counter.add(1)
 
-    def test_gauge_handle(self):
-        handle = metrics.GaugeHandle()
-        handle.set(1)
+    def test_bound_measure(self):
+        bound_measure = metrics.BoundMeasure()
+        bound_measure.record(1)
 
-    def test_measure_handle(self):
-        handle = metrics.MeasureHandle()
-        handle.record(1)
-
-
-@contextmanager
-# type: ignore
-def patch_metrics_globals(meter=None, meter_factory=None):
-    """Mock metrics._METER and metrics._METER_FACTORY.
-
-    This prevents previous changes to these values from affecting the code in
-    this scope, and prevents changes in this scope from leaking out and
-    affecting other tests.
-    """
-    with mock.patch("opentelemetry.metrics._METER", meter):
-        with mock.patch("opentelemetry.metrics._METER_FACTORY", meter_factory):
-            yield
-
-
-class TestGlobals(unittest.TestCase):
-    def test_meter_default_factory(self):
-        """Check that the default meter is a DefaultMeter."""
-        with patch_metrics_globals():
-            meter = metrics.meter()
-            self.assertIsInstance(meter, metrics.DefaultMeter)
-            # Check that we don't create a new instance on each call
-            self.assertIs(meter, metrics.meter())
-
-    def test_meter_custom_factory(self):
-        """Check that we use the provided factory for custom global meters."""
-        mock_meter = mock.Mock(metrics.Meter)
-        with patch_metrics_globals(meter_factory=lambda _: mock_meter):
-            meter = metrics.meter()
-            self.assertIs(meter, mock_meter)
+    def test_observer(self):
+        observer = metrics.DefaultObserver()
+        observer.observe(1, {})
