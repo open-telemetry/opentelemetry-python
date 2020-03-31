@@ -412,8 +412,10 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value2")
 
             root.set_attribute("empty-list", [])
-            root.set_attribute("list-of-bools", [True, True, False])
-            root.set_attribute("list-of-numerics", [123, 314, 0])
+            list_of_bools = [True, True, False]
+            root.set_attribute("list-of-bools", list_of_bools)
+            list_of_numerics = [123, 314, 0]
+            root.set_attribute("list-of-numerics", list_of_numerics)
 
             self.assertEqual(len(root.attributes), 10)
             self.assertEqual(root.attributes["component"], "http")
@@ -426,12 +428,20 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["http.status_text"], "OK")
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
-            self.assertEqual(root.attributes["empty-list"], [])
+            self.assertEqual(root.attributes["empty-list"], ())
             self.assertEqual(
-                root.attributes["list-of-bools"], [True, True, False]
+                root.attributes["list-of-bools"], (True, True, False)
+            )
+            list_of_bools.append(False)
+            self.assertEqual(
+                root.attributes["list-of-bools"], (True, True, False)
             )
             self.assertEqual(
-                root.attributes["list-of-numerics"], [123, 314, 0]
+                root.attributes["list-of-numerics"], (123, 314, 0)
+            )
+            list_of_numerics.append(227)
+            self.assertEqual(
+                root.attributes["list-of-numerics"], (123, 314, 0)
             )
 
         attributes = {
