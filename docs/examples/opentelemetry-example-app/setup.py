@@ -41,6 +41,7 @@ setuptools.setup(
         "opentelemetry-ext-flask",
         "flask",
         "requests",
+        "protobuf~=3.11",
     ],
     license="Apache-2.0",
     package_dir={"": "src"},
