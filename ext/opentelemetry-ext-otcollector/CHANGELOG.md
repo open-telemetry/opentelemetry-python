@@ -6,4 +6,4 @@
 
 Released 2020-03-16
 
-Initial release.
+- Initial release.

@@ -68,7 +68,6 @@ Released 2020-02-21
 - Implement MinMaxSumCount aggregator
   ([#422](https://github.com/open-telemetry/opentelemetry-python/pull/422))
 
-
 ## 0.3a0
 
 Released 2019-12-11
