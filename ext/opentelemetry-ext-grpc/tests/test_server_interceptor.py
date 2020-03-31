@@ -67,7 +67,8 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
             return b""
 
         server = grpc.server(
-            futures.ThreadPoolExecutor(), options=(("grpc.so_reuseport", 0),)
+            futures.ThreadPoolExecutor(max_workers=1),
+            options=(("grpc.so_reuseport", 0),),
         )
         # FIXME: grpcext interceptor doesn't apply to handlers passed to server
         # init, should use intercept_service API instead.
@@ -103,7 +104,8 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
             return b""
 
         server = grpc.server(
-            futures.ThreadPoolExecutor(), options=(("grpc.so_reuseport", 0),)
+            futures.ThreadPoolExecutor(max_workers=1),
+            options=(("grpc.so_reuseport", 0),),
         )
         server = intercept_server(server, interceptor)
         server.add_generic_rpc_handlers((UnaryUnaryRpcHandler(handler),))
@@ -140,7 +142,8 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
             return b""
 
         server = grpc.server(
-            futures.ThreadPoolExecutor(), options=(("grpc.so_reuseport", 0),)
+            futures.ThreadPoolExecutor(max_workers=1),
+            options=(("grpc.so_reuseport", 0),),
         )
         server = intercept_server(server, interceptor)
         server.add_generic_rpc_handlers((UnaryUnaryRpcHandler(handler),))
