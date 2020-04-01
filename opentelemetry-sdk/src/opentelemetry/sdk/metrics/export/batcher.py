@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,8 +63,8 @@ class Batcher(abc.ABC):
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for (metric, label_set), aggregator in self._batch_map.items():
-            metric_records.append(MetricRecord(aggregator, label_set, metric))
+        for (metric, labels), aggregator in self._batch_map.items():
+            metric_records.append(MetricRecord(aggregator, labels, metric))
         return metric_records
 
     def finished_collection(self):
@@ -90,7 +90,7 @@ class UngroupedBatcher(Batcher):
     def process(self, record):
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.take_checkpoint()
-        batch_key = (record.metric, record.label_set)
+        batch_key = (record.metric, record.labels)
         batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator
         if batch_value:

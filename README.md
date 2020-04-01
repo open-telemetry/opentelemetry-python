@@ -136,21 +136,6 @@ release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.
 - Prometheus Metrics Exporter
 - New Examples and Improvements to Existing Examples
 
-Thank you to the following individuals for contributing to this release:
-
-* Alex Boten
-* Chris Kleinknecht
-* Christian Neumüller
-* Daniel González
-* Diego Hurtado
-* Golovin Pavel
-* Hector Hernandez
-* Jake Malachowski
-* Joshua H Lang
-* Leighton Chen
-* Mauricio Vásquez
-* Yusuke Tsutsumi
-
 The [v0.5 beta
 release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.5.0) release includes:
 
@@ -159,18 +144,6 @@ release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.
 - Metrics SDK
 - Global configuration module
 - Documentation improvements
-
-Thank you to the following individuals for contributing to this release:
-
-* Alex Boten
-* Chris Kleinknecht
-* Dave Grochowski
-* Diego Hurtado
-* Hector Hernandez
-* Leighton Chen
-* Liz Fong-Jones
-* Mauricio Vásquez
-* Yusuke Tsutsumi
 
 See the [project
 milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
@@ -181,7 +154,6 @@ Future releases targets include:
 
 | Component                          | Version | Target Date   |
 | ---------------------------------- | ------- | ------------- |
-
 | Stable API for metrics and tracing | Beta v2 | March 31 2020 |
 | Support for Tags/Baggage           | Beta v2 | March 31 2020 |
 | gRPC Integration                   | Beta v2 | March 31 2020 |

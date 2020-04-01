@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ class TestHttpExample(unittest.TestCase):
 
     def test_http(self):
         dirpath = os.path.dirname(os.path.realpath(__file__))
-        test_script = "{}/../tracer_client.py".format(dirpath)
+        test_script = "{}/../client.py".format(dirpath)
         output = subprocess.check_output(
             (sys.executable, test_script)
         ).decode()

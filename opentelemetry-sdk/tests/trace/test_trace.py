@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -268,6 +268,7 @@ class TestSpanCreation(unittest.TestCase):
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
@@ -337,6 +338,7 @@ class TestSpanCreation(unittest.TestCase):
         other_parent = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
         )
 
         self.assertIsNone(tracer.get_current_span())
@@ -378,6 +380,12 @@ class TestSpanCreation(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertIs(span.resource, resources._EMPTY_RESOURCE)
 
+    def test_span_context_remote_flag(self):
+        tracer = new_tracer()
+
+        span = tracer.start_span("foo")
+        self.assertFalse(span.context.is_remote)
+
 
 class TestSpan(unittest.TestCase):
     def setUp(self):
@@ -404,8 +412,10 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("attr-key", "attr-value2")
 
             root.set_attribute("empty-list", [])
-            root.set_attribute("list-of-bools", [True, True, False])
-            root.set_attribute("list-of-numerics", [123, 314, 0])
+            list_of_bools = [True, True, False]
+            root.set_attribute("list-of-bools", list_of_bools)
+            list_of_numerics = [123, 314, 0]
+            root.set_attribute("list-of-numerics", list_of_numerics)
 
             self.assertEqual(len(root.attributes), 10)
             self.assertEqual(root.attributes["component"], "http")
@@ -418,12 +428,20 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["http.status_text"], "OK")
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
-            self.assertEqual(root.attributes["empty-list"], [])
+            self.assertEqual(root.attributes["empty-list"], ())
             self.assertEqual(
-                root.attributes["list-of-bools"], [True, True, False]
+                root.attributes["list-of-bools"], (True, True, False)
+            )
+            list_of_bools.append(False)
+            self.assertEqual(
+                root.attributes["list-of-bools"], (True, True, False)
             )
             self.assertEqual(
-                root.attributes["list-of-numerics"], [123, 314, 0]
+                root.attributes["list-of-numerics"], (123, 314, 0)
+            )
+            list_of_numerics.append(227)
+            self.assertEqual(
+                root.attributes["list-of-numerics"], (123, 314, 0)
             )
 
         attributes = {
@@ -539,10 +557,11 @@ class TestSpan(unittest.TestCase):
             now = time_ns()
             root.add_event("event2", {"name": "birthday"}, now)
 
+            def event_formatter():
+                return {"name": "hello"}
+
             # lazy event
-            root.add_lazy_event(
-                trace_api.Event("event3", {"name": "hello"}, now)
-            )
+            root.add_lazy_event("event3", event_formatter, now)
 
             self.assertEqual(len(root.events), 4)
 
@@ -564,20 +583,27 @@ class TestSpan(unittest.TestCase):
         other_context1 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
+            is_remote=False,
         )
         other_context2 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
+            is_remote=False,
         )
         other_context3 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
             span_id=trace.generate_span_id(),
+            is_remote=False,
         )
-        links = [
+
+        def get_link_attributes():
+            return {"component": "http"}
+
+        links = (
             trace_api.Link(other_context1),
             trace_api.Link(other_context2, {"name": "neighbor"}),
-            trace_api.Link(other_context3, {"component": "http"}),
-        ]
+            trace_api.LazyLink(other_context3, get_link_attributes),
+        )
         with self.tracer.start_as_current_span("root", links=links) as root:
 
             self.assertEqual(len(root.links), 3)
@@ -587,7 +613,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.links[0].context.span_id, other_context1.span_id
             )
-            self.assertEqual(root.links[0].attributes, {})
+            self.assertEqual(root.links[0].attributes, None)
             self.assertEqual(
                 root.links[1].context.trace_id, other_context2.trace_id
             )
