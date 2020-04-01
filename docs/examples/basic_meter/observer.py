@@ -19,7 +19,7 @@ asynchronous metrics data.
 import psutil
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import LabelSet, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -35,8 +35,8 @@ controller = PushController(meter=meter, exporter=exporter, interval=2)
 # Callback to gather cpu usage
 def get_cpu_usage_callback(observer):
     for (number, percent) in enumerate(psutil.cpu_percent(percpu=True)):
-        label_set = meter.get_label_set({"cpu_number": str(number)})
-        observer.observe(percent, label_set)
+        labels = {"cpu_number": str(number)}
+        observer.observe(percent, labels)
 
 
 meter.register_observer(
@@ -52,7 +52,7 @@ meter.register_observer(
 # Callback to gather RAM memory usage
 def get_ram_usage_callback(observer):
     ram_percent = psutil.virtual_memory().percent
-    observer.observe(ram_percent, LabelSet())
+    observer.observe(ram_percent, {})
 
 
 meter.register_observer(

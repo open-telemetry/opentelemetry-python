@@ -76,6 +76,8 @@ Note:
     While testing this library, the aforementioned imprecisions were observed
     to be of *less than a microsecond*.
 
+API
+---
 .. _Floating Point Arithmetic\\: Issues and Limitations:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """

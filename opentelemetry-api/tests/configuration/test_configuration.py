@@ -16,8 +16,9 @@ from json import dumps
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.configuration import Configuration  # type: ignore
 from pytest import fixture  # type: ignore # pylint: disable=import-error
+
+from opentelemetry.configuration import Configuration  # type: ignore
 
 
 class TestConfiguration(TestCase):

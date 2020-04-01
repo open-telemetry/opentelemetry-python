@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.6b0
+
+Released 2020-03-30
+
+- Exporting to collector now works
+  ([#508](https://github.com/open-telemetry/opentelemetry-python/pull/508))
+
 ## 0.4a0
 
 Released 2020-02-21

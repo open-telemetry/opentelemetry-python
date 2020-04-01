@@ -72,6 +72,7 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(
             span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
+        self.assertTrue(span_context.is_remote)
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(span_context)
 
@@ -155,7 +156,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(
-            trace.SpanContext(self.TRACE_ID, self.SPAN_ID)
+            trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
         ctx = set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
