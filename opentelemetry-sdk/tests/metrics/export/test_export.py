@@ -228,11 +228,14 @@ class TestCounterAggregator(unittest.TestCase):
             update_total += val
         return update_total
 
-    def test_update(self):
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def test_update(self, time_mock):
+        time_mock.return_value = 123
         counter = CounterAggregator()
         counter.update(1.0)
         counter.update(2.0)
         self.assertEqual(counter.current, 3.0)
+        self.assertEqual(counter.last_update_timestamp, 123)
 
     def test_checkpoint(self):
         counter = CounterAggregator()
@@ -246,8 +249,10 @@ class TestCounterAggregator(unittest.TestCase):
         counter2 = CounterAggregator()
         counter.checkpoint = 1.0
         counter2.checkpoint = 3.0
+        counter2.last_update_timestamp = 123
         counter.merge(counter2)
         self.assertEqual(counter.checkpoint, 4.0)
+        self.assertEqual(counter.last_update_timestamp, 123)
 
     def test_concurrent_update(self):
         counter = CounterAggregator()
@@ -296,7 +301,9 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             count_ += 1
         return MinMaxSumCountAggregator._TYPE(min_, max_, sum_, count_)
 
-    def test_update(self):
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def test_update(self, time_mock):
+        time_mock.return_value = 123
         mmsc = MinMaxSumCountAggregator()
         # test current values without any update
         self.assertEqual(mmsc.current, MinMaxSumCountAggregator._EMPTY)
@@ -309,6 +316,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         self.assertEqual(
             mmsc.current, (min(values), max(values), sum(values), len(values))
         )
+        self.assertEqual(mmsc.last_update_timestamp, 123)
 
     def test_checkpoint(self):
         mmsc = MinMaxSumCountAggregator()
@@ -340,6 +348,9 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         mmsc1.checkpoint = checkpoint1
         mmsc2.checkpoint = checkpoint2
 
+        mmsc1.last_update_timestamp = 100
+        mmsc2.last_update_timestamp = 123
+
         mmsc1.merge(mmsc2)
 
         self.assertEqual(
@@ -348,6 +359,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
                 checkpoint1, checkpoint2
             ),
         )
+        self.assertEqual(mmsc1.last_update_timestamp, 123)
 
     def test_merge_checkpoint(self):
         func = MinMaxSumCountAggregator._merge_checkpoint
@@ -421,7 +433,9 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
 
 class TestObserverAggregator(unittest.TestCase):
-    def test_update(self):
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def test_update(self, time_mock):
+        time_mock.return_value = 123
         observer = ObserverAggregator()
         # test current values without any update
         self.assertEqual(observer.mmsc.current, (None, None, None, 0))
@@ -436,6 +450,7 @@ class TestObserverAggregator(unittest.TestCase):
             observer.mmsc.current,
             (min(values), max(values), sum(values), len(values)),
         )
+        self.assertEqual(observer.last_update_timestamp, 123)
 
         self.assertEqual(observer.current, values[-1])
 
@@ -471,6 +486,9 @@ class TestObserverAggregator(unittest.TestCase):
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer2.mmsc.checkpoint = mmsc_checkpoint2
 
+        observer1.last_update_timestamp = 100
+        observer2.last_update_timestamp = 123
+
         observer1.checkpoint = checkpoint1
         observer2.checkpoint = checkpoint2
 
@@ -486,6 +504,75 @@ class TestObserverAggregator(unittest.TestCase):
                 checkpoint2.last,
             ),
         )
+        self.assertEqual(observer1.last_update_timestamp, 123)
+
+    def test_merge_last_updated(self):
+        observer1 = ObserverAggregator()
+        observer2 = ObserverAggregator()
+
+        mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        mmsc_checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
+
+        checkpoint1 = ObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+
+        checkpoint2 = ObserverAggregator._TYPE(*(mmsc_checkpoint2 + (27,)))
+
+        observer1.mmsc.checkpoint = mmsc_checkpoint1
+        observer2.mmsc.checkpoint = mmsc_checkpoint2
+
+        observer1.last_update_timestamp = 123
+        observer2.last_update_timestamp = 100
+
+        observer1.checkpoint = checkpoint1
+        observer2.checkpoint = checkpoint2
+
+        observer1.merge(observer2)
+
+        self.assertEqual(
+            observer1.checkpoint,
+            (
+                min(checkpoint1.min, checkpoint2.min),
+                max(checkpoint1.max, checkpoint2.max),
+                checkpoint1.sum + checkpoint2.sum,
+                checkpoint1.count + checkpoint2.count,
+                checkpoint1.last,
+            ),
+        )
+        self.assertEqual(observer1.last_update_timestamp, 123)
+
+    def test_merge_last_updated_none(self):
+        observer1 = ObserverAggregator()
+        observer2 = ObserverAggregator()
+
+        mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
+        mmsc_checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
+
+        checkpoint1 = ObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+
+        checkpoint2 = ObserverAggregator._TYPE(*(mmsc_checkpoint2 + (27,)))
+
+        observer1.mmsc.checkpoint = mmsc_checkpoint1
+        observer2.mmsc.checkpoint = mmsc_checkpoint2
+
+        observer1.last_update_timestamp = None
+        observer2.last_update_timestamp = 100
+
+        observer1.checkpoint = checkpoint1
+        observer2.checkpoint = checkpoint2
+
+        observer1.merge(observer2)
+
+        self.assertEqual(
+            observer1.checkpoint,
+            (
+                min(checkpoint1.min, checkpoint2.min),
+                max(checkpoint1.max, checkpoint2.max),
+                checkpoint1.sum + checkpoint2.sum,
+                checkpoint1.count + checkpoint2.count,
+                checkpoint2.last,
+            ),
+        )
+        self.assertEqual(observer1.last_update_timestamp, 100)
 
     def test_merge_with_empty(self):
         observer1 = ObserverAggregator()
@@ -496,6 +583,7 @@ class TestObserverAggregator(unittest.TestCase):
 
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer1.checkpoint = checkpoint1
+        observer1.last_update_timestamp = 100
 
         observer1.merge(observer2)
 

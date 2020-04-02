@@ -16,6 +16,8 @@ import abc
 import threading
 from collections import namedtuple
 
+from opentelemetry.util import time_ns
+
 
 class Aggregator(abc.ABC):
     """Base class for aggregators.
@@ -49,10 +51,12 @@ class CounterAggregator(Aggregator):
         self.current = 0
         self.checkpoint = 0
         self._lock = threading.Lock()
+        self.last_update_timestamp = None
 
     def update(self, value):
         with self._lock:
             self.current += value
+            self.last_update_timestamp = time_ns()
 
     def take_checkpoint(self):
         with self._lock:
@@ -62,6 +66,9 @@ class CounterAggregator(Aggregator):
     def merge(self, other):
         with self._lock:
             self.checkpoint += other.checkpoint
+            self.last_update_timestamp = get_latest_timestamp(
+                self.last_update_timestamp, other.last_update_timestamp
+            )
 
 
 class MinMaxSumCountAggregator(Aggregator):
@@ -88,6 +95,7 @@ class MinMaxSumCountAggregator(Aggregator):
         self.current = self._EMPTY
         self.checkpoint = self._EMPTY
         self._lock = threading.Lock()
+        self.last_update_timestamp = None
 
     def update(self, value):
         with self._lock:
@@ -100,6 +108,7 @@ class MinMaxSumCountAggregator(Aggregator):
                     self.current.sum + value,
                     self.current.count + 1,
                 )
+            self.last_update_timestamp = time_ns()
 
     def take_checkpoint(self):
         with self._lock:
@@ -110,6 +119,9 @@ class MinMaxSumCountAggregator(Aggregator):
         with self._lock:
             self.checkpoint = self._merge_checkpoint(
                 self.checkpoint, other.checkpoint
+            )
+            self.last_update_timestamp = get_latest_timestamp(
+                self.last_update_timestamp, other.last_update_timestamp
             )
 
 
@@ -123,10 +135,12 @@ class ObserverAggregator(Aggregator):
         self.mmsc = MinMaxSumCountAggregator()
         self.current = None
         self.checkpoint = self._TYPE(None, None, None, 0, None)
+        self.last_update_timestamp = None
 
     def update(self, value):
         self.mmsc.update(value)
         self.current = value
+        self.last_update_timestamp = time_ns()
 
     def take_checkpoint(self):
         self.mmsc.take_checkpoint()
@@ -134,9 +148,19 @@ class ObserverAggregator(Aggregator):
 
     def merge(self, other):
         self.mmsc.merge(other.mmsc)
-        self.checkpoint = self._TYPE(
-            *(
-                self.mmsc.checkpoint
-                + (other.checkpoint.last or self.checkpoint.last,)
-            )
+        last = self.checkpoint.last
+        self.last_update_timestamp = get_latest_timestamp(
+            self.last_update_timestamp, other.last_update_timestamp
         )
+        if self.last_update_timestamp == other.last_update_timestamp:
+            last = other.checkpoint.last
+        self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (last,)))
+
+
+def get_latest_timestamp(time_stamp, other_timestamp):
+    if time_stamp is None:
+        return other_timestamp
+    if other_timestamp is not None:
+        if time_stamp < other_timestamp:
+            return other_timestamp
+    return time_stamp
