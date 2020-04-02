@@ -160,7 +160,7 @@ class ObserverAggregator(Aggregator):
 def get_latest_timestamp(time_stamp, other_timestamp):
     if time_stamp is None:
         return other_timestamp
-    elif other_timestamp is not None:
+    if other_timestamp is not None:
         if time_stamp < other_timestamp:
             return other_timestamp
     return time_stamp
