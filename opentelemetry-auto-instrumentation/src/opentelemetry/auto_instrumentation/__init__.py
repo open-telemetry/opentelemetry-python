@@ -24,5 +24,5 @@ This package provides a command that automatically instruments a program:
 
 The code in ``program.py`` needs to use one of the packages for which there is
 an OpenTelemetry extension. For a list of the available extensions please check
-`here <https://opentelemetry-python.readthedocsio/>`_.
+`here <https://opentelemetry-python.readthedocs.io/>`_.
 """
