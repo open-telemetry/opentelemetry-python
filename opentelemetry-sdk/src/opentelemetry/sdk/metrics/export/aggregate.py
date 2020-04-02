@@ -164,4 +164,3 @@ def get_latest_timestamp(time_stamp, other_timestamp):
         if time_stamp < other_timestamp:
             return other_timestamp
     return time_stamp
-    
