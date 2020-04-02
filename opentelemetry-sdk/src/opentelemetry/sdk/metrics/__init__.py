@@ -21,7 +21,6 @@ from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,6 @@ class BaseBoundInstrument:
         self.value_type = value_type
         self.enabled = enabled
         self.aggregator = aggregator
-        self.last_update_timestamp = time_ns()
         self._ref_count = 0
         self._ref_count_lock = threading.Lock()
 
@@ -69,7 +67,6 @@ class BaseBoundInstrument:
         return True
 
     def update(self, value: metrics_api.ValueT):
-        self.last_update_timestamp = time_ns()
         self.aggregator.update(value)
 
     def release(self):
@@ -88,10 +85,8 @@ class BaseBoundInstrument:
             return self._ref_count
 
     def __repr__(self):
-        return '{}(data="{}", last_update_timestamp={})'.format(
-            type(self).__name__,
-            self.aggregator.current,
-            self.last_update_timestamp,
+        return '{}(data="{}")'.format(
+            type(self).__name__, self.aggregator.current
         )
 
 
@@ -331,7 +326,6 @@ class Meter(metrics_api.Meter):
                 if not observer.enabled:
                     continue
 
-                # TODO: capture timestamp?
                 if not observer.run():
                     continue
 
@@ -404,9 +398,7 @@ class Meter(metrics_api.Meter):
 
 
 class MeterProvider(metrics_api.MeterProvider):
-    def __init__(
-        self, resource: Resource = Resource.create_empty(),
-    ):
+    def __init__(self, resource: Resource = Resource.create_empty()):
         self.resource = resource
 
     def get_meter(
