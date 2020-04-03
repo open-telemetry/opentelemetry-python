@@ -195,9 +195,7 @@ def _translate_to_jaeger(spans: Span):
         status = span.status
 
         parent_id = 0
-        if isinstance(span.parent, trace_api.Span):
-            parent_id = span.parent.get_context().span_id
-        elif isinstance(span.parent, trace_api.SpanContext):
+        if span.parent is not None:
             parent_id = span.parent.span_id
 
         tags = _extract_tags(span.attributes)
