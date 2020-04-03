@@ -25,7 +25,6 @@ from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from pytest import fixture
 
 POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")
 POSTGRES_PORT = int(os.getenv("POSTGRESQL_PORT ", "5432"))
@@ -45,6 +44,15 @@ class TestFunctionalPsycopg(unittest.TestCase):
         cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
         cls._tracer_provider.add_span_processor(cls._span_processor)
         trace_integration(cls._tracer)
+        cls._connection = psycopg2.connect(
+            dbname=POSTGRES_DB_NAME,
+            user=POSTGRES_USER,
+            password=POSTGRES_PASSWORD,
+            host=POSTGRES_HOST,
+            port=POSTGRES_PORT,
+        )
+        cls._connection.set_session(autocommit=True)
+        cls._cursor = cls._connection.cursor()
 
     @classmethod
     def tearDownClass(cls):
@@ -52,27 +60,6 @@ class TestFunctionalPsycopg(unittest.TestCase):
             cls._cursor.close()
         if cls._connection:
             cls._connection.close()
-
-    @fixture(autouse=True)
-    def connect_to_db(self):
-        if self._connection is None:
-            # Try to connect to DB
-            for i in range(5):
-                try:
-                    self._connection = psycopg2.connect(
-                        dbname=POSTGRES_DB_NAME,
-                        user=POSTGRES_USER,
-                        password=POSTGRES_PASSWORD,
-                        host=POSTGRES_HOST,
-                        port=POSTGRES_PORT,
-                    )
-                    self._cursor = self._connection.cursor()
-                    break
-                except Exception as err:
-                    print(err)
-                time.sleep(5)
-            else:
-                raise Exception("Failed to connect to DB")
 
     def setUp(self):
         self._span_exporter.clear()
@@ -87,8 +74,8 @@ class TestFunctionalPsycopg(unittest.TestCase):
                 child_span = span
             self.assertIsInstance(span.start_time, int)
             self.assertIsInstance(span.end_time, int)
-        self.assertIsNot(root_span, None)
-        self.assertIsNot(child_span, None)
+        self.assertIsNotNone(root_span)
+        self.assertIsNotNone(child_span)
         self.assertEqual(root_span.name, "rootSpan")
         self.assertEqual(child_span.name, "postgresql.opentelemetry-tests")
         self.assertIsNotNone(child_span.parent)
@@ -107,7 +94,6 @@ class TestFunctionalPsycopg(unittest.TestCase):
             self._cursor.execute(
                 "CREATE TABLE IF NOT EXISTS test (id integer)"
             )
-            self._connection.commit()
         self.validate_spans()
 
     def test_executemany(self):
@@ -122,9 +108,8 @@ class TestFunctionalPsycopg(unittest.TestCase):
     def test_callproc(self):
         """Should create a child span for callproc
         """
-        with self._tracer.start_as_current_span("rootSpan"):
-            try:
-                self._cursor.callproc("test", ())
-            except Exception as err:
-                print(err)
-        self.validate_spans()
+        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
+            Exception
+        ):
+            self._cursor.callproc("test", ())
+            self.validate_spans()
