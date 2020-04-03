@@ -180,7 +180,7 @@ class ZipkinSpanExporter(SpanExporter):
             }
 
             if context.trace_flags.sampled:
-                zipkin_span["debug"] = 1
+                zipkin_span["debug"] = True
 
             if isinstance(span.parent, Span):
                 zipkin_span["parentId"] = format(
