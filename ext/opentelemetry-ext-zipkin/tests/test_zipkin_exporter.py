@@ -197,7 +197,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "value": "event0",
                     }
                 ],
-                "debug": 1,
+                "debug": True,
                 "parentId": format(parent_id, "x"),
             },
             {
