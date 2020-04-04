@@ -15,11 +15,11 @@ Usage
 
 .. code-block:: python
 
+    from opentelemetry.ext.flask import FlaskInstrumentor
+    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
     from flask import Flask
-    from opentelemetry.ext.flask import instrument_app
 
     app = Flask(__name__)
-    instrument_app(app)  # This is where the magic happens. ✨
 
     @app.route("/")
     def hello():
