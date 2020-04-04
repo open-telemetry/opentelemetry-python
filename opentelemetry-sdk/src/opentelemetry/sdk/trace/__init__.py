@@ -497,7 +497,7 @@ class Tracer(trace_api.Tracer):
         self.source = source
         self.instrumentation_info = instrumentation_info
 
-    def get_current_span(self):
+    def get_current_span(self):  # pylint: disable
         return self.source.get_current_span()
 
     def start_as_current_span(
@@ -655,7 +655,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     @staticmethod
     def get_current_span() -> Span:
-        return context_api.get_value(SPAN_KEY)  # type: ignore
+        return trace_api.get_current_span()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.

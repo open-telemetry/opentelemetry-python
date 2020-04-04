@@ -17,10 +17,7 @@ import unittest
 import opentelemetry.sdk.context.propagation.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
 import opentelemetry.trace as trace_api
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-)
+from opentelemetry.trace.propagation import set_span_in_context
 
 FORMAT = b3_format.B3Format()
 
@@ -33,7 +30,7 @@ def get_as_list(dict_object, key):
 def get_child_parent_new_carrier(old_carrier):
 
     ctx = FORMAT.extract(get_as_list, old_carrier)
-    parent_context = get_span_from_context(ctx).get_context()
+    parent_context = trace_api.get_current_span(ctx).get_context()
 
     parent = trace.Span("parent", parent_context)
     child = trace.Span(
@@ -233,7 +230,7 @@ class TestB3Format(unittest.TestCase):
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_span_from_context(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
@@ -245,7 +242,7 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_span_from_context(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     def test_missing_span_id(self):
@@ -256,5 +253,5 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_span_from_context(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)

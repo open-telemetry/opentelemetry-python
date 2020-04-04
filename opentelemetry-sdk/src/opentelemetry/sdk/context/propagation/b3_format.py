@@ -16,10 +16,7 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-)
+from opentelemetry.trace.propagation import set_span_in_context
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
@@ -125,7 +122,7 @@ class B3Format(HTTPTextFormat):
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        span = get_span_from_context(context=context)
+        span = trace.get_current_span(context=context)
         sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
         set_in_carrier(
             carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),

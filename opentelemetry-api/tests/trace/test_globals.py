@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch
 
-from opentelemetry import trace
+from opentelemetry import context, trace
+from opentelemetry.trace.propagation import set_span_in_context
 
 
 class TestGlobals(unittest.TestCase):
@@ -16,3 +17,22 @@ class TestGlobals(unittest.TestCase):
         """trace.get_tracer should proxy to the global tracer provider."""
         trace.get_tracer("foo", "var")
         self._mock_tracer_provider.get_tracer.assert_called_with("foo", "var")
+
+
+class TestTracer(unittest.TestCase):
+    def setUp(self):
+        self.tracer = trace.DefaultTracer()
+
+    def test_get_current_span(self):
+        """DefaultTracer's start_span will also
+        be retrievable via get_current_span
+        """
+        self.assertIs(trace.get_current_span(), None)
+        span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
+        ctx = set_span_in_context(span)
+        token = context.attach(ctx)
+        try:
+            self.assertIs(trace.get_current_span(), span)
+        finally:
+            context.detach(token)
+        self.assertIs(trace.get_current_span(), None)

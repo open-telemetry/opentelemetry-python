@@ -212,15 +212,17 @@ class TestSpanCreation(unittest.TestCase):
         with tracer_1.use_span(root, True):
             self.assertIs(tracer_1.get_current_span(), root)
             self.assertIs(tracer_2.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
         # outside of the loop, both should not reference a span.
         self.assertIs(tracer_1.get_current_span(), None)
         self.assertIs(tracer_2.get_current_span(), None)
+        self.assertIs(trace_api.get_current_span(), None)
 
     def test_start_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -228,7 +230,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
         with tracer.use_span(root, True):
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span(
                 "child", kind=trace_api.SpanKind.CLIENT
@@ -255,7 +257,7 @@ class TestSpanCreation(unittest.TestCase):
                 )
 
                 # Verify start_span() did not set the current span.
-                self.assertIs(tracer.get_current_span(), root)
+                self.assertIs(trace_api.get_current_span(), root)
 
             self.assertIsNotNone(child.end_time)
 
@@ -272,7 +274,7 @@ class TestSpanCreation(unittest.TestCase):
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -280,7 +282,7 @@ class TestSpanCreation(unittest.TestCase):
 
         # Test with the implicit root span
         with tracer.use_span(root, True):
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span("stepchild", other_parent) as child:
                 # The child's parent should be the one passed in,
@@ -306,30 +308,30 @@ class TestSpanCreation(unittest.TestCase):
                 )
 
                 # Verify start_span() did not set the current span.
-                self.assertIs(tracer.get_current_span(), root)
+                self.assertIs(trace_api.get_current_span(), root)
 
             # Verify ending the child did not set the current span.
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
     def test_start_as_current_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         with tracer.start_as_current_span("root") as root:
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_as_current_span("child") as child:
-                self.assertIs(tracer.get_current_span(), child)
+                self.assertIs(trace_api.get_current_span(), child)
                 self.assertIs(child.parent, root)
 
             # After exiting the child's scope the parent should become the
             # current span again.
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
         self.assertIsNotNone(root.end_time)
 
     def test_start_as_current_span_explicit(self):
@@ -341,11 +343,11 @@ class TestSpanCreation(unittest.TestCase):
             is_remote=False,
         )
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         # Test with the implicit root span
         with tracer.start_as_current_span("root") as root:
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             self.assertIsNotNone(root.start_time)
             self.assertIsNone(root.end_time)
@@ -356,14 +358,14 @@ class TestSpanCreation(unittest.TestCase):
                 # The child should become the current span as usual, but its
                 # parent should be the one passed in, not the
                 # previously-current span.
-                self.assertIs(tracer.get_current_span(), child)
+                self.assertIs(trace_api.get_current_span(), child)
                 self.assertNotEqual(child.parent, root)
                 self.assertIs(child.parent, other_parent)
 
             # After exiting the child's scope the last span on the stack should
             # become current, not the child's parent.
-            self.assertNotEqual(tracer.get_current_span(), other_parent)
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertNotEqual(trace_api.get_current_span(), other_parent)
+            self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
     def test_explicit_span_resource(self):
@@ -543,7 +545,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
 
     def test_events(self):
-        self.assertIsNone(self.tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         with self.tracer.start_as_current_span("root") as root:
             # only event name

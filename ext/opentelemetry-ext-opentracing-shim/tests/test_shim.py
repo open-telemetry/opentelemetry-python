@@ -26,10 +26,7 @@ from opentelemetry import propagators, trace
 from opentelemetry.context import Context
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-)
+from opentelemetry.trace.propagation import set_span_in_context
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
@@ -578,7 +575,7 @@ class MockHTTPTextFormat(HTTPTextFormat):
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        span = get_span_from_context(context)
+        span = trace.get_current_span(context)
         set_in_carrier(
             carrier, self.TRACE_ID_KEY, str(span.get_context().trace_id)
         )

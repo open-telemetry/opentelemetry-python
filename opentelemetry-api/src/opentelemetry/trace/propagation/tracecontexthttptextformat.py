@@ -17,11 +17,7 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    httptextformat,
-    set_span_in_context,
-)
+from opentelemetry.trace.propagation import httptextformat, set_span_in_context
 
 #    Keys and values are strings of up to 256 printable US-ASCII characters.
 #    Implementations should conform to the `W3C Trace Context - Tracestate`_
@@ -121,7 +117,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
 
         See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
         """
-        span_context = get_span_from_context(context).get_context()
+        span_context = trace.get_current_span(context).get_context()
 
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return

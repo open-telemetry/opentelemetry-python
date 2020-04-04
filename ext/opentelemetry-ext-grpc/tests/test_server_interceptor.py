@@ -100,7 +100,7 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
 
         def handler(request, context):
             nonlocal active_span_in_handler
-            active_span_in_handler = tracer.get_current_span()
+            active_span_in_handler = trace.get_current_span()
             return b""
 
         server = grpc.server(
@@ -113,13 +113,13 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
         port = server.add_insecure_port("[::]:0")
         channel = grpc.insecure_channel("localhost:{:d}".format(port))
 
-        active_span_before_call = tracer.get_current_span()
+        active_span_before_call = trace.get_current_span()
         try:
             server.start()
             channel.unary_unary("")(b"")
         finally:
             server.stop(None)
-        active_span_after_call = tracer.get_current_span()
+        active_span_after_call = trace.get_current_span()
 
         self.assertIsNone(active_span_before_call)
         self.assertIsNone(active_span_after_call)
@@ -138,7 +138,7 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
         active_spans_in_handler = []
 
         def handler(request, context):
-            active_spans_in_handler.append(tracer.get_current_span())
+            active_spans_in_handler.append(trace.get_current_span())
             return b""
 
         server = grpc.server(
@@ -188,7 +188,7 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
 
         def handler(request, context):
             latch()
-            active_spans_in_handler.append(tracer.get_current_span())
+            active_spans_in_handler.append(trace.get_current_span())
             return b""
 
         server = grpc.server(

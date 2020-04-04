@@ -95,10 +95,7 @@ from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
 from opentelemetry.trace import DefaultSpan
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-)
+from opentelemetry.trace.propagation import set_span_in_context
 
 logger = logging.getLogger(__name__)
 
@@ -704,6 +701,6 @@ class TracerShim(opentracing.Tracer):
 
         propagator = propagators.get_global_httptextformat()
         ctx = propagator.extract(get_as_list, carrier)
-        otel_context = get_span_from_context(ctx).get_context()
+        otel_context = trace_api.get_current_span(ctx).get_context()
 
         return SpanContextShim(otel_context)

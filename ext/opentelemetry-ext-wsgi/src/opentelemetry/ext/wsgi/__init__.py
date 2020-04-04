@@ -61,7 +61,6 @@ import wsgiref.util as wsgiref_util
 
 from opentelemetry import context, propagators, trace
 from opentelemetry.ext.wsgi.version import __version__
-from opentelemetry.trace.propagation import get_span_from_context
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
