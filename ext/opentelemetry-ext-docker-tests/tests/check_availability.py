@@ -12,21 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import sys
 import time
+import traceback
 
 import psycopg2
+import pymongo
 
-POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")
-POSTGRES_PORT = int(os.getenv("POSTGRESQL_PORT ", "5432"))
-POSTGRES_DB_NAME = os.getenv("POSTGRESQL_DB_NAME ", "opentelemetry-tests")
-POSTGRES_PASSWORD = os.getenv("POSTGRESQL_HOST ", "testpassword")
-POSTGRES_USER = os.getenv("POSTGRESQL_HOST ", "testuser")
+MONGODB_COLLECTION_NAME = "test"
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "opentelemetry-tests")
+MONGODB_HOST = os.getenv("MONGODB_HOST", "localhost")
+MONGODB_PORT = int(os.getenv("MONGODB_PORT", "27017"))
+POSTGRES_DB_NAME = os.getenv("POSTGRESQL_DB_NAME", "opentelemetry-tests")
+POSTGRES_HOST = os.getenv("POSTGRESQL_HOST", "localhost")
+POSTGRES_PASSWORD = os.getenv("POSTGRESQL_HOST", "testpassword")
+POSTGRES_PORT = int(os.getenv("POSTGRESQL_PORT", "5432"))
+POSTGRES_USER = os.getenv("POSTGRESQL_HOST", "testuser")
+RETRY_COUNT = 5
+RETRY_INTERVAL = 5  # Seconds
+
+
+def check_pymongo_connection():
+    # Try to connect to DB
+    for i in range(RETRY_COUNT):
+        try:
+            client = pymongo.MongoClient(
+                MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000
+            )
+            db = client[MONGODB_DB_NAME]
+            collection = db[MONGODB_COLLECTION_NAME]
+            collection.find_one()
+            client.close()
+            break
+        except Exception as ex:
+            if i == RETRY_COUNT - 1:
+                raise (ex)
+            traceback.print_exc()
+        time.sleep(RETRY_INTERVAL)
 
 
 def check_postgres_connection():
     # Try to connect to DB
-    for i in range(5):
+    for i in range(RETRY_COUNT):
         try:
             connection = psycopg2.connect(
                 dbname=POSTGRES_DB_NAME,
@@ -37,20 +63,17 @@ def check_postgres_connection():
             )
             connection.close()
             break
-        except Exception as err:
-            print(err)
-        time.sleep(5)
-    else:
-        raise Exception("Failed to connect to Postgres DB")
+        except Exception as ex:
+            if i == RETRY_COUNT - 1:
+                raise (ex)
+            traceback.print_exc()
+        time.sleep(RETRY_INTERVAL)
 
 
 def check_docker_services_availability():
-    try:
-        print("Checking Postgres availability")
-        check_postgres_connection()
-    except Exception:
-        sys.exit(1)
-    sys.exit(0)
+    # Check if Docker services accept connections
+    check_pymongo_connection()
+    check_postgres_connection()
 
 
 check_docker_services_availability()
