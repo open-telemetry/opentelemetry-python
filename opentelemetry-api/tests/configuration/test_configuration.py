@@ -19,12 +19,18 @@ from opentelemetry.configuration import Configuration  # type: ignore
 
 
 class TestConfiguration(TestCase):
-
+    # pylint: disable
     def setUp(self):
-        from opentelemetry.configuration import Configuration
+        from opentelemetry.configuration import (  # pylint: disable
+            Configuration,
+        )
+
+        # =redefined-outer-name,reimported,import-outside-toplevel,unused-import
 
     def tearDown(self):
-        from opentelemetry.configuration import Configuration
+        from opentelemetry.configuration import (
+            Configuration,  # pylint: disable
+        )
 
     def test_singleton(self):
         self.assertIsInstance(Configuration(), Configuration)
