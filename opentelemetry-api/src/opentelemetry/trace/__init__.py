@@ -700,6 +700,6 @@ def get_tracer_provider() -> TracerProvider:
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        _TRACER_PROVIDER = _load_provider("tracer_provider")
+        _TRACER_PROVIDER = _load_provider("tracer_provider")  # type: ignore
 
     return _TRACER_PROVIDER  # type: ignore

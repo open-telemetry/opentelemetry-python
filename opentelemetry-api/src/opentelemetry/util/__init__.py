@@ -13,10 +13,13 @@
 # limitations under the License.
 import time
 from logging import getLogger
+from typing import Union
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration
+from opentelemetry.configuration import Configuration  # type: ignore
+from opentelemetry.metrics import MeterProvider
+from opentelemetry.trace import TracerProvider
 
 logger = getLogger(__name__)
 
@@ -24,7 +27,7 @@ logger = getLogger(__name__)
 # this needs to be in the API.
 
 try:
-    time_ns = time.time_ns
+    time_ns = time.time_ns  # type: ignore
 # Python versions < 3.7
 except AttributeError:
 
@@ -32,14 +35,13 @@ except AttributeError:
         return int(time.time() * 1e9)
 
 
-def _load_provider(provider):
-
+def _load_provider(provider: str) -> Union[TracerProvider, MeterProvider]:
     try:
-        return next(
+        return next(  # type: ignore
             iter_entry_points(
                 "opentelemetry_{}".format(provider),
-                name=getattr(
-                    Configuration(), provider, "default_{}".format(provider),
+                name=getattr(  # type: ignore
+                    Configuration(), provider, "default_{}".format(provider),  # type: ignore
                 ),
             )
         ).load()()

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable-all
 
 from unittest import TestCase
 from unittest.mock import patch
@@ -19,25 +20,18 @@ from opentelemetry.configuration import Configuration  # type: ignore
 
 
 class TestConfiguration(TestCase):
-    # pylint: disable
     def setUp(self):
-        from opentelemetry.configuration import (  # pylint: disable
-            Configuration,
-        )
-
-        # =redefined-outer-name,reimported,import-outside-toplevel,unused-import
+        from opentelemetry.configuration import Configuration  # type: ignore
 
     def tearDown(self):
-        from opentelemetry.configuration import (
-            Configuration,  # pylint: disable
-        )
+        from opentelemetry.configuration import Configuration  # type: ignore
 
     def test_singleton(self):
         self.assertIsInstance(Configuration(), Configuration)
         self.assertIs(Configuration(), Configuration())
 
     @patch.dict(
-        "os.environ",
+        "os.environ",  # type: ignore
         {
             "OPENTELEMETRY_PYTHON_METER_PROVIDER": "meter_provider",
             "OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider",
