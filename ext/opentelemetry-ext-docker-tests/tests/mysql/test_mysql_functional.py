@@ -71,8 +71,8 @@ class TestFunctionalMysql(unittest.TestCase):
                 db_span = span
             self.assertIsInstance(span.start_time, int)
             self.assertIsInstance(span.end_time, int)
-        self.assertIsNot(root_span, None)
-        self.assertIsNot(db_span, None)
+        self.assertIsNotNone(root_span)
+        self.assertIsNotNone(db_span)
         self.assertEqual(root_span.name, "rootSpan")
         self.assertEqual(db_span.name, "mysql.opentelemetry-tests")
         self.assertIsNotNone(db_span.parent)
