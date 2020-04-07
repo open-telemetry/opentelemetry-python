@@ -73,34 +73,29 @@ class Configuration:
     def __new__(cls) -> "Configuration":
         if Configuration._instance is None:
 
-            for key in {
-                key: value
-                for key, value in environ.items()
-                if fullmatch("OPENTELEMETRY_PYTHON_[A-Z][A-Z_]*", key)
-                is not None
-            }.keys():
-                setattr(Configuration, "_{}".format(key), None)
-                setattr(
-                    Configuration,
-                    key,
-                    property(
-                        fget=lambda cls, key=key: getattr(
-                            cls, "_{}".format(key)
-                        )
-                    ),
-                )
+            for key, value in environ.items():
 
-            Configuration._instance = object.__new__(cls)
+                match = fullmatch("OPENTELEMETRY_PYTHON_([A-Z][A-Z_]*)", key)
 
-            Configuration.__slots__.extend(
-                [
-                    key
-                    for key in Configuration.__dict__.keys() if not key.startswith("_")  # pylint: disable=consider-iterating-dictionary
-                ]
-            )
+                if match is not None:
+
+                    key = match.group(1).lower()
+
+                    setattr(Configuration, "_{}".format(key), value)
+                    setattr(
+                        Configuration,
+                        key,
+                        property(
+                            fget=lambda cls, key=key: getattr(
+                                cls, "_{}".format(key)
+                            )
+                        ),
+                    )
+
+                Configuration.__slots__.append(key)
+
             Configuration.__slots__ = tuple(Configuration.__slots__)
 
-            from ipdb import set_trace
-            set_trace()
+            Configuration._instance = object.__new__(cls)
 
         return cls._instance
