@@ -35,7 +35,6 @@ tracer = trace.get_tracer(__name__)
 
 exporter = ConsoleSpanExporter()
 span_processor = BatchExportSpanProcessor(exporter)
-trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 # Integrations are the glue that binds the OpenTelemetry API and the
