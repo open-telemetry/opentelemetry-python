@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from pytest import fixture
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD ", "testpassword")
@@ -45,6 +44,14 @@ class TestFunctionalMysql(unittest.TestCase):
         cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
         cls._tracer_provider.add_span_processor(cls._span_processor)
         trace_integration(cls._tracer)
+        cls._connection = mysql.connector.connect(
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            host=MYSQL_HOST,
+            port=MYSQL_PORT,
+            database=MYSQL_DB_NAME,
+        )
+        cls._cursor = cls._connection.cursor()
 
     @classmethod
     def tearDownClass(cls):
@@ -53,27 +60,6 @@ class TestFunctionalMysql(unittest.TestCase):
 
     def setUp(self):
         self._span_exporter.clear()
-
-    @fixture(autouse=True)
-    def connect_to_db(self):
-        if self._connection is None:
-            # Try to connect to DB
-            for i in range(5):
-                try:
-                    self._connection = mysql.connector.connect(
-                        user=MYSQL_USER,
-                        password=MYSQL_PASSWORD,
-                        host=MYSQL_HOST,
-                        port=MYSQL_PORT,
-                        database=MYSQL_DB_NAME,
-                    )
-                    self._cursor = self._connection.cursor()
-                    break
-                except Exception as err:
-                    print(err)
-                time.sleep(5)
-            else:
-                raise Exception("Failed to connect to DB")
 
     def validate_spans(self):
         spans = self._span_exporter.get_finished_spans()
@@ -115,9 +101,8 @@ class TestFunctionalMysql(unittest.TestCase):
     def test_callproc(self):
         """Should create a child span for callproc
         """
-        with self._tracer.start_as_current_span("rootSpan"):
-            try:
-                self._cursor.callproc("test", ())
-            except mysql.connector.Error as err:
-                print(err)
-        self.validate_spans()
+        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
+            Exception
+        ):
+            self._cursor.callproc("test", ())
+            self.validate_spans()
