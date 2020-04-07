@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import time
+from logging import getLogger
+
+from pkg_resources import iter_entry_points
+
+from opentelemetry.configuration import Configuration
+
+logger = getLogger(__name__)
 
 # Since we want API users to be able to provide timestamps,
 # this needs to be in the API.
@@ -23,3 +30,21 @@ except AttributeError:
 
     def time_ns() -> int:
         return int(time.time() * 1e9)
+
+
+def _load_provider(provider):
+
+    try:
+        return next(
+            iter_entry_points(
+                "opentelemetry_{}".format(provider),
+                name=getattr(
+                    Configuration(), provider, "default_{}".format(provider),
+                ),
+            )
+        ).load()()
+    except Exception:  # pylint: disable=broad-except
+        logger.error(
+            "Failed to load configured provider %s", provider,
+        )
+        raise

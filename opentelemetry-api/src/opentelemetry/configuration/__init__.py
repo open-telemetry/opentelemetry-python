@@ -61,71 +61,46 @@ the configured meter provider::
 
 """
 
-from logging import getLogger
 from os import environ
-
-from pkg_resources import iter_entry_points
-
-logger = getLogger(__name__)
+from re import fullmatch
 
 
 class Configuration:
     _instance = None
 
-    __slots__ = ("tracer_provider", "meter_provider")
+    __slots__ = []
 
     def __new__(cls) -> "Configuration":
         if Configuration._instance is None:
 
-            configuration = {
-                key: "default_{}".format(key) for key in cls.__slots__
-            }
-
-            for key, value in configuration.items():
-                configuration[key] = environ.get(
-                    "OPENTELEMETRY_PYTHON_{}".format(key.upper()), value
-                )
-
-            for key, value in configuration.items():
-                underscored_key = "_{}".format(key)
-
-                setattr(Configuration, underscored_key, None)
+            for key in {
+                key: value
+                for key, value in environ.items()
+                if fullmatch("OPENTELEMETRY_PYTHON_[A-Z][A-Z_]*", key)
+                is not None
+            }.keys():
+                setattr(Configuration, "_{}".format(key), None)
                 setattr(
                     Configuration,
                     key,
                     property(
-                        fget=lambda cls, local_key=key, local_value=value: cls._load(
-                            key=local_key, value=local_value
+                        fget=lambda cls, key=key: getattr(
+                            cls, "_{}".format(key)
                         )
                     ),
                 )
 
             Configuration._instance = object.__new__(cls)
 
+            Configuration.__slots__.extend(
+                [
+                    key
+                    for key in Configuration.__dict__.keys() if not key.startswith("_")  # pylint: disable=consider-iterating-dictionary
+                ]
+            )
+            Configuration.__slots__ = tuple(Configuration.__slots__)
+
+            from ipdb import set_trace
+            set_trace()
+
         return cls._instance
-
-    @classmethod
-    def _load(cls, key=None, value=None):
-        underscored_key = "_{}".format(key)
-
-        if getattr(cls, underscored_key) is None:
-            try:
-                setattr(
-                    cls,
-                    underscored_key,
-                    next(
-                        iter_entry_points(
-                            "opentelemetry_{}".format(key), name=value,
-                        )
-                    ).load()(),
-                )
-            except Exception:  # pylint: disable=broad-except
-                # FIXME Decide on how to handle this. Should an exception be
-                # raised here, or only a message should be logged and should
-                # we fall back to the default meter provider?
-                logger.error(
-                    "Failed to load configured provider %s", value,
-                )
-                raise
-
-        return getattr(cls, underscored_key)
