@@ -18,12 +18,38 @@
 """
 Simple configuration manager
 
-This is a configuration manager for the Tracer and Meter providers. It reads
-configuration from environment variables prefixed with
-``OPENTELEMETRY_PYTHON_``:
+This is a configuration manager for OpenTelemetry. It reads configuration
+values from environment variables prefixed with
+``OPENTELEMETRY_PYTHON_`` whose characters are only all caps and underscores.
+The first character after ``OPENTELEMETRY_PYTHON_`` must be an uppercase
+character.
 
-1. ``OPENTELEMETRY_PYTHON_TRACER_PROVIDER``
-2. ``OPENTELEMETRY_PYTHON_METER_PROVIDER``
+For example, these environment variables will be read:
+
+1. ``OPENTELEMETRY_PYTHON_SOMETHING``
+2. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_``
+3. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND__ELSE``
+
+These won't:
+
+1. ``OPENTELEMETRY_PYTH_SOMETHING``
+2. ``OPENTELEMETRY_PYTHON_something``
+3. ``OPENTELEMETRY_PYTHON_SOMETHING_2_AND__ELSE``
+4. ``OPENTELEMETRY_PYTHON_SOMETHING_%_ELSE``
+
+The values stored in the environment variables can be found in an instance of
+``opentelemetry.configuration.Configuration``. This class can be instantiated
+freely because instantiating it returns a singleton.
+
+For example, if the environment variable
+``OPENTELEMETRY_PYTHON_METER_PROVIDER`` value is ``my_meter_provider``, then
+``Configuration().meter_provider == "my_meter_provider"`` would be ``True``.
+
+Environment variables used by OpenTelemetry
+-------------------------------------------
+
+1. OPENTELEMETRY_PYTHON_METER_PROVIDER
+2. OPENTELEMETRY_PYTHON_TRACER_PROVIDER
 
 The value of these environment variables should be the name of the entry point
 that points to the class that implements either provider. This OpenTelemetry
@@ -47,18 +73,6 @@ To use the meter provider above, then the
 "default_meter_provider" (this is not actually necessary since the
 OpenTelemetry API provided providers are the default ones used if no
 configuration is found in the environment variables).
-
-Once this is done, the configuration manager can be used by simply importing
-it from opentelemetry.configuration.Configuration. This is a class that can
-be instantiated as many times as needed without concern because it will
-always produce the same instance. Its attributes are lazy loaded and they
-hold an instance of their corresponding provider. So, for example, to get
-the configured meter provider::
-
-    from opentelemetry.configuration import Configuration
-
-    tracer_provider = Configuration().tracer_provider
-
 """
 
 from os import environ
