@@ -25,7 +25,7 @@ logger = getLogger(__name__)
 # this needs to be in the API.
 
 try:
-    time_ns = time.time_ns  # type: ignore
+    time_ns = time.time_ns
 # Python versions < 3.7
 except AttributeError:
 
