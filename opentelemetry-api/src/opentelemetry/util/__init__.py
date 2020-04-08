@@ -18,8 +18,6 @@ from typing import Union
 from pkg_resources import iter_entry_points
 
 from opentelemetry.configuration import Configuration  # type: ignore
-from opentelemetry.metrics import MeterProvider
-from opentelemetry.trace import TracerProvider
 
 logger = getLogger(__name__)
 
@@ -35,7 +33,7 @@ except AttributeError:
         return int(time.time() * 1e9)
 
 
-def _load_provider(provider: str) -> Union[TracerProvider, MeterProvider]:
+def _load_provider(provider: str) -> Union["TracerProvider", "MeterProvider"]:  # type: ignore
     try:
         return next(  # type: ignore
             iter_entry_points(

@@ -410,6 +410,6 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = _load_provider("meter_provider")  # type: ignore
+        _METER_PROVIDER = _load_provider("meter_provider")
 
-    return _METER_PROVIDER  # type: ignore
+    return _METER_PROVIDER
