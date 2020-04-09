@@ -45,6 +45,10 @@ For example, if the environment variable
 ``OPENTELEMETRY_PYTHON_METER_PROVIDER`` value is ``my_meter_provider``, then
 ``Configuration().meter_provider == "my_meter_provider"`` would be ``True``.
 
+Non defined attributes will always return ``None``. This is intended to make it
+easier to use the ``Configuration`` object in actual code, because it won't be
+necessary to check for the attribute to be defined first.
+
 Environment variables used by OpenTelemetry
 -------------------------------------------
 
