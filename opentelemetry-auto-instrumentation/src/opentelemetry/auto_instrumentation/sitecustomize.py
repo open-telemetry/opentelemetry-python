@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,22 +13,16 @@
 # limitations under the License.
 
 from logging import getLogger
-from os import environ, execl
-from os.path import abspath, dirname, pathsep
-from shutil import which
-from sys import argv
+
+from pkg_resources import iter_entry_points
 
 logger = getLogger(__file__)
 
 
-def run() -> None:
+for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+    try:
+        entry_point.load()().instrument()  # type: ignore
+        logger.debug("Instrumented %s", entry_point.name)
 
-    python_path = environ.get("PYTHONPATH", "")
-    filedir_path = dirname(abspath(__file__))
-
-    if filedir_path not in python_path:
-        environ["PYTHONPATH"] = pathsep.join([filedir_path, python_path])
-
-    executable = which(argv[1])
-
-    execl(executable, executable, *argv[2:])
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Instrumenting of %s failed", entry_point.name)
