@@ -45,6 +45,10 @@ class TestConfiguration(TestCase):
             Configuration().tracer_provider, "tracer_provider"
         )  # pylint: disable=no-member
 
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
+    )
     def test_property(self):
         with self.assertRaises(AttributeError):
             Configuration().tracer_provider = "new_tracer_provider"
@@ -52,3 +56,6 @@ class TestConfiguration(TestCase):
     def test_slots(self):
         with self.assertRaises(AttributeError):
             Configuration().xyz = "xyz"  # pylint: disable=assigning-non-slot
+
+    def test_getattr(self):
+        Configuration().xyz is None

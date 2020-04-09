@@ -113,3 +113,6 @@ class Configuration:
             Configuration._instance = object.__new__(cls)
 
         return cls._instance
+
+    def __getattr__(self, name):
+        return None
