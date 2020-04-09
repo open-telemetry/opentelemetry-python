@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import threading
 import typing
 from functools import wraps
 from os import environ
@@ -24,7 +25,7 @@ from opentelemetry.context.context import Context, RuntimeContext
 
 logger = logging.getLogger(__name__)
 _RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
-
+_RUNTIME_CONTEXT_LOCK = threading.Lock()
 
 _F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
 
@@ -42,26 +43,30 @@ def _load_runtime_context(func: _F) -> _F:
         **kwargs: typing.Dict[typing.Any, typing.Any]
     ) -> typing.Optional[typing.Any]:
         global _RUNTIME_CONTEXT  # pylint: disable=global-statement
-        if _RUNTIME_CONTEXT is None:
-            # FIXME use a better implementation of a configuration manager to avoid having
-            # to get configuration values straight from environment variables
-            if version_info < (3, 5):
-                # contextvars are not supported in 3.4, use thread-local storage
-                default_context = "threadlocal_context"
-            else:
-                default_context = "contextvars_context"
 
-            configured_context = environ.get(
-                "OPENTELEMETRY_CONTEXT", default_context
-            )  # type: str
-            try:
-                _RUNTIME_CONTEXT = next(
-                    iter_entry_points(
-                        "opentelemetry_context", configured_context
+        with _RUNTIME_CONTEXT_LOCK:
+            if _RUNTIME_CONTEXT is None:
+                # FIXME use a better implementation of a configuration manager to avoid having
+                # to get configuration values straight from environment variables
+                if version_info < (3, 5):
+                    # contextvars are not supported in 3.4, use thread-local storage
+                    default_context = "threadlocal_context"
+                else:
+                    default_context = "contextvars_context"
+
+                configured_context = environ.get(
+                    "OPENTELEMETRY_CONTEXT", default_context
+                )  # type: str
+                try:
+                    _RUNTIME_CONTEXT = next(
+                        iter_entry_points(
+                            "opentelemetry_context", configured_context
+                        )
+                    ).load()()
+                except Exception:  # pylint: disable=broad-except
+                    logger.error(
+                        "Failed to load context: %s", configured_context
                     )
-                ).load()()
-            except Exception:  # pylint: disable=broad-except
-                logger.error("Failed to load context: %s", configured_context)
         return func(*args, **kwargs)  # type: ignore
 
     return wrapper  # type:ignore

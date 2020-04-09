@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,6 +58,10 @@ import typing
 import opentelemetry.trace as trace
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
+from opentelemetry.correlationcontext.propagation import (
+    CorrelationContextPropagator,
+)
+from opentelemetry.propagators import composite
 from opentelemetry.trace.propagation import httptextformat
 from opentelemetry.trace.propagation.tracecontexthttptextformat import (
     TraceContextHTTPTextFormat,
@@ -106,8 +110,8 @@ def inject(
     get_global_httptextformat().inject(set_in_carrier, carrier, context)
 
 
-_HTTP_TEXT_FORMAT = (
-    TraceContextHTTPTextFormat()
+_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(
+    [TraceContextHTTPTextFormat(), CorrelationContextPropagator()],
 )  # type: httptextformat.HTTPTextFormat
 
 

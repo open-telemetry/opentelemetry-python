@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ following example::
     from opentelemetry.ext.opentracing_shim import create_tracer
 
     # Tell OpenTelemetry which Tracer implementation to use.
-    trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+    trace.set_tracer_provider(TracerProvider())
 
     # Create an OpenTelemetry Tracer.
     otel_tracer = trace.get_tracer(__name__)
@@ -76,6 +76,8 @@ Note:
     While testing this library, the aforementioned imprecisions were observed
     to be of *less than a microsecond*.
 
+API
+---
 .. _Floating Point Arithmetic\\: Issues and Limitations:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """

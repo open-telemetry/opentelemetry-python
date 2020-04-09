@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,9 +47,8 @@ class TestMeter(unittest.TestCase):
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
-        kvp = {"key1": "value1"}
-        label_set = meter.get_label_set(kvp)
-        counter.add(label_set, 1.0)
+        labels = {"key1": "value1"}
+        counter.add(1.0, labels)
         meter.metrics.add(counter)
         meter.collect()
         self.assertTrue(batcher_mock.process.called)
@@ -69,9 +68,8 @@ class TestMeter(unittest.TestCase):
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys, False
         )
-        kvp = {"key1": "value1"}
-        label_set = meter.get_label_set(kvp)
-        counter.add(label_set, 1.0)
+        labels = {"key1": "value1"}
+        counter.add(1.0, labels)
         meter.metrics.add(counter)
         meter.collect()
         self.assertFalse(batcher_mock.process.called)
@@ -83,7 +81,7 @@ class TestMeter(unittest.TestCase):
 
         def callback(observer):
             self.assertIsInstance(observer, metrics_api.Observer)
-            observer.observe(45, meter.get_label_set(()))
+            observer.observe(45, {})
 
         observer = metrics.Observer(
             callback, "name", "desc", "unit", int, meter, (), True
@@ -96,20 +94,18 @@ class TestMeter(unittest.TestCase):
     def test_record_batch(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         label_keys = ("key1",)
+        labels = {"key1": "value1"}
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
-        kvp = {"key1": "value1"}
-        label_set = meter.get_label_set(kvp)
         record_tuples = [(counter, 1.0)]
-        meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.bind(label_set).aggregator.current, 1.0)
+        meter.record_batch(labels, record_tuples)
+        self.assertEqual(counter.bind(labels).aggregator.current, 1.0)
 
     def test_record_batch_multiple(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         label_keys = ("key1", "key2", "key3")
-        kvp = {"key1": "value1", "key2": "value2", "key3": "value3"}
-        label_set = meter.get_label_set(kvp)
+        labels = {"key1": "value1", "key2": "value2", "key3": "value3"}
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
@@ -117,25 +113,24 @@ class TestMeter(unittest.TestCase):
             "name", "desc", "unit", float, meter, label_keys
         )
         record_tuples = [(counter, 1.0), (measure, 3.0)]
-        meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.bind(label_set).aggregator.current, 1.0)
+        meter.record_batch(labels, record_tuples)
+        self.assertEqual(counter.bind(labels).aggregator.current, 1.0)
         self.assertEqual(
-            measure.bind(label_set).aggregator.current, (3.0, 3.0, 3.0, 1)
+            measure.bind(labels).aggregator.current, (3.0, 3.0, 3.0, 1)
         )
 
     def test_record_batch_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         label_keys = ("key1",)
-        kvp = {"key1": "value1"}
-        label_set = meter.get_label_set(kvp)
+        labels = {"key1": "value1"}
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
-        counter.add(1.0, label_set)
-        bound_counter = counter.bind(label_set)
+        counter.add(1.0, labels)
+        bound_counter = counter.bind(labels)
         record_tuples = [(counter, 1.0)]
-        meter.record_batch(label_set, record_tuples)
-        self.assertEqual(counter.bind(label_set), bound_counter)
+        meter.record_batch(labels, record_tuples)
+        self.assertEqual(counter.bind(labels), bound_counter)
         self.assertEqual(bound_counter.aggregator.current, 2.0)
 
     def test_create_metric(self):
@@ -179,32 +174,86 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(observer.label_keys, ())
         self.assertTrue(observer.enabled)
 
-    def test_get_label_set(self):
+    def test_unregister_observer(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        kvp = {"environment": "staging", "a": "z"}
-        label_set = meter.get_label_set(kvp)
-        label_set2 = meter.get_label_set(kvp)
-        labels = set([label_set, label_set2])
-        self.assertEqual(len(labels), 1)
 
-    def test_get_label_set_empty(self):
+        callback = mock.Mock()
+
+        observer = meter.register_observer(
+            callback, "name", "desc", "unit", int, (), True
+        )
+
+        meter.unregister_observer(observer)
+        self.assertEqual(len(meter.observers), 0)
+
+    def test_direct_call_release_bound_instrument(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        kvp = {}
-        label_set = meter.get_label_set(kvp)
-        self.assertEqual(label_set, metrics.EMPTY_LABEL_SET)
+        label_keys = ("key1",)
+        labels = {"key1": "value1"}
+
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(counter)
+        counter.add(4.0, labels)
+
+        measure = metrics.Measure(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(measure)
+        measure.record(42.0, labels)
+
+        self.assertEqual(len(counter.bound_instruments), 1)
+        self.assertEqual(len(measure.bound_instruments), 1)
+
+        meter.collect()
+
+        self.assertEqual(len(counter.bound_instruments), 0)
+        self.assertEqual(len(measure.bound_instruments), 0)
+
+    def test_release_bound_instrument(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+        label_keys = ("key1",)
+        labels = {"key1": "value1"}
+
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(counter)
+        bound_counter = counter.bind(labels)
+        bound_counter.add(4.0)
+
+        measure = metrics.Measure(
+            "name", "desc", "unit", float, meter, label_keys
+        )
+        meter.metrics.add(measure)
+        bound_measure = measure.bind(labels)
+        bound_measure.record(42)
+
+        bound_counter.release()
+        bound_measure.release()
+
+        # be sure that bound instruments are only released after collection
+        self.assertEqual(len(counter.bound_instruments), 1)
+        self.assertEqual(len(measure.bound_instruments), 1)
+
+        meter.collect()
+
+        self.assertEqual(len(counter.bound_instruments), 0)
+        self.assertEqual(len(measure.bound_instruments), 0)
 
 
 class TestMetric(unittest.TestCase):
     def test_bind(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric_types = [metrics.Counter, metrics.Measure]
+        labels = {"key": "value"}
+        key_labels = tuple(sorted(labels.items()))
         for _type in metric_types:
             metric = _type("name", "desc", "unit", int, meter, ("key",))
-            kvp = {"key": "value"}
-            label_set = meter.get_label_set(kvp)
-            bound_instrument = metric.bind(label_set)
+            bound_instrument = metric.bind(labels)
             self.assertEqual(
-                metric.bound_instruments.get(label_set), bound_instrument
+                metric.bound_instruments.get(key_labels), bound_instrument
             )
 
 
@@ -212,11 +261,10 @@ class TestCounter(unittest.TestCase):
     def test_add(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
-        kvp = {"key": "value"}
-        label_set = meter.get_label_set(kvp)
-        bound_counter = metric.bind(label_set)
-        metric.add(3, label_set)
-        metric.add(2, label_set)
+        labels = {"key": "value"}
+        bound_counter = metric.bind(labels)
+        metric.add(3, labels)
+        metric.add(2, labels)
         self.assertEqual(bound_counter.aggregator.current, 5)
 
 
@@ -224,12 +272,11 @@ class TestMeasure(unittest.TestCase):
     def test_record(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
-        kvp = {"key": "value"}
-        label_set = meter.get_label_set(kvp)
-        bound_measure = metric.bind(label_set)
+        labels = {"key": "value"}
+        bound_measure = metric.bind(labels)
         values = (37, 42, 7)
         for val in values:
-            metric.record(val, label_set)
+            metric.record(val, labels)
         self.assertEqual(
             bound_measure.aggregator.current,
             (min(values), max(values), sum(values), len(values)),
@@ -242,26 +289,25 @@ class TestObserver(unittest.TestCase):
         observer = metrics.Observer(
             None, "name", "desc", "unit", int, meter, ("key",), True
         )
-        kvp = {"key": "value"}
-        label_set = meter.get_label_set(kvp)
+        labels = {"key": "value"}
+        key_labels = tuple(sorted(labels.items()))
         values = (37, 42, 7, 21)
         for val in values:
-            observer.observe(val, label_set)
+            observer.observe(val, labels)
         self.assertEqual(
-            observer.aggregators[label_set].mmsc.current,
+            observer.aggregators[key_labels].mmsc.current,
             (min(values), max(values), sum(values), len(values)),
         )
 
-        self.assertEqual(observer.aggregators[label_set].current, values[-1])
+        self.assertEqual(observer.aggregators[key_labels].current, values[-1])
 
     def test_observe_disabled(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         observer = metrics.Observer(
             None, "name", "desc", "unit", int, meter, ("key",), False
         )
-        kvp = {"key": "value"}
-        label_set = meter.get_label_set(kvp)
-        observer.observe(37, label_set)
+        labels = {"key": "value"}
+        observer.observe(37, labels)
         self.assertEqual(len(observer.aggregators), 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
@@ -270,9 +316,8 @@ class TestObserver(unittest.TestCase):
         observer = metrics.Observer(
             None, "name", "desc", "unit", int, meter, ("key",), True
         )
-        kvp = {"key": "value"}
-        label_set = meter.get_label_set(kvp)
-        observer.observe(37.0, label_set)
+        labels = {"key": "value"}
+        observer.observe(37.0, labels)
         self.assertEqual(len(observer.aggregators), 0)
         self.assertTrue(logger_mock.warning.called)
 
@@ -323,13 +368,10 @@ class TestBoundCounter(unittest.TestCase):
         self.assertEqual(bound_counter.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
-    @mock.patch("opentelemetry.sdk.metrics.time_ns")
-    def test_update(self, time_mock):
+    def test_update(self):
         aggregator = export.aggregate.CounterAggregator()
         bound_counter = metrics.BoundCounter(int, True, aggregator)
-        time_mock.return_value = 123
         bound_counter.update(4.0)
-        self.assertEqual(bound_counter.last_update_timestamp, 123)
         self.assertEqual(bound_counter.aggregator.current, 4.0)
 
 
@@ -358,11 +400,8 @@ class TestBoundMeasure(unittest.TestCase):
         )
         self.assertTrue(logger_mock.warning.called)
 
-    @mock.patch("opentelemetry.sdk.metrics.time_ns")
-    def test_update(self, time_mock):
+    def test_update(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_measure = metrics.BoundMeasure(int, True, aggregator)
-        time_mock.return_value = 123
         bound_measure.update(4.0)
-        self.assertEqual(bound_measure.last_update_timestamp, 123)
         self.assertEqual(bound_measure.aggregator.current, (4.0, 4.0, 4.0, 1))

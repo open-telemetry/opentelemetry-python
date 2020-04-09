@@ -1,7 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-http-requests/README.rst
-
-Module contents
----------------
+OpenTelemetry requests Integration
+==================================
 
 .. automodule:: opentelemetry.ext.http_requests
     :members:

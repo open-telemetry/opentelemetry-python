@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+## 0.6b0
+
+Released 2020-03-30
+
+- Add support for lazy events and links
+  ([#474](https://github.com/open-telemetry/opentelemetry-python/pull/474))
+- Metrics API no longer uses LabelSet
+  ([#527](https://github.com/open-telemetry/opentelemetry-python/pull/527))
+- Adding is_remote flag to SpanContext, indicating when a span is remote
+  ([#516](https://github.com/open-telemetry/opentelemetry-python/pull/516))
+- Adding a solution to release metric handles and observers
+  ([#435](https://github.com/open-telemetry/opentelemetry-python/pull/435))
+
+## 0.5b0
+
+Released 2020-03-16
+
+- Adding Correlation Context SDK and propagator
+  ([#471](https://github.com/open-telemetry/opentelemetry-python/pull/471))
+- Adding OT Collector metrics exporter
+  ([#454](https://github.com/open-telemetry/opentelemetry-python/pull/454))
+- Improve validation of attributes
+  ([#460](https://github.com/open-telemetry/opentelemetry-python/pull/460))
+- Moving resources to sdk
+  ([#464](https://github.com/open-telemetry/opentelemetry-python/pull/464))
+- Re-raise errors caught in opentelemetry.sdk.trace.Tracer.use_span()
+  ([#469](https://github.com/open-telemetry/opentelemetry-python/pull/469))
+- Implement observer instrument
+  ([#425](https://github.com/open-telemetry/opentelemetry-python/pull/425))
+
 ## 0.4a0 
 
 Released 2020-02-21
@@ -37,7 +67,6 @@ Released 2020-02-21
   ([#410](https://github.com/open-telemetry/opentelemetry-python/pull/410))
 - Implement MinMaxSumCount aggregator
   ([#422](https://github.com/open-telemetry/opentelemetry-python/pull/422))
-
 
 ## 0.3a0
 

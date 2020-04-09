@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-zipkin/README.rst
-
-
-Module contents
----------------
+Opentelemetry Zipkin Exporter
+=============================
 
 .. automodule:: opentelemetry.ext.zipkin
     :members:

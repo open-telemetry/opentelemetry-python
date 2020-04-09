@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@ import setuptools
 
 setuptools.setup(
     name="opentelemetry-example-app",
-    version="0.5.dev0",
+    version="0.7.dev0",
     author="OpenTelemetry Authors",
     author_email="cncf-opentelemetry-contributors@lists.cncf.io",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
@@ -41,6 +41,7 @@ setuptools.setup(
         "opentelemetry-ext-flask",
         "flask",
         "requests",
+        "protobuf~=3.11",
     ],
     license="Apache-2.0",
     package_dir={"": "src"},

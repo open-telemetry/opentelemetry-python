@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,68 +62,84 @@ either implicit or explicit context propagation consistently throughout.
 
 .. versionadded:: 0.1.0
 .. versionchanged:: 0.3.0
-    `TracerProvider` was introduced and the global ``tracer`` getter was replaced
-    by `tracer_provider`.
+    `TracerProvider` was introduced and the global ``tracer`` getter was
+    replaced by ``tracer_provider``.
+.. versionchanged:: 0.5.0
+    ``tracer_provider`` was replaced by `get_tracer_provider`,
+    ``set_preferred_tracer_provider_implementation`` was replaced by
+    `set_tracer_provider`.
 """
 
 import abc
 import enum
-import logging
 import types as python_types
 import typing
 from contextlib import contextmanager
+from logging import getLogger
 
+from opentelemetry.configuration import Configuration  # type: ignore
 from opentelemetry.trace.status import Status
-from opentelemetry.util import loader, types
+from opentelemetry.util import types
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
-class Link:
-    """A link to a `Span`."""
-
-    def __init__(
-        self, context: "SpanContext", attributes: types.Attributes = None
-    ) -> None:
+class LinkBase(abc.ABC):
+    def __init__(self, context: "SpanContext") -> None:
         self._context = context
-        if attributes is None:
-            self._attributes = {}  # type: types.Attributes
-        else:
-            self._attributes = attributes
 
     @property
     def context(self) -> "SpanContext":
         return self._context
 
     @property
+    @abc.abstractmethod
     def attributes(self) -> types.Attributes:
-        return self._attributes
+        pass
 
 
-class Event:
-    """A text annotation with a set of attributes."""
+class Link(LinkBase):
+    """A link to a `Span`.
+
+    Args:
+        context: `SpanContext` of the `Span` to link to.
+        attributes: Link's attributes.
+    """
 
     def __init__(
-        self, name: str, attributes: types.Attributes, timestamp: int
+        self, context: "SpanContext", attributes: types.Attributes = None,
     ) -> None:
-        self._name = name
+        super().__init__(context)
         self._attributes = attributes
-        self._timestamp = timestamp
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+
+class LazyLink(LinkBase):
+    """A lazy link to a `Span`.
+
+    Args:
+        context: `SpanContext` of the `Span` to link to.
+        link_formatter: Callable object that returns the attributes of the
+            Link.
+    """
+
+    def __init__(
+        self,
+        context: "SpanContext",
+        link_formatter: types.AttributesFormatter,
+    ) -> None:
+        super().__init__(context)
+        self._link_formatter = link_formatter
+
     @property
-    def timestamp(self) -> int:
-        return self._timestamp
+    def attributes(self) -> types.Attributes:
+        return self._link_formatter()
 
 
 class SpanKind(enum.Enum):
@@ -201,10 +217,17 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_lazy_event(self, event: Event) -> None:
+    def add_lazy_event(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         """Adds an `Event`.
 
-        Adds an `Event` that has previously been created.
+        Adds a single `Event` with the name, an event formatter that calculates
+        the attributes lazily and, optionally, a timestamp. Implementations
+        should generate a timestamp if the `timestamp` argument is omitted.
         """
 
     @abc.abstractmethod
@@ -314,12 +337,14 @@ class SpanContext:
         span_id: This span's ID.
         trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
+        is_remote: True if propagated from a remote parent.
     """
 
     def __init__(
         self,
         trace_id: int,
         span_id: int,
+        is_remote: bool,
         trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
@@ -331,13 +356,17 @@ class SpanContext:
         self.span_id = span_id
         self.trace_flags = trace_flags
         self.trace_state = trace_state
+        self.is_remote = is_remote
 
     def __repr__(self) -> str:
-        return "{}(trace_id={}, span_id={}, trace_state={!r})".format(
+        return (
+            "{}(trace_id={}, span_id={}, trace_state={!r}, is_remote={})"
+        ).format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
             self.trace_state,
+            self.is_remote,
         )
 
     def is_valid(self) -> bool:
@@ -384,7 +413,12 @@ class DefaultSpan(Span):
     ) -> None:
         pass
 
-    def add_lazy_event(self, event: Event) -> None:
+    def add_lazy_event(
+        self,
+        name: str,
+        event_formatter: types.AttributesFormatter,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         pass
 
     def update_name(self, name: str) -> None:
@@ -397,10 +431,11 @@ class DefaultSpan(Span):
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
 INVALID_SPAN_CONTEXT = SpanContext(
-    INVALID_TRACE_ID,
-    INVALID_SPAN_ID,
-    DEFAULT_TRACE_OPTIONS,
-    DEFAULT_TRACE_STATE,
+    trace_id=INVALID_TRACE_ID,
+    span_id=INVALID_SPAN_ID,
+    is_remote=False,
+    trace_flags=DEFAULT_TRACE_OPTIONS,
+    trace_state=DEFAULT_TRACE_STATE,
 )
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
@@ -639,15 +674,7 @@ class DefaultTracer(Tracer):
         yield
 
 
-# Once https://github.com/python/mypy/issues/7092 is resolved,
-# the following type definition should be replaced with
-# from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = typing.Callable[
-    [typing.Type[TracerProvider]], typing.Optional[TracerProvider]
-]
-
-_TRACER_PROVIDER = None  # type: typing.Optional[TracerProvider]
-_TRACER_PROVIDER_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+_TRACER_PROVIDER = None
 
 
 def get_tracer(
@@ -656,55 +683,26 @@ def get_tracer(
     """Returns a `Tracer` for use by the given instrumentation library.
 
     This function is a convenience wrapper for
-    opentelemetry.trace.tracer_provider().get_tracer
+    opentelemetry.trace.get_tracer_provider().get_tracer
     """
-    return tracer_provider().get_tracer(
+    return get_tracer_provider().get_tracer(
         instrumenting_module_name, instrumenting_library_version
     )
 
 
-def tracer_provider() -> TracerProvider:
-    """Gets the current global :class:`~.TracerProvider` object.
+def set_tracer_provider(tracer_provider: TracerProvider) -> None:
+    """Sets the current global :class:`~.TracerProvider` object."""
+    global _TRACER_PROVIDER  # pylint: disable=global-statement
+    _TRACER_PROVIDER = tracer_provider
 
-    If there isn't one set yet, a default will be loaded.
-    """
-    global _TRACER_PROVIDER, _TRACER_PROVIDER_FACTORY  # pylint:disable=global-statement
+
+def get_tracer_provider() -> TracerProvider:
+    """Gets the current global :class:`~.TracerProvider` object."""
+    global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        # pylint:disable=protected-access
-        try:
-            _TRACER_PROVIDER = loader._load_impl(
-                TracerProvider, _TRACER_PROVIDER_FACTORY  # type: ignore
-            )
-        except TypeError:
-            # if we raised an exception trying to instantiate an
-            # abstract class, default to no-op tracer impl
-            logger.warning(
-                "Unable to instantiate TracerProvider from factory.",
-                exc_info=True,
-            )
-            _TRACER_PROVIDER = DefaultTracerProvider()
-        del _TRACER_PROVIDER_FACTORY
+        _TRACER_PROVIDER = (
+            Configuration().tracer_provider  # type: ignore # pylint: disable=no-member
+        )
 
-    return _TRACER_PROVIDER
-
-
-def set_preferred_tracer_provider_implementation(
-    factory: ImplementationFactory,
-) -> None:
-    """Set the factory to be used to create the global TracerProvider.
-
-    See :mod:`opentelemetry.util.loader` for details.
-
-    This function may not be called after a tracer is already loaded.
-
-    Args:
-        factory: Callback that should create a new :class:`TracerProvider`
-            instance.
-    """
-    global _TRACER_PROVIDER_FACTORY  # pylint:disable=global-statement
-
-    if _TRACER_PROVIDER:
-        raise RuntimeError("TracerProvider already loaded.")
-
-    _TRACER_PROVIDER_FACTORY = factory
+    return _TRACER_PROVIDER  # type: ignore

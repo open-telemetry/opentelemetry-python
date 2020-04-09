@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,8 +73,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     def test_record_batch(self):
         meter = metrics.DefaultMeter()
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        meter.record_batch(label_set, ((counter, 1),))
+        meter.record_batch({}, ((counter, 1),))
 
     def test_create_metric(self):
         meter = metrics.DefaultMeter()
@@ -87,7 +86,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         observer = meter.register_observer(callback, "", "", "", int, (), True)
         self.assertIsInstance(observer, metrics.DefaultObserver)
 
-    def test_get_label_set(self):
+    def test_unregister_observer(self):
         meter = metrics.DefaultMeter()
-        label_set = meter.get_label_set({})
-        self.assertIsInstance(label_set, metrics.DefaultLabelSet)
+        observer = metrics.DefaultObserver()
+        meter.unregister_observer(observer)
