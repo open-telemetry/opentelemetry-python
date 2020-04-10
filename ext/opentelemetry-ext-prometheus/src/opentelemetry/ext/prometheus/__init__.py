@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Prometheus Metrics Exporter for OpenTelemetry."""
+"""
+This library allows export of metrics data to `Prometheus <https://prometheus.io/>`_.
+
+Usage
+-----
+
+The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metrics to `Prometheus`_.
+
+
+.. _Prometheus: https://prometheus.io/
+.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+
+.. code:: python
+
+    from opentelemetry import metrics
+    from opentelemetry.ext.prometheus import PrometheusMetricsExporter
+    from opentelemetry.sdk.metrics import Counter, Meter
+    from opentelemetry.sdk.metrics.export.controller import PushController
+    from prometheus_client import start_http_server
+
+    # Start Prometheus client
+    start_http_server(port=8000, addr="localhost")
+
+    # Meter is responsible for creating and recording metrics
+    metrics.set_meter_provider(MeterProvider())
+    meter = metrics.meter()
+    # exporter to export metrics to Prometheus
+    prefix = "MyAppPrefix"
+    exporter = PrometheusMetricsExporter(prefix)
+    # controller collects metrics created from meter and exports it via the
+    # exporter every interval
+    controller = PushController(meter, exporter, 5)
+
+    counter = meter.create_metric(
+        "requests",
+        "number of requests",
+        "requests",
+        int,
+        Counter,
+        ("environment",),
+    )
+
+    # Labels are used to identify key-values that are associated with a specific
+    # metric that you want to record. These are useful for pre-aggregation and can
+    # be used to store custom dimensions pertaining to a metric
+    labels = {"environment": "staging"}
+
+    counter.add(25, labels)
+    input("Press any key to exit...")
+
+API
+---
+"""
 
 import collections
 import logging
@@ -93,7 +145,7 @@ class CustomCollector:
         prometheus_metric = None
         label_values = []
         label_keys = []
-        for label_tuple in metric_record.label_set.labels:
+        for label_tuple in metric_record.labels:
             label_keys.append(self._sanitize(label_tuple[0]))
             label_values.append(label_tuple[1])
 

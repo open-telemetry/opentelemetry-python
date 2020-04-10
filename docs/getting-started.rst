@@ -184,12 +184,14 @@ And let's write a small Flask application that sends an HTTP request, activating
 .. code-block:: python
 
     # flask_example.py
+    from opentelemetry.ext.flask import FlaskInstrumentor
+    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
+
     import flask
     import requests
 
     import opentelemetry.ext.http_requests
     from opentelemetry import trace
-    from opentelemetry.ext.flask import instrument_app
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter
     from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
@@ -201,7 +203,6 @@ And let's write a small Flask application that sends an HTTP request, activating
 
     app = flask.Flask(__name__)
     opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
-    instrument_app(app)
 
     @app.route("/")
     def hello():
@@ -249,7 +250,7 @@ The following is an example of emitting metrics to console, in a similar fashion
     exporter = ConsoleMetricsExporter()
     controller = PushController(meter, exporter, 5)
 
-    staging_label_set = meter.get_label_set({"environment": "staging"})
+    staging_labels = {"environment": "staging"}
 
     requests_counter = meter.create_metric(
         name="requests",
@@ -260,10 +261,10 @@ The following is an example of emitting metrics to console, in a similar fashion
         label_keys=("environment",),
     )
 
-    requests_counter.add(25, staging_label_set)
+    requests_counter.add(25, staging_labels)
     time.sleep(5)
 
-    requests_counter.add(20, staging_label_set)
+    requests_counter.add(20, staging_labels)
     time.sleep(5)
 
 
@@ -272,8 +273,8 @@ The sleeps will cause the script to take a while, but running it should yield:
 .. code-block:: sh
 
     $ python metrics.py
-    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", label_set="(('environment', 'staging'),)", value=25)
-    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", label_set="(('environment', 'staging'),)", value=45)
+    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=25)
+    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
 
 Using Prometheus
 ----------------
@@ -285,19 +286,19 @@ Let's start by bringing up a Prometheus instance ourselves, to scrape our applic
 
 .. code-block:: yaml
 
-    # prometheus.yml
+    # /tmp/prometheus.yml
     scrape_configs:
     - job_name: 'my-app'
-        scrape_interval: 5s
-        static_configs:
-        - targets: ['localhost:8000']
+      scrape_interval: 5s
+      static_configs:
+      - targets: ['localhost:8000']
 
 And start a docker container for it:
 
 .. code-block:: sh
 
     # --net=host will not work properly outside of Linux.
-    docker run --net=host -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus\
+    docker run --net=host -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus \
         --log.level=debug --config.file=/etc/prometheus/prometheus.yml
 
 For our Python application, we will need to install an exporter specific to Prometheus:
@@ -331,7 +332,7 @@ And use that instead of the `ConsoleMetricsExporter`:
     exporter = PrometheusMetricsExporter("MyAppPrefix")
     controller = PushController(meter, exporter, 5)
 
-    staging_label_set = meter.get_label_set({"environment": "staging"})
+    staging_labels = {"environment": "staging"}
 
     requests_counter = meter.create_metric(
         name="requests",
@@ -342,10 +343,10 @@ And use that instead of the `ConsoleMetricsExporter`:
         label_keys=("environment",),
     )
 
-    requests_counter.add(25, staging_label_set)
+    requests_counter.add(25, staging_labels)
     time.sleep(5)
 
-    requests_counter.add(20, staging_label_set)
+    requests_counter.add(20, staging_labels)
     time.sleep(5)
 
     # This line is added to keep the HTTP server up long enough to scrape.
@@ -371,15 +372,13 @@ To see how this works in practice, let's start the Collector locally. Write the 
 
 .. code-block:: yaml
 
-    # otel-collector-config.yaml
+    # /tmp/otel-collector-config.yaml
     receivers:
         opencensus:
             endpoint: 0.0.0.0:55678
     exporters:
         logging:
             loglevel: debug
-            sampling_initial: 10
-            sampling_thereafter: 50
     processors:
         batch:
         queued_retry:
@@ -397,8 +396,8 @@ Start the docker container:
 
 .. code-block:: sh
 
-    docker run -p 55678:55678\
-        -v ./otel-collector-config.yaml:/etc/otel-collector-config.yaml\
+    docker run -p 55678:55678 \
+        -v /tmp/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
         omnition/opentelemetry-collector-contrib:latest \
         --config=/etc/otel-collector-config.yaml
 
@@ -433,6 +432,7 @@ And execute the following script:
     )
     tracer_provider = TracerProvider()
     trace.set_tracer_provider(tracer_provider)
+    span_processor = BatchExportSpanProcessor(span_exporter)
     tracer_provider.add_span_processor(span_processor)
 
     # create a CollectorMetricsExporter
@@ -448,7 +448,7 @@ And execute the following script:
     meter = metrics.get_meter(__name__)
     # controller collects metrics created from meter and exports it via the
     # exporter every interval
-    controller = PushController(meter, collector_exporter, 5)
+    controller = PushController(meter, metric_exporter, 5)
 
     # Configure the tracer to use the collector exporter
     tracer = trace.get_tracer_provider().get_tracer(__name__)
@@ -456,13 +456,17 @@ And execute the following script:
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
 
-    counter = meter.create_metric(
-        "requests", "number of requests", "requests", int, Counter, ("environment",),
+    requests_counter = meter.create_metric(
+        name="requests",
+        description="number of requests",
+        unit="1",
+        value_type=int,
+        metric_type=Counter,
+        label_keys=("environment",),
     )
-    # Labelsets are used to identify key-values that are associated with a specific
+    # Labels are used to identify key-values that are associated with a specific
     # metric that you want to record. These are useful for pre-aggregation and can
     # be used to store custom dimensions pertaining to a metric
-    label_set = meter.get_label_set({"environment": "staging"})
-
-    counter.add(25, label_set)
+    labels = {"environment": "staging"}
+    requests_counter.add(25, labels)
     time.sleep(10)  # give push_controller time to push metrics

@@ -15,3 +15,12 @@ services:
         MYSQL_PASSWORD: testpassword
         MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
         MYSQL_DATABASE: opentelemetry-tests
+  otpostgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: opentelemetry-tests
+
