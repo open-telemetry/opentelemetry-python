@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 import time
-import traceback
 
 import mysql.connector
 import psycopg2
@@ -36,6 +36,8 @@ POSTGRES_USER = os.getenv("POSTGRESQL_HOST", "testuser")
 RETRY_COUNT = 5
 RETRY_INTERVAL = 5  # Seconds
 
+logger = logging.getLogger(__name__)
+
 
 def check_pymongo_connection():
     # Try to connect to DB
@@ -52,7 +54,7 @@ def check_pymongo_connection():
         except Exception as ex:
             if i == RETRY_COUNT - 1:
                 raise (ex)
-            traceback.print_exc()
+            logger.exception(ex)
         time.sleep(RETRY_INTERVAL)
 
 
@@ -72,8 +74,9 @@ def check_mysql_connection():
         except Exception as ex:
             if i == RETRY_COUNT - 1:
                 raise (ex)
-            traceback.print_exc()
+            logger.exception(ex)
         time.sleep(RETRY_INTERVAL)
+
 
 def check_postgres_connection():
     # Try to connect to DB
@@ -91,7 +94,7 @@ def check_postgres_connection():
         except Exception as ex:
             if i == RETRY_COUNT - 1:
                 raise (ex)
-            traceback.print_exc()
+            logger.exception(ex)
         time.sleep(RETRY_INTERVAL)
 
 
