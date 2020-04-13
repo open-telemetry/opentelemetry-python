@@ -13,95 +13,50 @@
 # limitations under the License.
 
 import sys
-import unittest
-from unittest import mock
 
-import pkg_resources
+import httpretty
 import requests
 import urllib3
 
 import opentelemetry.ext.http_requests
-from opentelemetry import trace
+from opentelemetry import context, propagators, trace
+from opentelemetry.ext.testutil.mock_httptextformat import MockHTTPTextFormat
+from opentelemetry.ext.testutil.test_base import TestBase
 
 
-class TestRequestsIntegration(unittest.TestCase):
+class TestRequestsIntegration(TestBase):
+    URL = "http://httpbin.org/status/200"
 
-    # TODO: Copy & paste from test_wsgi_middleware
     def setUp(self):
-        self.span_attrs = {}
-        self.tracer_provider = trace.DefaultTracerProvider()
-        self.tracer = trace.DefaultTracer()
-        self.get_tracer_patcher = mock.patch.object(
-            self.tracer_provider,
-            "get_tracer",
-            autospec=True,
-            spec_set=True,
-            return_value=self.tracer,
-        )
-        self.get_tracer = self.get_tracer_patcher.start()
-        self.span_context_manager = mock.MagicMock()
-        self.span = mock.create_autospec(trace.Span, spec_set=True)
-        self.span.get_context.return_value = trace.INVALID_SPAN_CONTEXT
-        self.span_context_manager.__enter__.return_value = self.span
-
-        def setspanattr(key, value):
-            self.assertIsInstance(key, str)
-            self.span_attrs[key] = value
-
-        self.span.set_attribute = setspanattr
-        self.start_span_patcher = mock.patch.object(
-            self.tracer,
-            "start_as_current_span",
-            autospec=True,
-            spec_set=True,
-            return_value=self.span_context_manager,
-        )
-
-        mocked_response = requests.models.Response()
-        mocked_response.status_code = 200
-        mocked_response.reason = "Roger that!"
-        self.send_patcher = mock.patch.object(
-            requests.Session,
-            "send",
-            autospec=True,
-            spec_set=True,
-            return_value=mocked_response,
-        )
-
-        self.start_as_current_span = self.start_span_patcher.start()
-        self.send = self.send_patcher.start()
-
+        super().setUp()
         opentelemetry.ext.http_requests.enable(self.tracer_provider)
-        distver = pkg_resources.get_distribution(
-            "opentelemetry-ext-http-requests"
-        ).version
-        self.get_tracer.assert_called_with(
-            opentelemetry.ext.http_requests.__name__, distver
+        httpretty.enable()
+        httpretty.register_uri(
+            httpretty.GET, self.URL, body="Hello!",
         )
 
     def tearDown(self):
+        super().tearDown()
         opentelemetry.ext.http_requests.disable()
-        self.get_tracer_patcher.stop()
-        self.send_patcher.stop()
-        self.start_span_patcher.stop()
+        httpretty.disable()
 
     def test_basic(self):
-        url = "https://www.example.org/foo/bar?x=y#top"
-        requests.get(url=url)
-        self.assertEqual(1, len(self.send.call_args_list))
-        self.tracer.start_as_current_span.assert_called_with(  # pylint:disable=no-member
-            "/foo/bar", kind=trace.SpanKind.CLIENT
-        )
-        self.span_context_manager.__enter__.assert_called_with()
-        self.span_context_manager.__exit__.assert_called_with(None, None, None)
+        result = requests.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+        self.assertIs(span.kind, trace.SpanKind.CLIENT)
+        self.assertEqual(span.name, "/status/200")
+
         self.assertEqual(
-            self.span_attrs,
+            span.attributes,
             {
                 "component": "http",
                 "http.method": "GET",
-                "http.url": url,
+                "http.url": self.URL,
                 "http.status_code": 200,
-                "http.status_text": "Roger that!",
+                "http.status_text": "OK",
             },
         )
 
@@ -114,20 +69,84 @@ class TestRequestsIntegration(unittest.TestCase):
             exception_type = ValueError
 
         with self.assertRaises(exception_type):
-            requests.post(url=url)
-        call_args = (
-            self.tracer.start_as_current_span.call_args  # pylint:disable=no-member
-        )
-        self.assertTrue(
-            call_args[0][0].startswith("<Unparsable URL"),
-            msg=self.tracer.start_as_current_span.call_args,  # pylint:disable=no-member
-        )
-        self.span_context_manager.__enter__.assert_called_with()
-        exitspan = self.span_context_manager.__exit__
-        self.assertEqual(1, len(exitspan.call_args_list))
-        self.assertIs(exception_type, exitspan.call_args[0][0])
-        self.assertIsInstance(exitspan.call_args[0][1], exception_type)
+            requests.post(url)
+
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertTrue(span.name.startswith("<Unparsable URL"))
         self.assertEqual(
-            self.span_attrs,
+            span.attributes,
             {"component": "http", "http.method": "POST", "http.url": url},
         )
+
+    def test_disable(self):
+        opentelemetry.ext.http_requests.disable()
+        result = requests.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 0)
+
+    def test_disable_session(self):
+        session1 = requests.Session()
+        opentelemetry.ext.http_requests.disable_session(session1)
+
+        result = session1.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 0)
+
+        # Test that other sessions as well as global requests is still
+        # instrumented
+        session2 = requests.Session()
+        result = session2.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+
+        self.memory_exporter.clear()
+
+        result = requests.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+
+    def test_suppress_instrumentation(self):
+        token = context.attach(
+            context.set_value("suppress_instrumentation", True)
+        )
+        try:
+            result = requests.get(self.URL)
+            self.assertEqual(result.text, "Hello!")
+        finally:
+            context.detach(token)
+
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 0)
+
+    def test_distributed_context(self):
+        previous_propagator = propagators.get_global_httptextformat()
+        try:
+            propagators.set_global_httptextformat(MockHTTPTextFormat())
+            result = requests.get(self.URL)
+            self.assertEqual(result.text, "Hello!")
+
+            span_list = self.memory_exporter.get_finished_spans()
+            self.assertEqual(len(span_list), 1)
+            span = span_list[0]
+
+            headers = dict(httpretty.last_request().headers)
+            self.assertIn(MockHTTPTextFormat.TRACE_ID_KEY, headers)
+            self.assertEqual(
+                str(span.get_context().trace_id),
+                headers[MockHTTPTextFormat.TRACE_ID_KEY],
+            )
+            self.assertIn(MockHTTPTextFormat.SPAN_ID_KEY, headers)
+            self.assertEqual(
+                str(span.get_context().span_id),
+                headers[MockHTTPTextFormat.SPAN_ID_KEY],
+            )
+
+        finally:
+            propagators.set_global_httptextformat(previous_propagator)
