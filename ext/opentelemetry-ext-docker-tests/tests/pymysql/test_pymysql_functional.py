@@ -74,7 +74,7 @@ class TestFunctionalPyMysql(unittest.TestCase):
         self.assertIsNotNone(root_span)
         self.assertIsNotNone(db_span)
         self.assertEqual(root_span.name, "rootSpan")
-        self.assertEqual(db_span.name, "pymysql.opentelemetry-tests")
+        self.assertEqual(db_span.name, "mysql.opentelemetry-tests")
         self.assertIsNotNone(db_span.parent)
         self.assertEqual(db_span.parent.name, root_span.name)
         self.assertIs(db_span.kind, trace_api.SpanKind.CLIENT)
