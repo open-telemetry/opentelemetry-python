@@ -207,38 +207,42 @@ class Span(trace_api.Span):
             type(self).__name__, self.name, self.context
         )
 
-    def __str__(self):
-        def format_context(context):
-            x_ctx = OrderedDict()
-            x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
-            x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
-            x_ctx["trace_state"] = repr(context.trace_state)
-            return x_ctx
+    @staticmethod
+    def _format_context(context):
+        x_ctx = OrderedDict()
+        x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
+        x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
+        x_ctx["trace_state"] = repr(context.trace_state)
+        return x_ctx
 
-        def format_attributes(attributes):
-            if isinstance(attributes, BoundedDict):
-                return attributes._dict  # pylint: disable=protected-access
-            return attributes
+    @staticmethod
+    def _format_attributes(attributes):
+        if isinstance(attributes, BoundedDict):
+            return attributes._dict  # pylint: disable=protected-access
+        return attributes
 
-        def format_events(events):
-            f_events = []
-            for event in events:
-                f_event = OrderedDict()
-                f_event["name"] = event.name
-                f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-                f_event["attributes"] = format_attributes(event.attributes)
-                f_events.append(f_event)
-            return f_events
+    @staticmethod
+    def _format_events(events):
+        f_events = []
+        for event in events:
+            f_event = OrderedDict()
+            f_event["name"] = event.name
+            f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
+            f_event["attributes"] = Span._format_attributes(event.attributes)
+            f_events.append(f_event)
+        return f_events
 
-        def format_links(links):
-            f_links = []
-            for link in links:
-                f_link = OrderedDict()
-                f_link["context"] = format_context(link.context)
-                f_link["attributes"] = format_attributes(link.attributes)
-                f_links.append(f_link)
-            return f_links
+    @staticmethod
+    def _format_links(links):
+        f_links = []
+        for link in links:
+            f_link = OrderedDict()
+            f_link["context"] = Span._format_context(link.context)
+            f_link["attributes"] = Span._format_attributes(link.attributes)
+            f_links.append(f_link)
+        return f_links
 
+    def to_json(self):
         parent_id = None
         if self.parent is not None:
             if isinstance(self.parent, Span):
@@ -258,14 +262,14 @@ class Span(trace_api.Span):
         f_span = OrderedDict()
 
         f_span["name"] = self.name
-        f_span["context"] = format_context(self.context)
+        f_span["context"] = self._format_context(self.context)
         f_span["kind"] = str(self.kind)
         f_span["parent_id"] = parent_id
         f_span["start_time"] = start_time
         f_span["end_time"] = end_time
-        f_span["attributes"] = format_attributes(self.attributes)
-        f_span["events"] = format_events(self.events)
-        f_span["links"] = format_links(self.links)
+        f_span["attributes"] = self._format_attributes(self.attributes)
+        f_span["events"] = self._format_events(self.events)
+        f_span["links"] = self._format_links(self.links)
 
         return json.dumps(f_span, indent=4)
 
