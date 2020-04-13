@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,36 +21,32 @@ from opentelemetry import metrics
 class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
-        default_ls = metrics.DefaultLabelSet()
-        bound_metric_instr = default.bind(default_ls)
+        bound_metric_instr = default.bind({})
         self.assertIsInstance(
             bound_metric_instr, metrics.DefaultBoundInstrument
         )
 
     def test_counter(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        bound_counter = counter.bind(label_set)
+        bound_counter = counter.bind({})
         self.assertIsInstance(bound_counter, metrics.BoundCounter)
 
     def test_counter_add(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        counter.add(1, label_set)
+        counter.add(1, {})
 
     def test_measure(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        bound_measure = measure.bind(label_set)
+        bound_measure = measure.bind({})
         self.assertIsInstance(bound_measure, metrics.BoundMeasure)
 
     def test_measure_record(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        measure.record(1, label_set)
+        measure.record(1, {})
 
     def test_default_bound_metric(self):
-        metrics.DefaultBoundInstrument()
+        bound_instrument = metrics.DefaultBoundInstrument()
+        bound_instrument.release()
 
     def test_bound_counter(self):
         bound_counter = metrics.BoundCounter()
@@ -59,3 +55,7 @@ class TestMetrics(unittest.TestCase):
     def test_bound_measure(self):
         bound_measure = metrics.BoundMeasure()
         bound_measure.record(1)
+
+    def test_observer(self):
+        observer = metrics.DefaultObserver()
+        observer.observe(1, {})

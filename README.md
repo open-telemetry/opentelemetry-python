@@ -16,8 +16,8 @@ Libraries that produce telemetry data should only depend on `opentelemetry-api`,
 and defer the choice of the SDK to the application developer. Applications may
 depend on `opentelemetry-sdk` or another package that implements the API.
 
-**Please note** that this library is currently in _alpha_, and shouldn't be
-used in production environments.
+**Please note** that this library is currently in _beta_, and shouldn't
+generally be used in production environments.
 
 The API and SDK packages are available on PyPI, and can installed via `pip`:
 
@@ -50,6 +50,10 @@ pip install -e ./ext/opentelemetry-ext-{integration}
 The online documentation is available at https://opentelemetry-python.readthedocs.io/,
 if you want to access the documentation for the latest version use
 https://opentelemetry-python.readthedocs.io/en/latest/.
+
+## Compatible Exporters
+
+See the [OpenTelemetry registry](https://opentelemetry.io/registry/?s=python) for a list of exporters available.
 
 ## Contributing
 
@@ -87,8 +91,8 @@ OpenTelemetry Python is under active development.
 The library is not yet _generally available_, and releases aren't guaranteed to
 conform to a specific version of the specification. Future releases will not
 attempt to maintain backwards compatibility with previous releases. Each alpha
-release includes significant changes to the API and SDK packages, making them
-incompatible with each other.
+and beta release includes significant changes to the API and SDK packages,
+making them incompatible with each other.
 
 The [v0.1 alpha
 release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.1.0)
@@ -119,7 +123,8 @@ includes:
 - PyMongo Integration
 
 The [v0.4 alpha
-release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.4.0) release includes:
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.4.0)
+includes:
 
 - Metrics MinMaxSumCount Aggregator
 - Context API
@@ -132,33 +137,25 @@ release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.
 - Prometheus Metrics Exporter
 - New Examples and Improvements to Existing Examples
 
-Thank you to the following individuals for contributing to this release:
+The [v0.5 beta
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.5.0)
+includes:
 
-* Alex Boten
-* Chris Kleinknecht
-* Christian Neumüller
-* Daniel González
-* Diego Hurtado
-* Golovin Pavel
-* Hector Hernandez
-* Jake Malachowski
-* Joshua H Lang
-* Leighton Chen
-* Mauricio Vásquez
-* Yusuke Tsutsumi
+- W3C Correlation Context Propagation
+- OpenTelemetry Collector Exporter Integration for both metrics and traces
+- Metrics SDK
+- Global configuration module
+- Documentation improvements
+
+The [v0.6 beta
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.6.0)
+includes:
+
+- API changes and bugfixes
+- An autoinstrumentation package and updated Flask instrumentation
+- gRPC integration
 
 See the [project
 milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
-for details on upcoming releases. The dates and features described here are
-estimates, and subject to change.
-
-Future releases targets include:
-
-| Component                           | Version    | Target Date  |
-| ----------------------------------- | ---------- | ------------ |
-| W3C Correlation Context Propagation | Beta v1    | March 16 2020|
-| Support for Tags/Baggage            | Beta v1    | March 16 2020|
-| gRPC Integrations                   | Beta v1    | March 16 2020|
-| OpenTelemetry Collector Exporter    | Beta v1    | March 16 2020|
-| OpenCensus Bridge                   | Beta v1    | March 16 2020|
-| Metrics SDK (Complete)              | Beta v1    | March 16 2020|
+for details on upcoming releases. The dates and features described in issues
+and milestones are estimates, and subject to change.

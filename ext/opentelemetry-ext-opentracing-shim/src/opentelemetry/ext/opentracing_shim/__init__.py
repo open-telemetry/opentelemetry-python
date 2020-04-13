@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -76,6 +76,8 @@ Note:
     While testing this library, the aforementioned imprecisions were observed
     to be of *less than a microsecond*.
 
+API
+---
 .. _Floating Point Arithmetic\\: Issues and Limitations:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """

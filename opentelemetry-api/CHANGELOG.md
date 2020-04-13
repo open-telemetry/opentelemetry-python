@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+## 0.6b0
+
+Released 2020-03-30
+
+- Add support for lazy events and links
+  ([#474](https://github.com/open-telemetry/opentelemetry-python/pull/474))
+- Metrics API no longer uses LabelSet
+  ([#527](https://github.com/open-telemetry/opentelemetry-python/pull/527))
+- Adding is_remote flag to SpanContext, indicating when a span is remote
+  ([#516](https://github.com/open-telemetry/opentelemetry-python/pull/516))
+- Allow digit as first char in vendor specific trace state key
+  ([#511](https://github.com/open-telemetry/opentelemetry-python/pull/511))
+
+## 0.5b0
+
+Released 2020-03-16
+
+- Adding Correlation Context API and propagator
+  ([#471](https://github.com/open-telemetry/opentelemetry-python/pull/471))
+- Adding a global configuration module to simplify setting and getting globals
+  ([#466](https://github.com/open-telemetry/opentelemetry-python/pull/466))
+- Rename metric handle to bound metric instrument
+  ([#470](https://github.com/open-telemetry/opentelemetry-python/pull/470))
+- Moving resources to sdk
+  ([#464](https://github.com/open-telemetry/opentelemetry-python/pull/464))
+- Implementing propagators to API to use context
+  ([#446](https://github.com/open-telemetry/opentelemetry-python/pull/446))
+- Adding named meters, removing batchers
+  ([#431](https://github.com/open-telemetry/opentelemetry-python/pull/431))
+- Renaming TraceOptions to TraceFlags
+  ([#450](https://github.com/open-telemetry/opentelemetry-python/pull/450))
+- Renaming TracerSource to TraceProvider
+  ([#441](https://github.com/open-telemetry/opentelemetry-python/pull/441))
+- Adding attach/detach methods as per spec
+  ([#429](https://github.com/open-telemetry/opentelemetry-python/pull/450) 
+
 ## 0.4a0
 
 Released 2020-02-21
@@ -22,9 +58,6 @@ Released 2020-02-21
   ([#410](https://github.com/open-telemetry/opentelemetry-python/pull/410))
 - Adding trace.get_tracer function
   ([#430](https://github.com/open-telemetry/opentelemetry-python/pull/430))
-
-
-
 
 ## 0.3a0
 
