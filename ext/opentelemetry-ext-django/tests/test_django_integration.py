@@ -39,7 +39,7 @@ def get_func_name(func):
 
     if module_name is not None:
         module_name = func.__module__
-        return f"{module_name}.{func_name}"
+        return "{}.{}".format(module_name, func_name)
 
     return func_name
 
