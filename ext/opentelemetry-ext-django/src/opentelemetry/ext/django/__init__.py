@@ -19,6 +19,7 @@ in Django applications. In addition to opentelemetry-ext-wsgi, it supports
 django-specific features such as:
 
 # TODO: mathieu, look at flask doc and write similar thing
+# TODO: mathieu, header propagation from incoming request?
 """
 
 import logging
@@ -32,18 +33,6 @@ from opentelemetry.ext.django.version import __version__
 logger = logging.getLogger(__name__)
 
 
-def get_func_name(func):
-    """Return a name which includes the module name and function name."""
-    func_name = getattr(func, "__name__", func.__class__.__name__)
-    module_name = func.__module__
-
-    if module_name is not None:
-        module_name = func.__module__
-        return f"{module_name}.{func_name}"
-
-    return func_name
-
-
 def enable_tracing_url(path: str, blacklisted_paths: List[str]) -> bool:
     """ Returns whether or not a path should be traced.
         TODO: more extensive behaviour, e.g. prefix matching and regexes?
@@ -51,35 +40,28 @@ def enable_tracing_url(path: str, blacklisted_paths: List[str]) -> bool:
     for disabled_path in blacklisted_paths:
         if path == disabled_path:
             return False
-    return False
+    return True
 
 
 class OpenTelemetryTracingMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-        self.trace_settings = getattr(
+        trace_settings = getattr(
             django.conf.settings, "OPENTELEMETRY", {}
         ).get("TRACE", {})
-        self.blacklisted_paths = self.trace_settings.get(
-            "BLACKLISTED_PATHS", []
-        )
+        self.blacklisted_paths = trace_settings.get("BLACKLISTED_PATHS", [])
 
         self.tracer = trace.get_tracer(__name__, __version__)
-
-    def get_span_name(self, request) -> str:  # pylint: disable=no-self-use
-        try:
-            return get_func_name(request.resolver_match.func)
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.warning("Could not determine view name: %s", exc)
-            return request.path_info
 
     def process_view(self, request, *args, **kwargs):  # pylint: disable=W0613
         """ Once known which view is handling this request, we can better
             modify the name of the span.
         """
         if hasattr(self, "get_span_name"):
-            self.tracer.get_current_span().name = self.get_span_name(request)
+            self.tracer.get_current_span().name = self.get_span_name(  # pylint: disable=no-member
+                request
+            )
 
     def __call__(self, request):
         if enable_tracing_url(request.path, self.blacklisted_paths):
