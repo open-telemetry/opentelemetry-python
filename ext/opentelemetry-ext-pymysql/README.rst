@@ -1,10 +1,14 @@
 OpenTelemetry PyMySQL integration
-===============================
+=================================
 
 |pypi|
 
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-pymysql.svg
    :target: https://pypi.org/project/opentelemetry-ext-pymysql/
+
+Integration with PyMySQL that supports the PyMySQL library and is
+specified to trace_integration using 'PyMySQL'.
+
 
 Installation
 ------------
