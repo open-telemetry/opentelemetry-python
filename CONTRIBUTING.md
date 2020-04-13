@@ -13,6 +13,14 @@ on how to become a [**Member**](https://github.com/open-telemetry/community/blob
 [**Approver**](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver)
 and [**Maintainer**](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).
 
+# Find your right repo
+
+This is the main repo for OpenTelemetry Python. Neverhteless, there are other repos that are related to this project.
+Please take a look at this list first, your contributions may belong in one of these repos better:
+
+1. [OpenTelemetry Contrib](https://github.com/open-telemetry/opentelemetry-python-contrib): Instrumentations for third-party
+   libraries and frameworks
+
 ## Find a Buddy and get Started Quickly!
 
 If you are looking for someone to help you find a starting point and be a resource for your first contribution, join our
