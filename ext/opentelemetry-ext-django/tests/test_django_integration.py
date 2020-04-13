@@ -45,29 +45,37 @@ def get_func_name(func):
 
 
 class MockViewError(View):
-    def get(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def get(self, *args, **kwargs):
         return HttpResponse(
-            f"request: {self.request}, args: {args}, kwargs: {kwargs}",
+            "request: {}, args: {}, kwargs: {}".format(
+                self.request, args, kwargs
+            ),
             status=500,
         )
 
-    def post(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def post(self, *args, **kwargs):
         return HttpResponse(
-            f"request: {self.request}, args: {args}, kwargs: {kwargs}",
+            "request: {}, args: {}, kwargs: {}".format(
+                self.request, args, kwargs
+            ),
             status=500,
         )
 
 
 class MockViewOk(View):
-    def get(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def get(self, *args, **kwargs):
         return HttpResponse(
-            f"request: {self.request}, args: {args}, kwargs: {kwargs}",
+            "request: {}, args: {}, kwargs: {}".format(
+                self.request, args, kwargs
+            ),
             status=200,
         )
 
-    def post(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def post(self, *args, **kwargs):
         return HttpResponse(
-            f"request: {self.request}, args: {args}, kwargs: {kwargs}",
+            "request: {}, args: {}, kwargs: {}".format(
+                self.request, args, kwargs
+            ),
             status=200,
         )
 
