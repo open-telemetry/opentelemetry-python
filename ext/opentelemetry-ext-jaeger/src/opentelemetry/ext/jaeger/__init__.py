@@ -1,5 +1,5 @@
 # Copyright 2018, OpenCensus Authors
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Jaeger Span Exporter for OpenTelemetry."""
+"""
+The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
+This exporter always send traces to the configured agent using Thrift compact protocol over UDP.
+An optional collector can be configured, in this case Thrift binary protocol over HTTP is used.
+gRPC is still not supported by this implementation.
+
+Usage
+-----
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.ext import jaeger
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+
+    trace.set_tracer_provider(TracerProvider())
+    tracer = trace.get_tracer(__name__)
+
+    # create a JaegerSpanExporter
+    jaeger_exporter = jaeger.JaegerSpanExporter(
+        service_name='my-helloworld-service',
+        # configure agent
+        agent_host_name='localhost',
+        agent_port=6831,
+        # optional: configure also collector
+        # collector_host_name='localhost',
+        # collector_port=14268,
+        # collector_endpoint='/api/traces?format=jaeger.thrift',
+        # username=xxxx, # optional
+        # password=xxxx, # optional
+    )
+
+    # Create a BatchExportSpanProcessor and add the exporter to it
+    span_processor = BatchExportSpanProcessor(jaeger_exporter)
+
+    # add to the tracer
+    trace.get_tracer_provider().add_span_processor(span_processor)
+
+    with tracer.start_as_current_span('foo'):
+        print('Hello world!')
+
+API
+---
+.. _Jaeger: https://www.jaegertracing.io/
+.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+"""
 
 import base64
 import logging
@@ -342,23 +388,15 @@ class Collector:
     Args:
         thrift_url: URL of the Jaeger HTTP Thrift.
         auth: Auth tuple that contains username and password for Basic Auth.
-        client: Class for creating a Jaeger collector client.
-        http_transport: Class for creating new client for Thrift HTTP server.
     """
 
-    def __init__(
-        self,
-        thrift_url="",
-        auth=None,
-        client=jaeger.Client,
-        http_transport=THttpClient.THttpClient,
-    ):
+    def __init__(self, thrift_url="", auth=None):
         self.thrift_url = thrift_url
         self.auth = auth
-        self.http_transport = http_transport(uri_or_host=thrift_url)
-        self.client = client(
-            iprot=TBinaryProtocol.TBinaryProtocol(trans=self.http_transport)
+        self.http_transport = THttpClient.THttpClient(
+            uri_or_host=self.thrift_url
         )
+        self.protocol = TBinaryProtocol.TBinaryProtocol(self.http_transport)
 
         # set basic auth header
         if auth is not None:
@@ -373,18 +411,13 @@ class Collector:
         Args:
             batch: Object to emit Jaeger spans.
         """
-        try:
-            self.client.submitBatches([batch])
-            # it will call http_transport.flush() and
-            # status code and message will be updated
-            code = self.http_transport.code
-            msg = self.http_transport.message
-            if code >= 300 or code < 200:
-                logger.error(
-                    "Traces cannot be uploaded; HTTP status code: %s, message %s",
-                    code,
-                    msg,
-                )
-        finally:
-            if self.http_transport.isOpen():
-                self.http_transport.close()
+        batch.write(self.protocol)
+        self.http_transport.flush()
+        code = self.http_transport.code
+        msg = self.http_transport.message
+        if code >= 300 or code < 200:
+            logger.error(
+                "Traces cannot be uploaded; HTTP status code: %s, message: %s",
+                code,
+                msg,
+            )

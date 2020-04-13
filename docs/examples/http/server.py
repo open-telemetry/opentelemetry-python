@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,22 +28,13 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
 )
 
-if os.getenv("EXPORTER") == "jaeger":
-    from opentelemetry.ext.jaeger import JaegerSpanExporter
-
-    exporter = JaegerSpanExporter(
-        service_name="http-server",
-        agent_host_name="localhost",
-        agent_port=6831,
-    )
-else:
-    exporter = ConsoleSpanExporter()
-
+# The preferred tracer implementation must be set, as the opentelemetry-api
+# defines the interface with a no-op implementation.
+trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
 
-# SpanExporter receives the spans and send them to the target location.
+exporter = ConsoleSpanExporter()
 span_processor = BatchExportSpanProcessor(exporter)
-trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 # Integrations are the glue that binds the OpenTelemetry API and the

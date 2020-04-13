@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ import os
 import socket
 import time
 
+import pkg_resources
 from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.agent.common.v1 import common_pb2
 from opencensus.proto.trace.v1 import trace_pb2
@@ -24,7 +25,10 @@ from opentelemetry.ext.otcollector.version import (
     __version__ as otcollector_exporter_version,
 )
 from opentelemetry.trace import SpanKind
-from opentelemetry.util.version import __version__ as opentelemetry_version
+
+OPENTELEMETRY_VERSION = pkg_resources.get_distribution(
+    "opentelemetry-api"
+).version
 
 
 def proto_timestamp_from_time_ns(time_ns):
@@ -93,7 +97,7 @@ def get_node(service_name, host_name):
         library_info=common_pb2.LibraryInfo(
             language=common_pb2.LibraryInfo.Language.Value("PYTHON"),
             exporter_version=otcollector_exporter_version,
-            core_library_version=opentelemetry_version,
+            core_library_version=OPENTELEMETRY_VERSION,
         ),
         service_info=common_pb2.ServiceInfo(name=service_name),
     )

@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import abc
 from logging import getLogger
 from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
-from opentelemetry.configuration import Configuration  # type: ignore
+from opentelemetry.util import _load_provider
 
 logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
@@ -82,25 +82,6 @@ class BoundMeasure:
         """
 
 
-class LabelSet(abc.ABC):
-    """A canonicalized set of labels useful for preaggregation
-
-    Re-usable LabelSet objects provide a potential optimization for scenarios
-    where bound metric instruments might not be effective. For example, if the
-    LabelSet will be re-used but only used once per metrics, bound metric
-    instruments do not offer any optimization. It may best to pre-compute a
-    canonicalized LabelSet once and re-use it with the direct calling
-    convention. LabelSets are immutable and should be opaque in implementation.
-    """
-
-
-class DefaultLabelSet(LabelSet):
-    """The default LabelSet.
-
-    Used when no LabelSet implementation is available.
-    """
-
-
 class Metric(abc.ABC):
     """Base class for various types of metrics.
 
@@ -109,7 +90,7 @@ class Metric(abc.ABC):
     """
 
     @abc.abstractmethod
-    def bind(self, label_set: LabelSet) -> "object":
+    def bind(self, labels: Dict[str, str]) -> "object":
         """Gets a bound metric instrument.
 
         Bound metric instruments are useful to reduce the cost of repeatedly
@@ -121,51 +102,51 @@ class Metric(abc.ABC):
         provided are permitted.
 
         Args:
-            label_set: `LabelSet` to associate with the bound instrument.
+            labels: Labels to associate with the bound instrument.
         """
 
 
 class DefaultMetric(Metric):
     """The default Metric used when no Metric implementation is available."""
 
-    def bind(self, label_set: LabelSet) -> "DefaultBoundInstrument":
+    def bind(self, labels: Dict[str, str]) -> "DefaultBoundInstrument":
         """Gets a `DefaultBoundInstrument`.
 
         Args:
-            label_set: `LabelSet` to associate with the bound instrument.
+            labels: Labels to associate with the bound instrument.
         """
         return DefaultBoundInstrument()
 
-    def add(self, value: ValueT, label_set: LabelSet) -> None:
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """No-op implementation of `Counter` add.
 
         Args:
             value: The value to add to the counter metric.
-            label_set: `LabelSet` to associate with the bound instrument.
+            labels: Labels to associate with the bound instrument.
         """
 
-    def record(self, value: ValueT, label_set: LabelSet) -> None:
+    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
         """No-op implementation of `Measure` record.
 
         Args:
             value: The value to record to this measure metric.
-            label_set: `LabelSet` to associate with the bound instrument.
+            labels: Labels to associate with the bound instrument.
         """
 
 
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def bind(self, label_set: LabelSet) -> "BoundCounter":
+    def bind(self, labels: Dict[str, str]) -> "BoundCounter":
         """Gets a `BoundCounter`."""
         return BoundCounter()
 
-    def add(self, value: ValueT, label_set: LabelSet) -> None:
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
             value: The value to add to the counter metric.
-            label_set: `LabelSet` to associate with the returned bound counter.
+            labels: Labels to associate with the bound instrument.
         """
 
 
@@ -175,16 +156,16 @@ class Measure(Metric):
     Measure metrics represent raw statistics that are recorded.
     """
 
-    def bind(self, label_set: LabelSet) -> "BoundMeasure":
+    def bind(self, labels: Dict[str, str]) -> "BoundMeasure":
         """Gets a `BoundMeasure`."""
         return BoundMeasure()
 
-    def record(self, value: ValueT, label_set: LabelSet) -> None:
+    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Records the ``value`` to the measure.
 
         Args:
             value: The value to record to this measure metric.
-            label_set: `LabelSet` to associate with the returned bound measure.
+            labels: Labels to associate with the bound instrument.
         """
 
 
@@ -199,24 +180,24 @@ class Observer(abc.ABC):
     """
 
     @abc.abstractmethod
-    def observe(self, value: ValueT, label_set: LabelSet) -> None:
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Captures ``value`` to the observer.
 
         Args:
             value: The value to capture to this observer metric.
-            label_set: `LabelSet` associated to ``value``.
+            labels: Labels associated to ``value``.
         """
 
 
 class DefaultObserver(Observer):
     """No-op implementation of ``Observer``."""
 
-    def observe(self, value: ValueT, label_set: LabelSet) -> None:
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Captures ``value`` to the observer.
 
         Args:
             value: The value to capture to this observer metric.
-            label_set: `LabelSet` associated to ``value``.
+            labels: Labels associated to ``value``.
         """
 
 
@@ -286,20 +267,20 @@ class Meter(abc.ABC):
     @abc.abstractmethod
     def record_batch(
         self,
-        label_set: LabelSet,
+        labels: Dict[str, str],
         record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
         Allows the functionality of acting upon multiple metrics with a single
         API call. Implementations should find bound metric instruments that
-        match the key-value pairs in the labelset.
+        match the key-value pairs in the labels.
 
-        Args: label_set: The `LabelSet` associated with all measurements in the
-            batch. A measurement is a tuple, representing the `Metric` being
-            recorded and the corresponding value to record. record_tuples: A
-            sequence of pairs of `Metric` s and the corresponding value to
-            record for that metric.
+        Args:
+            labels: Labels associated with all measurements in the
+                batch.
+            record_tuples: A sequence of pairs of `Metric` s and the
+                corresponding value to record for that metric.
         """
 
     @abc.abstractmethod
@@ -361,23 +342,13 @@ class Meter(abc.ABC):
             observer: The observer to unregister.
         """
 
-    @abc.abstractmethod
-    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
-        """Gets a `LabelSet` with the given labels.
-
-        Args:
-            labels: A dictionary representing label key to label value pairs.
-
-        Returns: A `LabelSet` object canonicalized using the given input.
-        """
-
 
 class DefaultMeter(Meter):
     """The default Meter used when no Meter implementation is available."""
 
     def record_batch(
         self,
-        label_set: LabelSet,
+        labels: Dict[str, str],
         record_tuples: Sequence[Tuple["Metric", ValueT]],
     ) -> None:
         pass
@@ -410,10 +381,6 @@ class DefaultMeter(Meter):
     def unregister_observer(self, observer: "Observer") -> None:
         pass
 
-    def get_label_set(self, labels: Dict[str, str]) -> "LabelSet":
-        # pylint: disable=no-self-use
-        return DefaultLabelSet()
-
 
 _METER_PROVIDER = None
 
@@ -425,7 +392,7 @@ def get_meter(
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
     This function is a convenience wrapper for
-    opentelemetry.metrics.meter_provider().get_meter
+    opentelemetry.metrics.get_meter_provider().get_meter
     """
     return get_meter_provider().get_meter(
         instrumenting_module_name, stateful, instrumenting_library_version
@@ -443,8 +410,6 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = (
-            Configuration().meter_provider  # type: ignore # pylint: disable=no-member
-        )
+        _METER_PROVIDER = _load_provider("meter_provider")
 
-    return _METER_PROVIDER  # type: ignore
+    return _METER_PROVIDER

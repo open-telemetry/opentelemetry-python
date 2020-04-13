@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,31 +21,13 @@ from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=redefined-outer-name
-class LabelSet(metrics_api.LabelSet):
-    """See `opentelemetry.metrics.LabelSet`."""
-
-    def __init__(self, labels: Dict[str, str] = None):
-        if labels is None:
-            labels = {}
-        # LabelSet properties used only in dictionaries for fast lookup
-        self._labels = tuple(labels.items())
-        self._encoded = tuple(sorted(labels.items()))
-
-    @property
-    def labels(self):
-        return self._labels
-
-    def __hash__(self):
-        return hash(self._encoded)
-
-    def __eq__(self, other):
-        return self._encoded == other._encoded
+def get_labels_as_key(labels: Dict[str, str]) -> Tuple[Tuple[str, str]]:
+    """Gets a list of labels that can be used as a key in a dictionary."""
+    return tuple(sorted(labels.items()))
 
 
 class BaseBoundInstrument:
@@ -71,7 +53,6 @@ class BaseBoundInstrument:
         self.value_type = value_type
         self.enabled = enabled
         self.aggregator = aggregator
-        self.last_update_timestamp = time_ns()
         self._ref_count = 0
         self._ref_count_lock = threading.Lock()
 
@@ -86,7 +67,6 @@ class BaseBoundInstrument:
         return True
 
     def update(self, value: metrics_api.ValueT):
-        self.last_update_timestamp = time_ns()
         self.aggregator.update(value)
 
     def release(self):
@@ -105,10 +85,8 @@ class BaseBoundInstrument:
             return self._ref_count
 
     def __repr__(self):
-        return '{}(data="{}", last_update_timestamp={})'.format(
-            type(self).__name__,
-            self.aggregator.current,
-            self.last_update_timestamp,
+        return '{}(data="{}")'.format(
+            type(self).__name__, self.aggregator.current
         )
 
 
@@ -157,10 +135,11 @@ class Metric(metrics_api.Metric):
         self.bound_instruments = {}
         self.bound_instruments_lock = threading.Lock()
 
-    def bind(self, label_set: LabelSet) -> BaseBoundInstrument:
+    def bind(self, labels: Dict[str, str]) -> BaseBoundInstrument:
         """See `opentelemetry.metrics.Metric.bind`."""
+        key = get_labels_as_key(labels)
         with self.bound_instruments_lock:
-            bound_instrument = self.bound_instruments.get(label_set)
+            bound_instrument = self.bound_instruments.get(key)
             if bound_instrument is None:
                 bound_instrument = self.BOUND_INSTR_TYPE(
                     self.value_type,
@@ -168,7 +147,7 @@ class Metric(metrics_api.Metric):
                     # Aggregator will be created based off type of metric
                     self.meter.batcher.aggregator_for(self.__class__),
                 )
-                self.bound_instruments[label_set] = bound_instrument
+                self.bound_instruments[key] = bound_instrument
         bound_instrument.increase_ref_count()
         return bound_instrument
 
@@ -186,9 +165,9 @@ class Counter(Metric, metrics_api.Counter):
 
     BOUND_INSTR_TYPE = BoundCounter
 
-    def add(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
+    def add(self, value: metrics_api.ValueT, labels: Dict[str, str]) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
-        bound_intrument = self.bind(label_set)
+        bound_intrument = self.bind(labels)
         bound_intrument.add(value)
         bound_intrument.release()
 
@@ -200,9 +179,11 @@ class Measure(Metric, metrics_api.Measure):
 
     BOUND_INSTR_TYPE = BoundMeasure
 
-    def record(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
+    def record(
+        self, value: metrics_api.ValueT, labels: Dict[str, str]
+    ) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
-        bound_intrument = self.bind(label_set)
+        bound_intrument = self.bind(labels)
         bound_intrument.record(value)
         bound_intrument.release()
 
@@ -234,7 +215,9 @@ class Observer(metrics_api.Observer):
 
         self.aggregators = {}
 
-    def observe(self, value: metrics_api.ValueT, label_set: LabelSet) -> None:
+    def observe(
+        self, value: metrics_api.ValueT, labels: Dict[str, str]
+    ) -> None:
         if not self.enabled:
             return
         if not isinstance(value, self.value_type):
@@ -243,12 +226,13 @@ class Observer(metrics_api.Observer):
             )
             return
 
-        if label_set not in self.aggregators:
+        key = get_labels_as_key(labels)
+        if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
-            self.aggregators[label_set] = self.meter.batcher.aggregator_for(
+            self.aggregators[key] = self.meter.batcher.aggregator_for(
                 self.__class__
             )
-        aggregator = self.aggregators[label_set]
+        aggregator = self.aggregators[key]
         aggregator.update(value)
 
     def run(self) -> bool:
@@ -274,16 +258,12 @@ class Record:
     def __init__(
         self,
         metric: metrics_api.MetricT,
-        label_set: LabelSet,
+        labels: Dict[str, str],
         aggregator: Aggregator,
     ):
         self.metric = metric
-        self.label_set = label_set
+        self.labels = labels
         self.aggregator = aggregator
-
-
-# Used when getting a LabelSet with no key/values
-EMPTY_LABEL_SET = LabelSet()
 
 
 class Meter(metrics_api.Meter):
@@ -326,19 +306,19 @@ class Meter(metrics_api.Meter):
             to_remove = []
 
             with metric.bound_instruments_lock:
-                for label_set, bound_instr in metric.bound_instruments.items():
+                for labels, bound_instr in metric.bound_instruments.items():
                     # TODO: Consider storing records in memory?
-                    record = Record(metric, label_set, bound_instr.aggregator)
+                    record = Record(metric, labels, bound_instr.aggregator)
                     # Checkpoints the current aggregators
                     # Applies different batching logic based on type of batcher
                     self.batcher.process(record)
 
                     if bound_instr.ref_count() == 0:
-                        to_remove.append(label_set)
+                        to_remove.append(labels)
 
                 # Remove handles that were released
-                for label_set in to_remove:
-                    del metric.bound_instruments[label_set]
+                for labels in to_remove:
+                    del metric.bound_instruments[labels]
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
@@ -346,22 +326,23 @@ class Meter(metrics_api.Meter):
                 if not observer.enabled:
                     continue
 
-                # TODO: capture timestamp?
                 if not observer.run():
                     continue
 
-                for label_set, aggregator in observer.aggregators.items():
-                    record = Record(observer, label_set, aggregator)
+                for labels, aggregator in observer.aggregators.items():
+                    record = Record(observer, labels, aggregator)
                     self.batcher.process(record)
 
     def record_batch(
         self,
-        label_set: LabelSet,
+        labels: Dict[str, str],
         record_tuples: Sequence[Tuple[metrics_api.Metric, metrics_api.ValueT]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
+        # TODO: Avoid enconding the labels for each instrument, encode once
+        # and reuse.
         for metric, value in record_tuples:
-            metric.UPDATE_FUNCTION(value, label_set)
+            metric.UPDATE_FUNCTION(value, labels)
 
     def create_metric(
         self,
@@ -415,23 +396,9 @@ class Meter(metrics_api.Meter):
         with self.observers_lock:
             self.observers.remove(observer)
 
-    def get_label_set(self, labels: Dict[str, str]):
-        """See `opentelemetry.metrics.Meter.create_metric`.
-
-        This implementation encodes the labels to use as a map key.
-
-        Args:
-            labels: The dictionary of label keys to label values.
-        """
-        if len(labels) == 0:
-            return EMPTY_LABEL_SET
-        return LabelSet(labels=labels)
-
 
 class MeterProvider(metrics_api.MeterProvider):
-    def __init__(
-        self, resource: Resource = Resource.create_empty(),
-    ):
+    def __init__(self, resource: Resource = Resource.create_empty()):
         self.resource = resource
 
     def get_meter(

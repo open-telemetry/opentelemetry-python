@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ from opentelemetry.trace.propagation import (
 
 _KEY_WITHOUT_VENDOR_FORMAT = r"[a-z][_0-9a-z\-\*\/]{0,255}"
 _KEY_WITH_VENDOR_FORMAT = (
-    r"[a-z][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
+    r"[a-z0-9][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
 )
 
 _KEY_FORMAT = _KEY_WITHOUT_VENDOR_FORMAT + "|" + _KEY_WITH_VENDOR_FORMAT
@@ -105,6 +105,7 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),
+            is_remote=True,
             trace_flags=trace.TraceFlags(trace_flags),
             trace_state=tracestate,
         )

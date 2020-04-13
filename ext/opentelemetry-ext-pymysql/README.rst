@@ -1,33 +1,20 @@
 OpenTelemetry PyMySQL integration
 ===============================
 
-The integration with PyMySQL supports the `PyMySQL`_ library and is specified
-to ``trace_integration`` using ``'PyMySQL'``.
+|pypi|
 
-.. _PyMySQL: https://pypi.org/project/PyMySQL/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-pymysql.svg
+   :target: https://pypi.org/project/opentelemetry-ext-pymysql/
 
-Usage
------
+Installation
+------------
 
-.. code:: python
+::
 
-    import pymysql
-    from opentelemetry import trace
-    from opentelemetry.ext.pymysql import trace_integration
-    from opentelemetry.sdk.trace import TracerProvider
-
-    trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
-    trace_integration(tracer)
-    cnx = pymysql.connect(database='MySQL_Database')
-    cursor = cnx.cursor()
-    cursor.execute("INSERT INTO test (testField) VALUES (123)"
-    cnx.commit()
-    cursor.close()
-    cnx.close()
+    pip install opentelemetry-ext-pymysql
 
 
 References
 ----------
-
+* `OpenTelemetry PyMySQL Integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/pymysql/pymysql.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_

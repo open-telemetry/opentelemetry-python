@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ from flask import Flask, request
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
-import opentelemetry.ext.flask as otel_flask
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
 
@@ -43,6 +42,8 @@ def expected_attributes(override_attributes):
 
 class TestFlaskIntegration(WsgiTestBase):
     def setUp(self):
+        # No instrumentation code is here because it is present in the
+        # conftest.py file next to this file.
         super().setUp()
 
         self.app = Flask(__name__)
@@ -54,7 +55,6 @@ class TestFlaskIntegration(WsgiTestBase):
 
         self.app.route("/hello/<int:helloid>")(hello_endpoint)
 
-        otel_flask.instrument_app(self.app)
         self.client = Client(self.app, BaseResponse)
 
     def test_only_strings_in_environ(self):
