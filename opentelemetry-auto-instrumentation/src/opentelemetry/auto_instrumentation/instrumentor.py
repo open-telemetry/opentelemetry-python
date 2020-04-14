@@ -52,7 +52,9 @@ class BaseInstrumentor(ABC):
             self._is_instrumented = True
             return result
 
-        _LOG.warning("Attempting to instrument while already instrumented")
+        _LOG.warning(
+            "Attempting to automatically instrument while already instrumented"
+        )
 
         return None
 
@@ -64,7 +66,10 @@ class BaseInstrumentor(ABC):
             self._is_instrumented = False
             return result
 
-        _LOG.warning("Attempting to uninstrument while already uninstrumented")
+        _LOG.warning(
+            "Attempting to automatically uninstrument while already"
+            " uninstrumented"
+        )
 
         return None
 

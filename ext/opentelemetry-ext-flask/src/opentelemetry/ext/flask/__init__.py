@@ -29,9 +29,10 @@ Usage
 
 .. code-block:: python
 
-    from opentelemetry.ext.flask import FlaskInstrumentor
-    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
     from flask import Flask
+    from opentelemetry.ext.flask import FlaskInstrumentor
+
+    Flask = FlaskInstrumentor().instrument(flask_class=Flask)
 
     app = Flask(__name__)
 
@@ -183,11 +184,20 @@ class FlaskInstrumentor(BaseInstrumentor):
 
     def __init__(self):
         super().__init__()
-        self._original_flask = None
+        self._original_flask_class = None
 
-    def _instrument(self, **kwargs):
-        self._original_flask = flask.Flask
+    def _instrument(
+        self, flask_class=None
+    ):  # pylint: disable=arguments-differ
+        if flask_class is not None:
+            self._original_flask_class = flask_class
+            return _InstrumentedFlask
+
+        self._original_flask_class = flask.Flask
         flask.Flask = _InstrumentedFlask
 
-    def _uninstrument(self, **kwargs):
-        flask.Flask = self._original_flask
+        return None
+
+    def _uninstrument(self):  # pylint: disable=arguments-differ
+        flask.Flask = self._original_flask_class
+        return self._original_flask_class

@@ -21,7 +21,10 @@ from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
+from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
+
+Flask = FlaskInstrumentor().instrument(flask_class=Flask)
 
 
 def expected_attributes(override_attributes):
@@ -143,7 +146,9 @@ class TestFlaskIntegration(WsgiTestBase):
     @patch.dict(
         "os.environ",  # type: ignore
         {
-            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS": "http://localhost/excluded",
+            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS": (
+                "http://localhost/excluded"
+            ),
             "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS": "excluded2",
         },
     )
