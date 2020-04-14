@@ -184,12 +184,14 @@ And let's write a small Flask application that sends an HTTP request, activating
 .. code-block:: python
 
     # flask_example.py
+    from opentelemetry.ext.flask import FlaskInstrumentor
+    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
+
     import flask
     import requests
 
     import opentelemetry.ext.http_requests
     from opentelemetry import trace
-    from opentelemetry.ext.flask import instrument_app
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter
     from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
@@ -201,7 +203,6 @@ And let's write a small Flask application that sends an HTTP request, activating
 
     app = flask.Flask(__name__)
     opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
-    instrument_app(app)
 
     @app.route("/")
     def hello():
