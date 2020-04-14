@@ -19,7 +19,9 @@ This is the main repo for OpenTelemetry Python. Nevertheless, there are other re
 Please take a look at this list first, your contributions may belong in one of these repos better:
 
 1. [OpenTelemetry Contrib](https://github.com/open-telemetry/opentelemetry-python-contrib): Instrumentations for third-party
-   libraries and frameworks
+   libraries and frameworks. There is an ongoing effort to migrate into the Opentelemetry Contrib repo some of the existing
+   programmatic instrumentations that are now in the `ext` directory in the main OpenTelemetry repo. Please ask in the Gitter
+   channel (see below) for guidance if you want to contribute with these instrumentations.
 
 ## Find a Buddy and get Started Quickly!
 
