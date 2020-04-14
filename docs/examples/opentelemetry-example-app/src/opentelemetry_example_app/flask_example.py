@@ -33,8 +33,8 @@ trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
-FlaskInstrumentor().instrument()
-app = flask.Flask(__name__)
+Flask = FlaskInstrumentor().programmatic_instrument(flask.Flask)
+app = Flask(__name__)
 opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
 
 

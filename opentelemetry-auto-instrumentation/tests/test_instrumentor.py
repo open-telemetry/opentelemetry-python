@@ -20,25 +20,62 @@ from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 
 
 class TestInstrumentor(TestCase):
+    class Instrumentor(BaseInstrumentor):
+        def _automatic_instrument(self):
+            return "instrumented"
+
+        def _automatic_uninstrument(self):
+            return "uninstrumented"
+
+        @BaseInstrumentor.protect_instrument
+        def programmatic_instrument(self, arg):  # pylint: disable=no-self-use
+            return "programmatically_instrumented {}".format(arg)
+
+        @BaseInstrumentor.protect_uninstrument
+        def programmatic_uninstrument(
+            self, arg
+        ):  # pylint: disable=no-self-use
+            return "programmatically_uninstrumented {}".format(arg)
+
     def test_protect(self):
-        class Instrumentor(BaseInstrumentor):
-            def _instrument(self):
-                return "instrumented"
-
-            def _uninstrument(self):
-                return "uninstrumented"
-
-        instrumentor = Instrumentor()
+        instrumentor = self.Instrumentor()
 
         with self.assertLogs(level=WARNING):
-            self.assertIs(instrumentor.uninstrument(), None)
+            self.assertIs(instrumentor.automatic_uninstrument(), None)
 
-        self.assertEqual(instrumentor.instrument(), "instrumented")
+        self.assertEqual(instrumentor.automatic_instrument(), "instrumented")
+        with self.assertLogs(level=WARNING):
+            self.assertIs(instrumentor.automatic_instrument(), None)
+
+        self.assertEqual(
+            instrumentor.automatic_uninstrument(), "uninstrumented"
+        )
 
         with self.assertLogs(level=WARNING):
-            self.assertIs(instrumentor.instrument(), None)
+            self.assertIs(instrumentor.automatic_uninstrument(), None)
 
-        self.assertEqual(instrumentor.uninstrument(), "uninstrumented")
+    def test_singleton(self):
+        self.assertIs(self.Instrumentor(), self.Instrumentor())
+
+    def test_protect_instrument_uninstrument(self):
+
+        instrumentor = self.Instrumentor()
 
         with self.assertLogs(level=WARNING):
-            self.assertIs(instrumentor.uninstrument(), None)
+            self.assertIs(instrumentor.programmatic_uninstrument("test"), None)
+
+        self.assertEqual(
+            instrumentor.programmatic_instrument("test"),
+            "programmatically_instrumented test",
+        )
+
+        with self.assertLogs(level=WARNING):
+            self.assertIs(instrumentor.programmatic_instrument("test"), None)
+
+        self.assertEqual(
+            instrumentor.programmatic_uninstrument("test"),
+            "programmatically_uninstrumented test",
+        )
+
+        with self.assertLogs(level=WARNING):
+            self.assertIs(instrumentor.programmatic_uninstrument("test"), None)

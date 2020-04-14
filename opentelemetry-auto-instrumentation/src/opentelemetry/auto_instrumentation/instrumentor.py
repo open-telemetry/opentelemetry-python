@@ -26,38 +26,82 @@ _LOG = getLogger(__name__)
 class BaseInstrumentor(ABC):
     """An ABC for instrumentors"""
 
-    def __init__(self):
-        self._is_instrumented = False
+    _instance = None
+    _is_instrumented = False
+
+    def __new__(cls):
+
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+
+        return cls._instance
+
+    @staticmethod
+    def protect_instrument(method) -> None:
+        def inner(self, *args, **kwargs):
+            if self._is_instrumented:  # pylint: disable=protected-access
+                _LOG.warning(
+                    "Attempting to call %(method.__name__)s while "
+                    "already instrumented"
+                )
+                return None
+
+            result = method(self, *args, **kwargs)
+            self._is_instrumented = True  # pylint: disable=protected-access
+            return result
+
+        return inner
+
+    @staticmethod
+    def protect_uninstrument(method) -> None:
+        def inner(self, *args, **kwargs):
+            if not self._is_instrumented:  # pylint: disable=protected-access
+                _LOG.warning(
+                    "Attempting to call %(method.__name__)s while "
+                    "already uninstrumented"
+                )
+                return None
+
+            result = method(self, *args, **kwargs)
+            self._is_instrumented = False  # pylint: disable=protected-access
+            return result
+
+        return inner
 
     @abstractmethod
-    def _instrument(self) -> None:
+    def _automatic_instrument(self) -> None:
         """Instrument"""
 
     @abstractmethod
-    def _uninstrument(self) -> None:
+    def _automatic_uninstrument(self) -> None:
         """Uninstrument"""
 
-    def instrument(self) -> None:
+    def automatic_instrument(self) -> None:
         """Instrument"""
 
         if not self._is_instrumented:
-            result = self._instrument()
+            result = self._automatic_instrument()
             self._is_instrumented = True
             return result
 
-        _LOG.warning("Attempting to instrument while already instrumented")
+        _LOG.warning(
+            "Attempting to automatically instrument while already instrumented"
+        )
 
         return None
 
-    def uninstrument(self) -> None:
+    def automatic_uninstrument(self) -> None:
         """Uninstrument"""
 
         if self._is_instrumented:
-            result = self._uninstrument()
+            result = self._automatic_uninstrument()
             self._is_instrumented = False
             return result
 
-        _LOG.warning("Attempting to uninstrument while already uninstrumented")
+        _LOG.warning(
+            "Attempting to automatically uninstrument while already"
+            " uninstrumented"
+        )
 
         return None
 
