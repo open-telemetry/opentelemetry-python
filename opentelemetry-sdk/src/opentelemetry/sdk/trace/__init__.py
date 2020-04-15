@@ -604,9 +604,9 @@ class Tracer(trace_api.Tracer):
                 context_api.detach(token)
 
         except Exception as error:  # pylint: disable=broad-except
-            status = span.status if hasattr(span, "status") else None
             if (
-                status is None
+                isinstance(span, Span)
+                and span.status is None
                 and span._set_status_on_exception  # pylint:disable=protected-access  # noqa
             ):
                 span.set_status(
