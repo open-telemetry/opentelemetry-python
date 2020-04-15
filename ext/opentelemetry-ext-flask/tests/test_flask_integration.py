@@ -19,8 +19,8 @@ from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace as trace_api
-from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 Flask = FlaskInstrumentor().programmatic_instrument(Flask)
 
