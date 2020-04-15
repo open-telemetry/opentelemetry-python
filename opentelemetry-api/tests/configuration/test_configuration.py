@@ -39,6 +39,7 @@ class TestConfiguration(TestCase):
             "OPENTELEMETRY_PYTHON_METER_PROVIDER": "meter_provider",
             "OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider",
             "OPENTELEMETRY_PYTHON_OThER": "other",
+            "OPENTELEMETRY_PYTHON_OTHER_7": "other_7",
             "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },
     )
@@ -51,6 +52,9 @@ class TestConfiguration(TestCase):
         )  # pylint: disable=no-member
         self.assertEqual(
             Configuration().OThER, "other"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().OTHER_7, "other_7"
         )  # pylint: disable=no-member
         self.assertIsNone(Configuration().TRACEX_PROVIDER)
 
