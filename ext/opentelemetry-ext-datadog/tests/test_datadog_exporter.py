@@ -257,3 +257,18 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 self.assertEqual(span["type"], span_types[index])
             else:
                 self.assertTrue("type" not in span)
+
+    def test_errors(self):
+        with self.assertRaises(ValueError):
+            with self.tracer.start_span("foo"):
+                raise ValueError("bar")
+
+        self.assertEqual(self.agent_writer_mock.write.call_count, 1)
+
+        datadog_spans = self.agent_writer_mock.write.call_args.kwargs["spans"]
+
+        self.assertEqual(len(datadog_spans), 1)
+        span = datadog_spans[0].to_dict()
+        self.assertEqual(span["error"], 1)
+        self.assertEqual(span["meta"]["error.msg"], "bar")
+        self.assertEqual(span["meta"]["error.type"], "ValueError")

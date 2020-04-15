@@ -85,14 +85,16 @@ class DatadogSpanExporter(SpanExporter):
             )
             datadog_span.start_ns = span.start_time
             datadog_span.duration_ns = span.end_time - span.start_time
-            datadog_span.error = (
-                1
-                if span.status.canonical_code is not StatusCanonicalCode.OK
-                else 0
-            )
-            datadog_span.set_tags(span.attributes)
 
-            # TODO: Add exception info
+            if span.status.canonical_code is not StatusCanonicalCode.OK:
+                datadog_span.error = 1
+                if span.status.description:
+                    exc_type, exc_val = _get_exc_info(span)
+                    # no mapping for error.stack since traceback not recorded
+                    datadog_span.set_tag("error.msg", exc_val)
+                    datadog_span.set_tag("error.type", exc_type)
+
+            datadog_span.set_tags(span.attributes)
 
             datadog_spans.append(datadog_span)
 
@@ -143,3 +145,9 @@ def _get_span_type(span):
     span_type = span_type if span_type in DATADOG_SPAN_TYPES else None
 
     return span_type
+
+
+def _get_exc_info(span):
+    # parse status description for "{exc_type}: {exc_val}"
+    exc_type, exc_val = span.status.description.split(":", 1)
+    return exc_type, exc_val.strip()

@@ -36,8 +36,11 @@ tracer = trace.get_tracer(__name__)
 
 @app.route("/server_request")
 def server_request():
+    param = request.args.get("param")
     with tracer.start_as_current_span("server-inner"):
-        return "served: {}".format(request.args.get("param"))
+        if param == "error":
+            raise ValueError("forced server error")
+        return "served: {}".format(param)
 
 
 if __name__ == "__main__":

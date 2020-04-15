@@ -57,3 +57,5 @@ Auto-Instrumention Example
     opentelemetry-auto-instrumentation server.py
     # run client in another terminal
     python client.py testing
+    # run client to force server error
+    python client.py error
