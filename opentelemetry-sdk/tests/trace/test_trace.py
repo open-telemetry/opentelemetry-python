@@ -107,6 +107,16 @@ tracer_provider.add_span_processor(mock_processor)
         out = run_general_code(False, False)
         self.assertTrue(out.startswith(b"0"))
 
+    def test_use_span_exception(self):
+        class TestUseSpanException(Exception):
+            pass
+
+        default_span = trace_api.DefaultSpan(trace_api.INVALID_SPAN_CONTEXT)
+        tracer = new_tracer()
+        with self.assertRaises(TestUseSpanException):
+            with tracer.use_span(default_span):
+                raise TestUseSpanException()
+
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):
