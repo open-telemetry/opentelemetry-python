@@ -97,9 +97,10 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 context=span_context,
                 parent=parent_context,
                 kind=trace_api.SpanKind.CLIENT,
+                attributes=dict(component="testcomponent"),
             ),
             trace.Span(
-                name=span_names[1], context=parent_context, parent=None
+                name=span_names[1], context=parent_context, parent=None,
             ),
             trace.Span(name=span_names[2], context=other_context, parent=None),
         ]
@@ -126,7 +127,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 parent_id=parent_id,
                 span_id=span_id,
                 name=span_names[0],
-                resource=span_names[0],
+                resource="testcomponent",
                 start=start_times[0],
                 duration=durations[0],
                 error=0,

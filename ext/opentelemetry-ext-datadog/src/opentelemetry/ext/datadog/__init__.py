@@ -72,8 +72,7 @@ class DatadogSpanExporter(SpanExporter):
                 tracer,
                 span.name,
                 service=self.service,
-                # TODO: Handle resource
-                resource=span.name,
+                resource=span.attributes.get("component") or span.name,
                 trace_id=trace_id,
                 span_id=span_id,
                 parent_id=parent_id,
