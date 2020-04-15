@@ -14,6 +14,11 @@ from opentelemetry.trace.status import StatusCanonicalCode
 log = logging.getLogger(__name__)
 
 DEFAULT_AGENT_URL = "http://localhost:8126"
+DATADOG_SPAN_TYPES = (
+    "sql",
+    "mongodb",
+    "http",
+)
 
 
 class DatadogSpanExporter(SpanExporter):
@@ -73,6 +78,7 @@ class DatadogSpanExporter(SpanExporter):
                 span.name,
                 service=self.service,
                 resource=_get_resource(span),
+                span_type=_get_span_type(span),
                 trace_id=trace_id,
                 span_id=span_id,
                 parent_id=parent_id,
@@ -86,8 +92,6 @@ class DatadogSpanExporter(SpanExporter):
             )
             datadog_span.set_tags(span.attributes)
 
-            # TODO: Add span type
-            # TODO: Add span tags
             # TODO: Add exception info
 
             datadog_spans.append(datadog_span)
@@ -129,3 +133,13 @@ def _get_resource(span):
         )
 
     return span.attributes.get("component", span.name)
+
+
+def _get_span_type(span):
+    # use db.type for database integrations (sql, mongodb) otherwise component
+    span_type = span.attributes.get(
+        "db.type", span.attributes.get("component")
+    )
+    span_type = span_type if span_type in DATADOG_SPAN_TYPES else None
+
+    return span_type

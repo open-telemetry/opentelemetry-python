@@ -223,3 +223,37 @@ class TestDatadogSpanExporter(unittest.TestCase):
             self.assertEqual(len(datadog_spans), 1)
             span = datadog_spans[0].to_dict()
             self.assertEqual(span["resource"], resources[index])
+
+    def test_span_types(self):
+        span_types = [None, "http", "sql", "mongodb"]
+        attributes = [
+            {"component": "custom"},
+            {"component": "http"},
+            {"db.type": "sql"},
+            {"db.type": "mongodb"},
+        ]
+
+        with self.tracer.start_span("foo", attributes=attributes[0]):
+            pass
+
+        with self.tracer.start_span("bar", attributes=attributes[1]):
+            pass
+
+        with self.tracer.start_span("xxx", attributes=attributes[2]):
+            pass
+
+        with self.tracer.start_span("yyy", attributes=attributes[3]):
+            pass
+
+        self.assertEqual(self.agent_writer_mock.write.call_count, 4)
+
+        for index, call_args in enumerate(
+            self.agent_writer_mock.write.call_args_list
+        ):
+            datadog_spans = call_args.kwargs["spans"]
+            self.assertEqual(len(datadog_spans), 1)
+            span = datadog_spans[0].to_dict()
+            if span_types[index]:
+                self.assertEqual(span["type"], span_types[index])
+            else:
+                self.assertTrue("type" not in span)
