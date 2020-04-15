@@ -23,8 +23,8 @@ import opentracing
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
 from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.ext.testutil.mock_httptextformat import MockHTTPTextFormat
 from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 
 
 class TestShim(TestCase):

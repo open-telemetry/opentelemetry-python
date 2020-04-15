@@ -15,7 +15,7 @@
 import io
 import wsgiref.util as wsgiref_util
 
-from opentelemetry.ext.testutil.test_base import TestBase
+from opentelemetry.test.test_base import TestBase
 
 
 class WsgiTestBase(TestBase):

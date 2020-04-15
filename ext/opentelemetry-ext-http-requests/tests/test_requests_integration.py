@@ -20,8 +20,8 @@ import urllib3
 
 import opentelemetry.ext.http_requests
 from opentelemetry import context, propagators, trace
-from opentelemetry.ext.testutil.mock_httptextformat import MockHTTPTextFormat
-from opentelemetry.ext.testutil.test_base import TestBase
+from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
+from opentelemetry.test.test_base import TestBase
 
 
 class TestRequestsIntegration(TestBase):
