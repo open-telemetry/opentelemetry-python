@@ -22,9 +22,28 @@ from ddtrace.internal.writer import AgentWriter
 import opentelemetry.ext.datadog as datadog_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import export
 
 
 class TestDatadogSpanExporter(unittest.TestCase):
+    def setUp(self):
+        tracer_provider = trace.TracerProvider()
+
+        self.exporter = datadog_exporter.DatadogSpanExporter()
+
+        # just agent is configured now
+        self.agent_writer_mock = mock.Mock(spec=AgentWriter)
+        self.agent_writer_mock.started = True
+        self.agent_writer_mock.exit_timeout = 1
+
+        # pylint: disable=protected-access
+        self.exporter._agent_writer = self.agent_writer_mock
+
+        tracer_provider.add_span_processor(
+            export.SimpleExportSpanProcessor(self.exporter)
+        )
+        self.tracer = tracer_provider.get_tracer(__name__)
+
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
         exporter = datadog_exporter.DatadogSpanExporter()
@@ -132,6 +151,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 duration=durations[0],
                 error=0,
                 service="test-service",
+                meta={"component": "testcomponent"},
             ),
             dict(
                 trace_id=trace_id_low,
@@ -162,13 +182,6 @@ class TestDatadogSpanExporter(unittest.TestCase):
     @mock.patch.dict("os.environ", {"DD_SERVICE": "test-service"})
     def test_export(self):
         """Test that agent and/or collector are invoked"""
-        exporter = datadog_exporter.DatadogSpanExporter()
-
-        # just agent is configured now
-        agent_writer_mock = mock.Mock(spec=AgentWriter)
-        # pylint: disable=protected-access
-        exporter._agent_writer = agent_writer_mock
-
         # create and save span to be used in tests
         context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
@@ -180,6 +193,33 @@ class TestDatadogSpanExporter(unittest.TestCase):
         test_span.start()
         test_span.end()
 
-        exporter.export((test_span,))
+        self.exporter.export((test_span,))
 
-        self.assertEqual(agent_writer_mock.write.call_count, 1)
+        self.assertEqual(self.agent_writer_mock.write.call_count, 1)
+
+    def test_resources(self):
+        resources = ["foo", "foo", "GET /foo", "GET /foo"]
+        attributes = [
+            {},
+            {"component": "foo"},
+            {"http.method": "GET", "http.route": "/foo"},
+            {"http.method": "GET", "http.path": "/foo"},
+        ]
+
+        with self.tracer.start_span("foo", attributes=attributes[0]):
+            with self.tracer.start_span("bar", attributes=attributes[1]):
+                with self.tracer.start_span("xxx", attributes=attributes[2]):
+                    with self.tracer.start_span(
+                        "yyy", attributes=attributes[3]
+                    ):
+                        pass
+
+        self.assertEqual(self.agent_writer_mock.write.call_count, 4)
+
+        for index, call_args in enumerate(
+            reversed(self.agent_writer_mock.write.call_args_list)
+        ):
+            datadog_spans = call_args.kwargs["spans"]
+            self.assertEqual(len(datadog_spans), 1)
+            span = datadog_spans[0].to_dict()
+            self.assertEqual(span["resource"], resources[index])

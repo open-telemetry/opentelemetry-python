@@ -72,7 +72,7 @@ class DatadogSpanExporter(SpanExporter):
                 tracer,
                 span.name,
                 service=self.service,
-                resource=span.attributes.get("component") or span.name,
+                resource=_get_resource(span),
                 trace_id=trace_id,
                 span_id=span_id,
                 parent_id=parent_id,
@@ -84,6 +84,7 @@ class DatadogSpanExporter(SpanExporter):
                 if span.status.canonical_code is not StatusCanonicalCode.OK
                 else 0
             )
+            datadog_span.set_tags(span.attributes)
 
             # TODO: Add span type
             # TODO: Add span tags
@@ -114,3 +115,17 @@ def _get_trace_ids(span):
 def _convert_trace_id_uint64(otel_id):
     raw = otel_id.to_bytes(16, "big")
     return int.from_bytes(raw[8:], byteorder="big")
+
+
+def _get_resource(span):
+    if "http.method" in span.attributes:
+        route = span.attributes.get(
+            "http.route", span.attributes.get("http.path")
+        )
+        return (
+            span.attributes["http.method"] + " " + route
+            if route
+            else span.attributes["http.method"]
+        )
+
+    return span.attributes.get("component", span.name)
