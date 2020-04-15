@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,22 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry import trace
+from sys import argv
+
+from requests import get
+
+from opentelemetry import propagators, trace
 from opentelemetry.ext.datadog import DatadogSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 trace.set_tracer_provider(TracerProvider())
-tracer = trace.get_tracer(__name__)
 
-exporter = DatadogSpanExporter(
-    agent_url="http://localhost:8126", service="example"
+trace.get_tracer_provider().add_span_processor(
+    BatchExportSpanProcessor(
+        DatadogSpanExporter(
+            agent_url="http://localhost:8126", service="example-client"
+        )
+    )
 )
 
-span_processor = BatchExportSpanProcessor(exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+tracer = trace.get_tracer(__name__)
 
-with tracer.start_as_current_span("foo"):
-    with tracer.start_as_current_span("bar"):
-        with tracer.start_as_current_span("baz"):
-            print("Hello world from OpenTelemetry Python!")
+assert len(argv) == 2
+
+with tracer.start_as_current_span("client"):
+
+    with tracer.start_as_current_span("client-server"):
+        headers = {}
+        propagators.inject(dict.__setitem__, headers)
+        requested = get(
+            "http://localhost:8082/server_request",
+            params={"param": argv[1]},
+            headers=headers,
+        )
+
+        assert requested.status_code == 200
+        print(requested.text)

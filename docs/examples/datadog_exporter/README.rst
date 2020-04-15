@@ -12,8 +12,8 @@ Installation
     pip install opentelemetry-sdk
     pip install opentelemetry-ext-datadog
 
-Run the Example
----------------
+Basic Example
+-------------
 
 * Start Datadog Agent
 
@@ -27,10 +27,33 @@ Run the Example
         -e DD_APM_ENABLED=true \
         datadog/agent:latest
 
-* Run the example
+* Run example
 
 .. code-block:: sh
 
     python datadog_exporter.py
 
-The traces will be available at http://datadoghq.com/.
+Auto-Instrumention Example
+--------------------------
+
+* Start Datadog Agent (same as above)
+
+* Install libraries
+
+.. code-block:: sh
+
+    pip install opentelemetry-api
+    pip install opentelemetry-sdk
+    pip install opentelemetry-ext-datadog
+    pip install opentelemetry-auto-instrumentation
+    pip install opentelemetry-ext-flask
+    pip install flask
+    pip install requests
+
+* Run auto-instrumentation example
+
+.. code-block:: sh
+    # start server in a terminal
+    opentelemetry-auto-instrumentation server.py
+    # run client in another terminal
+    python client.py testing

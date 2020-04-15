@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,22 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from flask import Flask, request
+
 from opentelemetry import trace
 from opentelemetry.ext.datadog import DatadogSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-trace.set_tracer_provider(TracerProvider())
-tracer = trace.get_tracer(__name__)
+app = Flask(__name__)
 
-exporter = DatadogSpanExporter(
-    agent_url="http://localhost:8126", service="example"
+trace.set_tracer_provider(TracerProvider())
+
+trace.get_tracer_provider().add_span_processor(
+    BatchExportSpanProcessor(
+        DatadogSpanExporter(
+            agent_url="http://localhost:8126", service="example-server"
+        )
+    )
 )
 
-span_processor = BatchExportSpanProcessor(exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+tracer = trace.get_tracer(__name__)
 
-with tracer.start_as_current_span("foo"):
-    with tracer.start_as_current_span("bar"):
-        with tracer.start_as_current_span("baz"):
-            print("Hello world from OpenTelemetry Python!")
+
+@app.route("/server_request")
+def server_request():
+    with tracer.start_as_current_span("server-inner"):
+        return "served: {}".format(request.args.get("param"))
+
+
+if __name__ == "__main__":
+    app.run(port=8082)
