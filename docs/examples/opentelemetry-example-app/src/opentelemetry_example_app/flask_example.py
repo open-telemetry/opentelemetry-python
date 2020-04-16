@@ -29,13 +29,16 @@ from opentelemetry.sdk.trace.export import (
 )
 
 trace.set_tracer_provider(TracerProvider())
+
+opentelemetry.ext.http_requests.RequestsInstrumentor().instrument()
+FlaskInstrumentor().instrument()
+
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
-FlaskInstrumentor().instrument()
+
 app = flask.Flask(__name__)
-opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
 
 
 @app.route("/")

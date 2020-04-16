@@ -28,15 +28,18 @@ from opentelemetry.sdk.trace.export import (
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
+# It must be done before instrumenting any library.
 trace.set_tracer_provider(TracerProvider())
-tracer_provider = trace.get_tracer_provider()
 
+# Enable instrumentation in the requests library.
+http_requests.RequestsInstrumentor().instrument()
+
+# Configure a console span exporter.
 exporter = ConsoleSpanExporter()
 span_processor = BatchExportSpanProcessor(exporter)
-tracer_provider.add_span_processor(span_processor)
+trace.get_tracer_provider().add_span_processor(span_processor)
 
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
-http_requests.enable(tracer_provider)
 response = requests.get(url="http://127.0.0.1:5000/")

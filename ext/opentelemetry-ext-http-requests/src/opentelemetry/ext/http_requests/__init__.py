@@ -14,7 +14,7 @@
 
 """
 This library allows tracing HTTP requests made by the
-`requests <https://requests.kennethreitz.org/en/master/>`_ library.
+`requests <https://requests.readthedocs.io/en/master/>`_ library.
 
 Usage
 -----
@@ -23,10 +23,10 @@ Usage
 
     import requests
     import opentelemetry.ext.http_requests
-    from opentelemetry.trace import TracerProvider
 
-    opentelemetry.ext.http_requests.enable(TracerProvider())
-    response = requests.get(url='https://www.example.org/')
+    # You can optionally pass a custom TracerProvider to RequestInstrumentor.instrument()
+    opentelemetry.ext.http_requests.RequestInstrumentor.instrument()
+    response = requests.get(url="https://www.example.org/")
 
 Limitations
 -----------
@@ -47,17 +47,16 @@ from urllib.parse import urlparse
 
 from requests.sessions import Session
 
-from opentelemetry import context, propagators
+from opentelemetry import context, propagators, trace
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.http_requests.version import __version__
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import SpanKind, get_tracer_provider
+
+_tracer = None
 
 
-# NOTE: Currently we force passing a tracer. But in turn, this forces the user
-# to configure a SDK before enabling this integration. In turn, this means that
-# if the SDK/tracer is already using `requests` they may, in theory, bypass our
-# instrumentation when using `import from`, etc. (currently we only instrument
-# a instance method so the probability for that is very low).
-def enable(tracer_provider):
+# pylint: disable=unused-argument
+def _instrument(tracer_provider=None):
     """Enables tracing of all requests calls that go through
       :code:`requests.session.Session.request` (this includes
       :code:`requests.get`, etc.)."""
@@ -68,11 +67,6 @@ def enable(tracer_provider):
     # again, is implemented via Session.request (`Session` was named `session`
     # before v1.0.0, Dec 17, 2012, see
     # https://github.com/psf/requests/commit/4e5c4a6ab7bb0195dececdd19bb8505b872fe120)
-
-    # Guard against double instrumentation
-    disable()
-
-    tracer = tracer_provider.get_tracer(__name__, __version__)
 
     wrapped = Session.request
 
@@ -91,8 +85,20 @@ def enable(tracer_provider):
             if parsed_url is None:
                 path = "<URL parses to None>"
             path = parsed_url.path
+        # TODO: This is a workaround because currently the _instrument()
+        # method is called by the opentelemetry-auto-instrumentation command
+        # before configuring the SDK. This approach avoid getting a no-op
+        # tracer.
+        # pylint: disable=global-statement
+        global _tracer
+        if _tracer is None:
+            nonlocal tracer_provider
+            if tracer_provider is None:
+                tracer_provider = get_tracer_provider()
 
-        with tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
+            _tracer = tracer_provider.get_tracer(__name__, __version__)
+
+        with _tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", "http")
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
@@ -119,18 +125,31 @@ def enable(tracer_provider):
     # different, then push the current URL, pop it afterwards)
 
 
-def disable():
+def _uninstrument():
+    # pylint: disable=global-statement
     """Disables instrumentation of :code:`requests` through this module.
 
     Note that this only works if no other module also patches requests."""
+    global _tracer
 
     if getattr(Session.request, "opentelemetry_ext_requests_applied", False):
         original = Session.request.__wrapped__  # pylint:disable=no-member
         Session.request = original
+        _tracer = None
 
 
-def disable_session(session):
-    """Disables instrumentation on the session object."""
-    if getattr(session.request, "opentelemetry_ext_requests_applied", False):
-        original = session.request.__wrapped__  # pylint:disable=no-member
-        session.request = types.MethodType(original, session)
+class RequestsInstrumentor(BaseInstrumentor):
+    def _instrument(self, **kwargs):
+        _instrument(tracer_provider=kwargs.get("tracer_provider"))
+
+    def _uninstrument(self, **kwargs):
+        _uninstrument()
+
+    @staticmethod
+    def uninstrument_session(session):
+        """Disables instrumentation on the session object."""
+        if getattr(
+            session.request, "opentelemetry_ext_requests_applied", False
+        ):
+            original = session.request.__wrapped__  # pylint:disable=no-member
+            session.request = types.MethodType(original, session)

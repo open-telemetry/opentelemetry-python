@@ -18,8 +18,9 @@ import httpretty
 import requests
 import urllib3
 
-import opentelemetry.ext.http_requests
 from opentelemetry import context, propagators, trace
+from opentelemetry.ext import http_requests
+from opentelemetry.sdk import resources
 from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 from opentelemetry.test.test_base import TestBase
 
@@ -29,7 +30,7 @@ class TestRequestsIntegration(TestBase):
 
     def setUp(self):
         super().setUp()
-        opentelemetry.ext.http_requests.enable(self.tracer_provider)
+        http_requests.RequestsInstrumentor().instrument()
         httpretty.enable()
         httpretty.register_uri(
             httpretty.GET, self.URL, body="Hello!",
@@ -37,15 +38,17 @@ class TestRequestsIntegration(TestBase):
 
     def tearDown(self):
         super().tearDown()
-        opentelemetry.ext.http_requests.disable()
+        http_requests.RequestsInstrumentor().uninstrument()
         httpretty.disable()
 
     def test_basic(self):
         result = requests.get(self.URL)
         self.assertEqual(result.text, "Hello!")
+
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         span = span_list[0]
+
         self.assertIs(span.kind, trace.SpanKind.CLIENT)
         self.assertEqual(span.name, "/status/200")
 
@@ -59,6 +62,12 @@ class TestRequestsIntegration(TestBase):
                 "http.status_text": "OK",
             },
         )
+
+        self.assertIs(
+            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
+        )
+
+        self.check_span_instrumentation_info(span, http_requests)
 
     def test_invalid_url(self):
         url = "http://[::1/nope"
@@ -81,18 +90,18 @@ class TestRequestsIntegration(TestBase):
             {"component": "http", "http.method": "POST", "http.url": url},
         )
 
-    def test_disable(self):
-        opentelemetry.ext.http_requests.disable()
+    def test_uninstrument(self):
+        http_requests.RequestsInstrumentor().uninstrument()
         result = requests.get(self.URL)
         self.assertEqual(result.text, "Hello!")
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 0)
+        # instrument again to avoid annoying warning message
+        http_requests.RequestsInstrumentor().instrument()
 
-        opentelemetry.ext.http_requests.disable()
-
-    def test_disable_session(self):
+    def test_uninstrument_session(self):
         session1 = requests.Session()
-        opentelemetry.ext.http_requests.disable_session(session1)
+        http_requests.RequestsInstrumentor().uninstrument_session(session1)
 
         result = session1.get(self.URL)
         self.assertEqual(result.text, "Hello!")
@@ -152,3 +161,21 @@ class TestRequestsIntegration(TestBase):
 
         finally:
             propagators.set_global_httptextformat(previous_propagator)
+
+    def test_custom_tracer_provider(self):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+        http_requests.RequestsInstrumentor().uninstrument()
+        http_requests.RequestsInstrumentor().instrument(
+            tracer_provider=tracer_provider
+        )
+
+        result = requests.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
+
+        span_list = exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertIs(span.resource, resource)
