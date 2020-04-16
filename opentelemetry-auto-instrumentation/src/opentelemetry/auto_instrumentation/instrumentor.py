@@ -48,7 +48,7 @@ class BaseInstrumentor(ABC):
         """Instrument"""
 
         if not self._is_instrumented:
-            result = self._automatic_instrument(**kwargs)
+            result = self._instrument(**kwargs)
             self._is_instrumented = True
             return result
 
@@ -62,7 +62,7 @@ class BaseInstrumentor(ABC):
         """Uninstrument"""
 
         if self._is_instrumented:
-            result = self._automatic_uninstrument(**kwargs)
+            result = self._uninstrument(**kwargs)
             self._is_instrumented = False
             return result
 

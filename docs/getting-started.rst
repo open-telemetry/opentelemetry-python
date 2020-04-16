@@ -194,7 +194,7 @@ And let's write a small Flask application that sends an HTTP request, activating
     from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
     from opentelemetry.ext.flask import FlaskInstrumentor
 
-    Flask = FlaskInstrumentor().programmatic_instrument(flask.Flask)
+    Flask = FlaskInstrumentor().instrument(flask.Flask)
 
     trace.set_tracer_provider(TracerProvider())
     trace.get_tracer_provider().add_span_processor(

@@ -22,7 +22,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
-Flask = FlaskInstrumentor().programmatic_instrument(Flask)
+Flask = FlaskInstrumentor().instrument(flask_class=Flask)
 
 
 def expected_attributes(override_attributes):
