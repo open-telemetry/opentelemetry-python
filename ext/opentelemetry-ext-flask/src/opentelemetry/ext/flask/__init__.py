@@ -29,9 +29,10 @@ Usage
 
 .. code-block:: python
 
-    from opentelemetry.ext.flask import FlaskInstrumentor
-    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
     from flask import Flask
+    from opentelemetry.ext.flask import FlaskInstrumentor
+
+    Flask = FlaskInstrumentor().instrument(flask_class=Flask)
 
     app = Flask(__name__)
 
