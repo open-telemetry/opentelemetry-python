@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import abc
+import logging
 import threading
 from collections import namedtuple
 
 from opentelemetry.util import time_ns
 
+logger = logging.getLogger(__name__)
 
 class Aggregator(abc.ABC):
     """Base class for aggregators.
@@ -64,11 +66,12 @@ class CounterAggregator(Aggregator):
             self.current = 0
 
     def merge(self, other):
-        with self._lock:
-            self.checkpoint += other.checkpoint
-            self.last_update_timestamp = get_latest_timestamp(
-                self.last_update_timestamp, other.last_update_timestamp
-            )
+        if verify_type(self, other):
+            with self._lock:
+                self.checkpoint += other.checkpoint
+                self.last_update_timestamp = get_latest_timestamp(
+                    self.last_update_timestamp, other.last_update_timestamp
+                )
 
 
 class MinMaxSumCountAggregator(Aggregator):
@@ -116,13 +119,14 @@ class MinMaxSumCountAggregator(Aggregator):
             self.current = self._EMPTY
 
     def merge(self, other):
-        with self._lock:
-            self.checkpoint = self._merge_checkpoint(
-                self.checkpoint, other.checkpoint
-            )
-            self.last_update_timestamp = get_latest_timestamp(
-                self.last_update_timestamp, other.last_update_timestamp
-            )
+        if verify_type(self, other):
+            with self._lock:
+                self.checkpoint = self._merge_checkpoint(
+                    self.checkpoint, other.checkpoint
+                )
+                self.last_update_timestamp = get_latest_timestamp(
+                    self.last_update_timestamp, other.last_update_timestamp
+                )
 
 
 class ObserverAggregator(Aggregator):
@@ -147,14 +151,15 @@ class ObserverAggregator(Aggregator):
         self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (self.current,)))
 
     def merge(self, other):
-        self.mmsc.merge(other.mmsc)
-        last = self.checkpoint.last
-        self.last_update_timestamp = get_latest_timestamp(
-            self.last_update_timestamp, other.last_update_timestamp
-        )
-        if self.last_update_timestamp == other.last_update_timestamp:
-            last = other.checkpoint.last
-        self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (last,)))
+        if verify_type(self, other):
+            self.mmsc.merge(other.mmsc)
+            last = self.checkpoint.last
+            self.last_update_timestamp = get_latest_timestamp(
+                self.last_update_timestamp, other.last_update_timestamp
+            )
+            if self.last_update_timestamp == other.last_update_timestamp:
+                last = other.checkpoint.last
+            self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (last,)))
 
 
 def get_latest_timestamp(time_stamp, other_timestamp):
@@ -164,3 +169,15 @@ def get_latest_timestamp(time_stamp, other_timestamp):
         if time_stamp < other_timestamp:
             return other_timestamp
     return time_stamp
+
+
+def verify_type(this, other):
+    if isinstance(other, this.__class__):
+        return True
+    else:
+        logger.warning(
+            "Error in merging %s with %s.",
+            this.__class__.__name__,
+            other.__class__.__name__
+        )
+        return False

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
 from typing import Sequence, Type
 
 from opentelemetry.metrics import Counter, Measure, MetricT, Observer
@@ -25,7 +24,7 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 )
 
 
-class Batcher(abc.ABC):
+class Batcher:
     """Base class for all batcher types.
 
     The batcher is responsible for storing the aggregators and aggregated
@@ -63,7 +62,7 @@ class Batcher(abc.ABC):
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for (metric, labels), aggregator in self._batch_map.items():
+        for (metric, aggregator_type, labels), aggregator in self._batch_map.items():
             metric_records.append(MetricRecord(aggregator, labels, metric))
         return metric_records
 
@@ -75,24 +74,16 @@ class Batcher(abc.ABC):
         if not self.stateful:
             self._batch_map = {}
 
-    @abc.abstractmethod
     def process(self, record) -> None:
-        """Stores record information to be ready for exporting.
-
-        Depending on type of batcher, performs pre-export logic, such as
-        filtering records based off of keys.
-        """
-
-
-class UngroupedBatcher(Batcher):
-    """Accepts all records and passes them for exporting"""
-
-    def process(self, record):
+        """Stores record information to be ready for exporting."""
         # Checkpoints the current aggregator value to be collected for export
-        record.aggregator.take_checkpoint()
-        batch_key = (record.metric, record.labels)
-        batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator
+        aggregator.take_checkpoint()
+
+        # The uniqueness of a batch record is defined by a specific metric
+        # using an aggregator type with a specific set of labels.
+        key = (record.metric, aggregator.__class__, record.labels)
+        batch_value = self._batch_map.get(key)
         if batch_value:
             # Update the stored checkpointed value if exists. The call to merge
             # here combines only identical records (same key).
@@ -101,6 +92,6 @@ class UngroupedBatcher(Batcher):
         if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage
-            aggregator = self.aggregator_for(record.metric.__class__)
+            aggregator = record.aggregator.__class__()
             aggregator.merge(record.aggregator)
-        self._batch_map[batch_key] = aggregator
+        self._batch_map[key] = aggregator

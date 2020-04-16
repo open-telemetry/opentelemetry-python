@@ -19,14 +19,21 @@ It shows:
 - How to configure a meter passing a sateful or stateless.
 - How to configure an exporter and how to create a controller.
 - How to create some metrics intruments and how to capture data with them.
+- How to use views to specify aggregation types for each metric instrument.
 """
 import sys
 import time
 
-from opentelemetry import metrics
+from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics.export.aggregate import (
+    CounterAggregator,
+    MinMaxSumCountAggregator
+)
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.view import View
 
 stateful = True
 
@@ -55,8 +62,8 @@ print(
 # determines whether how metrics are collected: if true, metrics accumulate
 # over the process lifetime. If false, metrics are reset at the beginning of
 # each collection interval.
-metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__, batcher_mode == "stateful")
+metrics_api.set_meter_provider(MeterProvider())
+meter = metrics_api.get_meter(__name__, batcher_mode == "stateful")
 
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
@@ -90,6 +97,14 @@ requests_size = meter.create_metric(
 staging_labels = {"environment": "staging"}
 testing_labels = {"environment": "testing"}
 
+# Views are used to define an aggregation type to use for a specific metric
+counter_view = View(requests_counter, CounterAggregator)
+size_view = View(requests_size, MinMaxSumCountAggregator)
+
+# Register the views to the view manager to use the views
+metrics.view_manager.register_view(counter_view)
+metrics.view_manager.register_view(size_view)
+
 # Update the metric instruments using the direct calling convention
 requests_counter.add(25, staging_labels)
 requests_size.record(100, staging_labels)
@@ -101,4 +116,5 @@ time.sleep(5)
 
 requests_counter.add(35, testing_labels)
 requests_size.record(2, testing_labels)
-time.sleep(5)
+
+input("...\n")

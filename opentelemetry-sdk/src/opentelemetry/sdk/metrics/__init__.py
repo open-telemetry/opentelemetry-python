@@ -18,7 +18,8 @@ from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
-from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.metrics.export.batcher import Batcher
+from opentelemetry.sdk.metrics.view import view_manager, ViewData
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -48,47 +49,27 @@ class BaseBoundInstrument:
         self,
         value_type: Type[metrics_api.ValueT],
         enabled: bool,
-        aggregator: Aggregator,
+        labels: Tuple[Tuple[str, str]],
+        metric: metrics_api.MetricT,
     ):
-        self.value_type = value_type
-        self.enabled = enabled
-        self.aggregator = aggregator
-        self._ref_count = 0
-        self._ref_count_lock = threading.Lock()
+        self._value_type = value_type
+        self._enabled = enabled
+        self._labels = labels
+        self._metric = metric
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
-        if not self.enabled:
+        if not self._enabled:
             return False
-        if not isinstance(value, self.value_type):
+        if not isinstance(value, self._value_type):
             logger.warning(
-                "Invalid value passed for %s.", self.value_type.__name__
+                "Invalid value passed for %s.", self._value_type.__name__
             )
             return False
         return True
 
     def update(self, value: metrics_api.ValueT):
-        self.aggregator.update(value)
-
-    def release(self):
-        self.decrease_ref_count()
-
-    def decrease_ref_count(self):
-        with self._ref_count_lock:
-            self._ref_count -= 1
-
-    def increase_ref_count(self):
-        with self._ref_count_lock:
-            self._ref_count += 1
-
-    def ref_count(self):
-        with self._ref_count_lock:
-            return self._ref_count
-
-    def __repr__(self):
-        return '{}(data="{}")'.format(
-            type(self).__name__, self.aggregator.current
-        )
-
+        # The view manager handles all updates to aggregators
+        view_manager.update_view(self._metric, self._labels, value)
 
 class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
     def add(self, value: metrics_api.ValueT) -> None:
@@ -144,11 +125,10 @@ class Metric(metrics_api.Metric):
                 bound_instrument = self.BOUND_INSTR_TYPE(
                     self.value_type,
                     self.enabled,
-                    # Aggregator will be created based off type of metric
-                    self.meter.batcher.aggregator_for(self.__class__),
+                    get_labels_as_key(labels),
+                    self,
                 )
                 self.bound_instruments[key] = bound_instrument
-        bound_instrument.increase_ref_count()
         return bound_instrument
 
     def __repr__(self):
@@ -169,7 +149,6 @@ class Counter(Metric, metrics_api.Counter):
         """See `opentelemetry.metrics.Counter.add`."""
         bound_intrument = self.bind(labels)
         bound_intrument.add(value)
-        bound_intrument.release()
 
     UPDATE_FUNCTION = add
 
@@ -185,7 +164,6 @@ class Measure(Metric, metrics_api.Measure):
         """See `opentelemetry.metrics.Measure.record`."""
         bound_intrument = self.bind(labels)
         bound_intrument.record(value)
-        bound_intrument.release()
 
     UPDATE_FUNCTION = record
 
@@ -258,7 +236,7 @@ class Record:
     def __init__(
         self,
         metric: metrics_api.MetricT,
-        labels: Dict[str, str],
+        labels: Tuple[Tuple[str, str]],
         aggregator: Aggregator,
     ):
         self.metric = metric
@@ -283,7 +261,7 @@ class Meter(metrics_api.Meter):
         self.instrumentation_info = instrumentation_info
         self.metrics = set()
         self.observers = set()
-        self.batcher = UngroupedBatcher(stateful)
+        self.batcher = Batcher(stateful)
         self.observers_lock = threading.Lock()
         self.resource = resource
 
@@ -302,23 +280,12 @@ class Meter(metrics_api.Meter):
         for metric in self.metrics:
             if not metric.enabled:
                 continue
-
-            to_remove = []
-
-            with metric.bound_instruments_lock:
-                for labels, bound_instr in metric.bound_instruments.items():
-                    # TODO: Consider storing records in memory?
-                    record = Record(metric, labels, bound_instr.aggregator)
-                    # Checkpoints the current aggregators
-                    # Applies different batching logic based on type of batcher
-                    self.batcher.process(record)
-
-                    if bound_instr.ref_count() == 0:
-                        to_remove.append(labels)
-
-                # Remove handles that were released
-                for labels in to_remove:
-                    del metric.bound_instruments[labels]
+            
+            for view_data in view_manager.get_all_view_data_for_metric(metric):
+                record = Record(metric, view_data.labels, view_data.aggregator)
+                # Checkpoints the current aggregators
+                # Applies different logic for stateful
+                self.batcher.process(record)
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
