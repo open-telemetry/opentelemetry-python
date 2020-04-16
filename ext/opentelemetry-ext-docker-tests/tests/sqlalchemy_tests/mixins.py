@@ -1,11 +1,23 @@
-# stdlib
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import contextlib
 
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# 3rd party
 from opentelemetry import trace
 from opentelemetry.instrumentation.sqlalchemy.engine import trace_engine
 
@@ -106,7 +118,6 @@ class SQLAlchemyTestMixin(TracerTestBase):
         assert span.name == "{}.query".format(self.VENDOR)
         assert span.attributes.get("service") == self.SERVICE
         assert "INSERT INTO players" in span.attributes.get("resource")
-        print(span.attributes)
         assert span.attributes.get("sql.db") == self.SQL_DB
         # assert span.get_metric("sql.rows") == 1
         self.check_meta(span)
