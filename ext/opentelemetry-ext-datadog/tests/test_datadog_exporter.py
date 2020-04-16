@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 import unittest
 from unittest import mock
 
@@ -43,6 +44,16 @@ class TestDatadogSpanExporter(unittest.TestCase):
             export.SimpleExportSpanProcessor(self.exporter)
         )
         self.tracer = tracer_provider.get_tracer(__name__)
+
+    def get_spans(self):
+        kwargs_spans = [
+            call_args[-1]["spans"]
+            for call_args in self.agent_writer_mock.write.call_args_list
+        ]
+        return [
+            span.to_dict()
+            for span in itertools.chain.from_iterable(kwargs_spans)
+        ]
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
@@ -198,65 +209,46 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.assertEqual(self.agent_writer_mock.write.call_count, 1)
 
     def test_resources(self):
-        resources = ["foo", "foo", "GET /foo", "GET /foo"]
-        attributes = [
+        test_attributes = [
             {},
             {"component": "foo"},
             {"http.method": "GET", "http.route": "/foo"},
             {"http.method": "GET", "http.path": "/foo"},
         ]
 
-        with self.tracer.start_span("foo", attributes=attributes[0]):
-            with self.tracer.start_span("bar", attributes=attributes[1]):
-                with self.tracer.start_span("xxx", attributes=attributes[2]):
-                    with self.tracer.start_span(
-                        "yyy", attributes=attributes[3]
-                    ):
-                        pass
+        for index, test in enumerate(test_attributes):
+            with self.tracer.start_span(str(index), attributes=test):
+                pass
 
-        self.assertEqual(self.agent_writer_mock.write.call_count, 4)
+        datadog_spans = self.get_spans()
 
-        for index, call_args in enumerate(
-            reversed(self.agent_writer_mock.write.call_args_list)
-        ):
-            datadog_spans = call_args.kwargs["spans"]
-            self.assertEqual(len(datadog_spans), 1)
-            span = datadog_spans[0].to_dict()
-            self.assertEqual(span["resource"], resources[index])
+        self.assertEqual(len(datadog_spans), 4)
+
+        actual = [span["resource"] for span in datadog_spans]
+        expected = ["0", "foo", "GET /foo", "GET /foo"]
+
+        self.assertEqual(actual, expected)
 
     def test_span_types(self):
-        span_types = [None, "http", "sql", "mongodb"]
-        attributes = [
+        test_attributes = [
             {"component": "custom"},
             {"component": "http"},
             {"db.type": "sql"},
             {"db.type": "mongodb"},
         ]
 
-        with self.tracer.start_span("foo", attributes=attributes[0]):
-            pass
-
-        with self.tracer.start_span("bar", attributes=attributes[1]):
-            pass
-
-        with self.tracer.start_span("xxx", attributes=attributes[2]):
-            pass
-
-        with self.tracer.start_span("yyy", attributes=attributes[3]):
-            pass
+        for index, test in enumerate(test_attributes):
+            with self.tracer.start_span(str(index), attributes=test):
+                pass
 
         self.assertEqual(self.agent_writer_mock.write.call_count, 4)
 
-        for index, call_args in enumerate(
-            self.agent_writer_mock.write.call_args_list
-        ):
-            datadog_spans = call_args.kwargs["spans"]
-            self.assertEqual(len(datadog_spans), 1)
-            span = datadog_spans[0].to_dict()
-            if span_types[index]:
-                self.assertEqual(span["type"], span_types[index])
-            else:
-                self.assertTrue("type" not in span)
+        datadog_spans = self.get_spans()
+        self.assertEqual(len(datadog_spans), 4)
+
+        actual = [span.get("type") for span in datadog_spans]
+        expected = [None, "http", "sql", "mongodb"]
+        self.assertEqual(actual, expected)
 
     def test_errors(self):
         with self.assertRaises(ValueError):
@@ -265,10 +257,11 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         self.assertEqual(self.agent_writer_mock.write.call_count, 1)
 
-        datadog_spans = self.agent_writer_mock.write.call_args.kwargs["spans"]
+        datadog_spans = self.get_spans()
 
         self.assertEqual(len(datadog_spans), 1)
-        span = datadog_spans[0].to_dict()
+
+        span = datadog_spans[0]
         self.assertEqual(span["error"], 1)
         self.assertEqual(span["meta"]["error.msg"], "bar")
         self.assertEqual(span["meta"]["error.type"], "ValueError")
