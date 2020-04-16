@@ -29,8 +29,8 @@ Usage
     from opentelemetry.trace.ext.psycopg2 import trace_integration
 
     trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
-    trace_integration(tracer)
+
+    trace_integration()
     cnx = psycopg2.connect(database='Database')
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)")
@@ -49,7 +49,8 @@ import wrapt
 from psycopg2.sql import Composable
 
 from opentelemetry.ext.dbapi import DatabaseApiIntegration, TracedCursor
-from opentelemetry.trace import Tracer
+from opentelemetry.ext.psycopg2.version import __version__
+from opentelemetry.trace import Tracer, get_tracer_provider
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,15 @@ DATABASE_COMPONENT = "postgresql"
 DATABASE_TYPE = "sql"
 
 
-def trace_integration(tracer):
+def trace_integration(tracer_provider=None):
     """Integrate with PostgreSQL Psycopg library.
        Psycopg: http://initd.org/psycopg/
     """
+
+    if tracer_provider is None:
+        tracer_provider = get_tracer_provider()
+
+    tracer = tracer_provider.get_tracer(__name__, __version__)
 
     connection_attributes = {
         "database": "info.dbname",

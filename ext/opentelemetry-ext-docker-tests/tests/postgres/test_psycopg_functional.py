@@ -35,7 +35,7 @@ class TestFunctionalPsycopg(TestBase):
         cls._connection = None
         cls._cursor = None
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        trace_integration(cls._tracer)
+        trace_integration(cls.tracer_provider)
         cls._connection = psycopg2.connect(
             dbname=POSTGRES_DB_NAME,
             user=POSTGRES_USER,

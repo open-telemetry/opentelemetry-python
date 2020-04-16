@@ -16,20 +16,50 @@ from unittest import mock
 
 import mysql.connector
 
-from opentelemetry.ext.mysql import trace_integration
+import opentelemetry.ext.mysql
+from opentelemetry.sdk import resources
 from opentelemetry.test.test_base import TestBase
 
 
 class TestMysqlIntegration(TestBase):
     def test_trace_integration(self):
-        tracer = self.tracer_provider.get_tracer(__name__)
-
         with mock.patch("mysql.connector.connect") as mock_connect:
             mock_connect.get.side_effect = mysql.connector.MySQLConnection()
-            trace_integration(tracer)
+            opentelemetry.ext.mysql.trace_integration()
             cnx = mysql.connector.connect(database="test")
             cursor = cnx.cursor()
             query = "SELECT * FROM test"
             cursor.execute(query)
-            spans_list = self.memory_exporter.get_finished_spans()
-            self.assertEqual(len(spans_list), 1)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+        # TODO: Add more tests?
+
+        # check instrumentation name and version
+        self.assertEqual(
+            span.instrumentation_info.name, opentelemetry.ext.mysql.__name__,
+        )
+        self.assertEqual(
+            span.instrumentation_info.version,
+            opentelemetry.ext.mysql.__version__,
+        )
+
+    def test_custom_tracer_provider(self):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+
+        with mock.patch("mysql.connector.connect") as mock_connect:
+            mock_connect.get.side_effect = mysql.connector.MySQLConnection()
+            opentelemetry.ext.mysql.trace_integration(tracer_provider)
+            cnx = mysql.connector.connect(database="test")
+            cursor = cnx.cursor()
+            query = "SELECT * FROM test"
+            cursor.execute(query)
+
+        span_list = exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertIs(span.resource, resource)

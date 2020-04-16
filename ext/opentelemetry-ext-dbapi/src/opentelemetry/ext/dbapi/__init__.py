@@ -28,11 +28,11 @@ Usage
     from opentelemetry.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
+
     # Ex: mysql.connector
-    trace_integration(tracer, mysql.connector, "connect", "mysql", "sql")
+    trace_integration(mysql.connector, "connect", "mysql", "sql")
     # Ex: pyodbc
-    trace_integration(tracer, pyodbc, "Connection", "odbc", "sql")
+    trace_integration(pyodbc, "Connection", "odbc", "sql")
 
 API
 ---
@@ -44,13 +44,52 @@ import typing
 
 import wrapt
 
-from opentelemetry.trace import SpanKind, Tracer
+from opentelemetry.ext.dbapi.version import __version__
+from opentelemetry.trace import (
+    SpanKind,
+    Tracer,
+    TracerProvider,
+    get_tracer_provider,
+)
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
 
 
 def trace_integration(
+    connect_module: typing.Callable[..., any],
+    connect_method_name: str,
+    database_component: str,
+    database_type: str = "",
+    connection_attributes: typing.Dict = None,
+    tracer_provider: typing.Optional[TracerProvider] = None,
+):
+    """Integrate with DB API library.
+        https://www.python.org/dev/peps/pep-0249/
+
+        Args:
+            connect_module: Module name where connect method is available.
+            connect_method_name: The connect method name.
+            database_component: Database driver name or database name "JDBI", "jdbc", "odbc", "postgreSQL".
+            database_type: The Database type. For any SQL database, "sql".
+            connection_attributes: Attribute names for database, port, host and user in Connection object.
+            tracer_provider: The :class:`TracerProvider` to use. If ommited the current configured one is used.
+    """
+    if tracer_provider is None:
+        tracer_provider = get_tracer_provider()
+
+    tracer = tracer_provider.get_tracer(__name__, __version__)
+    wrap_connect(
+        tracer,
+        connect_module,
+        connect_method_name,
+        database_component,
+        database_type,
+        connection_attributes,
+    )
+
+
+def wrap_connect(
     tracer: Tracer,
     connect_module: typing.Callable[..., any],
     connect_method_name: str,
@@ -71,7 +110,7 @@ def trace_integration(
     """
 
     # pylint: disable=unused-argument
-    def wrap_connect(
+    def wrap_connect_(
         wrapped: typing.Callable[..., any],
         instance: typing.Any,
         args: typing.Tuple[any, any],
@@ -87,7 +126,7 @@ def trace_integration(
 
     try:
         wrapt.wrap_function_wrapper(
-            connect_module, connect_method_name, wrap_connect
+            connect_module, connect_method_name, wrap_connect_
         )
     except Exception as ex:  # pylint: disable=broad-except
         logger.warning("Failed to integrate with DB API. %s", str(ex))

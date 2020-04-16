@@ -42,25 +42,33 @@ API
 
 from pymongo import monitoring
 
-from opentelemetry.trace import SpanKind
+from opentelemetry.ext.pymongo.version import __version__
+from opentelemetry.trace import SpanKind, get_tracer_provider
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 DATABASE_TYPE = "mongodb"
 COMMAND_ATTRIBUTES = ["filter", "sort", "skip", "limit", "pipeline"]
 
 
-def trace_integration(tracer=None):
+def trace_integration(tracer_provider=None):
     """Integrate with pymongo to trace it using event listener.
        https://api.mongodb.com/python/current/api/pymongo/monitoring.html
+
+    Args:
+        tracer_provider: The `TracerProvider` to use. If none is passed the
+            current configured one is used.
     """
+
+    if tracer_provider is None:
+        tracer_provider = get_tracer_provider()
+
+    tracer = tracer_provider.get_tracer(__name__, __version__)
 
     monitoring.register(CommandTracer(tracer))
 
 
 class CommandTracer(monitoring.CommandListener):
     def __init__(self, tracer):
-        if tracer is None:
-            raise ValueError("The tracer is not provided.")
         self._tracer = tracer
         self._span_dict = {}
 
