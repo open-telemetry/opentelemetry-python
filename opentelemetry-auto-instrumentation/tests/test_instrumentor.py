@@ -21,10 +21,10 @@ from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 
 class TestInstrumentor(TestCase):
     class Instrumentor(BaseInstrumentor):
-        def _instrument(self):
+        def _instrument(self, **kwargs):
             return "instrumented"
 
-        def _uninstrument(self):
+        def _uninstrument(self, **kwargs):
             return "uninstrumented"
 
     def test_protect(self):
