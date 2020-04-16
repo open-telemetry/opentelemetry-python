@@ -18,14 +18,16 @@ from opentelemetry import trace
 from opentelemetry.instrumentation.sqlalchemy.version import __version__
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-# request targets
-TARGET_HOST = "out.host"
-TARGET_PORT = "out.port"
-
-# tags
-QUERY = "sql.query"  # the query text
-ROWS = "sql.rows"  # number of rows returned by a query
-DB = "sql.db"  # the name of the database
+# Network attribute semantic convention here:
+# https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes
+_HOST = "net.peer.name"
+_PORT = "net.peer.port"
+# Database semantic conventions here:
+# https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
+_ROWS = "sql.rows"  # number of rows returned by a query
+_STMT = "db.statement"
+_DB = "db.type"
+_URL = "db.url"
 
 
 def _normalize_vendor(vendor):
@@ -95,7 +97,7 @@ class EngineTracer:
         self.current_span = self.tracer.start_span(self.name)
         with self.tracer.use_span(self.current_span, end_on_exit=False):
             self.current_span.set_attribute("service", self.vendor)
-            self.current_span.set_attribute("resource", statement)
+            self.current_span.set_attribute(_STMT, statement)
 
             if not _set_attributes_from_url(
                 self.current_span, conn.engine.url
@@ -111,7 +113,7 @@ class EngineTracer:
 
         try:
             if cursor and cursor.rowcount >= 0:
-                self.current_span.set_attribute(ROWS, cursor.rowcount)
+                self.current_span.set_attribute(_ROWS, cursor.rowcount)
         finally:
             self.current_span.end()
 
@@ -132,14 +134,14 @@ class EngineTracer:
 def _set_attributes_from_url(span: trace.Span, url):
     """ set connection tags from the url. return true if successful. """
     if url.host:
-        span.set_attribute(TARGET_HOST, url.host)
+        span.set_attribute(_HOST, url.host)
     if url.port:
-        span.set_attribute(TARGET_PORT, url.port)
+        span.set_attribute(_PORT, url.port)
     if url.database:
-        span.set_attribute(DB, url.database)
+        span.set_attribute(_DB, url.database)
 
     return hasattr(span, "attributes") and bool(
-        span.attributes.get(TARGET_HOST, False)
+        span.attributes.get(_HOST, False)
     )
 
 
@@ -153,6 +155,6 @@ def _set_attributes_from_cursor(span: trace.Span, vendor, cursor):
             dsn = getattr(cursor.connection, "dsn", None)
             if dsn:
                 data = parse_dsn(dsn)
-                span.set_attribute(DB, data.get("dbname"))
-                span.set_attribute(TARGET_HOST, data.get("host"))
-                span.set_attribute(TARGET_PORT, data.get("port"))
+                span.set_attribute(_DB, data.get("dbname"))
+                span.set_attribute(_HOST, data.get("host"))
+                span.set_attribute(_PORT, int(data.get("port")))

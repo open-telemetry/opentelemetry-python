@@ -19,7 +19,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.sqlalchemy.engine import trace_engine
+from opentelemetry.instrumentation.sqlalchemy.engine import (
+    trace_engine,
+    _DB,
+    _ROWS,
+    _STMT,
+)
 
 from .utils import TracerTestBase
 
@@ -56,7 +61,7 @@ class SQLAlchemyTestMixin(TracerTestBase):
     `SQLAlchemyTestMixin` and `TestCase`. Then you must define the following
     static class variables:
     * VENDOR: the database vendor name
-    * SQL_DB: the `sql.db` tag that we expect (it's the name of the database available in the `.env` file)
+    * SQL_DB: the `db.type` tag that we expect (it's the name of the database available in the `.env` file)
     * SERVICE: the service that we expect by default
     * ENGINE_ARGS: all arguments required to create the engine
 
@@ -117,9 +122,9 @@ class SQLAlchemyTestMixin(TracerTestBase):
         # span fields
         assert span.name == "{}.query".format(self.VENDOR)
         assert span.attributes.get("service") == self.SERVICE
-        assert "INSERT INTO players" in span.attributes.get("resource")
-        assert span.attributes.get("sql.db") == self.SQL_DB
-        # assert span.get_metric("sql.rows") == 1
+        assert "INSERT INTO players" in span.attributes.get(_STMT)
+        assert span.attributes.get(_DB) == self.SQL_DB
+        assert span.attributes.get(_ROWS) == 1
         self.check_meta(span)
         assert (
             span.status.canonical_code == trace.status.StatusCanonicalCode.OK
@@ -140,9 +145,9 @@ class SQLAlchemyTestMixin(TracerTestBase):
         assert span.attributes.get("service") == self.SERVICE
         assert (
             "SELECT players.id AS players_id, players.name AS players_name \nFROM players \nWHERE players.name"
-            in span.attributes.get("resource")
+            in span.attributes.get(_STMT)
         )
-        assert span.attributes.get("sql.db") == self.SQL_DB
+        assert span.attributes.get(_DB) == self.SQL_DB
         self.check_meta(span)
         assert (
             span.status.canonical_code == trace.status.StatusCanonicalCode.OK
@@ -162,8 +167,8 @@ class SQLAlchemyTestMixin(TracerTestBase):
         # span fields
         assert span.name == "{}.query".format(self.VENDOR)
         assert span.attributes.get("service") == self.SERVICE
-        assert span.attributes.get("resource") == "SELECT * FROM players"
-        assert span.attributes.get("sql.db") == self.SQL_DB
+        assert span.attributes.get(_STMT) == "SELECT * FROM players"
+        assert span.attributes.get(_DB) == self.SQL_DB
         self.check_meta(span)
         assert (
             span.status.canonical_code == trace.status.StatusCanonicalCode.OK
@@ -196,8 +201,8 @@ class SQLAlchemyTestMixin(TracerTestBase):
         # span fields
         assert child_span.name == "{}.query".format(self.VENDOR)
         assert child_span.attributes.get("service") == self.SERVICE
-        assert child_span.attributes.get("resource") == "SELECT * FROM players"
-        assert child_span.attributes.get("sql.db") == self.SQL_DB
+        assert child_span.attributes.get(_STMT) == "SELECT * FROM players"
+        assert child_span.attributes.get(_DB) == self.SQL_DB
         assert (
             child_span.status.canonical_code
             == trace.status.StatusCanonicalCode.OK
