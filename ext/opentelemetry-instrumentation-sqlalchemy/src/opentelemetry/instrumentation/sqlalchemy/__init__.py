@@ -12,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-To trace sqlalchemy queries, add instrumentation to the engine class
-using the patch method that **must be called before** importing sqlalchemy::
+"""Instrument sqlalchemy to report SQL queries.
 
-    # patch before importing `create_engine`
+There are two options for instrumenting code. The first option is to use
+the `opentelemetry-auto-instrumentation` executable which will automatically
+patch your SQLAlchemy engine. The second is to programmatically enable
+instrumentation via the following code:
+::
     from opentelemetry.instrumentation.sqlalchemy.patch import patch
-    patch(sqlalchemy=True)
+    import sqlalchemy
 
-    # use SQLAlchemy as usual
-    from sqlalchemy import create_engine
-
-    engine = create_engine('sqlite:///:memory:')
-    engine.connect().execute("SELECT COUNT(*) FROM users")
+    patch()
 """
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.sqlalchemy.patch import patch, unpatch

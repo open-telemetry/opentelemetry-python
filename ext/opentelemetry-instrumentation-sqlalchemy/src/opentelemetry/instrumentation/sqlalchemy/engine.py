@@ -28,7 +28,7 @@ ROWS = "sql.rows"  # number of rows returned by a query
 DB = "sql.db"  # the name of the database
 
 
-def normalize_vendor(vendor):
+def _normalize_vendor(vendor):
     """ Return a canonical name for a type of database. """
     if not vendor:
         return "db"  # should this ever happen?
@@ -46,12 +46,13 @@ def trace_engine(engine, tracer=None, service=None):
     """
     Add tracing instrumentation to the given sqlalchemy engine or instance.
 
-    :param sqlalchemy.Engine engine: a SQLAlchemy engine class or instance
-    :param ddtrace.Tracer tracer: a tracer instance. will default to the global
-    :param str service: the name of the service to trace.
+    Args:
+        engine: a SQLAlchemy engine class or instance
+        tracer: a tracer instance. will default to the global
+        service: the name of the service to trace.
     """
     tracer = tracer or trace.get_tracer(
-        normalize_vendor(engine.name), __version__
+        _normalize_vendor(engine.name), __version__
     )
     EngineTracer(tracer, service, engine)
 
@@ -68,7 +69,7 @@ def _wrap_create_engine(func, module, args, kwargs):
     # using the PIN object
     engine = func(*args, **kwargs)
     EngineTracer(
-        trace.get_tracer(normalize_vendor(engine.name), __version__),
+        trace.get_tracer(_normalize_vendor(engine.name), __version__),
         None,
         engine,
     )
@@ -79,7 +80,7 @@ class EngineTracer:
     def __init__(self, tracer: trace.Tracer, service, engine):
         self.tracer = tracer
         self.engine = engine
-        self.vendor = normalize_vendor(engine.name)
+        self.vendor = _normalize_vendor(engine.name)
         self.service = service or self.vendor
         self.name = "%s.query" % self.vendor
         # TODO: revisit, might be better done w/ context attach/detach
