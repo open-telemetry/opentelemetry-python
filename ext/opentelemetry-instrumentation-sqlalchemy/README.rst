@@ -3,8 +3,8 @@ OpenTelemetry SQLAlchemy Tracing
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-sqlalchemy.svg
-   :target: https://pypi.org/project/opentelemetry-ext-sqlalchemy/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-instrumentation-sqlalchemy.svg
+   :target: https://pypi.org/project/opentelemetry-instrumentation-sqlalchemy/
 
 This library allows tracing requests made by the SQLAlchemy library.
 

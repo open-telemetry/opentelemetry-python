@@ -12,20 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-To trace sqlalchemy queries, add instrumentation to the engine class or
-instance you are using::
-
-    from opentelemetry.instrumentation.sqlalchemy.engine import trace_engine
-    from sqlalchemy import create_engine
-
-    engine = create_engine('sqlite:///:memory:')
-    trace_engine(engine, tracer, 'my-database')
-
-    engine.connect().execute('select count(*) from users')
-"""
-
-# 3p
 from sqlalchemy.event import listen
 
 from opentelemetry import trace
@@ -54,18 +40,6 @@ def normalize_vendor(vendor):
         return "postgres"
 
     return vendor
-
-
-def parse_pg_dsn(dsn):
-    """
-    Return a dictionary of the components of a postgres DSN.
-
-    >>> parse_pg_dsn('user=dog port=1543 dbname=dogdata')
-    {'user':'dog', 'port':'1543', 'dbname':'dogdata'}
-    """
-    # FIXME: replace by psycopg2.extensions.parse_dsn when available
-    # https://github.com/psycopg/psycopg2/pull/321
-    return {c.split("=")[0]: c.split("=")[1] for c in dsn.split() if "=" in c}
 
 
 def trace_engine(engine, tracer=None, service=None):
@@ -171,10 +145,13 @@ def _set_attributes_from_url(span: trace.Span, url):
 def _set_attributes_from_cursor(span: trace.Span, vendor, cursor):
     """ attempt to set db connection tags by introspecting the cursor. """
     if vendor == "postgres":
+        # pylint: disable=import-outside-toplevel
+        from psycopg2.extensions import parse_dsn
+
         if hasattr(cursor, "connection") and hasattr(cursor.connection, "dsn"):
             dsn = getattr(cursor.connection, "dsn", None)
             if dsn:
-                data = parse_pg_dsn(dsn)
+                data = parse_dsn(dsn)
                 span.set_attribute(DB, data.get("dbname"))
                 span.set_attribute(TARGET_HOST, data.get("host"))
                 span.set_attribute(TARGET_PORT, data.get("port"))
