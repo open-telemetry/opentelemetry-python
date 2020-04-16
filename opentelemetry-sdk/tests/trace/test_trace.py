@@ -117,6 +117,40 @@ tracer_provider.add_span_processor(mock_processor)
             with tracer.use_span(default_span):
                 raise TestUseSpanException()
 
+    def test_force_flush(self):
+        tracer_provider = trace.TracerProvider()
+
+        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
+        tracer_provider.add_span_processor(mock_processor1)
+        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
+        tracer_provider.add_span_processor(mock_processor2)
+
+        flushed = tracer_provider.force_flush()
+        self.assertTrue(flushed)
+        self.assertEqual(mock_processor1.force_flush.call_count, 1)
+        self.assertEqual(mock_processor2.force_flush.call_count, 1)
+
+        flushed = tracer_provider.force_flush(100)
+        self.assertTrue(flushed)
+        self.assertEqual(mock_processor1.force_flush.call_count, 2)
+        self.assertEqual(mock_processor2.force_flush.call_count, 2)
+
+    def test_force_flush_timeout_exceeded(self):
+        tracer_provider = trace.TracerProvider()
+
+        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
+        tracer_provider.add_span_processor(mock_processor1)
+        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
+        tracer_provider.add_span_processor(mock_processor2)
+
+        with (
+            mock.patch.object(trace, "time_ns", side_effect=(0, 0, 100000000))
+        ):
+            flushed = tracer_provider.force_flush(50)
+        self.assertFalse(flushed)
+        self.assertEqual(mock_processor1.force_flush.call_count, 1)
+        self.assertEqual(mock_processor2.force_flush.call_count, 0)
+
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):

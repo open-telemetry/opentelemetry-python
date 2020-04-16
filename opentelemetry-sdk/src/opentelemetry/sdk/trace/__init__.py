@@ -114,6 +114,25 @@ class MultiSpanProcessor(SpanProcessor):
         for sp in self._span_processors:
             sp.shutdown()
 
+    def force_flush(self, timeout_millis: int = None) -> bool:
+        flushed_within_time = True
+        flush_start_ns = time_ns()
+        for sp in self._span_processors:
+            if timeout_millis is None:
+                flushed_within_time = sp.force_flush() and flushed_within_time
+                continue
+
+            remaining_time_millis = (
+                timeout_millis - (time_ns() - flush_start_ns) // 1000000
+            )
+            if remaining_time_millis <= 0:
+                return False
+            flushed_within_time = (
+                sp.force_flush(remaining_time_millis) and flushed_within_time
+            )
+
+        return flushed_within_time
+
 
 class EventBase(abc.ABC):
     def __init__(self, name: str, timestamp: Optional[int] = None) -> None:
@@ -674,3 +693,18 @@ class TracerProvider(trace_api.TracerProvider):
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)
             self._atexit_handler = None
+
+    def force_flush(self, timeout_millis: int = None) -> bool:
+        """Requests the active span processor to process all spans that have not
+        yet been processed.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for spans to be
+                processed.
+
+        Returns:
+            False if the timeout is exceeded, True otherwise.
+        """
+        if timeout_millis is None:
+            return self._active_span_processor.force_flush()
+        return self._active_span_processor.force_flush(timeout_millis)
