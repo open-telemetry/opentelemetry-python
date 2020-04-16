@@ -160,18 +160,14 @@ class FlaskInstrumentor(BaseInstrumentor):
         super().__init__()
         self._original_flask_class = None
 
-    def _automatic_instrument(self):
+    def _instrument(self, flask_class=None):
+        if flask_class is not None:
+            self._original_flask_class = flask_class
+            return _InstrumentedFlask
+
         self._original_flask_class = flask.Flask
         flask.Flask = _InstrumentedFlask
 
-    def _automatic_uninstrument(self):
+    def _uninstrument(self):
         flask.Flask = self._original_flask_class
-
-    @BaseInstrumentor.protect_instrument
-    def programmatic_instrument(self, flask_class):
-        self._original_flask_class = flask_class
-        return _InstrumentedFlask
-
-    @BaseInstrumentor.protect_uninstrument
-    def programmatic_uninstrument(self):
         return self._original_flask_class

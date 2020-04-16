@@ -36,51 +36,19 @@ class BaseInstrumentor(ABC):
 
         return cls._instance
 
-    @staticmethod
-    def protect_instrument(method) -> None:
-        def inner(self, *args, **kwargs):
-            if self._is_instrumented:  # pylint: disable=protected-access
-                _LOG.warning(
-                    "Attempting to call %(method.__name__)s while "
-                    "already instrumented"
-                )
-                return None
-
-            result = method(self, *args, **kwargs)
-            self._is_instrumented = True  # pylint: disable=protected-access
-            return result
-
-        return inner
-
-    @staticmethod
-    def protect_uninstrument(method) -> None:
-        def inner(self, *args, **kwargs):
-            if not self._is_instrumented:  # pylint: disable=protected-access
-                _LOG.warning(
-                    "Attempting to call %(method.__name__)s while "
-                    "already uninstrumented"
-                )
-                return None
-
-            result = method(self, *args, **kwargs)
-            self._is_instrumented = False  # pylint: disable=protected-access
-            return result
-
-        return inner
-
     @abstractmethod
-    def _automatic_instrument(self) -> None:
+    def _instrument(self, *args, **kwargs) -> None:
         """Instrument"""
 
     @abstractmethod
-    def _automatic_uninstrument(self) -> None:
+    def _uninstrument(self, *args, **kwargs) -> None:
         """Uninstrument"""
 
-    def automatic_instrument(self) -> None:
+    def instrument(self, *args, **kwargs) -> None:
         """Instrument"""
 
         if not self._is_instrumented:
-            result = self._automatic_instrument()
+            result = self._automatic_instrument(*args, **kwargs)
             self._is_instrumented = True
             return result
 
@@ -90,11 +58,11 @@ class BaseInstrumentor(ABC):
 
         return None
 
-    def automatic_uninstrument(self) -> None:
+    def uninstrument(self, *args, **kwargs) -> None:
         """Uninstrument"""
 
         if self._is_instrumented:
-            result = self._automatic_uninstrument()
+            result = self._automatic_uninstrument(*args, **kwargs)
             self._is_instrumented = False
             return result
 
