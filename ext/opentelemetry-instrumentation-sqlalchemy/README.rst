@@ -13,7 +13,7 @@ Installation
 
 ::
 
-    pip install opentelemetry-ext-sqlalchemy
+    pip install opentelemetry-instrumentation-sqlalchemy
 
 
 References
