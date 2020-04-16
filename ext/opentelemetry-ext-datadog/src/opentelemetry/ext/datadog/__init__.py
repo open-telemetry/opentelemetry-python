@@ -1,3 +1,50 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+The **OpenTelemetry Datadog Exporter** provides a span exporter from
+`OpenTelemetry`_ traces to `Datadog`_ by using the Datadog Agent.
+
+Usage
+-----
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.ext.datadog import DatadogSpanExporter
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+
+    trace.set_tracer_provider(TracerProvider())
+    tracer = trace.get_tracer(__name__)
+
+    exporter = DatadogSpanExporter(
+        agent_url="http://agent:8126", service="my-helloworld-service"
+    )
+
+    span_processor = BatchExportSpanProcessor(exporter)
+    trace.get_tracer_provider().add_span_processor(span_processor)
+
+    with tracer.start_as_current_span("foo"):
+        print("Hello world!")
+
+API
+---
+.. _Datadog: https://www.datadoghq.com/
+.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+"""
+
 import logging
 import os
 from urllib.parse import urlparse
@@ -22,6 +69,13 @@ DATADOG_SPAN_TYPES = (
 
 
 class DatadogSpanExporter(SpanExporter):
+    """Datadog span exporter for OpenTelemetry.
+
+    Args:
+        agent_url: The url of the Datadog Agent or use `DD_TRACE_AGENT_URL` environment variable
+        service: The service to be used for the application or use `DD_SERVICE` environment variable
+    """
+
     def __init__(self, agent_url=None, service=None):
         self.agent_url = (
             agent_url
@@ -102,6 +156,7 @@ class DatadogSpanExporter(SpanExporter):
 
 
 def _get_trace_ids(span):
+    """Extract tracer ids from span"""
     ctx = span.get_context()
     trace_id = ctx.trace_id
     span_id = ctx.span_id
@@ -119,11 +174,13 @@ def _get_trace_ids(span):
 
 
 def _convert_trace_id_uint64(otel_id):
+    """Convert 128-bit int used for trace_id to 64-bit unsigned int"""
     raw = otel_id.to_bytes(16, "big")
     return int.from_bytes(raw[8:], byteorder="big")
 
 
 def _get_resource(span):
+    """Map span to Datadog resource name"""
     if "http.method" in span.attributes:
         route = span.attributes.get(
             "http.route", span.attributes.get("http.path")
@@ -138,6 +195,7 @@ def _get_resource(span):
 
 
 def _get_span_type(span):
+    """Map span to Datadog span type"""
     # use db.type for database integrations (sql, mongodb) otherwise component
     span_type = span.attributes.get(
         "db.type", span.attributes.get("component")
@@ -148,6 +206,6 @@ def _get_span_type(span):
 
 
 def _get_exc_info(span):
-    # parse status description for "{exc_type}: {exc_val}"
+    """Parse span status description for exception type and value"""
     exc_type, exc_val = span.status.description.split(":", 1)
     return exc_type, exc_val.strip()

@@ -1,10 +1,13 @@
 Datadog Exporter Example
-=======================
+========================
 
-This example shows how to use OpenTelemetry to send tracing data to Datadog.
+These examples shows how to use OpenTelemetry to send tracing data to Datadog.
 
-Installation
-------------
+
+Basic Example
+-------------
+
+* Installation
 
 .. code-block:: sh
 
@@ -12,14 +15,12 @@ Installation
     pip install opentelemetry-sdk
     pip install opentelemetry-ext-datadog
 
-Basic Example
--------------
-
 * Start Datadog Agent
 
 .. code-block:: sh
 
-    docker run -d -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    docker run --rm \
+        -v /var/run/docker.sock:/var/run/docker.sock:ro \
         -v /proc/:/host/proc/:ro \
         -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
         -p 127.0.0.1:8126:8126/tcp \
@@ -36,9 +37,7 @@ Basic Example
 Auto-Instrumention Example
 --------------------------
 
-* Start Datadog Agent (same as above)
-
-* Install libraries
+* Installation
 
 .. code-block:: sh
 
@@ -50,12 +49,33 @@ Auto-Instrumention Example
     pip install flask
     pip install requests
 
-* Run auto-instrumentation example
+* Start Datadog Agent
 
 .. code-block:: sh
-    # start server in a terminal
+
+    docker run --rm \
+        -v /var/run/docker.sock:/var/run/docker.sock:ro \
+        -v /proc/:/host/proc/:ro \
+        -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
+        -p 127.0.0.1:8126:8126/tcp \
+        -e DD_API_KEY="<DATADOG_API_KEY>" \
+        -e DD_APM_ENABLED=true \
+        datadog/agent:latest
+
+* Start server
+
+.. code-block:: sh
+
     opentelemetry-auto-instrumentation server.py
-    # run client in another terminal
+
+* Run client
+
+.. code-block:: sh
+
     python client.py testing
-    # run client to force server error
+
+* Run client with parameter to raise error
+
+.. code-block:: sh
+
     python client.py error

@@ -3,6 +3,7 @@ sphinx-rtd-theme~=0.4
 sphinx-autodoc-typehints~=1.10.2
 
 # Required by ext packages
+ddtrace>=0.34.0
 opentracing~=2.2.0
 Deprecated>=1.2.6
 thrift>=0.10.0
