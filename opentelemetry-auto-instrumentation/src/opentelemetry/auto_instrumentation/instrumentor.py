@@ -37,18 +37,18 @@ class BaseInstrumentor(ABC):
         return cls._instance
 
     @abstractmethod
-    def _instrument(self, *args, **kwargs) -> None:
+    def _instrument(self, **kwargs) -> None:
         """Instrument"""
 
     @abstractmethod
-    def _uninstrument(self, *args, **kwargs) -> None:
+    def _uninstrument(self, **kwargs) -> None:
         """Uninstrument"""
 
-    def instrument(self, *args, **kwargs) -> None:
+    def instrument(self, **kwargs) -> None:
         """Instrument"""
 
         if not self._is_instrumented:
-            result = self._automatic_instrument(*args, **kwargs)
+            result = self._automatic_instrument(**kwargs)
             self._is_instrumented = True
             return result
 
@@ -58,11 +58,11 @@ class BaseInstrumentor(ABC):
 
         return None
 
-    def uninstrument(self, *args, **kwargs) -> None:
+    def uninstrument(self, **kwargs) -> None:
         """Uninstrument"""
 
         if self._is_instrumented:
-            result = self._automatic_uninstrument(*args, **kwargs)
+            result = self._automatic_uninstrument(**kwargs)
             self._is_instrumented = False
             return result
 
