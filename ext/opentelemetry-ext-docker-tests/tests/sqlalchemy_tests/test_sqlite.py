@@ -55,7 +55,6 @@ class SQLiteTestCase(SQLAlchemyTestMixin, unittest.TestCase):
             span.status.canonical_code,
             trace.status.StatusCanonicalCode.UNKNOWN,
         )
-        # TODO: error handling
-        # self.assertEqual(span.attributes.get("error.msg"), "no such table: a_wrong_table")
-        # self.assertTrue("OperationalError" in span.attributes.get("error.type"))
-        # self.assertTrue("OperationalError: no such table: a_wrong_table" in span.attributes.get("error.stack"))
+        self.assertEqual(
+            span.status.description, "no such table: a_wrong_table"
+        )

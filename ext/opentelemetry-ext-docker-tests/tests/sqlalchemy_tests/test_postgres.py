@@ -80,10 +80,7 @@ class PostgresTestCase(SQLAlchemyTestMixin, unittest.TestCase):
             span.status.canonical_code,
             trace.status.StatusCanonicalCode.UNKNOWN,
         )
-        # TODO: error handling
-        # self.assertTrue('relation "a_wrong_table" does not exist' in span.attributes.get("error.msg"))
-        # assert "psycopg2.errors.UndefinedTable" in span.attributes.get("error.type")
-        # assert 'UndefinedTable: relation "a_wrong_table" does not exist' in span.attributes.get("error.stack")
+        self.assertTrue("a_wrong_table" in span.status.description)
 
 
 class PostgresCreatorTestCase(PostgresTestCase):

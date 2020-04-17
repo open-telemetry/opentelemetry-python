@@ -79,7 +79,4 @@ class MysqlConnectorTestCase(SQLAlchemyTestMixin, unittest.TestCase):
             span.status.canonical_code,
             trace.status.StatusCanonicalCode.UNKNOWN,
         )
-        # TODO: error handling
-        # self.assertEqual(span.attributes.get("error.type"), "mysql.connector.errors.ProgrammingError")
-        # self.assertTrue("Table 'test.a_wrong_table' doesn't exist" in span.attributes.get("error.msg"))
-        # self.assertTrue("Table 'test.a_wrong_table' doesn't exist" in span.attributes.get("error.stack"))
+        self.assertTrue("a_wrong_table" in span.status.description)

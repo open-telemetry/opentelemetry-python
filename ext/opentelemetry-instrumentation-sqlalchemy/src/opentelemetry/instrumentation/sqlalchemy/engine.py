@@ -90,7 +90,7 @@ class EngineTracer:
 
         listen(engine, "before_cursor_execute", self._before_cur_exec)
         listen(engine, "after_cursor_execute", self._after_cur_exec)
-        listen(engine, "dbapi_error", self._dbapi_error)
+        listen(engine, "handle_error", self._handle_error)
 
     # pylint: disable=unused-argument
     def _before_cur_exec(self, conn, cursor, statement, *args):
@@ -117,15 +117,16 @@ class EngineTracer:
         finally:
             self.current_span.end()
 
-    # pylint: disable=unused-argument
-    def _dbapi_error(self, conn, cursor, statement, *args):
+    def _handle_error(self, context):
         if not self.current_span:
             return
 
         try:
-            # span.set_traceback()
             self.current_span.set_status(
-                Status(StatusCanonicalCode.UNKNOWN, str("something happened"))
+                Status(
+                    StatusCanonicalCode.UNKNOWN,
+                    str(context.original_exception),
+                )
             )
         finally:
             self.current_span.end()
