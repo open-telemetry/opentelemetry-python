@@ -103,7 +103,7 @@ class EngineTracer:
 
     # pylint: disable=unused-argument
     def _after_cur_exec(self, conn, cursor, statement, *args):
-        if not self.current_span:
+        if self.current_span is None:
             return
 
         try:
@@ -113,7 +113,7 @@ class EngineTracer:
             self.current_span.end()
 
     def _handle_error(self, context):
-        if not self.current_span:
+        if self.current_span is None:
             return
 
         try:
@@ -142,7 +142,7 @@ def _set_attributes_from_url(span: trace.Span, url):
 
 
 def _set_attributes_from_cursor(span: trace.Span, vendor, cursor):
-    """ attempt to set db connection tags by introspecting the cursor. """
+    """Attempt to set db connection attributes by introspecting the cursor."""
     if vendor == "postgres":
         # pylint: disable=import-outside-toplevel
         from psycopg2.extensions import parse_dsn

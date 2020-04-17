@@ -29,7 +29,7 @@ from opentelemetry.instrumentation.sqlalchemy.patch import patch, unpatch
 
 
 class SQLAlchemyInstrumentor(BaseInstrumentor):
-    """An instrumentor for Redis
+    """An instrumentor for SQLAlchemy
     See `BaseInstrumentor`
     """
 
