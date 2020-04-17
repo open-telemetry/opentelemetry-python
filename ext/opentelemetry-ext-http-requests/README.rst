@@ -7,7 +7,7 @@ OpenTelemetry requests Integration
    :target: https://pypi.org/project/opentelemetry-ext-http-requests/
 
 This library allows tracing HTTP requests made by the
-`requests <https://requests.kennethreitz.org/en/master/>`_ library.
+`requests <https://requests.readthedocs.io/en/master/>`_ library.
 
 Installation
 ------------

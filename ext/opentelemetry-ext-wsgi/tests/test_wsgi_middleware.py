@@ -20,7 +20,7 @@ from urllib.parse import urlsplit
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
+from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 
 class Response:

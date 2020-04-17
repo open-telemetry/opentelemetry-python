@@ -660,7 +660,8 @@ class Tracer(trace_api.Tracer):
 
         except Exception as error:  # pylint: disable=broad-except
             if (
-                span.status is None
+                isinstance(span, Span)
+                and span.status is None
                 and span._set_status_on_exception  # pylint:disable=protected-access  # noqa
             ):
                 span.set_status(
