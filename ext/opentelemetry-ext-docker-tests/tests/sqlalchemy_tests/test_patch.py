@@ -19,8 +19,7 @@ import sqlalchemy
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.sqlalchemy import patch, unpatch
-
-from .utils import TracerTestBase
+from opentelemetry.test.test_base import TestBase
 
 POSTGRES_CONFIG = {
     "host": "127.0.0.1",
@@ -31,7 +30,7 @@ POSTGRES_CONFIG = {
 }
 
 
-class SQLAlchemyPatchTestCase(TracerTestBase, unittest.TestCase):
+class SQLAlchemyPatchTestCase(TestBase):
     """TestCase that checks if the engine is properly traced
     when the `patch()` method is used.
     """
@@ -47,7 +46,7 @@ class SQLAlchemyPatchTestCase(TracerTestBase, unittest.TestCase):
 
         # prepare a connection
         self.conn = self.engine.connect()
-        self._span_exporter.clear()
+        super().setUp()
 
     def tearDown(self):
         # clear the database and dispose the engine
@@ -60,7 +59,7 @@ class SQLAlchemyPatchTestCase(TracerTestBase, unittest.TestCase):
         rows = self.conn.execute("SELECT 1").fetchall()
         self.assertEqual(len(rows), 1)
 
-        traces = self._span_exporter.get_finished_spans()
+        traces = self.memory_exporter.get_finished_spans()
         # trace composition
         self.assertEqual(len(traces), 1)
         span = traces[0]

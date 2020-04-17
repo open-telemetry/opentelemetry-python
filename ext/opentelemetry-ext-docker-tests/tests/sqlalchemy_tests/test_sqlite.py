@@ -23,8 +23,10 @@ from opentelemetry.instrumentation.sqlalchemy.engine import _DB, _ROWS, _STMT
 from .mixins import SQLAlchemyTestMixin
 
 
-class SQLiteTestCase(SQLAlchemyTestMixin, unittest.TestCase):
+class SQLiteTestCase(SQLAlchemyTestMixin):
     """TestCase for the SQLite engine"""
+
+    __test__ = True
 
     VENDOR = "sqlite"
     SQL_DB = ":memory:"
@@ -37,7 +39,7 @@ class SQLiteTestCase(SQLAlchemyTestMixin, unittest.TestCase):
             with self.connection() as conn:
                 conn.execute("SELECT * FROM a_wrong_table").fetchall()
 
-        spans = self._span_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
         # span fields

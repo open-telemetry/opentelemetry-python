@@ -26,7 +26,7 @@ from opentelemetry.instrumentation.sqlalchemy.engine import (
     trace_engine,
 )
 
-from .utils import TracerTestBase
+from opentelemetry.test.test_base import TestBase
 
 Base = declarative_base()
 
@@ -47,7 +47,8 @@ class Player(Base):
     name = Column(String(20))
 
 
-class SQLAlchemyTestMixin(TracerTestBase):
+class SQLAlchemyTestMixin(TestBase):
+    __test__ = False
 
     """SQLAlchemy test mixin that includes a complete set of tests
     that must be executed for different engine. When a new test (or
@@ -90,6 +91,8 @@ class SQLAlchemyTestMixin(TracerTestBase):
         """
 
     def setUp(self):
+        super().setUp()
+        self._tracer = self.tracer_provider.get_tracer(__name__)
         # create an engine with the given arguments
         self.engine = _create_engine(self.ENGINE_ARGS)
 
@@ -99,7 +102,7 @@ class SQLAlchemyTestMixin(TracerTestBase):
         self.session = sessionmaker(bind=self.engine)()
         # trace the engine
         trace_engine(self.engine, self._tracer)
-        self._span_exporter.clear()
+        self.memory_exporter.clear()
 
     def tearDown(self):
         # pylint: disable=invalid-name
@@ -107,7 +110,7 @@ class SQLAlchemyTestMixin(TracerTestBase):
         self.session.close()
         Base.metadata.drop_all(bind=self.engine)
         self.engine.dispose()
-        super(SQLAlchemyTestMixin, self).tearDown()
+        super().tearDown()
 
     def test_orm_insert(self):
         # ensures that the ORM session is traced
@@ -115,83 +118,82 @@ class SQLAlchemyTestMixin(TracerTestBase):
         self.session.add(wayne)
         self.session.commit()
 
-        spans = self._span_exporter.get_finished_spans()
-        assert len(spans) == 1
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
         span = spans[0]
         # span fields
-        assert span.name == "{}.query".format(self.VENDOR)
-        assert span.attributes.get("service") == self.SERVICE
-        assert "INSERT INTO players" in span.attributes.get(_STMT)
-        assert span.attributes.get(_DB) == self.SQL_DB
-        assert span.attributes.get(_ROWS) == 1
+        self.assertEqual(span.name, "{}.query".format(self.VENDOR))
+        self.assertEqual(span.attributes.get("service"), self.SERVICE)
+        self.assertIn("INSERT INTO players", span.attributes.get(_STMT))
+        self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
+        self.assertEqual(span.attributes.get(_ROWS), 1)
         self.check_meta(span)
-        assert (
-            span.status.canonical_code is trace.status.StatusCanonicalCode.OK
+        self.assertIs(
+            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
         )
-        assert (span.end_time - span.start_time) > 0
+        self.assertGreater((span.end_time - span.start_time), 0)
 
     def test_session_query(self):
         # ensures that the Session queries are traced
         out = list(self.session.query(Player).filter_by(name="wayne"))
-        assert len(out) == 0
+        self.assertEqual(len(out), 0)
 
-        spans = self._span_exporter.get_finished_spans()
-        assert len(spans) == 1
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
         span = spans[0]
         # span fields
-        assert span.name == "{}.query".format(self.VENDOR)
-        assert span.attributes.get("service") == self.SERVICE
-        assert (
-            "SELECT players.id AS players_id, players.name AS players_name \nFROM players \nWHERE players.name"
-            in span.attributes.get(_STMT)
+        self.assertEqual(span.name, "{}.query".format(self.VENDOR))
+        self.assertEqual(span.attributes.get("service"), self.SERVICE)
+        self.assertIn(
+            "SELECT players.id AS players_id, players.name AS players_name \nFROM players \nWHERE players.name",
+            span.attributes.get(_STMT),
         )
-        assert span.attributes.get(_DB) == self.SQL_DB
+        self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
         self.check_meta(span)
-        assert (
-            span.status.canonical_code is trace.status.StatusCanonicalCode.OK
+        self.assertIs(
+            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
         )
-        assert (span.end_time - span.start_time) > 0
+        self.assertGreater((span.end_time - span.start_time), 0)
 
     def test_engine_connect_execute(self):
         # ensures that engine.connect() is properly traced
         with self.connection() as conn:
             rows = conn.execute("SELECT * FROM players").fetchall()
-            assert len(rows) == 0
+            self.assertEqual(len(rows), 0)
 
-        spans = self._span_exporter.get_finished_spans()
-        assert len(spans) == 1
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
         span = spans[0]
         # span fields
-        assert span.name == "{}.query".format(self.VENDOR)
-        assert span.attributes.get("service") == self.SERVICE
-        assert span.attributes.get(_STMT) == "SELECT * FROM players"
-        assert span.attributes.get(_DB) == self.SQL_DB
+        self.assertEqual(span.name, "{}.query".format(self.VENDOR))
+        self.assertEqual(span.attributes.get("service"), self.SERVICE)
+        self.assertEqual(span.attributes.get(_STMT), "SELECT * FROM players")
+        self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
         self.check_meta(span)
-        assert (
-            span.status.canonical_code is trace.status.StatusCanonicalCode.OK
+        self.assertIs(
+            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
         )
-        assert (span.end_time - span.start_time) > 0
+        self.assertGreater((span.end_time - span.start_time), 0)
 
     def test_parent(self):
         """Ensure that sqlalchemy works with opentelemetry."""
-        ot_tracer = trace.get_tracer("sqlalch_svc")
+        tracer = self.tracer_provider.get_tracer("sqlalch_svc")
 
-        with ot_tracer.start_as_current_span("sqlalch_op"):
+        with tracer.start_as_current_span("sqlalch_op"):
             with self.connection() as conn:
                 rows = conn.execute("SELECT * FROM players").fetchall()
-                assert len(rows) == 0
+                self.assertEqual(len(rows), 0)
 
-        spans = self._span_exporter.get_finished_spans()
-        assert len(spans) == 2
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 2)
         child_span, parent_span = spans
 
         # confirm the parenting
-        assert parent_span.parent is None
-        assert child_span.parent is parent_span
+        self.assertIsNone(parent_span.parent)
+        self.assertIs(child_span.parent, parent_span)
 
-        assert parent_span.name == "sqlalch_op"
-        assert parent_span.instrumentation_info.name == "sqlalch_svc"
+        self.assertEqual(parent_span.name, "sqlalch_op")
+        self.assertEqual(parent_span.instrumentation_info.name, "sqlalch_svc")
 
-        # span fields
-        assert child_span.name == "{}.query".format(self.VENDOR)
-        assert child_span.attributes.get("service") == self.SERVICE
+        self.assertEqual(child_span.name, "{}.query".format(self.VENDOR))
+        self.assertEqual(child_span.attributes.get("service"), self.SERVICE)

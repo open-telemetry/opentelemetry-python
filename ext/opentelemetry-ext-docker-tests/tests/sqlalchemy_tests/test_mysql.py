@@ -38,8 +38,10 @@ MYSQL_CONFIG = {
 }
 
 
-class MysqlConnectorTestCase(SQLAlchemyTestMixin, unittest.TestCase):
+class MysqlConnectorTestCase(SQLAlchemyTestMixin):
     """TestCase for mysql-connector engine"""
+
+    __test__ = True
 
     VENDOR = "mysql"
     SQL_DB = "opentelemetry-tests"
@@ -60,7 +62,7 @@ class MysqlConnectorTestCase(SQLAlchemyTestMixin, unittest.TestCase):
             with self.connection() as conn:
                 conn.execute("SELECT * FROM a_wrong_table").fetchall()
 
-        spans = self._span_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
         # span fields
