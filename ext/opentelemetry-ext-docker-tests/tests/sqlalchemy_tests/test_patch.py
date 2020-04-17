@@ -38,7 +38,6 @@ class SQLAlchemyPatchTestCase(TracerTestBase, unittest.TestCase):
 
     def setUp(self):
         # create a traced engine with the given arguments
-        # and configure the current PIN instance
         patch()
         dsn = (
             "postgresql://%(user)s:%(password)s@%(host)s:%(port)s/%(dbname)s"

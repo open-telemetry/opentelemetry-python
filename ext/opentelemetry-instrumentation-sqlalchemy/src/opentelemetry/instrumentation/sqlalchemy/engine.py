@@ -62,13 +62,8 @@ def trace_engine(engine, tracer=None, service=None):
 # pylint: disable=unused-argument
 def _wrap_create_engine(func, module, args, kwargs):
     """Trace the SQLAlchemy engine, creating an `EngineTracer`
-    object that will listen to SQLAlchemy events. A PIN object
-    is attached to the engine instance so that it can be
-    used later.
+    object that will listen to SQLAlchemy events.
     """
-    # the service name is set to `None` so that the engine
-    # name is used by default; users can update this setting
-    # using the PIN object
     engine = func(*args, **kwargs)
     EngineTracer(
         trace.get_tracer(_normalize_vendor(engine.name), __version__),
