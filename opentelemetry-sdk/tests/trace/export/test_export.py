@@ -289,7 +289,7 @@ class TestConsoleSpanExporter(unittest.TestCase):
         span = trace.Span("span name", trace_api.INVALID_SPAN_CONTEXT)
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
-        mock_stdout.write.assert_called_once_with(str(span) + os.linesep)
+        mock_stdout.write.assert_called_once_with(span.to_json() + os.linesep)
         self.assertEqual(mock_stdout.write.call_count, 1)
         self.assertEqual(mock_stdout.flush.call_count, 1)
 
