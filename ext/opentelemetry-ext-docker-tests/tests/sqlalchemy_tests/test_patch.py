@@ -51,8 +51,6 @@ class SQLAlchemyPatchTestCase(TracerTestBase, unittest.TestCase):
         self._span_exporter.clear()
 
     def tearDown(self):
-        super(SQLAlchemyPatchTestCase, self).tearDown()
-
         # clear the database and dispose the engine
         self.conn.close()
         self.engine.dispose()
@@ -61,16 +59,16 @@ class SQLAlchemyPatchTestCase(TracerTestBase, unittest.TestCase):
     def test_engine_traced(self):
         # ensures that the engine is traced
         rows = self.conn.execute("SELECT 1").fetchall()
-        assert len(rows) == 1
+        self.assertEqual(len(rows), 1)
 
-        traces = self.pop_traces()
+        traces = self._span_exporter.get_finished_spans()
         # trace composition
-        assert len(traces) == 1
+        self.assertEqual(len(traces), 1)
         span = traces[0]
         # check subset of span fields
-        assert span.name == "postgres.query"
-        assert span.attributes.get("service") == "postgres"
-        assert (
-            span.status.canonical_code == trace.status.StatusCanonicalCode.OK
+        self.assertEqual(span.name, "postgres.query")
+        self.assertEqual(span.attributes.get("service"), "postgres")
+        self.assertIs(
+            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
         )
-        assert (span.end_time - span.start_time) > 0
+        self.assertGreater((span.end_time - span.start_time), 0)

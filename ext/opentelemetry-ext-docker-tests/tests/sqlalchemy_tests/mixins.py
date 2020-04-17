@@ -115,10 +115,9 @@ class SQLAlchemyTestMixin(TracerTestBase):
         self.session.add(wayne)
         self.session.commit()
 
-        traces = self.pop_traces()
-        # trace composition
-        assert len(traces) == 1
-        span = traces[0]
+        spans = self._span_exporter.get_finished_spans()
+        assert len(spans) == 1
+        span = spans[0]
         # span fields
         assert span.name == "{}.query".format(self.VENDOR)
         assert span.attributes.get("service") == self.SERVICE
@@ -127,7 +126,7 @@ class SQLAlchemyTestMixin(TracerTestBase):
         assert span.attributes.get(_ROWS) == 1
         self.check_meta(span)
         assert (
-            span.status.canonical_code == trace.status.StatusCanonicalCode.OK
+            span.status.canonical_code is trace.status.StatusCanonicalCode.OK
         )
         assert (span.end_time - span.start_time) > 0
 
@@ -136,10 +135,9 @@ class SQLAlchemyTestMixin(TracerTestBase):
         out = list(self.session.query(Player).filter_by(name="wayne"))
         assert len(out) == 0
 
-        traces = self.pop_traces()
-        # trace composition
-        assert len(traces) == 1
-        span = traces[0]
+        spans = self._span_exporter.get_finished_spans()
+        assert len(spans) == 1
+        span = spans[0]
         # span fields
         assert span.name == "{}.query".format(self.VENDOR)
         assert span.attributes.get("service") == self.SERVICE
@@ -150,7 +148,7 @@ class SQLAlchemyTestMixin(TracerTestBase):
         assert span.attributes.get(_DB) == self.SQL_DB
         self.check_meta(span)
         assert (
-            span.status.canonical_code == trace.status.StatusCanonicalCode.OK
+            span.status.canonical_code is trace.status.StatusCanonicalCode.OK
         )
         assert (span.end_time - span.start_time) > 0
 
@@ -160,10 +158,9 @@ class SQLAlchemyTestMixin(TracerTestBase):
             rows = conn.execute("SELECT * FROM players").fetchall()
             assert len(rows) == 0
 
-        traces = self.pop_traces()
-        # trace composition
-        assert len(traces) == 1
-        span = traces[0]
+        spans = self._span_exporter.get_finished_spans()
+        assert len(spans) == 1
+        span = spans[0]
         # span fields
         assert span.name == "{}.query".format(self.VENDOR)
         assert span.attributes.get("service") == self.SERVICE
@@ -171,11 +168,11 @@ class SQLAlchemyTestMixin(TracerTestBase):
         assert span.attributes.get(_DB) == self.SQL_DB
         self.check_meta(span)
         assert (
-            span.status.canonical_code == trace.status.StatusCanonicalCode.OK
+            span.status.canonical_code is trace.status.StatusCanonicalCode.OK
         )
         assert (span.end_time - span.start_time) > 0
 
-    def test_opentelemetry(self):
+    def test_parent(self):
         """Ensure that sqlalchemy works with opentelemetry."""
         ot_tracer = trace.get_tracer("sqlalch_svc")
 
@@ -184,16 +181,13 @@ class SQLAlchemyTestMixin(TracerTestBase):
                 rows = conn.execute("SELECT * FROM players").fetchall()
                 assert len(rows) == 0
 
-        traces = self.pop_traces()
-        # trace composition
-        assert len(traces) == 2
-        child_span, parent_span = traces
+        spans = self._span_exporter.get_finished_spans()
+        assert len(spans) == 2
+        child_span, parent_span = spans
 
         # confirm the parenting
         assert parent_span.parent is None
-        assert (
-            child_span.parent.context.trace_id == parent_span.context.trace_id
-        )
+        assert child_span.parent is parent_span
 
         assert parent_span.name == "sqlalch_op"
         assert parent_span.instrumentation_info.name == "sqlalch_svc"
@@ -201,19 +195,3 @@ class SQLAlchemyTestMixin(TracerTestBase):
         # span fields
         assert child_span.name == "{}.query".format(self.VENDOR)
         assert child_span.attributes.get("service") == self.SERVICE
-        assert child_span.attributes.get(_STMT) == "SELECT * FROM players"
-        assert child_span.attributes.get(_DB) == self.SQL_DB
-        assert (
-            child_span.status.canonical_code
-            == trace.status.StatusCanonicalCode.OK
-        )
-        assert (child_span.end_time - child_span.start_time) > 0
-
-    def test_analytics_default(self):
-        # ensures that the ORM session is traced
-        wayne = Player(id=1, name="wayne")
-        self.session.add(wayne)
-        self.session.commit()
-
-        spans = self._span_exporter.get_finished_spans()
-        self.assertEqual(len(spans), 1)

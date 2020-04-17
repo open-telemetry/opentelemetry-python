@@ -37,10 +37,9 @@ class SQLiteTestCase(SQLAlchemyTestMixin, unittest.TestCase):
             with self.connection() as conn:
                 conn.execute("SELECT * FROM a_wrong_table").fetchall()
 
-        traces = self.pop_traces()
-        # trace composition
-        self.assertEqual(len(traces), 1)
-        span = traces[0]
+        spans = self._span_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+        span = spans[0]
         # span fields
         self.assertEqual(span.name, "{}.query".format(self.VENDOR))
         self.assertEqual(span.attributes.get("service"), self.SERVICE)
@@ -51,7 +50,7 @@ class SQLiteTestCase(SQLAlchemyTestMixin, unittest.TestCase):
         self.assertIsNone(span.attributes.get(_ROWS))
         self.assertTrue((span.end_time - span.start_time) > 0)
         # check the error
-        self.assertEqual(
+        self.assertIs(
             span.status.canonical_code,
             trace.status.StatusCanonicalCode.UNKNOWN,
         )
