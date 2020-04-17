@@ -20,10 +20,10 @@ from sqlalchemy.orm import sessionmaker
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.sqlalchemy.engine import (
-    trace_engine,
     _DB,
     _ROWS,
     _STMT,
+    trace_engine,
 )
 
 from .utils import TracerTestBase

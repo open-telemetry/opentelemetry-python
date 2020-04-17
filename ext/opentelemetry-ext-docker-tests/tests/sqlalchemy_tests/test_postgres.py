@@ -22,10 +22,10 @@ from sqlalchemy.exc import ProgrammingError
 from opentelemetry import trace
 from opentelemetry.instrumentation.sqlalchemy.engine import (
     _DB,
-    _ROWS,
-    _STMT,
     _HOST,
     _PORT,
+    _ROWS,
+    _STMT,
 )
 
 from .mixins import SQLAlchemyTestMixin
