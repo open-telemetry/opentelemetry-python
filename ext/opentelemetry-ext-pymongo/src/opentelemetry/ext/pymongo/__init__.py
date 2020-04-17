@@ -42,6 +42,8 @@ API
 
 from pymongo import monitoring
 
+from opentelemetry import trace
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.pymongo.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
@@ -64,6 +66,14 @@ def trace_integration(tracer_provider=None):
     monitoring.register(CommandTracer(tracer))
 
 
+class PymongoInstrumentor(BaseInstrumentor):
+    def _instrument(self):
+        trace_integration()
+
+    def _uninstrument(self):
+        pass
+
+
 class CommandTracer(monitoring.CommandListener):
     def __init__(self, tracer):
         self._tracer = tracer
@@ -79,6 +89,8 @@ class CommandTracer(monitoring.CommandListener):
             statement += " " + command
 
         try:
+            if self._tracer is None:
+                self._tracer = trace.get_tracer(DATABASE_TYPE, __version__)
             span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
             span.set_attribute("component", DATABASE_TYPE)
             span.set_attribute("db.type", DATABASE_TYPE)
