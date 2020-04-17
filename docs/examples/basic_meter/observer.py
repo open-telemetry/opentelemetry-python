@@ -42,7 +42,6 @@ meter.register_observer(
     description="per-cpu usage",
     unit="1",
     value_type=float,
-    label_keys=("cpu_number",),
 )
 
 
@@ -58,7 +57,6 @@ meter.register_observer(
     description="RAM memory usage",
     unit="1",
     value_type=float,
-    label_keys=(),
 )
 
 input("Metrics will be printed soon. Press a key to finish...\n")

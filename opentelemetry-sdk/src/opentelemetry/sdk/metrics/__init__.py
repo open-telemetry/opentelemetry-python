@@ -103,7 +103,6 @@ class Metric(metrics_api.Metric):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
         self.name = name
@@ -111,7 +110,6 @@ class Metric(metrics_api.Metric):
         self.unit = unit
         self.value_type = value_type
         self.meter = meter
-        self.label_keys = label_keys
         self.enabled = enabled
         self.bound_instruments = {}
         self.bound_instruments_lock = threading.Lock()
@@ -179,7 +177,6 @@ class Observer(metrics_api.Observer):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
         self.callback = callback
@@ -188,7 +185,6 @@ class Observer(metrics_api.Observer):
         self.unit = unit
         self.value_type = value_type
         self.meter = meter
-        self.label_keys = label_keys
         self.enabled = enabled
 
         self.aggregators = {}
@@ -318,7 +314,6 @@ class Meter(metrics_api.Meter):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         metric_type: Type[metrics_api.MetricT],
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
@@ -329,7 +324,6 @@ class Meter(metrics_api.Meter):
             unit,
             value_type,
             self,
-            label_keys=label_keys,
             enabled=enabled,
         )
         self.metrics.add(metric)
@@ -342,7 +336,6 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.Observer:
         ob = Observer(
@@ -352,7 +345,6 @@ class Meter(metrics_api.Meter):
             unit,
             value_type,
             self,
-            label_keys,
             enabled,
         )
         with self.observers_lock:

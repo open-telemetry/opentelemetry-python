@@ -79,7 +79,6 @@ requests_counter = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Counter,
-    label_keys=("environment",),
 )
 
 requests_size = meter.create_metric(
@@ -88,7 +87,6 @@ requests_size = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Measure,
-    label_keys=("environment",),
 )
 
 # Labels are used to identify key-values that are associated with a specific
