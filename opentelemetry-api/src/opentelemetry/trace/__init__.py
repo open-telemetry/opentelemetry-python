@@ -84,7 +84,7 @@ from opentelemetry.util import types
 logger = getLogger(__name__)
 
 # TODO: quarantine
-Parent = typing.Optional[typing.Union["SpanContext", "Span"]]
+ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
 class LinkBase(abc.ABC):
@@ -512,7 +512,7 @@ class Tracer(abc.ABC):
     def start_span(
         self,
         name: str,
-        parent: Parent = CURRENT_SPAN,
+        parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
@@ -564,7 +564,7 @@ class Tracer(abc.ABC):
     def start_as_current_span(
         self,
         name: str,
-        parent: Parent = CURRENT_SPAN,
+        parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
@@ -644,7 +644,7 @@ class DefaultTracer(Tracer):
     def start_span(
         self,
         name: str,
-        parent: Parent = Tracer.CURRENT_SPAN,
+        parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),
@@ -658,7 +658,7 @@ class DefaultTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: Parent = Tracer.CURRENT_SPAN,
+        parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: typing.Optional[types.Attributes] = None,
         links: typing.Sequence[Link] = (),

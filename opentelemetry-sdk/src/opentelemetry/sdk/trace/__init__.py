@@ -503,7 +503,7 @@ class Tracer(trace_api.Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: trace_api.Parent = trace_api.Tracer.CURRENT_SPAN,
+        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
@@ -514,7 +514,7 @@ class Tracer(trace_api.Tracer):
     def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
-        parent: trace_api.Parent = trace_api.Tracer.CURRENT_SPAN,
+        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: Optional[types.Attributes] = None,
         links: Sequence[trace_api.Link] = (),
@@ -531,9 +531,7 @@ class Tracer(trace_api.Tracer):
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext
         ):
-            raise TypeError(
-                "expected Span, SpanContext or None object for trace parent."
-            )
+            raise TypeError("parent must be a Span, SpanContext or None.")
 
         if parent_context is None or not parent_context.is_valid():
             parent = parent_context = None

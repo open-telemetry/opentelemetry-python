@@ -194,9 +194,7 @@ def _translate_to_jaeger(spans: Span):
 
         status = span.status
 
-        parent_id = 0
-        if span.parent is not None:
-            parent_id = span.parent.span_id
+        parent_id = span.parent.span_id if span.parent else 0
 
         tags = _extract_tags(span.attributes)
 
