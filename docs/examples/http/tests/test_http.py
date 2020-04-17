@@ -32,7 +32,7 @@ class TestHttpExample(unittest.TestCase):
         output = subprocess.check_output(
             (sys.executable, test_script)
         ).decode()
-        self.assertIn('"name":', output)
+        self.assertIn('"name": "/"', output)
 
     @classmethod
     def teardown_class(cls):
