@@ -25,7 +25,6 @@ from opentelemetry.instrumentation.sqlalchemy.engine import (
     _STMT,
     trace_engine,
 )
-
 from opentelemetry.test.test_base import TestBase
 
 Base = declarative_base()
