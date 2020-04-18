@@ -27,6 +27,9 @@ def run() -> None:
 
     python_path = environ.get("PYTHONPATH", [])
 
+    if not python_path:
+        python_path = []
+
     if python_path:
         python_path = python_path.split(pathsep)
 
@@ -35,7 +38,9 @@ def run() -> None:
     if filedir_path in python_path:
         python_path.remove(filedir_path)
 
-    environ["PYTHONPATH"] = pathsep.join([filedir_path, *python_path])
+    python_path.insert(0, filedir_path)
+
+    environ["PYTHONPATH"] = pathsep.join(python_path)
 
     executable = which(argv[1])
 
