@@ -20,9 +20,9 @@ This package provides a command that automatically instruments a program:
 
 ::
 
-    opentelemetry-auto-instrumentation program.py
+    opentelemetry-auto-instrumentation python program.py
 
 The code in ``program.py`` needs to use one of the packages for which there is
-an OpenTelemetry extension. For a list of the available extensions please check
-`here <https://opentelemetry-python.readthedocs.io/>`_.
+an OpenTelemetry integration. For a list of the available integrations please
+check `here <https://opentelemetry-python.readthedocs.io/>`_.
 """
