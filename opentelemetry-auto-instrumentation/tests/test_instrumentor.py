@@ -57,8 +57,9 @@ class TestRun(TestCase):
     @patch.dict("os.environ", {"PYTHONPATH": ""})
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.argv")
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
+    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
     def test_run_empty(
-        self, mock_execl, mock_argv
+        self, mock_which, mock_execl, mock_argv
     ):  # pylint: disable=unused-argument
         auto_instrumentation.run()
         assert environ["PYTHONPATH"] == self.auto_instrumentation_path
@@ -66,8 +67,9 @@ class TestRun(TestCase):
     @patch.dict("os.environ", {"PYTHONPATH": "abc"})
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.argv")
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
+    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
     def test_run_non_empty(
-        self, mock_execl, mock_argv
+        self, mock_which, mock_execl, mock_argv
     ):  # pylint: disable=unused-argument
         auto_instrumentation.run()
         assert environ["PYTHONPATH"] == pathsep.join(
@@ -80,8 +82,9 @@ class TestRun(TestCase):
     )
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.argv")
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
+    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
     def test_run_after_path(
-        self, mock_execl, mock_argv
+        self, mock_which, mock_execl, mock_argv
     ):  # pylint: disable=unused-argument
         auto_instrumentation.run()
         assert environ["PYTHONPATH"] == pathsep.join(
