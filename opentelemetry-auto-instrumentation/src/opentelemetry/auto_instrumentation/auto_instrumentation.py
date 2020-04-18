@@ -25,11 +25,17 @@ logger = getLogger(__file__)
 
 def run() -> None:
 
-    python_path = environ.get("PYTHONPATH", "")
+    python_path = environ.get("PYTHONPATH", [])
+
+    if python_path:
+        python_path = python_path.split(pathsep)
+
     filedir_path = dirname(abspath(__file__))
 
-    if filedir_path not in python_path:
-        environ["PYTHONPATH"] = pathsep.join([filedir_path, python_path])
+    if filedir_path in python_path:
+        python_path.remove(filedir_path)
+
+    environ["PYTHONPATH"] = pathsep.join([filedir_path, *python_path])
 
     executable = which(argv[1])
 
