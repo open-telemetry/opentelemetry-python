@@ -22,7 +22,7 @@ from opentelemetry.configuration import Configuration
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 
-from opentelemetry.instrumentors.django.middleware import (
+from opentelemetry.ext.django.middleware import (
     OpenTelemetryMiddleware
 )
 
@@ -48,16 +48,16 @@ class DjangoInstrumentor(BaseInstrumentor):
         # path to a class or a function that acts as middleware.
 
         # FIXME this is probably a pattern that will show up in the rest of the
-        # instrumentors. Find a better way of implementing this.
+        # ext. Find a better way of implementing this.
+        self._middleware_setting = (
+            "MIDDLEWARE" if VERSION >= (1, 10, 0) else "MIDDLEWARE_CLASSES"
+        )
+
         if (
             hasattr(Configuration(), "django_instrument")
             and not Configuration().django_instrument
         ):
             return
-
-        self._middleware_setting = (
-            "MIDDLEWARE" if VERSION >= (1, 10, 0) else "MIDDLEWARE_CLASSES"
-        )
 
         if "DJANGO_SETTINGS_MODULE" not in environ.keys():
             raise Exception(

@@ -19,7 +19,7 @@ PACKAGE_INFO = {}
 with open(
     join(
         dirname(__file__),
-        "src", "opentelemetry", "instrumentors", "django", "version.py"
+        "src", "opentelemetry", "ext", "django", "version.py"
     )
 ) as f:
     exec(f.read(), PACKAGE_INFO)
@@ -28,7 +28,7 @@ setup(
     version=PACKAGE_INFO["__version__"],
     entry_points={
         "opentelemetry_instrumentor": [
-            "django = opentelemetry.instrumentors.django:DjangoInstrumentor"
+            "django = opentelemetry.ext.django:DjangoInstrumentor"
         ]
     },
 )

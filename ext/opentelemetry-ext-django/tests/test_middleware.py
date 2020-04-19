@@ -1,9 +1,15 @@
-from django.test import SimpleTestCase, Client
+from django.test import Client
+from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 
-class TestDjangoOpenTracingMiddleware(SimpleTestCase):
+class TestDjangoOpenTracingMiddleware(WsgiTestBase):
 
     def test_middleware_traced(self):
         client = Client()
         response = client.get('/traced/')
-        assert response['numspans'] == '1'
+        span_list = self.memory_exporter.get_finished_spans()
+        span_list
+        response
+        from ipdb import set_trace
+        set_trace()
+        True

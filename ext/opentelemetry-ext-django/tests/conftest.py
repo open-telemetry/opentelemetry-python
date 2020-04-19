@@ -16,7 +16,7 @@ from os import environ
 
 from django import setup
 
-from opentelemetry.instrumentors.django import DjangoInstrumentor
+from opentelemetry.ext.django import DjangoInstrumentor
 
 
 _django_instrumentor = DjangoInstrumentor()

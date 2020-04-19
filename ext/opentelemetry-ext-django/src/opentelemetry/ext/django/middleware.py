@@ -22,7 +22,7 @@ from opentelemetry.trace import get_tracer, SpanKind
 from opentelemetry.ext.wsgi import (
     get_header_from_environ, collect_request_attributes
 )
-from opentelemetry.instrumentors.django.version import __version__
+from opentelemetry.ext.django.version import __version__
 
 if VERSION >= (1, 10, 0):
     # Read more about django.utils.deprecation.MiddlewareMixin here:
