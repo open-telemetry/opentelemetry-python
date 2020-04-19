@@ -69,6 +69,7 @@ class DjangoInstrumentor(BaseInstrumentor):
             self._middleware_setting,
             []
         )
+
         settings_middleware.append(
             ".".join(
                 [
@@ -84,4 +85,30 @@ class DjangoInstrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self):
-        pass
+        settings_middleware = getattr(
+            settings,
+            self._middleware_setting,
+            None
+        )
+
+        # FIXME This is starting to smell like trouble. We have 2 mechanisms
+        # that may make this condition be True, one implemented in
+        # BaseInstrumentor and another one implemented in _instrument. Both
+        # stop _instrument from running and thus, settings_middleware not being
+        # set.
+        if settings_middleware is None:
+            return
+
+        settings_middleware.remove(
+            ".".join(
+                [
+                    OpenTelemetryMiddleware.__module__,
+                    OpenTelemetryMiddleware.__qualname__
+                ]
+            )
+        )
+        setattr(
+            settings,
+            self._middleware_setting,
+            settings_middleware
+        )
