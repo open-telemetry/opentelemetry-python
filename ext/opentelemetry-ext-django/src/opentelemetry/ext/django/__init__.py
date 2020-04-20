@@ -18,13 +18,9 @@ from os import environ
 from django import VERSION
 from django.conf import settings
 
-from opentelemetry.configuration import Configuration
-
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-
-from opentelemetry.ext.django.middleware import (
-    OpenTelemetryMiddleware
-)
+from opentelemetry.configuration import Configuration
+from opentelemetry.ext.django.middleware import OpenTelemetryMiddleware
 
 _logger = getLogger(__name__)
 
@@ -38,11 +34,12 @@ class DjangoInstrumentor(BaseInstrumentor):
     _opentelemetry_middleware = ".".join(
         [
             OpenTelemetryMiddleware.__module__,
-            OpenTelemetryMiddleware.__qualname__
+            OpenTelemetryMiddleware.__qualname__,
         ]
     )
 
-    def _instrument(self):
+    def __init__(self):
+        super().__init__()
         # Django Middleware is code that is executed before and/or after a
         # request. Read about Django middleware here:
         # https://docs.djangoproject.com/en/3.0/topics/http/middleware/
@@ -54,12 +51,14 @@ class DjangoInstrumentor(BaseInstrumentor):
         # Django settings.MIDDLEWARE is a list of strings, each one a Python
         # path to a class or a function that acts as middleware.
 
-        # FIXME this is probably a pattern that will show up in the rest of the
-        # ext. Find a better way of implementing this.
         self._middleware_setting = (
             "MIDDLEWARE" if VERSION >= (1, 10, 0) else "MIDDLEWARE_CLASSES"
         )
 
+    def _instrument(self):
+
+        # FIXME this is probably a pattern that will show up in the rest of the
+        # ext. Find a better way of implementing this.
         # FIXME Probably the evaluation of strings into boolean values can be
         # built inside the Configuration class itself with the magic method
         # __bool__
@@ -74,27 +73,13 @@ class DjangoInstrumentor(BaseInstrumentor):
                 "Missing environment variable DJANGO_SETTINGS_MODULE"
             )
 
-        settings_middleware = getattr(
-            settings,
-            self._middleware_setting,
-            []
-        )
-
+        settings_middleware = getattr(settings, self._middleware_setting, [])
         settings_middleware.append(self._opentelemetry_middleware)
 
-        setattr(
-            settings,
-            self._middleware_setting,
-            settings_middleware,
-            # [self._opentelemetry_middleware]
-        )
+        setattr(settings, self._middleware_setting, settings_middleware)
 
     def _uninstrument(self):
-        settings_middleware = getattr(
-            settings,
-            self._middleware_setting,
-            None
-        )
+        settings_middleware = getattr(settings, self._middleware_setting, None)
 
         # FIXME This is starting to smell like trouble. We have 2 mechanisms
         # that may make this condition be True, one implemented in
@@ -107,8 +92,4 @@ class DjangoInstrumentor(BaseInstrumentor):
             return
 
         settings_middleware.remove(self._opentelemetry_middleware)
-        setattr(
-            settings,
-            self._middleware_setting,
-            settings_middleware
-        )
+        setattr(settings, self._middleware_setting, settings_middleware)

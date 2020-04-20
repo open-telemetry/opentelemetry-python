@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 
 
-def traced(request):
+def traced(request):  # pylint: disable=unused-argument
     return HttpResponse()
 
 

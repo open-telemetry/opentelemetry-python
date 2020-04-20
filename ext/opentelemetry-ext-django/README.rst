@@ -1,10 +1,10 @@
-OpenTelemetry Django Instrumentor
-================================
+OpenTelemetry Django Instrumentation
+====================================
 
-This instrumentor creates OpenTelemetry spans for Django applications. It just
-needs to be installed in the virtual environment where OpenTelemetry and the
-Django application are. The instrumentation of the Django application will be
-done automatically.
+This instrumentation creates OpenTelemetry spans for Django applications. It
+just needs to be installed in the virtual environment where OpenTelemetry and
+the Django application are. The instrumentation of the Django application will
+be done automatically.
 
 References
 ----------

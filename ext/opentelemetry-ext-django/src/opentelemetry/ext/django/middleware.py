@@ -16,13 +16,14 @@ from logging import getLogger
 
 from django import VERSION
 
-from opentelemetry.propagators import extract
 from opentelemetry.context import attach, detach
-from opentelemetry.trace import get_tracer, SpanKind
-from opentelemetry.ext.wsgi import (
-    get_header_from_environ, collect_request_attributes
-)
 from opentelemetry.ext.django.version import __version__
+from opentelemetry.ext.wsgi import (
+    collect_request_attributes,
+    get_header_from_environ,
+)
+from opentelemetry.propagators import extract
+from opentelemetry.trace import SpanKind, get_tracer
 
 if VERSION >= (1, 10, 0):
     # Read more about django.utils.deprecation.MiddlewareMixin here:
@@ -51,11 +52,13 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
     _environ_starttime_key = "opentelemetry-instrumentor-django.starttime_key"
     _environ_span_key = "opentelemetry-instrumentor-django.span_key"
     _environ_activation_key = (
-        "opentelemetry-instrumentor-djangoactivation_key"
+        "opentelemetry-instrumentor-django.activation_key"
     )
     _environ_token = "opentelemetry-instrumentor-django.token"
 
-    def process_view(self, request, view_func, view_args, view_kwargs):
+    def process_view(
+        self, request, view_func, view_args, view_kwargs
+    ):  # pylint: disable=unused-argument
         # request.META is a dictionary containing all available HTTP headers
         # Read more about request.META here:
         # https://docs.djangoproject.com/en/3.0/ref/request-response/#django.http.HttpRequest.META
@@ -91,13 +94,11 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
         request.META.get(self._environ_activation_key).__exit__(
             type(exception),
             exception,
-            getattr(exception, "__traceback__", None)
+            getattr(exception, "__traceback__", None),
         )
         detach(request.environ.get(self._environ_token))
 
     def process_response(self, request, response):
-        request.META[self._environ_activation_key].__exit__(
-            None, None, None
-        )
+        request.META[self._environ_activation_key].__exit__(None, None, None)
         detach(request.environ.get(self._environ_token))
         return response

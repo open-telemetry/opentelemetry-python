@@ -18,7 +18,6 @@ from django import setup
 
 from opentelemetry.ext.django import DjangoInstrumentor
 
-
 _django_instrumentor = DjangoInstrumentor()
 
 

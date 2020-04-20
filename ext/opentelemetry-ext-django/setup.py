@@ -13,13 +13,18 @@
 # limitations under the License.
 
 from os.path import dirname, join
+
 from setuptools import setup
 
 PACKAGE_INFO = {}
 with open(
     join(
         dirname(__file__),
-        "src", "opentelemetry", "ext", "django", "version.py"
+        "src",
+        "opentelemetry",
+        "ext",
+        "django",
+        "version.py",
     )
 ) as f:
     exec(f.read(), PACKAGE_INFO)
