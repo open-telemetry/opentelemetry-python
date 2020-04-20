@@ -331,6 +331,11 @@ class Span(trace_api.Span):
         if self.end_time:
             end_time = util.ns_to_iso_str(self.end_time)
 
+        status = OrderedDict()
+        status["canonical_code"] = str(self.status.canonical_code.name)
+        if self.status.description:
+            status["description"] = self.status.description
+
         f_span = OrderedDict()
 
         f_span["name"] = self.name
@@ -339,6 +344,7 @@ class Span(trace_api.Span):
         f_span["parent_id"] = parent_id
         f_span["start_time"] = start_time
         f_span["end_time"] = end_time
+        f_span["status"] = status
         f_span["attributes"] = self._format_attributes(self.attributes)
         f_span["events"] = self._format_events(self.events)
         f_span["links"] = self._format_links(self.links)
