@@ -29,11 +29,4 @@ with open(
 ) as f:
     exec(f.read(), PACKAGE_INFO)
 
-setup(
-    version=PACKAGE_INFO["__version__"],
-    entry_points={
-        "opentelemetry_instrumentor": [
-            "django = opentelemetry.ext.django:DjangoInstrumentor"
-        ]
-    },
-)
+setup(version=PACKAGE_INFO["__version__"])
