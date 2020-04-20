@@ -44,6 +44,15 @@ def _normalize_vendor(vendor):
     return vendor
 
 
+def _get_tracer(engine):
+    tracer = getattr(engine, "_opentelemetry_tracer", False)
+    if tracer:
+        return tracer
+    tracer = trace.get_tracer(_normalize_vendor(engine.name), __version__)
+    setattr(engine, "_opentelemetry_tracer", tracer)
+    return tracer
+
+
 def trace_engine(engine, tracer=None, service=None):
     """
     Add tracing instrumentation to the given sqlalchemy engine or instance.
@@ -66,15 +75,13 @@ def _wrap_create_engine(func, module, args, kwargs):
     """
     engine = func(*args, **kwargs)
     EngineTracer(
-        trace.get_tracer(_normalize_vendor(engine.name), __version__),
-        None,
-        engine,
+        _get_tracer(engine), None, engine,
     )
     return engine
 
 
 class EngineTracer:
-    def __init__(self, tracer: trace.Tracer, service, engine):
+    def __init__(self, tracer, service, engine):
         self.tracer = tracer
         self.engine = engine
         self.vendor = _normalize_vendor(engine.name)

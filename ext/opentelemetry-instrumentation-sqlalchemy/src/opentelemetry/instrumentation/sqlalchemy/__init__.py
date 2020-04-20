@@ -12,17 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Instrument sqlalchemy to report SQL queries.
+"""
+Instrument `sqlalchemy`_ to report SQL queries.
 
 There are two options for instrumenting code. The first option is to use
 the `opentelemetry-auto-instrumentation` executable which will automatically
 patch your SQLAlchemy engine. The second is to programmatically enable
 instrumentation via the following code:
-::
+
+.. _sqlalchemy: https://pypi.org/project/sqlalchemy/
+Usage
+-----
+.. code:: python
+
+    from opentelemetry import trace
     from opentelemetry.instrumentation.sqlalchemy.patch import patch
+    from opentelemetry.sdk.trace import TracerProvider
     import sqlalchemy
 
-    patch()
+    trace.set_tracer_provider(TracerProvider())
+    patch(trace.get_tracer_provider())
+
+API
+---
 """
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.sqlalchemy.patch import patch, unpatch
