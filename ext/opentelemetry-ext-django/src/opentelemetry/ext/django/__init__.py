@@ -68,7 +68,7 @@ class DjangoInstrumentor(BaseInstrumentor):
         ):
             return
 
-        if "DJANGO_SETTINGS_MODULE" not in environ.keys():
+        if "DJANGO_SETTINGS_MODULE" not in environ:
             raise Exception(
                 "Missing environment variable DJANGO_SETTINGS_MODULE"
             )
