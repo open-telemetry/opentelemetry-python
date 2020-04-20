@@ -35,6 +35,13 @@ class DjangoInstrumentor(BaseInstrumentor):
     See `BaseInstrumentor`
     """
 
+    _opentelemetry_middleware = ".".join(
+        [
+            OpenTelemetryMiddleware.__module__,
+            OpenTelemetryMiddleware.__qualname__
+        ]
+    )
+
     def _instrument(self):
         # Django Middleware is code that is executed before and/or after a
         # request. Read about Django middleware here:
@@ -73,18 +80,13 @@ class DjangoInstrumentor(BaseInstrumentor):
             []
         )
 
-        settings_middleware.append(
-            ".".join(
-                [
-                    OpenTelemetryMiddleware.__module__,
-                    OpenTelemetryMiddleware.__qualname__
-                ]
-            )
-        )
+        settings_middleware.append(self._opentelemetry_middleware)
+
         setattr(
             settings,
             self._middleware_setting,
-            settings_middleware
+            settings_middleware,
+            # [self._opentelemetry_middleware]
         )
 
     def _uninstrument(self):
@@ -94,24 +96,17 @@ class DjangoInstrumentor(BaseInstrumentor):
             None
         )
 
-        open_telemetry_middleware = ".".join(
-            [
-                OpenTelemetryMiddleware.__module__,
-                OpenTelemetryMiddleware.__qualname__
-            ]
-        )
-
         # FIXME This is starting to smell like trouble. We have 2 mechanisms
         # that may make this condition be True, one implemented in
         # BaseInstrumentor and another one implemented in _instrument. Both
         # stop _instrument from running and thus, settings_middleware not being
         # set.
-        if settings_middleware is None or open_telemetry_middleware not in (
-            settings_middleware
+        if settings_middleware is None or (
+            self._opentelemetry_middleware not in settings_middleware
         ):
             return
 
-        settings_middleware.remove(open_telemetry_middleware)
+        settings_middleware.remove(self._opentelemetry_middleware)
         setattr(
             settings,
             self._middleware_setting,

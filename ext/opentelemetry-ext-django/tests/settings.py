@@ -24,6 +24,9 @@ SECRET_KEY = 'm^c^r=-gx(j_tx)hyisz6%f4**thdz#v-u$)ghhpd^fs-!47t='
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# FIXME this is needed in order for test_middleware_error to pass. Apparently
+# without it Django will try to render some HTML causing an error (apparently)# unrelated to process_exception.
+DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = ["testserver"]
 
