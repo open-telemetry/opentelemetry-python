@@ -16,10 +16,7 @@
 # pylint:disable=no-self-use
 
 import threading
-import unittest
 from concurrent import futures
-from contextlib import contextmanager
-from unittest import mock
 
 import grpc
 
@@ -27,6 +24,7 @@ from opentelemetry import trace
 from opentelemetry.ext.grpc import server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
+from opentelemetry.test.test_base import TestBase
 
 
 class UnaryUnaryMethodHandler(grpc.RpcMethodHandler):
@@ -49,18 +47,16 @@ class UnaryUnaryRpcHandler(grpc.GenericRpcHandler):
         return UnaryUnaryMethodHandler(self._unary_unary_handler)
 
 
-class TestOpenTelemetryServerInterceptor(unittest.TestCase):
+class TestOpenTelemetryServerInterceptor(TestBase):
+    def setUp(self):
+        super().setUp()
+        self.tracer = self.tracer_provider.get_tracer(__name__)
+
     def test_create_span(self):
         """Check that the interceptor wraps calls with spans server-side."""
 
-        @contextmanager
-        def mock_start_as_current_span(*args, **kwargs):
-            yield mock.Mock(spec=trace.Span)
-
         # Intercept gRPC calls...
-        tracer = mock.Mock(spec=trace.Tracer)
-        tracer.start_as_current_span.side_effect = mock_start_as_current_span
-        interceptor = server_interceptor(tracer)
+        interceptor = server_interceptor(self.tracer)
 
         # No-op RPC handler
         def handler(request, context):
@@ -84,9 +80,12 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
         finally:
             server.stop(None)
 
-        tracer.start_as_current_span.assert_called_once_with(
-            name="", kind=trace.SpanKind.SERVER
-        )
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        self.assertEqual(span.name, "")
+        self.assertIs(span.kind, trace.SpanKind.SERVER)
 
     def test_span_lifetime(self):
         """Check that the span is active for the duration of the call."""
