@@ -72,4 +72,4 @@ class TestInMemorySpanExporter(unittest.TestCase):
 
         # after shutdown export should fail
         ret = memory_exporter.export(span_list)
-        self.assertEqual(ret, export.SpanExportResult.FAILED_NOT_RETRYABLE)
+        self.assertEqual(ret, export.SpanExportResult.FAILURE)
