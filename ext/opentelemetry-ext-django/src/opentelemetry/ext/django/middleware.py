@@ -49,8 +49,6 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
     """Django Middleware for OpenTelemetry
     """
 
-    _environ_starttime_key = "opentelemetry-instrumentor-django.starttime_key"
-    _environ_span_key = "opentelemetry-instrumentor-django.span_key"
     _environ_activation_key = (
         "opentelemetry-instrumentor-django.activation_key"
     )
@@ -80,14 +78,16 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
             view_func.__name__,
             kind=SpanKind.SERVER,
             attributes=attributes,
-            start_time=environ.get(self._environ_starttime_key),
+            start_time=environ.get(
+                "opentelemetry-instrumentor-django.starttime_key"
+            )
         )
 
         activation = tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
 
         request.META[self._environ_activation_key] = activation
-        request.META[self._environ_span_key] = span
+        request.META["opentelemetry-instrumentor-django.span_key"] = span
         request.META[self._environ_token] = token
 
     def process_exception(self, request, exception):
