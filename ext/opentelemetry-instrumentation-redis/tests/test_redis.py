@@ -21,7 +21,6 @@ from opentelemetry.test.test_base import TestBase
 
 class TestRedis(TestBase):
     def test_patch_unpatch(self):
-        # with mock.patch("redis.Redis"):
         redis_client = redis.Redis()
         # Test patch idempotence
         patch()
