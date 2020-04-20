@@ -19,10 +19,7 @@ from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
-
-Flask = FlaskInstrumentor().instrument(flask_class=Flask)
 
 
 def expected_attributes(override_attributes):
