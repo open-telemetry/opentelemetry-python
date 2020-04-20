@@ -6,5 +6,4 @@ def traced(request):
 
 
 def error(request):
-    return HttpResponse()
     raise ValueError("error")
