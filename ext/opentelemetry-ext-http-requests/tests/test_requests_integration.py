@@ -88,6 +88,8 @@ class TestRequestsIntegration(TestBase):
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 0)
 
+        opentelemetry.ext.http_requests.disable()
+
     def test_disable_session(self):
         session1 = requests.Session()
         opentelemetry.ext.http_requests.disable_session(session1)
