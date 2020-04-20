@@ -23,7 +23,8 @@ _django_instrumentor = DjangoInstrumentor()
 
 
 def pytest_sessionstart(session):  # pylint: disable=unused-argument
-    environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings')
+    environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
+    environ.setdefault("OPENTELEMETRY_PYTHON_DJANGO_INSTRUMENT", "True")
     setup()
     _django_instrumentor.instrument()
 

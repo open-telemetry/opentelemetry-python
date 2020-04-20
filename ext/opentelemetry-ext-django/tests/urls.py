@@ -1,7 +1,7 @@
 from django.conf.urls import url
-
-from . import views
+from .views import traced, error
 
 urlpatterns = [
-    url(r'^traced/', views.traced_func),
+    url(r'^traced/', traced),
+    url(r'^error/', error),
 ]

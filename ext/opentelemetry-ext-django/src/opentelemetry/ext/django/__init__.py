@@ -53,9 +53,12 @@ class DjangoInstrumentor(BaseInstrumentor):
             "MIDDLEWARE" if VERSION >= (1, 10, 0) else "MIDDLEWARE_CLASSES"
         )
 
+        # FIXME Probably the evaluation of strings into boolean values can be
+        # built inside the Configuration class itself with the magic method
+        # __bool__
         if (
             hasattr(Configuration(), "django_instrument")
-            and not Configuration().django_instrument
+            and Configuration().django_instrument != "True"
         ):
             return
 
@@ -91,22 +94,24 @@ class DjangoInstrumentor(BaseInstrumentor):
             None
         )
 
+        open_telemetry_middleware = ".".join(
+            [
+                OpenTelemetryMiddleware.__module__,
+                OpenTelemetryMiddleware.__qualname__
+            ]
+        )
+
         # FIXME This is starting to smell like trouble. We have 2 mechanisms
         # that may make this condition be True, one implemented in
         # BaseInstrumentor and another one implemented in _instrument. Both
         # stop _instrument from running and thus, settings_middleware not being
         # set.
-        if settings_middleware is None:
+        if settings_middleware is None or open_telemetry_middleware not in (
+            settings_middleware
+        ):
             return
 
-        settings_middleware.remove(
-            ".".join(
-                [
-                    OpenTelemetryMiddleware.__module__,
-                    OpenTelemetryMiddleware.__qualname__
-                ]
-            )
-        )
+        settings_middleware.remove(open_telemetry_middleware)
         setattr(
             settings,
             self._middleware_setting,
