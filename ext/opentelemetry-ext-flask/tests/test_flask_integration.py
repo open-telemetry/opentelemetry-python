@@ -19,7 +19,7 @@ from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
+from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 
 def expected_attributes(override_attributes):
@@ -78,10 +78,7 @@ class TestFlaskIntegration(WsgiTestBase):
 
     def test_simple(self):
         expected_attrs = expected_attributes(
-            {
-                "http.target": "/hello/123",
-                "http.route": "/hello/<int:helloid>",
-            }
+            {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
         resp = self.client.get("/hello/123")
         self.assertEqual(200, resp.status_code)

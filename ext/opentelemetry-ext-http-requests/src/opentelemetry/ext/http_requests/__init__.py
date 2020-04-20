@@ -42,6 +42,7 @@ API
 """
 
 import functools
+import types
 from urllib.parse import urlparse
 
 from requests.sessions import Session
@@ -96,9 +97,6 @@ def enable(tracer_provider):
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
-            # TODO: Propagate the trace context via headers once we have a way
-            # to access propagators.
-
             headers = kwargs.setdefault("headers", {})
             propagators.inject(type(headers).__setitem__, headers)
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
@@ -129,3 +127,10 @@ def disable():
     if getattr(Session.request, "opentelemetry_ext_requests_applied", False):
         original = Session.request.__wrapped__  # pylint:disable=no-member
         Session.request = original
+
+
+def disable_session(session):
+    """Disables instrumentation on the session object."""
+    if getattr(session.request, "opentelemetry_ext_requests_applied", False):
+        original = session.request.__wrapped__  # pylint:disable=no-member
+        session.request = types.MethodType(original, session)
