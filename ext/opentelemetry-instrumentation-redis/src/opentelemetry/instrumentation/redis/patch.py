@@ -26,7 +26,7 @@ _RAWCMD = "db.statement"
 _CMD = "redis.command"
 
 
-def patch(tracer=None):
+def patch(tracer_provider=None):
     """Patch the instrumented methods
 
     This duplicated doesn't look nice. The nicer alternative is to use an ObjectProxy on top
@@ -36,8 +36,12 @@ def patch(tracer=None):
         return
     setattr(redis, "_opentelemetry_patch", True)
 
-    if tracer:
-        setattr(redis, "_opentelemetry_tracer", tracer)
+    if tracer_provider:
+        setattr(
+            redis,
+            "_opentelemetry_tracer",
+            tracer_provider.get_tracer(_DEFAULT_SERVICE, __version__),
+        )
 
     if redis.VERSION < (3, 0, 0):
         wrap_function_wrapper(
