@@ -36,14 +36,8 @@ class TestMysqlIntegration(TestBase):
         span = spans_list[0]
         # TODO: Add more tests?
 
-        # check instrumentation name and version
-        self.assertEqual(
-            span.instrumentation_info.name, opentelemetry.ext.mysql.__name__,
-        )
-        self.assertEqual(
-            span.instrumentation_info.version,
-            opentelemetry.ext.mysql.__version__,
-        )
+        # Check version and name in span's instrumentation info
+        self.check_span_instrumentation_info(span, opentelemetry.ext.mysql)
 
     def test_custom_tracer_provider(self):
         resource = resources.Resource.create({})
