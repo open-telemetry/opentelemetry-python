@@ -24,8 +24,7 @@ It shows:
 import sys
 import time
 
-from opentelemetry import metrics as metrics_api
-from opentelemetry.sdk import metrics
+from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export.aggregate import (
     CounterAggregator,
@@ -62,8 +61,8 @@ print(
 # determines whether how metrics are collected: if true, metrics accumulate
 # over the process lifetime. If false, metrics are reset at the beginning of
 # each collection interval.
-metrics_api.set_meter_provider(MeterProvider())
-meter = metrics_api.get_meter(__name__, batcher_mode == "stateful")
+metrics.set_meter_provider(MeterProvider())
+meter = metrics.get_meter(__name__, batcher_mode == "stateful")
 
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
@@ -100,8 +99,8 @@ counter_view = View(requests_counter, CounterAggregator)
 size_view = View(requests_size, MinMaxSumCountAggregator)
 
 # Register the views to the view manager to use the views
-metrics.view_manager.register_view(counter_view)
-metrics.view_manager.register_view(size_view)
+meter.register_view(counter_view)
+meter.register_view(size_view)
 
 # Update the metric instruments using the direct calling convention
 requests_counter.add(25, staging_labels)

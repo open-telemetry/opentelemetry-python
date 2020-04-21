@@ -30,7 +30,7 @@ class View:
     def __init__(self, metric, aggregator_type, label_keys=None):
         self.metric = metric
         self.aggregator_type = aggregator_type
-        self._view_datas = {} # Labels to ViewData
+        self.view_datas = {} # Labels to ViewData
         self._view_datas_lock = threading.Lock()
         # TODO: add configuration for aggregators (histogram, etc.)
         # TODO: add label key configuration
@@ -41,17 +41,14 @@ class View:
     def get_all_view_data(self):
         # We return a copy of the values because the dictionary can be can be
         # always changing
-        return list(self._view_datas.values())
-
-    def get_view_data(self, labels):
-        return self._view_datas.get(labels)
+        return list(self.view_datas.values())
 
     def update_view_datas(self, labels, value):
         with self._view_datas_lock:
-            view_data = self.get_view_data(labels)
+            view_data = self.view_datas.get(labels)
             if view_data is None:
                 view_data = ViewData(labels, self.aggregator_type)
-                self._view_datas[labels] = view_data
+                self.view_datas[labels] = view_data
             view_data.aggregator.update(value)
 
     # Uniqueness of View is based on metric and aggregation type
@@ -63,45 +60,33 @@ class View:
             self.aggregator_type == other.aggregator_type
 
 
-class _ViewManager:
+class ViewManager:
 
     def __init__(self):
-        self._views = {} # metric to set of views
+        self.views = {} # metric to set of views
         self._view_lock = threading.Lock()
 
     def register_view(self, view):
         with self._view_lock:
-            if self._views.get(view.metric) is None:
-                self._views[view.metric] = {view}
-            elif view not in self._views.get(view.metric):
-                self._views[view.metric].add(view)
+            if self.views.get(view.metric) is None:
+                self.views[view.metric] = {view}
+            elif view not in self.views.get(view.metric):
+                self.views[view.metric].add(view)
             else:
                 logger.warning("View already registered.")
 
-    def get_views(self, metric):
-        return self._views.get(metric, {})
-
-    def get_all_view_data_for_metric(self, metric):
-        all_view_data = []
-        for view in self.get_views(metric):
-            all_view_data.extend(view.get_all_view_data())
-        return all_view_data
-
     def unregister_view(self, view):
         with self._view_lock:
-            if self._views.get(view.metric) is None:
+            if self.views.get(view.metric) is None:
                 logger.warning("Metric for view does not exist.")
-            elif view in self._views.get(view.metric):
-                self._views.get(view.metric).remove(view)
+            elif view in self.views.get(view.metric):
+                self.views.get(view.metric).remove(view)
 
     def update_view(self, metric, labels, value):
         with self._view_lock:
-            views = self.get_views(metric)
+            views = self.views.get(metric, {})
             # We only update if view was defined for the metric
             for view in views:
                 # TODO: Check view configuration here to keep/drop keys
                 # Find the view data corresponding to the labels
                 view.update_view_datas(labels, value)
-
-
-view_manager = _ViewManager()

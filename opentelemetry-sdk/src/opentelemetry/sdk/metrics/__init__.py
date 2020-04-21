@@ -19,7 +19,7 @@ from typing import Dict, Sequence, Tuple, Type
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator, ObserverAggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher
-from opentelemetry.sdk.metrics.view import view_manager, ViewData
+from opentelemetry.sdk.metrics.view import ViewData, ViewManager
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -38,38 +38,32 @@ class BaseBoundInstrument:
     instruments for a specific set of labels.
 
     Args:
-        value_type: The type of values for this bound instrument (int, float).
-        enabled: True if the originating instrument is enabled.
-        aggregator: The aggregator for this bound metric instrument. Will
-            handle aggregation upon updates and checkpointing of values for
-            exporting.
+        labels: A set of labels as keys that bind this metric instrument.
+        metric: The metric that created this bound instrument.
     """
 
     def __init__(
         self,
-        value_type: Type[metrics_api.ValueT],
-        enabled: bool,
         labels: Tuple[Tuple[str, str]],
         metric: metrics_api.MetricT,
     ):
-        self._enabled = enabled
         self._labels = labels
         self._metric = metric
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
-        if not self._enabled:
+        if not self._metric.enabled:
             return False
         if not isinstance(value, self._metric.value_type):
             logger.warning(
                 "Invalid value passed for %s.",
-                self.self._metric.value_type.__name__
+                self._metric.value_type.__name__
             )
             return False
         return True
 
     def update(self, value: metrics_api.ValueT):
         # The view manager handles all updates to aggregators
-        view_manager.update_view(self._metric, self._labels, value)
+        self._metric.meter.view_manager.update_view(self._metric, self._labels, value)
 
 class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
     def add(self, value: metrics_api.ValueT) -> None:
@@ -101,6 +95,7 @@ class Metric(metrics_api.Metric):
         name: str,
         description: str,
         unit: str,
+        meter: "Meter",
         value_type: Type[metrics_api.ValueT],
         enabled: bool = True,
     ):
@@ -108,6 +103,7 @@ class Metric(metrics_api.Metric):
         self.description = description
         self.unit = unit
         self.value_type = value_type
+        self.meter = meter
         self.enabled = enabled
         self.bound_instruments = {}
         self.bound_instruments_lock = threading.Lock()
@@ -119,8 +115,6 @@ class Metric(metrics_api.Metric):
             bound_instrument = self.bound_instruments.get(key)
             if bound_instrument is None:
                 bound_instrument = self.BOUND_INSTR_TYPE(
-                    self.value_type,
-                    self.enabled,
                     get_labels_as_key(labels),
                     self,
                 )
@@ -174,6 +168,7 @@ class Observer(metrics_api.Observer):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
         self.callback = callback
@@ -181,6 +176,7 @@ class Observer(metrics_api.Observer):
         self.description = description
         self.unit = unit
         self.value_type = value_type
+        self.label_keys = label_keys
         self.enabled = enabled
 
         self.aggregators = {}
@@ -249,7 +245,7 @@ class Meter(metrics_api.Meter):
         resource: Resource = Resource.create_empty(),
     ):
         self.instrumentation_info = instrumentation_info
-        self.metrics = set()
+        self.view_manager = ViewManager()
         self.observers = set()
         self.batcher = Batcher(stateful)
         self.observers_lock = threading.Lock()
@@ -267,15 +263,16 @@ class Meter(metrics_api.Meter):
         self._collect_observers()
 
     def _collect_metrics(self) -> None:
-        for metric in self.metrics:
+        # Iterate through metrics created by this meter that have been recorded
+        for (metric, views) in self.view_manager.views.items():
             if not metric.enabled:
                 continue
-            
-            for view_data in view_manager.get_all_view_data_for_metric(metric):
-                record = Record(metric, view_data.labels, view_data.aggregator)
-                # Checkpoints the current aggregators
-                # Applies different logic for stateful
-                self.batcher.process(record)
+            for view in views:
+                for view_data in view.get_all_view_data():
+                    record = Record(metric, view_data.labels, view_data.aggregator)
+                    # Checkpoints the current aggregators
+                    # Applies different logic for stateful
+                    self.batcher.process(record)
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
@@ -316,10 +313,10 @@ class Meter(metrics_api.Meter):
             name,
             description,
             unit,
+            self,
             value_type,
             enabled=enabled,
         )
-        self.metrics.add(metric)
         return metric
 
     def register_observer(
@@ -329,6 +326,7 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.Observer:
         ob = Observer(
@@ -337,6 +335,7 @@ class Meter(metrics_api.Meter):
             description,
             unit,
             value_type,
+            label_keys,
             enabled,
         )
         with self.observers_lock:
@@ -346,6 +345,12 @@ class Meter(metrics_api.Meter):
     def unregister_observer(self, observer: "Observer") -> None:
         with self.observers_lock:
             self.observers.remove(observer)
+
+    def register_view(self, view):
+        self.view_manager.register_view(view)
+
+    def unregister_view(self, view):
+        self.view_manager.unregister_view(view)
 
 
 class MeterProvider(metrics_api.MeterProvider):

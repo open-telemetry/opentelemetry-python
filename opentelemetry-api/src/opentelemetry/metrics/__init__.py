@@ -291,7 +291,6 @@ class Meter(abc.ABC):
         unit: str,
         value_type: Type[ValueT],
         metric_type: Type[MetricT],
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Metric":
         """Creates a ``metric_kind`` metric with type ``value_type``.
@@ -303,7 +302,6 @@ class Meter(abc.ABC):
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
             metric_type: The type of metric being created.
-            label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
