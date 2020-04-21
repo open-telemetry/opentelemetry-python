@@ -69,6 +69,26 @@ class TestRequestsIntegration(TestBase):
 
         self.check_span_instrumentation_info(span, http_requests)
 
+    def test_not_foundbasic(self):
+        url_404 = "http://httpbin.org/status/404"
+        httpretty.register_uri(
+            httpretty.GET, url_404, status=404,
+        )
+        result = requests.get(url_404)
+        self.assertEqual(result.status_code, 404)
+
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertEqual(span.attributes.get("http.status_code"), 404)
+        self.assertEqual(span.attributes.get("http.status_text"), "Not Found")
+
+        self.assertIs(
+            span.status.canonical_code,
+            trace.status.StatusCanonicalCode.NOT_FOUND,
+        )
+
     def test_invalid_url(self):
         url = "http://[::1/nope"
         exception_type = requests.exceptions.InvalidURL
