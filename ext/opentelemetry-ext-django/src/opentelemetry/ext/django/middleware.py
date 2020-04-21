@@ -21,6 +21,7 @@ from opentelemetry.ext.django.version import __version__
 from opentelemetry.ext.wsgi import (
     collect_request_attributes,
     get_header_from_environ,
+    add_response_attributes,
 )
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
@@ -53,6 +54,7 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
         "opentelemetry-instrumentor-django.activation_key"
     )
     _environ_token = "opentelemetry-instrumentor-django.token"
+    _environ_span_key = "opentelemetry-instrumentor-django.span_key"
 
     def process_view(
         self, request, view_func, view_args, view_kwargs
@@ -87,7 +89,7 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
         activation.__enter__()
 
         request.META[self._environ_activation_key] = activation
-        request.META["opentelemetry-instrumentor-django.span_key"] = span
+        request.META[self._environ_span_key] = span
         request.META[self._environ_token] = token
 
     def process_exception(self, request, exception):
@@ -100,5 +102,10 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
 
     def process_response(self, request, response):
         request.META[self._environ_activation_key].__exit__(None, None, None)
+        add_response_attributes(
+            request.META[self._environ_span_key],
+            "{} {}".format(response.status_code, response.reason_phrase),
+            response
+        )
         detach(request.environ.get(self._environ_token))
         return response
