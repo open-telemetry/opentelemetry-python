@@ -50,7 +50,7 @@ class TestPymongo(TestBase):
         # the memory exporter can't be used here because the span isn't ended
         # yet
         # pylint: disable=protected-access
-        span = command_tracer._get_span(mock_event)
+        span = command_tracer._pop_span(mock_event)
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(span.name, "mongodb.command_name.find")
         self.assertEqual(span.attributes["component"], "mongodb")

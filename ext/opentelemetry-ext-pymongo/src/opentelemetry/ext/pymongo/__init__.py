@@ -129,39 +129,32 @@ class CommandTracer(monitoring.CommandListener):
             if span is not None:
                 span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
                 span.end()
-                self._remove_span(event)
+                self._pop_span(event)
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
         """ Method to handle a pymongo CommandSucceededEvent """
         if not self.enable:
             return
-        span = self._get_span(event)
-        if span is not None:
-            span.set_attribute(
-                "db.mongo.duration_micros", event.duration_micros
-            )
-            span.set_status(Status(StatusCanonicalCode.OK, event.reply))
-            span.end()
-            self._remove_span(event)
+        span = self._pop_span(event)
+        if span is None:
+            return
+        span.set_attribute("db.mongo.duration_micros", event.duration_micros)
+        span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+        span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):
         """ Method to handle a pymongo CommandFailedEvent """
         if not self.enable:
             return
-        span = self._get_span(event)
-        if span is not None:
-            span.set_attribute(
-                "db.mongo.duration_micros", event.duration_micros
-            )
-            span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
-            span.end()
-            self._remove_span(event)
+        span = self._pop_span(event)
+        if span is None:
+            return
+        span.set_attribute("db.mongo.duration_micros", event.duration_micros)
+        span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
+        span.end()
 
-    def _get_span(self, event):
-        return self._span_dict.get(_get_span_dict_key(event))
-
-    def _remove_span(self, event):
-        self._span_dict.pop(_get_span_dict_key(event))
+    def _pop_span(self, event):
+        return self._span_dict.pop(_get_span_dict_key(event), None)
 
 
 def _get_span_dict_key(event):
