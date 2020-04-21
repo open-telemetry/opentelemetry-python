@@ -101,11 +101,11 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
         detach(request.environ.get(self._environ_token))
 
     def process_response(self, request, response):
-        request.META[self._environ_activation_key].__exit__(None, None, None)
         add_response_attributes(
             request.META[self._environ_span_key],
             "{} {}".format(response.status_code, response.reason_phrase),
             response
         )
+        request.META[self._environ_activation_key].__exit__(None, None, None)
         detach(request.environ.get(self._environ_token))
         return response
