@@ -37,14 +37,14 @@ class BaseInstrumentor(ABC):
         return cls._instance
 
     @abstractmethod
-    def _instrument(self, **kwargs) -> None:
+    def _instrument(self, **kwargs):
         """Instrument"""
 
     @abstractmethod
-    def _uninstrument(self, **kwargs) -> None:
+    def _uninstrument(self, **kwargs):
         """Uninstrument"""
 
-    def instrument(self, **kwargs) -> None:
+    def instrument(self, **kwargs):
         """Instrument"""
 
         if not self._is_instrumented:
@@ -52,13 +52,11 @@ class BaseInstrumentor(ABC):
             self._is_instrumented = True
             return result
 
-        _LOG.warning(
-            "Attempting to automatically instrument while already instrumented"
-        )
+        _LOG.warning("Attempting to instrument while already instrumented")
 
         return None
 
-    def uninstrument(self, **kwargs) -> None:
+    def uninstrument(self, **kwargs):
         """Uninstrument"""
 
         if self._is_instrumented:
@@ -66,10 +64,7 @@ class BaseInstrumentor(ABC):
             self._is_instrumented = False
             return result
 
-        _LOG.warning(
-            "Attempting to automatically uninstrument while already"
-            " uninstrumented"
-        )
+        _LOG.warning("Attempting to uninstrument while already uninstrumented")
 
         return None
 
