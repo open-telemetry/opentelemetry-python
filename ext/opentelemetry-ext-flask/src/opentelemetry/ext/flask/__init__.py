@@ -160,9 +160,9 @@ class FlaskInstrumentor(BaseInstrumentor):
         super().__init__()
         self._original_flask = None
 
-    def _instrument(self):  # pylint: disable=arguments-differ
+    def _instrument(self):
         self._original_flask = flask.Flask
         flask.Flask = _InstrumentedFlask
 
-    def _uninstrument(self):  # pylint: disable=arguments-differ
+    def _uninstrument(self):
         flask.Flask = self._original_flask
