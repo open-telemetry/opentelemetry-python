@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-from importlib import reload
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.trace import TracerProvider, export
