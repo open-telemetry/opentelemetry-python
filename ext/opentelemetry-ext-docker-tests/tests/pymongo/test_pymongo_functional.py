@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import typing
 import unittest
@@ -26,12 +27,15 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
+logger = logging.getLogger(__name__)
+
 MONGODB_HOST = os.getenv("MONGODB_HOST ", "localhost")
 MONGODB_PORT = int(os.getenv("MONGODB_PORT ", "27017"))
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME ", "opentelemetry-tests")
 MONGODB_COLLECTION_NAME = "test"
 
 
+# pylint: disable=broad-except
 class TestFunctionalPymongo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -78,39 +82,43 @@ class TestFunctionalPymongo(unittest.TestCase):
     def test_insert(self):
         """Should create a child span for insert
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            self._collection.insert_one(
-                {"name": "testName", "value": "testValue"}
-            )
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"):
+                self._collection.insert_one(
+                    {"name": "testName", "value": "testValue"}
+                )
+        except Exception as ex:
+            logger.warning("Failed to insert with pymongo. %s", str(ex))
+        self.validate_spans()
 
     def test_update(self):
         """Should create a child span for update
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            self._collection.update_one(
-                {"name": "testName"}, {"$set": {"value": "someOtherValue"}}
-            )
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"):
+                self._collection.update_one(
+                    {"name": "testName"}, {"$set": {"value": "someOtherValue"}}
+                )
+        except Exception as ex:
+            logger.warning("Failed to update with pymongo. %s", str(ex))
+        self.validate_spans()
 
     def test_find(self):
         """Should create a child span for find
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            self._collection.find_one()
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"):
+                self._collection.find_one()
+        except Exception as ex:
+            logger.warning("Failed to find with pymongo. %s", str(ex))
+        self.validate_spans()
 
     def test_delete(self):
         """Should create a child span for delete
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            self._collection.delete_one({"name": "testName"})
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"):
+                self._collection.delete_one({"name": "testName"})
+        except Exception as ex:
+            logger.warning("Failed to delete with pymongo. %s", str(ex))
+        self.validate_spans()

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import time
 import unittest
@@ -26,6 +27,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
+logger = logging.getLogger(__name__)
+
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD ", "testpassword")
 MYSQL_HOST = os.getenv("MYSQL_HOST ", "localhost")
@@ -33,6 +36,7 @@ MYSQL_PORT = int(os.getenv("MYSQL_PORT ", "3306"))
 MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME ", "opentelemetry-tests")
 
 
+# pylint: disable=broad-except
 class TestFunctionalMysql(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -85,22 +89,28 @@ class TestFunctionalMysql(unittest.TestCase):
     def test_execute(self):
         """Should create a child span for execute
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            self._cursor.execute("CREATE TABLE IF NOT EXISTS test (id INT)")
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
+                Exception
+            ):
+                self._cursor.execute("CREATE TABLE IF NOT EXISTS test (id INT)")
+        except Exception as ex:
+            logger.warning("Failed to execute with mysql. %s", str(ex))
+        self.validate_spans()
 
     def test_executemany(self):
         """Should create a child span for executemany
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            data = ["1", "2", "3"]
-            stmt = "INSERT INTO test (id) VALUES (%s)"
-            self._cursor.executemany(stmt, data)
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
+                Exception
+            ):
+                data = ["1", "2", "3"]
+                stmt = "INSERT INTO test (id) VALUES (%s)"
+                self._cursor.executemany(stmt, data)
+        except Exception as ex:
+            logger.warning("Failed to executemany with mysql. %s", str(ex))
+        self.validate_spans()
 
     def test_callproc(self):
         """Should create a child span for callproc

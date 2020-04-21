@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import time
 import unittest
@@ -26,6 +27,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
+logger = logging.getLogger(__name__)
+
 POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")
 POSTGRES_PORT = int(os.getenv("POSTGRESQL_PORT ", "5432"))
 POSTGRES_DB_NAME = os.getenv("POSTGRESQL_DB_NAME ", "opentelemetry-tests")
@@ -33,6 +36,7 @@ POSTGRES_PASSWORD = os.getenv("POSTGRESQL_HOST ", "testpassword")
 POSTGRES_USER = os.getenv("POSTGRESQL_HOST ", "testuser")
 
 
+# pylint: disable=broad-except
 class TestFunctionalPsycopg(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -90,24 +94,26 @@ class TestFunctionalPsycopg(unittest.TestCase):
     def test_execute(self):
         """Should create a child span for execute method
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            self._cursor.execute(
-                "CREATE TABLE IF NOT EXISTS test (id integer)"
-            )
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"):
+                self._cursor.execute(
+                    "CREATE TABLE IF NOT EXISTS test (id integer)"
+                )
+        except Exception as ex:
+            logger.warning("Failed to execute with pyscopg2. %s", str(ex))
+        self.validate_spans()
 
     def test_executemany(self):
         """Should create a child span for executemany
         """
-        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-            Exception
-        ):
-            data = ("1", "2", "3")
-            stmt = "INSERT INTO test (id) VALUES (%s)"
-            self._cursor.executemany(stmt, data)
-            self.validate_spans()
+        try:
+            with self._tracer.start_as_current_span("rootSpan"):
+                data = ("1", "2", "3")
+                stmt = "INSERT INTO test2 (id) VALUES (%s)"
+                self._cursor.executemany(stmt, data)
+        except Exception as ex:
+            logger.warning("Failed to executemany with pyscopg2. %s", str(ex))
+        self.validate_spans()
 
     def test_callproc(self):
         """Should create a child span for callproc
