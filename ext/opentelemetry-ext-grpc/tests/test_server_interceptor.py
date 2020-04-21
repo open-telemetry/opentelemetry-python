@@ -91,7 +91,7 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         """Check that the span is active for the duration of the call."""
 
         interceptor = server_interceptor()
-        tracer = trace.get_tracer(__name__)
+        tracer = self.tracer_provider.get_tracer(__name__)
 
         # To capture the current span at the time the handler is called
         active_span_in_handler = None
@@ -128,7 +128,7 @@ class TestOpenTelemetryServerInterceptor(TestBase):
     def test_sequential_server_spans(self):
         """Check that sequential RPCs get separate server spans."""
 
-        tracer = trace.get_tracer(__name__)
+        tracer = self.tracer_provider.get_tracer(__name__)
 
         interceptor = server_interceptor()
 
@@ -175,7 +175,7 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         context.
         """
 
-        tracer = trace.get_tracer(__name__)
+        tracer = self.tracer_provider.get_tracer(__name__)
 
         interceptor = server_interceptor()
 
