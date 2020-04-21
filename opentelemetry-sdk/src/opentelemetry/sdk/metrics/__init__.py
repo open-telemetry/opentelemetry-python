@@ -95,8 +95,8 @@ class Metric(metrics_api.Metric):
         name: str,
         description: str,
         unit: str,
-        meter: "Meter",
         value_type: Type[metrics_api.ValueT],
+        meter: "Meter",
         enabled: bool = True,
     ):
         self.name = name
@@ -313,8 +313,8 @@ class Meter(metrics_api.Meter):
             name,
             description,
             unit,
-            self,
             value_type,
+            self,
             enabled=enabled,
         )
         return metric
