@@ -90,10 +90,12 @@ class TestFunctionalMysql(unittest.TestCase):
         """Should create a child span for execute
         """
         try:
-            with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-                Exception
-            ):
-                self._cursor.execute("CREATE TABLE IF NOT EXISTS test (id INT)")
+            with self._tracer.start_as_current_span(
+                "rootSpan"
+            ), self.assertRaises(Exception):
+                self._cursor.execute(
+                    "CREATE TABLE IF NOT EXISTS test (id INT)"
+                )
         except Exception as ex:
             logger.warning("Failed to execute with mysql. %s", str(ex))
         self.validate_spans()
@@ -102,9 +104,9 @@ class TestFunctionalMysql(unittest.TestCase):
         """Should create a child span for executemany
         """
         try:
-            with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
-                Exception
-            ):
+            with self._tracer.start_as_current_span(
+                "rootSpan"
+            ), self.assertRaises(Exception):
                 data = ["1", "2", "3"]
                 stmt = "INSERT INTO test (id) VALUES (%s)"
                 self._cursor.executemany(stmt, data)
