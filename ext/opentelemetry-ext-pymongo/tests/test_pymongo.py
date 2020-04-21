@@ -12,23 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.pymongo import CommandTracer, trace_integration
-from opentelemetry.util import time_ns
+from opentelemetry.test.test_base import TestBase
 
 
-class TestPymongo(unittest.TestCase):
+class TestPymongo(TestBase):
+    def setUp(self):
+        super().setUp()
+        self.tracer = self.tracer_provider.get_tracer(__name__)
+
     def test_trace_integration(self):
         mock_register = mock.Mock()
         patch = mock.patch(
             "pymongo.monitoring.register", side_effect=mock_register
         )
-        mock_tracer = MockTracer()
         with patch:
-            trace_integration(mock_tracer)
+            trace_integration(self.tracer)
 
         self.assertTrue(mock_register.called)
 
@@ -40,12 +42,13 @@ class TestPymongo(unittest.TestCase):
             "pipeline": "pipeline",
             "command_name": "find",
         }
-        mock_tracer = MockTracer()
-        command_tracer = CommandTracer(mock_tracer)
+        command_tracer = CommandTracer(self.tracer)
         mock_event = MockEvent(
             command_attrs, ("test.com", "1234"), "test_request_id"
         )
         command_tracer.started(event=mock_event)
+        # the memory exporter can't be used here because the span isn't ended
+        # yet
         # pylint: disable=protected-access
         span = command_tracer._get_span(mock_event)
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
@@ -69,13 +72,13 @@ class TestPymongo(unittest.TestCase):
         self.assertEqual(span.attributes["db.mongo.pipeline"], "pipeline")
 
     def test_succeeded(self):
-        mock_tracer = MockTracer()
         mock_event = MockEvent({})
-        command_tracer = CommandTracer(mock_tracer)
+        command_tracer = CommandTracer(self.tracer)
         command_tracer.started(event=mock_event)
-        # pylint: disable=protected-access
-        span = command_tracer._get_span(mock_event)
         command_tracer.succeeded(event=mock_event)
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
         self.assertEqual(
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
@@ -86,13 +89,15 @@ class TestPymongo(unittest.TestCase):
         self.assertIsNotNone(span.end_time)
 
     def test_failed(self):
-        mock_tracer = MockTracer()
         mock_event = MockEvent({})
-        command_tracer = CommandTracer(mock_tracer)
+        command_tracer = CommandTracer(self.tracer)
         command_tracer.started(event=mock_event)
-        # pylint: disable=protected-access
-        span = command_tracer._get_span(mock_event)
         command_tracer.failed(event=mock_event)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
         self.assertEqual(
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
@@ -104,18 +109,18 @@ class TestPymongo(unittest.TestCase):
         self.assertIsNotNone(span.end_time)
 
     def test_multiple_commands(self):
-        mock_tracer = MockTracer()
         first_mock_event = MockEvent({}, ("firstUrl", "123"), "first")
         second_mock_event = MockEvent({}, ("secondUrl", "456"), "second")
-        command_tracer = CommandTracer(mock_tracer)
+        command_tracer = CommandTracer(self.tracer)
         command_tracer.started(event=first_mock_event)
-        # pylint: disable=protected-access
-        first_span = command_tracer._get_span(first_mock_event)
         command_tracer.started(event=second_mock_event)
-        # pylint: disable=protected-access
-        second_span = command_tracer._get_span(second_mock_event)
         command_tracer.succeeded(event=first_mock_event)
         command_tracer.failed(event=second_mock_event)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 2)
+        first_span = spans_list[0]
+        second_span = spans_list[1]
 
         self.assertEqual(first_span.attributes["db.mongo.request_id"], "first")
         self.assertIs(
@@ -147,41 +152,3 @@ class MockEvent:
 
     def __getattr__(self, item):
         return item
-
-
-class MockSpan:
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
-
-    def __init__(self):
-        self.status = None
-        self.name = ""
-        self.kind = trace_api.SpanKind.INTERNAL
-        self.attributes = None
-        self.end_time = None
-
-    def set_attribute(self, key, value):
-        self.attributes[key] = value
-
-    def set_status(self, status):
-        self.status = status
-
-    def end(self, end_time=None):
-        self.end_time = end_time if end_time is not None else time_ns()
-
-
-class MockTracer:
-    def __init__(self):
-        self.end_span = mock.Mock()
-
-    # pylint: disable=no-self-use
-    def start_span(self, name, kind):
-        span = MockSpan()
-        span.attributes = {}
-        span.status = None
-        span.name = name
-        span.kind = kind
-        return span

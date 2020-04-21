@@ -12,27 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest import mock
 
 import mysql.connector
 
-from opentelemetry import trace as trace_api
 from opentelemetry.ext.mysql import trace_integration
+from opentelemetry.test.test_base import TestBase
 
 
-class TestMysqlIntegration(unittest.TestCase):
+class TestMysqlIntegration(TestBase):
     def test_trace_integration(self):
-        tracer = trace_api.DefaultTracer()
-        span = mock.create_autospec(trace_api.Span, spec_set=True)
-        start_current_span_patcher = mock.patch.object(
-            tracer,
-            "start_as_current_span",
-            autospec=True,
-            spec_set=True,
-            return_value=span,
-        )
-        start_as_current_span = start_current_span_patcher.start()
+        tracer = self.tracer_provider.get_tracer(__name__)
 
         with mock.patch("mysql.connector.connect") as mock_connect:
             mock_connect.get.side_effect = mysql.connector.MySQLConnection()
@@ -41,4 +31,5 @@ class TestMysqlIntegration(unittest.TestCase):
             cursor = cnx.cursor()
             query = "SELECT * FROM test"
             cursor.execute(query)
-            self.assertTrue(start_as_current_span.called)
+            spans_list = self.memory_exporter.get_finished_spans()
+            self.assertEqual(len(spans_list), 1)

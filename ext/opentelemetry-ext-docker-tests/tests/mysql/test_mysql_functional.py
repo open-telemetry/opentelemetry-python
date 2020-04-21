@@ -15,17 +15,12 @@
 import logging
 import os
 import time
-import unittest
 
 import mysql.connector
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.mysql import trace_integration
-from opentelemetry.sdk.trace import Tracer, TracerProvider
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
+from opentelemetry.test.test_base import TestBase
 
 logger = logging.getLogger(__name__)
 
@@ -37,16 +32,13 @@ MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME ", "opentelemetry-tests")
 
 
 # pylint: disable=broad-except
-class TestFunctionalMysql(unittest.TestCase):
+class TestFunctionalMysql(TestBase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls._connection = None
         cls._cursor = None
-        cls._tracer_provider = TracerProvider()
-        cls._tracer = Tracer(cls._tracer_provider, None)
-        cls._span_exporter = InMemorySpanExporter()
-        cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
-        cls._tracer_provider.add_span_processor(cls._span_processor)
+        cls._tracer = cls.tracer_provider.get_tracer(__name__)
         trace_integration(cls._tracer)
         cls._connection = mysql.connector.connect(
             user=MYSQL_USER,
@@ -62,11 +54,8 @@ class TestFunctionalMysql(unittest.TestCase):
         if cls._connection:
             cls._connection.close()
 
-    def setUp(self):
-        self._span_exporter.clear()
-
     def validate_spans(self):
-        spans = self._span_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 2)
         for span in spans:
             if span.name == "rootSpan":

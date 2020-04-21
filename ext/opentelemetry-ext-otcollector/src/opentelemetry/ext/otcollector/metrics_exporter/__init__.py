@@ -80,7 +80,7 @@ class CollectorMetricsExporter(MetricsExporter):
                 pass
 
         except grpc.RpcError:
-            return MetricsExportResult.FAILED_RETRYABLE
+            return MetricsExportResult.FAILURE
 
         return MetricsExportResult.SUCCESS
 
