@@ -115,19 +115,16 @@ class MultiSpanProcessor(SpanProcessor):
             sp.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
-        flushed_within_time = True
-        flush_start_ns = time_ns()
+        deadline_ns = time_ns() + timeout_millis * 1000000
         for sp in self._span_processors:
-            remaining_time_millis = (
-                timeout_millis - (time_ns() - flush_start_ns) // 1000000
-            )
-            if remaining_time_millis <= 0:
+            current_time_ns = time_ns()
+            if current_time_ns >= deadline_ns:
                 return False
-            flushed_within_time = (
-                sp.force_flush(remaining_time_millis) and flushed_within_time
-            )
 
-        return flushed_within_time
+            if not sp.force_flush((deadline_ns - current_time_ns) // 1000000):
+                return False
+
+        return True
 
 
 class EventBase(abc.ABC):
