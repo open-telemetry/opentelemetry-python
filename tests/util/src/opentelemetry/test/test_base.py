@@ -25,10 +25,15 @@ class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tracer_provider = TracerProvider()
+        cls.original_provider = trace_api.get_tracer_provider()
         trace_api.set_tracer_provider(cls.tracer_provider)
         cls.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleExportSpanProcessor(cls.memory_exporter)
         cls.tracer_provider.add_span_processor(span_processor)
+
+    @classmethod
+    def tearDownClass(cls):
+        trace_api.set_tracer_provider(cls.original_provider)
 
     def setUp(self):
         self.memory_exporter.clear()
