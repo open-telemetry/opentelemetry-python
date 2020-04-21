@@ -40,21 +40,6 @@ class Batcher:
         # (deltas)
         self.stateful = stateful
 
-    def aggregator_for(self, metric_type: Type[MetricT]) -> Aggregator:
-        """Returns an aggregator based on metric type.
-
-        Aggregators keep track of and updates values when metrics get updated.
-        """
-        # pylint:disable=R0201
-        if issubclass(metric_type, Counter):
-            return CounterAggregator()
-        if issubclass(metric_type, Measure):
-            return MinMaxSumCountAggregator()
-        if issubclass(metric_type, Observer):
-            return ObserverAggregator()
-        # TODO: Add other aggregators
-        return CounterAggregator()
-
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
 

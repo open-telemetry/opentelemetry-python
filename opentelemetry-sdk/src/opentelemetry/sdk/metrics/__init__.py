@@ -17,7 +17,7 @@ import threading
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
-from opentelemetry.sdk.metrics.export.aggregate import Aggregator
+from opentelemetry.sdk.metrics.export.aggregate import Aggregator, ObserverAggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.view import view_manager, ViewData
 from opentelemetry.sdk.resources import Resource
@@ -52,7 +52,6 @@ class BaseBoundInstrument:
         labels: Tuple[Tuple[str, str]],
         metric: metrics_api.MetricT,
     ):
-        self._value_type = value_type
         self._enabled = enabled
         self._labels = labels
         self._metric = metric
@@ -60,9 +59,10 @@ class BaseBoundInstrument:
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
         if not self._enabled:
             return False
-        if not isinstance(value, self._value_type):
+        if not isinstance(value, self._metric.value_type):
             logger.warning(
-                "Invalid value passed for %s.", self._value_type.__name__
+                "Invalid value passed for %s.",
+                self.self._metric.value_type.__name__
             )
             return False
         return True
@@ -102,14 +102,12 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
         enabled: bool = True,
     ):
         self.name = name
         self.description = description
         self.unit = unit
         self.value_type = value_type
-        self.meter = meter
         self.enabled = enabled
         self.bound_instruments = {}
         self.bound_instruments_lock = threading.Lock()
@@ -176,7 +174,6 @@ class Observer(metrics_api.Observer):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
         enabled: bool = True,
     ):
         self.callback = callback
@@ -184,7 +181,6 @@ class Observer(metrics_api.Observer):
         self.description = description
         self.unit = unit
         self.value_type = value_type
-        self.meter = meter
         self.enabled = enabled
 
         self.aggregators = {}
@@ -203,9 +199,7 @@ class Observer(metrics_api.Observer):
         key = get_labels_as_key(labels)
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
-            self.aggregators[key] = self.meter.batcher.aggregator_for(
-                self.__class__
-            )
+            self.aggregators[key] = ObserverAggregator()
         aggregator = self.aggregators[key]
         aggregator.update(value)
 
@@ -323,7 +317,6 @@ class Meter(metrics_api.Meter):
             description,
             unit,
             value_type,
-            self,
             enabled=enabled,
         )
         self.metrics.add(metric)
@@ -344,7 +337,6 @@ class Meter(metrics_api.Meter):
             description,
             unit,
             value_type,
-            self,
             enabled,
         )
         with self.observers_lock:
