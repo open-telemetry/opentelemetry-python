@@ -90,20 +90,24 @@ class TestFunctionalPsycopg(unittest.TestCase):
     def test_execute(self):
         """Should create a child span for execute method
         """
-        with self._tracer.start_as_current_span("rootSpan"):
+        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
+            Exception
+        ):
             self._cursor.execute(
                 "CREATE TABLE IF NOT EXISTS test (id integer)"
             )
-        self.validate_spans()
+            self.validate_spans()
 
     def test_executemany(self):
         """Should create a child span for executemany
         """
-        with self._tracer.start_as_current_span("rootSpan"):
+        with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
+            Exception
+        ):
             data = ("1", "2", "3")
             stmt = "INSERT INTO test (id) VALUES (%s)"
             self._cursor.executemany(stmt, data)
-        self.validate_spans()
+            self.validate_spans()
 
     def test_callproc(self):
         """Should create a child span for callproc
