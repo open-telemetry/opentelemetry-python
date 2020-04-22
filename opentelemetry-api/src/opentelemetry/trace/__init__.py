@@ -679,7 +679,7 @@ _TRACER_PROVIDER = None
 def get_tracer(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
-    tracer_provider: TracerProvider = None,
+    tracer_provider: typing.Optional[TracerProvider] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
