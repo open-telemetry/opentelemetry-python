@@ -44,8 +44,9 @@ Usage
 API
 ---
 """
+from opentelemetry import trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.instrumentation.redis.patch import patch, unpatch
+from opentelemetry.instrumentation.redis.patch import _patch, _unpatch
 
 
 class RedisInstrumentor(BaseInstrumentor):
@@ -53,8 +54,12 @@ class RedisInstrumentor(BaseInstrumentor):
     See `BaseInstrumentor`
     """
 
-    def _instrument(self):
-        patch()
+    def _instrument(self, **kwargs):
+        _patch(
+            tracer_provider=kwargs.get(
+                "tracer_provider", trace.get_tracer_provider()
+            )
+        )
 
-    def _uninstrument(self):
-        unpatch()
+    def _uninstrument(self, **kwargs):
+        _unpatch()

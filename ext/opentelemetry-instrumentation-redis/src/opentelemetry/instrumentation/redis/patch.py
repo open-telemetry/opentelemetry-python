@@ -26,22 +26,17 @@ _RAWCMD = "db.statement"
 _CMD = "redis.command"
 
 
-def patch(tracer_provider=None):
+def _patch(tracer_provider=None):
     """Patch the instrumented methods
 
     This duplicated doesn't look nice. The nicer alternative is to use an ObjectProxy on top
     of Redis and StrictRedis. However, it means that any "import redis.Redis" won't be instrumented.
     """
-    if getattr(redis, "_opentelemetry_patch", False):
-        return
-    setattr(redis, "_opentelemetry_patch", True)
-
-    if tracer_provider:
-        setattr(
-            redis,
-            "_opentelemetry_tracer",
-            tracer_provider.get_tracer(_DEFAULT_SERVICE, __version__),
-        )
+    setattr(
+        redis,
+        "_opentelemetry_tracer",
+        tracer_provider.get_tracer(_DEFAULT_SERVICE, __version__),
+    )
 
     if redis.VERSION < (3, 0, 0):
         wrap_function_wrapper(
@@ -75,43 +70,27 @@ def unwrap(obj, attr):
         setattr(obj, attr, func.__wrapped__)
 
 
-def unpatch():
-    if getattr(redis, "_opentelemetry_patch", False):
-        setattr(redis, "_opentelemetry_patch", False)
-        if redis.VERSION < (3, 0, 0):
-            unwrap(redis.StrictRedis, "execute_command")
-            unwrap(redis.StrictRedis, "pipeline")
-            unwrap(redis.Redis, "pipeline")
-            unwrap(
-                redis.client.BasePipeline,  # pylint:disable=no-member
-                "execute",
-            )
-            unwrap(
-                redis.client.BasePipeline,  # pylint:disable=no-member
-                "immediate_execute_command",
-            )
-        else:
-            unwrap(redis.Redis, "execute_command")
-            unwrap(redis.Redis, "pipeline")
-            unwrap(redis.client.Pipeline, "execute")
-            unwrap(redis.client.Pipeline, "immediate_execute_command")
-
-
-def _get_tracer():
-    # NOTE: this code will be safe to remove once the instrumentator changes
-    # to support configuration are merged in. At that point, we can set
-    # the tracer during the initialization as we'll have a tracer_provider
-    # to do so.
-    tracer = getattr(redis, "_opentelemetry_tracer", False)
-    if tracer:
-        return tracer
-    tracer = trace.get_tracer(_DEFAULT_SERVICE, __version__)
-    setattr(redis, "_opentelemetry_tracer", tracer)
-    return tracer
+def _unpatch():
+    if redis.VERSION < (3, 0, 0):
+        unwrap(redis.StrictRedis, "execute_command")
+        unwrap(redis.StrictRedis, "pipeline")
+        unwrap(redis.Redis, "pipeline")
+        unwrap(
+            redis.client.BasePipeline, "execute",  # pylint:disable=no-member
+        )
+        unwrap(
+            redis.client.BasePipeline,  # pylint:disable=no-member
+            "immediate_execute_command",
+        )
+    else:
+        unwrap(redis.Redis, "execute_command")
+        unwrap(redis.Redis, "pipeline")
+        unwrap(redis.client.Pipeline, "execute")
+        unwrap(redis.client.Pipeline, "immediate_execute_command")
 
 
 def traced_execute_command(func, instance, args, kwargs):
-    tracer = _get_tracer()
+    tracer = getattr(redis, "_opentelemetry_tracer")
     query = _format_command_args(args)
     with tracer.start_as_current_span(_CMD) as span:
         span.set_attribute("service", tracer.instrumentation_info.name)
@@ -122,7 +101,7 @@ def traced_execute_command(func, instance, args, kwargs):
 
 
 def traced_execute_pipeline(func, instance, args, kwargs):
-    tracer = _get_tracer()
+    tracer = getattr(redis, "_opentelemetry_tracer")
 
     cmds = [_format_command_args(c) for c, _ in instance.command_stack]
     resource = "\n".join(cmds)

@@ -15,7 +15,7 @@
 import redis
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.redis.patch import patch, unpatch
+from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 
@@ -28,11 +28,11 @@ class TestRedisPatch(TestBase):
         super().setUp()
         self.redis_client = redis.Redis(port=self.TEST_PORT)
         self.redis_client.flushall()
-        patch()
+        RedisInstrumentor().instrument(tracer_provider=self.tracer_provider)
 
     def tearDown(self):
         super().tearDown()
-        unpatch()
+        RedisInstrumentor().uninstrument()
 
     def test_long_command(self):
         self.redis_client.mget(*range(1000))
