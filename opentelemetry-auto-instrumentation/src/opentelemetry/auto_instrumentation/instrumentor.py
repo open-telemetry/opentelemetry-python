@@ -26,22 +26,29 @@ _LOG = getLogger(__name__)
 class BaseInstrumentor(ABC):
     """An ABC for instrumentors"""
 
-    def __init__(self):
-        self._is_instrumented = False
+    _instance = None
+    _is_instrumented = False
+
+    def __new__(cls):
+
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+
+        return cls._instance
 
     @abstractmethod
-    def _instrument(self) -> None:
+    def _instrument(self, **kwargs):
         """Instrument"""
 
     @abstractmethod
-    def _uninstrument(self) -> None:
+    def _uninstrument(self, **kwargs):
         """Uninstrument"""
 
-    def instrument(self) -> None:
+    def instrument(self, **kwargs):
         """Instrument"""
 
         if not self._is_instrumented:
-            result = self._instrument()
+            result = self._instrument(**kwargs)
             self._is_instrumented = True
             return result
 
@@ -49,11 +56,11 @@ class BaseInstrumentor(ABC):
 
         return None
 
-    def uninstrument(self) -> None:
+    def uninstrument(self, **kwargs):
         """Uninstrument"""
 
         if self._is_instrumented:
-            result = self._uninstrument()
+            result = self._uninstrument(**kwargs)
             self._is_instrumented = False
             return result
 
