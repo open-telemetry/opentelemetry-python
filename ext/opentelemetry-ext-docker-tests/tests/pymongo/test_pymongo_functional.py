@@ -70,43 +70,43 @@ class TestFunctionalPymongo(TestBase):
     def test_insert(self):
         """Should create a child span for insert
         """
-        try:
-            with self._tracer.start_as_current_span("rootSpan"):
+        with self._tracer.start_as_current_span("rootSpan"):
+            try:
                 self._collection.insert_one(
                     {"name": "testName", "value": "testValue"}
                 )
-        except Exception as ex:
-            logger.warning("Failed to insert with pymongo. %s", str(ex))
+            except Exception as ex:
+                logger.warning("Failed to insert with pymongo. %s", str(ex))
         self.validate_spans()
 
     def test_update(self):
         """Should create a child span for update
         """
-        try:
-            with self._tracer.start_as_current_span("rootSpan"):
+        with self._tracer.start_as_current_span("rootSpan"):
+            try:
                 self._collection.update_one(
                     {"name": "testName"}, {"$set": {"value": "someOtherValue"}}
                 )
-        except Exception as ex:
-            logger.warning("Failed to update with pymongo. %s", str(ex))
+            except Exception as ex:
+                logger.warning("Failed to update with pymongo. %s", str(ex))
         self.validate_spans()
 
     def test_find(self):
         """Should create a child span for find
         """
-        try:
-            with self._tracer.start_as_current_span("rootSpan"):
+        with self._tracer.start_as_current_span("rootSpan"):
+            try:
                 self._collection.find_one()
-        except Exception as ex:
-            logger.warning("Failed to find with pymongo. %s", str(ex))
+            except Exception as ex:
+                logger.warning("Failed to find with pymongo. %s", str(ex))
         self.validate_spans()
 
     def test_delete(self):
         """Should create a child span for delete
         """
-        try:
-            with self._tracer.start_as_current_span("rootSpan"):
+        with self._tracer.start_as_current_span("rootSpan"):
+            try:
                 self._collection.delete_one({"name": "testName"})
-        except Exception as ex:
-            logger.warning("Failed to delete with pymongo. %s", str(ex))
+            except Exception as ex:
+                logger.warning("Failed to delete with pymongo. %s", str(ex))
         self.validate_spans()
