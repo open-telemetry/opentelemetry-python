@@ -14,7 +14,7 @@
 
 from os import environ
 
-from django import setup
+# from django import setup
 
 from opentelemetry.ext.django import DjangoInstrumentor
 
@@ -22,11 +22,13 @@ _django_instrumentor = DjangoInstrumentor()
 
 
 def pytest_sessionstart(session):  # pylint: disable=unused-argument
-    environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
+    # environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
     environ.setdefault("OPENTELEMETRY_PYTHON_DJANGO_INSTRUMENT", "True")
-    setup()
-    _django_instrumentor.instrument()
+    # setup()
+    # _django_instrumentor.instrument()
+    pass
 
 
 def pytest_sessionfinish(session):  # pylint: disable=unused-argument
-    _django_instrumentor.uninstrument()
+    # _django_instrumentor.uninstrument()
+    pass

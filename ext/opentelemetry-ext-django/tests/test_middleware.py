@@ -12,12 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.test import Client, SimpleTestCase
+from sys import modules
+
+from django.test import Client
+from django.conf import settings
+from django.conf.urls import url
+from django.test.utils import (
+    setup_test_environment, teardown_test_environment
+)
 
 from opentelemetry.test.wsgitestutil import WsgiTestBase
+from opentelemetry.ext.django import DjangoInstrumentor
+
+from .views import error, traced  # pylint: disable=import-error
+
+urlpatterns = [
+    url(r"^traced/", traced),
+    url(r"^error/", error),
+]
+_django_instrumentor = DjangoInstrumentor()
 
 
-class TestDjangoOpenTracingMiddleware(WsgiTestBase, SimpleTestCase):
+# class TestDjangoOpenTracingMiddleware(WsgiTestBase, SimpleTestCase):
+class TestDjangoOpenTracingMiddleware(WsgiTestBase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        settings.configure(ROOT_URLCONF=modules[__name__])
+
+    def setUp(self):
+        super().setUp()
+        setup_test_environment()
+        _django_instrumentor.instrument()
+
+    def tearDown(self):
+        super().tearDown()
+        teardown_test_environment()
+        _django_instrumentor.uninstrument()
+
     def test_middleware_traced(self):
         Client().get("/traced/")
         self.assertEqual(len(self.memory_exporter.get_finished_spans()), 1)
