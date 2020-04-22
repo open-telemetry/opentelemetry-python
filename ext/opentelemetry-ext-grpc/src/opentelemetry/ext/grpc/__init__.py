@@ -32,10 +32,7 @@ def client_interceptor(tracer_provider=None):
     """
     from . import _client
 
-    if tracer_provider is None:
-        tracer_provider = trace.get_tracer_provider()
-
-    tracer = tracer_provider.get_tracer(__name__, __version__)
+    tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
     return _client.OpenTelemetryClientInterceptor(tracer)
 
@@ -51,9 +48,6 @@ def server_interceptor(tracer_provider=None):
     """
     from . import _server
 
-    if tracer_provider is None:
-        tracer_provider = trace.get_tracer_provider()
-
-    tracer = tracer_provider.get_tracer(__name__, __version__)
+    tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
     return _server.OpenTelemetryServerInterceptor(tracer)

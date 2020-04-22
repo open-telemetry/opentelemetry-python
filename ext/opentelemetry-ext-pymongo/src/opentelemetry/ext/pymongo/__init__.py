@@ -29,9 +29,8 @@ Usage
     from opentelemetry.trace.ext.pymongo import trace_integration
 
     trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
 
-    trace_integration(tracer)
+    trace_integration()
     client = MongoClient()
     db = client["MongoDB_Database"]
     collection = db["MongoDB_Collection"]
@@ -44,7 +43,7 @@ API
 from pymongo import monitoring
 
 from opentelemetry.ext.pymongo.version import __version__
-from opentelemetry.trace import SpanKind, get_tracer_provider
+from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 DATABASE_TYPE = "mongodb"
@@ -60,10 +59,7 @@ def trace_integration(tracer_provider=None):
             current configured one is used.
     """
 
-    if tracer_provider is None:
-        tracer_provider = get_tracer_provider()
-
-    tracer = tracer_provider.get_tracer(__name__, __version__)
+    tracer = get_tracer(__name__, __version__, tracer_provider)
 
     monitoring.register(CommandTracer(tracer))
 

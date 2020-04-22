@@ -24,6 +24,7 @@ Usage
     import mysql.connector
     import pyodbc
 
+    from opentelemetry import trace
     from opentelemetry.ext.dbapi import trace_integration
     from opentelemetry.trace import TracerProvider
 
@@ -45,12 +46,7 @@ import typing
 import wrapt
 
 from opentelemetry.ext.dbapi.version import __version__
-from opentelemetry.trace import (
-    SpanKind,
-    Tracer,
-    TracerProvider,
-    get_tracer_provider,
-)
+from opentelemetry.trace import SpanKind, Tracer, TracerProvider, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
@@ -75,10 +71,7 @@ def trace_integration(
             connection_attributes: Attribute names for database, port, host and user in Connection object.
             tracer_provider: The :class:`TracerProvider` to use. If ommited the current configured one is used.
     """
-    if tracer_provider is None:
-        tracer_provider = get_tracer_provider()
-
-    tracer = tracer_provider.get_tracer(__name__, __version__)
+    tracer = get_tracer(__name__, __version__, tracer_provider)
     wrap_connect(
         tracer,
         connect_module,

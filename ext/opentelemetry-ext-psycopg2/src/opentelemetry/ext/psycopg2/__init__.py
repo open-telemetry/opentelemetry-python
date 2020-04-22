@@ -50,7 +50,7 @@ from psycopg2.sql import Composable
 
 from opentelemetry.ext.dbapi import DatabaseApiIntegration, TracedCursor
 from opentelemetry.ext.psycopg2.version import __version__
-from opentelemetry.trace import Tracer, get_tracer_provider
+from opentelemetry.trace import Tracer, get_tracer
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +63,7 @@ def trace_integration(tracer_provider=None):
        Psycopg: http://initd.org/psycopg/
     """
 
-    if tracer_provider is None:
-        tracer_provider = get_tracer_provider()
-
-    tracer = tracer_provider.get_tracer(__name__, __version__)
+    tracer = get_tracer(__name__, __version__, tracer_provider)
 
     connection_attributes = {
         "database": "info.dbname",
