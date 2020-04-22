@@ -93,19 +93,35 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
         request.META[self._environ_token] = token
 
     def process_exception(self, request, exception):
-        request.META.get(self._environ_activation_key).__exit__(
+        # Django can call this method and process_response later. In order
+        # to avoid __exit__ and detach from being called twice then, the
+        # respective keys are being removed here.
+        request.META[self._environ_activation_key].__exit__(
             type(exception),
             exception,
             getattr(exception, "__traceback__", None),
         )
-        detach(request.environ.get(self._environ_token))
+        request.META.pop(self._environ_activation_key)
+
+        detach(request.environ[self._environ_token])
+        request.META.pop(self._environ_token)
 
     def process_response(self, request, response):
-        add_response_attributes(
-            request.META[self._environ_span_key],
-            "{} {}".format(response.status_code, response.reason_phrase),
-            response
-        )
-        request.META[self._environ_activation_key].__exit__(None, None, None)
-        detach(request.environ.get(self._environ_token))
+        if self._environ_activation_key in request.META.keys():
+            add_response_attributes(
+                request.META[self._environ_span_key],
+                "{} {}".format(response.status_code, response.reason_phrase),
+                response
+            )
+            request.META.pop(self._environ_span_key)
+
+            request.META[self._environ_activation_key].__exit__(
+                None, None, None
+            )
+            request.META.pop(self._environ_activation_key)
+
+        if self._environ_token in request.META.keys():
+            detach(request.environ.get(self._environ_token))
+            request.META.pop(self._environ_token)
+
         return response

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from logging import getLogger
-from os import environ
 
 from django import VERSION
 from django.conf import settings
@@ -67,11 +66,6 @@ class DjangoInstrumentor(BaseInstrumentor):
             and Configuration().django_instrument != "True"
         ):
             return
-
-        if "DJANGO_SETTINGS_MODULE" not in environ:
-            raise Exception(
-                "Missing environment variable DJANGO_SETTINGS_MODULE"
-            )
 
         settings_middleware = getattr(settings, self._middleware_setting, [])
         settings_middleware.append(self._opentelemetry_middleware)
