@@ -98,6 +98,10 @@ def unpatch():
 
 
 def _get_tracer():
+    # NOTE: this code will be safe to remove once the instrumentator changes
+    # to support configuration are merged in. At that point, we can set
+    # the tracer during the initialization as we'll have a tracer_provider
+    # to do so.
     tracer = getattr(redis, "_opentelemetry_tracer", False)
     if tracer:
         return tracer
