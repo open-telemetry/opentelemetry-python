@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-from importlib import reload
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.trace import TracerProvider, export
@@ -25,13 +24,14 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.original_provider = trace_api.get_tracer_provider()
         result = cls.create_tracer_provider()
         cls.tracer_provider, cls.memory_exporter = result
         trace_api.set_tracer_provider(cls.tracer_provider)
 
     @classmethod
     def tearDownClass(cls):
-        reload(trace_api)
+        trace_api.set_tracer_provider(cls.original_provider)
 
     def setUp(self):
         self.memory_exporter.clear()

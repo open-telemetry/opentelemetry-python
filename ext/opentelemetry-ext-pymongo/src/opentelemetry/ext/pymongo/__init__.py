@@ -24,6 +24,7 @@ Usage
 .. code:: python
 
     from pymongo import MongoClient
+    from opentelemetry import trace
     from opentelemetry.trace import TracerProvider
     from opentelemetry.trace.ext.pymongo import trace_integration
 

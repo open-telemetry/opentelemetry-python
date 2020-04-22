@@ -24,6 +24,7 @@ Usage
 .. code:: python
 
     import mysql.connector
+    from opentelemetry import trace
     from opentelemetry.trace import TracerProvider
     from opentelemetry.ext.mysql import trace_integration
 
