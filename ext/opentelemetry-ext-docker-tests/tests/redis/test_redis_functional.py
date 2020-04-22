@@ -12,17 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-
 import redis
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.redis.patch import patch, unpatch
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
 from opentelemetry.test.test_base import TestBase
 
 
@@ -32,12 +25,13 @@ class TestRedisPatch(TestBase):
     TEST_PORT = 6379
 
     def setUp(self):
-        patch()
+        super().setUp()
         self.redis_client = redis.Redis(port=self.TEST_PORT)
         self.redis_client.flushall()
-        super().setUp()
+        patch()
 
     def tearDown(self):
+        super().tearDown()
         unpatch()
 
     def test_long_command(self):

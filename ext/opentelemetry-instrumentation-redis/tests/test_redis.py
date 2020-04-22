@@ -35,6 +35,8 @@ class TestRedis(TestBase):
 
         # Test unpatch
         unpatch()
+        # ensure double unpatching doesnt break things
+        unpatch()
 
         with mock.patch.object(redis_client, "connection"):
             redis_client.get("key")
