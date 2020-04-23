@@ -73,9 +73,7 @@ class TestRun(TestCase):
         auto_instrumentation.run()
         self.assertEqual(
             environ["PYTHONPATH"],
-            pathsep.join(
-                [self.auto_instrumentation_path, "abc"]
-            ),
+            pathsep.join([self.auto_instrumentation_path, "abc"]),
         )
 
     @patch.dict(
@@ -91,7 +89,5 @@ class TestRun(TestCase):
         auto_instrumentation.run()
         self.assertEqual(
             environ["PYTHONPATH"],
-            pathsep.join(
-                [self.auto_instrumentation_path, "abc"]
-            ),
+            pathsep.join([self.auto_instrumentation_path, "abc"]),
         )
