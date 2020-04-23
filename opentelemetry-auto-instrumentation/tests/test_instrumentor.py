@@ -76,7 +76,7 @@ class TestRun(TestCase):
             environ["PYTHONPATH"],
             pathsep.join(
                 [self.auto_instrumentation_path, "abc"]
-            )
+            ),
         )
 
     @patch.dict(
@@ -91,7 +91,8 @@ class TestRun(TestCase):
     ):  # pylint: disable=unused-argument
         auto_instrumentation.run()
         self.assertEqual(
-            environ["PYTHONPATH"] == pathsep.join(
+            environ["PYTHONPATH"],
+            pathsep.join(
                 [self.auto_instrumentation_path, "abc"]
-            )
+            ),
         )
