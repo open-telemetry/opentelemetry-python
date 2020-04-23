@@ -91,7 +91,6 @@ class SQLAlchemyTestMixin(TestBase):
 
     def setUp(self):
         super().setUp()
-        self._tracer = self.tracer_provider.get_tracer(__name__)
         # create an engine with the given arguments
         self.engine = _create_engine(self.ENGINE_ARGS)
 
@@ -100,7 +99,7 @@ class SQLAlchemyTestMixin(TestBase):
         Base.metadata.create_all(self.engine, checkfirst=False)
         self.session = sessionmaker(bind=self.engine)()
         # trace the engine
-        trace_engine(self.engine, self._tracer)
+        trace_engine(self.engine, self.tracer_provider)
         self.memory_exporter.clear()
 
     def tearDown(self):

@@ -26,18 +26,18 @@ Usage
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.instrumentation.sqlalchemy.patch import patch
+    from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
     import sqlalchemy
 
     trace.set_tracer_provider(TracerProvider())
-    patch(trace.get_tracer_provider())
+    trace_engine(engine, trace.get_tracer_provider())
 
 API
 ---
 """
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.instrumentation.sqlalchemy.patch import patch, unpatch
+from opentelemetry.instrumentation.sqlalchemy.patch import _patch, _unpatch
 
 
 class SQLAlchemyInstrumentor(BaseInstrumentor):
@@ -45,8 +45,8 @@ class SQLAlchemyInstrumentor(BaseInstrumentor):
     See `BaseInstrumentor`
     """
 
-    def _instrument(self):
-        patch()
+    def _instrument(self, **kwargs):
+        _patch()
 
-    def _uninstrument(self):
-        unpatch()
+    def _uninstrument(self, **kwargs):
+        _unpatch()

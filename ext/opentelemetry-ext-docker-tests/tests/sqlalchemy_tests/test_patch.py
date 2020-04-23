@@ -18,7 +18,7 @@ import unittest
 import sqlalchemy
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.sqlalchemy import patch, unpatch
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 POSTGRES_CONFIG = {
@@ -37,7 +37,7 @@ class SQLAlchemyPatchTestCase(TestBase):
 
     def setUp(self):
         # create a traced engine with the given arguments
-        patch()
+        SQLAlchemyInstrumentor().instrument()
         dsn = (
             "postgresql://%(user)s:%(password)s@%(host)s:%(port)s/%(dbname)s"
             % POSTGRES_CONFIG
@@ -52,7 +52,7 @@ class SQLAlchemyPatchTestCase(TestBase):
         # clear the database and dispose the engine
         self.conn.close()
         self.engine.dispose()
-        unpatch()
+        SQLAlchemyInstrumentor().uninstrument()
 
     def test_engine_traced(self):
         # ensures that the engine is traced

@@ -23,7 +23,14 @@ from opentelemetry.instrumentation.sqlalchemy.engine import trace_engine
 
 class TestSqlalchemyInstrumentation(unittest.TestCase):
     def test_trace_integration(self):
+        tracer_provider = trace_api.get_tracer_provider()
         tracer = trace_api.DefaultTracer()
+
+        get_tracer_patcher = mock.patch.object(
+            tracer_provider, "get_tracer", return_value=tracer,
+        )
+
+        get_tracer_patcher = get_tracer_patcher.start()
 
         span = mock.create_autospec(trace_api.Span, spec_set=True)
         start_span_patcher = mock.patch.object(
@@ -35,7 +42,7 @@ class TestSqlalchemyInstrumentation(unittest.TestCase):
         )
         start_span_patcher = start_span_patcher.start()
         engine = create_engine("sqlite:///:memory:")
-        trace_engine(engine, tracer, "my-database")
+        trace_engine(engine, tracer_provider, "my-database")
         cnx = engine.connect()
         cnx.execute("SELECT	1 + 1;").fetchall()
         self.assertTrue(start_span_patcher.called)

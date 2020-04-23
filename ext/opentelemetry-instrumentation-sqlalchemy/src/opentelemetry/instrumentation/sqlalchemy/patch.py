@@ -29,19 +29,12 @@ def unwrap(obj, attr):
         setattr(obj, attr, func.__wrapped__)
 
 
-def patch():
-    if getattr(sqlalchemy.engine, "__otel_patch", False):
-        return
-    setattr(sqlalchemy.engine, "__otel_patch", True)
-
+def _patch():
     # patch the engine creation function
     _w("sqlalchemy", "create_engine", _wrap_create_engine)
     _w("sqlalchemy.engine", "create_engine", _wrap_create_engine)
 
 
-def unpatch():
-    # unpatch sqlalchemy
-    if getattr(sqlalchemy.engine, "__otel_patch", False):
-        setattr(sqlalchemy.engine, "__otel_patch", False)
-        unwrap(sqlalchemy, "create_engine")
-        unwrap(sqlalchemy.engine, "create_engine")
+def _unpatch():
+    unwrap(sqlalchemy, "create_engine")
+    unwrap(sqlalchemy.engine, "create_engine")
