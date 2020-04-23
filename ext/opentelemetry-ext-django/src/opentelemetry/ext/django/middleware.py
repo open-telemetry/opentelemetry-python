@@ -19,9 +19,9 @@ from django import VERSION
 from opentelemetry.context import attach, detach
 from opentelemetry.ext.django.version import __version__
 from opentelemetry.ext.wsgi import (
+    add_response_attributes,
     collect_request_attributes,
     get_header_from_environ,
-    add_response_attributes,
 )
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
@@ -82,7 +82,7 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
             attributes=attributes,
             start_time=environ.get(
                 "opentelemetry-instrumentor-django.starttime_key"
-            )
+            ),
         )
 
         activation = tracer.use_span(span, end_on_exit=True)
@@ -111,7 +111,7 @@ class OpenTelemetryMiddleware(MiddlewareMixin):
             add_response_attributes(
                 request.META[self._environ_span_key],
                 "{} {}".format(response.status_code, response.reason_phrase),
-                response
+                response,
             )
             request.META.pop(self._environ_span_key)
 

@@ -14,17 +14,15 @@
 
 from sys import modules
 
-from django.test import Client
 from django.conf import settings
 from django.conf.urls import url
-from django.test.utils import (
-    setup_test_environment, teardown_test_environment
-)
+from django.test import Client
+from django.test.utils import setup_test_environment, teardown_test_environment
 
+from opentelemetry.ext.django import DjangoInstrumentor
+from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
-from opentelemetry.test.wsgitestutil import WsgiTestBase
-from opentelemetry.ext.django import DjangoInstrumentor
 
 from .views import error, traced  # pylint: disable=import-error
 
@@ -37,7 +35,6 @@ _django_instrumentor = DjangoInstrumentor()
 
 # class TestDjangoOpenTracingMiddleware(WsgiTestBase, SimpleTestCase):
 class TestDjangoOpenTracingMiddleware(WsgiTestBase):
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -102,12 +99,11 @@ class TestDjangoOpenTracingMiddleware(WsgiTestBase):
 
         self.assertEqual(span.name, "error")
         self.assertEqual(span.kind, SpanKind.SERVER)
-        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
-        self.assertEqual(span.attributes["http.method"], "POST")
         self.assertEqual(
-            span.attributes["http.url"], "http://testserver/traced/"
+            span.status.canonical_code, StatusCanonicalCode.UNKNOWN
+        )
+        self.assertEqual(span.attributes["http.method"], "GET")
+        self.assertEqual(
+            span.attributes["http.url"], "http://testserver/error/"
         )
         self.assertEqual(span.attributes["http.scheme"], "http")
-        self.assertEqual(span.attributes["http.status_code"], 500)
-        # FIXME should the status_text be "OK"
-        self.assertEqual(span.attributes["http.status_text"], "OK")

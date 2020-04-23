@@ -54,7 +54,7 @@ class DjangoInstrumentor(BaseInstrumentor):
             "MIDDLEWARE" if VERSION >= (1, 10, 0) else "MIDDLEWARE_CLASSES"
         )
 
-    def _instrument(self):
+    def _instrument(self, **kwargs):
 
         # FIXME this is probably a pattern that will show up in the rest of the
         # ext. Find a better way of implementing this.
@@ -72,7 +72,7 @@ class DjangoInstrumentor(BaseInstrumentor):
 
         setattr(settings, self._middleware_setting, settings_middleware)
 
-    def _uninstrument(self):
+    def _uninstrument(self, **kwargs):
         settings_middleware = getattr(settings, self._middleware_setting, None)
 
         # FIXME This is starting to smell like trouble. We have 2 mechanisms
