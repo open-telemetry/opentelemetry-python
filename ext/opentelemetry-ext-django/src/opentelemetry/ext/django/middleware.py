@@ -14,7 +14,7 @@
 
 from logging import getLogger
 
-from django import VERSION
+from django.utils.deprecation import MiddlewareMixin
 
 from opentelemetry.context import attach, detach
 from opentelemetry.ext.django.version import __version__
@@ -25,22 +25,6 @@ from opentelemetry.ext.wsgi import (
 )
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
-
-if VERSION >= (1, 10, 0):
-    # Read more about django.utils.deprecation.MiddlewareMixin here:
-    # https://docs.djangoproject.com/en/3.0/topics/http/middleware/#django.utils.deprecation.MiddlewareMixin
-
-    # This mixin provides these methods:
-    # def __init__(self, get_response=None):
-    #     self._get_response = get_reponse
-    # def __call__(self, request):
-    #     self.process_request(request)
-    #     self.get_response(request)
-    #     self.process_response(request, response)
-    #     return response
-    from django.utils.deprecation import MiddlewareMixin
-else:
-    MiddlewareMixin = object
 
 
 _logger = getLogger(__name__)
