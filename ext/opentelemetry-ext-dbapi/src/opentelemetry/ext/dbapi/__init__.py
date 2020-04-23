@@ -125,6 +125,15 @@ def wrap_connect(
         logger.warning("Failed to integrate with DB API. %s", str(ex))
 
 
+def unwrap_connect(
+    connect_module: typing.Callable[..., any], connect_method_name: str,
+):
+    if hasattr(connect_module, connect_method_name):
+        conn = getattr(connect_module, connect_method_name)
+        if isinstance(conn, wrapt.ObjectProxy):
+            setattr(connect_module, connect_method_name, conn.__wrapped__)
+
+
 class DatabaseApiIntegration:
     def __init__(
         self,
@@ -184,7 +193,7 @@ class DatabaseApiIntegration:
             self.name += "." + self.database
         user = self.connection_props.get("user")
         if user is not None:
-            self.span_attributes["db.user"] = user
+            self.span_attributes["db.user"] = str(user)
         host = self.connection_props.get("host")
         if host is not None:
             self.span_attributes["net.peer.name"] = host
