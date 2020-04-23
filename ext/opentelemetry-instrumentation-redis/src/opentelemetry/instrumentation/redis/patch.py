@@ -16,8 +16,6 @@
 import redis
 from wrapt import ObjectProxy, wrap_function_wrapper
 
-from opentelemetry import trace
-
 from .util import _extract_conn_attributes, _format_command_args
 from .version import __version__
 
