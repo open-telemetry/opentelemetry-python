@@ -242,4 +242,4 @@ class TestZipkinSpanExporter(unittest.TestCase):
         spans = []
         exporter = ZipkinSpanExporter("test-service")
         status = exporter.export(spans)
-        self.assertEqual(SpanExportResult.FAILED_NOT_RETRYABLE, status)
+        self.assertEqual(SpanExportResult.FAILURE, status)

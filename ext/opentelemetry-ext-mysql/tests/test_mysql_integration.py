@@ -12,33 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest import mock
 
 import mysql.connector
 
-from opentelemetry import trace as trace_api
-from opentelemetry.ext.mysql import trace_integration
+import opentelemetry.ext.mysql
+from opentelemetry.sdk import resources
+from opentelemetry.test.test_base import TestBase
 
 
-class TestMysqlIntegration(unittest.TestCase):
+class TestMysqlIntegration(TestBase):
     def test_trace_integration(self):
-        tracer = trace_api.DefaultTracer()
-        span = mock.create_autospec(trace_api.Span, spec_set=True)
-        start_current_span_patcher = mock.patch.object(
-            tracer,
-            "start_as_current_span",
-            autospec=True,
-            spec_set=True,
-            return_value=span,
-        )
-        start_as_current_span = start_current_span_patcher.start()
-
         with mock.patch("mysql.connector.connect") as mock_connect:
             mock_connect.get.side_effect = mysql.connector.MySQLConnection()
-            trace_integration(tracer)
+            opentelemetry.ext.mysql.trace_integration()
             cnx = mysql.connector.connect(database="test")
             cursor = cnx.cursor()
             query = "SELECT * FROM test"
             cursor.execute(query)
-            self.assertTrue(start_as_current_span.called)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        # Check version and name in span's instrumentation info
+        self.check_span_instrumentation_info(span, opentelemetry.ext.mysql)
+
+    def test_custom_tracer_provider(self):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+
+        with mock.patch("mysql.connector.connect") as mock_connect:
+            mock_connect.get.side_effect = mysql.connector.MySQLConnection()
+            opentelemetry.ext.mysql.trace_integration(tracer_provider)
+            cnx = mysql.connector.connect(database="test")
+            cursor = cnx.cursor()
+            query = "SELECT * FROM test"
+            cursor.execute(query)
+
+        span_list = exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertIs(span.resource, resource)

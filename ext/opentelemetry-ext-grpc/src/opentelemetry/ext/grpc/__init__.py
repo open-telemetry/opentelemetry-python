@@ -17,8 +17,11 @@
 # pylint:disable=no-name-in-module
 # pylint:disable=relative-beyond-top-level
 
+from opentelemetry import trace
+from opentelemetry.ext.grpc.version import __version__
 
-def client_interceptor(tracer):
+
+def client_interceptor(tracer_provider=None):
     """Create a gRPC client channel interceptor.
 
     Args:
@@ -29,10 +32,12 @@ def client_interceptor(tracer):
     """
     from . import _client
 
+    tracer = trace.get_tracer(__name__, __version__, tracer_provider)
+
     return _client.OpenTelemetryClientInterceptor(tracer)
 
 
-def server_interceptor(tracer):
+def server_interceptor(tracer_provider=None):
     """Create a gRPC server interceptor.
 
     Args:
@@ -42,5 +47,7 @@ def server_interceptor(tracer):
         A service-side interceptor object.
     """
     from . import _server
+
+    tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
     return _server.OpenTelemetryServerInterceptor(tracer)

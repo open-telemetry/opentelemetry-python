@@ -15,9 +15,12 @@
 
 import abc
 import atexit
+import json
 import logging
+import os
 import random
 import threading
+from collections import OrderedDict
 from contextlib import contextmanager
 from types import TracebackType
 from typing import Iterator, MutableSequence, Optional, Sequence, Tuple, Type
@@ -276,19 +279,79 @@ class Span(trace_api.Span):
             type(self).__name__, self.name, self.context
         )
 
-    def __str__(self):
-        return (
-            '{}(name="{}", context={}, kind={}, '
-            "parent={}, start_time={}, end_time={})"
-        ).format(
-            type(self).__name__,
-            self.name,
-            self.context,
-            self.kind,
-            repr(self.parent),
-            util.ns_to_iso_str(self.start_time) if self.start_time else "None",
-            util.ns_to_iso_str(self.end_time) if self.end_time else "None",
-        )
+    @staticmethod
+    def _format_context(context):
+        x_ctx = OrderedDict()
+        x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
+        x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
+        x_ctx["trace_state"] = repr(context.trace_state)
+        return x_ctx
+
+    @staticmethod
+    def _format_attributes(attributes):
+        if isinstance(attributes, BoundedDict):
+            return attributes._dict  # pylint: disable=protected-access
+        return attributes
+
+    @staticmethod
+    def _format_events(events):
+        f_events = []
+        for event in events:
+            f_event = OrderedDict()
+            f_event["name"] = event.name
+            f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
+            f_event["attributes"] = Span._format_attributes(event.attributes)
+            f_events.append(f_event)
+        return f_events
+
+    @staticmethod
+    def _format_links(links):
+        f_links = []
+        for link in links:
+            f_link = OrderedDict()
+            f_link["context"] = Span._format_context(link.context)
+            f_link["attributes"] = Span._format_attributes(link.attributes)
+            f_links.append(f_link)
+        return f_links
+
+    def to_json(self):
+        parent_id = None
+        if self.parent is not None:
+            if isinstance(self.parent, Span):
+                ctx = self.parent.context
+                parent_id = trace_api.format_span_id(ctx.span_id)
+            elif isinstance(self.parent, SpanContext):
+                parent_id = trace_api.format_span_id(self.parent.span_id)
+
+        start_time = None
+        if self.start_time:
+            start_time = util.ns_to_iso_str(self.start_time)
+
+        end_time = None
+        if self.end_time:
+            end_time = util.ns_to_iso_str(self.end_time)
+
+        if self.status is not None:
+            status = OrderedDict()
+            status["canonical_code"] = str(self.status.canonical_code.name)
+            if self.status.description:
+                status["description"] = self.status.description
+
+        f_span = OrderedDict()
+
+        f_span["name"] = self.name
+        f_span["context"] = self._format_context(self.context)
+        f_span["kind"] = str(self.kind)
+        f_span["parent_id"] = parent_id
+        f_span["start_time"] = start_time
+        f_span["end_time"] = end_time
+        if self.status is not None:
+            f_span["status"] = status
+        f_span["attributes"] = self._format_attributes(self.attributes)
+        f_span["events"] = self._format_events(self.events)
+        f_span["links"] = self._format_links(self.links)
+
+        return json.dumps(f_span, indent=4)
 
     def get_context(self):
         return self.context
@@ -605,7 +668,8 @@ class Tracer(trace_api.Tracer):
 
         except Exception as error:  # pylint: disable=broad-except
             if (
-                span.status is None
+                isinstance(span, Span)
+                and span.status is None
                 and span._set_status_on_exception  # pylint:disable=protected-access  # noqa
             ):
                 span.set_status(

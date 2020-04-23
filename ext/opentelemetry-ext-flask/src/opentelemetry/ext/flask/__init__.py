@@ -160,9 +160,9 @@ class FlaskInstrumentor(BaseInstrumentor):
         super().__init__()
         self._original_flask = None
 
-    def _instrument(self):
+    def _instrument(self, **kwargs):
         self._original_flask = flask.Flask
         flask.Flask = _InstrumentedFlask
 
-    def _uninstrument(self):
+    def _uninstrument(self, **kwargs):
         flask.Flask = self._original_flask

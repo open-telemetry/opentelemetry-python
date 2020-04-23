@@ -14,8 +14,8 @@
 
 import unittest
 
-import opentelemetry.sdk.context.propagation.b3_format as b3_format
 import opentelemetry.sdk.trace as trace
+import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.trace.propagation import (
     get_span_from_context,
