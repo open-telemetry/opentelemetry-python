@@ -67,6 +67,12 @@ class DjangoInstrumentor(BaseInstrumentor):
         ):
             return
 
+        # This can not be solved, but is an inherent problem of this approach:
+        # the order of middleware entries matters, and here you have no control
+        # on that:
+        # https://docs.djangoproject.com/en/3.0/topics/http/middleware/#activating-middleware
+        # https://docs.djangoproject.com/en/3.0/ref/middleware/#middleware-ordering
+
         settings_middleware = getattr(settings, self._middleware_setting, [])
         settings_middleware.append(self._opentelemetry_middleware)
 
