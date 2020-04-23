@@ -1,8 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-pymysql/README.rst
-
-
-Module contents
----------------
+OpenTelemetry PyMySQL Integration
+=================================
 
 .. automodule:: opentelemetry.ext.pymysql
     :members:
