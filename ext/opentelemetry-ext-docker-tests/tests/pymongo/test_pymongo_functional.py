@@ -31,7 +31,7 @@ class TestFunctionalPymongo(TestBase):
     def setUpClass(cls):
         super().setUpClass()
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        trace_integration(cls._tracer)
+        trace_integration(cls.tracer_provider)
         client = MongoClient(
             MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000
         )

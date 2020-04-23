@@ -30,7 +30,7 @@ class TestPymongo(TestBase):
             "pymongo.monitoring.register", side_effect=mock_register
         )
         with patch:
-            trace_integration(self.tracer)
+            trace_integration(self.tracer_provider)
 
         self.assertTrue(mock_register.called)
 

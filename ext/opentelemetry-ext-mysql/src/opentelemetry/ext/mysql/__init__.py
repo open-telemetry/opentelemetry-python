@@ -29,9 +29,8 @@ Usage
     from opentelemetry.ext.mysql import trace_integration
 
     trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
 
-    trace_integration(tracer)
+    trace_integration()
     cnx = mysql.connector.connect(database='MySQL_Database')
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)"
@@ -42,23 +41,29 @@ API
 ---
 """
 
+import typing
+
 import mysql.connector
 
-from opentelemetry.ext.dbapi import trace_integration as db_integration
-from opentelemetry.trace import Tracer
+from opentelemetry.ext.dbapi import wrap_connect
+from opentelemetry.ext.mysql.version import __version__
+from opentelemetry.trace import TracerProvider, get_tracer
 
 
-def trace_integration(tracer: Tracer):
+def trace_integration(tracer_provider: typing.Optional[TracerProvider] = None):
     """Integrate with MySQL Connector/Python library.
        https://dev.mysql.com/doc/connector-python/en/
     """
+
+    tracer = get_tracer(__name__, __version__, tracer_provider)
+
     connection_attributes = {
         "database": "database",
         "port": "server_port",
         "host": "server_host",
         "user": "user",
     }
-    db_integration(
+    wrap_connect(
         tracer,
         mysql.connector,
         "connect",
