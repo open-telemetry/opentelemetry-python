@@ -35,7 +35,7 @@ class TestFunctionalMysql(TestBase):
         cls._connection = None
         cls._cursor = None
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        trace_integration(cls._tracer)
+        trace_integration(cls.tracer_provider)
         cls._connection = mysql.connector.connect(
             user=MYSQL_USER,
             password=MYSQL_PASSWORD,

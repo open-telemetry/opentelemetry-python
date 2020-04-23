@@ -677,14 +677,20 @@ _TRACER_PROVIDER = None
 
 
 def get_tracer(
-    instrumenting_module_name: str, instrumenting_library_version: str = ""
+    instrumenting_module_name: str,
+    instrumenting_library_version: str = "",
+    tracer_provider: typing.Optional[TracerProvider] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
     This function is a convenience wrapper for
-    opentelemetry.trace.get_tracer_provider().get_tracer
+    opentelemetry.trace.TracerProvider.get_tracer.
+
+    If tracer_provider is ommited the current configured one is used.
     """
-    return get_tracer_provider().get_tracer(
+    if tracer_provider is None:
+        tracer_provider = get_tracer_provider()
+    return tracer_provider.get_tracer(
         instrumenting_module_name, instrumenting_library_version
     )
 
