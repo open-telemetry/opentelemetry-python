@@ -43,7 +43,7 @@ class TestFunctionalPyMysql(unittest.TestCase):
         cls._span_exporter = InMemorySpanExporter()
         cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
         cls._tracer_provider.add_span_processor(cls._span_processor)
-        trace_integration(cls._tracer)
+        trace_integration(cls._tracer_provider)
         cls._connection = pymy.connect(
             user=MYSQL_USER,
             password=MYSQL_PASSWORD,

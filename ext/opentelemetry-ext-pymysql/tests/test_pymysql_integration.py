@@ -12,34 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest import mock
 
 import pymysql
 
-from opentelemetry import trace as trace_api
+import opentelemetry.ext.pymysql
 from opentelemetry.ext.pymysql import trace_integration
+from opentelemetry.test.test_base import TestBase
 
 
-class TestPyMysqlIntegration(unittest.TestCase):
+class TestPyMysqlIntegration(TestBase):
     def test_trace_integration(self):
-        tracer = trace_api.DefaultTracer()
-        span = mock.create_autospec(trace_api.Span, spec_set=True)
-        start_current_span_patcher = mock.patch.object(
-            tracer,
-            "start_as_current_span",
-            autospec=True,
-            spec_set=True,
-            return_value=span,
-        )
-        start_as_current_span = start_current_span_patcher.start()
-
         with mock.patch("pymysql.connect"):
-            trace_integration(tracer)
+            trace_integration()
             cnx = pymysql.connect(database="test")
             cursor = cnx.cursor()
             query = "SELECT * FROM test"
             cursor.execute(query)
-            self.assertTrue(start_as_current_span.called)
 
-        start_current_span_patcher.stop()
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        # Check version and name in span's instrumentation info
+        self.check_span_instrumentation_info(span, opentelemetry.ext.pymysql)

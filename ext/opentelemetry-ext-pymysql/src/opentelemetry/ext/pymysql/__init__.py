@@ -42,22 +42,28 @@ API
 ---
 """
 
+import typing
+
 import pymysql
 
-from opentelemetry.ext.dbapi import trace_integration as db_integration
-from opentelemetry.trace import Tracer
+from opentelemetry.ext.dbapi import wrap_connect
+from opentelemetry.ext.pymysql.version import __version__
+from opentelemetry.trace import TracerProvider, get_tracer
 
 
-def trace_integration(tracer: Tracer):
+def trace_integration(tracer_provider: typing.Optional[TracerProvider] = None):
     """Integrate with the PyMySQL library.
        https://github.com/PyMySQL/PyMySQL/
     """
+
+    tracer = get_tracer(__name__, __version__, tracer_provider)
+
     connection_attributes = {
         "database": "db",
         "port": "port",
         "host": "host",
         "user": "user",
     }
-    db_integration(
+    wrap_connect(
         tracer, pymysql, "connect", "mysql", "sql", connection_attributes
     )
