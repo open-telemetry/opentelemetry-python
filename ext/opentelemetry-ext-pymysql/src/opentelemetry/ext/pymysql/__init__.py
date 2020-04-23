@@ -31,7 +31,7 @@ Usage
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
     trace_integration(tracer)
-    cnx = pymysql.connect(database='MySQL_Database')
+    cnx = pymysql.connect(database="MySQL_Database")
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)"
     cnx.commit()
