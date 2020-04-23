@@ -13,51 +13,55 @@
 # limitations under the License.
 
 import itertools
+import logging
+import time
 import unittest
 from unittest import mock
 
 from ddtrace.internal.writer import AgentWriter
 
-# pylint:disable=no-name-in-module
-# pylint:disable=import-error
-import opentelemetry.ext.datadog as datadog_exporter
 from opentelemetry import trace as trace_api
+from opentelemetry.ext import datadog
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import export
+
+
+class MockDatadogSpanExporter(datadog.DatadogSpanExporter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        agent_writer_mock = mock.Mock(spec=AgentWriter)
+        agent_writer_mock.started = True
+        agent_writer_mock.exit_timeout = 1
+        self._agent_writer = agent_writer_mock
+
+
+def get_spans(tracer, exporter, shutdown=True):
+    if shutdown:
+        tracer.source.shutdown()
+
+    spans = [
+        call_args[-1]["spans"]
+        for call_args in exporter.agent_writer.write.call_args_list
+    ]
+
+    return [span.to_dict() for span in itertools.chain.from_iterable(spans)]
 
 
 class TestDatadogSpanExporter(unittest.TestCase):
     def setUp(self):
+        self.exporter = MockDatadogSpanExporter()
+        self.span_processor = datadog.DatadogExportSpanProcessor(self.exporter)
         tracer_provider = trace.TracerProvider()
-
-        self.exporter = datadog_exporter.DatadogSpanExporter()
-
-        # just agent is configured now
-        self.agent_writer_mock = mock.Mock(spec=AgentWriter)
-        self.agent_writer_mock.started = True
-        self.agent_writer_mock.exit_timeout = 1
-
-        # pylint: disable=protected-access
-        self.exporter._agent_writer = self.agent_writer_mock
-
-        tracer_provider.add_span_processor(
-            export.SimpleExportSpanProcessor(self.exporter)
-        )
+        tracer_provider.add_span_processor(self.span_processor)
+        self.tracer_provider = tracer_provider
         self.tracer = tracer_provider.get_tracer(__name__)
 
-    def get_spans(self):
-        kwargs_spans = [
-            call_args[-1]["spans"]
-            for call_args in self.agent_writer_mock.write.call_args_list
-        ]
-        return [
-            span.to_dict()
-            for span in itertools.chain.from_iterable(kwargs_spans)
-        ]
+    def tearDown(self):
+        self.tracer_provider.shutdown()
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
-        exporter = datadog_exporter.DatadogSpanExporter()
+        exporter = datadog.DatadogSpanExporter()
 
         self.assertEqual(exporter.agent_url, "http://localhost:8126")
         self.assertTrue(exporter.service is None)
@@ -66,7 +70,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
     def test_constructor_explicit(self):
         """Test the constructor passing all the options."""
         agent_url = "http://localhost:8126"
-        exporter = datadog_exporter.DatadogSpanExporter(
+        exporter = datadog.DatadogSpanExporter(
             agent_url=agent_url, service="explicit"
         )
 
@@ -79,7 +83,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         {"DD_TRACE_AGENT_URL": "http://agent:8126", "DD_SERVICE": "environ"},
     )
     def test_constructor_environ(self):
-        exporter = datadog_exporter.DatadogSpanExporter()
+        exporter = datadog.DatadogSpanExporter()
 
         self.assertEqual(exporter.agent_url, "http://agent:8126")
         self.assertEqual(exporter.service, "environ")
@@ -145,7 +149,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         otel_spans[2].end(end_time=end_times[2])
 
         # pylint: disable=protected-access
-        exporter = datadog_exporter.DatadogSpanExporter()
+        exporter = datadog.DatadogSpanExporter()
         datadog_spans = [
             span.to_dict()
             for span in exporter._translate_to_datadog(otel_spans)
@@ -206,7 +210,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         self.exporter.export((test_span,))
 
-        self.assertEqual(self.agent_writer_mock.write.call_count, 1)
+        self.assertEqual(self.exporter.agent_writer.write.call_count, 1)
 
     def test_resources(self):
         test_attributes = [
@@ -220,7 +224,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
             with self.tracer.start_span(str(index), attributes=test):
                 pass
 
-        datadog_spans = self.get_spans()
+        datadog_spans = get_spans(self.tracer, self.exporter)
 
         self.assertEqual(len(datadog_spans), 4)
 
@@ -241,9 +245,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
             with self.tracer.start_span(str(index), attributes=test):
                 pass
 
-        self.assertEqual(self.agent_writer_mock.write.call_count, 4)
+        datadog_spans = get_spans(self.tracer, self.exporter)
 
-        datadog_spans = self.get_spans()
         self.assertEqual(len(datadog_spans), 4)
 
         actual = [span.get("type") for span in datadog_spans]
@@ -255,9 +258,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
             with self.tracer.start_span("foo"):
                 raise ValueError("bar")
 
-        self.assertEqual(self.agent_writer_mock.write.call_count, 1)
-
-        datadog_spans = self.get_spans()
+        datadog_spans = get_spans(self.tracer, self.exporter)
 
         self.assertEqual(len(datadog_spans), 1)
 
@@ -265,3 +266,105 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.assertEqual(span["error"], 1)
         self.assertEqual(span["meta"]["error.msg"], "bar")
         self.assertEqual(span["meta"]["error.type"], "ValueError")
+
+    def test_shutdown(self):
+        span_names = ["xxx", "bar", "foo"]
+
+        for name in span_names:
+            with self.tracer.start_span(name):
+                pass
+
+        self.span_processor.shutdown()
+
+        # check that spans are exported without an explicitly call to
+        # force_flush()
+        datadog_spans = get_spans(self.tracer, self.exporter)
+        actual = [span.get("name") for span in datadog_spans]
+        self.assertListEqual(span_names, actual)
+
+    def test_flush(self):
+        span_names0 = ["xxx", "bar", "foo"]
+        span_names1 = ["yyy", "baz", "fox"]
+
+        for name in span_names0:
+            with self.tracer.start_span(name):
+                pass
+
+        self.assertTrue(self.span_processor.force_flush())
+        datadog_spans = get_spans(self.tracer, self.exporter, shutdown=False)
+        actual0 = [span.get("name") for span in datadog_spans]
+        self.assertListEqual(span_names0, actual0)
+
+        # create some more spans to check that span processor still works
+        for name in span_names1:
+            with self.tracer.start_span(name):
+                pass
+
+        self.assertTrue(self.span_processor.force_flush())
+        datadog_spans = get_spans(self.tracer, self.exporter)
+        actual1 = [span.get("name") for span in datadog_spans]
+        self.assertListEqual(span_names0 + span_names1, actual1)
+
+    def test_span_processor_lossless(self):
+        """Test that no spans are lost when sending max_trace_size spans"""
+        span_processor = datadog.DatadogExportSpanProcessor(
+            self.exporter, max_trace_size=128
+        )
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(span_processor)
+        tracer = tracer_provider.get_tracer(__name__)
+
+        with tracer.start_as_current_span("root"):
+            for _ in range(127):
+                with tracer.start_span("foo"):
+                    pass
+
+        self.assertTrue(span_processor.force_flush())
+        datadog_spans = get_spans(tracer, self.exporter)
+        self.assertEqual(len(datadog_spans), 128)
+        tracer_provider.shutdown()
+
+    def test_span_processor_dropped_spans(self):
+        """Test that spans are lost when exceeding max_trace_size spans"""
+        span_processor = datadog.DatadogExportSpanProcessor(
+            self.exporter, max_trace_size=128
+        )
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(span_processor)
+        tracer = tracer_provider.get_tracer(__name__)
+
+        with tracer.start_as_current_span("root"):
+            for _ in range(127):
+                with tracer.start_span("foo"):
+                    pass
+            with self.assertLogs(level=logging.WARNING):
+                with tracer.start_span("one-too-many"):
+                    pass
+
+        self.assertTrue(span_processor.force_flush())
+        datadog_spans = get_spans(tracer, self.exporter)
+        self.assertEqual(len(datadog_spans), 128)
+        tracer_provider.shutdown()
+
+    def test_span_processor_scheduled_delay(self):
+        """Test that spans are exported each schedule_delay_millis"""
+        delay = 300
+        span_processor = datadog.DatadogExportSpanProcessor(
+            self.exporter, schedule_delay_millis=delay
+        )
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(span_processor)
+        tracer = tracer_provider.get_tracer(__name__)
+
+        with tracer.start_span("foo"):
+            pass
+
+        time.sleep(delay / (1e3 * 2))
+        datadog_spans = get_spans(tracer, self.exporter, shutdown=False)
+        self.assertEqual(len(datadog_spans), 0)
+
+        time.sleep(delay / (1e3 * 2) + 0.01)
+        datadog_spans = get_spans(tracer, self.exporter, shutdown=False)
+        self.assertEqual(len(datadog_spans), 1)
+
+        tracer_provider.shutdown()
