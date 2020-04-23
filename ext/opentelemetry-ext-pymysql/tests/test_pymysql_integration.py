@@ -17,18 +17,20 @@ from unittest import mock
 import pymysql
 
 import opentelemetry.ext.pymysql
-from opentelemetry.ext.pymysql import trace_integration
+from opentelemetry.ext.pymysql import PymysqlInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 
 class TestPyMysqlIntegration(TestBase):
-    def test_trace_integration(self):
-        with mock.patch("pymysql.connect"):
-            trace_integration()
-            cnx = pymysql.connect(database="test")
-            cursor = cnx.cursor()
-            query = "SELECT * FROM test"
-            cursor.execute(query)
+    @mock.patch("pymysql.connect")
+    # pylint: disable=unused-argument
+    def test_instrumentor(self, mock_connect):
+        PymysqlInstrumentor().instrument()
+
+        cnx = pymysql.connect(database="test")
+        cursor = cnx.cursor()
+        query = "SELECT * FROM test"
+        cursor.execute(query)
 
         spans_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans_list), 1)
@@ -36,3 +38,14 @@ class TestPyMysqlIntegration(TestBase):
 
         # Check version and name in span's instrumentation info
         self.check_span_instrumentation_info(span, opentelemetry.ext.pymysql)
+
+        # check that no spans are generated ater uninstrument
+        PymysqlInstrumentor().uninstrument()
+
+        cnx = pymysql.connect(database="test")
+        cursor = cnx.cursor()
+        query = "SELECT * FROM test"
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)

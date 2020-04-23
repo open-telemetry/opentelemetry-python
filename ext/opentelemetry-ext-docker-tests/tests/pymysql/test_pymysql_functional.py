@@ -17,7 +17,7 @@ import os
 import pymysql as pymy
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymysql import trace_integration
+from opentelemetry.ext.pymysql import PymysqlInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
@@ -34,7 +34,7 @@ class TestFunctionalPyMysql(TestBase):
         cls._connection = None
         cls._cursor = None
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        trace_integration()
+        PymysqlInstrumentor().instrument()
         cls._connection = pymy.connect(
             user=MYSQL_USER,
             password=MYSQL_PASSWORD,
