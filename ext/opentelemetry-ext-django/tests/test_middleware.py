@@ -21,6 +21,8 @@ from django.test.utils import (
     setup_test_environment, teardown_test_environment
 )
 
+from opentelemetry.trace import SpanKind
+from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.ext.django import DjangoInstrumentor
 
@@ -51,11 +53,61 @@ class TestDjangoOpenTracingMiddleware(WsgiTestBase):
         teardown_test_environment()
         _django_instrumentor.uninstrument()
 
-    def test_middleware_traced(self):
+    def test_traced_get(self):
         Client().get("/traced/")
-        self.assertEqual(len(self.memory_exporter.get_finished_spans()), 1)
 
-    def test_middleware_error(self):
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+
+        span = spans[0]
+
+        self.assertEqual(span.name, "traced")
+        self.assertEqual(span.kind, SpanKind.SERVER)
+        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
+        self.assertEqual(span.attributes["http.method"], "GET")
+        self.assertEqual(
+            span.attributes["http.url"], "http://testserver/traced/"
+        )
+        self.assertEqual(span.attributes["http.scheme"], "http")
+        self.assertEqual(span.attributes["http.status_code"], 200)
+        self.assertEqual(span.attributes["http.status_text"], "OK")
+
+    def test_traced_post(self):
+        Client().post("/traced/")
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+
+        span = spans[0]
+
+        self.assertEqual(span.name, "traced")
+        self.assertEqual(span.kind, SpanKind.SERVER)
+        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
+        self.assertEqual(span.attributes["http.method"], "POST")
+        self.assertEqual(
+            span.attributes["http.url"], "http://testserver/traced/"
+        )
+        self.assertEqual(span.attributes["http.scheme"], "http")
+        self.assertEqual(span.attributes["http.status_code"], 200)
+        self.assertEqual(span.attributes["http.status_text"], "OK")
+
+    def test_error(self):
         with self.assertRaises(ValueError):
             Client().get("/error/")
-        self.assertEqual(len(self.memory_exporter.get_finished_spans()), 1)
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+
+        span = spans[0]
+
+        self.assertEqual(span.name, "error")
+        self.assertEqual(span.kind, SpanKind.SERVER)
+        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
+        self.assertEqual(span.attributes["http.method"], "POST")
+        self.assertEqual(
+            span.attributes["http.url"], "http://testserver/traced/"
+        )
+        self.assertEqual(span.attributes["http.scheme"], "http")
+        self.assertEqual(span.attributes["http.status_code"], 500)
+        # FIXME should the status_text be "OK"
+        self.assertEqual(span.attributes["http.status_text"], "OK")
