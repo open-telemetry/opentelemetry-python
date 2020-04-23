@@ -62,7 +62,7 @@ class TestRun(TestCase):
         self, mock_which, mock_execl, mock_argv
     ):  # pylint: disable=unused-argument
         auto_instrumentation.run()
-        assert environ["PYTHONPATH"] == self.auto_instrumentation_path
+        self.assertEqual(environ["PYTHONPATH"], self.auto_instrumentation_path)
 
     @patch.dict("os.environ", {"PYTHONPATH": "abc"})
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.argv")
@@ -72,8 +72,11 @@ class TestRun(TestCase):
         self, mock_which, mock_execl, mock_argv
     ):  # pylint: disable=unused-argument
         auto_instrumentation.run()
-        assert environ["PYTHONPATH"] == pathsep.join(
-            [self.auto_instrumentation_path, "abc"]
+        self.assertEqual(
+            environ["PYTHONPATH"],
+            pathsep.join(
+                [self.auto_instrumentation_path, "abc"]
+            )
         )
 
     @patch.dict(
@@ -87,6 +90,8 @@ class TestRun(TestCase):
         self, mock_which, mock_execl, mock_argv
     ):  # pylint: disable=unused-argument
         auto_instrumentation.run()
-        assert environ["PYTHONPATH"] == pathsep.join(
-            [self.auto_instrumentation_path, "abc"]
+        self.assertEqual(
+            environ["PYTHONPATH"] == pathsep.join(
+                [self.auto_instrumentation_path, "abc"]
+            )
         )
