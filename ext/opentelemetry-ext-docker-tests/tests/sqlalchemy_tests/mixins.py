@@ -19,7 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.sqlalchemy.engine import (
+from opentelemetry.ext.sqlalchemy.engine import (
     _DB,
     _ROWS,
     _STMT,

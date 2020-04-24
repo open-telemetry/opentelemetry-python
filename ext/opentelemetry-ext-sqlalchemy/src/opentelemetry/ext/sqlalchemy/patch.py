@@ -16,7 +16,7 @@ import sqlalchemy
 import wrapt
 from wrapt import wrap_function_wrapper as _w
 
-from opentelemetry.instrumentation.sqlalchemy.engine import _wrap_create_engine
+from opentelemetry.ext.sqlalchemy.engine import _wrap_create_engine
 
 
 def unwrap(obj, attr):

@@ -15,7 +15,7 @@
 from sqlalchemy.event import listen
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.sqlalchemy.version import __version__
+from opentelemetry.ext.sqlalchemy.version import __version__
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 # Network attribute semantic convention here:

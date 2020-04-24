@@ -18,7 +18,7 @@ from unittest import mock
 from sqlalchemy import create_engine
 
 from opentelemetry import trace as trace_api
-from opentelemetry.instrumentation.sqlalchemy.engine import trace_engine
+from opentelemetry.ext.sqlalchemy.engine import trace_engine
 
 
 class TestSqlalchemyInstrumentation(unittest.TestCase):

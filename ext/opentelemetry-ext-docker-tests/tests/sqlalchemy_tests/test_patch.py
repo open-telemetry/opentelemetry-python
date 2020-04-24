@@ -18,7 +18,7 @@ import unittest
 import sqlalchemy
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 POSTGRES_CONFIG = {

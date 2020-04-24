@@ -18,7 +18,7 @@ import pytest
 from sqlalchemy.exc import OperationalError
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.sqlalchemy.engine import _DB, _ROWS, _STMT
+from opentelemetry.ext.sqlalchemy.engine import _DB, _ROWS, _STMT
 
 from .mixins import SQLAlchemyTestMixin
 

@@ -26,7 +26,7 @@ Usage
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+    from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
     import sqlalchemy
 
@@ -37,7 +37,7 @@ API
 ---
 """
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.instrumentation.sqlalchemy.patch import _patch, _unpatch
+from opentelemetry.ext.sqlalchemy.patch import _patch, _unpatch
 
 
 class SQLAlchemyInstrumentor(BaseInstrumentor):
