@@ -19,7 +19,7 @@ from opentelemetry.ext.redis import RedisInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 
-class TestRedisPatch(TestBase):
+class TestRedisInstrument(TestBase):
 
     test_service = "redis"
 

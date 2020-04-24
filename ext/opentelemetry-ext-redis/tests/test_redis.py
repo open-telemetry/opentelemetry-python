@@ -20,7 +20,7 @@ from opentelemetry.test.test_base import TestBase
 
 
 class TestRedis(TestBase):
-    def test_patch_unpatch(self):
+    def test_instrument_uninstrument(self):
         redis_client = redis.Redis()
         RedisInstrumentor().instrument(tracer_provider=self.tracer_provider)
 
@@ -31,7 +31,7 @@ class TestRedis(TestBase):
         self.assertEqual(len(spans), 1)
         self.memory_exporter.clear()
 
-        # Test unpatch
+        # Test uninstrument
         RedisInstrumentor().uninstrument()
 
         with mock.patch.object(redis_client, "connection"):
@@ -41,7 +41,7 @@ class TestRedis(TestBase):
         self.assertEqual(len(spans), 0)
         self.memory_exporter.clear()
 
-        # Test patch again
+        # Test instrument again
         RedisInstrumentor().instrument()
 
         with mock.patch.object(redis_client, "connection"):
