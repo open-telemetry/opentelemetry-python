@@ -19,7 +19,7 @@ import os
 import requests
 
 from opentelemetry import trace
-from opentelemetry.ext import http_requests
+from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
@@ -32,7 +32,7 @@ from opentelemetry.sdk.trace.export import (
 trace.set_tracer_provider(TracerProvider())
 
 # Enable instrumentation in the requests library.
-http_requests.RequestsInstrumentor().instrument()
+RequestsInstrumentor().instrument()
 
 # Configure a console span exporter.
 exporter = ConsoleSpanExporter()
