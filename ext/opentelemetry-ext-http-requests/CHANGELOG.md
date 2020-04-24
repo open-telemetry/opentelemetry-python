@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Implement instrumentor interface ([#597](https://github.com/open-telemetry/opentelemetry-python/pull/597))
+
 ## 0.3a0
 
 Released 2019-10-29
