@@ -62,7 +62,7 @@ def _patch(tracer_provider=None):
         )
 
 
-def unwrap(obj, attr):
+def _unwrap(obj, attr):
     func = getattr(obj, attr, None)
     if isinstance(func, ObjectProxy) and hasattr(func, "__wrapped__"):
         setattr(obj, attr, func.__wrapped__)
@@ -70,21 +70,21 @@ def unwrap(obj, attr):
 
 def _unpatch():
     if redis.VERSION < (3, 0, 0):
-        unwrap(redis.StrictRedis, "execute_command")
-        unwrap(redis.StrictRedis, "pipeline")
-        unwrap(redis.Redis, "pipeline")
-        unwrap(
+        _unwrap(redis.StrictRedis, "execute_command")
+        _unwrap(redis.StrictRedis, "pipeline")
+        _unwrap(redis.Redis, "pipeline")
+        _unwrap(
             redis.client.BasePipeline, "execute",  # pylint:disable=no-member
         )
-        unwrap(
+        _unwrap(
             redis.client.BasePipeline,  # pylint:disable=no-member
             "immediate_execute_command",
         )
     else:
-        unwrap(redis.Redis, "execute_command")
-        unwrap(redis.Redis, "pipeline")
-        unwrap(redis.client.Pipeline, "execute")
-        unwrap(redis.client.Pipeline, "immediate_execute_command")
+        _unwrap(redis.Redis, "execute_command")
+        _unwrap(redis.Redis, "pipeline")
+        _unwrap(redis.client.Pipeline, "execute")
+        _unwrap(redis.client.Pipeline, "immediate_execute_command")
 
 
 def traced_execute_command(func, instance, args, kwargs):

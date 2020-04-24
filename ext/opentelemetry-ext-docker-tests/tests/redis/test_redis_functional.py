@@ -21,12 +21,11 @@ from opentelemetry.test.test_base import TestBase
 
 class TestRedisPatch(TestBase):
 
-    TEST_SERVICE = "redis"
-    TEST_PORT = 6379
+    test_service = "redis"
 
     def setUp(self):
         super().setUp()
-        self.redis_client = redis.Redis(port=self.TEST_PORT)
+        self.redis_client = redis.Redis(port=6379)
         self.redis_client.flushall()
         RedisInstrumentor().instrument(tracer_provider=self.tracer_provider)
 
@@ -40,7 +39,7 @@ class TestRedisPatch(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.TEST_SERVICE)
+        self.assertEqual(span.attributes["service"], self.test_service)
         self.assertEqual(span.name, "redis.command")
         self.assertIs(
             span.status.canonical_code, trace.status.StatusCanonicalCode.OK
@@ -61,7 +60,7 @@ class TestRedisPatch(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.TEST_SERVICE)
+        self.assertEqual(span.attributes["service"], self.test_service)
         self.assertEqual(span.name, "redis.command")
         self.assertIs(
             span.status.canonical_code, trace.status.StatusCanonicalCode.OK
@@ -83,7 +82,7 @@ class TestRedisPatch(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.TEST_SERVICE)
+        self.assertEqual(span.attributes["service"], self.test_service)
         self.assertEqual(span.name, "redis.command")
         self.assertIs(
             span.status.canonical_code, trace.status.StatusCanonicalCode.OK
@@ -109,7 +108,7 @@ class TestRedisPatch(TestBase):
         # single span for the whole pipeline
         self.assertEqual(len(spans), 2)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.TEST_SERVICE)
+        self.assertEqual(span.attributes["service"], self.test_service)
         self.assertEqual(span.name, "redis.command")
         self.assertEqual(span.attributes.get("db.statement"), "SET b 2")
         self.assertIs(
@@ -139,6 +138,6 @@ class TestRedisPatch(TestBase):
         self.assertEqual(parent_span.instrumentation_info.name, "redis_svc")
 
         self.assertEqual(
-            child_span.attributes.get("service"), self.TEST_SERVICE
+            child_span.attributes.get("service"), self.test_service
         )
         self.assertEqual(child_span.name, "redis.command")
