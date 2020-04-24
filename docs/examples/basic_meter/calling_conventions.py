@@ -20,7 +20,7 @@ import time
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import CountAggregation
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.view import View
@@ -50,8 +50,8 @@ clicks_counter = meter.create_metric(
 labels = {"environment": "staging"}
 
 # Views are used to define an aggregation type to use for a specific metric
-counter_view = View(requests_counter, CounterAggregator)
-clicks_view = View(clicks_counter, CounterAggregator)
+counter_view = View(requests_counter, CountAggregation())
+clicks_view = View(clicks_counter, CountAggregation())
 
 # Register the views to the view manager to use the views
 meter.register_view(counter_view)

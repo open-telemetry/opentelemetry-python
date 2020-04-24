@@ -21,14 +21,10 @@ from opentelemetry.sdk.metrics.export.aggregate import Aggregator, ObserverAggre
 from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.view import ViewData, ViewManager
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 logger = logging.getLogger(__name__)
-
-
-def get_labels_as_key(labels: Dict[str, str]) -> Tuple[Tuple[str, str]]:
-    """Gets a list of labels that can be used as a key in a dictionary."""
-    return tuple(sorted(labels.items()))
 
 
 class BaseBoundInstrument:
@@ -63,7 +59,7 @@ class BaseBoundInstrument:
 
     def update(self, value: metrics_api.ValueT):
         # The view manager handles all updates to aggregators
-        self._metric.meter.view_manager.update_view(self._metric, self._labels, value)
+        self._metric.meter.view_manager.record(self._metric, self._labels, value)
 
 class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
     def add(self, value: metrics_api.ValueT) -> None:
@@ -110,12 +106,12 @@ class Metric(metrics_api.Metric):
 
     def bind(self, labels: Dict[str, str]) -> BaseBoundInstrument:
         """See `opentelemetry.metrics.Metric.bind`."""
-        key = get_labels_as_key(labels)
+        key = get_dict_as_key(labels)
         with self.bound_instruments_lock:
             bound_instrument = self.bound_instruments.get(key)
             if bound_instrument is None:
                 bound_instrument = self.BOUND_INSTR_TYPE(
-                    get_labels_as_key(labels),
+                    key,
                     self,
                 )
                 self.bound_instruments[key] = bound_instrument
@@ -192,7 +188,7 @@ class Observer(metrics_api.Observer):
             )
             return
 
-        key = get_labels_as_key(labels)
+        key = get_dict_as_key(labels)
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
             self.aggregators[key] = ObserverAggregator()
@@ -264,14 +260,13 @@ class Meter(metrics_api.Meter):
 
     def _collect_metrics(self) -> None:
         # Iterate through metrics created by this meter that have been recorded
-        for (metric, views) in self.view_manager.views.items():
+        for (metric, view_datas) in self.view_manager.view_datas.items():
             if not metric.enabled:
                 continue
-            for view in views:
-                for view_data in view.get_all_view_data():
-                    record = Record(metric, view_data.labels, view_data.aggregator)
+            for view_data in view_datas:
+                for (labels, aggregator) in view_data.aggregators.items():
+                    record = Record(metric, labels, aggregator)
                     # Checkpoints the current aggregators
-                    # Applies different logic for stateful
                     self.batcher.process(record)
 
     def _collect_observers(self) -> None:

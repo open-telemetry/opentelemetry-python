@@ -27,8 +27,8 @@ import time
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
 from opentelemetry.sdk.metrics.export.aggregate import (
-    CounterAggregator,
-    MinMaxSumCountAggregator
+    CountAggregation,
+    SummaryAggregation
 )
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -62,7 +62,7 @@ print(
 # over the process lifetime. If false, metrics are reset at the beginning of
 # each collection interval.
 metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__, batcher_mode == "stateful")
+meter = metrics.get_meter(__name__, stateful)
 
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
@@ -95,8 +95,8 @@ staging_labels = {"environment": "staging"}
 testing_labels = {"environment": "testing"}
 
 # Views are used to define an aggregation type to use for a specific metric
-counter_view = View(requests_counter, CounterAggregator)
-size_view = View(requests_size, MinMaxSumCountAggregator)
+counter_view = View(requests_counter, CountAggregation())
+size_view = View(requests_size, SummaryAggregation())
 
 # Register the views to the view manager to use the views
 meter.register_view(counter_view)

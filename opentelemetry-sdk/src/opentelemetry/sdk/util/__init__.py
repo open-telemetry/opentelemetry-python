@@ -31,6 +31,11 @@ def ns_to_iso_str(nanoseconds):
     return ts.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
+def get_dict_as_key(labels):
+    """Converts a dict to be used as a unique key"""
+    return tuple(sorted(labels.items()))
+
+
 class BoundedList(Sequence):
     """An append only list with a fixed max size.
 

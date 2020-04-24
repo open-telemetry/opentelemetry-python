@@ -21,6 +21,32 @@ from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 
+
+class Aggregation:
+
+    @abc.abstractmethod
+    def new_aggregator(self, measure=None):
+        """Get a new Aggregator for this aggregation."""
+
+
+class CountAggregation(Aggregation):
+    """Describes that the data collected and aggregated with this method will
+    be turned into a count value
+    """
+    def new_aggregator(self):
+        """Get a new Aggregator for this aggregation."""
+        return CounterAggregator()
+
+
+class SummaryAggregation(Aggregation):
+    """Describes that the data collected and aggregated with this method will
+    be turned into a summary
+    """
+    def new_aggregator(self):
+        """Get a new Aggregator for this aggregation."""
+        return MinMaxSumCountAggregator()
+
+
 class Aggregator(abc.ABC):
     """Base class for aggregators.
 
