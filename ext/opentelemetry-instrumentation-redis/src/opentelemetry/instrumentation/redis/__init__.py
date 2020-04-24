@@ -17,7 +17,7 @@ Instrument `redis`_ to report Redis queries.
 
 There are two options for instrumenting code. The first option is to use
 the `opentelemetry-auto-instrumentation` executable which will automatically
-patch your Redis client. The second is to programmatically enable
+instrument your Redis client. The second is to programmatically enable
 instrumentation via the following code:
 
 .. _redis: https://pypi.org/project/redis/

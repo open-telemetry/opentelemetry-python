@@ -32,7 +32,7 @@ def _extract_conn_attributes(conn_kwargs):
 
 
 def _format_command_args(args):
-    """Format command arguments and trims them as needed"""
+    """Format command arguments and trim them as needed"""
     value_max_len = 100
     value_too_long_mark = "..."
     cmd_max_len = 1000
