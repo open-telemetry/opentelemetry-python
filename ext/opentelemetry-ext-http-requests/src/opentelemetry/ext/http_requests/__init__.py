@@ -50,10 +50,8 @@ from requests.sessions import Session
 from opentelemetry import context, propagators, trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.http_requests.version import __version__
-from opentelemetry.trace import SpanKind, get_tracer_provider
+from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
-
-_tracer = None
 
 
 # pylint: disable=unused-argument
@@ -71,6 +69,8 @@ def _instrument(tracer_provider=None):
 
     wrapped = Session.request
 
+    tracer = trace.get_tracer(__name__, __version__, tracer_provider)
+
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
         if context.get_value("suppress_instrumentation"):
@@ -86,20 +86,8 @@ def _instrument(tracer_provider=None):
             if parsed_url is None:
                 path = "<URL parses to None>"
             path = parsed_url.path
-        # TODO: This is a workaround because currently the _instrument()
-        # method is called by the opentelemetry-auto-instrumentation command
-        # before configuring the SDK. This approach avoid getting a no-op
-        # tracer.
-        # pylint: disable=global-statement
-        global _tracer
-        if _tracer is None:
-            nonlocal tracer_provider
-            if tracer_provider is None:
-                tracer_provider = get_tracer_provider()
 
-            _tracer = tracer_provider.get_tracer(__name__, __version__)
-
-        with _tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
+        with tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", "http")
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
@@ -131,12 +119,9 @@ def _uninstrument():
     """Disables instrumentation of :code:`requests` through this module.
 
     Note that this only works if no other module also patches requests."""
-    global _tracer
-
     if getattr(Session.request, "opentelemetry_ext_requests_applied", False):
         original = Session.request.__wrapped__  # pylint:disable=no-member
         Session.request = original
-        _tracer = None
 
 
 def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
