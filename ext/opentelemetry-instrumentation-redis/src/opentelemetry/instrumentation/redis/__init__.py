@@ -34,7 +34,7 @@ Usage
 
     trace.set_tracer_provider(TracerProvider())
 
-    # You can patch redis specifically
+    # Instrument redis
     RedisInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 
     # This will report a span with the default settings
