@@ -16,17 +16,16 @@
 # pylint:disable=no-self-use
 
 import threading
-import unittest
 from concurrent import futures
-from contextlib import contextmanager
-from unittest import mock
 
 import grpc
 
+import opentelemetry.ext.grpc
 from opentelemetry import trace
 from opentelemetry.ext.grpc import server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
+from opentelemetry.test.test_base import TestBase
 
 
 class UnaryUnaryMethodHandler(grpc.RpcMethodHandler):
@@ -49,18 +48,12 @@ class UnaryUnaryRpcHandler(grpc.GenericRpcHandler):
         return UnaryUnaryMethodHandler(self._unary_unary_handler)
 
 
-class TestOpenTelemetryServerInterceptor(unittest.TestCase):
+class TestOpenTelemetryServerInterceptor(TestBase):
     def test_create_span(self):
         """Check that the interceptor wraps calls with spans server-side."""
 
-        @contextmanager
-        def mock_start_as_current_span(*args, **kwargs):
-            yield mock.Mock(spec=trace.Span)
-
         # Intercept gRPC calls...
-        tracer = mock.Mock(spec=trace.Tracer)
-        tracer.start_as_current_span.side_effect = mock_start_as_current_span
-        interceptor = server_interceptor(tracer)
+        interceptor = server_interceptor()
 
         # No-op RPC handler
         def handler(request, context):
@@ -84,22 +77,28 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
         finally:
             server.stop(None)
 
-        tracer.start_as_current_span.assert_called_once_with(
-            name="", kind=trace.SpanKind.SERVER
-        )
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        self.assertEqual(span.name, "")
+        self.assertIs(span.kind, trace.SpanKind.SERVER)
+
+        # Check version and name in span's instrumentation info
+        self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
 
     def test_span_lifetime(self):
         """Check that the span is active for the duration of the call."""
 
-        tracer_provider = trace_sdk.TracerProvider()
-        tracer = tracer_provider.get_tracer(__name__)
-        interceptor = server_interceptor(tracer)
+        interceptor = server_interceptor()
+        tracer = self.tracer_provider.get_tracer(__name__)
 
         # To capture the current span at the time the handler is called
         active_span_in_handler = None
 
         def handler(request, context):
             nonlocal active_span_in_handler
+            # The current span  is shared among all the tracers.
             active_span_in_handler = tracer.get_current_span()
             return b""
 
@@ -129,10 +128,9 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
     def test_sequential_server_spans(self):
         """Check that sequential RPCs get separate server spans."""
 
-        tracer_provider = trace_sdk.TracerProvider()
-        tracer = tracer_provider.get_tracer(__name__)
+        tracer = self.tracer_provider.get_tracer(__name__)
 
-        interceptor = server_interceptor(tracer)
+        interceptor = server_interceptor()
 
         # Capture the currently active span in each thread
         active_spans_in_handler = []
@@ -177,10 +175,9 @@ class TestOpenTelemetryServerInterceptor(unittest.TestCase):
         context.
         """
 
-        tracer_provider = trace_sdk.TracerProvider()
-        tracer = tracer_provider.get_tracer(__name__)
+        tracer = self.tracer_provider.get_tracer(__name__)
 
-        interceptor = server_interceptor(tracer)
+        interceptor = server_interceptor()
 
         # Capture the currently active span in each thread
         active_spans_in_handler = []

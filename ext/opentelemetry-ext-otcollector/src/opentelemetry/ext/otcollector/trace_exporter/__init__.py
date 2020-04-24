@@ -73,7 +73,7 @@ class CollectorSpanExporter(SpanExporter):
                 pass
 
         except grpc.RpcError:
-            return SpanExportResult.FAILED_NOT_RETRYABLE
+            return SpanExportResult.FAILURE
 
         return SpanExportResult.SUCCESS
 
