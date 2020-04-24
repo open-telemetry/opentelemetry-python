@@ -55,11 +55,7 @@ class RedisInstrumentor(BaseInstrumentor):
     """
 
     def _instrument(self, **kwargs):
-        _patch(
-            tracer_provider=kwargs.get(
-                "tracer_provider", trace.get_tracer_provider()
-            )
-        )
+        _patch(kwargs.get("tracer_provider", trace.get_tracer_provider()))
 
     def _uninstrument(self, **kwargs):
         _unpatch()

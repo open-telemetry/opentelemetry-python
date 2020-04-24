@@ -24,7 +24,7 @@ _RAWCMD = "db.statement"
 _CMD = "redis.command"
 
 
-def _patch(tracer_provider=None):
+def _patch(tracer_provider):
     """Patch the instrumented methods
 
     This duplicated doesn't look nice. The nicer alternative is to use an ObjectProxy on top

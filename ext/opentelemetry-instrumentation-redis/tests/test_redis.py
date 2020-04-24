@@ -22,8 +22,6 @@ from opentelemetry.test.test_base import TestBase
 class TestRedis(TestBase):
     def test_patch_unpatch(self):
         redis_client = redis.Redis()
-        # Test patch idempotence
-        RedisInstrumentor().instrument(tracer_provider=self.tracer_provider)
         RedisInstrumentor().instrument(tracer_provider=self.tracer_provider)
 
         with mock.patch.object(redis_client, "connection"):
@@ -35,8 +33,6 @@ class TestRedis(TestBase):
 
         # Test unpatch
         RedisInstrumentor().uninstrument()
-        # ensure double unpatching doesnt break things
-        RedisInstrumentor().uninstrument()
 
         with mock.patch.object(redis_client, "connection"):
             redis_client.get("key")
@@ -46,7 +42,7 @@ class TestRedis(TestBase):
         self.memory_exporter.clear()
 
         # Test patch again
-        RedisInstrumentor().instrument(tracer_provider=self.tracer_provider)
+        RedisInstrumentor().instrument()
 
         with mock.patch.object(redis_client, "connection"):
             redis_client.get("key")
