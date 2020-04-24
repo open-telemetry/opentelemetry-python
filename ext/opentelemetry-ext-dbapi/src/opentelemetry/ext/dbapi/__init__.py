@@ -103,7 +103,7 @@ def wrap_connect(
     """
 
     # pylint: disable=unused-argument
-    def wrap_connect_(
+    def _wrap_connect(
         wrapped: typing.Callable[..., any],
         instance: typing.Any,
         args: typing.Tuple[any, any],
@@ -119,7 +119,7 @@ def wrap_connect(
 
     try:
         wrapt.wrap_function_wrapper(
-            connect_module, connect_method_name, wrap_connect_
+            connect_module, connect_method_name, _wrap_connect
         )
     except Exception as ex:  # pylint: disable=broad-except
         logger.warning("Failed to integrate with DB API. %s", str(ex))
@@ -128,9 +128,57 @@ def wrap_connect(
 def unwrap_connect(
     connect_module: typing.Callable[..., any], connect_method_name: str,
 ):
+    """Disable integration with DB API library.
+        https://www.python.org/dev/peps/pep-0249/
+
+        Args:
+            connect_module: Module name where connect method is available.
+            connect_method_name: The connect method name.
+    """
     conn = getattr(connect_module, connect_method_name, None)
     if isinstance(conn, wrapt.ObjectProxy):
         setattr(connect_module, connect_method_name, conn.__wrapped__)
+
+
+def instrument_connection(
+    tracer,
+    connection,
+    database_component: str,
+    database_type: str = "",
+    connection_attributes: typing.Dict = None,
+):
+    """Enable instrumentation in a database connection.
+
+        Args:
+            tracer: The :class:`Tracer` to use.
+            connection: The connection to instrument.
+            database_component: Database driver name or database name "JDBI",
+                "jdbc", "odbc", "postgreSQL".
+            database_type: The Database type. For any SQL database, "sql".
+            connection_attributes: Attribute names for database, port, host
+                and user in connection object.
+    """
+    db_integration = DatabaseApiIntegration(
+        tracer,
+        database_component,
+        database_type,
+        connection_attributes=connection_attributes,
+    )
+    db_integration.get_connection_attributes(connection)
+    return TracedConnectionProxy(connection, db_integration)
+
+
+def uninstrument_connection(connection):
+    """Disable instrumentation in a database connection.
+
+        Args:
+            connection: The connection to uninstrument.
+    """
+    if isinstance(connection, wrapt.ObjectProxy):
+        return connection.__wrapped__
+
+    logger.warning("Connection is not instrumented")
+    return connection
 
 
 class DatabaseApiIntegration:
@@ -167,8 +215,7 @@ class DatabaseApiIntegration:
         """
         connection = connect_method(*args, **kwargs)
         self.get_connection_attributes(connection)
-        traced_connection = TracedConnectionProxy(connection, self)
-        return traced_connection
+        return TracedConnectionProxy(connection, self)
 
     def get_connection_attributes(self, connection):
         # Populate span fields using connection
