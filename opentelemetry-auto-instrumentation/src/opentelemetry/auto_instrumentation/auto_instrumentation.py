@@ -35,8 +35,7 @@ def run() -> None:
 
     filedir_path = dirname(abspath(__file__))
 
-    if filedir_path in python_path:
-        python_path.remove(filedir_path)
+    python_path = [path for path in python_path if path != filedir_path]
 
     python_path.insert(0, filedir_path)
 
