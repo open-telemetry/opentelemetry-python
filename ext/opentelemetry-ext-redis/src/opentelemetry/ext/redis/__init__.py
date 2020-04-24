@@ -50,7 +50,6 @@ from wrapt import ObjectProxy, wrap_function_wrapper
 
 from opentelemetry import trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-
 from opentelemetry.ext.redis.util import (
     _extract_conn_attributes,
     _format_command_args,
