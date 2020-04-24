@@ -15,6 +15,11 @@
 import logging
 import threading
 
+from opentelemetry.sdk.metrics.export.aggregate import (
+    CountAggregation,
+    SummaryAggregation
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,8 +47,6 @@ class View:
         if label_keys is None:
             label_keys = []
         self.label_keys = sorted(label_keys)
-        if self.label_keys is None:
-            self.label_keys = []
 
     def new_aggregator(self):
         return self.aggregation.new_aggregator()
@@ -87,9 +90,15 @@ class ViewManager:
                 self.views.get(view.metric).remove(view)
 
     def record(self, metric, labels, value):
+        view_datas = self.view_datas.get(metric)
+        # If no views registered for metric, use default aggregation
+        if view_datas is None:
+            aggregation = CountAggregation() \
+                if metric.__class__.__name__ == "Counter" else SummaryAggregation()
+            view = View(metric, aggregation)
+            self.register_view(view)
         with self._view_lock:
             view_datas = self.view_datas.get(metric, {})
-            # We only update if view was defined for the metric
             for view_data in view_datas:
                 # Record the value with the given labels to the view data
                 view_data.record(value, labels)

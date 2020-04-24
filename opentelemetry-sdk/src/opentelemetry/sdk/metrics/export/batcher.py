@@ -12,16 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Sequence, Type
+from typing import Sequence
 
-from opentelemetry.metrics import Counter, Measure, MetricT, Observer
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics.export.aggregate import (
-    Aggregator,
-    CounterAggregator,
-    MinMaxSumCountAggregator,
-    ObserverAggregator,
-)
 
 
 class Batcher:

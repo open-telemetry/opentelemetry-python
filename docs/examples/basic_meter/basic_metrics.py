@@ -26,13 +26,8 @@ import time
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
-from opentelemetry.sdk.metrics.export.aggregate import (
-    CountAggregation,
-    SummaryAggregation
-)
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
-from opentelemetry.sdk.metrics.view import View
 
 stateful = True
 
@@ -93,14 +88,6 @@ requests_size = meter.create_metric(
 # be used to store custom dimensions pertaining to a metric
 staging_labels = {"environment": "staging"}
 testing_labels = {"environment": "testing"}
-
-# Views are used to define an aggregation type to use for a specific metric
-counter_view = View(requests_counter, CountAggregation())
-size_view = View(requests_size, SummaryAggregation())
-
-# Register the views to the view manager to use the views
-meter.register_view(counter_view)
-meter.register_view(size_view)
 
 # Update the metric instruments using the direct calling convention
 requests_counter.add(25, staging_labels)
