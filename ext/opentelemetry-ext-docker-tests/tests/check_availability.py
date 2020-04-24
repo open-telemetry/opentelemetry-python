@@ -48,10 +48,8 @@ def retryable(func):
         for i in range(RETRY_COUNT):
             try:
                 func()
-                break
+                return
             except Exception as ex:  # pylint: disable=broad-except
-                if i == RETRY_COUNT - 1:
-                    raise ex
                 logger.error(
                     "waiting for %s, retry %d/%d [%s]",
                     func.__name__,
@@ -60,10 +58,12 @@ def retryable(func):
                     ex,
                 )
             time.sleep(RETRY_INTERVAL)
+        raise Exception("waiting for %s failed")
 
     return wrapper
 
 
+@retryable
 def check_pymongo_connection():
     client = pymongo.MongoClient(
         MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000
