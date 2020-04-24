@@ -48,6 +48,7 @@ class TestFunctionalPyMysql(TestBase):
     def tearDownClass(cls):
         if cls._connection:
             cls._connection.close()
+        PyMySQLInstrumentor().uninstrument()
 
     def validate_spans(self):
         spans = self.memory_exporter.get_finished_spans()
