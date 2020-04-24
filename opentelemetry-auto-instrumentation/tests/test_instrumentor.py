@@ -14,12 +14,8 @@
 # type: ignore
 
 from logging import WARNING
-from os import environ
-from os.path import abspath, dirname, pathsep
 from unittest import TestCase
-from unittest.mock import patch
 
-from opentelemetry.auto_instrumentation import auto_instrumentation
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 
 
@@ -49,46 +45,3 @@ class TestInstrumentor(TestCase):
 
     def test_singleton(self):
         self.assertIs(self.Instrumentor(), self.Instrumentor())
-
-
-class TestRun(TestCase):
-    auto_instrumentation_path = dirname(abspath(auto_instrumentation.__file__))
-
-    @patch.dict("os.environ", {"PYTHONPATH": ""})
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.argv")
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
-    def test_run_empty(
-        self, mock_which, mock_execl, mock_argv
-    ):  # pylint: disable=unused-argument
-        auto_instrumentation.run()
-        self.assertEqual(environ["PYTHONPATH"], self.auto_instrumentation_path)
-
-    @patch.dict("os.environ", {"PYTHONPATH": "abc"})
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.argv")
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
-    def test_run_non_empty(
-        self, mock_which, mock_execl, mock_argv
-    ):  # pylint: disable=unused-argument
-        auto_instrumentation.run()
-        self.assertEqual(
-            environ["PYTHONPATH"],
-            pathsep.join([self.auto_instrumentation_path, "abc"]),
-        )
-
-    @patch.dict(
-        "os.environ",
-        {"PYTHONPATH": pathsep.join(["abc", auto_instrumentation_path])},
-    )
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.argv")
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
-    def test_run_after_path(
-        self, mock_which, mock_execl, mock_argv
-    ):  # pylint: disable=unused-argument
-        auto_instrumentation.run()
-        self.assertEqual(
-            environ["PYTHONPATH"],
-            pathsep.join([self.auto_instrumentation_path, "abc"]),
-        )
