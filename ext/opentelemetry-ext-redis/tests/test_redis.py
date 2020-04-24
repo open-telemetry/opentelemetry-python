@@ -15,7 +15,7 @@ from unittest import mock
 
 import redis
 
-from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.ext.redis import RedisInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 

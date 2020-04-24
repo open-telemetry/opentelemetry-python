@@ -1,7 +1,7 @@
 OpenTelemetry Redis Instrumentation
 ===================================
 
-.. automodule:: opentelemetry.instrumentation.redis
+.. automodule:: opentelemetry.ext.redis
     :members:
     :undoc-members:
     :show-inheritance:
