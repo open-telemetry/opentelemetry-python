@@ -30,7 +30,7 @@ def run() -> None:
     if not python_path:
         python_path = []
 
-    if python_path:
+    else:
         python_path = python_path.split(pathsep)
 
     filedir_path = dirname(abspath(__file__))
