@@ -93,7 +93,9 @@ class TestExecl(TestCase):
     )
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
-    def test_execl(self, mock_execl, mock_which):
+    def test_execl(
+        self, mock_execl, mock_which
+    ):  # pylint: disable=no-self-use
         mock_which.configure_mock(**{"return_value": "python"})
 
         auto_instrumentation.run()
