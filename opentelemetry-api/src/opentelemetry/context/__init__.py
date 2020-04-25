@@ -148,4 +148,3 @@ def detach(token: object) -> None:
         _RUNTIME_CONTEXT.detach(token)  # type: ignore
     except Exception:  # pylint: disable=broad-except
         logger.error("Failed to detach context")
-        raise
