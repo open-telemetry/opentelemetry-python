@@ -36,8 +36,22 @@ Usage
 API
 ---
 """
+import sqlalchemy
+import wrapt
+from wrapt import wrap_function_wrapper as _w
+
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.ext.sqlalchemy.patch import _patch, _unpatch
+from opentelemetry.ext.sqlalchemy.engine import _wrap_create_engine
+
+
+def _unwrap(obj, attr):
+    func = getattr(obj, attr, None)
+    if (
+        func
+        and isinstance(func, wrapt.ObjectProxy)
+        and hasattr(func, "__wrapped__")
+    ):
+        setattr(obj, attr, func.__wrapped__)
 
 
 class SQLAlchemyInstrumentor(BaseInstrumentor):
@@ -46,7 +60,9 @@ class SQLAlchemyInstrumentor(BaseInstrumentor):
     """
 
     def _instrument(self, **kwargs):
-        _patch()
+        _w("sqlalchemy", "create_engine", _wrap_create_engine)
+        _w("sqlalchemy.engine", "create_engine", _wrap_create_engine)
 
     def _uninstrument(self, **kwargs):
-        _unpatch()
+        _unwrap(sqlalchemy, "create_engine")
+        _unwrap(sqlalchemy.engine, "create_engine")
