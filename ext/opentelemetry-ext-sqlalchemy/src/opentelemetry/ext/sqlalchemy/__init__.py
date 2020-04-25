@@ -17,7 +17,7 @@ Instrument `sqlalchemy`_ to report SQL queries.
 
 There are two options for instrumenting code. The first option is to use
 the `opentelemetry-auto-instrumentation` executable which will automatically
-patch your SQLAlchemy engine. The second is to programmatically enable
+instrument your SQLAlchemy engine. The second is to programmatically enable
 instrumentation via the following code:
 
 .. _sqlalchemy: https://pypi.org/project/sqlalchemy/

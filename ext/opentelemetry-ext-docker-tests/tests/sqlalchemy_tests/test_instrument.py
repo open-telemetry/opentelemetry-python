@@ -30,9 +30,9 @@ POSTGRES_CONFIG = {
 }
 
 
-class SQLAlchemyPatchTestCase(TestBase):
+class SQLAlchemyInstrumentTestCase(TestBase):
     """TestCase that checks if the engine is properly traced
-    when the `patch()` method is used.
+    when the `instrument()` method is used.
     """
 
     def setUp(self):
