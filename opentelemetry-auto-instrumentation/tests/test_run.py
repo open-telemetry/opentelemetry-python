@@ -89,7 +89,7 @@ class TestRun(TestCase):
 class TestExecl(TestCase):
     @patch(
         "opentelemetry.auto_instrumentation.auto_instrumentation.argv",
-        new=[1, 2, 3]
+        new=[1, 2, 3],
     )
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
     @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
