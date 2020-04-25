@@ -68,7 +68,7 @@ class TestFunctionalPsycopg(TestBase):
         self.assertEqual(root_span.name, "rootSpan")
         self.assertEqual(child_span.name, "postgresql.opentelemetry-tests")
         self.assertIsNotNone(child_span.parent)
-        self.assertEqual(child_span.parent.name, root_span.name)
+        self.assertIs(child_span.parent, root_span.get_context())
         self.assertIs(child_span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(
             child_span.attributes["db.instance"], POSTGRES_DB_NAME
