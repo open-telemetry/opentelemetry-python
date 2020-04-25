@@ -25,7 +25,7 @@ logger = getLogger(__file__)
 
 def run() -> None:
 
-    python_path = environ.get("PYTHONPATH", [])
+    python_path = environ.get("PYTHONPATH")
 
     if not python_path:
         python_path = []
