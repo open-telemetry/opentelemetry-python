@@ -84,3 +84,18 @@ class TestRun(TestCase):
             environ["PYTHONPATH"],
             pathsep.join([self.auto_instrumentation_path, "abc"]),
         )
+
+
+class TestExecl(TestCase):
+    @patch(
+        "opentelemetry.auto_instrumentation.auto_instrumentation.argv",
+        new=[1, 2, 3]
+    )
+    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
+    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
+    def test_execl(self, mock_execl, mock_which):
+        mock_which.configure_mock(**{"return_value": "python"})
+
+        auto_instrumentation.run()
+
+        mock_execl.assert_called_with("python", "python", 3)
