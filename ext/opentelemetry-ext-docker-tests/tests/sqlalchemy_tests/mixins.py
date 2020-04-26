@@ -105,6 +105,15 @@ class SQLAlchemyTestMixin(TestBase):
         self.engine.dispose()
         super().tearDown()
 
+    def _check_span(self, span):
+        self.assertEqual(span.name, "{}.query".format(self.VENDOR))
+        self.assertEqual(span.attributes.get("service"), self.SERVICE)
+        self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
+        self.assertIs(
+            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
+        )
+        self.assertGreater((span.end_time - span.start_time), 0)
+
     def test_orm_insert(self):
         # ensures that the ORM session is traced
         wayne = Player(id=1, name="wayne")
@@ -114,17 +123,10 @@ class SQLAlchemyTestMixin(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        # span fields
-        self.assertEqual(span.name, "{}.query".format(self.VENDOR))
-        self.assertEqual(span.attributes.get("service"), self.SERVICE)
+        self._check_span(span)
         self.assertIn("INSERT INTO players", span.attributes.get(_STMT))
-        self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
         self.assertEqual(span.attributes.get(_ROWS), 1)
         self.check_meta(span)
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
-        self.assertGreater((span.end_time - span.start_time), 0)
 
     def test_session_query(self):
         # ensures that the Session queries are traced
@@ -134,19 +136,12 @@ class SQLAlchemyTestMixin(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        # span fields
-        self.assertEqual(span.name, "{}.query".format(self.VENDOR))
-        self.assertEqual(span.attributes.get("service"), self.SERVICE)
+        self._check_span(span)
         self.assertIn(
             "SELECT players.id AS players_id, players.name AS players_name \nFROM players \nWHERE players.name",
             span.attributes.get(_STMT),
         )
-        self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
         self.check_meta(span)
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
-        self.assertGreater((span.end_time - span.start_time), 0)
 
     def test_engine_connect_execute(self):
         # ensures that engine.connect() is properly traced
@@ -157,16 +152,9 @@ class SQLAlchemyTestMixin(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        # span fields
-        self.assertEqual(span.name, "{}.query".format(self.VENDOR))
-        self.assertEqual(span.attributes.get("service"), self.SERVICE)
+        self._check_span(span)
         self.assertEqual(span.attributes.get(_STMT), "SELECT * FROM players")
-        self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
         self.check_meta(span)
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
-        self.assertGreater((span.end_time - span.start_time), 0)
 
     def test_parent(self):
         """Ensure that sqlalchemy works with opentelemetry."""
@@ -183,7 +171,7 @@ class SQLAlchemyTestMixin(TestBase):
 
         # confirm the parenting
         self.assertIsNone(parent_span.parent)
-        self.assertIs(child_span.parent, parent_span)
+        self.assertIs(child_span.parent, parent_span.get_context())
 
         self.assertEqual(parent_span.name, "sqlalch_op")
         self.assertEqual(parent_span.instrumentation_info.name, "sqlalch_svc")
