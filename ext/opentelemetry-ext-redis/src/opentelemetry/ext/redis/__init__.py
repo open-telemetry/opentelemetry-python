@@ -149,8 +149,8 @@ class RedisInstrumentor(BaseInstrumentor):
             _unwrap(redis.StrictRedis, "pipeline")
             _unwrap(redis.Redis, "pipeline")
             _unwrap(
-                redis.client.BasePipeline,
-                "execute",  # pylint:disable=no-member
+                redis.client.BasePipeline,  # pylint:disable=no-member
+                "execute",
             )
             _unwrap(
                 redis.client.BasePipeline,  # pylint:disable=no-member
