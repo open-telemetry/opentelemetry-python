@@ -33,23 +33,24 @@ class TestRedisInstrument(TestBase):
         super().tearDown()
         RedisInstrumentor().uninstrument()
 
+    def _check_span(self, span):
+        self.assertEqual(span.attributes["service"], self.test_service)
+        self.assertEqual(span.name, "redis.command")
+        self.assertIs(
+            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
+        )
+        self.assertEqual(span.attributes.get("db.instance"), 0)
+        self.assertEqual(
+            span.attributes.get("db.url"), "redis://localhost:6379"
+        )
+
     def test_long_command(self):
         self.redis_client.mget(*range(1000))
 
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.test_service)
-        self.assertEqual(span.name, "redis.command")
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
-
-        self.assertEqual(span.attributes.get("db.instance"), 0)
-        self.assertEqual(
-            span.attributes.get("db.url"), "redis://localhost:6379"
-        )
-
+        self._check_span(span)
         self.assertTrue(
             span.attributes.get("db.statement").startswith("MGET 0 1 2 3")
         )
@@ -60,15 +61,7 @@ class TestRedisInstrument(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.test_service)
-        self.assertEqual(span.name, "redis.command")
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
-        self.assertEqual(span.attributes.get("db.instance"), 0)
-        self.assertEqual(
-            span.attributes.get("db.url"), "redis://localhost:6379"
-        )
+        self._check_span(span)
         self.assertEqual(span.attributes.get("db.statement"), "GET cheese")
         self.assertEqual(span.attributes.get("redis.args_length"), 2)
 
@@ -82,15 +75,7 @@ class TestRedisInstrument(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.test_service)
-        self.assertEqual(span.name, "redis.command")
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
-        self.assertEqual(span.attributes.get("db.instance"), 0)
-        self.assertEqual(
-            span.attributes.get("db.url"), "redis://localhost:6379"
-        )
+        self._check_span(span)
         self.assertEqual(
             span.attributes.get("db.statement"),
             "SET blah 32\nRPUSH foo éé\nHGETALL xxx",
@@ -108,16 +93,8 @@ class TestRedisInstrument(TestBase):
         # single span for the whole pipeline
         self.assertEqual(len(spans), 2)
         span = spans[0]
-        self.assertEqual(span.attributes["service"], self.test_service)
-        self.assertEqual(span.name, "redis.command")
+        self._check_span(span)
         self.assertEqual(span.attributes.get("db.statement"), "SET b 2")
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
-        self.assertEqual(span.attributes.get("db.instance"), 0)
-        self.assertEqual(
-            span.attributes.get("db.url"), "redis://localhost:6379"
-        )
 
     def test_parent(self):
         """Ensure OpenTelemetry works with redis."""
@@ -132,7 +109,7 @@ class TestRedisInstrument(TestBase):
 
         # confirm the parenting
         self.assertIsNone(parent_span.parent)
-        self.assertIs(child_span.parent, parent_span)
+        self.assertIs(child_span.parent, parent_span.get_context())
 
         self.assertEqual(parent_span.name, "redis_get")
         self.assertEqual(parent_span.instrumentation_info.name, "redis_svc")
