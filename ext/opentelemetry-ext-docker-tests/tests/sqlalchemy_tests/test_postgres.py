@@ -20,13 +20,7 @@ import pytest
 from sqlalchemy.exc import ProgrammingError
 
 from opentelemetry import trace
-from opentelemetry.ext.sqlalchemy.engine import (
-    _DB,
-    _HOST,
-    _PORT,
-    _ROWS,
-    _STMT,
-)
+from opentelemetry.ext.sqlalchemy.engine import _DB, _HOST, _PORT, _ROWS, _STMT
 
 from .mixins import SQLAlchemyTestMixin
 

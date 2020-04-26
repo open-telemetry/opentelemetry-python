@@ -19,12 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from opentelemetry import trace
-from opentelemetry.ext.sqlalchemy.engine import (
-    _DB,
-    _ROWS,
-    _STMT,
-    trace_engine,
-)
+from opentelemetry.ext.sqlalchemy.engine import _DB, _ROWS, _STMT, trace_engine
 from opentelemetry.test.test_base import TestBase
 
 Base = declarative_base()
