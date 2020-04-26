@@ -243,7 +243,7 @@ class TestSpanCreation(unittest.TestCase):
             with tracer.start_span(
                 "child", kind=trace_api.SpanKind.CLIENT
             ) as child:
-                self.assertIs(child.parent, root)
+                self.assertIs(child.parent, root.get_context())
                 self.assertEqual(child.kind, trace_api.SpanKind.CLIENT)
 
                 self.assertIsNotNone(child.start_time)
@@ -332,7 +332,7 @@ class TestSpanCreation(unittest.TestCase):
 
             with tracer.start_as_current_span("child") as child:
                 self.assertIs(tracer.get_current_span(), child)
-                self.assertIs(child.parent, root)
+                self.assertIs(child.parent, root.get_context())
 
             # After exiting the child's scope the parent should become the
             # current span again.
