@@ -19,16 +19,18 @@ Some utils used by the redis integration
 
 def _extract_conn_attributes(conn_kwargs):
     """ Transform redis conn info into dict """
+    attributes = {
+        "db.type": "redis",
+        "db.instance": conn_kwargs.get("db", 0),
+    }
     try:
-        return {
-            "db.type": "redis",
-            "db.url": "redis://{}:{}".format(
-                conn_kwargs["host"], conn_kwargs["port"]
-            ),
-            "db.instance": conn_kwargs["db"] or 0,
-        }
+        attributes["db.url"] = "redis://{}:{}".format(
+            conn_kwargs["host"], conn_kwargs["port"]
+        )
     except KeyError:
-        return {}
+        pass  # don't include url attribute
+
+    return attributes
 
 
 def _format_command_args(args):
