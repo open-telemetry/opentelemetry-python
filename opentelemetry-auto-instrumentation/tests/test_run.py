@@ -13,7 +13,7 @@
 # limitations under the License.
 # type: ignore
 
-from os import environ
+from os import environ, getcwd
 from os.path import abspath, dirname, pathsep
 from unittest import TestCase
 from unittest.mock import patch
@@ -49,14 +49,17 @@ class TestRun(TestCase):
     @patch.dict("os.environ", {"PYTHONPATH": ""})
     def test_empty(self):
         auto_instrumentation.run()
-        self.assertEqual(environ["PYTHONPATH"], self.auto_instrumentation_path)
+        self.assertEqual(
+            environ["PYTHONPATH"],
+            pathsep.join([self.auto_instrumentation_path, getcwd()]),
+        )
 
     @patch.dict("os.environ", {"PYTHONPATH": "abc"})
     def test_non_empty(self):
         auto_instrumentation.run()
         self.assertEqual(
             environ["PYTHONPATH"],
-            pathsep.join([self.auto_instrumentation_path, "abc"]),
+            pathsep.join([self.auto_instrumentation_path, getcwd(), "abc"]),
         )
 
     @patch.dict(
@@ -67,7 +70,7 @@ class TestRun(TestCase):
         auto_instrumentation.run()
         self.assertEqual(
             environ["PYTHONPATH"],
-            pathsep.join([self.auto_instrumentation_path, "abc"]),
+            pathsep.join([self.auto_instrumentation_path, getcwd(), "abc"]),
         )
 
     @patch.dict(
@@ -82,7 +85,7 @@ class TestRun(TestCase):
         auto_instrumentation.run()
         self.assertEqual(
             environ["PYTHONPATH"],
-            pathsep.join([self.auto_instrumentation_path, "abc"]),
+            pathsep.join([self.auto_instrumentation_path, getcwd(), "abc"]),
         )
 
 

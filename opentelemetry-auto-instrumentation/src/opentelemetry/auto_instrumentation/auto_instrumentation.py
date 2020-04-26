@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from os import environ, execl
+from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
 from shutil import which
 from sys import argv
@@ -32,6 +32,11 @@ def run() -> None:
 
     else:
         python_path = python_path.split(pathsep)
+
+    cwd_path = getcwd()
+
+    if cwd_path not in python_path:
+        python_path.insert(0, cwd_path)
 
     filedir_path = dirname(abspath(__file__))
 
