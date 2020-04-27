@@ -33,7 +33,7 @@ trace.get_tracer_provider().add_span_processor(
 
 tracer = trace.get_tracer(__name__)
 
-assert len(argv) == 2
+assert len(argv) == 3
 
 with tracer.start_as_current_span("client"):
 
@@ -42,7 +42,7 @@ with tracer.start_as_current_span("client"):
         propagators.inject(dict.__setitem__, headers)
         requested = get(
             "http://localhost:8082/server_request",
-            params={"param": argv[1]},
+            params={"param": argv[2]},
             headers=headers,
         )
 

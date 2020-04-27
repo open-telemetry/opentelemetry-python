@@ -72,10 +72,10 @@ Auto-Instrumention Example
 
 .. code-block:: sh
 
-    python client.py testing
+    opentelemetry-auto-instrumentation client.py testing
 
 * Run client with parameter to raise error
 
 .. code-block:: sh
 
-    python client.py error
+    opentelemetry-auto-instrumentation client.py error
