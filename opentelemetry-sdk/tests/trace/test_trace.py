@@ -882,3 +882,14 @@ class TestSpanProcessor(unittest.TestCase):
         expected_list.append(span_event_end_fmt("SP1", "foo"))
 
         self.assertListEqual(spans_calls_list, expected_list)
+
+    def test_use_span_set_status_on_exception(self):
+        """In the case where tracer sets status on exception,
+        it shouldn't raise another exception instead of the original one.
+        """
+        tracer = new_tracer()
+        invalid_span = None
+        with self.assertRaises(RuntimeError) as cm:
+            with tracer.use_span(invalid_span, False):
+                raise RuntimeError("intended error")
+        self.assertEqual(str(cm.exception), "intended error")

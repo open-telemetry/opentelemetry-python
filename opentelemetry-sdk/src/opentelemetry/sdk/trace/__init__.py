@@ -667,18 +667,24 @@ class Tracer(trace_api.Tracer):
                 context_api.detach(token)
 
         except Exception as error:  # pylint: disable=broad-except
-            if (
-                isinstance(span, Span)
-                and span.status is None
-                and span._set_status_on_exception  # pylint:disable=protected-access  # noqa
-            ):
-                span.set_status(
-                    Status(
-                        canonical_code=StatusCanonicalCode.UNKNOWN,
-                        description="{}: {}".format(
-                            type(error).__name__, error
-                        ),
+            try:
+                if (
+                    isinstance(span, Span)
+                    and span.status is None
+                    and span._set_status_on_exception  # pylint:disable=protected-access  # noqa
+                ):
+                    span.set_status(
+                        Status(
+                            canonical_code=StatusCanonicalCode.UNKNOWN,
+                            description="{}: {}".format(
+                                type(error).__name__, error
+                            ),
+                        )
                     )
+            except Exception as e:
+                logger.error(
+                    "Got another exception while setting status on exception: %s"
+                    % e
                 )
 
             raise
