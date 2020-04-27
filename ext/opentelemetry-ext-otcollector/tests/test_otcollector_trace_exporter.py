@@ -135,7 +135,10 @@ class TestCollectorSpanExporter(unittest.TestCase):
             kind=trace_api.SpanKind.SERVER,
         )
         span_3 = trace.Span(
-            name="test3", context=other_context, links=(link_2,), parent=span_2
+            name="test3",
+            context=other_context,
+            links=(link_2,),
+            parent=span_2.get_context(),
         )
         otel_spans = [span_1, span_2, span_3]
         otel_spans[0].start(start_time=start_times[0])

@@ -198,8 +198,8 @@ class Span(trace_api.Span):
     Args:
         name: The name of the operation this span represents
         context: The immutable span context
-        parent: This span's parent, may be a `SpanContext` if the parent is
-            remote, null if this is a root span
+        parent: This span's parent's `SpanContext`, or
+            null if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
         resource: Entity producing telemetry
@@ -219,7 +219,7 @@ class Span(trace_api.Span):
         self,
         name: str,
         context: trace_api.SpanContext,
-        parent: trace_api.ParentSpan = None,
+        parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
         resource: None = None,
@@ -594,7 +594,7 @@ class Tracer(trace_api.Tracer):
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext
         ):
-            raise TypeError
+            raise TypeError("parent must be a Span, SpanContext or None.")
 
         if parent_context is None or not parent_context.is_valid():
             parent = parent_context = None
@@ -640,7 +640,7 @@ class Tracer(trace_api.Tracer):
             span = Span(
                 name=name,
                 context=context,
-                parent=parent,
+                parent=parent_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=span_attributes,
