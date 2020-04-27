@@ -15,7 +15,7 @@
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymongo import CommandTracer, trace_integration
+from opentelemetry.ext.pymongo import CommandTracer, PymongoInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 
@@ -24,13 +24,13 @@ class TestPymongo(TestBase):
         super().setUp()
         self.tracer = self.tracer_provider.get_tracer(__name__)
 
-    def test_trace_integration(self):
+    def test_pymongo_instrumentor(self):
         mock_register = mock.Mock()
         patch = mock.patch(
             "pymongo.monitoring.register", side_effect=mock_register
         )
         with patch:
-            trace_integration(self.tracer_provider)
+            PymongoInstrumentor().instrument()
 
         self.assertTrue(mock_register.called)
 
@@ -50,7 +50,7 @@ class TestPymongo(TestBase):
         # the memory exporter can't be used here because the span isn't ended
         # yet
         # pylint: disable=protected-access
-        span = command_tracer._get_span(mock_event)
+        span = command_tracer._pop_span(mock_event)
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(span.name, "mongodb.command_name.find")
         self.assertEqual(span.attributes["component"], "mongodb")
