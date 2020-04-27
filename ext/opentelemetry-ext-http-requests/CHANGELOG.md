@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Implement instrumentor interface ([#611](https://github.com/open-telemetry/opentelemetry-python/pull/611))
+- Implement instrumentor interface ([#597](https://github.com/open-telemetry/opentelemetry-python/pull/597))
 
 ## 0.3a0
 
