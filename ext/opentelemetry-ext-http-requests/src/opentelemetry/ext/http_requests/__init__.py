@@ -14,7 +14,7 @@
 
 """
 This library allows tracing HTTP requests made by the
-`requests <https://requests.kennethreitz.org/en/master/>`_ library.
+`requests <https://requests.readthedocs.io/en/master/>`_ library.
 
 Usage
 -----
@@ -23,10 +23,10 @@ Usage
 
     import requests
     import opentelemetry.ext.http_requests
-    from opentelemetry.trace import TracerProvider
 
-    opentelemetry.ext.http_requests.enable(TracerProvider())
-    response = requests.get(url='https://www.example.org/')
+    # You can optionally pass a custom TracerProvider to RequestInstrumentor.instrument()
+    opentelemetry.ext.http_requests.RequestInstrumentor.instrument()
+    response = requests.get(url="https://www.example.org/")
 
 Limitations
 -----------
@@ -47,17 +47,15 @@ from urllib.parse import urlparse
 
 from requests.sessions import Session
 
-from opentelemetry import context, propagators
+from opentelemetry import context, propagators, trace
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.http_requests.version import __version__
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import SpanKind, get_tracer
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
-# NOTE: Currently we force passing a tracer. But in turn, this forces the user
-# to configure a SDK before enabling this integration. In turn, this means that
-# if the SDK/tracer is already using `requests` they may, in theory, bypass our
-# instrumentation when using `import from`, etc. (currently we only instrument
-# a instance method so the probability for that is very low).
-def enable(tracer_provider):
+# pylint: disable=unused-argument
+def _instrument(tracer_provider=None):
     """Enables tracing of all requests calls that go through
       :code:`requests.session.Session.request` (this includes
       :code:`requests.get`, etc.)."""
@@ -69,12 +67,9 @@ def enable(tracer_provider):
     # before v1.0.0, Dec 17, 2012, see
     # https://github.com/psf/requests/commit/4e5c4a6ab7bb0195dececdd19bb8505b872fe120)
 
-    # Guard against double instrumentation
-    disable()
-
-    tracer = tracer_provider.get_tracer(__name__, __version__)
-
     wrapped = Session.request
+
+    tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
@@ -82,7 +77,7 @@ def enable(tracer_provider):
             return wrapped(self, method, url, *args, **kwargs)
 
         # See
-        # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/data-semantic-conventions.md#http-client
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#http-client
         try:
             parsed_url = urlparse(url)
         except ValueError as exc:  # Invalid URL
@@ -103,11 +98,11 @@ def enable(tracer_provider):
 
             span.set_attribute("http.status_code", result.status_code)
             span.set_attribute("http.status_text", result.reason)
+            span.set_status(
+                Status(_http_status_to_canonical_code(result.status_code))
+            )
 
             return result
-
-        # TODO: How to handle exceptions? Should we create events for them? Set
-        # certain attributes?
 
     instrumented_request.opentelemetry_ext_requests_applied = True
 
@@ -119,18 +114,59 @@ def enable(tracer_provider):
     # different, then push the current URL, pop it afterwards)
 
 
-def disable():
+def _uninstrument():
+    # pylint: disable=global-statement
     """Disables instrumentation of :code:`requests` through this module.
 
     Note that this only works if no other module also patches requests."""
-
     if getattr(Session.request, "opentelemetry_ext_requests_applied", False):
         original = Session.request.__wrapped__  # pylint:disable=no-member
         Session.request = original
 
 
-def disable_session(session):
-    """Disables instrumentation on the session object."""
-    if getattr(session.request, "opentelemetry_ext_requests_applied", False):
-        original = session.request.__wrapped__  # pylint:disable=no-member
-        session.request = types.MethodType(original, session)
+def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
+    # pylint:disable=too-many-branches,too-many-return-statements
+    if code < 100:
+        return StatusCanonicalCode.UNKNOWN
+    if code <= 299:
+        return StatusCanonicalCode.OK
+    if code <= 399:
+        if allow_redirect:
+            return StatusCanonicalCode.OK
+        return StatusCanonicalCode.DEADLINE_EXCEEDED
+    if code <= 499:
+        if code == 401:  # HTTPStatus.UNAUTHORIZED:
+            return StatusCanonicalCode.UNAUTHENTICATED
+        if code == 403:  # HTTPStatus.FORBIDDEN:
+            return StatusCanonicalCode.PERMISSION_DENIED
+        if code == 404:  # HTTPStatus.NOT_FOUND:
+            return StatusCanonicalCode.NOT_FOUND
+        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
+            return StatusCanonicalCode.RESOURCE_EXHAUSTED
+        return StatusCanonicalCode.INVALID_ARGUMENT
+    if code <= 599:
+        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
+            return StatusCanonicalCode.UNIMPLEMENTED
+        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
+            return StatusCanonicalCode.UNAVAILABLE
+        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
+            return StatusCanonicalCode.DEADLINE_EXCEEDED
+        return StatusCanonicalCode.INTERNAL
+    return StatusCanonicalCode.UNKNOWN
+
+
+class RequestsInstrumentor(BaseInstrumentor):
+    def _instrument(self, **kwargs):
+        _instrument(tracer_provider=kwargs.get("tracer_provider"))
+
+    def _uninstrument(self, **kwargs):
+        _uninstrument()
+
+    @staticmethod
+    def uninstrument_session(session):
+        """Disables instrumentation on the session object."""
+        if getattr(
+            session.request, "opentelemetry_ext_requests_applied", False
+        ):
+            original = session.request.__wrapped__  # pylint:disable=no-member
+            session.request = types.MethodType(original, session)
