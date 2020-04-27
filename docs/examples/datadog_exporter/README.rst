@@ -1,7 +1,7 @@
 Datadog Exporter Example
 ========================
 
-These examples shows how to use OpenTelemetry to send tracing data to Datadog.
+These examples show how to use OpenTelemetry to send tracing data to Datadog.
 
 
 Basic Example
