@@ -77,7 +77,7 @@ def _instrument(tracer_provider=None):
             return wrapped(self, method, url, *args, **kwargs)
 
         # See
-        # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/data-semantic-conventions.md#http-client
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#http-client
         try:
             parsed_url = urlparse(url)
         except ValueError as exc:  # Invalid URL
