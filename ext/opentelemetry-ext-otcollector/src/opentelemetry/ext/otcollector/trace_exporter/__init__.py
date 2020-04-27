@@ -73,7 +73,7 @@ class CollectorSpanExporter(SpanExporter):
                 pass
 
         except grpc.RpcError:
-            return SpanExportResult.FAILED_NOT_RETRYABLE
+            return SpanExportResult.FAILURE
 
         return SpanExportResult.SUCCESS
 
@@ -109,9 +109,7 @@ def translate_to_collector(spans: Sequence[Span]):
         )
 
         parent_id = 0
-        if isinstance(span.parent, trace_api.Span):
-            parent_id = span.parent.get_context().span_id
-        elif isinstance(span.parent, trace_api.SpanContext):
+        if span.parent is not None:
             parent_id = span.parent.span_id
 
         collector_span.parent_span_id = parent_id.to_bytes(8, "big")
@@ -157,18 +155,7 @@ def translate_to_collector(spans: Sequence[Span]):
                 collector_span_link.type = (
                     trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED
                 )
-
-                if isinstance(span.parent, trace_api.Span):
-                    if (
-                        link.context.span_id
-                        == span.parent.get_context().span_id
-                        and link.context.trace_id
-                        == span.parent.get_context().trace_id
-                    ):
-                        collector_span_link.type = (
-                            trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN
-                        )
-                elif isinstance(span.parent, trace_api.SpanContext):
+                if span.parent is not None:
                     if (
                         link.context.span_id == span.parent.span_id
                         and link.context.trace_id == span.parent.trace_id

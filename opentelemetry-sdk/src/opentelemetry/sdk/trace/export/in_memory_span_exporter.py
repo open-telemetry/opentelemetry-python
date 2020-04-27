@@ -45,7 +45,7 @@ class InMemorySpanExporter(SpanExporter):
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         """Stores a list of spans in memory."""
         if self._stopped:
-            return SpanExportResult.FAILED_NOT_RETRYABLE
+            return SpanExportResult.FAILURE
         with self._lock:
             self._finished_spans.extend(spans)
         return SpanExportResult.SUCCESS
