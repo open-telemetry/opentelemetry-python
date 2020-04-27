@@ -21,6 +21,9 @@ from opentelemetry.configuration import Configuration  # type: ignore
 
 class TestConfiguration(TestCase):
     def setUp(self):
+        # This is added here to force a reload of the whole Configuration
+        # class, resetting its internal attributes so that each tests starts
+        # with a clean class.
         from opentelemetry.configuration import Configuration  # type: ignore
 
     def tearDown(self):
@@ -35,15 +38,25 @@ class TestConfiguration(TestCase):
         {
             "OPENTELEMETRY_PYTHON_METER_PROVIDER": "meter_provider",
             "OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider",
+            "OPENTELEMETRY_PYTHON_OThER": "other",
+            "OPENTELEMETRY_PYTHON_OTHER_7": "other_7",
+            "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },
     )
     def test_environment_variables(self):  # type: ignore
         self.assertEqual(
-            Configuration().meter_provider, "meter_provider"
+            Configuration().METER_PROVIDER, "meter_provider"
         )  # pylint: disable=no-member
         self.assertEqual(
-            Configuration().tracer_provider, "tracer_provider"
+            Configuration().TRACER_PROVIDER, "tracer_provider"
         )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().OThER, "other"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().OTHER_7, "other_7"
+        )  # pylint: disable=no-member
+        self.assertIsNone(Configuration().TRACEX_PROVIDER)
 
     @patch.dict(
         "os.environ",  # type: ignore
@@ -51,11 +64,11 @@ class TestConfiguration(TestCase):
     )
     def test_property(self):
         with self.assertRaises(AttributeError):
-            Configuration().tracer_provider = "new_tracer_provider"
+            Configuration().TRACER_PROVIDER = "new_tracer_provider"
 
     def test_slots(self):
         with self.assertRaises(AttributeError):
-            Configuration().xyz = "xyz"  # pylint: disable=assigning-non-slot
+            Configuration().XYZ = "xyz"  # pylint: disable=assigning-non-slot
 
     def test_getattr(self):
-        Configuration().xyz is None
+        self.assertIsNone(Configuration().XYZ)
