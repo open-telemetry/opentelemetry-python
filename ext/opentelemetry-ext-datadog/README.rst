@@ -6,7 +6,9 @@ OpenTelemetry Datadog Exporter
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-datadog.svg
    :target: https://pypi.org/project/opentelemetry-ext-datadog/
 
-This library allows to export tracing data to `Datadog <https://www.datadoghq.com/>`_.
+This library allows to export tracing data to `Datadog
+<https://www.datadoghq.com/>`_. OpenTelemetry span event and links are not
+supported.
 
 Installation
 ------------

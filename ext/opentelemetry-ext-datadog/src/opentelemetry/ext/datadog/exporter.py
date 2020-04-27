@@ -101,6 +101,8 @@ class DatadogSpanExporter(SpanExporter):
 
             datadog_span.set_tags(span.attributes)
 
+            # span events and span links are not supported
+
             datadog_spans.append(datadog_span)
 
         return datadog_spans
