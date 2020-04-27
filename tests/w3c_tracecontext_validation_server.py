@@ -40,7 +40,7 @@ from opentelemetry.sdk.trace.export import (  # noqa # isort:skip
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
 trace.set_tracer_provider(TracerProvider())
-http_requests.enable(trace.get_tracer_provider())
+http_requests.RequestsInstrumentor().instrument()
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = SimpleExportSpanProcessor(ConsoleSpanExporter())
