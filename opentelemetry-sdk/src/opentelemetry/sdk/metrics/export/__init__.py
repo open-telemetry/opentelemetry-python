@@ -21,8 +21,7 @@ from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 
 class MetricsExportResult(Enum):
     SUCCESS = 0
-    FAILED_RETRYABLE = 1
-    FAILED_NOT_RETRYABLE = 2
+    FAILURE = 1
 
 
 class MetricRecord:

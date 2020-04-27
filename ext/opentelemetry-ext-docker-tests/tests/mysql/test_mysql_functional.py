@@ -14,17 +14,12 @@
 
 import os
 import time
-import unittest
 
 import mysql.connector
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.mysql import trace_integration
-from opentelemetry.sdk.trace import Tracer, TracerProvider
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
+from opentelemetry.test.test_base import TestBase
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD ", "testpassword")
@@ -33,17 +28,14 @@ MYSQL_PORT = int(os.getenv("MYSQL_PORT ", "3306"))
 MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME ", "opentelemetry-tests")
 
 
-class TestFunctionalMysql(unittest.TestCase):
+class TestFunctionalMysql(TestBase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls._connection = None
         cls._cursor = None
-        cls._tracer_provider = TracerProvider()
-        cls._tracer = Tracer(cls._tracer_provider, None)
-        cls._span_exporter = InMemorySpanExporter()
-        cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
-        cls._tracer_provider.add_span_processor(cls._span_processor)
-        trace_integration(cls._tracer)
+        cls._tracer = cls.tracer_provider.get_tracer(__name__)
+        trace_integration(cls.tracer_provider)
         cls._connection = mysql.connector.connect(
             user=MYSQL_USER,
             password=MYSQL_PASSWORD,
@@ -58,11 +50,8 @@ class TestFunctionalMysql(unittest.TestCase):
         if cls._connection:
             cls._connection.close()
 
-    def setUp(self):
-        self._span_exporter.clear()
-
     def validate_spans(self):
-        spans = self._span_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 2)
         for span in spans:
             if span.name == "rootSpan":
@@ -76,7 +65,7 @@ class TestFunctionalMysql(unittest.TestCase):
         self.assertEqual(root_span.name, "rootSpan")
         self.assertEqual(db_span.name, "mysql.opentelemetry-tests")
         self.assertIsNotNone(db_span.parent)
-        self.assertEqual(db_span.parent.name, root_span.name)
+        self.assertIs(db_span.parent, root_span.get_context())
         self.assertIs(db_span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(db_span.attributes["db.instance"], MYSQL_DB_NAME)
         self.assertEqual(db_span.attributes["net.peer.name"], MYSQL_HOST)

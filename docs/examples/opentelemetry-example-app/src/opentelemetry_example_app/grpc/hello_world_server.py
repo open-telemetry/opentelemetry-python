@@ -64,7 +64,6 @@ trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
-tracer = trace.get_tracer(__name__)
 
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
@@ -75,7 +74,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
 def serve():
 
     server = grpc.server(futures.ThreadPoolExecutor())
-    server = intercept_server(server, server_interceptor(tracer))
+    server = intercept_server(server, server_interceptor())
 
     helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port("[::]:50051")
