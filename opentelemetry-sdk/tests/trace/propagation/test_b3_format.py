@@ -258,3 +258,47 @@ class TestB3Format(unittest.TestCase):
         ctx = FORMAT.extract(get_as_list, carrier)
         span_context = get_span_from_context(ctx).get_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+
+    def test_parent_span_context(self):
+        """If a parent is a SpanContext not a Span"""
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+            FORMAT.PARENT_SPAN_ID_KEY: self.serialized_parent_id,
+            FORMAT.SAMPLED_KEY: "1",
+        }
+
+        ctx = FORMAT.extract(get_as_list, old_carrier)
+        parent_context = get_span_from_context(ctx).get_context()
+
+        parent = trace.Span("parent", parent_context)
+        child = trace.Span(
+            "child",
+            trace_api.SpanContext(
+                parent_context.trace_id,
+                trace.generate_span_id(),
+                is_remote=False,
+                trace_flags=parent_context.trace_flags,
+                trace_state=parent_context.trace_state,
+            ),
+            parent=parent.get_context(),
+        )
+
+        new_carrier = {}
+        ctx = set_span_in_context(child)
+        FORMAT.inject(dict.__setitem__, new_carrier, context=ctx)
+
+        self.assertEqual(
+            new_carrier[FORMAT.TRACE_ID_KEY],
+            b3_format.format_trace_id(child.context.trace_id),
+        )
+        self.assertEqual(
+            new_carrier[FORMAT.SPAN_ID_KEY],
+            b3_format.format_span_id(child.context.span_id),
+        )
+        self.assertEqual(
+            new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
+            b3_format.format_span_id(parent.context.span_id),
+        )
+        self.assertTrue(parent.context.is_remote)
+        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
