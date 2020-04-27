@@ -52,50 +52,15 @@ DATABASE_TYPE = "mongodb"
 COMMAND_ATTRIBUTES = ["filter", "sort", "skip", "limit", "pipeline"]
 
 
-class PymongoInstrumentor(BaseInstrumentor):
-    _commandtracer_instance = None
-    # The instrumentation for PyMongo is based on the event listener interface
-    # https://api.mongodb.com/python/current/api/pymongo/monitoring.html.
-    # This interface only allows to register listeners and does not provide
-    # an unregister API. In order to provide a mechanishm to disable
-    # instrumentation an enabled flag is implemented in CommandTracer,
-    # it's checked in the different listeners.
-
-    def _instrument(self, **kwargs):
-        """Integrate with pymongo to trace it using event listener.
-        https://api.mongodb.com/python/current/api/pymongo/monitoring.html
-
-        Args:
-            tracer_provider: The `TracerProvider` to use. If none is passed the
-                current configured one is used.
-        """
-
-        tracer_provider = kwargs.get("tracer_provider")
-
-        # Create and register a CommandTracer only the first time
-        if self._commandtracer_instance is None:
-            tracer = get_tracer(__name__, __version__, tracer_provider)
-
-            self._commandtracer_instance = CommandTracer(tracer)
-            monitoring.register(self._commandtracer_instance)
-
-        # If already created, just enable it
-        self._commandtracer_instance.enable = True
-
-    def _uninstrument(self, **kwargs):
-        if self._commandtracer_instance is not None:
-            self._commandtracer_instance.enable = False
-
-
 class CommandTracer(monitoring.CommandListener):
     def __init__(self, tracer):
         self._tracer = tracer
         self._span_dict = {}
-        self.enable = True
+        self.is_enabled = True
 
     def started(self, event: monitoring.CommandStartedEvent):
         """ Method to handle a pymongo CommandStartedEvent """
-        if not self.enable:
+        if not self.is_enabled:
             return
         command = event.command.get(event.command_name, "")
         name = DATABASE_TYPE + "." + event.command_name
@@ -133,7 +98,7 @@ class CommandTracer(monitoring.CommandListener):
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
         """ Method to handle a pymongo CommandSucceededEvent """
-        if not self.enable:
+        if not self.is_enabled:
             return
         span = self._pop_span(event)
         if span is None:
@@ -144,7 +109,7 @@ class CommandTracer(monitoring.CommandListener):
 
     def failed(self, event: monitoring.CommandFailedEvent):
         """ Method to handle a pymongo CommandFailedEvent """
-        if not self.enable:
+        if not self.is_enabled:
             return
         span = self._pop_span(event)
         if span is None:
@@ -161,3 +126,38 @@ def _get_span_dict_key(event):
     if event.connection_id is not None:
         return (event.request_id, event.connection_id)
     return event.request_id
+
+
+class PymongoInstrumentor(BaseInstrumentor):
+    _commandtracer_instance: CommandTracer = None
+    # The instrumentation for PyMongo is based on the event listener interface
+    # https://api.mongodb.com/python/current/api/pymongo/monitoring.html.
+    # This interface only allows to register listeners and does not provide
+    # an unregister API. In order to provide a mechanishm to disable
+    # instrumentation an enabled flag is implemented in CommandTracer,
+    # it's checked in the different listeners.
+
+    def _instrument(self, **kwargs):
+        """Integrate with pymongo to trace it using event listener.
+        https://api.mongodb.com/python/current/api/pymongo/monitoring.html
+
+        Args:
+            tracer_provider: The `TracerProvider` to use. If none is passed the
+                current configured one is used.
+        """
+
+        tracer_provider = kwargs.get("tracer_provider")
+
+        # Create and register a CommandTracer only the first time
+        if self._commandtracer_instance is None:
+            tracer = get_tracer(__name__, __version__, tracer_provider)
+
+            self._commandtracer_instance = CommandTracer(tracer)
+            monitoring.register(self._commandtracer_instance)
+
+        # If already created, just enable it
+        self._commandtracer_instance.is_enabled = True
+
+    def _uninstrument(self, **kwargs):
+        if self._commandtracer_instance is not None:
+            self._commandtracer_instance.is_enabled = False
