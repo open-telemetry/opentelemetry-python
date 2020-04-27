@@ -129,7 +129,7 @@ def _get_span_dict_key(event):
 
 
 class PymongoInstrumentor(BaseInstrumentor):
-    _commandtracer_instance: CommandTracer = None
+    _commandtracer_instance = None  # type CommandTracer
     # The instrumentation for PyMongo is based on the event listener interface
     # https://api.mongodb.com/python/current/api/pymongo/monitoring.html.
     # This interface only allows to register listeners and does not provide
