@@ -58,7 +58,7 @@ class TestPyMysqlIntegration(TestBase):
 
     @mock.patch("pymysql.connect")
     # pylint: disable=unused-argument
-    def _test_custom_tracer_provider(self, mock_connect):
+    def test_custom_tracer_provider(self, mock_connect):
         resource = resources.Resource.create({})
         result = self.create_tracer_provider(resource=resource)
         tracer_provider, exporter = result
