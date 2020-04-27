@@ -64,8 +64,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
         exporter = datadog.DatadogSpanExporter()
 
         self.assertEqual(exporter.agent_url, "http://localhost:8126")
-        self.assertTrue(exporter.service is None)
-        self.assertTrue(exporter.agent_writer is not None)
+        self.assertIsNone(exporter.service)
+        self.assertIsNotNone(exporter.agent_writer)
 
     def test_constructor_explicit(self):
         """Test the constructor passing all the options."""
@@ -76,7 +76,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         self.assertEqual(exporter.agent_url, agent_url)
         self.assertEqual(exporter.service, "explicit")
-        self.assertTrue(exporter.agent_writer is not None)
+        self.assertIsNotNone(exporter.agent_writer)
 
     @mock.patch.dict(
         "os.environ",
@@ -87,7 +87,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         self.assertEqual(exporter.agent_url, "http://agent:8126")
         self.assertEqual(exporter.service, "environ")
-        self.assertTrue(exporter.agent_writer is not None)
+        self.assertIsNotNone(exporter.agent_writer)
 
     # pylint: disable=too-many-locals
     @mock.patch.dict("os.environ", {"DD_SERVICE": "test-service"})
