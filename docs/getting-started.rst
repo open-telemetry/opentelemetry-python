@@ -202,7 +202,7 @@ And let's write a small Flask application that sends an HTTP request, activating
     )
 
     app = flask.Flask(__name__)
-    opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
+    opentelemetry.ext.http_requests.RequestsInstrumentor().instrument()
 
     @app.route("/")
     def hello():
