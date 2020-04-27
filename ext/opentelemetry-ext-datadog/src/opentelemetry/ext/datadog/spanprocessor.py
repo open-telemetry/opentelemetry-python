@@ -97,8 +97,8 @@ class DatadogExportSpanProcessor(SpanProcessor):
 
         with self.traces_spans_lock:
             self.traces_spans_ended_count[trace_id] += 1
-
-        self.check_traces_queue.appendleft(trace_id)
+            if self.is_trace_exportable(trace_id):
+                self.check_traces_queue.appendleft(trace_id)
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
@@ -152,6 +152,9 @@ class DatadogExportSpanProcessor(SpanProcessor):
                 notify_flush = True
             else:
                 with self.traces_spans_lock:
+                    # check whether trace is exportable again in case that new
+                    # spans were started since we last concluded trace was
+                    # exportable
                     if self.is_trace_exportable(trace_id):
                         export_traces.append(trace_id)
                         self.clear_counts(trace_id)
