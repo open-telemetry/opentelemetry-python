@@ -26,7 +26,6 @@ from opentelemetry.ext.wsgi import (
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
 
-
 _logger = getLogger(__name__)
 
 
