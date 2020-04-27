@@ -23,4 +23,8 @@ services:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpassword
       POSTGRES_DB: opentelemetry-tests
+  otredis:
+      image: redis:4.0-alpine
+      ports:
+          - "127.0.0.1:6379:6379"
 
