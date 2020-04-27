@@ -18,10 +18,19 @@ import pymysql
 
 import opentelemetry.ext.pymysql
 from opentelemetry.ext.pymysql import PymysqlInstrumentor
+from opentelemetry.sdk import resources
 from opentelemetry.test.test_base import TestBase
 
 
 class TestPyMysqlIntegration(TestBase):
+    def setUp(self):
+        super().setUp()
+        PymysqlInstrumentor().instrument
+
+    def tearDown(self):
+        super().tearDown()
+        PymysqlInstrumentor().uninstrument()
+
     @mock.patch("pymysql.connect")
     # pylint: disable=unused-argument
     def test_instrumentor(self, mock_connect):
@@ -49,3 +58,23 @@ class TestPyMysqlIntegration(TestBase):
 
         spans_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans_list), 1)
+
+    @mock.patch("pymysql.connect")
+    # pylint: disable=unused-argument
+    def test_custom_tracer_provider(self, mock_connect):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+
+        PymysqlInstrumentor().instrument(tracer_provider=tracer_provider)
+
+        cnx = pymysql.connect(database="test")
+        cursor = cnx.cursor()
+        query = "SELECT * FROM test"
+        cursor.execute(query)
+
+        spans_list = exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        self.assertIs(span.resource, resource)
