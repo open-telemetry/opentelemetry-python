@@ -25,6 +25,8 @@ Usage
 -----
 .. code:: python
 
+    from sqlalchemy import create_engine
+
     from opentelemetry import trace
     from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
