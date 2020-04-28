@@ -134,18 +134,11 @@ class B3Format(HTTPTextFormat):
             carrier, self.SPAN_ID_KEY, format_span_id(span.context.span_id)
         )
         if span.parent is not None:
-            if isinstance(span.parent, trace.SpanContext):
-                set_in_carrier(
-                    carrier,
-                    self.PARENT_SPAN_ID_KEY,
-                    format_span_id(span.parent.span_id),
-                )
-            else:
-                set_in_carrier(
-                    carrier,
-                    self.PARENT_SPAN_ID_KEY,
-                    format_span_id(span.parent.context.span_id),
-                )
+            set_in_carrier(
+                carrier,
+                self.PARENT_SPAN_ID_KEY,
+                format_span_id(span.parent.span_id),
+            )
         set_in_carrier(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
 
