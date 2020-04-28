@@ -128,10 +128,9 @@ def wrap_connect(
 def unwrap_connect(
     connect_module: typing.Callable[..., any], connect_method_name: str,
 ):
-    if hasattr(connect_module, connect_method_name):
-        conn = getattr(connect_module, connect_method_name)
-        if isinstance(conn, wrapt.ObjectProxy):
-            setattr(connect_module, connect_method_name, conn.__wrapped__)
+    conn = getattr(connect_module, connect_method_name, None)
+    if isinstance(conn, wrapt.ObjectProxy):
+        setattr(connect_module, connect_method_name, conn.__wrapped__)
 
 
 class DatabaseApiIntegration:
