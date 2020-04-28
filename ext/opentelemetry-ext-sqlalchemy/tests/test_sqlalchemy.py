@@ -14,14 +14,18 @@
 
 from sqlalchemy import create_engine
 
-from opentelemetry.ext.sqlalchemy.engine import trace_engine
+from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 
 class TestSqlalchemyInstrumentation(TestBase):
     def test_trace_integration(self):
         engine = create_engine("sqlite:///:memory:")
-        trace_engine(engine, self.tracer_provider, "my-database")
+        SQLAlchemyInstrumentor().instrument(
+            engine=engine,
+            tracer_provider=self.tracer_provider,
+            service="my-database",
+        )
         cnx = engine.connect()
         cnx.execute("SELECT	1 + 1;").fetchall()
         spans = self.memory_exporter.get_finished_spans()

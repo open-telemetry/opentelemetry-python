@@ -31,7 +31,7 @@ _URL = "db.url"
 
 
 def _normalize_vendor(vendor):
-    """ Return a canonical name for a type of database. """
+    """Return a canonical name for a type of database."""
     if not vendor:
         return "db"  # should this ever happen?
 
@@ -55,18 +55,6 @@ def _get_tracer(engine, tracer_provider=None):
     )
     setattr(engine, "_opentelemetry_tracer", tracer)
     return tracer
-
-
-def trace_engine(engine, tracer_provider=None, service=None):
-    """
-    Add tracing instrumentation to the given sqlalchemy engine or instance.
-
-    Args:
-        engine: a SQLAlchemy engine class or instance
-        tracer_provider: a tracer_provider instance. defaults to global
-        service: the name of the service to trace.
-    """
-    EngineTracer(_get_tracer(engine, tracer_provider), service, engine)
 
 
 # pylint: disable=unused-argument
@@ -134,7 +122,7 @@ class EngineTracer:
 
 
 def _set_attributes_from_url(span: trace.Span, url):
-    """ set connection tags from the url. return true if successful. """
+    """Set connection tags from the url. return true if successful."""
     if url.host:
         span.set_attribute(_HOST, url.host)
     if url.port:

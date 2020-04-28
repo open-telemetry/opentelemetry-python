@@ -19,7 +19,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from opentelemetry import trace
-from opentelemetry.ext.sqlalchemy.engine import _DB, _ROWS, _STMT, trace_engine
+from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.ext.sqlalchemy.engine import _DB, _ROWS, _STMT
 from opentelemetry.test.test_base import TestBase
 
 Base = declarative_base()
@@ -94,7 +95,9 @@ class SQLAlchemyTestMixin(TestBase):
         Base.metadata.create_all(self.engine, checkfirst=False)
         self.session = sessionmaker(bind=self.engine)()
         # trace the engine
-        trace_engine(self.engine, self.tracer_provider)
+        SQLAlchemyInstrumentor().instrument(
+            engine=self.engine, tracer_provider=self.tracer_provider
+        )
         self.memory_exporter.clear()
 
     def tearDown(self):
@@ -103,6 +106,7 @@ class SQLAlchemyTestMixin(TestBase):
         self.session.close()
         Base.metadata.drop_all(bind=self.engine)
         self.engine.dispose()
+        SQLAlchemyInstrumentor().uninstrument()
         super().tearDown()
 
     def _check_span(self, span):

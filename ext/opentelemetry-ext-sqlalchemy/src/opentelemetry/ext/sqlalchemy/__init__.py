@@ -31,7 +31,7 @@ Usage
     import sqlalchemy
 
     trace.set_tracer_provider(TracerProvider())
-    trace_engine(engine, trace.get_tracer_provider())
+    SQLAlchemyInstrumentor().instrument()
 
 API
 ---
@@ -41,7 +41,11 @@ import wrapt
 from wrapt import wrap_function_wrapper as _w
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.ext.sqlalchemy.engine import _wrap_create_engine
+from opentelemetry.ext.sqlalchemy.engine import (
+    EngineTracer,
+    _get_tracer,
+    _wrap_create_engine,
+)
 
 
 def _unwrap(obj, attr):
@@ -60,8 +64,29 @@ class SQLAlchemyInstrumentor(BaseInstrumentor):
     """
 
     def _instrument(self, **kwargs):
+        """Instruments SQLAlchemy engine creation methods and the engine
+        if passed as an argument.
+
+        Args:
+            **kwargs: Optional arguments
+                ``engine``: a SQLAlchemy engine instance
+                ``tracer_provider``: a TracerProvider, defaults to global
+                ``service``: the name of the service to trace.
+
+        Returns:
+            An instrumented engine if passed in as an argument, None otherwise.
+        """
         _w("sqlalchemy", "create_engine", _wrap_create_engine)
         _w("sqlalchemy.engine", "create_engine", _wrap_create_engine)
+        if kwargs.get("engine") is not None:
+            return EngineTracer(
+                _get_tracer(
+                    kwargs.get("engine"), kwargs.get("tracer_provider")
+                ),
+                kwargs.get("service"),
+                kwargs.get("engine"),
+            )
+        return None
 
     def _uninstrument(self, **kwargs):
         _unwrap(sqlalchemy, "create_engine")
