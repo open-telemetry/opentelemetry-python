@@ -19,27 +19,27 @@
 Simple configuration manager
 
 This is a configuration manager for OpenTelemetry. It reads configuration
-values from environment variables prefixed with
-``OPENTELEMETRY_PYTHON_`` whose characters are only all caps and underscores.
-The first character after ``OPENTELEMETRY_PYTHON_`` must be an uppercase
-character.
+values from environment variables prefixed with ``OPENTELEMETRY_PYTHON_`` whose
+characters are only alphanumeric characters and unserscores, except for the
+first character after ``OPENTELEMETRY_PYTHON_`` which must not be a number.
 
 For example, these environment variables will be read:
 
 1. ``OPENTELEMETRY_PYTHON_SOMETHING``
 2. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_``
 3. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND__ELSE``
+4. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND_else``
+4. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND_else2``
 
 These won't:
 
 1. ``OPENTELEMETRY_PYTH_SOMETHING``
-2. ``OPENTELEMETRY_PYTHON_something``
-3. ``OPENTELEMETRY_PYTHON_SOMETHING_2_AND__ELSE``
-4. ``OPENTELEMETRY_PYTHON_SOMETHING_%_ELSE``
+2. ``OPENTELEMETRY_PYTHON_2_SOMETHING_AND__ELSE``
+3. ``OPENTELEMETRY_PYTHON_SOMETHING_%_ELSE``
 
 The values stored in the environment variables can be found in an instance of
 ``opentelemetry.configuration.Configuration``. This class can be instantiated
-freely because instantiating it returns a singleton.
+freely because instantiating it returns always the same object.
 
 For example, if the environment variable
 ``OPENTELEMETRY_PYTHON_METER_PROVIDER`` value is ``my_meter_provider``, then
@@ -93,11 +93,13 @@ class Configuration:
 
             for key, value in environ.items():
 
-                match = fullmatch("OPENTELEMETRY_PYTHON_([A-Z][A-Z_]*)", key)
+                match = fullmatch(
+                    r"OPENTELEMETRY_PYTHON_([A-Za-z_][\w_]*)", key
+                )
 
                 if match is not None:
 
-                    key = match.group(1).lower()
+                    key = match.group(1)
 
                     setattr(Configuration, "_{}".format(key), value)
                     setattr(
