@@ -124,9 +124,7 @@ def _set_attributes_from_url(span: trace.Span, url):
     if url.database:
         span.set_attribute(_DB, url.database)
 
-    return hasattr(span, "attributes") and bool(
-        span.attributes.get(_HOST, False)
-    )
+    return bool(url.host)
 
 
 def _set_attributes_from_cursor(span: trace.Span, vendor, cursor):
