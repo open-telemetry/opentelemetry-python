@@ -45,16 +45,11 @@ def _normalize_vendor(vendor):
 
 
 def _get_tracer(engine, tracer_provider=None):
-    tracer = getattr(engine, "_opentelemetry_tracer", False)
-    if tracer:
-        return tracer
     if tracer_provider is None:
         tracer_provider = trace.get_tracer_provider()
-    tracer = tracer_provider.get_tracer(
+    return tracer_provider.get_tracer(
         _normalize_vendor(engine.name), __version__
     )
-    setattr(engine, "_opentelemetry_tracer", tracer)
-    return tracer
 
 
 # pylint: disable=unused-argument
@@ -74,7 +69,6 @@ class EngineTracer:
         self.vendor = _normalize_vendor(engine.name)
         self.service = service or self.vendor
         self.name = "%s.query" % self.vendor
-        # TODO: revisit, might be better done w/ context attach/detach
         self.current_span = None
 
         listen(engine, "before_cursor_execute", self._before_cur_exec)
