@@ -17,7 +17,7 @@ from unittest import mock
 import pymysql
 
 import opentelemetry.ext.pymysql
-from opentelemetry.ext.pymysql import PymysqlInstrumentor
+from opentelemetry.ext.pymysql import PyMySQLInstrumentor
 from opentelemetry.sdk import resources
 from opentelemetry.test.test_base import TestBase
 
@@ -25,13 +25,13 @@ from opentelemetry.test.test_base import TestBase
 class TestPyMysqlIntegration(TestBase):
     def tearDown(self):
         super().tearDown()
-        # ensure that it's uninstrumented if some of the tests fail
-        PymysqlInstrumentor().uninstrument()
+        with self.disable_logging():
+            PyMySQLInstrumentor().uninstrument()
 
     @mock.patch("pymysql.connect")
     # pylint: disable=unused-argument
     def test_instrumentor(self, mock_connect):
-        PymysqlInstrumentor().instrument()
+        PyMySQLInstrumentor().instrument()
 
         cnx = pymysql.connect(database="test")
         cursor = cnx.cursor()
@@ -46,7 +46,7 @@ class TestPyMysqlIntegration(TestBase):
         self.check_span_instrumentation_info(span, opentelemetry.ext.pymysql)
 
         # check that no spans are generated after uninstrument
-        PymysqlInstrumentor().uninstrument()
+        PyMySQLInstrumentor().uninstrument()
 
         cnx = pymysql.connect(database="test")
         cursor = cnx.cursor()
@@ -63,7 +63,7 @@ class TestPyMysqlIntegration(TestBase):
         result = self.create_tracer_provider(resource=resource)
         tracer_provider, exporter = result
 
-        PymysqlInstrumentor().instrument(tracer_provider=tracer_provider)
+        PyMySQLInstrumentor().instrument(tracer_provider=tracer_provider)
 
         cnx = pymysql.connect(database="test")
         cursor = cnx.cursor()
