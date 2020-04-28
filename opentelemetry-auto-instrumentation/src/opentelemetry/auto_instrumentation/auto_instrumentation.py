@@ -35,6 +35,9 @@ def run() -> None:
 
     cwd_path = getcwd()
 
+    # This is being added to support applications that are being run from their
+    # own executable, like Django.
+    # FIXME investigate if there is another way to achieve this
     if cwd_path not in python_path:
         python_path.insert(0, cwd_path)
 
