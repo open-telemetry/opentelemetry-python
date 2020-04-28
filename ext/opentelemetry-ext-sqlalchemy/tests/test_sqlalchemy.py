@@ -12,37 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-from unittest import mock
-
 from sqlalchemy import create_engine
 
-from opentelemetry import trace as trace_api
 from opentelemetry.ext.sqlalchemy.engine import trace_engine
+from opentelemetry.test.test_base import TestBase
 
 
-class TestSqlalchemyInstrumentation(unittest.TestCase):
+class TestSqlalchemyInstrumentation(TestBase):
     def test_trace_integration(self):
-        tracer_provider = trace_api.get_tracer_provider()
-        tracer = trace_api.DefaultTracer()
-
-        get_tracer_patcher = mock.patch.object(
-            tracer_provider, "get_tracer", return_value=tracer,
-        )
-
-        get_tracer_patcher = get_tracer_patcher.start()
-
-        span = mock.create_autospec(trace_api.Span, spec_set=True)
-        start_span_patcher = mock.patch.object(
-            tracer,
-            "start_span",
-            autospec=True,
-            spec_set=True,
-            return_value=span,
-        )
-        start_span_patcher = start_span_patcher.start()
         engine = create_engine("sqlite:///:memory:")
-        trace_engine(engine, tracer_provider, "my-database")
+        trace_engine(engine, self.tracer_provider, "my-database")
         cnx = engine.connect()
         cnx.execute("SELECT	1 + 1;").fetchall()
-        self.assertTrue(start_span_patcher.called)
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(spans[0].name, "sqlite.query")
