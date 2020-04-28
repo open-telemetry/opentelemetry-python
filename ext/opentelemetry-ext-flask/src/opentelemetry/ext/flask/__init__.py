@@ -32,9 +32,9 @@ Usage
     from flask import Flask
     from opentelemetry.ext.flask import FlaskInstrumentor
 
-    Flask = FlaskInstrumentor().instrument(flask_class=Flask)
-
     app = Flask(__name__)
+
+    FlaskInstrumentor().instrument(app=app)
 
     @app.route("/")
     def hello():
@@ -182,22 +182,24 @@ class FlaskInstrumentor(BaseInstrumentor):
     See `BaseInstrumentor`
     """
 
-    def __init__(self):
-        super().__init__()
-        self._original_flask_class = None
+    def _instrument(self, **kwargs):
+        app = kwargs.get("app")
 
-    def _instrument(
-        self, flask_class=None
-    ):  # pylint: disable=arguments-differ
-        if flask_class is not None:
-            self._original_flask_class = flask_class
-            return _InstrumentedFlask
+        if app is not None:
+            pass
 
-        self._original_flask_class = flask.Flask
-        flask.Flask = _InstrumentedFlask
+        else:
+            self._original_flask_class = flask.Flask
+            flask.Flask = _InstrumentedFlask
 
         return None
 
-    def _uninstrument(self):  # pylint: disable=arguments-differ
-        flask.Flask = self._original_flask_class
-        return self._original_flask_class
+    def _uninstrument(self, **kwargs):
+        app = kwargs.get("app")
+
+        if app is not None:
+            pass
+
+        else:
+            flask.Flask = self._original_flask_class
+            return self._original_flask_class
