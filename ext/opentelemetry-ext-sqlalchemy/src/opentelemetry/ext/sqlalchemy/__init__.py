@@ -31,7 +31,11 @@ Usage
     import sqlalchemy
 
     trace.set_tracer_provider(TracerProvider())
-    SQLAlchemyInstrumentor().instrument()
+    engine = create_engine("sqlite:///:memory:")
+    SQLAlchemyInstrumentor().instrument(
+        engine=engine,
+        service="service-A",
+    )
 
 API
 ---

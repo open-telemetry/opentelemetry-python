@@ -19,6 +19,10 @@ from opentelemetry.test.test_base import TestBase
 
 
 class TestSqlalchemyInstrumentation(TestBase):
+    def tearDown(self):
+        super().tearDown()
+        SQLAlchemyInstrumentor().uninstrument()
+
     def test_trace_integration(self):
         engine = create_engine("sqlite:///:memory:")
         SQLAlchemyInstrumentor().instrument(
@@ -26,6 +30,18 @@ class TestSqlalchemyInstrumentation(TestBase):
             tracer_provider=self.tracer_provider,
             service="my-database",
         )
+        cnx = engine.connect()
+        cnx.execute("SELECT	1 + 1;").fetchall()
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(spans[0].name, "sqlite.query")
+
+    def test_create_engine_wrapper(self):
+        SQLAlchemyInstrumentor().instrument()
+        from sqlalchemy import create_engine  # pylint: disable-all
+
+        engine = create_engine("sqlite:///:memory:")
         cnx = engine.connect()
         cnx.execute("SELECT	1 + 1;").fetchall()
         spans = self.memory_exporter.get_finished_spans()
