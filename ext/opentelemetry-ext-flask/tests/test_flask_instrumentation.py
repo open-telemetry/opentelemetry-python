@@ -24,8 +24,6 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
-Flask = FlaskInstrumentor().instrument(flask_class=Flask)
-
 
 def expected_attributes(override_attributes):
     default_attributes = {
@@ -45,7 +43,7 @@ def expected_attributes(override_attributes):
     return default_attributes
 
 
-class TestFlaskIntegration(WsgiTestBase):
+class TestFlaskInstrumentation(WsgiTestBase):
     def setUp(self):
         # No instrumentation code is here because it is present in the
         # conftest.py file next to this file.
@@ -53,6 +51,8 @@ class TestFlaskIntegration(WsgiTestBase):
         Configuration._instance = None  # pylint:disable=protected-access
         Configuration.__slots__ = []
         self.app = Flask(__name__)
+
+        FlaskInstrumentor().instrument(app=self.app)
 
         def hello_endpoint(helloid):
             if helloid == 500:
@@ -72,8 +72,7 @@ class TestFlaskIntegration(WsgiTestBase):
         self.client = Client(self.app, BaseResponse)
 
     def tearDown(self):
-        Configuration._instance = None  # pylint:disable=protected-access
-        Configuration.__slots__ = []
+        FlaskInstrumentor().uninstrument(app=self.app)
 
     def test_only_strings_in_environ(self):
         """

@@ -100,6 +100,8 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
+    from ipdb import set_trace
+    set_trace
     environ = flask.request.environ
     span_name = (
         flask.request.endpoint
@@ -182,23 +184,20 @@ class FlaskInstrumentor(BaseInstrumentor):
     def _instrument(self, **kwargs):
         app = kwargs.get("app")
 
-        if app is not None:
+        if app is None:
+            flask.Flask = _InstrumentedFlask
 
         else:
+
             app.wsgi_app = _rewrapped_app(app.wsgi_app)
 
             app.before_request(_before_request)
             app.teardown_request(_teardown_request)
 
-        else:
-            flask.Flask = _InstrumentedFlask
-
-        return None
-
     def _uninstrument(self, **kwargs):
         app = kwargs.get("app")
 
-        if app is not None:
+        if app is None:
             pass
 
         else:
