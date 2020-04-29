@@ -14,12 +14,11 @@
 
 from logging import getLogger
 
-from django import VERSION
 from django.conf import settings
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.configuration import Configuration
-from opentelemetry.ext.django.middleware import OpenTelemetryMiddleware
+from opentelemetry.ext.django.middleware import DjangoMiddleware
 
 _logger = getLogger(__name__)
 
@@ -31,28 +30,8 @@ class DjangoInstrumentor(BaseInstrumentor):
     """
 
     _opentelemetry_middleware = ".".join(
-        [
-            OpenTelemetryMiddleware.__module__,
-            OpenTelemetryMiddleware.__qualname__,
-        ]
+        [DjangoMiddleware.__module__, DjangoMiddleware.__qualname__]
     )
-
-    def __init__(self):
-        super().__init__()
-        # Django Middleware is code that is executed before and/or after a
-        # request. Read about Django middleware here:
-        # https://docs.djangoproject.com/en/3.0/topics/http/middleware/
-
-        # This method must set this Django settings attribute:
-        # MIDDLEWARE: for Django version > 1.0
-        # MIDDLEWARE_CLASSES: for Django version <= 1.0
-
-        # Django settings.MIDDLEWARE is a list of strings, each one a Python
-        # path to a class or a function that acts as middleware.
-
-        self._middleware_setting = (
-            "MIDDLEWARE" if VERSION >= (1, 10, 0) else "MIDDLEWARE_CLASSES"
-        )
 
     def _instrument(self, **kwargs):
 
@@ -71,13 +50,13 @@ class DjangoInstrumentor(BaseInstrumentor):
         # https://docs.djangoproject.com/en/3.0/topics/http/middleware/#activating-middleware
         # https://docs.djangoproject.com/en/3.0/ref/middleware/#middleware-ordering
 
-        settings_middleware = getattr(settings, self._middleware_setting, [])
+        settings_middleware = getattr(settings, "MIDDLEWARE", [])
         settings_middleware.append(self._opentelemetry_middleware)
 
-        setattr(settings, self._middleware_setting, settings_middleware)
+        setattr(settings, "MIDDLEWARE", settings_middleware)
 
     def _uninstrument(self, **kwargs):
-        settings_middleware = getattr(settings, self._middleware_setting, None)
+        settings_middleware = getattr(settings, "MIDDLEWARE", None)
 
         # FIXME This is starting to smell like trouble. We have 2 mechanisms
         # that may make this condition be True, one implemented in
@@ -90,4 +69,4 @@ class DjangoInstrumentor(BaseInstrumentor):
             return
 
         settings_middleware.remove(self._opentelemetry_middleware)
-        setattr(settings, self._middleware_setting, settings_middleware)
+        setattr(settings, "MIDDLEWARE", settings_middleware)
