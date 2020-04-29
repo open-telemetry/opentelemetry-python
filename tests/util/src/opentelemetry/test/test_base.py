@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import unittest
+from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.trace import TracerProvider, export
@@ -59,3 +61,13 @@ class TestBase(unittest.TestCase):
         tracer_provider.add_span_processor(span_processor)
 
         return tracer_provider, memory_exporter
+
+    @staticmethod
+    @contextmanager
+    def disable_logging(highest_level=logging.CRITICAL):
+        logging.disable(highest_level)
+
+        try:
+            yield
+        finally:
+            logging.disable(logging.NOTSET)
