@@ -44,8 +44,6 @@ app = flask.Flask(__name__)
 
 FlaskInstrumentor().instrument(app=app)
 
-opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
-
 
 @app.route("/")
 def hello():
