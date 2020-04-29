@@ -91,19 +91,17 @@ def _rewrapped_app(wsgi_app):
                     status,
                 )
 
-            return start_response(
-                status, response_headers, *args, **kwargs
-            )
+            return start_response(status, response_headers, *args, **kwargs)
 
         return wsgi_app(environ, _start_response)
+
     return _wrapped_app
 
 
 def _before_request():
     environ = flask.request.environ
-    span_name = (
-        flask.request.endpoint
-        or otel_wsgi.get_default_span_name(environ)
+    span_name = flask.request.endpoint or otel_wsgi.get_default_span_name(
+        environ
     )
     token = context.attach(
         propagators.extract(otel_wsgi.get_header_from_environ, environ)

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import NOTSET, WARNING, disable
-import unittest
+from unittest import main
 
 from flask import Flask
 from werkzeug.test import Client
@@ -79,4 +79,4 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

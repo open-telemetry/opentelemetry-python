@@ -12,23 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-<<<<<<< HEAD:ext/opentelemetry-ext-flask/tests/test_flask_instrumentation.py
-import unittest
-from unittest.mock import patch
-
-from flask import Flask, request
-from werkzeug.test import Client
-from werkzeug.wrappers import BaseResponse
-
-from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
-from opentelemetry.ext.flask import FlaskInstrumentor
-from opentelemetry.test.wsgitestutil import WsgiTestBase
-=======
 from flask import request
 
 from opentelemetry import trace as trace_api
->>>>>>> dd973af2... Refactor test cases:ext/opentelemetry-ext-flask/tests/base_test.py
 
 
 def expected_attributes(override_attributes):
@@ -49,41 +35,7 @@ def expected_attributes(override_attributes):
     return default_attributes
 
 
-<<<<<<< HEAD:ext/opentelemetry-ext-flask/tests/test_flask_instrumentation.py
-class TestFlaskInstrumentation(WsgiTestBase):
-    def setUp(self):
-        # No instrumentation code is here because it is present in the
-        # conftest.py file next to this file.
-        super().setUp()
-        Configuration._instance = None  # pylint:disable=protected-access
-        Configuration.__slots__ = []
-        self.app = Flask(__name__)
-
-        FlaskInstrumentor().instrument(app=self.app)
-
-        def hello_endpoint(helloid):
-            if helloid == 500:
-                raise ValueError(":-(")
-            return "Hello: " + str(helloid)
-
-        def excluded_endpoint():
-            return "excluded"
-
-        def excluded2_endpoint():
-            return "excluded2"
-
-        self.app.route("/hello/<int:helloid>")(hello_endpoint)
-        self.app.route("/excluded")(excluded_endpoint)
-        self.app.route("/excluded2")(excluded2_endpoint)
-
-        self.client = Client(self.app, BaseResponse)
-
-    def tearDown(self):
-        FlaskInstrumentor().uninstrument(app=self.app)
-=======
 class InstrumentationTest:
->>>>>>> dd973af2... Refactor test cases:ext/opentelemetry-ext-flask/tests/base_test.py
-
     def test_only_strings_in_environ(self):
         """
         Some WSGI servers (such as Gunicorn) expect keys in the environ object
@@ -151,27 +103,3 @@ class InstrumentationTest:
         self.assertEqual(span_list[0].name, "hello_endpoint")
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
-<<<<<<< HEAD:ext/opentelemetry-ext-flask/tests/test_flask_instrumentation.py
-
-    @patch.dict(
-        "os.environ",  # type: ignore
-        {
-            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS": (
-                "http://localhost/excluded"
-            ),
-            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS": "excluded2",
-        },
-    )
-    def test_excluded_path(self):
-        self.client.get("/hello/123")
-        self.client.get("/excluded")
-        self.client.get("/excluded2")
-        span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
-
-
-if __name__ == "__main__":
-    unittest.main()
-=======
->>>>>>> dd973af2... Refactor test cases:ext/opentelemetry-ext-flask/tests/base_test.py
