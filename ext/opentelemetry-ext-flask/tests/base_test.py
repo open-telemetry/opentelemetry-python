@@ -36,6 +36,7 @@ def expected_attributes(override_attributes):
 
 
 class InstrumentationTest:
+    # pylint: disable=no-member
     def test_only_strings_in_environ(self):
         """
         Some WSGI servers (such as Gunicorn) expect keys in the environ object

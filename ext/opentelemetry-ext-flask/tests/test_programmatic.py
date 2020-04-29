@@ -23,6 +23,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
+# pylint: disable=import-error
 from .base_test import InstrumentationTest, expected_attributes
 
 
