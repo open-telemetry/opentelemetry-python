@@ -35,7 +35,7 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
 
         self.app = Flask(__name__)
 
-        FlaskInstrumentor().instrument(app=self.app)
+        FlaskInstrumentor().instrument_app(self.app)
 
         def hello_endpoint(helloid):
             if helloid == 500:
@@ -48,10 +48,10 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
 
     def tearDown(self):
         disable(WARNING)
-        FlaskInstrumentor().uninstrument(app=self.app)
+        FlaskInstrumentor().uninstrument_app(self.app)
         disable(NOTSET)
 
-    def test_uninstrument(self):
+    def test_unonstrument(self):
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
@@ -64,7 +64,7 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
-        FlaskInstrumentor().uninstrument(app=self.app)
+        FlaskInstrumentor().uninstrument_app(self.app)
 
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}

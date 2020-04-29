@@ -33,8 +33,7 @@ from opentelemetry.sdk.trace.export import (
 # It must be done before instrumenting any library
 trace.set_tracer_provider(TracerProvider())
 
-opentelemetry.ext.requests.RequestsInstrumentor().instrument()
-FlaskInstrumentor().instrument()
+opentelemetry.ext.http_requests.RequestsInstrumentor().instrument()
 
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
@@ -42,7 +41,7 @@ trace.get_tracer_provider().add_span_processor(
 
 app = flask.Flask(__name__)
 
-FlaskInstrumentor().instrument(app=app)
+FlaskInstrumentor().instrument_app(app)
 
 
 @app.route("/")

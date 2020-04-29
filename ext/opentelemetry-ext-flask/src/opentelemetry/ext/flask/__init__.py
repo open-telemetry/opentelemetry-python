@@ -61,7 +61,7 @@ from opentelemetry.util import (
     time_ns,
 )
 
-logger = getLogger(__name__)
+_logger = getLogger(__name__)
 
 _ENVIRON_STARTTIME_KEY = "opentelemetry-flask.starttime_key"
 _ENVIRON_SPAN_KEY = "opentelemetry-flask.span_key"
@@ -85,7 +85,7 @@ def _rewrapped_app(wsgi_app):
                     span, status, response_headers
                 )
             else:
-                logger.warning(
+                _logger.warning(
                     "Flask environ's OpenTelemetry span "
                     "missing at _start_response(%s)",
                     status,
@@ -130,7 +130,7 @@ def _before_request():
 def _teardown_request(exc):
     activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
     if not activation:
-        logger.warning(
+        _logger.warning(
             "Flask environ's OpenTelemetry activation missing"
             "at _teardown_flask_request(%s)",
             exc,
@@ -179,30 +179,40 @@ class FlaskInstrumentor(BaseInstrumentor):
     """
 
     def _instrument(self, **kwargs):
-        app = kwargs.get("app")
+        self._original_flask = flask.Flask
+        flask.Flask = _InstrumentedFlask
 
-        if app is None:
-            self._original_flask = flask.Flask
-            flask.Flask = _InstrumentedFlask
-
-        else:
+    def instrument_app(self, app):
+        # FIXME remove this protection once some mechanism in the
+        # BaseInstrumentor class is available for these methods.
+        if not self._is_instrumented:
             app._original_wsgi_app = app.wsgi_app
             app.wsgi_app = _rewrapped_app(app.wsgi_app)
 
             app.before_request(_before_request)
             app.teardown_request(_teardown_request)
+            self._is_instrumented = True
+        else:
+            _logger.warning(
+                "Attempting to instrument while already instrumented"
+            )
 
     def _uninstrument(self, **kwargs):
-        app = kwargs.get("app")
+        flask.Flask = self._original_flask
 
-        if app is None:
-            flask.Flask = self._original_flask
-
-        else:
+    def uninstrument_app(self, app):
+        # FIXME remove this protection once some mechanism in the
+        # BaseInstrumentor class is available for these methods.
+        if self._is_instrumented:
             app.wsgi_app = app._original_wsgi_app
 
             # FIXME add support for other Flask blueprints that are not None
             app.before_request_funcs[None].remove(_before_request)
             app.teardown_request_funcs[None].remove(_teardown_request)
-
             del app._original_wsgi_app
+
+            self._is_instrumented = False
+        else:
+            _logger.warning(
+                "Attempting to uninstrument while already uninstrumented"
+            )

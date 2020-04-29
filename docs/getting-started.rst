@@ -104,6 +104,7 @@ Configure exporters to emit spans elsewhere
 
 The example above does emit information about all spans, but the output is a bit hard to read.
 In common cases, you would instead *export* this data to an application performance monitoring backend, to be visualized and queried.
+oHEA
 It is also common to aggregate span and trace information from multiple services into a single database, so that actions that require multiple services can still all be visualized together.
 
 This concept is known as distributed tracing. One such distributed tracing backend is known as Jaeger.
@@ -194,15 +195,14 @@ And let's write a small Flask application that sends an HTTP request, activating
     from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
     from opentelemetry.ext.flask import FlaskInstrumentor
 
-    Flask = FlaskInstrumentor().instrument(flask_class=flask.Flask)
-
     trace.set_tracer_provider(TracerProvider())
     trace.get_tracer_provider().add_span_processor(
         SimpleExportSpanProcessor(ConsoleSpanExporter())
     )
 
     app = flask.Flask(__name__)
-    opentelemetry.ext.requests.RequestsInstrumentor().instrument()
+    FlaskInstrumentor().instrument_app(app)
+    opentelemetry.ext.http_requests.RequestsInstrumentor().instrument()
 
     @app.route("/")
     def hello():
