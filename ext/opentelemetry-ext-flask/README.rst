@@ -16,6 +16,16 @@ Installation
 
     pip install opentelemetry-ext-flask
 
+Configuration
+-------------
+
+Blacklist
+*********
+Excludes certain hosts and paths from being tracked. Pass in comma delimited string into environment variables.
+
+Blacklisted hosts: OPENTELEMETRY_PYTHON_FLASK_BLACKLIST_HOSTS
+Blacklisted paths: OPENTELEMETRY_PYTHON_FLASK_BLACKLIST_PATHS
+
 
 References
 ----------

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add blacklisting for paths and hosts
+  ([#327](https://github.com/open-telemetry/opentelemetry-python/pull/327))
+
 ## 0.6b0
 
 Released 2020-03-30

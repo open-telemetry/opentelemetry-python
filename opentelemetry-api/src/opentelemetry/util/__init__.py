@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import re
 import time
 from logging import getLogger
 from typing import Union
@@ -48,3 +49,42 @@ def _load_provider(provider: str) -> Union["TracerProvider", "MeterProvider"]:  
             "Failed to load configured provider %s", provider,
         )
         raise
+
+# Pattern for matching the 'https://', 'http://', 'ftp://' part.
+URL_PATTERN = '^(https?|ftp):\\/\\/'
+
+
+def disable_tracing_url(url, blacklist_paths):
+    """Disable tracing on the provided blacklist paths
+
+    If the url path starts with the blacklisted path, return True.
+
+    :type blacklist_paths: list
+    :param blacklist_paths: Paths to prevent from tracing
+
+    :rtype: bool
+    :returns: True if not tracing, False if tracing
+    """
+    # Remove the 'https?|ftp://' if exists
+    url = re.sub(URL_PATTERN, '', url)
+
+    # Split the url by the first '/' and get the path part
+    url_path = url.split('/', 1)[1]
+
+    for path in blacklist_paths:
+        if url_path.startswith(path):
+            return True
+
+    return False
+
+
+def disable_tracing_hostname(url, blacklist_hostnames):
+    """Disable tracing for the provided blacklist URLs.
+
+    :type blacklist_hostnames: list
+    :param blacklist_hostnames: URLs to prevent tracing
+
+    :rtype: bool
+    :returns: True if not tracing, False if tracing
+    """
+    return url in blacklist_hostnames
