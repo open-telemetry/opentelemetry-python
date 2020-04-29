@@ -47,7 +47,7 @@ API
 ---
 """
 
-import logging
+from logging import getLogger
 
 import flask
 
@@ -61,7 +61,7 @@ from opentelemetry.util import (
     time_ns,
 )
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 _ENVIRON_STARTTIME_KEY = "opentelemetry-flask.starttime_key"
 _ENVIRON_SPAN_KEY = "opentelemetry-flask.span_key"
@@ -100,8 +100,6 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
-    from ipdb import set_trace
-    set_trace
     environ = flask.request.environ
     span_name = (
         flask.request.endpoint
@@ -185,10 +183,11 @@ class FlaskInstrumentor(BaseInstrumentor):
         app = kwargs.get("app")
 
         if app is None:
+            self._original_flask = flask.Flask
             flask.Flask = _InstrumentedFlask
 
         else:
-
+            app._original_wsgi_app = app.wsgi_app
             app.wsgi_app = _rewrapped_app(app.wsgi_app)
 
             app.before_request(_before_request)
@@ -198,7 +197,13 @@ class FlaskInstrumentor(BaseInstrumentor):
         app = kwargs.get("app")
 
         if app is None:
-            pass
+            flask.Flask = self._original_flask
 
         else:
-            pass
+            app.wsgi_app = app._original_wsgi_app
+
+            # FIXME add support for other Flask blueprints that are not None
+            app.before_request_funcs[None].remove(_before_request)
+            app.teardown_request_funcs[None].remove(_teardown_request)
+
+            del app._original_wsgi_app

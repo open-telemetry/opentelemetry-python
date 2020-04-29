@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD:ext/opentelemetry-ext-flask/tests/test_flask_instrumentation.py
 import unittest
 from unittest.mock import patch
 
@@ -23,6 +24,11 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
+=======
+from flask import request
+
+from opentelemetry import trace as trace_api
+>>>>>>> dd973af2... Refactor test cases:ext/opentelemetry-ext-flask/tests/base_test.py
 
 
 def expected_attributes(override_attributes):
@@ -43,6 +49,7 @@ def expected_attributes(override_attributes):
     return default_attributes
 
 
+<<<<<<< HEAD:ext/opentelemetry-ext-flask/tests/test_flask_instrumentation.py
 class TestFlaskInstrumentation(WsgiTestBase):
     def setUp(self):
         # No instrumentation code is here because it is present in the
@@ -73,6 +80,9 @@ class TestFlaskInstrumentation(WsgiTestBase):
 
     def tearDown(self):
         FlaskInstrumentor().uninstrument(app=self.app)
+=======
+class InstrumentationTest:
+>>>>>>> dd973af2... Refactor test cases:ext/opentelemetry-ext-flask/tests/base_test.py
 
     def test_only_strings_in_environ(self):
         """
@@ -93,7 +103,7 @@ class TestFlaskInstrumentation(WsgiTestBase):
         self.client.get("/assert_environ")
         self.assertEqual(nonstring_keys, set())
 
-    def test_simple(self):
+    def test_simple_uninstrument(self):
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
@@ -141,6 +151,7 @@ class TestFlaskInstrumentation(WsgiTestBase):
         self.assertEqual(span_list[0].name, "hello_endpoint")
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
+<<<<<<< HEAD:ext/opentelemetry-ext-flask/tests/test_flask_instrumentation.py
 
     @patch.dict(
         "os.environ",  # type: ignore
@@ -162,3 +173,5 @@ class TestFlaskInstrumentation(WsgiTestBase):
 
 if __name__ == "__main__":
     unittest.main()
+=======
+>>>>>>> dd973af2... Refactor test cases:ext/opentelemetry-ext-flask/tests/base_test.py
