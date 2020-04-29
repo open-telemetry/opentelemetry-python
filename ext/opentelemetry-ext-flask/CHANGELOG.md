@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Add blacklisting for paths and hosts
-  ([#327](https://github.com/open-telemetry/opentelemetry-python/pull/327))
+  ([#6300](https://github.com/open-telemetry/opentelemetry-python/pull/630))
 
 ## 0.6b0
 
