@@ -69,6 +69,16 @@ class TestAutomatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
         FlaskInstrumentor().uninstrument()
+        self.app = flask.Flask(__name__)
+
+        def hello_endpoint(helloid):
+            if helloid == 500:
+                raise ValueError(":-(")
+            return "Hello: " + str(helloid)
+
+        self.app.route("/hello/<int:helloid>")(hello_endpoint)
+
+        self.client = Client(self.app, BaseResponse)
 
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
