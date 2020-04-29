@@ -33,8 +33,7 @@ urlpatterns = [
 _django_instrumentor = DjangoInstrumentor()
 
 
-# class TestDjangoOpenTracingMiddleware(WsgiTestBase, SimpleTestCase):
-class TestDjangoOpenTracingMiddleware(WsgiTestBase):
+class TestMiddleware(WsgiTestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

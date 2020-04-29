@@ -61,10 +61,8 @@ class DjangoInstrumentor(BaseInstrumentor):
         # FIXME Probably the evaluation of strings into boolean values can be
         # built inside the Configuration class itself with the magic method
         # __bool__
-        if (
-            hasattr(Configuration(), "django_instrument")
-            and Configuration().django_instrument != "True"
-        ):
+
+        if Configuration().DJANGO_INSTRUMENT != "True":
             return
 
         # This can not be solved, but is an inherent problem of this approach:
