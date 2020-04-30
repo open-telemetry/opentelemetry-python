@@ -1,12 +1,5 @@
-.. include:: ../../../ext/opentelemetry-ext-grpc/README.rst
-
-Submodules
-----------
-
-.. toctree::
-
-   grpc.client_interceptor
-   grpc.server_interceptor
+OpenTelemetry gRPC Integration
+==============================
 
 Module contents
 ---------------
