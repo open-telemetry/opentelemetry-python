@@ -41,10 +41,10 @@ def _load_provider(
         return next(  # type: ignore
             iter_entry_points(
                 "opentelemetry_{}".format(provider),
-                name=getattr(  # type: ignore
-                    Configuration(),
+                name=getattr(
+                    Configuration(),  # type: ignore
                     provider,
-                    "default_{}".format(provider),  # type: ignore
+                    "default_{}".format(provider),
                 ),
             )
         ).load()()
