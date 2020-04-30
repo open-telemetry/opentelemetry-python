@@ -51,7 +51,7 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
         FlaskInstrumentor().uninstrument_app(self.app)
         disable(NOTSET)
 
-    def test_unonstrument(self):
+    def test_uninstrument(self):
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
