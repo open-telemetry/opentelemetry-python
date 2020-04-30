@@ -56,7 +56,7 @@ from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import (
     disable_tracing_hostname,
-    disable_tracing_url,
+    disable_tracing_path,
     time_ns
 )
 
@@ -170,7 +170,7 @@ def _disable_trace(url):
             return True
     if excluded_paths:
         excluded_paths = str.split(excluded_paths, ',')
-        if disable_tracing_url(url, excluded_paths):
+        if disable_tracing_path(url, excluded_paths):
             return True
     return False
 
