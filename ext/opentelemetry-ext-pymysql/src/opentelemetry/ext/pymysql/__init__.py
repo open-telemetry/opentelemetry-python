@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The integration with PyMySQL supports the `PyMySQL`_ library and is specified
-to ``trace_integration`` using ``'PyMySQL'``.
+The integration with PyMySQL supports the `PyMySQL`_ library and can be enabled
+by using ``PyMySQLInstrumentor``.
 
 .. _PyMySQL: https://pypi.org/project/PyMySQL/
 
@@ -25,11 +25,13 @@ Usage
 
     import pymysql
     from opentelemetry import trace
-    from opentelemetry.ext.pymysql import trace_integration
+    from opentelemetry.ext.pymysql import PyMySQLInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
-    trace_integration()
+
+    PyMySQLInstrumentor().instrument()
+
     cnx = pymysql.connect(database="MySQL_Database")
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)"
@@ -45,24 +47,30 @@ import typing
 
 import pymysql
 
-from opentelemetry.ext.dbapi import wrap_connect
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.ext.dbapi import unwrap_connect, wrap_connect
 from opentelemetry.ext.pymysql.version import __version__
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
-def trace_integration(tracer_provider: typing.Optional[TracerProvider] = None):
-    """Integrate with the PyMySQL library.
-       https://github.com/PyMySQL/PyMySQL/
-    """
+class PyMySQLInstrumentor(BaseInstrumentor):
+    def _instrument(self, **kwargs):
+        """Integrate with the PyMySQL library.
+        https://github.com/PyMySQL/PyMySQL/
+        """
+        tracer_provider = kwargs.get("tracer_provider")
 
-    tracer = get_tracer(__name__, __version__, tracer_provider)
+        tracer = get_tracer(__name__, __version__, tracer_provider)
 
-    connection_attributes = {
-        "database": "db",
-        "port": "port",
-        "host": "host",
-        "user": "user",
-    }
-    wrap_connect(
-        tracer, pymysql, "connect", "mysql", "sql", connection_attributes
-    )
+        connection_attributes = {
+            "database": "db",
+            "port": "port",
+            "host": "host",
+            "user": "user",
+        }
+        wrap_connect(
+            tracer, pymysql, "connect", "mysql", "sql", connection_attributes
+        )
+
+    def _uninstrument(self, **kwargs):
+        unwrap_connect(pymysql, "connect")
