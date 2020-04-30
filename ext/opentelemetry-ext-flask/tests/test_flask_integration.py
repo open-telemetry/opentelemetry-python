@@ -20,7 +20,7 @@ from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration 
+from opentelemetry.configuration import Configuration
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 
@@ -96,7 +96,7 @@ class TestFlaskIntegration(WsgiTestBase):
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
         resp = self.client.get("/hello/123")
-        
+
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "hello_endpoint")

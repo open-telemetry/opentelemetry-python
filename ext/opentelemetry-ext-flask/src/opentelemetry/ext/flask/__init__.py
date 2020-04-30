@@ -57,7 +57,7 @@ from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import (
     disable_tracing_hostname,
     disable_tracing_path,
-    time_ns
+    time_ns,
 )
 
 logger = logging.getLogger(__name__)
@@ -165,11 +165,11 @@ def _disable_trace(url):
     excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
     excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
     if excluded_hosts:
-        excluded_hosts = str.split(excluded_hosts, ',')
+        excluded_hosts = str.split(excluded_hosts, ",")
         if disable_tracing_hostname(url, excluded_hosts):
             return True
     if excluded_paths:
-        excluded_paths = str.split(excluded_paths, ',')
+        excluded_paths = str.split(excluded_paths, ",")
         if disable_tracing_path(url, excluded_paths):
             return True
     return False
