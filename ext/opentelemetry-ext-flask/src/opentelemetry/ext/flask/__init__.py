@@ -182,28 +182,30 @@ class FlaskInstrumentor(BaseInstrumentor):
         self._original_flask = flask.Flask
         flask.Flask = _InstrumentedFlask
 
-    def instrument_app(self, app):
-        # FIXME remove this protection once some mechanism in the
-        # BaseInstrumentor class is available for these methods.
-        if not self._is_instrumented:
+    def instrument_app(self, app):  # pylint: disable=no-self-use
+        if not hasattr(app, "_is_instrumented"):
+            app._is_instrumented = False
+
+        if not app._is_instrumented:
             app._original_wsgi_app = app.wsgi_app
             app.wsgi_app = _rewrapped_app(app.wsgi_app)
 
             app.before_request(_before_request)
             app.teardown_request(_teardown_request)
-            self._is_instrumented = True
+            app._is_instrumented = True
         else:
             _logger.warning(
-                "Attempting to instrument while already instrumented"
+                "Attempting to instrument Flask app while already instrumented"
             )
 
     def _uninstrument(self, **kwargs):
         flask.Flask = self._original_flask
 
-    def uninstrument_app(self, app):
-        # FIXME remove this protection once some mechanism in the
-        # BaseInstrumentor class is available for these methods.
-        if self._is_instrumented:
+    def uninstrument_app(self, app):  # pylint: disable=no-self-use
+        if not hasattr(app, "_is_instrumented"):
+            app._is_instrumented = False
+
+        if app._is_instrumented:
             app.wsgi_app = app._original_wsgi_app
 
             # FIXME add support for other Flask blueprints that are not None
@@ -211,8 +213,9 @@ class FlaskInstrumentor(BaseInstrumentor):
             app.teardown_request_funcs[None].remove(_teardown_request)
             del app._original_wsgi_app
 
-            self._is_instrumented = False
+            app._is_instrumented = False
         else:
             _logger.warning(
-                "Attempting to uninstrument while already uninstrumented"
+                "Attempting to uninstrument Flask "
+                "app while already uninstrumented"
             )
