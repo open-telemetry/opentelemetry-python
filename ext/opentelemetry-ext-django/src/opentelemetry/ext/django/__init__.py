@@ -24,7 +24,7 @@ _logger = getLogger(__name__)
 
 
 class DjangoInstrumentor(BaseInstrumentor):
-    """A instrumentor for flask.Django
+    """An instrumentor for Django
 
     See `BaseInstrumentor`
     """
