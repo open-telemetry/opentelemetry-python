@@ -26,7 +26,7 @@ Installation
     $ pip install opentelemetry-api
     $ pip install opentelemetry-sdk
     $ pip install opentelemetry-auto-instrumentation
-    $ pip install ext/opentelemetry-ext-django
+    $ pip install opentelemetry-ext-django
     $ pip install requests
 
 
