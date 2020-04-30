@@ -30,19 +30,22 @@ from opentelemetry.sdk.trace.export import (
 
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
+# It must be done before instrumenting any library.
 trace.set_tracer_provider(TracerProvider())
-tracer = trace.get_tracer(__name__)
-
-exporter = ConsoleSpanExporter()
-span_processor = BatchExportSpanProcessor(exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
 
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
-http_requests.enable(trace.get_tracer_provider())
+http_requests.RequestsInstrumentor().instrument()
 app = flask.Flask(__name__)
 app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
+
+# Configure a console span exporter.
+exporter = ConsoleSpanExporter()
+span_processor = BatchExportSpanProcessor(exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
+
+tracer = trace.get_tracer(__name__)
 
 
 @app.route("/")

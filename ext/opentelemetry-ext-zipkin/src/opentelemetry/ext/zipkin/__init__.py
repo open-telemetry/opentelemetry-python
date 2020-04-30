@@ -142,8 +142,8 @@ class ZipkinSpanExporter(SpanExporter):
             )
 
             if self.retry:
-                return SpanExportResult.FAILED_RETRYABLE
-            return SpanExportResult.FAILED_NOT_RETRYABLE
+                return SpanExportResult.FAILURE
+            return SpanExportResult.FAILURE
         return SpanExportResult.SUCCESS
 
     def _translate_to_zipkin(self, spans: Sequence[Span]):
