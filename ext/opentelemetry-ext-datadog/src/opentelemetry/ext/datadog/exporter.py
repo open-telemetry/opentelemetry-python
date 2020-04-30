@@ -128,8 +128,7 @@ def _get_trace_ids(span):
 
 def _convert_trace_id_uint64(otel_id):
     """Convert 128-bit int used for trace_id to 64-bit unsigned int"""
-    raw = otel_id.to_bytes(16, "big")
-    return int.from_bytes(raw[8:], byteorder="big")
+    return otel_id & 0xFFFFFFFFFFFFFFFF
 
 
 def _get_resource(span):
