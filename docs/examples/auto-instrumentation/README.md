@@ -92,7 +92,7 @@ Span(name="serv_request", context=SpanContext(trace_id=0x9c0e0ce8f7b7dbb51d1d6e7
 Now, kill the execution of `server_instrumented.py` with `ctrl + c` and run this instead:
 
 ```sh
-$ opentelemetry-auto-instrumentation python opentelemetry-python/opentelemetry-auto-instrumentation/example/server_uninstrumented.py
+$ opentelemetry-auto-instrumentation python docs/examples/auto-instrumentation/server_uninstrumented.py
 ```
 
 In the console where you previously executed `client.py`, run again this again:
