@@ -35,7 +35,7 @@ except AttributeError:
 
 
 def _load_provider(
-    provider: str
+    provider: str,
 ) -> Union["TracerProvider", "MeterProvider"]:  # type: ignore
     try:
         return next(  # type: ignore
