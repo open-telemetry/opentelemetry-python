@@ -34,34 +34,35 @@ except AttributeError:
         return int(time.time() * 1e9)
 
 
-def _load_provider(provider: str) -> Union["TracerProvider", "MeterProvider"]:  # type: ignore
+def _load_provider(
+    provider: str
+) -> Union["TracerProvider", "MeterProvider"]:  # type: ignore
     try:
         return next(  # type: ignore
             iter_entry_points(
                 "opentelemetry_{}".format(provider),
                 name=getattr(  # type: ignore
-                    Configuration(), provider, "default_{}".format(provider),  # type: ignore
+                    Configuration(),
+                    provider,
+                    "default_{}".format(provider),  # type: ignore
                 ),
             )
         ).load()()
     except Exception:  # pylint: disable=broad-except
-        logger.error(
-            "Failed to load configured provider %s", provider,
-        )
+        logger.error("Failed to load configured provider %s", provider)
         raise
 
+
 # Pattern for matching the 'https://', 'http://', 'ftp://' part.
-URL_PATTERN = '^(https?|ftp):\\/\\/'
+URL_PATTERN = "^(https?|ftp):\\/\\/"
 
 
-def disable_tracing_path(
-    url: str,
-    excluded_paths: Sequence[str]) -> bool:
+def disable_tracing_path(url: str, excluded_paths: Sequence[str]) -> bool:
     # Remove the 'https?|ftp://' if exists
-    url = re.sub(URL_PATTERN, '', url)
+    url = re.sub(URL_PATTERN, "", url)
 
     # Split the url by the first '/' and get the path part
-    url_path = url.split('/', 1)[1]
+    url_path = url.split("/", 1)[1]
 
     for path in excluded_paths:
         if url_path.startswith(path):
@@ -71,6 +72,6 @@ def disable_tracing_path(
 
 
 def disable_tracing_hostname(
-    url: str,
-    excluded_hostnames: Sequence[str]) -> bool:
+    url: str, excluded_hostnames: Sequence[str]
+) -> bool:
     return url in excluded_hostnames
