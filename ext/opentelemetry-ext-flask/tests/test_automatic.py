@@ -13,15 +13,7 @@
 # limitations under the License.
 
 from logging import NOTSET, WARNING, disable
-from unittest import main
 
-# This is used instead of from flask import Flask, request because if not then
-# FlaskInstrumentor().instrument() would need to be called before importing
-# Flask. This is just an intrinsic limitation due the fact that we are testing
-# the instrumentor in a way that mimics how it would be called with the
-# opentelemetry-auto-instrumentation command. This does not mean that the
-# instrumentor should be used in this way in end user applications. For those
-# cases, FlaskInstrumentor.instrument(app=app) should be used.
 import flask
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
@@ -92,7 +84,3 @@ class TestAutomatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual(span_list[0].name, "hello_endpoint")
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
-
-
-if __name__ == "__main__":
-    main()

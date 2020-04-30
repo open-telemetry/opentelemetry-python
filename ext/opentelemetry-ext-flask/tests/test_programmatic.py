@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from logging import NOTSET, WARNING, disable
-from unittest import main
 
 from flask import Flask
 from werkzeug.test import Client
@@ -75,7 +74,3 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual(span_list[0].name, "hello_endpoint")
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
-
-
-if __name__ == "__main__":
-    main()
