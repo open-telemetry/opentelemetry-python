@@ -15,16 +15,15 @@
 from flask import Flask, request
 
 from opentelemetry import trace
-from opentelemetry.ext.datadog import DatadogSpanExporter
+from opentelemetry.ext.datadog import DatadogExportSpanProcessor, DatadogSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 app = Flask(__name__)
 
 trace.set_tracer_provider(TracerProvider())
 
 trace.get_tracer_provider().add_span_processor(
-    BatchExportSpanProcessor(
+    DatadogExportSpanProcessor(
         DatadogSpanExporter(
             agent_url="http://localhost:8126", service="example-server"
         )

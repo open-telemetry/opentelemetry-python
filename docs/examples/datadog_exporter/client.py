@@ -17,14 +17,13 @@ from sys import argv
 from requests import get
 
 from opentelemetry import propagators, trace
-from opentelemetry.ext.datadog import DatadogSpanExporter
+from opentelemetry.ext.datadog import DatadogExportSpanProcessor, DatadogSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 trace.set_tracer_provider(TracerProvider())
 
 trace.get_tracer_provider().add_span_processor(
-    BatchExportSpanProcessor(
+    DatadogExportSpanProcessor(
         DatadogSpanExporter(
             agent_url="http://localhost:8126", service="example-client"
         )

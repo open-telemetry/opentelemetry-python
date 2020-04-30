@@ -15,9 +15,8 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.ext.datadog import DatadogSpanExporter
+from opentelemetry.ext.datadog import DatadogExportSpanProcessor, DatadogSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
@@ -26,7 +25,7 @@ exporter = DatadogSpanExporter(
     agent_url="http://localhost:8126", service="example"
 )
 
-span_processor = BatchExportSpanProcessor(exporter)
+span_processor = DatadogExportSpanProcessor(exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 with tracer.start_as_current_span("foo"):
