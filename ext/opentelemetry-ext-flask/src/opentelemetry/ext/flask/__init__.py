@@ -34,7 +34,7 @@ Usage
 
     app = Flask(__name__)
 
-    FlaskInstrumentor().instrument(app=app)
+    FlaskInstrumentor().instrument_app(app)
 
     @app.route("/")
     def hello():
