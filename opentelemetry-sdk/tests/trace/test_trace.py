@@ -117,39 +117,16 @@ tracer_provider.add_span_processor(mock_processor)
             with tracer.use_span(default_span):
                 raise TestUseSpanException()
 
-    def test_force_flush(self):
-        tracer_provider = trace.TracerProvider()
+    def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
+        span_processor = trace.ConcurrentMultiSpanProcessor(2)
+        tracer_provider = trace.TracerProvider(
+            active_span_processor=span_processor
+        )
 
-        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
-        tracer_provider.add_span_processor(mock_processor1)
-        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
-        tracer_provider.add_span_processor(mock_processor2)
-
-        flushed = tracer_provider.force_flush()
-        self.assertTrue(flushed)
-        self.assertEqual(mock_processor1.force_flush.call_count, 1)
-        self.assertEqual(mock_processor2.force_flush.call_count, 1)
-
-        flushed = tracer_provider.force_flush(100)
-        self.assertTrue(flushed)
-        self.assertEqual(mock_processor1.force_flush.call_count, 2)
-        self.assertEqual(mock_processor2.force_flush.call_count, 2)
-
-    def test_force_flush_timeout_exceeded(self):
-        tracer_provider = trace.TracerProvider()
-
-        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
-        tracer_provider.add_span_processor(mock_processor1)
-        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
-        tracer_provider.add_span_processor(mock_processor2)
-
-        with (
-            mock.patch.object(trace, "time_ns", side_effect=(0, 0, 100000000))
-        ):
-            flushed = tracer_provider.force_flush(50)
-        self.assertFalse(flushed)
-        self.assertEqual(mock_processor1.force_flush.call_count, 1)
-        self.assertEqual(mock_processor2.force_flush.call_count, 0)
+        # pylint: disable=protected-access
+        self.assertEqual(
+            span_processor, tracer_provider._active_span_processor
+        )
 
 
 class TestTracerSampling(unittest.TestCase):
@@ -801,118 +778,3 @@ class TestSpan(unittest.TestCase):
             .get_tracer(__name__)
             .start_as_current_span("root")
         )
-
-
-def span_event_start_fmt(span_processor_name, span_name):
-    return span_processor_name + ":" + span_name + ":start"
-
-
-def span_event_end_fmt(span_processor_name, span_name):
-    return span_processor_name + ":" + span_name + ":end"
-
-
-class MySpanProcessor(trace.SpanProcessor):
-    def __init__(self, name, span_list):
-        self.name = name
-        self.span_list = span_list
-
-    def on_start(self, span: "trace.Span") -> None:
-        self.span_list.append(span_event_start_fmt(self.name, span.name))
-
-    def on_end(self, span: "trace.Span") -> None:
-        self.span_list.append(span_event_end_fmt(self.name, span.name))
-
-
-class TestSpanProcessor(unittest.TestCase):
-    def test_span_processor(self):
-        tracer_provider = trace.TracerProvider()
-        tracer = tracer_provider.get_tracer(__name__)
-
-        spans_calls_list = []  # filled by MySpanProcessor
-        expected_list = []  # filled by hand
-
-        # Span processors are created but not added to the tracer yet
-        sp1 = MySpanProcessor("SP1", spans_calls_list)
-        sp2 = MySpanProcessor("SP2", spans_calls_list)
-
-        with tracer.start_as_current_span("foo"):
-            with tracer.start_as_current_span("bar"):
-                with tracer.start_as_current_span("baz"):
-                    pass
-
-        # at this point lists must be empty
-        self.assertEqual(len(spans_calls_list), 0)
-
-        # add single span processor
-        tracer_provider.add_span_processor(sp1)
-
-        with tracer.start_as_current_span("foo"):
-            expected_list.append(span_event_start_fmt("SP1", "foo"))
-
-            with tracer.start_as_current_span("bar"):
-                expected_list.append(span_event_start_fmt("SP1", "bar"))
-
-                with tracer.start_as_current_span("baz"):
-                    expected_list.append(span_event_start_fmt("SP1", "baz"))
-
-                expected_list.append(span_event_end_fmt("SP1", "baz"))
-
-            expected_list.append(span_event_end_fmt("SP1", "bar"))
-
-        expected_list.append(span_event_end_fmt("SP1", "foo"))
-
-        self.assertListEqual(spans_calls_list, expected_list)
-
-        spans_calls_list.clear()
-        expected_list.clear()
-
-        # go for multiple span processors
-        tracer_provider.add_span_processor(sp2)
-
-        with tracer.start_as_current_span("foo"):
-            expected_list.append(span_event_start_fmt("SP1", "foo"))
-            expected_list.append(span_event_start_fmt("SP2", "foo"))
-
-            with tracer.start_as_current_span("bar"):
-                expected_list.append(span_event_start_fmt("SP1", "bar"))
-                expected_list.append(span_event_start_fmt("SP2", "bar"))
-
-                with tracer.start_as_current_span("baz"):
-                    expected_list.append(span_event_start_fmt("SP1", "baz"))
-                    expected_list.append(span_event_start_fmt("SP2", "baz"))
-
-                expected_list.append(span_event_end_fmt("SP1", "baz"))
-                expected_list.append(span_event_end_fmt("SP2", "baz"))
-
-            expected_list.append(span_event_end_fmt("SP1", "bar"))
-            expected_list.append(span_event_end_fmt("SP2", "bar"))
-
-        expected_list.append(span_event_end_fmt("SP1", "foo"))
-        expected_list.append(span_event_end_fmt("SP2", "foo"))
-
-        # compare if two lists are the same
-        self.assertListEqual(spans_calls_list, expected_list)
-
-    def test_add_span_processor_after_span_creation(self):
-        tracer_provider = trace.TracerProvider()
-        tracer = tracer_provider.get_tracer(__name__)
-
-        spans_calls_list = []  # filled by MySpanProcessor
-        expected_list = []  # filled by hand
-
-        # Span processors are created but not added to the tracer yet
-        sp = MySpanProcessor("SP1", spans_calls_list)
-
-        with tracer.start_as_current_span("foo"):
-            with tracer.start_as_current_span("bar"):
-                with tracer.start_as_current_span("baz"):
-                    # add span processor after spans have been created
-                    tracer_provider.add_span_processor(sp)
-
-                expected_list.append(span_event_end_fmt("SP1", "baz"))
-
-            expected_list.append(span_event_end_fmt("SP1", "bar"))
-
-        expected_list.append(span_event_end_fmt("SP1", "foo"))
-
-        self.assertListEqual(spans_calls_list, expected_list)
