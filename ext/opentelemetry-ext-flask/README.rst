@@ -19,12 +19,12 @@ Installation
 Configuration
 -------------
 
-Blacklist
-*********
+Exclude lists
+*************
 Excludes certain hosts and paths from being tracked. Pass in comma delimited string into environment variables.
 
-Blacklisted hosts: OPENTELEMETRY_PYTHON_FLASK_BLACKLIST_HOSTS
-Blacklisted paths: OPENTELEMETRY_PYTHON_FLASK_BLACKLIST_PATHS
+Excluded hosts: OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS
+Excluded paths: OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS
 
 
 References

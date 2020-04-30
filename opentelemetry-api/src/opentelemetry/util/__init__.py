@@ -54,13 +54,13 @@ def _load_provider(provider: str) -> Union["TracerProvider", "MeterProvider"]:  
 URL_PATTERN = '^(https?|ftp):\\/\\/'
 
 
-def disable_tracing_url(url, blacklist_paths):
-    """Disable tracing on the provided blacklist paths
+def disable_tracing_path(url, excluded_paths):
+    """Disable tracing on the provided excluded paths
 
-    If the url path starts with the blacklisted path, return True.
+    If the path starts with the excluded path, return True.
 
-    :type blacklist_paths: list
-    :param blacklist_paths: Paths to prevent from tracing
+    :type excluded_paths: list
+    :param excluded_paths: Paths to exclude from tracing
 
     :rtype: bool
     :returns: True if not tracing, False if tracing
@@ -71,20 +71,20 @@ def disable_tracing_url(url, blacklist_paths):
     # Split the url by the first '/' and get the path part
     url_path = url.split('/', 1)[1]
 
-    for path in blacklist_paths:
+    for path in excluded_paths:
         if url_path.startswith(path):
             return True
 
     return False
 
 
-def disable_tracing_hostname(url, blacklist_hostnames):
-    """Disable tracing for the provided blacklist URLs.
+def disable_tracing_hostname(url, excluded_hostnames):
+    """Disable tracing for the provided excluded hostnames.
 
-    :type blacklist_hostnames: list
-    :param blacklist_hostnames: URLs to prevent tracing
+    :type excluded_hostnames: list
+    :param excluded_hostnames: hostnames to exclude from tracing
 
     :rtype: bool
     :returns: True if not tracing, False if tracing
     """
-    return url in blacklist_hostnames
+    return url in excluded_hostnames

@@ -107,7 +107,7 @@ class _InstrumentedFlask(flask.Flask):
 
         @self.before_request
         def _before_flask_request():
-            # Do not trace if the url is blacklisted
+            # Do not trace if the url is excluded
             if _disable_trace(flask.request.url):
                 return
             environ = flask.request.environ
@@ -140,7 +140,7 @@ class _InstrumentedFlask(flask.Flask):
 
         @self.teardown_request
         def _teardown_flask_request(exc):
-            # Do not trace if the url is blacklisted
+            # Not traced if the url is excluded
             if _disable_trace(flask.request.url):
                 return
             activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
@@ -162,15 +162,15 @@ class _InstrumentedFlask(flask.Flask):
 
 
 def _disable_trace(url):
-    blacklist_hosts = configuration.Configuration().FLASK_BLACKLIST_HOSTS
-    blacklist_paths = configuration.Configuration().FLASK_BLACKLIST_PATHS
-    if blacklist_hosts:
-        blacklist_hosts = str.split(blacklist_hosts, ',')
-        if disable_tracing_hostname(url, blacklist_hosts):
+    excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
+    excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
+    if excluded_hosts:
+        excluded_hosts = str.split(excluded_hosts, ',')
+        if disable_tracing_hostname(url, excluded_hosts):
             return True
-    if blacklist_paths:
-        blacklist_paths = str.split(blacklist_paths, ',')
-        if disable_tracing_url(url, blacklist_paths):
+    if excluded_paths:
+        excluded_paths = str.split(excluded_paths, ',')
+        if disable_tracing_url(url, excluded_paths):
             return True
     return False
 

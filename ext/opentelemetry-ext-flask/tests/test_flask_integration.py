@@ -56,15 +56,15 @@ class TestFlaskIntegration(WsgiTestBase):
                 raise ValueError(":-(")
             return "Hello: " + str(helloid)
 
-        def blacklist_endpoint():
-            return "blacklist"
+        def excluded_endpoint():
+            return "excluded"
 
-        def blacklist2_endpoint():
-            return "blacklist2"
+        def excluded2_endpoint():
+            return "excluded2"
 
         self.app.route("/hello/<int:helloid>")(hello_endpoint)
-        self.app.route("/blacklist")(blacklist_endpoint)
-        self.app.route("/blacklist2")(blacklist2_endpoint)
+        self.app.route("/excluded")(excluded_endpoint)
+        self.app.route("/excluded2")(excluded2_endpoint)
 
         self.client = Client(self.app, BaseResponse)
 
@@ -143,14 +143,14 @@ class TestFlaskIntegration(WsgiTestBase):
     @patch.dict(
         "os.environ",  # type: ignore
         {
-            "OPENTELEMETRY_PYTHON_FLASK_BLACKLIST_HOSTS": "http://localhost/blacklist",
-            "OPENTELEMETRY_PYTHON_FLASK_BLACKLIST_PATHS": "blacklist2",
+            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS": "http://localhost/excluded",
+            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS": "excluded2",
         },
     )
-    def test_blacklist_path(self):
+    def test_excluded_path(self):
         self.client.get("/hello/123")
-        self.client.get("/blacklist")
-        self.client.get("/blacklist2")
+        self.client.get("/excluded")
+        self.client.get("/excluded2")
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "hello_endpoint")
