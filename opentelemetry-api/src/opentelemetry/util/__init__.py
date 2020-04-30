@@ -14,7 +14,7 @@
 import re
 import time
 from logging import getLogger
-from typing import Union
+from typing import Sequence, Union
 
 from pkg_resources import iter_entry_points
 
@@ -54,17 +54,9 @@ def _load_provider(provider: str) -> Union["TracerProvider", "MeterProvider"]:  
 URL_PATTERN = '^(https?|ftp):\\/\\/'
 
 
-def disable_tracing_path(url, excluded_paths):
-    """Disable tracing on the provided excluded paths
-
-    If the path starts with the excluded path, return True.
-
-    :type excluded_paths: list
-    :param excluded_paths: Paths to exclude from tracing
-
-    :rtype: bool
-    :returns: True if not tracing, False if tracing
-    """
+def disable_tracing_path(
+    url: str,
+    excluded_paths: Sequence[str]) -> bool:
     # Remove the 'https?|ftp://' if exists
     url = re.sub(URL_PATTERN, '', url)
 
@@ -78,13 +70,7 @@ def disable_tracing_path(url, excluded_paths):
     return False
 
 
-def disable_tracing_hostname(url, excluded_hostnames):
-    """Disable tracing for the provided excluded hostnames.
-
-    :type excluded_hostnames: list
-    :param excluded_hostnames: hostnames to exclude from tracing
-
-    :rtype: bool
-    :returns: True if not tracing, False if tracing
-    """
+def disable_tracing_hostname(
+    url: str,
+    excluded_hostnames: Sequence[str]) -> bool:
     return url in excluded_hostnames
