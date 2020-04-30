@@ -95,7 +95,7 @@ class TestFlaskIntegration(WsgiTestBase):
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
-        resp = self.client.get("/hello/123")
+        self.client.get("/hello/123")
 
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
