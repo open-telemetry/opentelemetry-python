@@ -20,14 +20,10 @@ from opentelemetry.configuration import Configuration  # type: ignore
 
 
 class TestConfiguration(TestCase):
-    def setUp(self):
-        # This is added here to force a reload of the whole Configuration
-        # class, resetting its internal attributes so that each tests starts
-        # with a clean class.
-        from opentelemetry.configuration import Configuration  # type: ignore
-
     def tearDown(self):
-        from opentelemetry.configuration import Configuration  # type: ignore
+        # This call resets the attributes of the Configuration class so that
+        # each test is executed in the same conditions.
+        Configuration._reset()
 
     def test_singleton(self):
         self.assertIsInstance(Configuration(), Configuration)

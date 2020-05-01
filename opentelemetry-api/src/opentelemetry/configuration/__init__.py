@@ -122,3 +122,14 @@ class Configuration:
 
     def __getattr__(self, name):
         return None
+
+    @classmethod
+    def _reset(cls):
+        """
+        This method "resets" the global configuration attributes
+
+        It is not intended to be used by production code but by testing code
+        only.
+        """
+        cls.__slots__ = []
+        cls._instance = None
