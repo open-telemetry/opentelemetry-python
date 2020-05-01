@@ -54,13 +54,13 @@ def _load_provider(
 
 
 # Pattern for matching up until the first '/' after the 'https://' part.
-URL_PATTERN = "^(https?|ftp):\\/\\/.*\\/"
+_URL_PATTERN = r"(https?|ftp)://.*?/"
 
 
 def disable_tracing_path(url: str, excluded_paths: Sequence[str]) -> bool:
     if excluded_paths:
-        # Match only the part after the first '/' that is not in URL_PATTERN
-        regex = "{}({})".format(URL_PATTERN, "|".join(excluded_paths))
+        # Match only the part after the first '/' that is not in _URL_PATTERN
+        regex = "{}({})".format(_URL_PATTERN, "|".join(excluded_paths))
         if re.match(regex, url):
             return True
     return False
