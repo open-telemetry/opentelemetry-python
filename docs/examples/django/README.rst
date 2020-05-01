@@ -45,7 +45,7 @@ Clone the `opentelemetry-python` repository and go to `opentelemetry-python/docs
 
 Once there run this command:
 
-`opentelemetry-python-autoinstrumentation python3 manage.py runserver`
+`opentelemetry-auto-instrumentation python3 manage.py runserver`
 
 Execution of the client
 .......................
