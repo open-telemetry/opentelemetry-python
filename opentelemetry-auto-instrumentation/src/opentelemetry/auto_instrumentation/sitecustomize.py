@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Usage
------
+from logging import getLogger
 
-This package provides a command that automatically instruments a program:
+from pkg_resources import iter_entry_points
 
-::
+logger = getLogger(__file__)
 
-    opentelemetry-auto-instrumentation python program.py
 
-The code in ``program.py`` needs to use one of the packages for which there is
-an OpenTelemetry integration. For a list of the available integrations please
-check `here <https://opentelemetry-python.readthedocs.io/>`_.
-"""
+for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+    try:
+        entry_point.load()().instrument()  # type: ignore
+        logger.debug("Instrumented %s", entry_point.name)
+
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Instrumenting of %s failed", entry_point.name)
