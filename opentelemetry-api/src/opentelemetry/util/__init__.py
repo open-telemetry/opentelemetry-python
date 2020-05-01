@@ -63,8 +63,7 @@ def disable_tracing_path(url: str, excluded_paths: Sequence[str]) -> bool:
         regex = "{}({})".format(URL_PATTERN, "|".join(excluded_paths))
         if re.match(regex, url):
             return True
-        else:
-            return False
+    return False
 
 
 def disable_tracing_hostname(
