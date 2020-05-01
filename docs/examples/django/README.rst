@@ -142,5 +142,6 @@ Instrumentation package.
 References
 ----------
 
+* `Django <https://djangoproject.com/>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
 * `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python/tree/master/ext/opentelemetry-ext-django>`_
