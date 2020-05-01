@@ -41,7 +41,7 @@ Set these environment variables first:
 #. `export OPENTELEMETRY_PYTHON_DJANGO_INSTRUMENT=True`
 #. `export DJANGO_SETTINGS_MODULE=instrumentation_example.settings`
 
-Clone the `opentelemetry-python` repository and go to `opentelemetry-python/ext/opentelemetry-ext-django/example`.
+Clone the `opentelemetry-python` repository and go to `opentelemetry-python/docs/examples/django`.
 
 Once there run this command:
 
