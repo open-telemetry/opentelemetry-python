@@ -13,18 +13,12 @@
 # limitations under the License.
 
 import os
-import time
-import unittest
 
 import pymysql as pymy
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymysql import trace_integration
-from opentelemetry.sdk.trace import Tracer, TracerProvider
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
+from opentelemetry.ext.pymysql import PyMySQLInstrumentor
+from opentelemetry.test.test_base import TestBase
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD ", "testpassword")
@@ -33,17 +27,14 @@ MYSQL_PORT = int(os.getenv("MYSQL_PORT ", "3306"))
 MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME ", "opentelemetry-tests")
 
 
-class TestFunctionalPyMysql(unittest.TestCase):
+class TestFunctionalPyMysql(TestBase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls._connection = None
         cls._cursor = None
-        cls._tracer_provider = TracerProvider()
-        cls._tracer = Tracer(cls._tracer_provider, None)
-        cls._span_exporter = InMemorySpanExporter()
-        cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
-        cls._tracer_provider.add_span_processor(cls._span_processor)
-        trace_integration(cls._tracer_provider)
+        cls._tracer = cls.tracer_provider.get_tracer(__name__)
+        PyMySQLInstrumentor().instrument()
         cls._connection = pymy.connect(
             user=MYSQL_USER,
             password=MYSQL_PASSWORD,
@@ -58,11 +49,8 @@ class TestFunctionalPyMysql(unittest.TestCase):
         if cls._connection:
             cls._connection.close()
 
-    def setUp(self):
-        self._span_exporter.clear()
-
     def validate_spans(self):
-        spans = self._span_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 2)
         for span in spans:
             if span.name == "rootSpan":
