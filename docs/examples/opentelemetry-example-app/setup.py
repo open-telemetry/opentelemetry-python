@@ -37,7 +37,7 @@ setuptools.setup(
         "typing; python_version<'3.5'",
         "opentelemetry-api",
         "opentelemetry-sdk",
-        "opentelemetry-ext-http-requests",
+        "opentelemetry-ext-requests",
         "opentelemetry-ext-flask",
         "flask",
         "requests",
