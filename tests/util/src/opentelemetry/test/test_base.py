@@ -16,7 +16,13 @@ import logging
 import unittest
 from contextlib import contextmanager
 
+from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import export as metrics_export
+from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import (
+    InMemoryMetricsExporter,
+)
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -26,14 +32,19 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.original_provider = trace_api.get_tracer_provider()
+        cls.original_tracer_provider = trace_api.get_tracer_provider()
         result = cls.create_tracer_provider()
         cls.tracer_provider, cls.memory_exporter = result
         trace_api.set_tracer_provider(cls.tracer_provider)
+        cls.original_meter_provider = metrics_api.get_meter_provider()
+        result = cls.create_meter_provider()
+        cls.meter_provider, cls.memory_metrics_exporter = result
+        metrics_api.set_meter_provider(cls.meter_provider)
 
     @classmethod
     def tearDownClass(cls):
-        trace_api.set_tracer_provider(cls.original_provider)
+        trace_api.set_tracer_provider(cls.original_tracer_provider)
+        metrics_api.set_meter_provider(cls.original_meter_provider)
 
     def setUp(self):
         self.memory_exporter.clear()
@@ -61,6 +72,12 @@ class TestBase(unittest.TestCase):
         tracer_provider.add_span_processor(span_processor)
 
         return tracer_provider, memory_exporter
+
+    @staticmethod
+    def create_meter_provider(**kwargs):
+        meter_provider = MeterProvider(**kwargs)
+        memory_exporter = InMemoryMetricsExporter()
+        return meter_provider, memory_exporter
 
     @staticmethod
     @contextmanager
