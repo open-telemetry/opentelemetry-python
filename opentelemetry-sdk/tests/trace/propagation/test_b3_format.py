@@ -45,7 +45,7 @@ def get_child_parent_new_carrier(old_carrier):
             trace_flags=parent_context.trace_flags,
             trace_state=parent_context.trace_state,
         ),
-        parent=parent,
+        parent=parent.get_context(),
     )
 
     new_carrier = {}

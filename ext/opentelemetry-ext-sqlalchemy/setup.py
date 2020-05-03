@@ -11,18 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-"""
-Usage
------
+import setuptools
 
-This package provides a command that automatically instruments a program:
+BASE_DIR = os.path.dirname(__file__)
+VERSION_FILENAME = os.path.join(
+    BASE_DIR, "src", "opentelemetry", "ext", "sqlalchemy", "version.py",
+)
+PACKAGE_INFO = {}
+with open(VERSION_FILENAME) as f:
+    exec(f.read(), PACKAGE_INFO)
 
-::
-
-    opentelemetry-auto-instrumentation python program.py
-
-The code in ``program.py`` needs to use one of the packages for which there is
-an OpenTelemetry integration. For a list of the available integrations please
-check `here <https://opentelemetry-python.readthedocs.io/>`_.
-"""
+setuptools.setup(version=PACKAGE_INFO["__version__"])

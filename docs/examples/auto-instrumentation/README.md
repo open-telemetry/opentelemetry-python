@@ -55,11 +55,9 @@ $ source auto_instrumentation/bin/activate
 # Installation
 
 ```sh
-$ pip install opentelemetry-api
 $ pip install opentelemetry-sdk
 $ pip install opentelemetry-auto-instrumentation
-$ pip install ext/opentelemetry-ext-flask
-$ pip install flask
+$ pip install opentelemetry-ext-flask
 $ pip install requests
 ```
 
@@ -71,20 +69,46 @@ This is done in 2 separate consoles, one to run each of the scripts that make up
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python opentelemetry-python/opentelemetry-auto-instrumentation/example/server_instrumented.py
+$ python opentelemetry-python/docs/examples/auto-instrumentation/server_instrumented.py
 ```
 
 ```sh
 $ source auto_instrumentation/bin/activate
-$ python opentelemetry-python/opentelemetry-auto-instrumentation/example/client.py testing
+$ python opentelemetry-python/docs/examples/auto-instrumentation/client.py testing
 ```
 
 The execution of `server_instrumented.py` should return an output similar to:
 
 ```sh
-Hello, testing!
-Span(name="serv_request", context=SpanContext(trace_id=0x9c0e0ce8f7b7dbb51d1d6e744a4dad49, span_id=0xd1ba3ec4c76a0d7f, trace_state={}), kind=SpanKind.INTERNAL, parent=None, start_time=2020-03-19T00:06:31.275719Z, end_time=2020-03-19T00:06:31.275920Z)
-127.0.0.1 - - [18/Mar/2020 18:06:31] "GET /serv_request?helloStr=Hello%2C+testing%21 HTTP/1.1" 200 -
+{
+    "name": "server_request",
+    "context": {
+        "trace_id": "0xfa002aad260b5f7110db674a9ddfcd23",
+        "span_id": "0x8b8bbaf3ca9c5131",
+        "trace_state": "{}"
+    },
+    "kind": "SpanKind.SERVER",
+    "parent_id": null,
+    "start_time": "2020-04-30T17:28:57.886397Z",
+    "end_time": "2020-04-30T17:28:57.886490Z",
+    "status": {
+        "canonical_code": "OK"
+    },
+    "attributes": {
+        "component": "http",
+        "http.method": "GET",
+        "http.server_name": "127.0.0.1",
+        "http.scheme": "http",
+        "host.port": 8082,
+        "http.host": "localhost:8082",
+        "http.target": "/server_request?param=testing",
+        "net.peer.ip": "127.0.0.1",
+        "net.peer.port": 52872,
+        "http.flavor": "1.1"
+    },
+    "events": [],
+    "links": []
+}
 ```
 
 ## Execution of an automatically instrumented server
@@ -92,21 +116,50 @@ Span(name="serv_request", context=SpanContext(trace_id=0x9c0e0ce8f7b7dbb51d1d6e7
 Now, kill the execution of `server_instrumented.py` with `ctrl + c` and run this instead:
 
 ```sh
-$ opentelemetry-auto-instrumentation opentelemetry-python/opentelemetry-auto-instrumentation/example/server_uninstrumented.py
+$ opentelemetry-auto-instrumentation python docs/examples/auto-instrumentation/server_uninstrumented.py
 ```
 
 In the console where you previously executed `client.py`, run again this again:
 
 ```sh
-$ python opentelemetry-python/opentelemetry-auto-instrumentation/example/client.py testing
+$ python opentelemetry-python/docs/examples/auto-instrumentation/client.py testing
 ```
 
 The execution of `server_uninstrumented.py` should return an output similar to:
 
 ```sh
-Hello, testing!
-Span(name="serv_request", context=SpanContext(trace_id=0xf26b28b5243e48f5f96bfc753f95f3f0, span_id=0xbeb179a095d087ed, trace_state={}), kind=SpanKind.SERVER, parent=<opentelemetry.trace.DefaultSpan object at 0x7f1a20a54908>, start_time=2020-03-19T00:24:18.828561Z, end_time=2020-03-19T00:24:18.845127Z)
-127.0.0.1 - - [18/Mar/2020 18:24:18] "GET /serv_request?helloStr=Hello%2C+testing%21 HTTP/1.1" 200 -
+{
+    "name": "server_request",
+    "context": {
+        "trace_id": "0x9f528e0b76189f539d9c21b1a7a2fc24",
+        "span_id": "0xd79760685cd4c269",
+        "trace_state": "{}"
+    },
+    "kind": "SpanKind.SERVER",
+    "parent_id": "0xb4fb7eee22ef78e4",
+    "start_time": "2020-04-30T17:10:02.400604Z",
+    "end_time": "2020-04-30T17:10:02.401858Z",
+    "status": {
+        "canonical_code": "OK"
+    },
+    "attributes": {
+        "component": "http",
+        "http.method": "GET",
+        "http.server_name": "127.0.0.1",
+        "http.scheme": "http",
+        "host.port": 8082,
+        "http.host": "localhost:8082",
+        "http.target": "/server_request?param=testing",
+        "net.peer.ip": "127.0.0.1",
+        "net.peer.port": 48240,
+        "http.flavor": "1.1",
+        "http.route": "/server_request",
+        "http.status_text": "OK",
+        "http.status_code": 200
+    },
+    "events": [],
+    "links": []
+}
 ```
 
-As you can see, both outputs are equivalentsince the automatic instrumentation does what the manual instrumentation does too.
+Both outputs are equivalent since the automatic instrumentation does what the manual instrumentation does too.
