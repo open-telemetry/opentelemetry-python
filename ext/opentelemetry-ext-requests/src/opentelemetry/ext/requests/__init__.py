@@ -22,10 +22,10 @@ Usage
 .. code-block:: python
 
     import requests
-    import opentelemetry.ext.http_requests
+    import opentelemetry.ext.requests
 
     # You can optionally pass a custom TracerProvider to RequestInstrumentor.instrument()
-    opentelemetry.ext.http_requests.RequestInstrumentor.instrument()
+    opentelemetry.ext.requests.RequestInstrumentor.instrument()
     response = requests.get(url="https://www.example.org/")
 
 Limitations
@@ -49,7 +49,7 @@ from requests.sessions import Session
 
 from opentelemetry import context, propagators, trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.ext.http_requests.version import __version__
+from opentelemetry.ext.requests.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 

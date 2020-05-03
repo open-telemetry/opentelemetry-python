@@ -18,8 +18,9 @@ import httpretty
 import requests
 import urllib3
 
+import opentelemetry.ext.requests
 from opentelemetry import context, propagators, trace
-from opentelemetry.ext import http_requests
+from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
 from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 from opentelemetry.test.test_base import TestBase
@@ -30,7 +31,7 @@ class TestRequestsIntegration(TestBase):
 
     def setUp(self):
         super().setUp()
-        http_requests.RequestsInstrumentor().instrument()
+        RequestsInstrumentor().instrument()
         httpretty.enable()
         httpretty.register_uri(
             httpretty.GET, self.URL, body="Hello!",
@@ -38,7 +39,7 @@ class TestRequestsIntegration(TestBase):
 
     def tearDown(self):
         super().tearDown()
-        http_requests.RequestsInstrumentor().uninstrument()
+        RequestsInstrumentor().uninstrument()
         httpretty.disable()
 
     def test_basic(self):
@@ -67,7 +68,7 @@ class TestRequestsIntegration(TestBase):
             span.status.canonical_code, trace.status.StatusCanonicalCode.OK
         )
 
-        self.check_span_instrumentation_info(span, http_requests)
+        self.check_span_instrumentation_info(span, opentelemetry.ext.requests)
 
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"
@@ -111,17 +112,17 @@ class TestRequestsIntegration(TestBase):
         )
 
     def test_uninstrument(self):
-        http_requests.RequestsInstrumentor().uninstrument()
+        RequestsInstrumentor().uninstrument()
         result = requests.get(self.URL)
         self.assertEqual(result.text, "Hello!")
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 0)
         # instrument again to avoid annoying warning message
-        http_requests.RequestsInstrumentor().instrument()
+        RequestsInstrumentor().instrument()
 
     def test_uninstrument_session(self):
         session1 = requests.Session()
-        http_requests.RequestsInstrumentor().uninstrument_session(session1)
+        RequestsInstrumentor().uninstrument_session(session1)
 
         result = session1.get(self.URL)
         self.assertEqual(result.text, "Hello!")
@@ -186,10 +187,8 @@ class TestRequestsIntegration(TestBase):
         resource = resources.Resource.create({})
         result = self.create_tracer_provider(resource=resource)
         tracer_provider, exporter = result
-        http_requests.RequestsInstrumentor().uninstrument()
-        http_requests.RequestsInstrumentor().instrument(
-            tracer_provider=tracer_provider
-        )
+        RequestsInstrumentor().uninstrument()
+        RequestsInstrumentor().instrument(tracer_provider=tracer_provider)
 
         result = requests.get(self.URL)
         self.assertEqual(result.text, "Hello!")
