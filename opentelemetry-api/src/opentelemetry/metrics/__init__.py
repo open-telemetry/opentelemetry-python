@@ -221,7 +221,7 @@ class MeterProvider(abc.ABC):
                 This should *not* be the name of the module that is
                 instrumented but the name of the module doing the instrumentation.
                 E.g., instead of ``"requests"``, use
-                ``"opentelemetry.ext.http_requests"``.
+                ``"opentelemetry.ext.requests"``.
 
             stateful: True/False to indicate whether the meter will be
                     stateful. True indicates the meter computes checkpoints

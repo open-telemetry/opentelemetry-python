@@ -15,6 +15,7 @@
 from flask import Flask, request
 
 from opentelemetry import propagators, trace
+from opentelemetry.ext.wsgi import collect_request_attributes
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -38,6 +39,8 @@ def server_request():
         parent=propagators.extract(
             lambda dict_, key: dict_.get(key, []), request.headers
         )["current-span"],
+        kind=trace.SpanKind.SERVER,
+        attributes=collect_request_attributes(request.environ),
     ):
         print(request.args.get("param"))
         return "served"

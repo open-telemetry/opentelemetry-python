@@ -3,7 +3,7 @@ HTTP Integration Example
 
 This example shows how to use
 :doc:`WSGI Middleware <../../ext/wsgi/wsgi>`
-and :doc:`requests <../../ext/http_requests/http_requests>` integrations to
+and :doc:`requests <../../ext/requests/requests>` integrations to
 instrument an HTTP client and server in Python.
 
 The source files required to run this example are available :scm_web:`here <docs/examples/http/>`.
@@ -16,7 +16,7 @@ Installation
     pip install opentelemetry-api
     pip install opentelemetry-sdk
     pip install opentelemetry-ext-wsgi
-    pip install opentelemetry-ext-http-requests
+    pip install opentelemetry-ext-requests
     pip install flask
 
 
@@ -60,6 +60,6 @@ Useful links
 - OpenTelemetry_
 - :doc:`../../api/trace`
 - :doc:`../../ext/wsgi/wsgi`
-- :doc:`../../ext/http_requests/http_requests`
+- :doc:`../../ext/requests/requests`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
