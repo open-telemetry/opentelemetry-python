@@ -22,6 +22,7 @@ import opentelemetry.ext.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
@@ -199,6 +200,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
+        otel_spans[0].resource = Resource(labels={ "key_resource": "some_resource" })
         otel_spans[0].set_status(
             Status(StatusCanonicalCode.UNKNOWN, "Example description")
         )
@@ -236,6 +238,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         key="key_float",
                         vType=jaeger.TagType.DOUBLE,
                         vDouble=111.22,
+                    ),
+                    jaeger.Tag(
+                        key="key_resource",
+                        vType=jaeger.TagType.STRING,
+                        vStr="some_resource"
                     ),
                     jaeger.Tag(
                         key="status.code",
