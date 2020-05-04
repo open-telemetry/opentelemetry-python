@@ -82,7 +82,7 @@ class TestFunctionalMysql(TestBase):
         """Should create a child span for executemany
         """
         with self._tracer.start_as_current_span("rootSpan"):
-            data = ["1", "2", "3"]
+            data = (("1",), ("2",), ("3",))
             stmt = "INSERT INTO test (id) VALUES (%s)"
             self._cursor.executemany(stmt, data)
         self.validate_spans()
