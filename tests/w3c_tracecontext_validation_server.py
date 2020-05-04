@@ -23,24 +23,23 @@ import json
 import flask
 import requests
 
+from opentelemetry import trace
+from opentelemetry.ext.requests import RequestsInstrumentor
+from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerProvider
-
-# FIXME This could likely be avoided by integrating this script into the
-# standard test running mechanisms.
-
-from opentelemetry import trace  # noqa # isort:skip
-from opentelemetry.ext import http_requests  # noqa # isort:skip"
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware  # noqa # isort:skip
-from opentelemetry.sdk.trace.export import (  # noqa # isort:skip
+from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+
+# FIXME This could likely be avoided by integrating this script into the
+# standard test running mechanisms.
 
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
 trace.set_tracer_provider(TracerProvider())
-http_requests.RequestsInstrumentor().instrument()
+RequestsInstrumentor().instrument()
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = SimpleExportSpanProcessor(ConsoleSpanExporter())
