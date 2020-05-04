@@ -30,37 +30,57 @@ class ViewData:
         self.aggregators = {} # Label to aggregator
 
     def record(self, value, labels):
-        # TODO: Check view configuration here to keep/drop keys
+        # Aggregate based on ViewConfig
+        if self.view.config == ViewConfig.LABEL_KEYS:
+            updated_labels = []
+            label_key_set = set(self.view.label_keys)
+            for label in labels:
+                if label[0] in label_key_set:
+                    updated_labels.append(label)
+            labels = tuple(updated_labels)
+        elif self.view.config == ViewConfig.DROP_ALL:
+            labels = ()
         if self.aggregators.get(labels) is None:
             self.aggregators[labels] = self.view.new_aggregator()
         # Labels are already converted to tuples to be used as keys
         self.aggregators[labels].update(value)
 
 
+class ViewConfig:
+
+    UNGROUPED = 0
+    LABEL_KEYS = 1
+    DROP_ALL = 2
+
+
 class View:
 
-    def __init__(self, metric, aggregation, label_keys=None):
+    def __init__(self, metric, aggregation, label_keys=None, config=ViewConfig.UNGROUPED):
         self.metric = metric
         self.aggregation = aggregation
-        # TODO: add configuration for aggregators (histogram, etc.)
-        # TODO: add label key configuration
         if label_keys is None:
             label_keys = []
+        # TODO: add configuration for aggregators (histogram, etc.)
         self.label_keys = sorted(label_keys)
+        self.config = config
 
     def new_aggregator(self):
         return self.aggregation.new_aggregator()
 
-    # Uniqueness is based on metric, aggregation type and ordered label keys
+    # Uniqueness is based on metric, aggregation type, ordered label keys and ViewConfig
     def __hash__(self):
         return hash(
-            (self.metric, self.aggregation.__class__, tuple(self.label_keys))
+            (self.metric,
+            self.aggregation.__class__,
+            tuple(self.label_keys),
+            self.config)
         )
 
     def __eq__(self, other):
         return self.metric == other.metric and \
             self.aggregation.__class__ == other.aggregation.__class__ and \
-            self.label_keys.sort() == other.label_keys.sort()
+            self.label_keys.sort() == other.label_keys.sort() and \
+            self.config == other.config
 
 
 class ViewManager:
