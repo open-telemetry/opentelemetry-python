@@ -26,7 +26,7 @@ _LOG = getLogger(__name__)
 class BaseInstrumentor(ABC):
     """An ABC for instrumentors
 
-    Child classes of this ABC are implemented to instrument specific third
+    Child classes of this ABC should instrument specific third
     party libraries or frameworks either by using the
     ``opentelemetry-auto-instrumentation`` command or by calling their methods
     directly.
