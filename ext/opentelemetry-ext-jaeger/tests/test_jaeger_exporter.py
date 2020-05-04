@@ -214,7 +214,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         # pylint: disable=protected-access
         spans = jaeger_exporter._translate_to_jaeger(otel_spans)
-        # print(spans[0])
 
         expected_spans = [
             jaeger.Span(
