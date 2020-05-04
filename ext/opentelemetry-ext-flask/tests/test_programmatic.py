@@ -18,7 +18,8 @@ from flask import Flask
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
-from opentelemetry import trace as trace_api
+from opentelemetry import trace
+from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
@@ -30,6 +31,8 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
     def setUp(self):
         super().setUp()
 
+        Configuration._instance = None  # pylint: disable=protected-access
+        Configuration.__slots__ = []  # pylint: disable=protected-access
         self.app = Flask(__name__)
 
         FlaskInstrumentor().instrument_app(self.app)
@@ -39,7 +42,15 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
                 raise ValueError(":-(")
             return "Hello: " + str(helloid)
 
+        def excluded_endpoint():
+            return "excluded"
+
+        def excluded2_endpoint():
+            return "excluded2"
+
         self.app.route("/hello/<int:helloid>")(hello_endpoint)
+        self.app.route("/excluded")(excluded_endpoint)
+        self.app.route("/excluded2")(excluded2_endpoint)
 
         self.client = Client(self.app, BaseResponse)
 
@@ -58,7 +69,7 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
         FlaskInstrumentor().uninstrument_app(self.app)
@@ -72,5 +83,5 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)

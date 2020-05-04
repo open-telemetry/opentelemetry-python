@@ -33,7 +33,7 @@ from opentelemetry.sdk.trace.export import (
 # It must be done before instrumenting any library
 trace.set_tracer_provider(TracerProvider())
 
-opentelemetry.ext.http_requests.RequestsInstrumentor().instrument()
+opentelemetry.ext.requests.RequestsInstrumentor().instrument()
 
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())

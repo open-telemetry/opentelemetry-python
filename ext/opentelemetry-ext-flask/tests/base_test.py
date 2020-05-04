@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import patch
+
 from flask import request
 
-from opentelemetry import trace as trace_api
+from opentelemetry import trace
 
 
 def expected_attributes(override_attributes):
@@ -36,6 +38,7 @@ def expected_attributes(override_attributes):
 
 
 class InstrumentationTest:
+
     # pylint: disable=no-member
     def test_only_strings_in_environ(self):
         """
@@ -65,7 +68,7 @@ class InstrumentationTest:
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_404(self):
@@ -84,7 +87,7 @@ class InstrumentationTest:
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "/bye")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_internal_error(self):
@@ -102,5 +105,22 @@ class InstrumentationTest:
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS": (
+                "http://localhost/excluded"
+            ),
+            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS": "excluded2",
+        },
+    )
+    def test_excluded_path(self):
+        self.client.get("/hello/123")
+        self.client.get("/excluded")
+        self.client.get("/excluded2")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "hello_endpoint")

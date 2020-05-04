@@ -78,18 +78,21 @@ def _rewrapped_app(wsgi_app):
         environ[_ENVIRON_STARTTIME_KEY] = time_ns()
 
         def _start_response(status, response_headers, *args, **kwargs):
-            span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
 
-            if span:
-                otel_wsgi.add_response_attributes(
-                    span, status, response_headers
-                )
-            else:
-                _logger.warning(
-                    "Flask environ's OpenTelemetry span "
-                    "missing at _start_response(%s)",
-                    status,
-                )
+            if not _disable_trace(flask.request.url):
+
+                span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
+
+                if span:
+                    otel_wsgi.add_response_attributes(
+                        span, status, response_headers
+                    )
+                else:
+                    _logger.warning(
+                        "Flask environ's OpenTelemetry span "
+                        "missing at _start_response(%s)",
+                        status,
+                    )
 
             return start_response(status, response_headers, *args, **kwargs)
 
@@ -99,6 +102,9 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
+    if _disable_trace(flask.request.url):
+        return
+
     environ = flask.request.environ
     span_name = flask.request.endpoint or otel_wsgi.get_default_span_name(
         environ
@@ -160,6 +166,7 @@ class _InstrumentedFlask(flask.Flask):
 def _disable_trace(url):
     excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
     excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
+
     if excluded_hosts:
         excluded_hosts = str.split(excluded_hosts, ",")
         if disable_tracing_hostname(url, excluded_hosts):
