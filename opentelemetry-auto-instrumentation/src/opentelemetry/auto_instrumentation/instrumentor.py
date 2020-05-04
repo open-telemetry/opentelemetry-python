@@ -64,18 +64,13 @@ class BaseInstrumentor(ABC):
         mechanism) that will be used later by the code in the ``instrument``
         implementation via the global ``Configuration`` object.
 
-        When this method is to be called directly in the user code, ``kwargs``
-        should be used to pass attributes that will override the configuration
-        values read by the ``Configuration`` object.
+        The ``instrument`` methods ``kwargs`` should default to values from the
+        ``Configuration`` object.
 
-        In this way, calling this method directly without passing any optional
-        values should do the very same thing that the
-        ``opentelemetry-auto-instrumentation`` command does. The idea behind
-        this approach is also to keep the ``Configuration`` object immutable.
-
-        This is necessary because this object is used by all the OpenTelemetry
-        components and any change to one of its attributes could break another
-        component, leading to very hard to debug bugs.
+        This means that calling this method directly without passing any
+        optional values should do the very same thing that the
+        ``opentelemetry-auto-instrumentation`` command does. This approach is
+        followed because the ``Configuration`` object is immutable.
         """
 
         if not self._is_instrumented:
@@ -88,7 +83,11 @@ class BaseInstrumentor(ABC):
         return None
 
     def uninstrument(self, **kwargs):
-        """Uninstrument the library"""
+        """Uninstrument the library
+
+        See ``BaseInstrumentor.instrument`` for more information regarding the
+        usage of ``kwargs``.
+        """
 
         if self._is_instrumented:
             result = self._uninstrument(**kwargs)
