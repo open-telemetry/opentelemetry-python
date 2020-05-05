@@ -49,56 +49,51 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
 
+ATTRIBUTE_JINJA2_TEMPLATE_NAME = "jinja2.template_name"
+ATTRIBUTE_JINJA2_TEMPLATE_PATH = "jinja2.template_path"
 DEFAULT_TEMPLATE_NAME = "<memory>"
 
 
 def _wrap_render(wrapped, instance, args, kwargs):
     """Wrap `Template.render()` or `Template.generate()`
     """
-    template_name = instance.name or DEFAULT_TEMPLATE_NAME
     tracer = trace.get_tracer(__name__, __version__)
+    template_name = instance.name or DEFAULT_TEMPLATE_NAME
+    attributes = {ATTRIBUTE_JINJA2_TEMPLATE_NAME: template_name}
     with tracer.start_as_current_span(
-        "jinja2.render", kind=trace.SpanKind.INTERNAL
-    ) as span:
-        try:
-            return wrapped(*args, **kwargs)
-        finally:
-            span.set_attribute("component", "template")
-            span.set_attribute("jinja2.template_name", template_name)
+        "jinja2.render", kind=trace.SpanKind.INTERNAL, attributes=attributes
+    ):
+        return wrapped(*args, **kwargs)
 
 
 def _wrap_compile(wrapped, _, args, kwargs):
-    if len(args) > 1:
-        template_name = args[1]
-    else:
-        template_name = kwargs.get("name", DEFAULT_TEMPLATE_NAME)
-
     tracer = trace.get_tracer(__name__, __version__)
+    template_name = (
+        args[1] if len(args) > 1 else kwargs.get("name", DEFAULT_TEMPLATE_NAME)
+    )
+    attributes = {ATTRIBUTE_JINJA2_TEMPLATE_NAME: template_name}
     with tracer.start_as_current_span(
-        "jinja2.compile", kind=trace.SpanKind.INTERNAL
-    ) as span:
-        try:
-            return wrapped(*args, **kwargs)
-        finally:
-            span.set_attribute("component", "template")
-            span.set_attribute("jinja2.template_name", template_name)
+        "jinja2.compile", kind=trace.SpanKind.INTERNAL, attributes=attributes
+    ):
+        return wrapped(*args, **kwargs)
 
 
 def _wrap_load_template(wrapped, _, args, kwargs):
-    template_name = kwargs.get("name", args[0])
     tracer = trace.get_tracer(__name__, __version__)
+    template_name = kwargs.get("name", args[0])
+    attributes = {ATTRIBUTE_JINJA2_TEMPLATE_NAME: template_name}
     with tracer.start_as_current_span(
-        "jinja2.load", kind=trace.SpanKind.INTERNAL
+        "jinja2.load", kind=trace.SpanKind.INTERNAL, attributes=attributes
     ) as span:
         template = None
         try:
             template = wrapped(*args, **kwargs)
             return template
         finally:
-            span.set_attribute("component", "template")
-            span.set_attribute("jinja2.template_name", template_name)
             if template:
-                span.set_attribute("jinja2.template_path", template.filename)
+                span.set_attribute(
+                    ATTRIBUTE_JINJA2_TEMPLATE_PATH, template.filename
+                )
 
 
 def _unwrap(obj, attr):

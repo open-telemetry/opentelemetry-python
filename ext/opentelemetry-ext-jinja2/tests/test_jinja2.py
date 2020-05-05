@@ -40,15 +40,13 @@ class TestJinja2Instrumentor(TestBase):
         self.assertEqual(spans[0].name, "jinja2.compile")
         self.assertEqual(spans[0].kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
-            spans[0].attributes,
-            {"component": "template", "jinja2.template_name": "<memory>"},
+            spans[0].attributes, {"jinja2.template_name": "<memory>"},
         )
 
         self.assertEqual(spans[1].name, "jinja2.render")
         self.assertEqual(spans[1].kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
-            spans[1].attributes,
-            {"component": "template", "jinja2.template_name": "<memory>"},
+            spans[1].attributes, {"jinja2.template_name": "<memory>"},
         )
 
     def test_generate_inline_template(self):
@@ -63,15 +61,13 @@ class TestJinja2Instrumentor(TestBase):
         self.assertEqual(spans[0].name, "jinja2.compile")
         self.assertEqual(spans[0].kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
-            spans[0].attributes,
-            {"component": "template", "jinja2.template_name": "<memory>"},
+            spans[0].attributes, {"jinja2.template_name": "<memory>"},
         )
 
         self.assertEqual(spans[1].name, "jinja2.render")
         self.assertEqual(spans[1].kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
-            spans[1].attributes,
-            {"component": "template", "jinja2.template_name": "<memory>"},
+            spans[1].attributes, {"jinja2.template_name": "<memory>"},
         )
 
     def test_file_template(self):
@@ -92,16 +88,11 @@ class TestJinja2Instrumentor(TestBase):
         self.assertEqual(spans[4].name, "jinja2.render")
 
         self.assertEqual(
-            spans[0].attributes,
-            {
-                "component": "template",
-                "jinja2.template_name": "template.html",
-            },
+            spans[0].attributes, {"jinja2.template_name": "template.html"},
         )
         self.assertEqual(
             spans[1].attributes,
             {
-                "component": "template",
                 "jinja2.template_name": "template.html",
                 "jinja2.template_path": os.path.join(
                     TMPL_DIR, "template.html"
@@ -109,21 +100,15 @@ class TestJinja2Instrumentor(TestBase):
             },
         )
         self.assertEqual(
-            spans[2].attributes,
-            {"component": "template", "jinja2.template_name": "base.html"},
+            spans[2].attributes, {"jinja2.template_name": "base.html"},
         )
         self.assertEqual(
             spans[3].attributes,
             {
-                "component": "template",
                 "jinja2.template_name": "base.html",
                 "jinja2.template_path": os.path.join(TMPL_DIR, "base.html"),
             },
         )
         self.assertEqual(
-            spans[4].attributes,
-            {
-                "component": "template",
-                "jinja2.template_name": "template.html",
-            },
+            spans[4].attributes, {"jinja2.template_name": "template.html"},
         )
