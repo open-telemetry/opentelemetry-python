@@ -156,7 +156,7 @@ def instrument_connection(
                 "jdbc", "odbc", "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
             connection_attributes: Attribute names for database, port, host
-                and user in connection object.
+                and user in a connection object.
     """
     db_integration = DatabaseApiIntegration(
         tracer,
