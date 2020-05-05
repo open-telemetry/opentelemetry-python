@@ -85,8 +85,6 @@ class TestConfiguration(TestCase):
 
         Configuration._reset()
 
-        self.assertIsNone(Configuration._instance)
-        self.assertEqual(Configuration.__slots__, [])
         self.assertIsNone(
             Configuration().TRACER_PROVIDER
         )  # pylint: disable=no-member
