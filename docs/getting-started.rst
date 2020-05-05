@@ -104,7 +104,6 @@ Configure exporters to emit spans elsewhere
 
 The example above does emit information about all spans, but the output is a bit hard to read.
 In common cases, you would instead *export* this data to an application performance monitoring backend, to be visualized and queried.
-oHEA
 It is also common to aggregate span and trace information from multiple services into a single database, so that actions that require multiple services can still all be visualized together.
 
 This concept is known as distributed tracing. One such distributed tracing backend is known as Jaeger.
