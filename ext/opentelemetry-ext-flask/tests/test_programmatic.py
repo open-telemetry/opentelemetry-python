@@ -14,14 +14,13 @@
 
 from flask import Flask
 
-from opentelemetry import trace
 from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 # pylint: disable=import-error
-from .base_test import InstrumentationTest, expected_attributes
+from .base_test import InstrumentationTest
 
 
 class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
@@ -42,28 +41,16 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
             FlaskInstrumentor().uninstrument_app(self.app)
 
     def test_uninstrument(self):
-        expected_attrs = expected_attributes(
-            {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
-        )
         resp = self.client.get("/hello/123")
         self.assertEqual(200, resp.status_code)
         self.assertEqual([b"Hello: 123"], list(resp.response))
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "_hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
-        self.assertEqual(span_list[0].attributes, expected_attrs)
 
         FlaskInstrumentor().uninstrument_app(self.app)
 
-        expected_attrs = expected_attributes(
-            {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
-        )
         resp = self.client.get("/hello/123")
         self.assertEqual(200, resp.status_code)
         self.assertEqual([b"Hello: 123"], list(resp.response))
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "_hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
-        self.assertEqual(span_list[0].attributes, expected_attrs)
