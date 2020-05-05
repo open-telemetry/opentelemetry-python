@@ -14,7 +14,6 @@
 
 from flask import Flask
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
@@ -27,8 +26,6 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
     def setUp(self):
         super().setUp()
 
-        Configuration._instance = None  # pylint: disable=protected-access
-        Configuration.__slots__ = []  # pylint: disable=protected-access
         self.app = Flask(__name__)
 
         FlaskInstrumentor().instrument_app(self.app)

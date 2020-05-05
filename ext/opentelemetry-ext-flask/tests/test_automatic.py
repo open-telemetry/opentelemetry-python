@@ -16,7 +16,6 @@ import flask
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
@@ -29,8 +28,6 @@ class TestAutomatic(InstrumentationTest, TestBase, WsgiTestBase):
     def setUp(self):
         super().setUp()
 
-        Configuration._instance = None  # pylint: disable=protected-access
-        Configuration.__slots__ = []  # pylint: disable=protected-access
         FlaskInstrumentor().instrument()
 
         self.app = flask.Flask(__name__)
