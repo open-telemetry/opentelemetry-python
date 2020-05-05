@@ -15,22 +15,40 @@
 # limitations under the License.
 
 from logging import getLogger
-from runpy import run_path
+from os import environ, execl, getcwd
+from os.path import abspath, dirname, pathsep
+from shutil import which
 from sys import argv
-
-from pkg_resources import iter_entry_points
 
 logger = getLogger(__file__)
 
 
 def run() -> None:
 
-    for entry_point in iter_entry_points("opentelemetry_instrumentor"):
-        try:
-            entry_point.load()().instrument()  # type: ignore
-            logger.debug("Instrumented %s", entry_point.name)
+    python_path = environ.get("PYTHONPATH")
 
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Instrumenting of %s failed", entry_point.name)
+    if not python_path:
+        python_path = []
 
-    run_path(argv[1], run_name="__main__")  # type: ignore
+    else:
+        python_path = python_path.split(pathsep)
+
+    cwd_path = getcwd()
+
+    # This is being added to support applications that are being run from their
+    # own executable, like Django.
+    # FIXME investigate if there is another way to achieve this
+    if cwd_path not in python_path:
+        python_path.insert(0, cwd_path)
+
+    filedir_path = dirname(abspath(__file__))
+
+    python_path = [path for path in python_path if path != filedir_path]
+
+    python_path.insert(0, filedir_path)
+
+    environ["PYTHONPATH"] = pathsep.join(python_path)
+
+    executable = which(argv[1])
+
+    execl(executable, executable, *argv[2:])

@@ -176,7 +176,7 @@ We will now instrument a basic Flask application that uses the requests library 
 .. code-block:: sh
 
     pip install opentelemetry-ext-flask
-    pip install opentelemetry-ext-http-requests
+    pip install opentelemetry-ext-requests
 
 
 And let's write a small Flask application that sends an HTTP request, activating each instrumentation during the initialization:
@@ -190,7 +190,7 @@ And let's write a small Flask application that sends an HTTP request, activating
     import flask
     import requests
 
-    import opentelemetry.ext.http_requests
+    import opentelemetry.ext.requests
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter
@@ -202,7 +202,7 @@ And let's write a small Flask application that sends an HTTP request, activating
     )
 
     app = flask.Flask(__name__)
-    opentelemetry.ext.http_requests.RequestsInstrumentor().instrument()
+    opentelemetry.ext.requests.RequestsInstrumentor().instrument()
 
     @app.route("/")
     def hello():

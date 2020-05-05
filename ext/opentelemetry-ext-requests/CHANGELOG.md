@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Rename package to opentelemetry-ext-requests ([#619](https://github.com/open-telemetry/opentelemetry-python/pull/619))
 - Implement instrumentor interface ([#597](https://github.com/open-telemetry/opentelemetry-python/pull/597))
 
 ## 0.3a0
