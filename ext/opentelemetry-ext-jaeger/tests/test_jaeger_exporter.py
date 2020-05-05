@@ -35,7 +35,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        self._test_span = trace.Span("test_span", context=context)
+        self._test_span = trace.Span("test_span", context=context, resource=Resource.create_empty())
         self._test_span.start()
         self._test_span.end()
 
@@ -190,9 +190,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 kind=trace_api.SpanKind.CLIENT,
             ),
             trace.Span(
-                name=span_names[1], context=parent_context, parent=None
+                name=span_names[1], context=parent_context, parent=None, resource=Resource.create_empty()
             ),
-            trace.Span(name=span_names[2], context=other_context, parent=None),
+            trace.Span(name=span_names[2], context=other_context, parent=None, resource=Resource.create_empty()),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
@@ -200,6 +200,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
+        #
         otel_spans[0].resource = Resource(labels={ "key_resource": "some_resource" })
         otel_spans[0].set_status(
             Status(StatusCanonicalCode.UNKNOWN, "Example description")
