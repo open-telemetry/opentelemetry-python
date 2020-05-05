@@ -16,9 +16,10 @@
 The opentelemetry-ext-aiohttp-client package allows tracing HTTP requests
 made by the aiohttp client library.
 
-Example usage:
+Usage
+-----
 
-    .. code-block:: python
+    .. code:: python
 
         import aiohttp
         from opentelemetry.ext.aiohttp_client import (
@@ -27,8 +28,7 @@ Example usage:
         )
         import yarl
 
-
-         def strip_query_params(url: yarl.URL) -> str:
+        def strip_query_params(url: yarl.URL) -> str:
             return str(url.with_query(None))
 
         async with aiohttp.ClientSession(trace_configs=[create_trace_config(
@@ -49,6 +49,7 @@ import typing
 
 import aiohttp
 
+from opentelemetry import context as context_api
 from opentelemetry import propagators, trace
 from opentelemetry.ext.aiohttp_client.version import __version__
 from opentelemetry.trace import SpanKind
@@ -108,7 +109,7 @@ def create_trace_config(
 ) -> aiohttp.TraceConfig:
     """Create an aiohttp-compatible trace configuration.
 
-    One span is created for the entire HTTP request, including intial
+    One span is created for the entire HTTP request, including initial
     TCP/TLS setup if the connection doesn't exist.
 
     By default the span name is set to the HTTP request method.
@@ -141,6 +142,10 @@ def create_trace_config(
 
     tracer = trace.get_tracer_provider().get_tracer(__name__, __version__)
 
+    def _end_trace(trace_config_ctx: types.SimpleNamespace):
+        context_api.detach(trace_config_ctx.token)
+        trace_config_ctx.span.end()
+
     async def on_request_start(
         unused_session: aiohttp.ClientSession,
         trace_config_ctx: types.SimpleNamespace,
@@ -166,15 +171,9 @@ def create_trace_config(
             },
         )
 
-        # Set the span as active via the `Tracer.use_span` context.
-        # TODO: would be nice to have an explicit API to set a context as active.
-        span_manager = contextlib.ExitStack()
-        span_manager.enter_context(
-            trace_config_ctx.tracer.use_span(
-                trace_config_ctx.span, end_on_exit=True
-            )
+        trace_config_ctx.token = context_api.attach(
+            trace.propagation.set_span_in_context(trace_config_ctx.span)
         )
-        trace_config_ctx.span_manager = span_manager
 
         propagators.inject(
             tracer, type(params.headers).__setitem__, params.headers
@@ -194,7 +193,7 @@ def create_trace_config(
         trace_config_ctx.span.set_attribute(
             "http.status_text", params.response.reason
         )
-        trace_config_ctx.span_manager.close()
+        _end_trace(trace_config_ctx)
 
     async def on_request_exception(
         unused_session: aiohttp.ClientSession,
@@ -216,7 +215,7 @@ def create_trace_config(
             status = StatusCanonicalCode.UNAVAILABLE
 
         trace_config_ctx.span.set_status(Status(status))
-        trace_config_ctx.span_manager.close()
+        _end_trace(trace_config_ctx)
 
     def _trace_config_ctx_factory(**kwargs):
         if kwargs.get("trace_request_ctx", None) is None:

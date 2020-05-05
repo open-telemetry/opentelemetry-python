@@ -26,27 +26,13 @@ import yarl
 
 import opentelemetry.ext.aiohttp_client
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider, export
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
+from opentelemetry.sdk.trace import export
+from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 
 
-class TestAioHttpIntegration(unittest.TestCase):
+class TestAioHttpIntegration(TestBase):
     maxDiff = None
-
-    InMemoryExporter = None
-
-    @classmethod
-    def setUpClass(cls):
-        trace.set_tracer_provider(TracerProvider())
-        cls.InMemoryExporter = InMemorySpanExporter()
-        span_processor = export.SimpleExportSpanProcessor(cls.InMemoryExporter)
-        trace.get_tracer_provider().add_span_processor(span_processor)
-
-    def tearDown(self):
-        self.InMemoryExporter.clear()
 
     def assert_spans(self, spans):
         self.assertEqual(
@@ -54,9 +40,9 @@ class TestAioHttpIntegration(unittest.TestCase):
                 (
                     span.name,
                     (span.status.canonical_code, span.status.description),
-                    dict(span.attributes),
+                    dict(span.attributes)
                 )
-                for span in self.InMemoryExporter.get_finished_spans()
+                for span in self.memory_exporter.get_finished_spans()
             ],
             spans,
         )
@@ -186,7 +172,7 @@ class TestAioHttpIntegration(unittest.TestCase):
                     ]
                 )
 
-                self.InMemoryExporter.clear()
+                self.memory_exporter.clear()
 
     def test_span_name_option(self):
         for span_name, method, path, expected in (
@@ -227,7 +213,7 @@ class TestAioHttpIntegration(unittest.TestCase):
                         )
                     ]
                 )
-                self.InMemoryExporter.clear()
+                self.memory_exporter.clear()
 
     def test_url_filter_option(self):
         # Strips all query params from URL before adding as a span attribute.
@@ -295,7 +281,7 @@ class TestAioHttpIntegration(unittest.TestCase):
                     )
                 ]
             )
-            self.InMemoryExporter.clear()
+            self.memory_exporter.clear()
 
     def test_timeout(self):
         async def request_handler(unused_request):
