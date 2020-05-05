@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import NOTSET, WARNING, disable
-
 from flask import Flask
 
 from opentelemetry import trace
 from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 # pylint: disable=import-error
 from .base_test import InstrumentationTest, expected_attributes
 
 
-class TestProgrammatic(WsgiTestBase, InstrumentationTest):
+class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
     def setUp(self):
         super().setUp()
 
@@ -39,9 +38,8 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
 
     def tearDown(self):
         super().tearDown()
-        disable(WARNING)
-        FlaskInstrumentor().uninstrument_app(self.app)
-        disable(NOTSET)
+        with self.disable_logging():
+            FlaskInstrumentor().uninstrument_app(self.app)
 
     def test_uninstrument(self):
         expected_attrs = expected_attributes(

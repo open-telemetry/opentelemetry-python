@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import NOTSET, WARNING, disable
-
 import flask
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
@@ -21,13 +19,14 @@ from werkzeug.wrappers import BaseResponse
 from opentelemetry import trace
 from opentelemetry.configuration import Configuration
 from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 # pylint: disable=import-error
 from .base_test import InstrumentationTest, expected_attributes
 
 
-class TestAutomatic(WsgiTestBase, InstrumentationTest):
+class TestAutomatic(InstrumentationTest, TestBase, WsgiTestBase):
     def setUp(self):
         super().setUp()
 
@@ -41,14 +40,14 @@ class TestAutomatic(WsgiTestBase, InstrumentationTest):
 
     def tearDown(self):
         super().tearDown()
-        disable(WARNING)
-        FlaskInstrumentor().uninstrument()
-        disable(NOTSET)
+        with self.disable_logging():
+            FlaskInstrumentor().uninstrument()
 
     def test_uninstrument(self):
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
+        # pylint: disable=access-member-before-definition
         resp = self.client.get("/hello/123")
         self.assertEqual(200, resp.status_code)
         self.assertEqual([b"Hello: 123"], list(resp.response))
@@ -62,7 +61,7 @@ class TestAutomatic(WsgiTestBase, InstrumentationTest):
         self.app = flask.Flask(__name__)
 
         self.app.route("/hello/<int:helloid>")(self._hello_endpoint)
-
+        # pylint: disable=attribute-defined-outside-init
         self.client = Client(self.app, BaseResponse)
 
         expected_attrs = expected_attributes(

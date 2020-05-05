@@ -40,7 +40,6 @@ def expected_attributes(override_attributes):
 
 
 class InstrumentationTest:
-
     @staticmethod
     def _hello_endpoint(helloid):
         if helloid == 500:
@@ -48,18 +47,19 @@ class InstrumentationTest:
         return "Hello: " + str(helloid)
 
     def _common_initialization(self):
-
         def excluded_endpoint():
             return "excluded"
 
         def excluded2_endpoint():
             return "excluded2"
 
+        # pylint: disable=no-member
         self.app.route("/hello/<int:helloid>")(self._hello_endpoint)
         self.app.route("/excluded/<int:helloid>")(self._hello_endpoint)
         self.app.route("/excluded")(excluded_endpoint)
         self.app.route("/excluded2")(excluded2_endpoint)
 
+        # pylint: disable=attribute-defined-outside-init
         self.client = Client(self.app, BaseResponse)
 
     # pylint: disable=no-member
