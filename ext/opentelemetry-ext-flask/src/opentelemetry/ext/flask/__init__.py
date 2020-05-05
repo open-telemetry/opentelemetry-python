@@ -51,10 +51,14 @@ import logging
 import flask
 
 import opentelemetry.ext.wsgi as otel_wsgi
-from opentelemetry import context, propagators, trace
+from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
-from opentelemetry.util import time_ns
+from opentelemetry.util import (
+    disable_tracing_hostname,
+    disable_tracing_path,
+    time_ns,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,17 +84,18 @@ class _InstrumentedFlask(flask.Flask):
             environ[_ENVIRON_STARTTIME_KEY] = time_ns()
 
             def _start_response(status, response_headers, *args, **kwargs):
-                span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
-                if span:
-                    otel_wsgi.add_response_attributes(
-                        span, status, response_headers
-                    )
-                else:
-                    logger.warning(
-                        "Flask environ's OpenTelemetry span "
-                        "missing at _start_response(%s)",
-                        status,
-                    )
+                if not _disable_trace(flask.request.url):
+                    span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
+                    if span:
+                        otel_wsgi.add_response_attributes(
+                            span, status, response_headers
+                        )
+                    else:
+                        logger.warning(
+                            "Flask environ's OpenTelemetry span "
+                            "missing at _start_response(%s)",
+                            status,
+                        )
 
                 return start_response(
                     status, response_headers, *args, **kwargs
@@ -102,6 +107,9 @@ class _InstrumentedFlask(flask.Flask):
 
         @self.before_request
         def _before_flask_request():
+            # Do not trace if the url is excluded
+            if _disable_trace(flask.request.url):
+                return
             environ = flask.request.environ
             span_name = (
                 flask.request.endpoint
@@ -132,6 +140,9 @@ class _InstrumentedFlask(flask.Flask):
 
         @self.teardown_request
         def _teardown_flask_request(exc):
+            # Not traced if the url is excluded
+            if _disable_trace(flask.request.url):
+                return
             activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
             if not activation:
                 logger.warning(
@@ -148,6 +159,20 @@ class _InstrumentedFlask(flask.Flask):
                     type(exc), exc, getattr(exc, "__traceback__", None)
                 )
             context.detach(flask.request.environ.get(_ENVIRON_TOKEN))
+
+
+def _disable_trace(url):
+    excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
+    excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
+    if excluded_hosts:
+        excluded_hosts = str.split(excluded_hosts, ",")
+        if disable_tracing_hostname(url, excluded_hosts):
+            return True
+    if excluded_paths:
+        excluded_paths = str.split(excluded_paths, ",")
+        if disable_tracing_path(url, excluded_paths):
+            return True
+    return False
 
 
 class FlaskInstrumentor(BaseInstrumentor):

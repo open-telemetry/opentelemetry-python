@@ -20,7 +20,7 @@ import flask
 import requests
 
 from opentelemetry import trace
-from opentelemetry.ext import http_requests
+from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -36,7 +36,7 @@ trace.set_tracer_provider(TracerProvider())
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
-http_requests.RequestsInstrumentor().instrument()
+RequestsInstrumentor().instrument()
 app = flask.Flask(__name__)
 app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
 
