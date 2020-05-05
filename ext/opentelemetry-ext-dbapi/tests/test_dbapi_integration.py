@@ -150,7 +150,8 @@ class TestDBApiIntegration(TestBase):
 
     def test_uninstrument_connection(self):
         connection = mock.Mock()
-        # Avoid get_attributes failing because can't concatenate mock
+        # Set connection.database to avoid a failure because mock can't
+        # be concatenated
         connection.database = "-"
         connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
         self.assertIsInstance(connection2, dbapi.TracedConnectionProxy)
