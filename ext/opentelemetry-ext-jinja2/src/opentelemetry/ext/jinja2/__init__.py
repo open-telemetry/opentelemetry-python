@@ -108,10 +108,6 @@ class Jinja2Instrumentor(BaseInstrumentor):
     See `BaseInstrumentor`
     """
 
-    def __init__(self):
-        super().__init__()
-        self._original_jinja2_tempalte_render = None
-
     def _instrument(self, **kwargs):
         _wrap(jinja2, "environment.Template.render", _wrap_render)
         _wrap(jinja2, "environment.Template.generate", _wrap_render)
