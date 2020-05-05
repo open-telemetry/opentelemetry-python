@@ -16,23 +16,15 @@
 # pylint:disable=no-member
 
 import time
-import typing
 from unittest import TestCase
 
 import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
-from opentelemetry.context import Context
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.trace.propagation import set_span_in_context
-from opentelemetry.trace.propagation.httptextformat import (
-    Getter,
-    HTTPTextFormat,
-    HTTPTextFormatT,
-    Setter,
-)
+from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 
 
 class TestShim(TestCase):
@@ -289,7 +281,8 @@ class TestShim(TestCase):
 
                 self.assertEqual(parent_trace_id, child_trace_id)
                 self.assertEqual(
-                    child.span.unwrap().parent, parent.span.unwrap()
+                    child.span.unwrap().parent,
+                    parent.span.unwrap().get_context(),
                 )
 
             # Verify parent span becomes the active span again.
@@ -317,7 +310,9 @@ class TestShim(TestCase):
                 child_trace_id = child.span.unwrap().get_context().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
-                self.assertEqual(child.span.unwrap().parent, parent.unwrap())
+                self.assertEqual(
+                    child.span.unwrap().parent, parent.unwrap().get_context()
+                )
 
         with self.shim.start_span("ParentSpan") as parent:
             child = self.shim.start_span("ChildSpan", child_of=parent)
@@ -326,7 +321,9 @@ class TestShim(TestCase):
             child_trace_id = child.unwrap().get_context().trace_id
 
             self.assertEqual(child_trace_id, parent_trace_id)
-            self.assertEqual(child.unwrap().parent, parent.unwrap())
+            self.assertEqual(
+                child.unwrap().parent, parent.unwrap().get_context()
+            )
 
             child.finish()
 
@@ -539,46 +536,3 @@ class TestShim(TestCase):
         # Verify exception for non supported binary format.
         with self.assertRaises(opentracing.UnsupportedFormatException):
             self.shim.extract(opentracing.Format.BINARY, bytearray())
-
-
-class MockHTTPTextFormat(HTTPTextFormat):
-    """Mock propagator for testing purposes."""
-
-    TRACE_ID_KEY = "mock-traceid"
-    SPAN_ID_KEY = "mock-spanid"
-
-    def extract(
-        self,
-        get_from_carrier: Getter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
-        context: typing.Optional[Context] = None,
-    ) -> Context:
-        trace_id_list = get_from_carrier(carrier, self.TRACE_ID_KEY)
-        span_id_list = get_from_carrier(carrier, self.SPAN_ID_KEY)
-
-        if not trace_id_list or not span_id_list:
-            return set_span_in_context(trace.INVALID_SPAN)
-
-        return set_span_in_context(
-            trace.DefaultSpan(
-                trace.SpanContext(
-                    trace_id=int(trace_id_list[0]),
-                    span_id=int(span_id_list[0]),
-                    is_remote=True,
-                )
-            )
-        )
-
-    def inject(
-        self,
-        set_in_carrier: Setter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
-        context: typing.Optional[Context] = None,
-    ) -> None:
-        span = trace.get_current_span(context)
-        set_in_carrier(
-            carrier, self.TRACE_ID_KEY, str(span.get_context().trace_id)
-        )
-        set_in_carrier(
-            carrier, self.SPAN_ID_KEY, str(span.get_context().span_id)
-        )

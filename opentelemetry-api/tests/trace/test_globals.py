@@ -17,6 +17,9 @@ class TestGlobals(unittest.TestCase):
         """trace.get_tracer should proxy to the global tracer provider."""
         trace.get_tracer("foo", "var")
         self._mock_tracer_provider.get_tracer.assert_called_with("foo", "var")
+        mock_provider = unittest.mock.Mock()
+        trace.get_tracer("foo", "var", mock_provider)
+        mock_provider.get_tracer.assert_called_with("foo", "var")
 
 
 class TestTracer(unittest.TestCase):

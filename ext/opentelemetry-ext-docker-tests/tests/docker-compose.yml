@@ -5,3 +5,26 @@ services:
     ports:
      - "27017:27017"
     image: mongo:latest
+  otmysql:
+      ports:
+       - "3306:3306"
+      image: mysql:latest
+      restart: always
+      environment:
+        MYSQL_USER: testuser
+        MYSQL_PASSWORD: testpassword
+        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        MYSQL_DATABASE: opentelemetry-tests
+  otpostgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: opentelemetry-tests
+  otredis:
+      image: redis:4.0-alpine
+      ports:
+          - "127.0.0.1:6379:6379"
+

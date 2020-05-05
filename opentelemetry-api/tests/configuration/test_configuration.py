@@ -11,104 +11,64 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable-all
 
-from json import dumps
 from unittest import TestCase
 from unittest.mock import patch
-
-from pytest import fixture  # type: ignore # pylint: disable=import-error
 
 from opentelemetry.configuration import Configuration  # type: ignore
 
 
 class TestConfiguration(TestCase):
-    class IterEntryPointsMock:
-        def __init__(
-            self, argument, name=None
-        ):  # pylint: disable=unused-argument
-            self._name = name
-
-        def __next__(self):
-            return self
-
-        def __call__(self):
-            return self._name
-
-        def load(self):
-            return self
-
-    @fixture(autouse=True)
-    def configdir(self, tmpdir):  # type: ignore # pylint: disable=no-self-use
-        tmpdir.chdir()
-        tmpdir.mkdir(".config").join("opentelemetry_python.json").write(
-            dumps({"tracer_provider": "overridden_tracer_provider"})
-        )
-
     def setUp(self):
-        Configuration._instance = None  # pylint: disable=protected-access
+        # This is added here to force a reload of the whole Configuration
+        # class, resetting its internal attributes so that each tests starts
+        # with a clean class.
+        from opentelemetry.configuration import Configuration  # type: ignore
 
     def tearDown(self):
-        Configuration._instance = None  # pylint: disable=protected-access
+        from opentelemetry.configuration import Configuration  # type: ignore
 
     def test_singleton(self):
+        self.assertIsInstance(Configuration(), Configuration)
         self.assertIs(Configuration(), Configuration())
 
-    @patch(
-        "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}  # type: ignore
-    )
-    def test_lazy(  # type: ignore
-        self, mock_iter_entry_points,  # pylint: disable=unused-argument
-    ):
-        configuration = Configuration()
-
-        self.assertIsNone(
-            configuration._tracer_provider  # pylint: disable=no-member,protected-access
-        )
-
-        configuration.tracer_provider  # pylint: disable=pointless-statement
-
-        self.assertEqual(
-            configuration._tracer_provider,  # pylint: disable=no-member,protected-access
-            "default_tracer_provider",
-        )
-
-    @patch(
-        "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}  # type: ignore
-    )
-    def test_default_values(  # type: ignore
-        self, mock_iter_entry_points  # pylint: disable=unused-argument
-    ):
-        self.assertEqual(
-            Configuration().tracer_provider, "default_tracer_provider"
-        )  # pylint: disable=no-member
-        self.assertEqual(
-            Configuration().meter_provider, "default_meter_provider"
-        )  # pylint: disable=no-member
-
-    @patch(
-        "opentelemetry.configuration.iter_entry_points",
-        **{"side_effect": IterEntryPointsMock}  # type: ignore
-    )
     @patch.dict(
-        "os.environ",
-        {"OPENTELEMETRY_PYTHON_METER_PROVIDER": "overridden_meter_provider"},
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_METER_PROVIDER": "meter_provider",
+            "OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider",
+            "OPENTELEMETRY_PYTHON_OThER": "other",
+            "OPENTELEMETRY_PYTHON_OTHER_7": "other_7",
+            "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
+        },
     )
-    def test_environment_variables(  # type: ignore
-        self, mock_iter_entry_points  # pylint: disable=unused-argument
-    ):  # type: ignore
+    def test_environment_variables(self):  # type: ignore
         self.assertEqual(
-            Configuration().tracer_provider, "default_tracer_provider"
+            Configuration().METER_PROVIDER, "meter_provider"
         )  # pylint: disable=no-member
         self.assertEqual(
-            Configuration().meter_provider, "overridden_meter_provider"
+            Configuration().TRACER_PROVIDER, "tracer_provider"
         )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().OThER, "other"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().OTHER_7, "other_7"
+        )  # pylint: disable=no-member
+        self.assertIsNone(Configuration().TRACEX_PROVIDER)
 
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
+    )
     def test_property(self):
         with self.assertRaises(AttributeError):
-            Configuration().tracer_provider = "new_tracer_provider"
+            Configuration().TRACER_PROVIDER = "new_tracer_provider"
 
     def test_slots(self):
         with self.assertRaises(AttributeError):
-            Configuration().xyz = "xyz"  # pylint: disable=assigning-non-slot
+            Configuration().XYZ = "xyz"  # pylint: disable=assigning-non-slot
+
+    def test_getattr(self):
+        self.assertIsNone(Configuration().XYZ)

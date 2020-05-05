@@ -34,7 +34,7 @@ import abc
 from logging import getLogger
 from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
-from opentelemetry.configuration import Configuration  # type: ignore
+from opentelemetry.util import _load_provider
 
 logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
@@ -221,7 +221,7 @@ class MeterProvider(abc.ABC):
                 This should *not* be the name of the module that is
                 instrumented but the name of the module doing the instrumentation.
                 E.g., instead of ``"requests"``, use
-                ``"opentelemetry.ext.http_requests"``.
+                ``"opentelemetry.ext.requests"``.
 
             stateful: True/False to indicate whether the meter will be
                     stateful. True indicates the meter computes checkpoints
@@ -410,8 +410,6 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = (
-            Configuration().meter_provider  # type: ignore # pylint: disable=no-member
-        )
+        _METER_PROVIDER = _load_provider("meter_provider")
 
-    return _METER_PROVIDER  # type: ignore
+    return _METER_PROVIDER

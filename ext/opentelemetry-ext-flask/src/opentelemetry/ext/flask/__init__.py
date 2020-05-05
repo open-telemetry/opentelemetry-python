@@ -1,3 +1,17 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Note: This package is not named "flask" because of
 # https://github.com/PyCQA/pylint/issues/2648
 
@@ -15,11 +29,11 @@ Usage
 
 .. code-block:: python
 
+    from opentelemetry.ext.flask import FlaskInstrumentor
+    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
     from flask import Flask
-    from opentelemetry.ext.flask import instrument_app
 
     app = Flask(__name__)
-    instrument_app(app)  # This is where the magic happens. ✨
 
     @app.route("/")
     def hello():
@@ -37,10 +51,14 @@ import logging
 import flask
 
 import opentelemetry.ext.wsgi as otel_wsgi
-from opentelemetry import context, propagators, trace
+from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
-from opentelemetry.util import time_ns
+from opentelemetry.util import (
+    disable_tracing_hostname,
+    disable_tracing_path,
+    time_ns,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,17 +84,18 @@ class _InstrumentedFlask(flask.Flask):
             environ[_ENVIRON_STARTTIME_KEY] = time_ns()
 
             def _start_response(status, response_headers, *args, **kwargs):
-                span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
-                if span:
-                    otel_wsgi.add_response_attributes(
-                        span, status, response_headers
-                    )
-                else:
-                    logger.warning(
-                        "Flask environ's OpenTelemetry span "
-                        "missing at _start_response(%s)",
-                        status,
-                    )
+                if not _disable_trace(flask.request.url):
+                    span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
+                    if span:
+                        otel_wsgi.add_response_attributes(
+                            span, status, response_headers
+                        )
+                    else:
+                        logger.warning(
+                            "Flask environ's OpenTelemetry span "
+                            "missing at _start_response(%s)",
+                            status,
+                        )
 
                 return start_response(
                     status, response_headers, *args, **kwargs
@@ -88,6 +107,9 @@ class _InstrumentedFlask(flask.Flask):
 
         @self.before_request
         def _before_flask_request():
+            # Do not trace if the url is excluded
+            if _disable_trace(flask.request.url):
+                return
             environ = flask.request.environ
             span_name = (
                 flask.request.endpoint
@@ -118,6 +140,9 @@ class _InstrumentedFlask(flask.Flask):
 
         @self.teardown_request
         def _teardown_flask_request(exc):
+            # Not traced if the url is excluded
+            if _disable_trace(flask.request.url):
+                return
             activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
             if not activation:
                 logger.warning(
@@ -136,6 +161,20 @@ class _InstrumentedFlask(flask.Flask):
             context.detach(flask.request.environ.get(_ENVIRON_TOKEN))
 
 
+def _disable_trace(url):
+    excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
+    excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
+    if excluded_hosts:
+        excluded_hosts = str.split(excluded_hosts, ",")
+        if disable_tracing_hostname(url, excluded_hosts):
+            return True
+    if excluded_paths:
+        excluded_paths = str.split(excluded_paths, ",")
+        if disable_tracing_path(url, excluded_paths):
+            return True
+    return False
+
+
 class FlaskInstrumentor(BaseInstrumentor):
     """A instrumentor for flask.Flask
 
@@ -146,9 +185,9 @@ class FlaskInstrumentor(BaseInstrumentor):
         super().__init__()
         self._original_flask = None
 
-    def _instrument(self):
+    def _instrument(self, **kwargs):
         self._original_flask = flask.Flask
         flask.Flask = _InstrumentedFlask
 
-    def _uninstrument(self):
+    def _uninstrument(self, **kwargs):
         flask.Flask = self._original_flask
