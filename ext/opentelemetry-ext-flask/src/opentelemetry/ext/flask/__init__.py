@@ -180,7 +180,7 @@ def _disable_trace(url):
 
 class FlaskInstrumentor(BaseInstrumentor):
     # pylint: disable=protected-access,attribute-defined-outside-init
-    """A instrumentor for flask.Flask
+    """An instrumentor for flask.Flask
 
     See `BaseInstrumentor`
     """
