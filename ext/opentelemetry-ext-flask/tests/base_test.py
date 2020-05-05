@@ -59,7 +59,7 @@ class InstrumentationTest:
         self.client.get("/assert_environ")
         self.assertEqual(nonstring_keys, set())
 
-    def test_simple_uninstrument(self):
+    def test_simple(self):
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
