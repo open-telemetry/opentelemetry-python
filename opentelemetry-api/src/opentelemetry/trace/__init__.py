@@ -70,6 +70,35 @@ either implicit or explicit context propagation consistently throughout.
     `set_tracer_provider`.
 """
 
+__all__ = [
+    "DEFAULT_TRACE_OPTIONS",
+    "DEFAULT_TRACE_STATE",
+    "INVALID_SPAN",
+    "INVALID_SPAN_CONTEXT",
+    "INVALID_SPAN_ID",
+    "INVALID_TRACE_ID",
+    "DefaultSpan",
+    "DefaultTracer",
+    "DefaultTracerProvider",
+    "LazyLink",
+    "Link",
+    "LinkBase",
+    "ParentSpan",
+    "Span",
+    "SpanContext",
+    "SpanKind",
+    "TraceFlags",
+    "TraceState",
+    "TracerProvider",
+    "Tracer",
+    "format_span_id",
+    "format_trace_id",
+    "get_current_span",
+    "get_tracer",
+    "get_tracer_provider",
+    "set_tracer_provider",
+]
+
 import abc
 import enum
 import types as python_types
