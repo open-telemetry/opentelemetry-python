@@ -38,6 +38,9 @@ Be sure rabbitmq is running:
     trace.set_tracer_provider(TracerProvider())
     # TODO: configure span exporters
 
+    from opentelemetry.ext.celery import CeleryInstrumentor
+    CeleryInstrumentor().instrument()
+
     from celery import Celery
 
     app = Celery("tasks", broker="amqp://localhost")
