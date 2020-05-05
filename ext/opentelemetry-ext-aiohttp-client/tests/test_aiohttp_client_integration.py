@@ -63,7 +63,6 @@ class TestAioHttpIntegration(TestBase):
                 self.assertEqual(actual, expected)
                 self.assertIsInstance(actual, str)
 
-    # Helper to start an aiohttp test server and send an actual HTTP request to it.
     @staticmethod
     def _http_request(
         trace_config,
@@ -73,6 +72,7 @@ class TestAioHttpIntegration(TestBase):
         request_handler: typing.Callable = None,
         **kwargs
     ) -> typing.Tuple[str, int]:
+        """Helper to start an aiohttp test server and send an actual HTTP request to it."""
         async def do_request():
             async def default_handler(unused_request):
                 return aiohttp.web.Response(status=int(status_code))

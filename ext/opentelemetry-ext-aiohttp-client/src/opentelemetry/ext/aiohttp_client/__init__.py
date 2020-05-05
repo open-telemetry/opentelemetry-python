@@ -116,7 +116,7 @@ def create_trace_config(
 
     Example usage:
 
-    .. code-block:: python
+    .. code:: python
 
         import aiohttp
         from opentelemetry.ext.aiohttp_client import create_trace_config
@@ -218,8 +218,7 @@ def create_trace_config(
         _end_trace(trace_config_ctx)
 
     def _trace_config_ctx_factory(**kwargs):
-        if kwargs.get("trace_request_ctx", None) is None:
-            kwargs["trace_request_ctx"] = {}
+        kwargs.setdefault("trace_request_ctx", {})
         return types.SimpleNamespace(
             span_name=span_name, tracer=tracer, url_filter=url_filter, **kwargs
         )
