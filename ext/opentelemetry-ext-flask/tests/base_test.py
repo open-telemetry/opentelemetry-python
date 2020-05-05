@@ -19,6 +19,7 @@ from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace
+from opentelemetry.configuration import Configuration
 
 
 def expected_attributes(override_attributes):
@@ -40,6 +41,11 @@ def expected_attributes(override_attributes):
 
 
 class InstrumentationTest:
+
+    def setUp(self):
+        super().setUp()
+        Configuration._reset()
+
     @staticmethod
     def _hello_endpoint(helloid):
         if helloid == 500:
