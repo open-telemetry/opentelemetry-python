@@ -132,7 +132,7 @@ def unwrap_connect(
         https://www.python.org/dev/peps/pep-0249/
 
         Args:
-            connect_module: Module name where connect method is available.
+            connect_module: Module name where the connect method is available.
             connect_method_name: The connect method name.
     """
     conn = getattr(connect_module, connect_method_name, None)
