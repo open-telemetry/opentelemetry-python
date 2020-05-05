@@ -41,10 +41,9 @@ def expected_attributes(override_attributes):
 
 
 class InstrumentationTest:
-
-    def setUp(self):
-        super().setUp()
-        Configuration._reset()
+    def setUp(self):  # pylint: disable=invalid-name
+        super().setUp()  # pylint: disable=no-member
+        Configuration._reset()  # pylint: disable=protected-access
 
     @staticmethod
     def _hello_endpoint(helloid):
