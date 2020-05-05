@@ -15,6 +15,8 @@
 from unittest.mock import patch
 
 from flask import request
+from werkzeug.test import Client
+from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace
 
@@ -38,6 +40,27 @@ def expected_attributes(override_attributes):
 
 
 class InstrumentationTest:
+
+    @staticmethod
+    def _hello_endpoint(helloid):
+        if helloid == 500:
+            raise ValueError(":-(")
+        return "Hello: " + str(helloid)
+
+    def _common_initialization(self):
+
+        def excluded_endpoint():
+            return "excluded"
+
+        def excluded2_endpoint():
+            return "excluded2"
+
+        self.app.route("/hello/<int:helloid>")(self._hello_endpoint)
+        self.app.route("/excluded/<int:helloid>")(self._hello_endpoint)
+        self.app.route("/excluded")(excluded_endpoint)
+        self.app.route("/excluded2")(excluded2_endpoint)
+
+        self.client = Client(self.app, BaseResponse)
 
     # pylint: disable=no-member
     def test_only_strings_in_environ(self):
@@ -67,7 +90,7 @@ class InstrumentationTest:
 
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
@@ -104,7 +127,7 @@ class InstrumentationTest:
         resp.close()
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
@@ -123,4 +146,4 @@ class InstrumentationTest:
         self.client.get("/excluded2")
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].name, "_hello_endpoint")

@@ -37,25 +37,10 @@ class TestAutomatic(WsgiTestBase, InstrumentationTest):
 
         self.app = flask.Flask(__name__)
 
-        def hello_endpoint(helloid):
-            if helloid == 500:
-                raise ValueError(":-(")
-            return "Hello: " + str(helloid)
-
-        def excluded_endpoint():
-            return "excluded"
-
-        def excluded2_endpoint():
-            return "excluded2"
-
-        self.app.route("/hello/<int:helloid>")(hello_endpoint)
-        self.app.route("/excluded/<int:helloid>")(hello_endpoint)
-        self.app.route("/excluded")(excluded_endpoint)
-        self.app.route("/excluded2")(excluded2_endpoint)
-
-        self.client = Client(self.app, BaseResponse)
+        self._common_initialization()
 
     def tearDown(self):
+        super().tearDown()
         disable(WARNING)
         FlaskInstrumentor().uninstrument()
         disable(NOTSET)
@@ -69,19 +54,14 @@ class TestAutomatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual([b"Hello: 123"], list(resp.response))
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
         FlaskInstrumentor().uninstrument()
         self.app = flask.Flask(__name__)
 
-        def hello_endpoint(helloid):
-            if helloid == 500:
-                raise ValueError(":-(")
-            return "Hello: " + str(helloid)
-
-        self.app.route("/hello/<int:helloid>")(hello_endpoint)
+        self.app.route("/hello/<int:helloid>")(self._hello_endpoint)
 
         self.client = Client(self.app, BaseResponse)
 
@@ -93,6 +73,6 @@ class TestAutomatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual([b"Hello: 123"], list(resp.response))
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)

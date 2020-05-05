@@ -15,8 +15,6 @@
 from logging import NOTSET, WARNING, disable
 
 from flask import Flask
-from werkzeug.test import Client
-from werkzeug.wrappers import BaseResponse
 
 from opentelemetry import trace
 from opentelemetry.configuration import Configuration
@@ -37,24 +35,10 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
 
         FlaskInstrumentor().instrument_app(self.app)
 
-        def hello_endpoint(helloid):
-            if helloid == 500:
-                raise ValueError(":-(")
-            return "Hello: " + str(helloid)
-
-        def excluded_endpoint():
-            return "excluded"
-
-        def excluded2_endpoint():
-            return "excluded2"
-
-        self.app.route("/hello/<int:helloid>")(hello_endpoint)
-        self.app.route("/excluded")(excluded_endpoint)
-        self.app.route("/excluded2")(excluded2_endpoint)
-
-        self.client = Client(self.app, BaseResponse)
+        self._common_initialization()
 
     def tearDown(self):
+        super().tearDown()
         disable(WARNING)
         FlaskInstrumentor().uninstrument_app(self.app)
         disable(NOTSET)
@@ -68,7 +52,7 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual([b"Hello: 123"], list(resp.response))
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
@@ -82,6 +66,6 @@ class TestProgrammatic(WsgiTestBase, InstrumentationTest):
         self.assertEqual([b"Hello: 123"], list(resp.response))
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
