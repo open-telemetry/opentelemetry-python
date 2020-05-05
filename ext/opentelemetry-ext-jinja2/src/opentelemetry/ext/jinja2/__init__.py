@@ -17,19 +17,22 @@
 Usage
 -----
 
-The OpenTelemetry ``jinja2`` integration traces templates loading, compilation and rendering.
+The OpenTelemetry ``jinja2`` integration traces templates loading, compilation
+and rendering.
+
+Usage
+-----
 
 .. code-block:: python
 
-Instrumentation example::
-
-    from opentelemetry.ext.jinja2 import Jinja2Instrumentor
-    Jinja2Instrumentor().instrument()  # This needs to be executed before importing jinja2
     from jinja2 import Environment, FileSystemLoader
+    from opentelemetry.ext.jinja2 import Jinja2Instrumentor
 
-    env = Environment(
-        loader=FileSystemLoader("templates")
-    )
+    trace.set_tracer_provider(TracerProvider())
+
+    Jinja2Instrumentor().instrument()
+
+    env = Environment(loader=FileSystemLoader("templates"))
     template = env.get_template('mytemplate.html')
 
 API
