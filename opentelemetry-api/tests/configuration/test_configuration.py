@@ -68,3 +68,25 @@ class TestConfiguration(TestCase):
 
     def test_getattr(self):
         self.assertIsNone(Configuration().XYZ)
+
+    def test_reset(self):
+        environ_patcher = patch.dict(
+            "os.environ",  # type: ignore
+            {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
+        )
+
+        environ_patcher.start()
+
+        self.assertEqual(
+            Configuration().TRACER_PROVIDER, "tracer_provider"
+        )  # pylint: disable=no-member
+
+        environ_patcher.stop()
+
+        Configuration._reset()
+
+        self.assertIsNone(Configuration._instance)
+        self.assertEqual(Configuration.__slots__, [])
+        self.assertIsNone(
+            Configuration().TRACER_PROVIDER
+        )  # pylint: disable=no-member
