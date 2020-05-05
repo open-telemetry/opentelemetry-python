@@ -70,8 +70,8 @@ from thrift.transport import THttpClient, TTransport
 
 import opentelemetry.trace as trace_api
 from opentelemetry.ext.jaeger.gen.agent import Agent as agent
-from opentelemetry.sdk.resources import EMPTY_RESOURCE
 from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
+from opentelemetry.sdk.resources import EMPTY_RESOURCE
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCanonicalCode
 
