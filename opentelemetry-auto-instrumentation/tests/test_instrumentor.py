@@ -34,6 +34,7 @@ class TestInstrumentor(TestCase):
             self.assertIs(instrumentor.uninstrument(), None)
 
         self.assertEqual(instrumentor.instrument(), "instrumented")
+
         with self.assertLogs(level=WARNING):
             self.assertIs(instrumentor.instrument(), None)
 
