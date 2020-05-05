@@ -91,6 +91,8 @@ from opentelemetry.trace.span import (
     SpanContext,
     TraceFlags,
     TraceState,
+    format_span_id,
+    format_trace_id,
 )
 from opentelemetry.trace.status import Status
 from opentelemetry.util import _load_provider, types

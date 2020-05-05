@@ -91,19 +91,13 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         """Check that the span is active for the duration of the call."""
 
         interceptor = server_interceptor()
-        tracer = self.tracer_provider.get_tracer(__name__)
 
         # To capture the current span at the time the handler is called
         active_span_in_handler = None
 
         def handler(request, context):
             nonlocal active_span_in_handler
-<<<<<<< HEAD
             active_span_in_handler = trace.get_current_span()
-=======
-            # The current span  is shared among all the tracers.
-            active_span_in_handler = tracer.get_current_span()
->>>>>>> source/master
             return b""
 
         server = grpc.server(
@@ -131,8 +125,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
 
     def test_sequential_server_spans(self):
         """Check that sequential RPCs get separate server spans."""
-
-        tracer = self.tracer_provider.get_tracer(__name__)
 
         interceptor = server_interceptor()
 
@@ -178,8 +170,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         separate threads. Each one should see a different active span and
         context.
         """
-
-        tracer = self.tracer_provider.get_tracer(__name__)
 
         interceptor = server_interceptor()
 

@@ -189,8 +189,8 @@ class SpanContext:
             "{}(trace_id={}, span_id={}, trace_state={!r}, is_remote={})"
         ).format(
             type(self).__name__,
-            _format_trace_id(self.trace_id),
-            _format_span_id(self.span_id),
+            format_trace_id(self.trace_id),
+            format_span_id(self.span_id),
             self.trace_state,
             self.is_remote,
         )
@@ -266,9 +266,9 @@ INVALID_SPAN_CONTEXT = SpanContext(
 INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
 
-def _format_trace_id(trace_id: int) -> str:
+def format_trace_id(trace_id: int) -> str:
     return "0x{:032x}".format(trace_id)
 
 
-def _format_span_id(span_id: int) -> str:
+def format_span_id(span_id: int) -> str:
     return "0x{:016x}".format(span_id)
