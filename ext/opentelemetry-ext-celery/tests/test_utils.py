@@ -30,7 +30,7 @@ class TestUtils(unittest.TestCase):
         # it should extract only relevant keys
         context = {
             "correlation_id": "44b7f305",
-            "delivery_info": "{'eager': 'True'}",
+            "delivery_info": {"eager": True},
             "eta": "soon",
             "expires": "later",
             "hostname": "localhost",
@@ -39,19 +39,29 @@ class TestUtils(unittest.TestCase):
             "retries": 4,
             "timelimit": ("now", "later"),
             "custom_meta": "custom_value",
+            "routing_key": "celery",
         }
 
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
         utils.set_attributes_from_context(span, context)
 
-        self.assertEqual(span.attributes["celery.correlation_id"], "44b7f305")
         self.assertEqual(
-            span.attributes["celery.delivery_info"], "{'eager': 'True'}"
+            span.attributes.get("messaging.message_id"), "44b7f305"
+        )
+        self.assertEqual(
+            span.attributes.get("messaging.conversation_id"), "44b7f305"
+        )
+        self.assertEqual(
+            span.attributes.get("messaging.destination"), "celery"
+        )
+
+        self.assertEqual(
+            span.attributes["celery.delivery_info"], str({"eager": True})
         )
         self.assertEqual(span.attributes.get("celery.eta"), "soon")
         self.assertEqual(span.attributes.get("celery.expires"), "later")
         self.assertEqual(span.attributes.get("celery.hostname"), "localhost")
-        self.assertEqual(span.attributes.get("celery.id"), "44b7f305")
+
         self.assertEqual(span.attributes.get("celery.reply_to"), "44b7f305")
         self.assertEqual(span.attributes.get("celery.retries"), 4)
         self.assertEqual(

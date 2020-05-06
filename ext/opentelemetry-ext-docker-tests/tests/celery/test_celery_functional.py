@@ -101,12 +101,14 @@ class TestCeleryIntegration(TestBase):
         span = spans[0]
 
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.fn_task")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), t.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.fn_task",
         )
-        self.assertEqual(span.attributes.get("celery.id"), t.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "SUCCESS")
 
@@ -126,12 +128,14 @@ class TestCeleryIntegration(TestBase):
         span = spans[0]
 
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.fn_task")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), t.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.fn_task",
         )
-        self.assertEqual(span.attributes.get("celery.id"), t.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "SUCCESS")
 
@@ -152,14 +156,20 @@ class TestCeleryIntegration(TestBase):
         span = spans[0]
 
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.apply")
+        self.assertEqual(
+            span.name, "test_celery_functional.fn_task_parameters"
+        )
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), t.task_id
+        )
+        self.assertEqual(
+            span.attributes.get("messaging.destination"), "celery"
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.fn_task_parameters",
         )
-        self.assertEqual(span.attributes.get("celery.id"), t.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "apply_async")
-        self.assertEqual(span.attributes.get("celery.routing_key"), "celery")
 
     def test_fn_task_delay(self):
         # using delay shorthand must preserve arguments
@@ -176,14 +186,20 @@ class TestCeleryIntegration(TestBase):
         span = spans[0]
 
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.apply")
+        self.assertEqual(
+            span.name, "test_celery_functional.fn_task_parameters"
+        )
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), t.task_id
+        )
+        self.assertEqual(
+            span.attributes.get("messaging.destination"), "celery"
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.fn_task_parameters",
         )
-        self.assertEqual(span.attributes.get("celery.id"), t.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "apply_async")
-        self.assertEqual(span.attributes.get("celery.routing_key"), "celery")
 
     def test_fn_exception(self):
         # it should catch exceptions in task functions
@@ -200,12 +216,14 @@ class TestCeleryIntegration(TestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.fn_exception")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), t.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.fn_exception",
         )
-        self.assertEqual(span.attributes.get("celery.id"), t.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "FAILURE")
 
@@ -227,12 +245,14 @@ class TestCeleryIntegration(TestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.fn_exception")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), t.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.fn_exception",
         )
-        self.assertEqual(span.attributes.get("celery.id"), t.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "FAILURE")
 
@@ -253,12 +273,14 @@ class TestCeleryIntegration(TestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.fn_exception")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), t.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.fn_exception",
         )
-        self.assertEqual(span.attributes.get("celery.id"), t.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "RETRY")
 
@@ -287,12 +309,14 @@ class TestCeleryIntegration(TestBase):
         span = spans[0]
 
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.BaseTask")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), r.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.BaseTask",
         )
-        self.assertEqual(span.attributes.get("celery.id"), r.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "SUCCESS")
 
@@ -317,12 +341,14 @@ class TestCeleryIntegration(TestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.BaseTask")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), r.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.BaseTask",
         )
-        self.assertEqual(span.attributes.get("celery.id"), r.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "FAILURE")
 
@@ -352,12 +378,14 @@ class TestCeleryIntegration(TestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.BaseTask")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), r.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.BaseTask",
         )
-        self.assertEqual(span.attributes.get("celery.id"), r.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "FAILURE")
 
@@ -378,12 +406,14 @@ class TestCeleryIntegration(TestBase):
         span = spans[0]
 
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.add")
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.add",
         )
-        self.assertEqual(span.attributes.get("celery.id"), res.task_id)
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), res.task_id
+        )
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "SUCCESS")
 
@@ -417,18 +447,20 @@ class TestCeleryIntegration(TestBase):
 
         span = spans[1]
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.run")
+        self.assertEqual(span.name, "test_celery_functional.CelerySubClass")
+        self.assertEqual(
+            span.attributes.get("messaging.message_id"), res.task_id
+        )
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.CelerySubClass",
         )
-        self.assertEqual(span.attributes.get("celery.id"), res.task_id)
         self.assertEqual(span.attributes.get("celery.action"), "run")
         self.assertEqual(span.attributes.get("celery.state"), "SUCCESS")
 
         span = spans[0]
         self.assertTrue(span.status.is_ok)
-        self.assertEqual(span.name, "celery.apply")
+        self.assertEqual(span.name, "test_celery_functional.CelerySubClass")
         self.assertEqual(
             span.attributes.get("celery.task_name"),
             "test_celery_functional.CelerySubClass",

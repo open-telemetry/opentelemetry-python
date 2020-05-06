@@ -74,17 +74,14 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
 
-# Span names
-_PRODUCER_ROOT_SPAN = "celery.apply"
-_WORKER_ROOT_SPAN = "celery.run"
-
 # Task operations
 _TASK_TAG_KEY = "celery.action"
-_TASK_APPLY = "apply"
 _TASK_APPLY_ASYNC = "apply_async"
 _TASK_RUN = "run"
+
 _TASK_RETRY_REASON_KEY = "celery.retry.reason"
 _TASK_NAME_KEY = "celery.task_name"
+_MESSAGE_ID_ATTRIBUTE_NAME = "messaging.message_id"
 
 
 class CeleryInstrumentor(BaseInstrumentor):
@@ -124,7 +121,8 @@ class CeleryInstrumentor(BaseInstrumentor):
             )
             return
 
-        span = self._tracer.start_span(_WORKER_ROOT_SPAN)
+        # TODO: When the span could be SERVER?
+        span = self._tracer.start_span(task.name, kind=trace.SpanKind.CONSUMER)
 
         activation = self._tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
@@ -170,11 +168,12 @@ class CeleryInstrumentor(BaseInstrumentor):
             )
             return
 
-        span = self._tracer.start_span(_PRODUCER_ROOT_SPAN)
+        # TODO: When the span could be CLIENT?
+        span = self._tracer.start_span(task.name, kind=trace.SpanKind.PRODUCER)
 
         # apply some attributes here because most of the data is not available
         span.set_attribute(_TASK_TAG_KEY, _TASK_APPLY_ASYNC)
-        span.set_attribute("celery.id", task_id)
+        span.set_attribute(_MESSAGE_ID_ATTRIBUTE_NAME, task_id)
         span.set_attribute(_TASK_NAME_KEY, task.name)
         set_attributes_from_context(span, kwargs)
 

@@ -16,13 +16,16 @@
 CTX_KEY = "__otel_task_span"
 
 
+# pylint:disable=too-many-branches
 def set_attributes_from_context(span, context):
     """Helper to extract meta values from a Celery Context"""
+
     attribute_keys = (
         "compression",
         "correlation_id",
         "countdown",
         "delivery_info",
+        "declare",
         "eta",
         "exchange",
         "expires",
@@ -62,12 +65,36 @@ def set_attributes_from_context(span, context):
 
         # TODO: hack to avoid bad attribute type
         if key == "delivery_info":
+            # Get also destination from this
+            routing_key = value.get("routing_key")
+            if routing_key:
+                span.set_attribute("messaging.destination", routing_key)
             value = str(value)
 
         # prefix the tag as 'celery'
-        tag_name = "celery.{}".format(key)
+        attribute_name = "celery.{}".format(key)
 
-        span.set_attribute(tag_name, value)
+        if key == "id":
+            attribute_name = "messaging.message_id"
+
+        if key == "correlation_id":
+            attribute_name = "messaging.conversation_id"
+
+        if key == "routing_key":
+            attribute_name = "messaging.destination"
+
+        # according to https://docs.celeryproject.org/en/stable/userguide/routing.html#exchange-types
+        if key == "declare":
+            attribute_name = "messaging.destination_kind"
+            for declare in value:
+                if declare.exchange.type == "direct":
+                    value = "queue"
+                    break
+                if declare.exchange.type == "topic":
+                    value = "topic"
+                    break
+
+        span.set_attribute(attribute_name, value)
 
 
 def attach_span(task, task_id, span, is_publish=False):
