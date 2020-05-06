@@ -111,7 +111,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         signals.task_retry.disconnect(self._trace_retry)
 
     def _trace_prerun(self, *args, **kwargs):
-        task = kwargs.get("sender")
+        task = kwargs.get("task")
         task_id = kwargs.get("task_id")
         logger.debug("prerun signal start task_id=%s", task_id)
         if task is None or task_id is None:
@@ -129,7 +129,7 @@ class CeleryInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def _trace_postrun(*args, **kwargs):
-        task = kwargs.get("sender")
+        task = kwargs.get("task")
         task_id = kwargs.get("task_id")
         logger.debug("postrun signal task_id=%s", task_id)
         if task is None or task_id is None:
@@ -156,9 +156,8 @@ class CeleryInstrumentor(BaseInstrumentor):
     def _trace_before_publish(self, *args, **kwargs):
         # The `Task` instance **does not** include any information about the current
         # execution, so it **must not** be used to retrieve `request` data.
-        task_name = kwargs.get("sender")
         # pylint: disable=no-member
-        task = registry.tasks.get(task_name)
+        task = registry.tasks.get(kwargs.get("sender"))
         task_id = retrieve_task_id(kwargs)
 
         if task is None or task_id is None:
@@ -182,9 +181,8 @@ class CeleryInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def _trace_after_publish(*args, **kwargs):
-        task_name = kwargs.get("sender")
         # pylint: disable=no-member
-        task = registry.tasks.get(task_name)
+        task = registry.tasks.get(kwargs.get("sender"))
         task_id = retrieve_task_id(kwargs)
         if task is None or task_id is None:
             logger.debug(
