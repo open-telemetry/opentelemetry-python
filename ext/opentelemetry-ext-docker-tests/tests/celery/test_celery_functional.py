@@ -18,6 +18,7 @@ import celery
 from celery import Celery
 from celery.exceptions import Retry
 
+import opentelemetry.ext.celery
 from opentelemetry.ext.celery import CeleryInstrumentor
 from opentelemetry.sdk import resources
 from opentelemetry.test.test_base import TestBase
@@ -46,6 +47,19 @@ class TestCeleryIntegration(TestBase):
         with self.disable_logging():
             CeleryInstrumentor().uninstrument()
         super().tearDown()
+
+    def test_instrumentation_info(self):
+        @self.app.task
+        def fn_task():
+            return 42
+
+        fn_task.delay()
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+
+        span = spans[0]
+        self.check_span_instrumentation_info(span, opentelemetry.ext.celery)
 
     def test_concurrent_delays(self):
         # it should create one trace for each delayed execution
