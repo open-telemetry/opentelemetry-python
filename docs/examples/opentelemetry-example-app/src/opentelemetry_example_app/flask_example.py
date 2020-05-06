@@ -34,14 +34,14 @@ from opentelemetry.sdk.trace.export import (
 trace.set_tracer_provider(TracerProvider())
 
 opentelemetry.ext.requests.RequestsInstrumentor().instrument()
-FlaskInstrumentor().instrument()
 
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
-
 app = flask.Flask(__name__)
+
+FlaskInstrumentor().instrument_app(app)
 
 
 @app.route("/")
