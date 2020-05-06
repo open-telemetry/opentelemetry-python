@@ -149,14 +149,17 @@ def instrument_connection(
 ):
     """Enable instrumentation in a database connection.
 
-        Args:
-            tracer: The :class:`Tracer` to use.
-            connection: The connection to instrument.
-            database_component: Database driver name or database name "JDBI",
-                "jdbc", "odbc", "postgreSQL".
-            database_type: The Database type. For any SQL database, "sql".
-            connection_attributes: Attribute names for database, port, host
-                and user in a connection object.
+    Args:
+        tracer: The :class:`Tracer` to use.
+        connection: The connection to instrument.
+        database_component: Database driver name or database name "JDBI",
+            "jdbc", "odbc", "postgreSQL".
+        database_type: The Database type. For any SQL database, "sql".
+        connection_attributes: Attribute names for database, port, host and
+            user in a connection object.
+
+    Returns:
+        An instrumented connection.
     """
     db_integration = DatabaseApiIntegration(
         tracer,
@@ -171,8 +174,11 @@ def instrument_connection(
 def uninstrument_connection(connection):
     """Disable instrumentation in a database connection.
 
-        Args:
-            connection: The connection to uninstrument.
+    Args:
+        connection: The connection to uninstrument.
+
+    Returns:
+        An uninstrumented connection.
     """
     if isinstance(connection, wrapt.ObjectProxy):
         return connection.__wrapped__

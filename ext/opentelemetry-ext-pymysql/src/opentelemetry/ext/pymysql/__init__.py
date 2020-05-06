@@ -89,8 +89,11 @@ class PyMySQLInstrumentor(BaseInstrumentor):
     def instrument_connection(self, connection):
         """Enable instrumentation in a PyMySQL connection.
 
-            Args:
-                connection: The connection to instrument.
+        Args:
+            connection: The connection to instrument.
+
+        Returns:
+            An instrumented connection.
         """
         tracer = get_tracer(__name__, __version__)
 
@@ -105,7 +108,10 @@ class PyMySQLInstrumentor(BaseInstrumentor):
     def uninstrument_connection(self, connection):
         """Disable instrumentation in a PyMySQL connection.
 
-            Args:
-                connection: The connection to uninstrument.
+        Args:
+            connection: The connection to uninstrument.
+
+        Returns:
+            An uninstrumented connection.
         """
         return dbapi.uninstrument_connection(connection)
