@@ -29,7 +29,7 @@ from opentelemetry.trace import SpanKind, get_tracer
 _logger = getLogger(__name__)
 
 
-class DjangoMiddleware(MiddlewareMixin):
+class _DjangoMiddleware(MiddlewareMixin):
     """Django Middleware for OpenTelemetry
     """
 

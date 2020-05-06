@@ -18,7 +18,7 @@ from django.conf import settings
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.configuration import Configuration
-from opentelemetry.ext.django.middleware import DjangoMiddleware
+from opentelemetry.ext.django.middleware import _DjangoMiddleware
 
 _logger = getLogger(__name__)
 
@@ -30,7 +30,7 @@ class DjangoInstrumentor(BaseInstrumentor):
     """
 
     _opentelemetry_middleware = ".".join(
-        [DjangoMiddleware.__module__, DjangoMiddleware.__qualname__]
+        [_DjangoMiddleware.__module__, _DjangoMiddleware.__qualname__]
     )
 
     def _instrument(self, **kwargs):

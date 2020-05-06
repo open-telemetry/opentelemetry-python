@@ -23,9 +23,7 @@ Installation
 
 .. code-block::
 
-    $ pip install opentelemetry-api
     $ pip install opentelemetry-sdk
-    $ pip install opentelemetry-auto-instrumentation
     $ pip install opentelemetry-ext-django
     $ pip install requests
 
@@ -43,9 +41,10 @@ Set these environment variables first:
 
 Clone the `opentelemetry-python` repository and go to `opentelemetry-python/docs/examples/django`.
 
-Once there run this command:
+Once there, open the `manage.py` file. The call to `DjangoInstrumentor.instrument()`
+in `main` is all that is needed to make the app be instrumented.
 
-`opentelemetry-auto-instrumentation python3 manage.py runserver`
+Run the Django app with `python manage.py runserver`.
 
 Execution of the client
 .......................
@@ -58,47 +57,6 @@ Go to `opentelemetry-python/ext/opentelemetry-ext-django/example`, once there
 run the client with:
 
 `python client.py hello`
-
-This should produce output similar to this one:
-
-.. code-block::
-
-    {
-        "name": "client-server",
-        "context": {
-            "trace_id": "0xa97f61b977a8cd4a21e3c43b8fae3708",
-            "span_id": "0x6290f0a6c49a5e9c",
-            "trace_state": "{}"
-        },
-        "kind": "SpanKind.INTERNAL",
-        "parent_id": "0x0af82d771221ac0a",
-        "start_time": "2020-04-26T01:48:51.793095Z",
-        "end_time": "2020-04-26T01:48:51.798319Z",
-        "status": {
-            "canonical_code": "OK"
-        },
-        "attributes": {},
-        "events": [],
-        "links": []
-    }
-    {
-        "name": "client",
-        "context": {
-            "trace_id": "0xa97f61b977a8cd4a21e3c43b8fae3708",
-            "span_id": "0x0af82d771221ac0a",
-            "trace_state": "{}"
-        },
-        "kind": "SpanKind.INTERNAL",
-        "parent_id": null,
-        "start_time": "2020-04-26T01:48:51.792938Z",
-        "end_time": "2020-04-26T01:48:51.798535Z",
-        "status": {
-            "canonical_code": "OK"
-        },
-        "attributes": {},
-        "events": [],
-        "links": []
-    }
 
 Go to the previous console, where the Django app is running. You should see
 output similar to this one:

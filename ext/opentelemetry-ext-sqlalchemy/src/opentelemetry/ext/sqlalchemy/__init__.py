@@ -46,6 +46,7 @@ import sqlalchemy
 import wrapt
 from wrapt import wrap_function_wrapper as _w
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.sqlalchemy.engine import (
     EngineTracer,
@@ -84,7 +85,10 @@ class SQLAlchemyInstrumentor(BaseInstrumentor):
         """
         _w("sqlalchemy", "create_engine", _wrap_create_engine)
         _w("sqlalchemy.engine", "create_engine", _wrap_create_engine)
-        if kwargs.get("engine") is not None:
+
+        engine = kwargs.get("engine", Configuration.SQL_ALCHEMY_ENGINE)
+
+        if engine is not None:
             return EngineTracer(
                 _get_tracer(
                     kwargs.get("engine"), kwargs.get("tracer_provider")
