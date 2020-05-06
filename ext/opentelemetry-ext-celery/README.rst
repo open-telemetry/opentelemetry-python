@@ -1,12 +1,12 @@
-OpenTelemetry Celery Integration
-================================
+OpenTelemetry Celery Instrumentation
+====================================
 
 |pypi|
 
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-celery.svg
    :target: https://pypi.org/project/opentelemetry-ext-celery/
 
-Integration with Celery.
+Instrumentation for Celery.
 
 
 Installation
@@ -19,6 +19,6 @@ Installation
 
 References
 ----------
-* `OpenTelemetry Celery Integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/celery/celery.html>`_
+* `OpenTelemetry Celery Instrumentation <https://opentelemetry-python.readthedocs.io/en/latest/ext/celery/celery.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
 
