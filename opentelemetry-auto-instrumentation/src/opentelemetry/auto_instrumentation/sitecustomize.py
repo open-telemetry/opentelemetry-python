@@ -11,16 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
 
-import setuptools
+from logging import getLogger
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "ext", "http_requests", "version.py"
-)
-PACKAGE_INFO = {}
-with open(VERSION_FILENAME) as f:
-    exec(f.read(), PACKAGE_INFO)
+from pkg_resources import iter_entry_points
 
-setuptools.setup(version=PACKAGE_INFO["__version__"])
+logger = getLogger(__file__)
+
+
+for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+    try:
+        entry_point.load()().instrument()  # type: ignore
+        logger.debug("Instrumented %s", entry_point.name)
+
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Instrumenting of %s failed", entry_point.name)

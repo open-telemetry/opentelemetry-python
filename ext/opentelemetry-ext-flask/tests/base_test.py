@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
+from unittest.mock import patch
 
-from flask import Flask, request
+from flask import request
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
-from opentelemetry import trace as trace_api
-from opentelemetry.test.wsgitestutil import WsgiTestBase
+from opentelemetry import trace
+from opentelemetry.configuration import Configuration
 
 
 def expected_attributes(override_attributes):
@@ -40,23 +40,34 @@ def expected_attributes(override_attributes):
     return default_attributes
 
 
-class TestFlaskIntegration(WsgiTestBase):
-    def setUp(self):
-        # No instrumentation code is here because it is present in the
-        # conftest.py file next to this file.
-        super().setUp()
+class InstrumentationTest:
+    def setUp(self):  # pylint: disable=invalid-name
+        super().setUp()  # pylint: disable=no-member
+        Configuration._reset()  # pylint: disable=protected-access
 
-        self.app = Flask(__name__)
+    @staticmethod
+    def _hello_endpoint(helloid):
+        if helloid == 500:
+            raise ValueError(":-(")
+        return "Hello: " + str(helloid)
 
-        def hello_endpoint(helloid):
-            if helloid == 500:
-                raise ValueError(":-(")
-            return "Hello: " + str(helloid)
+    def _common_initialization(self):
+        def excluded_endpoint():
+            return "excluded"
 
-        self.app.route("/hello/<int:helloid>")(hello_endpoint)
+        def excluded2_endpoint():
+            return "excluded2"
 
+        # pylint: disable=no-member
+        self.app.route("/hello/<int:helloid>")(self._hello_endpoint)
+        self.app.route("/excluded/<int:helloid>")(self._hello_endpoint)
+        self.app.route("/excluded")(excluded_endpoint)
+        self.app.route("/excluded2")(excluded2_endpoint)
+
+        # pylint: disable=attribute-defined-outside-init
         self.client = Client(self.app, BaseResponse)
 
+    # pylint: disable=no-member
     def test_only_strings_in_environ(self):
         """
         Some WSGI servers (such as Gunicorn) expect keys in the environ object
@@ -80,13 +91,12 @@ class TestFlaskIntegration(WsgiTestBase):
         expected_attrs = expected_attributes(
             {"http.target": "/hello/123", "http.route": "/hello/<int:helloid>"}
         )
-        resp = self.client.get("/hello/123")
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual([b"Hello: 123"], list(resp.response))
+        self.client.get("/hello/123")
+
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_404(self):
@@ -105,7 +115,7 @@ class TestFlaskIntegration(WsgiTestBase):
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         self.assertEqual(span_list[0].name, "/bye")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_internal_error(self):
@@ -122,10 +132,23 @@ class TestFlaskIntegration(WsgiTestBase):
         resp.close()
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "hello_endpoint")
-        self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
+        self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
-
-if __name__ == "__main__":
-    unittest.main()
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS": (
+                "http://localhost/excluded"
+            ),
+            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS": "excluded2",
+        },
+    )
+    def test_excluded_path(self):
+        self.client.get("/hello/123")
+        self.client.get("/excluded")
+        self.client.get("/excluded2")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(span_list[0].name, "_hello_endpoint")
