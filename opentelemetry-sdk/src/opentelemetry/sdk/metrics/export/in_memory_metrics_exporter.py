@@ -15,7 +15,7 @@
 import threading
 from typing import Sequence
 
-from . import MetricsExporter, MetricsExportResult, MetricRecord
+from . import MetricRecord, MetricsExporter, MetricsExportResult
 
 
 class InMemoryMetricsExporter(MetricsExporter):
