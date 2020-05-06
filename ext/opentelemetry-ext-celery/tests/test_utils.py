@@ -125,7 +125,6 @@ class TestUtils(unittest.TestCase):
             return 42
 
         # delete the Span
-        exception = None
         task_id = "7c6731af-9533-40c3-83a9-25b58f0d837f"
         try:
             utils.detach_span(fn_task, task_id)
