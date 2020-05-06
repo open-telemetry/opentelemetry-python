@@ -74,7 +74,8 @@ class TestBase(unittest.TestCase):
 
     @staticmethod
     def create_meter_provider(**kwargs):
-        """Helper to create a configure meter provider
+        """Helper to create a configured meter provider
+
         Creates a `MeterProvider` and an `InMemoryMetricsExporter`.
 
         Returns:

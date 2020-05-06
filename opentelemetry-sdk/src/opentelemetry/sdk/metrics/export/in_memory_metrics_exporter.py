@@ -19,7 +19,8 @@ from . import MetricRecord, MetricsExporter, MetricsExportResult
 
 
 class InMemoryMetricsExporter(MetricsExporter):
-    """ Implementation of `MetricsExporter` thta stores metrics in memory.
+    """Implementation of `MetricsExporter` that stores metrics in memory.
+
     This class can be used for testing purposes. It stores exported metrics
     in a list in memory that can be retrieved using the
     :func:`.get_exported_metrics` method.
