@@ -1,15 +1,24 @@
-OpenTelemetry Django Instrumentation
-====================================
+OpenTelemetry Django Tracing
+============================
 
-This instrumentation creates OpenTelemetry spans for Django applications.
+|pypi|
 
-Once this package is installed, run your Django application like this:
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-django.svg
+   :target: https://pypi.org/project/opentelemetry-ext-django/
 
-`opentelemetry-python-autoinstrumentation python3 manage.py runserver`
+This library allows tracing requests for Django applications.
+
+Installation
+------------
+
+::
+
+    pip install opentelemetry-ext-django
+
 
 References
 ----------
 
+* `Django <https://www.djangoproject.com/>`_
+* `OpenTelemetry Django Tracing <https://opentelemetry-python.readthedocs.io/en/latest/ext/django/django.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `OpenTelemetry WSGI extension <https://github.com/open-telemetry/opentelemetry-python/tree/master/ext/opentelemetry-ext-wsgi>`_
-* `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python/tree/master/ext/opentelemetry-ext-django>`_
