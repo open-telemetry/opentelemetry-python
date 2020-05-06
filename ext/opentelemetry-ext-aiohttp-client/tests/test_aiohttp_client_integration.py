@@ -40,7 +40,7 @@ class TestAioHttpIntegration(TestBase):
                 (
                     span.name,
                     (span.status.canonical_code, span.status.description),
-                    dict(span.attributes)
+                    dict(span.attributes),
                 )
                 for span in self.memory_exporter.get_finished_spans()
             ],
@@ -73,6 +73,7 @@ class TestAioHttpIntegration(TestBase):
         **kwargs
     ) -> typing.Tuple[str, int]:
         """Helper to start an aiohttp test server and send an actual HTTP request to it."""
+
         async def do_request():
             async def default_handler(unused_request):
                 return aiohttp.web.Response(status=int(status_code))
