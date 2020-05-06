@@ -103,7 +103,7 @@ def attach_span(task, task_id, span, is_publish=False):
     `(task_id, is_publish)` as a key. This is useful when information must be
     propagated from one Celery signal to another.
 
-    DEV: We use (task_id, is_publish) for the key to ensure that publishing a
+    We use (task_id, is_publish) for the key to ensure that publishing a
     task from within another task does not cause any conflicts.
 
     This mostly happens when either a task fails and a retry policy is in place,
@@ -131,7 +131,7 @@ def detach_span(task, task_id, is_publish=False):
     if span_dict is None:
         return
 
-    # DEV: See note in `attach_span` for key info
+    # See note in `attach_span` for key info
     span_dict.pop((task_id, is_publish), (None, None))
 
 
@@ -143,7 +143,7 @@ def retrieve_span(task, task_id, is_publish=False):
     if span_dict is None:
         return (None, None)
 
-    # DEV: See note in `attach_span` for key info
+    # See note in `attach_span` for key info
     return span_dict.get((task_id, is_publish), (None, None))
 
 

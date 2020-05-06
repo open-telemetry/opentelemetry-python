@@ -116,7 +116,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         logger.debug("prerun signal start task_id=%s", task_id)
         if task is None or task_id is None:
             logger.debug(
-                "unable to extract the Task and the task_id. This version of Celery may not be supported."
+                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
             )
             return
 
@@ -134,7 +134,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         logger.debug("postrun signal task_id=%s", task_id)
         if task is None or task_id is None:
             logger.debug(
-                "unable to extract the Task and the task_id. This version of Celery may not be supported."
+                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
             )
             return
 
@@ -162,7 +162,7 @@ class CeleryInstrumentor(BaseInstrumentor):
 
         if task is None or task_id is None:
             logger.debug(
-                "unable to extract the Task and the task_id. This version of Celery may not be supported."
+                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
             )
             return
 
@@ -186,7 +186,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         task_id = retrieve_task_id(kwargs)
         if task is None or task_id is None:
             logger.debug(
-                "unable to extract the Task and the task_id. This version of Celery may not be supported."
+                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
             )
             return
 
@@ -205,7 +205,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         task_id = kwargs.get("task_id")
         if task is None or task_id is None:
             logger.debug(
-                "unable to extract the Task and the task_id. This version of Celery may not be supported."
+                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
             )
             return
 
@@ -233,14 +233,14 @@ class CeleryInstrumentor(BaseInstrumentor):
         context = kwargs.get("request")
         if task is None or context is None:
             logger.debug(
-                "unable to extract the Task or the Context. This version of Celery may not be supported."
+                "Unable to extract the Task or the Context. This version of Celery may not be supported."
             )
             return
 
         reason = kwargs.get("reason")
         if not reason:
             logger.debug(
-                "unable to extract the retry reason. This version of Celery may not be supported."
+                "Unable to extract the retry reason. This version of Celery may not be supported."
             )
             return
 
@@ -249,6 +249,6 @@ class CeleryInstrumentor(BaseInstrumentor):
             return
 
         # Add retry reason metadata to span
-        # DEV: Use `str(reason)` instead of `reason.message` in case we get
+        # Use `str(reason)` instead of `reason.message` in case we get
         # something that isn't an `Exception`
         span.set_attribute(_TASK_RETRY_REASON_KEY, str(reason))
