@@ -92,8 +92,8 @@ class _DjangoMiddleware(MiddlewareMixin):
 
     def process_response(self, request, response):
         if (
-            self._environ_activation_key in request.META.keys() and
-            self._environ_span_key in request.META.keys()
+            self._environ_activation_key in request.META.keys()
+            and self._environ_span_key in request.META.keys()
         ):
             add_response_attributes(
                 request.META[self._environ_span_key],
