@@ -13,7 +13,6 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry import trace as trace_api
 from opentelemetry.context import get_value, set_value
 from opentelemetry.context.context import Context
 from opentelemetry.trace.span import INVALID_SPAN, Span
