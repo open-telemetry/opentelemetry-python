@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The integration with MySQL supports the `mysql-connector`_ library and is specified
-to ``trace_integration`` using ``'MySQL'``.
+MySQL instrumentation supporing `mysql-connector`_, it can be enabled by
+using ``MySQLInstrumentor``.
 
 .. _mysql-connector: https://pypi.org/project/mysql-connector/
 
@@ -26,12 +26,13 @@ Usage
     import mysql.connector
     from opentelemetry import trace
     from opentelemetry.trace import TracerProvider
-    from opentelemetry.ext.mysql import trace_integration
+    from opentelemetry.ext.mysql import MySQLInstrumentor
 
     trace.set_tracer_provider(TracerProvider())
 
-    trace_integration()
-    cnx = mysql.connector.connect(database='MySQL_Database')
+    MySQLInstrumentor.instrument()
+
+    cnx = mysql.connector.connect(database="MySQL_Database")
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)"
     cursor.close()
@@ -45,29 +46,71 @@ import typing
 
 import mysql.connector
 
-from opentelemetry.ext.dbapi import wrap_connect
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.ext import dbapi
 from opentelemetry.ext.mysql.version import __version__
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
-def trace_integration(tracer_provider: typing.Optional[TracerProvider] = None):
-    """Integrate with MySQL Connector/Python library.
-       https://dev.mysql.com/doc/connector-python/en/
-    """
-
-    tracer = get_tracer(__name__, __version__, tracer_provider)
-
-    connection_attributes = {
+class MySQLInstrumentor(BaseInstrumentor):
+    _CONNECTION_ATTRIBUTES = {
         "database": "database",
         "port": "server_port",
         "host": "server_host",
         "user": "user",
     }
-    wrap_connect(
-        tracer,
-        mysql.connector,
-        "connect",
-        "mysql",
-        "sql",
-        connection_attributes,
-    )
+
+    _DATABASE_COMPONENT = "mysql"
+    _DATABASE_TYPE = "sql"
+
+    def _instrument(self, **kwargs):
+        """Integrate with MySQL Connector/Python library.
+        https://dev.mysql.com/doc/connector-python/en/
+        """
+        tracer_provider = kwargs.get("tracer_provider")
+
+        tracer = get_tracer(__name__, __version__, tracer_provider)
+
+        dbapi.wrap_connect(
+            tracer,
+            mysql.connector,
+            "connect",
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
+        )
+
+    def _uninstrument(self, **kwargs):
+        """"Disable MySQL instrumentation"""
+        dbapi.unwrap_connect(mysql.connector, "connect")
+
+    # pylint:disable=no-self-use
+    def instrument_connection(self, connection):
+        """Enable instrumentation in a MySQL connection.
+
+        Args:
+            connection: The connection to instrument.
+
+        Returns:
+            An instrumented connection.
+        """
+        tracer = get_tracer(__name__, __version__)
+
+        return dbapi.instrument_connection(
+            tracer,
+            connection,
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
+        )
+
+    def uninstrument_connection(self, connection):
+        """Disable instrumentation in a MySQL connection.
+
+        Args:
+            connection: The connection to uninstrument.
+
+        Returns:
+            An uninstrumented connection.
+        """
+        return dbapi.uninstrument_connection(connection)
