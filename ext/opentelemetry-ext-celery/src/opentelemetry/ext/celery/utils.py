@@ -71,7 +71,6 @@ def set_attributes_from_context(span, context):
                 span.set_attribute("messaging.destination", routing_key)
             value = str(value)
 
-        # prefix the tag as 'celery'
         attribute_name = "celery.{}".format(key)
 
         if key == "id":
