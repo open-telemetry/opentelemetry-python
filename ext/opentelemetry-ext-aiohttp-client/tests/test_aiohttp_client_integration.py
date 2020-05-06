@@ -15,8 +15,6 @@
 import asyncio
 import contextlib
 import typing
-import unittest
-import unittest.mock
 import urllib.parse
 from http import HTTPStatus
 
@@ -25,8 +23,6 @@ import aiohttp.test_utils
 import yarl
 
 import opentelemetry.ext.aiohttp_client
-from opentelemetry import trace
-from opentelemetry.sdk.trace import export
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 
