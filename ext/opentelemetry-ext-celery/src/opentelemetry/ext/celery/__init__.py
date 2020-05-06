@@ -57,8 +57,7 @@ API
 
 import logging
 
-import celery
-from celery import signals
+from celery import registry, signals
 
 from opentelemetry import trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
@@ -159,7 +158,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         # execution, so it **must not** be used to retrieve `request` data.
         task_name = kwargs.get("sender")
         # pylint: disable=no-member
-        task = celery.registry.tasks.get(task_name)
+        task = registry.tasks.get(task_name)
         task_id = retrieve_task_id(kwargs)
 
         if task is None or task_id is None:
@@ -185,7 +184,7 @@ class CeleryInstrumentor(BaseInstrumentor):
     def _trace_after_publish(*args, **kwargs):
         task_name = kwargs.get("sender")
         # pylint: disable=no-member
-        task = celery.registry.tasks.get(task_name)
+        task = registry.tasks.get(task_name)
         task_id = retrieve_task_id(kwargs)
         if task is None or task_id is None:
             logger.debug(
