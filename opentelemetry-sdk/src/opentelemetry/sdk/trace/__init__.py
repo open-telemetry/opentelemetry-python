@@ -223,17 +223,19 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         for sp in self._span_processors:  # type: SpanProcessor
             future = self._executor.submit(sp.force_flush, timeout_millis)
             futures.append(future)
-        deadline_ns = time_ns() + timeout_millis * 1000000
-        flushed_in_time = True
-        for future in futures:
-            try:
-                timeout_sec = (deadline_ns - time_ns()) / 1e9
-                flushed_in_time = (
-                    future.result(timeout_sec) and flushed_in_time
-                )
-            except concurrent.futures.TimeoutError:
-                flushed_in_time = False
-        return flushed_in_time
+
+        timeout_sec = timeout_millis / 1e3
+        done_futures, not_done_futures = concurrent.futures.wait(
+            futures, timeout_sec
+        )
+        if not_done_futures:
+            return False
+
+        for future in done_futures:
+            if not future.result():
+                return False
+
+        return True
 
 
 class EventBase(abc.ABC):
@@ -817,9 +819,7 @@ class TracerProvider(trace_api.TracerProvider):
         ] = None,
     ):
         self._active_span_processor = (
-            SynchronousMultiSpanProcessor()
-            if active_span_processor is None
-            else active_span_processor
+            active_span_processor or SynchronousMultiSpanProcessor()
         )
         self.resource = resource
         self.sampler = sampler

@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
+import time
+import typing
 import unittest
 from threading import Event
 from unittest import mock
 
+from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
 
 
@@ -134,33 +138,50 @@ class TestSpanProcessor(unittest.TestCase):
         self.assertListEqual(spans_calls_list, expected_list)
 
 
-class TestSynchronousMultiSpanProcessor(unittest.TestCase):
+class MultiSpanProcessorTestBase(abc.ABC):
+    @abc.abstractmethod
+    def create_multi_span_processor(
+        self,
+    ) -> typing.Union[
+        trace.SynchronousMultiSpanProcessor, trace.ConcurrentMultiSpanProcessor
+    ]:
+        pass
+
+    @staticmethod
+    def create_default_span() -> trace_api.Span:
+        span_context = trace_api.SpanContext(37, 73, is_remote=False)
+        return trace_api.DefaultSpan(span_context)
+
     def test_on_start(self):
-        multi_processor = trace.SynchronousMultiSpanProcessor()
+        multi_processor = self.create_multi_span_processor()
 
         mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
-        multi_processor.on_start(mock.Mock(spec=trace.Span))
+        span = self.create_default_span()
+        multi_processor.on_start(span)
 
         for mock_processor in mocks:
-            self.assertEqual(1, mock_processor.on_start.call_count)
+            mock_processor.on_start.assert_called_once_with(span)
+        multi_processor.shutdown()
 
     def test_on_end(self):
-        multi_processor = trace.SynchronousMultiSpanProcessor()
+        multi_processor = self.create_multi_span_processor()
 
         mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
-        multi_processor.on_end(mock.Mock(spec=trace.Span))
+        span = self.create_default_span()
+        multi_processor.on_end(span)
 
         for mock_processor in mocks:
-            self.assertEqual(1, mock_processor.on_end.call_count)
+            mock_processor.on_end.assert_called_once_with(span)
+        multi_processor.shutdown()
 
     def test_on_shutdown(self):
-        multi_processor = trace.SynchronousMultiSpanProcessor()
+        multi_processor = self.create_multi_span_processor()
 
         mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
         for mock_processor in mocks:
@@ -169,10 +190,10 @@ class TestSynchronousMultiSpanProcessor(unittest.TestCase):
         multi_processor.shutdown()
 
         for mock_processor in mocks:
-            self.assertEqual(1, mock_processor.shutdown.call_count)
+            mock_processor.shutdown.assert_called_once_with()
 
     def test_force_flush(self):
-        multi_processor = trace.SynchronousMultiSpanProcessor()
+        multi_processor = self.create_multi_span_processor()
 
         mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
         for mock_processor in mocks:
@@ -181,22 +202,35 @@ class TestSynchronousMultiSpanProcessor(unittest.TestCase):
 
         flushed = multi_processor.force_flush(timeout_millis)
 
+        # pylint: disable=no-member
         self.assertTrue(flushed)
         for mock_processor in mocks:
+            # pylint: disable=no-member
             self.assertEqual(1, mock_processor.force_flush.call_count)
+        multi_processor.shutdown()
+
+
+class TestSynchronousMultiSpanProcessor(
+    MultiSpanProcessorTestBase, unittest.TestCase
+):
+    def create_multi_span_processor(
+        self,
+    ) -> trace.SynchronousMultiSpanProcessor:
+        return trace.SynchronousMultiSpanProcessor()
 
     def test_force_flush_late_by_timeout(self):
         multi_processor = trace.SynchronousMultiSpanProcessor()
 
+        def delayed_flush(_):
+            time.sleep(0.055)
+
         mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
+        mock_processor1.force_flush = mock.Mock(side_effect=delayed_flush)
         multi_processor.add_span_processor(mock_processor1)
         mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
         multi_processor.add_span_processor(mock_processor2)
 
-        with (
-            mock.patch.object(trace, "time_ns", side_effect=(0, 0, 100000000))
-        ):
-            flushed = multi_processor.force_flush(50)
+        flushed = multi_processor.force_flush(50)
 
         self.assertFalse(flushed)
         self.assertEqual(1, mock_processor1.force_flush.call_count)
@@ -217,59 +251,13 @@ class TestSynchronousMultiSpanProcessor(unittest.TestCase):
         self.assertEqual(0, mock_processor2.force_flush.call_count)
 
 
-class TestConcurrentMultiSpanProcessor(unittest.TestCase):
-    def test_on_start(self):
-        multi_processor = trace.ConcurrentMultiSpanProcessor(3)
-
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
-        for mock_processor in mocks:
-            multi_processor.add_span_processor(mock_processor)
-
-        multi_processor.on_start(mock.Mock(spec=trace.Span))
-
-        for mock_processor in mocks:
-            self.assertEqual(1, mock_processor.on_start.call_count)
-        multi_processor.shutdown()
-
-    def test_on_end(self):
-        multi_processor = trace.ConcurrentMultiSpanProcessor(3)
-
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
-        for mock_processor in mocks:
-            multi_processor.add_span_processor(mock_processor)
-        mock_span = mock.Mock(spec=trace.Span)
-
-        multi_processor.on_end(mock_span)
-
-        for mock_processor in mocks:
-            self.assertEqual(1, mock_processor.on_end.call_count)
-        multi_processor.shutdown()
-
-    def test_on_shutdown(self):
-        multi_processor = trace.ConcurrentMultiSpanProcessor(3)
-
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
-        for mock_processor in mocks:
-            multi_processor.add_span_processor(mock_processor)
-
-        multi_processor.shutdown()
-
-        for mock_processor in mocks:
-            self.assertEqual(1, mock_processor.shutdown.call_count)
-
-    def test_force_flush(self):
-        multi_processor = trace.ConcurrentMultiSpanProcessor(3)
-
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
-        for mock_processor in mocks:
-            multi_processor.add_span_processor(mock_processor)
-
-        flushed = multi_processor.force_flush(100)
-
-        self.assertTrue(flushed)
-        for mock_processor in mocks:
-            self.assertEqual(1, mock_processor.force_flush.call_count)
-        multi_processor.shutdown()
+class TestConcurrentMultiSpanProcessor(
+    MultiSpanProcessorTestBase, unittest.TestCase
+):
+    def create_multi_span_processor(
+        self,
+    ) -> trace.ConcurrentMultiSpanProcessor:
+        return trace.ConcurrentMultiSpanProcessor(3)
 
     def test_force_flush_late_by_timeout(self):
         multi_processor = trace.ConcurrentMultiSpanProcessor(5)
