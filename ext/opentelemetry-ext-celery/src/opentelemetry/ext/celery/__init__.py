@@ -17,7 +17,7 @@ Instrument `celery`_ to report Celery APP operations.
 There are two options for instrumenting code. The first option is to use the
 ``opentelemetry-auto-instrumentation`` executable which will automatically
 instrument your Celery APP. The second is to programmatically enable
-instrumentation via the following code:
+instrumentation as explained in the following section.
 
 .. _celery: https://pypi.org/project/celery/
 
