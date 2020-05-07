@@ -15,6 +15,10 @@ import sys
 from os import listdir
 from os.path import isdir, join
 
+# configure django to avoid the following exception:
+# django.core.exceptions.ImproperlyConfigured: Requested settings, but settings
+# are not configured. You must either define the environment variable
+# DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
 import django
 from django.conf import settings
 
