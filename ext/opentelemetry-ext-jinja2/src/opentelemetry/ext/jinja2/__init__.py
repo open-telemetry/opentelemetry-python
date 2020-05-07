@@ -106,7 +106,7 @@ def _unwrap(obj, attr):
 
 
 class Jinja2Instrumentor(BaseInstrumentor):
-    """A instrumentor for jinja2
+    """An instrumentor for jinja2
 
     See `BaseInstrumentor`
     """
