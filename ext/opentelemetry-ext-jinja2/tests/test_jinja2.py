@@ -18,6 +18,8 @@ import jinja2
 
 from opentelemetry import trace as trace_api
 from opentelemetry.test.test_base import TestBase
+from opentelemetry.ext.jinja2 import Jinja2Instrumentor
+
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 TMPL_DIR = os.path.join(TEST_DIR, "templates")
@@ -26,9 +28,14 @@ TMPL_DIR = os.path.join(TEST_DIR, "templates")
 class TestJinja2Instrumentor(TestBase):
     def setUp(self):
         super().setUp()
+        self.instrumentor = Jinja2Instrumentor()
+        self.instrumentor.instrument()
         # prevent cache effects when using Template('code...')
         # pylint: disable=protected-access
         jinja2.environment._spontaneous_environments.clear()
+
+    def tearDown(self):
+        self.instrumentor.uninstrument()
 
     def test_render_inline_template(self):
         template = jinja2.environment.Template("Hello {{name}}!")
