@@ -20,6 +20,7 @@ import typing
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.sdk.trace.export import SpanExporter
+from opentelemetry.trace import INVALID_TRACE_ID
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ class DatadogExportSpanProcessor(SpanProcessor):
     to the Datadog Agent which expects to received list of spans for each trace.
     """
 
-    _FLUSH_TOKEN = -1
+    _FLUSH_TOKEN = INVALID_TRACE_ID
 
     def __init__(
         self,
@@ -52,17 +53,16 @@ class DatadogExportSpanProcessor(SpanProcessor):
 
         # queue trace_ids for traces with recently ended spans for worker thread to check
         # for exporting
-        self.check_traces_queue = collections.deque(
-            []
+        self.check_traces_queue = (
+            collections.deque()
         )  # type: typing.Deque[int]
 
+        self.traces_lock = threading.Lock()
         # dictionary of trace_ids to a list of spans where the first span is the
         # first opened span for the trace
         self.traces = collections.defaultdict(list)
-
         # counter to keep track of the number of spans and ended spans for a
         # trace_id
-        self.traces_spans_lock = threading.Lock()
         self.traces_spans_count = collections.Counter()
         self.traces_spans_ended_count = collections.Counter()
 
@@ -85,7 +85,7 @@ class DatadogExportSpanProcessor(SpanProcessor):
         ctx = span.get_context()
         trace_id = ctx.trace_id
 
-        with self.traces_spans_lock:
+        with self.traces_lock:
             # check upper bound on number of spans for trace before adding new
             # span
             if self.traces_spans_count[trace_id] == self.max_trace_size:
@@ -97,10 +97,6 @@ class DatadogExportSpanProcessor(SpanProcessor):
             self.traces[trace_id].append(span)
             self.traces_spans_count[trace_id] += 1
 
-    def queue_size(self) -> int:
-        """Use count of spans per trace as upper bound on spans to keep"""
-        return sum(self.traces_spans_count.values())
-
     def on_end(self, span: Span) -> None:
         if self.done:
             logger.warning("Already shutdown, dropping span.")
@@ -109,7 +105,7 @@ class DatadogExportSpanProcessor(SpanProcessor):
         ctx = span.get_context()
         trace_id = ctx.trace_id
 
-        with self.traces_spans_lock:
+        with self.traces_lock:
             self.traces_spans_ended_count[trace_id] += 1
             if self.is_trace_exportable(trace_id):
                 self.check_traces_queue.appendleft(trace_id)
@@ -148,44 +144,41 @@ class DatadogExportSpanProcessor(SpanProcessor):
             < 0
         )
 
-    def clear_counts(self, trace_id):
-        del self.traces_spans_count[trace_id]
-        del self.traces_spans_ended_count[trace_id]
-
-    def clear_trace(self, trace_id):
-        del self.traces[trace_id]
-
     def export(self) -> None:
         """Exports traces with finished spans."""
         notify_flush = False
-        export_traces = []
+        export_trace_ids = []
 
         while self.check_traces_queue:
             trace_id = self.check_traces_queue.pop()
             if trace_id is self._FLUSH_TOKEN:
                 notify_flush = True
             else:
-                with self.traces_spans_lock:
+                with self.traces_lock:
                     # check whether trace is exportable again in case that new
                     # spans were started since we last concluded trace was
                     # exportable
                     if self.is_trace_exportable(trace_id):
-                        export_traces.append(trace_id)
-                        self.clear_counts(trace_id)
+                        export_trace_ids.append(trace_id)
+                        del self.traces_spans_count[trace_id]
+                        del self.traces_spans_ended_count[trace_id]
 
-        if len(export_traces) > 0:
+        if len(export_trace_ids) > 0:
             token = attach(set_value("suppress_instrumentation", True))
 
-            for trace_id in export_traces:
-                try:
-                    # Ignore type b/c the Optional[None]+slicing is too "clever"
-                    # for mypy
-                    self.span_exporter.export(self.traces[trace_id])  # type: ignore
-                # pylint: disable=broad-except
-                except Exception:
-                    logger.exception("Exception while exporting Span batch.")
-                finally:
-                    self.clear_trace(trace_id)
+            for trace_id in export_trace_ids:
+                with self.traces_lock:
+                    try:
+                        # Ignore type b/c the Optional[None]+slicing is too "clever"
+                        # for mypy
+                        self.span_exporter.export(self.traces[trace_id])  # type: ignore
+                    # pylint: disable=broad-except
+                    except Exception:
+                        logger.exception(
+                            "Exception while exporting Span batch."
+                        )
+                    finally:
+                        del self.traces[trace_id]
 
             detach(token)
 
