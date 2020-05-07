@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import sys
 
 import httpretty
@@ -36,6 +37,7 @@ class TestRequestsIntegration(TestBase):
         httpretty.register_uri(
             httpretty.GET, self.URL, body="Hello!",
         )
+        httpretty.register_uri(httpretty.POST, self.URL, body="World!")
 
     def tearDown(self):
         super().tearDown()
@@ -182,6 +184,46 @@ class TestRequestsIntegration(TestBase):
 
         finally:
             propagators.set_global_httptextformat(previous_propagator)
+
+    def test_apply_custom_attributes_on_span(self):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+        RequestsInstrumentor().uninstrument()
+
+        def outgoing_http_custom_attributes(span, result: requests.Response):
+            request_body = result.request.body
+            span.set_attribute("http.request.body", result.request.body)
+            span.set_attribute(
+                "http.response.body", result.content.decode("utf-8")
+            )
+
+        RequestsInstrumentor().instrument(
+            tracer_provider=tracer_provider,
+            apply_custom_attributes_on_span=outgoing_http_custom_attributes,
+        )
+
+        result = requests.post(self.URL, data=json.dumps({"hello": "world"}))
+        self.assertEqual(result.text, "World!")
+
+        span_list = exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertEqual(
+            span.attributes,
+            {
+                "component": "http",
+                "http.method": "POST",
+                "http.url": self.URL,
+                "http.status_code": 200,
+                "http.status_text": "OK",
+                "http.request.body": '{"hello": "world"}',
+                "http.response.body": "World!",
+            },
+        )
+
+        self.assertIs(span.resource, resource)
 
     def test_custom_tracer_provider(self):
         resource = resources.Resource.create({})
