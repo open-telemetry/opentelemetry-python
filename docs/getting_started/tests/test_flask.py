@@ -15,16 +15,29 @@ import os
 import subprocess
 import sys
 import unittest
+from time import sleep
+
+import requests
 
 
-class TestBasicTracerExample(unittest.TestCase):
-    def test_basic_tracer(self):
+class TestFlask(unittest.TestCase):
+    def test_flask(self):
         dirpath = os.path.dirname(os.path.realpath(__file__))
-        test_script = "{}/../tracer.py".format(dirpath)
-        output = subprocess.check_output(
-            (sys.executable, test_script)
-        ).decode()
+        server_script = "{}/../flask_example.py".format(dirpath)
+        server = subprocess.Popen(
+            [sys.executable, server_script], stdout=subprocess.PIPE,
+        )
+        sleep(1)
 
-        self.assertIn('"name": "foo"', output)
-        self.assertIn('"name": "bar"', output)
-        self.assertIn('"name": "baz"', output)
+        try:
+            result = requests.get("http://localhost:5000")
+            self.assertEqual(result.status_code, 200)
+
+            sleep(0.1)
+        finally:
+            server.terminate()
+
+        output = str(server.stdout.read())
+        self.assertIn('"name": ""', output)
+        self.assertIn('"name": "example-request"', output)
+        self.assertIn('"name": "hello"', output)

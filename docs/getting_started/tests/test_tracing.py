@@ -15,25 +15,16 @@ import os
 import subprocess
 import sys
 import unittest
-from time import sleep
 
 
-class TestHttpExample(unittest.TestCase):
-    @classmethod
-    def setup_class(cls):
+class TestBasicTracerExample(unittest.TestCase):
+    def test_basic_tracer(self):
         dirpath = os.path.dirname(os.path.realpath(__file__))
-        server_script = "{}/../server.py".format(dirpath)
-        cls.server = subprocess.Popen([sys.executable, server_script])
-        sleep(1)
-
-    def test_http(self):
-        dirpath = os.path.dirname(os.path.realpath(__file__))
-        test_script = "{}/../client.py".format(dirpath)
+        test_script = "{}/../tracing.py".format(dirpath)
         output = subprocess.check_output(
             (sys.executable, test_script)
         ).decode()
-        self.assertIn('"name": "/"', output)
 
-    @classmethod
-    def teardown_class(cls):
-        cls.server.terminate()
+        self.assertIn('"name": "foo"', output)
+        self.assertIn('"name": "bar"', output)
+        self.assertIn('"name": "baz"', output)
