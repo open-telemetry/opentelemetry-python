@@ -19,5 +19,6 @@ Installation
 
 References
 ----------
+* `OpenTelemetry System Metrics Instrumentation <https://opentelemetry-python.readthedocs.io/en/latest/ext/system_metrics/system_metrics.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
 

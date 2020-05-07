@@ -22,7 +22,6 @@ Usage
 
     from opentelemetry.ext.system_metrics import SystemMetrics
     from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-    from opentelemetry.sdk.metrics.export.controller import PushController
 
     exporter = ConsoleMetricsExporter()
     SystemMetrics(exporter)
@@ -61,6 +60,18 @@ class SystemMetrics:
         )
         self._proc = psutil.Process(os.getpid())
         self._labels = labels
+        self._system_memory_labels = {}
+        self._system_cpu_labels = {}
+        self._network_bytes_labels = {}
+        self._runtime_memory_labels = {}
+        self._runtime_gc_labels = {}
+        # create the label set for each observer once
+        for key, value in self._labels.items():
+            self._system_memory_labels[key] = value
+            self._system_cpu_labels[key] = value
+            self._network_bytes_labels[key] = value
+            self._runtime_memory_labels[key] = value
+            self._runtime_gc_labels[key] = value
 
         self.meter.register_observer(
             callback=self._get_system_memory,
@@ -109,6 +120,7 @@ class SystemMetrics:
 
     def _get_system_memory(self, observer: metrics.Observer) -> None:
         """Observer callback for memory available
+
         Args:
             observer: the observer to update
         """
@@ -116,21 +128,23 @@ class SystemMetrics:
         for key, value in system_memory._asdict().items():
             if not isinstance(value, int):
                 continue
-            labels = {"type": key}
-            observer.observe(value, labels)
+            self._system_memory_labels["type"] = key
+            observer.observe(value, self._system_memory_labels)
 
     def _get_system_cpu(self, observer: metrics.Observer) -> None:
         """Observer callback for system cpu
+
         Args:
             observer: the observer to update
         """
         cpu_times = psutil.cpu_times()
         for key, value in cpu_times._asdict().items():
-            labels = {"type": key}
-            observer.observe(value, labels)
+            self._system_cpu_labels["type"] = key
+            observer.observe(value, self._system_cpu_labels)
 
     def _get_network_bytes(self, observer: metrics.Observer) -> None:
         """Observer callback for network bytes
+
         Args:
             observer: the observer to update
         """
@@ -140,18 +154,21 @@ class SystemMetrics:
             "bytes_sent",
         ]
         for metric in _metrics:
-            labels = {"type": metric}
-            observer.observe(getattr(net_io, metric), labels)
+            self._network_bytes_labels["type"] = metric
+            observer.observe(
+                getattr(net_io, metric), self._network_bytes_labels
+            )
 
     def _get_runtime_memory(self, observer: metrics.Observer) -> None:
         """Observer callback for runtime memory
+
         Args:
             observer: the observer to update
         """
         proc_memory = self._proc.memory_info()
         for key, value in proc_memory._asdict().items():
-            labels = {"type": key}
-            observer.observe(value, labels)
+            self._runtime_memory_labels["type"] = key
+            observer.observe(value, self._runtime_memory_labels)
 
     def _get_runtime_gc_count(self, observer: metrics.Observer) -> None:
         """Observer callback for garbage collection
@@ -161,5 +178,5 @@ class SystemMetrics:
         """
         gc_count = gc.get_count()
         for index, count in enumerate(gc_count):
-            labels = {"count": str(index)}
-            observer.observe(count, labels)
+            self._runtime_gc_labels["count"] = str(index)
+            observer.observe(count, self._runtime_gc_labels)

@@ -19,7 +19,6 @@ from contextlib import contextmanager
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics import export as metrics_export
 from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import (
     InMemoryMetricsExporter,
 )
