@@ -138,3 +138,12 @@ class TestJinja2Instrumentor(TestBase):
         self.assertEqual(
             spans[4].attributes, {"jinja2.template_name": "template.html"},
         )
+
+    def test_uninstrumented(self):
+        self.instrumentor.uninstrument()
+
+        jinja2.environment.Template("Hello {{name}}!")
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 0)
+
+        self.instrumentor.instrument()
