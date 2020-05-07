@@ -35,7 +35,7 @@ Usage
     Jinja2Instrumentor().instrument()
 
     env = Environment(loader=FileSystemLoader("templates"))
-    template = env.get_template('mytemplate.html')
+    template = env.get_template("mytemplate.html")
 
 API
 ---
