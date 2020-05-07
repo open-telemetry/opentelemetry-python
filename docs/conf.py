@@ -68,6 +68,7 @@ intersphinx_mapping = {
         "https://opentracing-python.readthedocs.io/en/latest/",
         None,
     ),
+    "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
 }
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
