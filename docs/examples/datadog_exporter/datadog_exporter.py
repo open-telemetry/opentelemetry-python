@@ -15,7 +15,10 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.ext.datadog import DatadogExportSpanProcessor, DatadogSpanExporter
+from opentelemetry.ext.datadog import (
+    DatadogExportSpanProcessor,
+    DatadogSpanExporter,
+)
 from opentelemetry.sdk.trace import TracerProvider
 
 trace.set_tracer_provider(TracerProvider())
