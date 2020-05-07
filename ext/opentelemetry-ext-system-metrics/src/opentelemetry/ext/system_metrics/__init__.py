@@ -26,7 +26,7 @@ Usage
     exporter = ConsoleMetricsExporter()
     SystemMetrics(exporter)
 
-    # metrics are collected asynchrnously
+    # metrics are collected asynchronously
     input("...")
 
 API
