@@ -12,17 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Usage
------
+from os.path import dirname, join
 
-This package provides a command that automatically instruments a program:
+from setuptools import setup
 
-::
+PACKAGE_INFO = {}
+with open(
+    join(
+        dirname(__file__),
+        "src",
+        "opentelemetry",
+        "ext",
+        "django",
+        "version.py",
+    )
+) as f:
+    exec(f.read(), PACKAGE_INFO)
 
-    opentelemetry-auto-instrumentation python program.py
-
-The code in ``program.py`` needs to use one of the packages for which there is
-an OpenTelemetry integration. For a list of the available integrations please
-check :doc:`here <../../index>`.
-"""
+setup(version=PACKAGE_INFO["__version__"])

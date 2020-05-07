@@ -11,15 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from opentelemetry.ext.flask import FlaskInstrumentor
-
-_FLASK_INSTRUMENTOR = FlaskInstrumentor()
+from django.apps import AppConfig
 
 
-def pytest_sessionstart(session):  # pylint: disable=unused-argument
-    _FLASK_INSTRUMENTOR.instrument()
-
-
-def pytest_sessionfinish(session):  # pylint: disable=unused-argument
-    _FLASK_INSTRUMENTOR.uninstrument()
+class PagesConfig(AppConfig):
+    name = "pages"

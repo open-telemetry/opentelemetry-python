@@ -12,17 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Usage
------
-
-This package provides a command that automatically instruments a program:
-
-::
-
-    opentelemetry-auto-instrumentation python program.py
-
-The code in ``program.py`` needs to use one of the packages for which there is
-an OpenTelemetry integration. For a list of the available integrations please
-check :doc:`here <../../index>`.
-"""
+default_app_config = "pages.apps.PagesConfig"

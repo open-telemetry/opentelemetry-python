@@ -11,18 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from django.http import HttpResponse
 
-"""
-Usage
------
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleExportSpanProcessor,
+)
 
-This package provides a command that automatically instruments a program:
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer_provider().get_tracer(__name__)
 
-::
+trace.get_tracer_provider().add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
 
-    opentelemetry-auto-instrumentation python program.py
 
-The code in ``program.py`` needs to use one of the packages for which there is
-an OpenTelemetry integration. For a list of the available integrations please
-check :doc:`here <../../index>`.
-"""
+def home_page_view(request):
+    return HttpResponse("Hello, world")
