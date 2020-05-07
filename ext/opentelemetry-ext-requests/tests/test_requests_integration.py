@@ -192,7 +192,6 @@ class TestRequestsIntegration(TestBase):
         RequestsInstrumentor().uninstrument()
 
         def outgoing_http_custom_attributes(span, result: requests.Response):
-            request_body = result.request.body
             span.set_attribute("http.request.body", result.request.body)
             span.set_attribute(
                 "http.response.body", result.content.decode("utf-8")
