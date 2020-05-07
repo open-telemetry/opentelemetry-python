@@ -23,11 +23,4 @@ PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
 
-setuptools.setup(
-    version=PACKAGE_INFO["__version__"],
-    entry_points={
-        "opentelemetry_instrumentor": [
-            "jinja2 = opentelemetry.ext.jinja2:Jinja2Instrumentor"
-        ]
-    },
-)
+setuptools.setup(version=PACKAGE_INFO["__version__"])
