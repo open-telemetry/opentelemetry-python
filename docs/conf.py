@@ -15,6 +15,12 @@ import sys
 from os import listdir
 from os.path import isdir, join
 
+import django
+from django.conf import settings
+
+settings.configure()
+django.setup()
+
 source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
     os.path.abspath("../opentelemetry-sdk/src/"),
