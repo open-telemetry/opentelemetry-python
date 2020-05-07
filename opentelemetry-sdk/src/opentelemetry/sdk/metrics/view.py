@@ -60,7 +60,6 @@ class View:
         self.aggregation = aggregation
         if label_keys is None:
             label_keys = []
-        # TODO: add configuration for aggregators (histogram, etc.)
         self.label_keys = sorted(label_keys)
         self.config = config
 

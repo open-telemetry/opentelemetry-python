@@ -70,6 +70,6 @@ class Batcher:
         if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage
-            aggregator = record.aggregator.__class__()
+            aggregator = record.aggregator.__class__(config=record.aggregator.config)
             aggregator.merge(record.aggregator)
         self._batch_map[key] = aggregator
