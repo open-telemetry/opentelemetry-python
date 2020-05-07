@@ -27,6 +27,7 @@ Usage
 
     from jinja2 import Environment, FileSystemLoader
     from opentelemetry.ext.jinja2 import Jinja2Instrumentor
+    from opentelemetry.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
 
@@ -38,6 +39,7 @@ Usage
 API
 ---
 """
+# pylint: disable=no-value-for-parameter
 
 import logging
 
@@ -45,9 +47,9 @@ import jinja2
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
-from opentelemetry import trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.jinja2.version import __version__
+from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
@@ -57,36 +59,60 @@ ATTRIBUTE_JINJA2_TEMPLATE_PATH = "jinja2.template_path"
 DEFAULT_TEMPLATE_NAME = "<memory>"
 
 
-def _wrap_render(wrapped, instance, args, kwargs):
+def with_tracer_wrapper(func):
+    """Helper for providing tracer for wrapper functions.
+
+    Usage::
+
+        @with_tracer
+        def my_wrapper(tracer, wrapped, instance, args, kwargs):
+            # Do tracing stuff
+            pass
+
+        def instrument():
+            tracer = get_tracer(__name__)
+            wrap(mod, "Class.function", my_wrapper(tracer))
+    """
+
+    def _with_tracer(tracer):
+        def wrapper(wrapped, instance, args, kwargs):
+            return func(tracer, wrapped, instance, args, kwargs)
+
+        return wrapper
+
+    return _with_tracer
+
+
+@with_tracer_wrapper
+def _wrap_render(tracer, wrapped, instance, args, kwargs):
     """Wrap `Template.render()` or `Template.generate()`
     """
-    tracer = trace.get_tracer(__name__, __version__)
     template_name = instance.name or DEFAULT_TEMPLATE_NAME
     attributes = {ATTRIBUTE_JINJA2_TEMPLATE_NAME: template_name}
     with tracer.start_as_current_span(
-        "jinja2.render", kind=trace.SpanKind.INTERNAL, attributes=attributes
+        "jinja2.render", kind=SpanKind.INTERNAL, attributes=attributes
     ):
         return wrapped(*args, **kwargs)
 
 
-def _wrap_compile(wrapped, _, args, kwargs):
-    tracer = trace.get_tracer(__name__, __version__)
+@with_tracer_wrapper
+def _wrap_compile(tracer, wrapped, _, args, kwargs):
     template_name = (
         args[1] if len(args) > 1 else kwargs.get("name", DEFAULT_TEMPLATE_NAME)
     )
     attributes = {ATTRIBUTE_JINJA2_TEMPLATE_NAME: template_name}
     with tracer.start_as_current_span(
-        "jinja2.compile", kind=trace.SpanKind.INTERNAL, attributes=attributes
+        "jinja2.compile", kind=SpanKind.INTERNAL, attributes=attributes
     ):
         return wrapped(*args, **kwargs)
 
 
-def _wrap_load_template(wrapped, _, args, kwargs):
-    tracer = trace.get_tracer(__name__, __version__)
+@with_tracer_wrapper
+def _wrap_load_template(tracer, wrapped, _, args, kwargs):
     template_name = kwargs.get("name", args[0])
     attributes = {ATTRIBUTE_JINJA2_TEMPLATE_NAME: template_name}
     with tracer.start_as_current_span(
-        "jinja2.load", kind=trace.SpanKind.INTERNAL, attributes=attributes
+        "jinja2.load", kind=SpanKind.INTERNAL, attributes=attributes
     ) as span:
         template = None
         try:
@@ -112,13 +138,16 @@ class Jinja2Instrumentor(BaseInstrumentor):
     """
 
     def _instrument(self, **kwargs):
-        _wrap(jinja2, "environment.Template.render", _wrap_render)
-        _wrap(jinja2, "environment.Template.generate", _wrap_render)
-        _wrap(jinja2, "environment.Environment.compile", _wrap_compile)
+        tracer_provider = kwargs.get("tracer_provider")
+        tracer = get_tracer(__name__, __version__, tracer_provider)
+
+        _wrap(jinja2, "environment.Template.render", _wrap_render(tracer))
+        _wrap(jinja2, "environment.Template.generate", _wrap_render(tracer))
+        _wrap(jinja2, "environment.Environment.compile", _wrap_compile(tracer))
         _wrap(
             jinja2,
             "environment.Environment._load_template",
-            _wrap_load_template,
+            _wrap_load_template(tracer),
         )
 
     def _uninstrument(self, **kwargs):

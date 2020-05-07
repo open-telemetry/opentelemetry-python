@@ -17,9 +17,8 @@ import os
 import jinja2
 
 from opentelemetry import trace as trace_api
-from opentelemetry.test.test_base import TestBase
 from opentelemetry.ext.jinja2 import Jinja2Instrumentor
-
+from opentelemetry.test.test_base import TestBase
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 TMPL_DIR = os.path.join(TEST_DIR, "templates")
