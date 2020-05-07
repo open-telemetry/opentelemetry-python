@@ -20,6 +20,7 @@ from os.path import isdir, join
 # are not configured. You must either define the environment variable
 # DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
 from django.conf import settings
+
 settings.configure()
 
 
