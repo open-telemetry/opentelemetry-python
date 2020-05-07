@@ -65,7 +65,7 @@ def with_tracer_wrapper(func):
 
     Usage::
 
-        @with_tracer
+        @with_tracer_wrapper
         def my_wrapper(tracer, wrapped, instance, args, kwargs):
             # Do tracing stuff
             pass
