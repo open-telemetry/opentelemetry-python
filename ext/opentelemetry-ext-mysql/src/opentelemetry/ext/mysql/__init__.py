@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-MySQL instrumentation supporing `mysql-connector`_, it can be enabled by
+MySQL instrumentation supporting `mysql-connector`_, it can be enabled by
 using ``MySQLInstrumentor``.
 
 .. _mysql-connector: https://pypi.org/project/mysql-connector/
