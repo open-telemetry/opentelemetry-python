@@ -3,7 +3,12 @@
 # import boto.awslambda
 # import boto.sts
 # import boto.elasticache
-from moto import mock_s3, mock_ec2, mock_lambda, mock_sts
+from moto import (
+    mock_s3_deprecated,
+    mock_ec2_deprecated,
+    mock_lambda_deprecated,
+    mock_sts_deprecated
+)
 
 from opentelemetry.test.test_base import TestBase
 
@@ -32,7 +37,7 @@ class TestBotoInstrumentor(TestBase):
         from opentelemetry.ext.boto import BotoInstrumentor
         BotoInstrumentor().uninstrument()
 
-    @mock_ec2
+    @mock_ec2_deprecated
     def test_ec2_client(self):
         from boto.ec2 import connect_to_region
         ec2 = connect_to_region("us-west-2")
@@ -63,7 +68,7 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(span.name, "ec2.command")
         self.assertEqual(span.span_type, "http")
 
-    @mock_ec2
+    @mock_ec2_deprecated
     def test_analytics_enabled_with_rate(self):
         from boto.ec2 import connect_to_region
         ec2 = connect_to_region("us-west-2")
@@ -73,7 +78,7 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
 
-    @mock_ec2
+    @mock_ec2_deprecated
     def test_analytics_enabled_without_rate(self):
         from boto.ec2 import connect_to_region
         ec2 = connect_to_region("us-west-2")
@@ -83,7 +88,7 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
 
-    @mock_s3
+    @mock_s3_deprecated
     def test_s3_client(self):
         from boto.s3 import connect_to_region
 
@@ -131,7 +136,7 @@ class TestBotoInstrumentor(TestBase):
             span = spans[0]
             self.assertEqual(span.resource, "s3.head")
 
-    @mock_s3
+    @mock_s3_deprecated
     def test_s3_put(self):
 
         from os import environ
@@ -163,7 +168,7 @@ class TestBotoInstrumentor(TestBase):
         )
         self.assertEqual(spans[2].resource, "s3.put")
 
-    @mock_lambda
+    @mock_lambda_deprecated
     def test_unpatch(self):
         from boto.awslambda import connect_to_region
         lamb = connect_to_region("us-east-2")
@@ -176,7 +181,7 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert not spans, spans
 
-    @mock_s3
+    @mock_s3_deprecated
     def test_double_patch(self):
         from boto.s3 import connect_to_region
         s3 = connect_to_region("us-east-1")
@@ -191,7 +196,7 @@ class TestBotoInstrumentor(TestBase):
         assert spans
         self.assertEqual(len(spans), 1)
 
-    @mock_lambda
+    @mock_lambda_deprecated
     def test_lambda_client(self):
         from boto.awslambda import connect_to_region
         lamb = connect_to_region("us-east-2")
@@ -211,7 +216,7 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(span.service, "test-boto-tracing.lambda")
         self.assertEqual(span.resource, "lambda.get")
 
-    @mock_sts
+    @mock_sts_deprecated
     def test_sts_client(self):
         from boto.sts import connect_to_region
         sts = connect_to_region("us-west-2")
@@ -250,7 +255,7 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(span.resource, "elasticache")
 
     """
-    @mock_ec2
+    @mock_ec2_deprecated
     def test_ec2_client_ot(self):
         OpenTracing compatibility check of the test_ec2_client test.
 
