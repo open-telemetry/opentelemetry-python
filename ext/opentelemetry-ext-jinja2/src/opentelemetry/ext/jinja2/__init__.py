@@ -60,7 +60,7 @@ ATTRIBUTE_JINJA2_TEMPLATE_PATH = "jinja2.template_path"
 DEFAULT_TEMPLATE_NAME = "<memory>"
 
 
-def with_tracer_wrapper(func):
+def _with_tracer_wrapper(func):
     """Helper for providing tracer for wrapper functions.
 
     Usage::
@@ -84,7 +84,7 @@ def with_tracer_wrapper(func):
     return _with_tracer
 
 
-@with_tracer_wrapper
+@_with_tracer_wrapper
 def _wrap_render(tracer, wrapped, instance, args, kwargs):
     """Wrap `Template.render()` or `Template.generate()`
     """
@@ -96,7 +96,7 @@ def _wrap_render(tracer, wrapped, instance, args, kwargs):
         return wrapped(*args, **kwargs)
 
 
-@with_tracer_wrapper
+@_with_tracer_wrapper
 def _wrap_compile(tracer, wrapped, _, args, kwargs):
     template_name = (
         args[1] if len(args) > 1 else kwargs.get("name", DEFAULT_TEMPLATE_NAME)
@@ -108,7 +108,7 @@ def _wrap_compile(tracer, wrapped, _, args, kwargs):
         return wrapped(*args, **kwargs)
 
 
-@with_tracer_wrapper
+@_with_tracer_wrapper
 def _wrap_load_template(tracer, wrapped, _, args, kwargs):
     template_name = kwargs.get("name", args[0])
     attributes = {ATTRIBUTE_JINJA2_TEMPLATE_NAME: template_name}
