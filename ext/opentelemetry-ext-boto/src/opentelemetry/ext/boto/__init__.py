@@ -121,45 +121,46 @@ class BotoInstrumentor(BaseInstrumentor):
 
         endpoint_name = getattr(instance, "host").split(".")[0]
 
-        span = self._tracer.start_span(
+        with self._tracer.start_as_current_span(
             "{}.command".format(endpoint_name),
             kind=SpanKind.CONSUMER,
-        )
+        ) as span:
+            operation_name = None
+            if args:
+                operation_name = args[0]
+                span.resource = "{}.{}".format(
+                    endpoint_name, operation_name.lower()
+                )
+            else:
+                span.resource = endpoint_name
 
-        operation_name = None
-        if args:
-            operation_name = args[0]
-            span.resource = "%s.%s" % (endpoint_name, operation_name.lower())
-        else:
-            span.resource = endpoint_name
+            add_span_arg_tags(
+                span,
+                endpoint_name,
+                args,
+                AWS_QUERY_ARGS_NAME,
+                AWS_QUERY_TRACED_ARGS
+            )
 
-        add_span_arg_tags(
-            span,
-            endpoint_name,
-            args,
-            AWS_QUERY_ARGS_NAME,
-            AWS_QUERY_TRACED_ARGS
-        )
+            # Obtaining region name
+            region_name = _get_instance_region_name(instance)
 
-        # Obtaining region name
-        region_name = _get_instance_region_name(instance)
+            meta = {
+                AGENT: "boto",
+                OPERATION: operation_name,
+            }
+            if region_name:
+                meta[REGION] = region_name
 
-        meta = {
-            AGENT: "boto",
-            OPERATION: operation_name,
-        }
-        if region_name:
-            meta[REGION] = region_name
+            for key, value in meta.items():
+                span.set_attribute(key, value)
 
-        for key, value in meta.items():
-            span.set_attribute(key, value)
+            # Original func returns a boto.connection.HTTPResponse object
+            result = original_func(*args, **kwargs)
+            span.set_attribute("http.status_code", getattr(result, "status"))
+            span.set_attribute("http.method", getattr(result, "_method"))
 
-        # Original func returns a boto.connection.HTTPResponse object
-        result = original_func(*args, **kwargs)
-        span.set_attribute("http.status_code", getattr(result, "status"))
-        span.set_attribute("http.method", getattr(result, "_method"))
-
-        return result
+            return result
 
     def _patched_auth_request(self, original_func, instance, args, kwargs):
         # Catching the name of the operation that called make_request()
@@ -183,43 +184,43 @@ class BotoInstrumentor(BaseInstrumentor):
 
         endpoint_name = getattr(instance, "host").split(".")[0]
 
-        span = self._tracer.start_span(
+        with self._tracer.start_as_current_span(
             "{}.command".format(endpoint_name),
             kind=SpanKind.CONSUMER,
-        )
-        if args:
-            http_method = args[0]
-            span.resource = "%s.%s" % (endpoint_name, http_method.lower())
-        else:
-            span.resource = endpoint_name
+        ) as span:
+            if args:
+                http_method = args[0]
+                span.resource = "%s.%s" % (endpoint_name, http_method.lower())
+            else:
+                span.resource = endpoint_name
 
-        add_span_arg_tags(
-            span,
-            endpoint_name,
-            args,
-            AWS_AUTH_ARGS_NAME,
-            AWS_AUTH_TRACED_ARGS
-        )
+            add_span_arg_tags(
+                span,
+                endpoint_name,
+                args,
+                AWS_AUTH_ARGS_NAME,
+                AWS_AUTH_TRACED_ARGS
+            )
 
-        # Obtaining region name
-        region_name = _get_instance_region_name(instance)
+            # Obtaining region name
+            region_name = _get_instance_region_name(instance)
 
-        meta = {
-            AGENT: "boto",
-            OPERATION: operation_name,
-        }
-        if region_name:
-            meta[REGION] = region_name
+            meta = {
+                AGENT: "boto",
+                OPERATION: operation_name,
+            }
+            if region_name:
+                meta[REGION] = region_name
 
-        for key, value in meta.items():
-            span.set_attribute(key, value)
+            for key, value in meta.items():
+                span.set_attribute(key, value)
 
-        # Original func returns a boto.connection.HTTPResponse object
-        result = original_func(*args, **kwargs)
-        span.set_attribute("http.status_code", getattr(result, "status"))
-        span.set_attribute("http.method", getattr(result, "_method"))
+            # Original func returns a boto.connection.HTTPResponse object
+            result = original_func(*args, **kwargs)
+            span.set_attribute("http.status_code", getattr(result, "status"))
+            span.set_attribute("http.method", getattr(result, "_method"))
 
-        return result
+            return result
 
 
 def truncate_arg_value(value, max_len=1024):
