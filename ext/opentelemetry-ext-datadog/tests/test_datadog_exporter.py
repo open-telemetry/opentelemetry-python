@@ -23,6 +23,7 @@ from ddtrace.internal.writer import AgentWriter
 from opentelemetry import trace as trace_api
 from opentelemetry.ext import datadog
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
 class MockDatadogSpanExporter(datadog.DatadogSpanExporter):
@@ -125,18 +126,25 @@ class TestDatadogSpanExporter(unittest.TestCase):
             trace_id, other_id, is_remote=False
         )
 
+        instrumentation_info = InstrumentationInfo(__name__, "0")
+
         otel_spans = [
             trace.Span(
                 name=span_names[0],
                 context=span_context,
                 parent=parent_context,
                 kind=trace_api.SpanKind.CLIENT,
-                attributes=dict(component="testcomponent"),
+                instrumentation_info=instrumentation_info,
             ),
             trace.Span(
-                name=span_names[1], context=parent_context, parent=None,
+                name=span_names[1],
+                context=parent_context,
+                parent=None,
+                instrumentation_info=instrumentation_info,
             ),
-            trace.Span(name=span_names[2], context=other_context, parent=None),
+            trace.Span(
+                name=span_names[2], context=other_context, parent=None,
+            ),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
@@ -160,19 +168,18 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 trace_id=trace_id_low,
                 parent_id=parent_id,
                 span_id=span_id,
-                name=span_names[0],
-                resource="testcomponent",
+                name="tests.test_datadog_exporter.CLIENT",
+                resource=span_names[0],
                 start=start_times[0],
                 duration=durations[0],
                 error=0,
                 service="test-service",
-                meta={"component": "testcomponent"},
             ),
             dict(
                 trace_id=trace_id_low,
                 parent_id=0,
                 span_id=parent_id,
-                name=span_names[1],
+                name="tests.test_datadog_exporter.INTERNAL",
                 resource=span_names[1],
                 start=start_times[1],
                 duration=durations[1],
@@ -215,7 +222,6 @@ class TestDatadogSpanExporter(unittest.TestCase):
     def test_resources(self):
         test_attributes = [
             {},
-            {"component": "foo"},
             {"http.method": "GET", "http.route": "/foo"},
             {"http.method": "GET", "http.path": "/foo"},
         ]
@@ -226,31 +232,60 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         datadog_spans = get_spans(self.tracer, self.exporter)
 
-        self.assertEqual(len(datadog_spans), 4)
+        self.assertEqual(len(datadog_spans), 3)
 
         actual = [span["resource"] for span in datadog_spans]
-        expected = ["0", "foo", "GET /foo", "GET /foo"]
+        expected = ["0", "GET /foo", "GET /foo"]
 
         self.assertEqual(actual, expected)
 
     def test_span_types(self):
-        test_attributes = [
-            {"component": "custom"},
-            {"component": "http"},
-            {"db.type": "sql"},
-            {"db.type": "mongodb"},
+        test_instrumentations = [
+            "opentelemetry.ext.aiohttp-client",
+            "opentelemetry.ext.dbapi",
+            "opentelemetry.ext.django",
+            "opentelemetry.ext.flask",
+            "opentelemetry.ext.grpc",
+            "opentelemetry.ext.jinja2",
+            "opentelemetry.ext.mysql",
+            "opentelemetry.ext.psycopg2",
+            "opentelemetry.ext.pymongo",
+            "opentelemetry.ext.pymysql",
+            "opentelemetry.ext.redis",
+            "opentelemetry.ext.requests",
+            "opentelemetry.ext.sqlalchemy",
+            "opentelemetry.ext.wsgi",
         ]
 
-        for index, test in enumerate(test_attributes):
-            with self.tracer.start_span(str(index), attributes=test):
+        for index, instrumentation in enumerate(test_instrumentations):
+            # change tracer's instrumentation info before starting span
+            self.tracer.instrumentation_info = InstrumentationInfo(
+                instrumentation, "0"
+            )
+            with self.tracer.start_span(str(index)):
                 pass
 
         datadog_spans = get_spans(self.tracer, self.exporter)
 
-        self.assertEqual(len(datadog_spans), 4)
+        self.assertEqual(len(datadog_spans), 14)
 
         actual = [span.get("type") for span in datadog_spans]
-        expected = [None, "http", "sql", "mongodb"]
+        expected = [
+            "http",
+            "sql",
+            "web",
+            "web",
+            "grpc",
+            "template",
+            "sql",
+            "sql",
+            "mongodb",
+            "sql",
+            "redis",
+            "http",
+            "sql",
+            "web",
+        ]
         self.assertEqual(actual, expected)
 
     def test_errors(self):
@@ -279,7 +314,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         # check that spans are exported without an explicitly call to
         # force_flush()
         datadog_spans = get_spans(self.tracer, self.exporter)
-        actual = [span.get("name") for span in datadog_spans]
+        actual = [span.get("resource") for span in datadog_spans]
         self.assertListEqual(span_names, actual)
 
     def test_flush(self):
@@ -292,7 +327,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         self.assertTrue(self.span_processor.force_flush())
         datadog_spans = get_spans(self.tracer, self.exporter, shutdown=False)
-        actual0 = [span.get("name") for span in datadog_spans]
+        actual0 = [span.get("resource") for span in datadog_spans]
         self.assertListEqual(span_names0, actual0)
 
         # create some more spans to check that span processor still works
@@ -302,7 +337,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         self.assertTrue(self.span_processor.force_flush())
         datadog_spans = get_spans(self.tracer, self.exporter)
-        actual1 = [span.get("name") for span in datadog_spans]
+        actual1 = [span.get("resource") for span in datadog_spans]
         self.assertListEqual(span_names0 + span_names1, actual1)
 
     def test_span_processor_lossless(self):

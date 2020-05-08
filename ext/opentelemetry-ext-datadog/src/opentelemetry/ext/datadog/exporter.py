@@ -16,6 +16,7 @@ import logging
 import os
 from urllib.parse import urlparse
 
+from ddtrace.ext import SpanTypes as DatadogSpanTypes
 from ddtrace.internal.writer import AgentWriter
 from ddtrace.span import Span as DatadogSpan
 
@@ -25,12 +26,24 @@ from opentelemetry.trace.status import StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
 
+
 DEFAULT_AGENT_URL = "http://localhost:8126"
-DATADOG_SPAN_TYPES = (
-    "sql",
-    "mongodb",
-    "http",
-)
+_INSTRUMENTATION_SPAN_TYPES = {
+    "opentelemetry.ext.aiohttp-client": DatadogSpanTypes.HTTP,
+    "opentelemetry.ext.dbapi": DatadogSpanTypes.SQL,
+    "opentelemetry.ext.django": DatadogSpanTypes.WEB,
+    "opentelemetry.ext.flask": DatadogSpanTypes.WEB,
+    "opentelemetry.ext.grpc": DatadogSpanTypes.GRPC,
+    "opentelemetry.ext.jinja2": DatadogSpanTypes.TEMPLATE,
+    "opentelemetry.ext.mysql": DatadogSpanTypes.SQL,
+    "opentelemetry.ext.psycopg2": DatadogSpanTypes.SQL,
+    "opentelemetry.ext.pymongo": DatadogSpanTypes.MONGODB,
+    "opentelemetry.ext.pymysql": DatadogSpanTypes.SQL,
+    "opentelemetry.ext.redis": DatadogSpanTypes.REDIS,
+    "opentelemetry.ext.requests": DatadogSpanTypes.HTTP,
+    "opentelemetry.ext.sqlalchemy": DatadogSpanTypes.SQL,
+    "opentelemetry.ext.wsgi": DatadogSpanTypes.WEB,
+}
 
 
 class DatadogSpanExporter(SpanExporter):
@@ -94,7 +107,7 @@ class DatadogSpanExporter(SpanExporter):
 
             datadog_span = DatadogSpan(
                 tracer,
-                span.name,
+                _get_span_name(span),
                 service=self.service,
                 resource=_get_resource(span),
                 span_type=_get_span_type(span),
@@ -145,8 +158,24 @@ def _convert_trace_id_uint64(otel_id):
     return otel_id & 0xFFFFFFFFFFFFFFFF
 
 
+def _get_span_name(span):
+    """Get span name by using instrumentation and kind while backing off to
+    span.name
+    """
+    instrumentation_name = (
+        span.instrumentation_info.name if span.instrumentation_info else None
+    )
+    span_kind_name = span.kind.name if span.kind else None
+    name = (
+        "{}.{}".format(instrumentation_name, span_kind_name)
+        if instrumentation_name and span_kind_name
+        else span.name
+    )
+    return name
+
+
 def _get_resource(span):
-    """Map span to Datadog resource name"""
+    """Get resource name for span"""
     if "http.method" in span.attributes:
         route = span.attributes.get(
             "http.route", span.attributes.get("http.path")
@@ -157,17 +186,15 @@ def _get_resource(span):
             else span.attributes["http.method"]
         )
 
-    return span.attributes.get("component", span.name)
+    return span.name
 
 
 def _get_span_type(span):
-    """Map span to Datadog span type"""
-    # use db.type for database integrations (sql, mongodb) otherwise component
-    span_type = span.attributes.get(
-        "db.type", span.attributes.get("component")
+    """Get Datadog span type"""
+    instrumentation_name = (
+        span.instrumentation_info.name if span.instrumentation_info else None
     )
-    span_type = span_type if span_type in DATADOG_SPAN_TYPES else None
-
+    span_type = _INSTRUMENTATION_SPAN_TYPES.get(instrumentation_name)
     return span_type
 
 
