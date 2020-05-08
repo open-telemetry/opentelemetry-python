@@ -21,7 +21,7 @@ class TestStatus(unittest.TestCase):
     def test_constructor(self):
         status = Status()
         self.assertEqual(status.canonical_code, StatusCanonicalCode.OK)
-        self.assertEqual(status.description, None)
+        self.assertIsNone(status.description)
 
         status = Status(StatusCanonicalCode.UNAVAILABLE, "unavailable")
         self.assertEqual(
@@ -31,5 +31,5 @@ class TestStatus(unittest.TestCase):
 
     def test_invalid_description(self):
         status = Status(description={"test": "val"})
-        self.assertEqual(status.canonical_code, StatusCanonicalCode.OK)
+        self.assertIs(status.canonical_code, StatusCanonicalCode.OK)
         self.assertEqual(status.description, "")
