@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add exclude list for paths and hosts
+  ([#630](https://github.com/open-telemetry/opentelemetry-python/pull/630))
+
 ## 0.6b0
 
 Released 2020-03-30

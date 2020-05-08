@@ -56,3 +56,7 @@ _build/
 # mypy
 .mypy_cache/
 target
+
+# Django example
+
+docs/examples/django/db.sqlite3
