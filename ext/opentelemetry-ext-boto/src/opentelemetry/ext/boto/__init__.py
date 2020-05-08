@@ -36,16 +36,14 @@ API
 """
 
 import logging
-
-from boto.connection import AWSQueryConnection, AWSAuthConnection
-
 from inspect import currentframe
 
-from wrapt import wrap_function_wrapper, ObjectProxy
+from boto.connection import AWSAuthConnection, AWSQueryConnection
+from wrapt import ObjectProxy, wrap_function_wrapper
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.ext.boto.version import __version__
+from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
 
@@ -105,12 +103,12 @@ class BotoInstrumentor(BaseInstrumentor):
         wrap_function_wrapper(
             "boto.connection",
             "AWSQueryConnection.make_request",
-            self._patched_query_request
+            self._patched_query_request,
         )
         wrap_function_wrapper(
             "boto.connection",
             "AWSAuthConnection.make_request",
-            self._patched_auth_request
+            self._patched_auth_request,
         )
 
     def _uninstrument(self, **kwargs):
@@ -122,8 +120,7 @@ class BotoInstrumentor(BaseInstrumentor):
         endpoint_name = getattr(instance, "host").split(".")[0]
 
         with self._tracer.start_as_current_span(
-            "{}.command".format(endpoint_name),
-            kind=SpanKind.CONSUMER,
+            "{}.command".format(endpoint_name), kind=SpanKind.CONSUMER,
         ) as span:
             operation_name = None
             if args:
@@ -139,7 +136,7 @@ class BotoInstrumentor(BaseInstrumentor):
                 endpoint_name,
                 args,
                 AWS_QUERY_ARGS_NAME,
-                AWS_QUERY_TRACED_ARGS
+                AWS_QUERY_TRACED_ARGS,
             )
 
             # Obtaining region name
@@ -185,8 +182,7 @@ class BotoInstrumentor(BaseInstrumentor):
         endpoint_name = getattr(instance, "host").split(".")[0]
 
         with self._tracer.start_as_current_span(
-            "{}.command".format(endpoint_name),
-            kind=SpanKind.CONSUMER,
+            "{}.command".format(endpoint_name), kind=SpanKind.CONSUMER,
         ) as span:
             if args:
                 http_method = args[0]
@@ -199,7 +195,7 @@ class BotoInstrumentor(BaseInstrumentor):
                 endpoint_name,
                 args,
                 AWS_AUTH_ARGS_NAME,
-                AWS_AUTH_TRACED_ARGS
+                AWS_AUTH_TRACED_ARGS,
             )
 
             # Obtaining region name

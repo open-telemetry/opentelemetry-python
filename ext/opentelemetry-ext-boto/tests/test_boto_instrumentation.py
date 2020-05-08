@@ -1,20 +1,19 @@
-import boto.ec2
-import boto.s3
+from unittest import skipUnless
+
 import boto.awslambda
-import boto.sts
+import boto.ec2
 import boto.elasticache
+import boto.s3
+import boto.sts
+
 from moto import (
-    mock_s3_deprecated,
     mock_ec2_deprecated,
     mock_lambda_deprecated,
-    mock_sts_deprecated
+    mock_s3_deprecated,
+    mock_sts_deprecated,
 )
-
 from opentelemetry.ext.boto import BotoInstrumentor
 from opentelemetry.test.test_base import TestBase
-
-# testing
-from unittest import skipUnless
 
 
 def assert_span_http_status_code(span, code):
@@ -153,10 +152,9 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_lambda_deprecated
     def test_unpatch(self):
-        from boto.awslambda import connect_to_region
-        lamb = connect_to_region("us-east-2")
 
-        from opentelemetry.ext.boto import BotoInstrumentor
+        lamb = boto.awslambda.connect_to_region("us-east-2")
+
         BotoInstrumentor().uninstrument()
 
         # multiple calls
@@ -166,10 +164,8 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_s3_deprecated
     def test_double_patch(self):
-        from boto.s3 import connect_to_region
-        s3 = connect_to_region("us-east-1")
+        s3 = boto.s3.connect_to_region("us-east-1")
 
-        from opentelemetry.ext.boto import BotoInstrumentor
         BotoInstrumentor().instrument()
         BotoInstrumentor().instrument()
 
@@ -181,8 +177,7 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_lambda_deprecated
     def test_lambda_client(self):
-        from boto.awslambda import connect_to_region
-        lamb = connect_to_region("us-east-2")
+        lamb = boto.awslambda.connect_to_region("us-east-2")
 
         # multiple calls
         lamb.list_functions()
@@ -200,8 +195,7 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_sts_deprecated
     def test_sts_client(self):
-        from boto.sts import connect_to_region
-        sts = connect_to_region("us-west-2")
+        sts = boto.sts.connect_to_region("us-west-2")
 
         sts.get_federation_token(12, duration=10)
 
@@ -221,12 +215,11 @@ class TestBotoInstrumentor(TestBase):
         False,
         (
             "Test to reproduce the case where args sent to patched function "
-            "are None, can\"t be mocked: needs AWS crendentials"
+            "are None, can't be mocked: needs AWS crendentials"
         ),
     )
     def test_elasticache_client(self):
-        from boto.elasticache import connect_to_region
-        elasticache = connect_to_region("us-west-2")
+        elasticache = boto.elasticache.connect_to_region("us-west-2")
 
         elasticache.describe_cache_clusters()
 
@@ -235,51 +228,3 @@ class TestBotoInstrumentor(TestBase):
         span = spans[0]
         self.assertEqual(span.resource, "elasticache")
         self.assertEqual(span.attributes["aws.region"], "us-west-2")
-
-    """
-    @mock_ec2_deprecated
-    def test_ec2_client_ot(self):
-        OpenTracing compatibility check of the test_ec2_client test.
-
-        ec2 = boto.ec2.connect_to_region("us-west-2")
-
-        ot_tracer = init_tracer("my_svc", self.tracer)
-        writer = self.tracer.writer
-
-        with ot_tracer.start_active_span("ot_span"):
-            ec2.get_all_instances()
-        spans = writer.pop()
-        assert spans
-        self.assertEqual(len(spans), 2)
-        ot_span, dd_span = spans
-
-        # confirm the parenting
-        self.assertIsNone(ot_span.parent_id)
-        self.assertEqual(dd_span.parent_id, ot_span.span_id)
-
-        self.assertEqual(ot_span.resource, "ot_span")
-        self.assertEqual(
-            dd_span.attributes["aws.operation"), "DescribeInstances"
-        )
-        assert_span_http_status_code(dd_span, 200)
-        self.assertEqual(dd_span.attributes["http.method"), "POST")
-        self.assertEqual(dd_span.attributes["aws.region"), "us-west-2")
-        self.assertEqual(dd_span.resource, "ec2.runinstances")
-
-        with ot_tracer.start_active_span("ot_span"):
-            ec2.run_instances(21)
-        spans = writer.pop()
-        assert spans
-        self.assertEqual(len(spans), 2)
-        ot_span, dd_span = spans
-
-        # confirm the parenting
-        self.assertIsNone(ot_span.parent_id)
-        self.assertEqual(dd_span.parent_id, ot_span.span_id)
-
-        self.assertEqual(dd_span.attributes["aws.operation"), "RunInstances")
-        assert_span_http_status_code(dd_span, 200)
-        self.assertEqual(dd_span.attributes["http.method"), "POST")
-        self.assertEqual(dd_span.attributes["aws.region"), "us-west-2")
-        self.assertEqual(dd_span.name, "ec2.command")
-    """
