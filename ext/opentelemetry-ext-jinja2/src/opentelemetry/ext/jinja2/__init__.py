@@ -62,17 +62,6 @@ DEFAULT_TEMPLATE_NAME = "<memory>"
 
 def _with_tracer_wrapper(func):
     """Helper for providing tracer for wrapper functions.
-
-    Usage::
-
-        @with_tracer_wrapper
-        def my_wrapper(tracer, wrapped, instance, args, kwargs):
-            # Do tracing stuff
-            pass
-
-        def instrument():
-            tracer = get_tracer(__name__)
-            wrap(mod, "Class.function", my_wrapper(tracer))
     """
 
     def _with_tracer(tracer):
