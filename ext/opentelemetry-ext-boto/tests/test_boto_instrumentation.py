@@ -58,6 +58,7 @@ class TestBotoInstrumentor(TestBase):
         span = spans[1]
         self.assertEqual(span.attributes["aws.operation"], "RunInstances")
         assert_span_http_status_code(span, 200)
+        self.assertEqual(span.resource, "ec2.runinstances")
         self.assertEqual(span.attributes["http.method"], "POST")
         self.assertEqual(span.attributes["aws.region"], "us-west-2")
         self.assertEqual(span.name, "ec2.command")
@@ -111,6 +112,7 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 3)
         span = spans[2]
         assert_span_http_status_code(span, 200)
+        self.assertEqual(span.resource, "s3.head")
         self.assertEqual(span.attributes["http.method"], "HEAD")
         self.assertEqual(span.attributes["aws.operation"], "head_bucket")
         self.assertEqual(span.name, "s3.command")
@@ -121,7 +123,7 @@ class TestBotoInstrumentor(TestBase):
         except Exception:
             spans = self.memory_exporter.get_finished_spans()
             assert spans
-            span = spans[0]
+            span = spans[2]
             self.assertEqual(span.resource, "s3.head")
 
     @mock_s3_deprecated
@@ -139,6 +141,7 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 3)
         self.assertEqual(spans[0].attributes["aws.operation"], "create_bucket")
         assert_span_http_status_code(spans[0], 200)
+        self.assertEqual(spans[0].resource, "s3.put")
         # get bucket
         self.assertEqual(spans[1].attributes["aws.operation"], "head_bucket")
         self.assertEqual(spans[1].resource, "s3.head")
@@ -190,6 +193,7 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 2)
         span = spans[0]
         assert_span_http_status_code(span, 200)
+        self.assertEqual(span.resource, "lambda.get")
         self.assertEqual(span.attributes["http.method"], "GET")
         self.assertEqual(span.attributes["aws.region"], "us-east-2")
         self.assertEqual(span.attributes["aws.operation"], "list_functions")
@@ -204,13 +208,14 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
         span = spans[0]
+        self.assertEqual(span.resource, "sts.getfederationtoken")
         self.assertEqual(span.attributes["aws.region"], "us-west-2")
         self.assertEqual(
             span.attributes["aws.operation"], "GetFederationToken"
         )
 
         # checking for protection on sts against security leak
-        self.assertIsNone(span.attributes["args.path"])
+        self.assertTrue("args.path" not in span.attributes.keys())
 
     @skipUnless(
         False,
@@ -228,6 +233,7 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
         span = spans[0]
+        self.assertEqual(span.resource, "elasticache")
         self.assertEqual(span.attributes["aws.region"], "us-west-2")
 
     """
@@ -258,6 +264,7 @@ class TestBotoInstrumentor(TestBase):
         assert_span_http_status_code(dd_span, 200)
         self.assertEqual(dd_span.attributes["http.method"), "POST")
         self.assertEqual(dd_span.attributes["aws.region"), "us-west-2")
+        self.assertEqual(dd_span.resource, "ec2.runinstances")
 
         with ot_tracer.start_active_span("ot_span"):
             ec2.run_instances(21)
