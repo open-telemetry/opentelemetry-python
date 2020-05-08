@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from logging import WARNING
 
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -30,6 +31,7 @@ class TestStatus(unittest.TestCase):
         self.assertEqual(status.description, "unavailable")
 
     def test_invalid_description(self):
-        status = Status(description={"test": "val"})
-        self.assertIs(status.canonical_code, StatusCanonicalCode.OK)
-        self.assertEqual(status.description, "")
+        with self.assertLogs(level=WARNING):
+            status = Status(description={"test": "val"})
+            self.assertEqual(status.canonical_code, StatusCanonicalCode.OK)
+            self.assertEqual(status.description, "")
