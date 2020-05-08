@@ -38,7 +38,9 @@ class InMemoryMetricsExporter(MetricsExporter):
 
     def export(
         self, metric_records: Sequence[MetricRecord]
-    ) -> "MetricsExportResult":
+    ) -> MetricsExportResult:
+        if self._stopped:
+            return MetricsExportResult.FAILURE
         with self._lock:
             self._exported_metrics.extend(metric_records)
         return MetricsExportResult.SUCCESS
@@ -47,3 +49,10 @@ class InMemoryMetricsExporter(MetricsExporter):
         """Get list of collected metrics."""
         with self._lock:
             return tuple(self._exported_metrics)
+
+    def shutdown(self) -> None:
+        """Shuts down the exporter.
+
+        Called when the SDK is shut down.
+        """
+        self._stopped = True
