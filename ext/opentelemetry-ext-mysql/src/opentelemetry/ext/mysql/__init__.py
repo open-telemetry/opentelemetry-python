@@ -30,7 +30,7 @@ Usage
 
     trace.set_tracer_provider(TracerProvider())
 
-    MySQLInstrumentor.instrument()
+    MySQLInstrumentor().instrument()
 
     cnx = mysql.connector.connect(database="MySQL_Database")
     cursor = cnx.cursor()
