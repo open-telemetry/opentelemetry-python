@@ -105,3 +105,41 @@ class TestConfiguration(TestCase):
         )  # pylint: disable=no-member
         self.assertTrue(Configuration().TRUE)  # pylint: disable=no-member
         self.assertFalse(Configuration().FALSE)  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_POSITIVE_INTEGER": "123",
+            "OPENTELEMETRY_PYTHON_NEGATIVE_INTEGER": "-123",
+            "OPENTELEMETRY_PYTHON_NON_INTEGER": "-12z3",
+        },
+    )
+    def test_integer(self):
+        self.assertEqual(
+            Configuration().POSITIVE_INTEGER, 123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NEGATIVE_INTEGER, -123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NON_INTEGER, "-12z3"
+        )  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_POSITIVE_FLOAT": "123.123",
+            "OPENTELEMETRY_PYTHON_NEGATIVE_FLOAT": "-123.123",
+            "OPENTELEMETRY_PYTHON_NON_FLOAT": "-12z3.123",
+        },
+    )
+    def test_float(self):
+        self.assertEqual(
+            Configuration().POSITIVE_FLOAT, 123.123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NEGATIVE_FLOAT, -123.123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NON_FLOAT, "-12z3.123"
+        )  # pylint: disable=no-member

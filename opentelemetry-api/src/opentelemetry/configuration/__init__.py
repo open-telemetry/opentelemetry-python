@@ -81,6 +81,8 @@ configuration is found in the environment variables).
 Configuration values that are exactly ``"True"`` or ``"False"`` will be
 converted to its boolean values of ``True`` and ``False`` respectively.
 
+Configuration values that can be casted to integers or floats will be casted.
+
 This object can be used by any OpenTelemetry component, native or external.
 For that reason, the ``Configuration`` object is designed to be immutable.
 If a component would change the value of one of the ``Configuration`` object
@@ -115,8 +117,17 @@ class Configuration:
 
                     if value == "True":
                         value = True
-                    if value == "False":
+                    elif value == "False":
                         value = False
+                    else:
+                        try:
+                            value = int(value)
+                        except ValueError:
+                            pass
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            pass
 
                     setattr(Configuration, "_{}".format(key), value)
                     setattr(
