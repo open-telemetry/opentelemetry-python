@@ -35,6 +35,7 @@ class TestJinja2Instrumentor(TestBase):
         self.tracer = get_tracer(__name__)
 
     def tearDown(self):
+        super().tearDown()
         Jinja2Instrumentor().uninstrument()
 
     def test_render_inline_template(self):
