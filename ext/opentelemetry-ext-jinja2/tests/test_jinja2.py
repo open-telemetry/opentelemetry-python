@@ -56,7 +56,7 @@ class TestJinja2Instrumentor(TestBase):
         )
 
         self.assertEqual(spans[1].name, "jinja2.render")
-        self.assertEqual(spans[1].kind, trace_api.SpanKind.INTERNAL)
+        self.assertIs(spans[1].kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
             spans[1].attributes, {"jinja2.template_name": "<memory>"},
         )
