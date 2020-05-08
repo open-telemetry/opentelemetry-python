@@ -78,6 +78,9 @@ To use the meter provider above, then the
 OpenTelemetry API provided providers are the default ones used if no
 configuration is found in the environment variables).
 
+Configuration values that are exactly ``"True"`` or ``"False"`` will be
+converted to its boolean values of ``True`` and ``False`` respectively.
+
 This object can be used by any OpenTelemetry component, native or external.
 For that reason, the ``Configuration`` object is designed to be immutable.
 If a component would change the value of one of the ``Configuration`` object
@@ -109,6 +112,11 @@ class Configuration:
                 if match is not None:
 
                     key = match.group(1)
+
+                    if value == "True":
+                        value = True
+                    if value == "False":
+                        value = False
 
                     setattr(Configuration, "_{}".format(key), value)
                     setattr(

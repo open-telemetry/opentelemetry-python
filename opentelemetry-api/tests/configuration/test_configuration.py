@@ -88,3 +88,20 @@ class TestConfiguration(TestCase):
         self.assertIsNone(
             Configuration().TRACER_PROVIDER
         )  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_TRUE": "True",
+            "OPENTELEMETRY_PYTHON_FALSE": "False",
+        },
+    )
+    def test_boolean(self):
+        self.assertIsInstance(
+            Configuration().TRUE, bool
+        )  # pylint: disable=no-member
+        self.assertIsInstance(
+            Configuration().FALSE, bool
+        )  # pylint: disable=no-member
+        self.assertTrue(Configuration().TRUE)  # pylint: disable=no-member
+        self.assertFalse(Configuration().FALSE)  # pylint: disable=no-member
