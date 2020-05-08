@@ -94,9 +94,11 @@ def translate_to_collector(spans: Sequence[Span]):
     for span in spans:
         status = None
         if span.status is not None:
-            status = trace_pb2.Status(code=span.status.canonical_code.value,)
-            if isinstance(span.status.description, str):
-                status.message = span.status.description
+            status = trace_pb2.Status(
+                code=span.status.canonical_code.value,
+                message=span.status.description,
+            )
+
         collector_span = trace_pb2.Span(
             name=trace_pb2.TruncatableString(value=span.name),
             kind=utils.get_collector_span_kind(span.kind),
