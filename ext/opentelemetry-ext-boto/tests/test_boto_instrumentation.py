@@ -19,8 +19,7 @@ from unittest import skipUnless
 
 def assert_span_http_status_code(span, code):
     """Assert on the span's 'http.status_code' tag"""
-    tag = span.attributes["http.status_code")
-    code = str(code)
+    tag = span.attributes["http.status_code"]
     assert tag == code, "%r != %r" % (tag, code)
 
 
@@ -46,25 +45,22 @@ class TestBotoInstrumentor(TestBase):
         assert spans
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.attributes["aws.operation"), "DescribeInstances")
+        self.assertEqual(span.attributes["aws.operation"], "DescribeInstances")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.attributes["http.METHOD"), "POST")
-        self.assertEqual(span.attributes["aws.region"), "us-west-2")
+        self.assertEqual(span.attributes["http.method"], "POST")
+        self.assertEqual(span.attributes["aws.region"], "us-west-2")
 
         # Create an instance
         ec2.run_instances(21)
         spans = self.memory_exporter.get_finished_spans()
         assert spans
-        self.assertEqual(len(spans), 1)
-        span = spans[0]
-        self.assertEqual(span.attributes["aws.operation"), "RunInstances")
+        self.assertEqual(len(spans), 2)
+        span = spans[1]
+        self.assertEqual(span.attributes["aws.operation"], "RunInstances")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.attributes["http.METHOD"), "POST")
-        self.assertEqual(span.attributes["aws.region"), "us-west-2")
-        self.assertEqual(span.service, "test-boto-tracing.ec2")
-        self.assertEqual(span.resource, "ec2.runinstances")
+        self.assertEqual(span.attributes["http.method"], "POST")
+        self.assertEqual(span.attributes["aws.region"], "us-west-2")
         self.assertEqual(span.name, "ec2.command")
-        self.assertEqual(span.span_type, "http")
 
     @mock_ec2_deprecated
     def test_analytics_enabled_with_rate(self):
@@ -94,31 +90,29 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 1)
         span = spans[0]
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.attributes["http.METHOD"), "GET")
-        self.assertEqual(span.attributes["aws.operation"), "get_all_buckets")
+        self.assertEqual(span.attributes["http.method"], "GET")
+        self.assertEqual(span.attributes["aws.operation"], "get_all_buckets")
 
         # Create a bucket command
         s3.create_bucket("cheese")
         spans = self.memory_exporter.get_finished_spans()
         assert spans
-        self.assertEqual(len(spans), 1)
-        span = spans[0]
+        self.assertEqual(len(spans), 2)
+        span = spans[1]
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.attributes["http.METHOD"), "PUT")
-        self.assertEqual(span.attributes["path"), "/")
-        self.assertEqual(span.attributes["aws.operation"), "create_bucket")
+        self.assertEqual(span.attributes["http.method"], "PUT")
+        self.assertEqual(span.attributes["path"], "/")
+        self.assertEqual(span.attributes["aws.operation"], "create_bucket")
 
         # Get the created bucket
         s3.get_bucket("cheese")
         spans = self.memory_exporter.get_finished_spans()
         assert spans
-        self.assertEqual(len(spans), 1)
-        span = spans[0]
+        self.assertEqual(len(spans), 3)
+        span = spans[2]
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.attributes["http.METHOD"), "HEAD")
-        self.assertEqual(span.attributes["aws.operation"), "head_bucket")
-        self.assertEqual(span.service, "test-boto-tracing.s3")
-        self.assertEqual(span.resource, "s3.head")
+        self.assertEqual(span.attributes["http.method"], "HEAD")
+        self.assertEqual(span.attributes["aws.operation"], "head_bucket")
         self.assertEqual(span.name, "s3.command")
 
         # Checking for resource incase of error
@@ -143,16 +137,14 @@ class TestBotoInstrumentor(TestBase):
         assert spans
         # create bucket
         self.assertEqual(len(spans), 3)
-        self.assertEqual(spans[0].attributes["aws.operation"), "create_bucket")
+        self.assertEqual(spans[0].attributes["aws.operation"], "create_bucket")
         assert_span_http_status_code(spans[0], 200)
-        self.assertEqual(spans[0].service, "test-boto-tracing.s3")
-        self.assertEqual(spans[0].resource, "s3.put")
         # get bucket
-        self.assertEqual(spans[1].attributes["aws.operation"), "head_bucket")
+        self.assertEqual(spans[1].attributes["aws.operation"], "head_bucket")
         self.assertEqual(spans[1].resource, "s3.head")
         # put object
         self.assertEqual(
-            spans[2].attributes["aws.operation"), "_send_file_internal"
+            spans[2].attributes["aws.operation"], "_send_file_internal"
         )
         self.assertEqual(spans[2].resource, "s3.put")
 
@@ -198,11 +190,9 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 2)
         span = spans[0]
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.attributes["http.METHOD"), "GET")
-        self.assertEqual(span.attributes["aws.region"), "us-east-2")
-        self.assertEqual(span.attributes["aws.operation"), "list_functions")
-        self.assertEqual(span.service, "test-boto-tracing.lambda")
-        self.assertEqual(span.resource, "lambda.get")
+        self.assertEqual(span.attributes["http.method"], "GET")
+        self.assertEqual(span.attributes["aws.region"], "us-east-2")
+        self.assertEqual(span.attributes["aws.operation"], "list_functions")
 
     @mock_sts_deprecated
     def test_sts_client(self):
@@ -214,13 +204,13 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
         span = spans[0]
-        self.assertEqual(span.attributes["aws.region"), "us-west-2")
-        self.assertEqual(span.attributes["aws.operation"), "GetFederationToken")
-        self.assertEqual(span.service, "test-boto-tracing.sts")
-        self.assertEqual(span.resource, "sts.getfederationtoken")
+        self.assertEqual(span.attributes["aws.region"], "us-west-2")
+        self.assertEqual(
+            span.attributes["aws.operation"], "GetFederationToken"
+        )
 
         # checking for protection on sts against security leak
-        self.assertIsNone(span.attributes["args.path"))
+        self.assertIsNone(span.attributes["args.path"])
 
     @skipUnless(
         False,
@@ -238,9 +228,7 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
         span = spans[0]
-        self.assertEqual(span.attributes["aws.region"), "us-west-2")
-        self.assertEqual(span.service, "test-boto-tracing.elasticache")
-        self.assertEqual(span.resource, "elasticache")
+        self.assertEqual(span.attributes["aws.region"], "us-west-2")
 
     """
     @mock_ec2_deprecated
@@ -264,9 +252,11 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(dd_span.parent_id, ot_span.span_id)
 
         self.assertEqual(ot_span.resource, "ot_span")
-        self.assertEqual(dd_span.attributes["aws.operation"), "DescribeInstances")
+        self.assertEqual(
+            dd_span.attributes["aws.operation"), "DescribeInstances"
+        )
         assert_span_http_status_code(dd_span, 200)
-        self.assertEqual(dd_span.attributes["http.METHOD"), "POST")
+        self.assertEqual(dd_span.attributes["http.method"), "POST")
         self.assertEqual(dd_span.attributes["aws.region"), "us-west-2")
 
         with ot_tracer.start_active_span("ot_span"):
@@ -282,9 +272,7 @@ class TestBotoInstrumentor(TestBase):
 
         self.assertEqual(dd_span.attributes["aws.operation"), "RunInstances")
         assert_span_http_status_code(dd_span, 200)
-        self.assertEqual(dd_span.attributes["http.METHOD"), "POST")
+        self.assertEqual(dd_span.attributes["http.method"), "POST")
         self.assertEqual(dd_span.attributes["aws.region"), "us-west-2")
-        self.assertEqual(dd_span.service, "test-boto-tracing.ec2")
-        self.assertEqual(dd_span.resource, "ec2.runinstances")
         self.assertEqual(dd_span.name, "ec2.command")
     """
