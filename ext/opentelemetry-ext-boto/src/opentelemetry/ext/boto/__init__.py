@@ -37,7 +37,7 @@ API
 
 import logging
 
-import boto
+from boto.connection import AWSQueryConnection, AWSAuthConnection
 
 from inspect import currentframe
 
@@ -114,8 +114,8 @@ class BotoInstrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self, **kwargs):
-        unwrap(boto.connection.AWSQueryConnection, "make_request")
-        unwrap(boto.connection.AWSAuthConnection, "make_request")
+        unwrap(AWSQueryConnection, "make_request")
+        unwrap(AWSAuthConnection, "make_request")
 
     def _patched_query_request(self, original_func, instance, args, kwargs):
 

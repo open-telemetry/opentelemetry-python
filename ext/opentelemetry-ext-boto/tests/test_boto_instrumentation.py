@@ -1,13 +1,10 @@
-import boto.ec2
-import boto.s3
-import boto.awslambda
-import boto.sqs
-import boto.kms
-import boto.sts
-import boto.elasticache
+# import boto.ec2
+# import boto.s3
+# import boto.awslambda
+# import boto.sts
+# import boto.elasticache
 from moto import mock_s3, mock_ec2, mock_lambda, mock_sts
 
-from opentelemetry.ext.boto import BotoInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 # testing
@@ -28,14 +25,17 @@ class TestBotoInstrumentor(TestBase):
 
     def setUp(self):
         super().setUp()
+        from opentelemetry.ext.boto import BotoInstrumentor
         BotoInstrumentor().instrument()
 
     def tearDown(self):
+        from opentelemetry.ext.boto import BotoInstrumentor
         BotoInstrumentor().uninstrument()
 
     @mock_ec2
     def test_ec2_client(self):
-        ec2 = boto.ec2.connect_to_region("us-west-2")
+        from boto.ec2 import connect_to_region
+        ec2 = connect_to_region("us-west-2")
 
         ec2.get_all_instances()
 
@@ -65,7 +65,8 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_ec2
     def test_analytics_enabled_with_rate(self):
-        ec2 = boto.ec2.connect_to_region("us-west-2")
+        from boto.ec2 import connect_to_region
+        ec2 = connect_to_region("us-west-2")
 
         ec2.get_all_instances()
 
@@ -74,7 +75,8 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_ec2
     def test_analytics_enabled_without_rate(self):
-        ec2 = boto.ec2.connect_to_region("us-west-2")
+        from boto.ec2 import connect_to_region
+        ec2 = connect_to_region("us-west-2")
 
         ec2.get_all_instances()
 
@@ -83,7 +85,9 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_s3
     def test_s3_client(self):
-        s3 = boto.s3.connect_to_region("us-east-1")
+        from boto.s3 import connect_to_region
+
+        s3 = connect_to_region("us-east-1")
 
         s3.get_all_buckets()
         spans = self.memory_exporter.get_finished_spans()
@@ -129,11 +133,16 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_s3
     def test_s3_put(self):
-        s3 = boto.s3.connect_to_region("us-east-1")
 
+        from os import environ
+        environ["AWS_ACCESS_KEY_ID"] = "testing"
+        environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+
+        from boto.s3 import connect_to_region, key
+        s3 = connect_to_region("us-east-1")
         s3.create_bucket("mybucket")
         bucket = s3.get_bucket("mybucket")
-        k = boto.s3.key.Key(bucket)
+        k = key.Key(bucket)
         k.key = "foo"
         k.set_contents_from_string("bar")
 
@@ -156,8 +165,10 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_lambda
     def test_unpatch(self):
-        lamb = boto.awslambda.connect_to_region("us-east-2")
+        from boto.awslambda import connect_to_region
+        lamb = connect_to_region("us-east-2")
 
+        from opentelemetry.ext.boto import BotoInstrumentor
         BotoInstrumentor().uninstrument()
 
         # multiple calls
@@ -167,8 +178,10 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_s3
     def test_double_patch(self):
-        s3 = boto.s3.connect_to_region("us-east-1")
+        from boto.s3 import connect_to_region
+        s3 = connect_to_region("us-east-1")
 
+        from opentelemetry.ext.boto import BotoInstrumentor
         BotoInstrumentor().instrument()
         BotoInstrumentor().instrument()
 
@@ -180,7 +193,8 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_lambda
     def test_lambda_client(self):
-        lamb = boto.awslambda.connect_to_region("us-east-2")
+        from boto.awslambda import connect_to_region
+        lamb = connect_to_region("us-east-2")
 
         # multiple calls
         lamb.list_functions()
@@ -199,7 +213,8 @@ class TestBotoInstrumentor(TestBase):
 
     @mock_sts
     def test_sts_client(self):
-        sts = boto.sts.connect_to_region("us-west-2")
+        from boto.sts import connect_to_region
+        sts = connect_to_region("us-west-2")
 
         sts.get_federation_token(12, duration=10)
 
@@ -222,7 +237,8 @@ class TestBotoInstrumentor(TestBase):
         ),
     )
     def test_elasticache_client(self):
-        elasticache = boto.elasticache.connect_to_region("us-west-2")
+        from boto.elasticache import connect_to_region
+        elasticache = connect_to_region("us-west-2")
 
         elasticache.describe_cache_clusters()
 
