@@ -99,11 +99,11 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 6)
 
-        self.assertEqual(spans[0].parent, spans[1].get_context())
-        self.assertEqual(spans[1].parent, spans[5].get_context())
-        self.assertEqual(spans[2].parent, spans[3].get_context())
-        self.assertEqual(spans[3].parent, spans[4].get_context())
-        self.assertEqual(spans[4].parent, spans[5].get_context())
+        self.assertIs(spans[0].parent, spans[1].get_context())
+        self.assertIs(spans[1].parent, spans[5].get_context())
+        self.assertIs(spans[2].parent, spans[3].get_context())
+        self.assertIs(spans[3].parent, spans[4].get_context())
+        self.assertIs(spans[4].parent, spans[5].get_context())
         self.assertIsNone(spans[5].parent)
 
         self.assertEqual(spans[0].name, "jinja2.compile")
