@@ -137,11 +137,7 @@ class DatadogExportSpanProcessor(SpanProcessor):
         return (
             self.traces_spans_count[trace_id]
             - self.traces_spans_ended_count[trace_id]
-            == 0
-            if not self._spans_dropped
-            else self.traces_spans_count[trace_id]
-            - self.traces_spans_ended_count[trace_id]
-            < 0
+            <= 0
         )
 
     def export(self) -> None:
