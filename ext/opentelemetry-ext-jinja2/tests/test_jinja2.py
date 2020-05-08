@@ -28,15 +28,14 @@ TMPL_DIR = os.path.join(TEST_DIR, "templates")
 class TestJinja2Instrumentor(TestBase):
     def setUp(self):
         super().setUp()
-        self.instrumentor = Jinja2Instrumentor()
-        self.instrumentor.instrument()
+        Jinja2Instrumentor().instrument()
         # prevent cache effects when using Template('code...')
         # pylint: disable=protected-access
         jinja2.environment._spontaneous_environments.clear()
         self.tracer = get_tracer(__name__)
 
     def tearDown(self):
-        self.instrumentor.uninstrument()
+        Jinja2Instrumentor().uninstrument()
 
     def test_render_inline_template(self):
         with self.tracer.start_as_current_span("test"):
@@ -140,10 +139,10 @@ class TestJinja2Instrumentor(TestBase):
         )
 
     def test_uninstrumented(self):
-        self.instrumentor.uninstrument()
+        Jinja2Instrumentor().uninstrument()
 
         jinja2.environment.Template("Hello {{name}}!")
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 0)
 
-        self.instrumentor.instrument()
+        Jinja2Instrumentor().instrument()
