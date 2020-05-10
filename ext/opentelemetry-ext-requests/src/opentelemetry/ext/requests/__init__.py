@@ -168,7 +168,7 @@ class RequestsInstrumentor(BaseInstrumentor):
         Args:
             **kwargs: Optional arguments
                 ``tracer_provider``: a TracerProvider, defaults to global
-                ``span_callback``: On optional callback invoked before returning the http response. Invoked with Span and requests.Response
+                ``span_callback``: An optional callback invoked before returning the http response. Invoked with Span and requests.Response
         """
         _instrument(
             tracer_provider=kwargs.get("tracer_provider"),
