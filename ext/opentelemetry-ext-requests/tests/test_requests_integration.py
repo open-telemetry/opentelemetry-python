@@ -37,7 +37,6 @@ class TestRequestsIntegration(TestBase):
         httpretty.register_uri(
             httpretty.GET, self.URL, body="Hello!",
         )
-        httpretty.register_uri(httpretty.POST, self.URL, body="World!")
 
     def tearDown(self):
         super().tearDown()
@@ -185,27 +184,22 @@ class TestRequestsIntegration(TestBase):
         finally:
             propagators.set_global_httptextformat(previous_propagator)
 
-    def test_apply_custom_attributes_on_span(self):
-        resource = resources.Resource.create({})
-        result = self.create_tracer_provider(resource=resource)
-        tracer_provider, exporter = result
+    def test_span_callback(self):
         RequestsInstrumentor().uninstrument()
 
-        def outgoing_http_custom_attributes(span, result: requests.Response):
-            span.set_attribute("http.request.body", result.request.body)
+        def span_callback(span, result: requests.Response):
             span.set_attribute(
                 "http.response.body", result.content.decode("utf-8")
             )
 
         RequestsInstrumentor().instrument(
-            tracer_provider=tracer_provider,
-            apply_custom_attributes_on_span=outgoing_http_custom_attributes,
+            tracer_provider=self.tracer_provider, span_callback=span_callback,
         )
 
-        result = requests.post(self.URL, data=json.dumps({"hello": "world"}))
-        self.assertEqual(result.text, "World!")
+        result = requests.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
 
-        span_list = exporter.get_finished_spans()
+        span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
         span = span_list[0]
 
@@ -213,16 +207,13 @@ class TestRequestsIntegration(TestBase):
             span.attributes,
             {
                 "component": "http",
-                "http.method": "POST",
+                "http.method": "GET",
                 "http.url": self.URL,
                 "http.status_code": 200,
                 "http.status_text": "OK",
-                "http.request.body": '{"hello": "world"}',
-                "http.response.body": "World!",
+                "http.response.body": "Hello!",
             },
         )
-
-        self.assertIs(span.resource, resource)
 
     def test_custom_tracer_provider(self):
         resource = resources.Resource.create({})

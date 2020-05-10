@@ -55,7 +55,7 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
 # pylint: disable=unused-argument
-def _instrument(tracer_provider=None, apply_custom_attributes_on_span=None):
+def _instrument(tracer_provider=None, span_callback=None):
     """Enables tracing of all requests calls that go through
       :code:`requests.session.Session.request` (this includes
       :code:`requests.get`, etc.)."""
@@ -101,8 +101,8 @@ def _instrument(tracer_provider=None, apply_custom_attributes_on_span=None):
             span.set_status(
                 Status(_http_status_to_canonical_code(result.status_code))
             )
-            if apply_custom_attributes_on_span is not None:
-                apply_custom_attributes_on_span(span, result)
+            if span_callback is not None:
+                span_callback(span, result)
 
             return result
 
@@ -161,9 +161,7 @@ class RequestsInstrumentor(BaseInstrumentor):
     def _instrument(self, **kwargs):
         _instrument(
             tracer_provider=kwargs.get("tracer_provider"),
-            apply_custom_attributes_on_span=kwargs.get(
-                "apply_custom_attributes_on_span"
-            ),
+            span_callback=kwargs.get("span_callback"),
         )
 
     def _uninstrument(self, **kwargs):
