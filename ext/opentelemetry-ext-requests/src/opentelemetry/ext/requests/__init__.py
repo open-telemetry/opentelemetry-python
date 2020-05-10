@@ -158,7 +158,18 @@ def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
 
 
 class RequestsInstrumentor(BaseInstrumentor):
+    """An instrumentor for requests
+    See `BaseInstrumentor`
+    """
+
     def _instrument(self, **kwargs):
+        """Instruments requests module
+
+        Args:
+            **kwargs: Optional arguments
+                ``tracer_provider``: a TracerProvider, defaults to global
+                ``span_callback``: On optional callback invoked before returning the http response. Invoked with Span and requests.Response
+        """
         _instrument(
             tracer_provider=kwargs.get("tracer_provider"),
             span_callback=kwargs.get("span_callback"),
