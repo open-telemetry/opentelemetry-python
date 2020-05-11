@@ -38,32 +38,43 @@ class TestJinja2Instrumentor(TestBase):
         super().tearDown()
         Jinja2Instrumentor().uninstrument()
 
-    def test_render_inline_template(self):
-        with self.tracer.start_as_current_span("test"):
+    def test_render_inline_template_with_root(self):
+        with self.tracer.start_as_current_span("root"):
             template = jinja2.environment.Template("Hello {{name}}!")
             self.assertEqual(template.render(name="Jinja"), "Hello Jinja!")
 
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 3)
 
-        self.assertIs(spans[0].parent, spans[2].get_context())
-        self.assertIs(spans[1].parent, spans[2].get_context())
-        self.assertIsNone(spans[2].parent)
+        render, template, root = spans
 
-        self.assertEqual(spans[0].name, "jinja2.compile")
-        self.assertIs(spans[0].kind, trace_api.SpanKind.INTERNAL)
+        self.assertIs(render.parent, root.get_context())
+        self.assertIs(template.parent, root.get_context())
+        self.assertIsNone(root.parent)
+
+    def test_render_inline_template(self):
+        template = jinja2.environment.Template("Hello {{name}}!")
+        self.assertEqual(template.render(name="Jinja"), "Hello Jinja!")
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 2)
+
+        template, render = spans
+
+        self.assertEqual(template.name, "jinja2.compile")
+        self.assertIs(template.kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
-            spans[0].attributes, {"jinja2.template_name": "<memory>"},
+            template.attributes, {"jinja2.template_name": "<memory>"},
         )
 
-        self.assertEqual(spans[1].name, "jinja2.render")
-        self.assertIs(spans[1].kind, trace_api.SpanKind.INTERNAL)
+        self.assertEqual(render.name, "jinja2.render")
+        self.assertIs(render.kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
-            spans[1].attributes, {"jinja2.template_name": "<memory>"},
+            render.attributes, {"jinja2.template_name": "<memory>"},
         )
 
-    def test_generate_inline_template(self):
-        with self.tracer.start_as_current_span("test"):
+    def test_generate_inline_template_with_root(self):
+        with self.tracer.start_as_current_span("root"):
             template = jinja2.environment.Template("Hello {{name}}!")
             self.assertEqual(
                 "".join(template.generate(name="Jinja")), "Hello Jinja!"
@@ -72,24 +83,37 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 3)
 
-        self.assertIs(spans[0].parent, spans[2].get_context())
-        self.assertIs(spans[1].parent, spans[2].get_context())
-        self.assertIsNone(spans[2].parent)
+        template, generate, root = spans
 
-        self.assertEqual(spans[0].name, "jinja2.compile")
-        self.assertIs(spans[0].kind, trace_api.SpanKind.INTERNAL)
+        self.assertIs(generate.parent, root.get_context())
+        self.assertIs(template.parent, root.get_context())
+        self.assertIsNone(root.parent)
+
+    def test_generate_inline_template(self):
+        template = jinja2.environment.Template("Hello {{name}}!")
         self.assertEqual(
-            spans[0].attributes, {"jinja2.template_name": "<memory>"},
+            "".join(template.generate(name="Jinja")), "Hello Jinja!"
         )
 
-        self.assertEqual(spans[1].name, "jinja2.render")
-        self.assertIs(spans[1].kind, trace_api.SpanKind.INTERNAL)
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 2)
+
+        template, generate = spans
+
+        self.assertEqual(template.name, "jinja2.compile")
+        self.assertIs(template.kind, trace_api.SpanKind.INTERNAL)
         self.assertEqual(
-            spans[1].attributes, {"jinja2.template_name": "<memory>"},
+            template.attributes, {"jinja2.template_name": "<memory>"},
         )
 
-    def test_file_template(self):
-        with self.tracer.start_as_current_span("test"):
+        self.assertEqual(generate.name, "jinja2.render")
+        self.assertIs(generate.kind, trace_api.SpanKind.INTERNAL)
+        self.assertEqual(
+            generate.attributes, {"jinja2.template_name": "<memory>"},
+        )
+
+    def test_file_template_with_root(self):
+        with self.tracer.start_as_current_span("root"):
             loader = jinja2.loaders.FileSystemLoader(TMPL_DIR)
             env = jinja2.Environment(loader=loader)
             template = env.get_template("template.html")
@@ -100,24 +124,39 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 6)
 
-        self.assertIs(spans[0].parent, spans[1].get_context())
-        self.assertIs(spans[1].parent, spans[5].get_context())
-        self.assertIs(spans[2].parent, spans[3].get_context())
-        self.assertIs(spans[3].parent, spans[4].get_context())
-        self.assertIs(spans[4].parent, spans[5].get_context())
-        self.assertIsNone(spans[5].parent)
+        compile2, load2, compile1, load1, render, root = spans
 
-        self.assertEqual(spans[0].name, "jinja2.compile")
-        self.assertEqual(spans[1].name, "jinja2.load")
-        self.assertEqual(spans[2].name, "jinja2.compile")
-        self.assertEqual(spans[3].name, "jinja2.load")
-        self.assertEqual(spans[4].name, "jinja2.render")
+        self.assertIs(compile2.parent, load2.get_context())
+        self.assertIs(load2.parent, root.get_context())
+        self.assertIs(compile1.parent, load1.get_context())
+        self.assertIs(load1.parent, render.get_context())
+        self.assertIs(render.parent, root.get_context())
+        self.assertIsNone(root.parent)
+
+    def test_file_template(self):
+        loader = jinja2.loaders.FileSystemLoader(TMPL_DIR)
+        env = jinja2.Environment(loader=loader)
+        template = env.get_template("template.html")
+        self.assertEqual(
+            template.render(name="Jinja"), "Message: Hello Jinja!"
+        )
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 5)
+
+        compile2, load2, compile1, load1, render = spans
+
+        self.assertEqual(compile2.name, "jinja2.compile")
+        self.assertEqual(load2.name, "jinja2.load")
+        self.assertEqual(compile1.name, "jinja2.compile")
+        self.assertEqual(load1.name, "jinja2.load")
+        self.assertEqual(render.name, "jinja2.render")
 
         self.assertEqual(
-            spans[0].attributes, {"jinja2.template_name": "template.html"},
+            compile2.attributes, {"jinja2.template_name": "template.html"},
         )
         self.assertEqual(
-            spans[1].attributes,
+            load2.attributes,
             {
                 "jinja2.template_name": "template.html",
                 "jinja2.template_path": os.path.join(
@@ -126,17 +165,17 @@ class TestJinja2Instrumentor(TestBase):
             },
         )
         self.assertEqual(
-            spans[2].attributes, {"jinja2.template_name": "base.html"},
+            compile1.attributes, {"jinja2.template_name": "base.html"},
         )
         self.assertEqual(
-            spans[3].attributes,
+            load1.attributes,
             {
                 "jinja2.template_name": "base.html",
                 "jinja2.template_path": os.path.join(TMPL_DIR, "base.html"),
             },
         )
         self.assertEqual(
-            spans[4].attributes, {"jinja2.template_name": "template.html"},
+            render.attributes, {"jinja2.template_name": "template.html"},
         )
 
     def test_uninstrumented(self):
