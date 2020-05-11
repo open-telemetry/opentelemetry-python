@@ -58,7 +58,7 @@ from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import (
     disable_tracing_hostname,
     disable_tracing_path,
-    time_ns,
+    time_ns
 )
 
 _logger = getLogger(__name__)
@@ -69,6 +69,21 @@ _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
 _ENVIRON_TOKEN = "opentelemetry-flask.token"
 
 
+def _disable_trace(url, path):
+    excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
+    excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
+
+    if excluded_hosts:
+        excluded_hosts = str.split(excluded_hosts, ",")
+        if disable_tracing_hostname(url, excluded_hosts):
+            return True
+    if excluded_paths:
+        excluded_paths = str.split(excluded_paths, ",")
+        if disable_tracing_path(path, excluded_paths):
+            return True
+    return False
+
+    
 def _rewrapped_app(wsgi_app):
     def _wrapped_app(environ, start_response):
         # We want to measure the time for route matching, etc.
@@ -79,7 +94,7 @@ def _rewrapped_app(wsgi_app):
 
         def _start_response(status, response_headers, *args, **kwargs):
 
-            if not _disable_trace(flask.request.url):
+            if not _disable_trace(flask.request.url, flask.request.path[1:]):
 
                 span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
 
@@ -102,7 +117,7 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
-    if _disable_trace(flask.request.url):
+    if _disable_trace(flask.request.url, flask.request.path[1:]):
         return
 
     environ = flask.request.environ
@@ -161,21 +176,6 @@ class _InstrumentedFlask(flask.Flask):
 
         self.before_request(_before_request)
         self.teardown_request(_teardown_request)
-
-
-def _disable_trace(url):
-    excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
-    excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
-
-    if excluded_hosts:
-        excluded_hosts = str.split(excluded_hosts, ",")
-        if disable_tracing_hostname(url, excluded_hosts):
-            return True
-    if excluded_paths:
-        excluded_paths = str.split(excluded_paths, ",")
-        if disable_tracing_path(url, excluded_paths):
-            return True
-    return False
 
 
 class FlaskInstrumentor(BaseInstrumentor):
