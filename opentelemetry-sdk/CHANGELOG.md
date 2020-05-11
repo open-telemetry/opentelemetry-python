@@ -12,9 +12,11 @@
   ([#621](https://github.com/open-telemetry/opentelemetry-python/pull/621))
 - bugfix: a DefaultSpan now longer causes an exception when used with tracer
   ([#577](https://github.com/open-telemetry/opentelemetry-python/pull/577))
-- move last_updated_timestamp into aggregators instead of bound metric instrument
+- move last_updated_timestamp into aggregators instead of bound metric
+  instrument
   ([#522](https://github.com/open-telemetry/opentelemetry-python/pull/522))
-- bugfix: suppressing instrumentation in metrics to eliminate an infinite loop of telemetry
+- bugfix: suppressing instrumentation in metrics to eliminate an infinite loop
+  of telemetry
   ([#529](https://github.com/open-telemetry/opentelemetry-python/pull/529))
 - bugfix: freezing span attribute sequences, reducing potential user errors
   ([#529](https://github.com/open-telemetry/opentelemetry-python/pull/529))

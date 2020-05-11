@@ -6,7 +6,8 @@
   ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
 - tracer.get_tracer now optionally accepts a TracerProvider
   ([#602](https://github.com/open-telemetry/opentelemetry-python/pull/602))
-- Configuration object can now be used by any component of opentelemetry, including 3rd party instrumentations
+- Configuration object can now be used by any component of opentelemetry,
+  including 3rd party instrumentations
   ([#563](https://github.com/open-telemetry/opentelemetry-python/pull/563))
 - bugfix: configuration object now matches fields in a case-sensitive manner
   ([#583](https://github.com/open-telemetry/opentelemetry-python/pull/583))
