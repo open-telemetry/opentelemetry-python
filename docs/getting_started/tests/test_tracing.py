@@ -20,7 +20,7 @@ import unittest
 class TestBasicTracerExample(unittest.TestCase):
     def test_basic_tracer(self):
         dirpath = os.path.dirname(os.path.realpath(__file__))
-        test_script = "{}/../tracing.py".format(dirpath)
+        test_script = "{}/../tracing_example.py".format(dirpath)
         output = subprocess.check_output(
             (sys.executable, test_script)
         ).decode()

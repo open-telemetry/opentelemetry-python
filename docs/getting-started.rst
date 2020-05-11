@@ -28,7 +28,7 @@ how long the action took, or add arbitrary attributes to the span that may provi
 
 Here's an example of a script that emits a trace containing three named spans: "foo", "bar", and "baz":
 
-.. literalinclude:: getting_started/tracing.py
+.. literalinclude:: getting_started/tracing_example.py
     :language: python
     :lines: 15-
 
@@ -36,7 +36,7 @@ We can run it, and see the traces print to your console:
 
 .. code-block:: sh
 
-    $ python tracing.py
+    $ python tracing_example.py
     {
         "name": "baz",
         "context": {
@@ -187,7 +187,7 @@ subdivision of the measurements the metric represents.
 
 The following is an example of emitting metrics to console, in a similar fashion to the trace example:
 
-.. literalinclude:: getting_started/metrics.py
+.. literalinclude:: getting_started/metrics_example.py
     :language: python
     :lines: 15-
 
@@ -195,7 +195,7 @@ The sleeps will cause the script to take a while, but running it should yield:
 
 .. code-block:: sh
 
-    $ python metrics.py
+    $ python metrics_example.py
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=25)
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
 
@@ -233,7 +233,7 @@ For our Python application, we will need to install an exporter specific to Prom
 
 And use that instead of the `ConsoleMetricsExporter`:
 
-.. literalinclude:: getting_started/prometheus.py
+.. literalinclude:: getting_started/prometheus_example.py
     :language: python
     :lines: 15-
 
@@ -293,6 +293,6 @@ Install the OpenTelemetry Collector exporter:
 
 And execute the following script:
 
-.. literalinclude:: getting_started/otcollector.py
+.. literalinclude:: getting_started/otcollector_example.py
     :language: python
     :lines: 15-
