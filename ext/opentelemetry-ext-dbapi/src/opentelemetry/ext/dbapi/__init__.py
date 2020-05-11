@@ -68,13 +68,12 @@ def trace_integration(
             connect_module: Module name where connect method is available.
             connect_method_name: The connect method name.
             database_component: Database driver name or database name "JDBI",
-                                "jdbc", "odbc", "postgreSQL".
+                "jdbc", "odbc", "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
             connection_attributes: Attribute names for database, port, host and
-                                   user in Connection object.
+                user in Connection object.
             tracer_provider: The :class:`opentelemetry.trace.TracerProvider` to
-                             use. If ommited the current configured one is
-                             used.
+                use. If ommited the current configured one is used.
     """
     tracer = get_tracer(__name__, __version__, tracer_provider)
     wrap_connect(
@@ -103,10 +102,10 @@ def wrap_connect(
             connect_module: Module name where connect method is available.
             connect_method_name: The connect method name.
             database_component: Database driver name or database name "JDBI",
-                                "jdbc", "odbc", "postgreSQL".
+                "jdbc", "odbc", "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
             connection_attributes: Attribute names for database, port, host and
-                                   user in Connection object.
+                user in Connection object.
     """
 
     # pylint: disable=unused-argument
@@ -160,10 +159,10 @@ def instrument_connection(
         tracer: The :class:`opentelemetry.trace.Tracer` to use.
         connection: The connection to instrument.
         database_component: Database driver name or database name "JDBI",
-                            "jdbc", "odbc", "postgreSQL".
+            "jdbc", "odbc", "postgreSQL".
         database_type: The Database type. For any SQL database, "sql".
         connection_attributes: Attribute names for database, port, host and
-                               user in a connection object.
+            user in a connection object.
 
     Returns:
         An instrumented connection.
