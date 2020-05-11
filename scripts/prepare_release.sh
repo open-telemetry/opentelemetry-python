@@ -45,6 +45,7 @@ function update_version_file() {
 
 function update_changelog() {
     errors=0
+    RELEASE_DATE=`date +%F`
     for f in `find . -name CHANGELOG.md`; do
         # check if version is already in CHANGELOG
         grep -q ${VERSION} $f;
@@ -58,7 +59,7 @@ function update_changelog() {
         changes=`sed -n '/## Unreleased/,/^##/p' ${f} | grep -v '^##'  | wc -w | awk '{$1=$1;print}'`
         if [ ${changes} != "0" ]; then
             # update CHANGELOG.md
-            perl -i -pe 's/## Unreleased.*/## Unreleased\n\n## '${VERSION}'/' ${f};
+            perl -i -pe 's/## Unreleased.*/## Unreleased\n\n## '${VERSION}'\n\nReleased '${RELEASE_DATE}'/' ${f};
             git add ${f};
             echo "Updating ${f}"
         else
