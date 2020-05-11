@@ -27,12 +27,7 @@ from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint: disable=import-error
-from .views import (
-    error,
-    excluded,
-    excluded2,
-    traced
-)
+from .views import error, excluded, excluded2, traced
 
 urlpatterns = [
     url(r"^traced/", traced),

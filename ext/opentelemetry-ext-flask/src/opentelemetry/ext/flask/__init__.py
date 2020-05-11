@@ -58,7 +58,7 @@ from opentelemetry.ext.flask.version import __version__
 from opentelemetry.util import (
     disable_tracing_hostname,
     disable_tracing_path,
-    time_ns
+    time_ns,
 )
 
 _logger = getLogger(__name__)
@@ -83,7 +83,7 @@ def _disable_trace(url, path):
             return True
     return False
 
-    
+
 def _rewrapped_app(wsgi_app):
     def _wrapped_app(environ, start_response):
         # We want to measure the time for route matching, etc.
