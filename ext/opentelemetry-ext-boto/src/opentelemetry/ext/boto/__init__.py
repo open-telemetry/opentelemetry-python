@@ -74,8 +74,7 @@ def _get_instance_region_name(instance):
         return None
     if isinstance(region, str):
         return region.split(":")[1]
-    else:
-        return region.name
+    return region.name
 
 
 class BotoInstrumentor(BaseInstrumentor):
@@ -96,6 +95,7 @@ class BotoInstrumentor(BaseInstrumentor):
 
         # FIXME should the tracer provider be accessed via Configuration
         # instead?
+        # pylint: disable=attribute-defined-outside-init
         self._tracer = get_tracer(
             __name__, __version__, kwargs.get("tracer_provider")
         )
@@ -245,7 +245,7 @@ def add_span_arg_tags(span, endpoint_name, args, args_names, args_traced):
             span.set_attribute(key, value)
 
 
-def flatten_dict(d, sep=".", prefix=""):
+def flatten_dict(dict_, sep=".", prefix=""):
     """
     Returns a normalized dict of depth 1 with keys in order of embedding
     """
@@ -253,15 +253,19 @@ def flatten_dict(d, sep=".", prefix=""):
     return (
         {
             prefix + sep + k if prefix else k: v
-            for kk, vv in d.items()
+            for kk, vv in dict_.items()
             for k, v in flatten_dict(vv, sep, kk).items()
         }
-        if isinstance(d, dict)
-        else {prefix: d}
+        if isinstance(dict_, dict)
+        else {prefix: dict_}
     )
 
 
 def unwrap(obj, attr):
-    f = getattr(obj, attr, None)
-    if f and isinstance(f, ObjectProxy) and hasattr(f, "__wrapped__"):
-        setattr(obj, attr, f.__wrapped__)
+    function = getattr(obj, attr, None)
+    if (
+        function
+        and isinstance(function, ObjectProxy)
+        and hasattr(function, "__wrapped__")
+    ):
+        setattr(obj, attr, function.__wrapped__)

@@ -6,7 +6,7 @@ import boto.elasticache
 import boto.s3
 import boto.sts
 
-from moto import (
+from moto import (  # pylint: disable=import-error
     mock_ec2_deprecated,
     mock_lambda_deprecated,
     mock_s3_deprecated,
@@ -119,7 +119,7 @@ class TestBotoInstrumentor(TestBase):
         # Checking for resource incase of error
         try:
             s3.get_bucket("big_bucket")
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             spans = self.memory_exporter.get_finished_spans()
             assert spans
             span = spans[2]
@@ -130,9 +130,9 @@ class TestBotoInstrumentor(TestBase):
         s3 = boto.s3.connect_to_region("us-east-1")
         s3.create_bucket("mybucket")
         bucket = s3.get_bucket("mybucket")
-        k = boto.s3.key.Key(bucket)
-        k.key = "foo"
-        k.set_contents_from_string("bar")
+        key = boto.s3.key.Key(bucket)
+        key.key = "foo"
+        key.set_contents_from_string("bar")
 
         spans = self.memory_exporter.get_finished_spans()
         assert spans
