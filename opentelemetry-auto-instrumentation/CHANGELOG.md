@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- add support for programmatic instrumentation
+- Add support for programmatic instrumentation
   ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/569))
 - bugfix: enable auto-instrumentation command to work for custom entry points
   (e.g. flask_run)

@@ -2,11 +2,11 @@
 
 ## Unreleased
 
-- exporter api: span parents are now always spancontext
+- Exporter API: span parents are now always spancontext
   ([#548](https://github.com/open-telemetry/opentelemetry-python/pull/548))
 - tracer.get_tracer now optionally accepts a TracerProvider
   ([#602](https://github.com/open-telemetry/opentelemetry-python/pull/602))
-- console span exporter now prints prettier, more legible messages
+- Console span exporter now prints prettier, more legible messages
   ([#505](https://github.com/open-telemetry/opentelemetry-python/pull/505))
 - bugfix: B3 propagation now retrieves parentSpanId correctly
   ([#621](https://github.com/open-telemetry/opentelemetry-python/pull/621))
