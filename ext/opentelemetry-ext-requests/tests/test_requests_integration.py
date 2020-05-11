@@ -183,6 +183,37 @@ class TestRequestsIntegration(TestBase):
         finally:
             propagators.set_global_httptextformat(previous_propagator)
 
+    def test_span_callback(self):
+        RequestsInstrumentor().uninstrument()
+
+        def span_callback(span, result: requests.Response):
+            span.set_attribute(
+                "http.response.body", result.content.decode("utf-8")
+            )
+
+        RequestsInstrumentor().instrument(
+            tracer_provider=self.tracer_provider, span_callback=span_callback,
+        )
+
+        result = requests.get(self.URL)
+        self.assertEqual(result.text, "Hello!")
+
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertEqual(
+            span.attributes,
+            {
+                "component": "http",
+                "http.method": "GET",
+                "http.url": self.URL,
+                "http.status_code": 200,
+                "http.status_text": "OK",
+                "http.response.body": "Hello!",
+            },
+        )
+
     def test_custom_tracer_provider(self):
         resource = resources.Resource.create({})
         result = self.create_tracer_provider(resource=resource)
