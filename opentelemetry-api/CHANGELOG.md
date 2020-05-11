@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Add reset for the global configuration object, for testing purposes
+  ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
+- tracer.get_tracer now optionally accepts a TracerProvider
+  ([#602](https://github.com/open-telemetry/opentelemetry-python/pull/602))
+- Configuration object can now be used by any component of opentelemetry,
+  including 3rd party instrumentations
+  ([#563](https://github.com/open-telemetry/opentelemetry-python/pull/563))
+- bugfix: configuration object now matches fields in a case-sensitive manner
+  ([#583](https://github.com/open-telemetry/opentelemetry-python/pull/583))
+- bugfix: configuration object now accepts all valid python variable names
+  ([#583](https://github.com/open-telemetry/opentelemetry-python/pull/583))
+- bugfix: configuration undefined attributes now return None instead of raising
+  an AttributeError.
+  ([#583](https://github.com/open-telemetry/opentelemetry-python/pull/583))
+
 ## 0.6b0
 
 Released 2020-03-30
@@ -36,7 +51,7 @@ Released 2020-03-16
 - Renaming TracerSource to TraceProvider
   ([#441](https://github.com/open-telemetry/opentelemetry-python/pull/441))
 - Adding attach/detach methods as per spec
-  ([#429](https://github.com/open-telemetry/opentelemetry-python/pull/450) 
+  ([#429](https://github.com/open-telemetry/opentelemetry-python/pull/450)
 
 ## 0.4a0
 
