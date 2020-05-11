@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- exports api: span parents are now always spancontext
+- exporter api: span parents are now always spancontext
   ([#548](https://github.com/open-telemetry/opentelemetry-python/pull/548))
 - tracer.get_tracer now optionally accepts a TracerProvider
   ([#602](https://github.com/open-telemetry/opentelemetry-python/pull/602))
