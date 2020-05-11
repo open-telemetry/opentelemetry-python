@@ -372,37 +372,38 @@ class Span(trace_api.Span):
             logger.warning("invalid key (empty or null)")
             return
 
-        if isinstance(value, Sequence):
-            error_message = self._check_attribute_value_sequence(value)
-            if error_message is not None:
-                logger.warning("%s in attribute value sequence", error_message)
-                return
-            # Freeze mutable sequences defensively
-            if isinstance(value, MutableSequence):
-                value = tuple(value)
-        elif not isinstance(value, (bool, str, int, float)):
-            logger.warning("invalid type for attribute value")
+        error_message = self._check_attribute_value(value)
+        if error_message is not None:
+            logger.warning(error_message)
             return
+        # Freeze mutable sequences defensively
+        if isinstance(value, MutableSequence):
+            value = tuple(value)
 
         self.attributes[key] = value
 
     @staticmethod
-    def _check_attribute_value_sequence(sequence: Sequence) -> Optional[str]:
+    def _check_attribute_value(value: types.AttributeValue) -> Optional[str]:
         """
         Checks if sequence items are valid and are of the same type
         """
-        if len(sequence) == 0:
+        if isinstance(value, Sequence):
+            if len(value) == 0:
+                return None
+
+            first_element_type = type(value[0])
+
+            if first_element_type not in (bool, str, int, float):
+                return "invalid type in attribute value sequence"
+
+            for element in value:
+                if not isinstance(element, first_element_type):
+                    return "different types in attribute value sequence"
             return None
-
-        first_element_type = type(sequence[0])
-
-        if first_element_type not in (bool, str, int, float):
-            return "invalid type"
-
-        for element in sequence:
-            if not isinstance(element, first_element_type):
-                return "different type"
+        elif not isinstance(value, (bool, str, int, float)):
+            return "invalid type for attribute value"
         return None
+
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
@@ -425,6 +426,14 @@ class Span(trace_api.Span):
     ) -> None:
         if attributes is None:
             attributes = Span._empty_attributes
+        else:
+            for attr_key, attr_value in list(attributes.items()):
+                error_message = self._check_attribute_value(attr_value)
+                if error_message:
+                    logger.warning(error_message)
+                    return
+                if isinstance(attr_value, MutableSequence):
+                    attributes[attr_key] = tuple(attr_value)
         self._add_event(
             Event(
                 name=name,
