@@ -8,7 +8,7 @@
 #   4. sets the output variable 'version_updated' to determine whether
 #      the github action to create a pull request should run. this allows
 #      maintainers to merge changes back into the release branch without
-#      trigerring unnecessary pull requests
+#      triggering unnecessary pull requests
 #
 
 VERSION=`echo $1 | awk -F "/" '{print $NF}'`
