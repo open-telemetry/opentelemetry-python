@@ -46,7 +46,8 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 3)
 
-        render, template, root = spans
+        # pylint:disable=unbalanced-tuple-unpacking
+        render, template, root = spans[:3]
 
         self.assertIs(render.parent, root.get_context())
         self.assertIs(template.parent, root.get_context())
@@ -59,6 +60,7 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 2)
 
+        # pylint:disable=unbalanced-tuple-unpacking
         template, render = spans
 
         self.assertEqual(template.name, "jinja2.compile")
@@ -83,6 +85,7 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 3)
 
+        # pylint:disable=unbalanced-tuple-unpacking
         template, generate, root = spans
 
         self.assertIs(generate.parent, root.get_context())
@@ -98,7 +101,8 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 2)
 
-        template, generate = spans
+        # pylint:disable=unbalanced-tuple-unpacking
+        template, generate = spans[:2]
 
         self.assertEqual(template.name, "jinja2.compile")
         self.assertIs(template.kind, trace_api.SpanKind.INTERNAL)
@@ -124,6 +128,7 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 6)
 
+        # pylint:disable=unbalanced-tuple-unpacking
         compile2, load2, compile1, load1, render, root = spans
 
         self.assertIs(compile2.parent, load2.get_context())
@@ -144,6 +149,7 @@ class TestJinja2Instrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 5)
 
+        # pylint:disable=unbalanced-tuple-unpacking
         compile2, load2, compile1, load1, render = spans
 
         self.assertEqual(compile2.name, "jinja2.compile")
