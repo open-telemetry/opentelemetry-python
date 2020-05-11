@@ -131,3 +131,20 @@ class Configuration:
 
     def __getattr__(self, name):
         return None
+
+    @classmethod
+    def _reset(cls):
+        """
+        This method "resets" the global configuration attributes
+
+        It is not intended to be used by production code but by testing code
+        only.
+        """
+
+        for slot in cls.__slots__:
+            if slot in cls.__dict__.keys():
+                delattr(cls, slot)
+                delattr(cls, "_{}".format(slot))
+
+        cls.__slots__ = []
+        cls._instance = None

@@ -75,3 +75,40 @@ class TestPyMysqlIntegration(TestBase):
         span = spans_list[0]
 
         self.assertIs(span.resource, resource)
+
+    @mock.patch("pymysql.connect")
+    # pylint: disable=unused-argument
+    def test_instrument_connection(self, mock_connect):
+        cnx = pymysql.connect(database="test")
+        query = "SELECT * FROM test"
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 0)
+
+        cnx = PyMySQLInstrumentor().instrument_connection(cnx)
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+
+    @mock.patch("pymysql.connect")
+    # pylint: disable=unused-argument
+    def test_uninstrument_connection(self, mock_connect):
+        PyMySQLInstrumentor().instrument()
+        cnx = pymysql.connect(database="test")
+        query = "SELECT * FROM test"
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+
+        cnx = PyMySQLInstrumentor().uninstrument_connection(cnx)
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
