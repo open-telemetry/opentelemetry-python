@@ -32,6 +32,6 @@ class TestStatus(unittest.TestCase):
 
     def test_invalid_description(self):
         with self.assertLogs(level=WARNING):
-            status = Status(description={"test": "val"})
+            status = Status(description={"test": "val"}) # type: ignore
             self.assertEqual(status.canonical_code, StatusCanonicalCode.OK)
             self.assertEqual(status.description, "")

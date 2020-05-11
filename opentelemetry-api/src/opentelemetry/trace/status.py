@@ -170,9 +170,9 @@ class Status:
         description: typing.Optional[str] = None,
     ):
         self._canonical_code = canonical_code
+        self._description = None
         if description is not None and not isinstance(description, str):
             logger.warning("Invalid status description type, expected str")
-            self._description = ""
         else:
             self._description = description
 
