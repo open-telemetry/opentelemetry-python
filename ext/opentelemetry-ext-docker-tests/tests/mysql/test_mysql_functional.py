@@ -18,7 +18,7 @@ import time
 import mysql.connector
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.mysql import trace_integration
+from opentelemetry.ext.mysql import MySQLInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
@@ -35,7 +35,7 @@ class TestFunctionalMysql(TestBase):
         cls._connection = None
         cls._cursor = None
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        trace_integration(cls.tracer_provider)
+        MySQLInstrumentor().instrument()
         cls._connection = mysql.connector.connect(
             user=MYSQL_USER,
             password=MYSQL_PASSWORD,
@@ -49,6 +49,7 @@ class TestFunctionalMysql(TestBase):
     def tearDownClass(cls):
         if cls._connection:
             cls._connection.close()
+        MySQLInstrumentor().uninstrument()
 
     def validate_spans(self):
         spans = self.memory_exporter.get_finished_spans()
@@ -82,7 +83,7 @@ class TestFunctionalMysql(TestBase):
         """Should create a child span for executemany
         """
         with self._tracer.start_as_current_span("rootSpan"):
-            data = ["1", "2", "3"]
+            data = (("1",), ("2",), ("3",))
             stmt = "INSERT INTO test (id) VALUES (%s)"
             self._cursor.executemany(stmt, data)
         self.validate_spans()

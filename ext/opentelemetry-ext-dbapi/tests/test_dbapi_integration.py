@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import logging
+from unittest import mock
+
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.dbapi import DatabaseApiIntegration
+from opentelemetry.ext import dbapi
 from opentelemetry.test.test_base import TestBase
 
 
@@ -35,7 +39,7 @@ class TestDBApiIntegration(TestBase):
             "host": "server_host",
             "user": "user",
         }
-        db_integration = DatabaseApiIntegration(
+        db_integration = dbapi.DatabaseApiIntegration(
             self.tracer, "testcomponent", "testtype", connection_attributes
         )
         mock_connection = db_integration.wrapped_connection(
@@ -66,7 +70,9 @@ class TestDBApiIntegration(TestBase):
         )
 
     def test_span_failed(self):
-        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        db_integration = dbapi.DatabaseApiIntegration(
+            self.tracer, "testcomponent"
+        )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, {}
         )
@@ -85,7 +91,9 @@ class TestDBApiIntegration(TestBase):
         self.assertEqual(span.status.description, "Test Exception")
 
     def test_executemany(self):
-        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        db_integration = dbapi.DatabaseApiIntegration(
+            self.tracer, "testcomponent"
+        )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, {}
         )
@@ -97,7 +105,9 @@ class TestDBApiIntegration(TestBase):
         self.assertEqual(span.attributes["db.statement"], "Test query")
 
     def test_callproc(self):
-        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        db_integration = dbapi.DatabaseApiIntegration(
+            self.tracer, "testcomponent"
+        )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, {}
         )
@@ -109,6 +119,50 @@ class TestDBApiIntegration(TestBase):
         self.assertEqual(
             span.attributes["db.statement"], "Test stored procedure"
         )
+
+    @mock.patch("opentelemetry.ext.dbapi")
+    def test_wrap_connect(self, mock_dbapi):
+        dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
+        connection = mock_dbapi.connect()
+        self.assertEqual(mock_dbapi.connect.call_count, 1)
+        self.assertIsInstance(connection, dbapi.TracedConnectionProxy)
+        self.assertIsInstance(connection.__wrapped__, mock.Mock)
+
+    @mock.patch("opentelemetry.ext.dbapi")
+    def test_unwrap_connect(self, mock_dbapi):
+        dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
+        connection = mock_dbapi.connect()
+        self.assertEqual(mock_dbapi.connect.call_count, 1)
+        self.assertIsInstance(connection, dbapi.TracedConnectionProxy)
+
+        dbapi.unwrap_connect(mock_dbapi, "connect")
+        connection = mock_dbapi.connect()
+        self.assertEqual(mock_dbapi.connect.call_count, 2)
+        self.assertIsInstance(connection, mock.Mock)
+
+    def test_instrument_connection(self):
+        connection = mock.Mock()
+        # Avoid get_attributes failing because can't concatenate mock
+        connection.database = "-"
+        connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
+        self.assertIsInstance(connection2, dbapi.TracedConnectionProxy)
+        self.assertIs(connection2.__wrapped__, connection)
+
+    def test_uninstrument_connection(self):
+        connection = mock.Mock()
+        # Set connection.database to avoid a failure because mock can't
+        # be concatenated
+        connection.database = "-"
+        connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
+        self.assertIsInstance(connection2, dbapi.TracedConnectionProxy)
+        self.assertIs(connection2.__wrapped__, connection)
+
+        connection3 = dbapi.uninstrument_connection(connection2)
+        self.assertIs(connection3, connection)
+
+        with self.assertLogs(level=logging.WARNING):
+            connection4 = dbapi.uninstrument_connection(connection)
+        self.assertIs(connection4, connection)
 
 
 # pylint: disable=unused-argument

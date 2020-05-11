@@ -15,6 +15,15 @@ import sys
 from os import listdir
 from os.path import isdir, join
 
+# configure django to avoid the following exception:
+# django.core.exceptions.ImproperlyConfigured: Requested settings, but settings
+# are not configured. You must either define the environment variable
+# DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
+from django.conf import settings
+
+settings.configure()
+
+
 source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
     os.path.abspath("../opentelemetry-sdk/src/"),
@@ -68,6 +77,7 @@ intersphinx_mapping = {
         "https://opentracing-python.readthedocs.io/en/latest/",
         None,
     ),
+    "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
 }
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky

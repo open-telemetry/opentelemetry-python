@@ -20,11 +20,10 @@ from opentelemetry.configuration import Configuration  # type: ignore
 
 
 class TestConfiguration(TestCase):
-    def setUp(self):
-        from opentelemetry.configuration import Configuration  # type: ignore
-
     def tearDown(self):
-        from opentelemetry.configuration import Configuration  # type: ignore
+        # This call resets the attributes of the Configuration class so that
+        # each test is executed in the same conditions.
+        Configuration._reset()
 
     def test_singleton(self):
         self.assertIsInstance(Configuration(), Configuration)
@@ -35,15 +34,25 @@ class TestConfiguration(TestCase):
         {
             "OPENTELEMETRY_PYTHON_METER_PROVIDER": "meter_provider",
             "OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider",
+            "OPENTELEMETRY_PYTHON_OThER": "other",
+            "OPENTELEMETRY_PYTHON_OTHER_7": "other_7",
+            "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },
     )
     def test_environment_variables(self):  # type: ignore
         self.assertEqual(
-            Configuration().meter_provider, "meter_provider"
+            Configuration().METER_PROVIDER, "meter_provider"
         )  # pylint: disable=no-member
         self.assertEqual(
-            Configuration().tracer_provider, "tracer_provider"
+            Configuration().TRACER_PROVIDER, "tracer_provider"
         )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().OThER, "other"
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().OTHER_7, "other_7"
+        )  # pylint: disable=no-member
+        self.assertIsNone(Configuration().TRACEX_PROVIDER)
 
     @patch.dict(
         "os.environ",  # type: ignore
@@ -51,11 +60,31 @@ class TestConfiguration(TestCase):
     )
     def test_property(self):
         with self.assertRaises(AttributeError):
-            Configuration().tracer_provider = "new_tracer_provider"
+            Configuration().TRACER_PROVIDER = "new_tracer_provider"
 
     def test_slots(self):
         with self.assertRaises(AttributeError):
-            Configuration().xyz = "xyz"  # pylint: disable=assigning-non-slot
+            Configuration().XYZ = "xyz"  # pylint: disable=assigning-non-slot
 
     def test_getattr(self):
-        Configuration().xyz is None
+        self.assertIsNone(Configuration().XYZ)
+
+    def test_reset(self):
+        environ_patcher = patch.dict(
+            "os.environ",  # type: ignore
+            {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
+        )
+
+        environ_patcher.start()
+
+        self.assertEqual(
+            Configuration().TRACER_PROVIDER, "tracer_provider"
+        )  # pylint: disable=no-member
+
+        environ_patcher.stop()
+
+        Configuration._reset()
+
+        self.assertIsNone(
+            Configuration().TRACER_PROVIDER
+        )  # pylint: disable=no-member
