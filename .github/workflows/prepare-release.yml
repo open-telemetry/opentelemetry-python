@@ -1,7 +1,8 @@
 name: prepare-release
 on:
   push:
-    branch: [ 'release/*' ]
+    branches:
+      - 'release/**'
 
 jobs:
   build:
