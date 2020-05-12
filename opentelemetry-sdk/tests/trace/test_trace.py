@@ -619,9 +619,13 @@ class TestSpan(unittest.TestCase):
             root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
             root.add_event("event0", {"attr1": dict()})
             root.add_event("event0", {"attr1": [[True]]})
-            root.add_event("event0", {"attr1": [dict()]})
+            root.add_event("event0", {"attr1": [dict()], "attr2": [1, 2]})
 
-            self.assertEqual(len(root.events), 0)
+            self.assertEqual(len(root.events), 4)
+            self.assertEqual(root.events[0].attributes, {"attr1": True})
+            self.assertEqual(root.events[1].attributes, {})
+            self.assertEqual(root.events[2].attributes, {})
+            self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
     def test_links(self):
         other_context1 = trace_api.SpanContext(

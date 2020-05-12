@@ -245,33 +245,19 @@ class Span(trace_api.Span):
         self.status = None
         self._lock = threading.Lock()
 
-        if attributes is None:
+        self._filter_attribute_values(attributes)
+        if attributes is None or len(attributes) == 0:
             self.attributes = Span._empty_attributes
         else:
-            self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
-            for attr_key, attr_value in attributes.items():
-                error_message = self._check_attribute_value(attr_value)
-                if error_message:
-                    logger.warning(error_message)
-                else:
-                    self.attributes[attr_key] = attr_value
+            self.attributes = BoundedDict.from_map(MAX_NUM_ATTRIBUTES, attributes)
 
         if events is None:
             self.events = Span._empty_events
         else:
             self.events = BoundedList(MAX_NUM_EVENTS)
             for event in events:
-                good_event = True
-                for attr_key, attr_value in list(event.attributes.items()):
-                    error_message = self._check_attribute_value(attr_value)
-                    if error_message:
-                        logger.warning(error_message)
-                        good_event = False
-                        break
-                    if isinstance(attr_value, MutableSequence):
-                        attributes[attr_key] = tuple(attr_value)
-                if good_event:
-                    self.events.append(event)
+                self._filter_attribute_values(event.attributes)
+                self.events.append(event)
 
         if links is None:
             self.links = Span._empty_links
@@ -428,6 +414,18 @@ class Span(trace_api.Span):
                 [valid_type.__name__ for valid_type in valid_types],
             )
 
+    def _filter_attribute_values(self, attributes: types.Attributes):
+        if attributes:
+            for attr_key, attr_value in list(attributes.items()):
+                error_message = self._check_attribute_value(attr_value)
+                if error_message:
+                    attributes.pop(attr_key)
+                    logger.warning(error_message)
+                elif isinstance(attr_value, MutableSequence):
+                    attributes[attr_key] = tuple(attr_value)
+                else:
+                    attributes[attr_key] = attr_value
+
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
             if not self.is_recording_events():
@@ -447,16 +445,9 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        if attributes is None:
+        self._filter_attribute_values(attributes)
+        if attributes is None or len(attributes) == 0:
             attributes = Span._empty_attributes
-        else:
-            for attr_key, attr_value in list(attributes.items()):
-                error_message = self._check_attribute_value(attr_value)
-                if error_message:
-                    logger.warning(error_message)
-                    return
-                if isinstance(attr_value, MutableSequence):
-                    attributes[attr_key] = tuple(attr_value)
         self._add_event(
             Event(
                 name=name,
