@@ -204,30 +204,25 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
 
         if first_element_type not in VALID_ATTR_VALUE_TYPES:
             logger.warning(
-                "Invalid type {} in attribute value sequence. Expected one of {} or a sequence of those types".format(
-                    first_element_type.__name__,
-                    [
-                        valid_type.__name__
-                        for valid_type in VALID_ATTR_VALUE_TYPES
-                    ],
-                )
+                "Invalid type %s in attribute value sequence. Expected one of %s or a sequence of those types",
+                first_element_type.__name__,
+                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
             )
             return False
 
         for element in list(value)[1:]:
             if not isinstance(element, first_element_type):
                 logger.warning(
-                    "Mixed types {} and {} in attribute value sequence".format(
-                        first_element_type.__name__, type(element).__name__
-                    )
+                    "Mixed types %s and %s in attribute value sequence",
+                    first_element_type.__name__,
+                    type(element).__name__,
                 )
                 return False
     elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
         logger.warning(
-            "Invalid type {} for attribute value. Expected one of {} or a sequence of those types".format(
-                type(value).__name__,
-                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
-            )
+            "Invalid type %s for attribute value. Expected one of %s or a sequence of those types",
+            type(value).__name__,
+            [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
         )
         return False
     return True
@@ -427,7 +422,8 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
-    def _filter_attribute_values(self, attributes: types.Attributes):
+    @staticmethod
+    def _filter_attribute_values(attributes: types.Attributes):
         if attributes:
             for attr_key, attr_value in list(attributes.items()):
                 if _is_valid_attribute_value(attr_value):
