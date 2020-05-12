@@ -491,56 +491,38 @@ class TestSpan(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertEqual(
             trace.Span._check_attribute_value([1, 2, 3.4, "ss", 4]),
-            "different types in attribute value sequence",
+            "Mixed types int and float in attribute value sequence",
         )
         self.assertEqual(
             trace.Span._check_attribute_value([dict(), 1, 2, 3.4, 4]),
-            "invalid type in attribute value sequence",
+            "Invalid type dict in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float']",
         )
         self.assertEqual(
-            trace.Span._check_attribute_value(
-                ["sw", "lf", 3.4, "ss"]
-            ),
-            "different types in attribute value sequence",
+            trace.Span._check_attribute_value(["sw", "lf", 3.4, "ss"]),
+            "Mixed types str and float in attribute value sequence",
         )
         self.assertEqual(
             trace.Span._check_attribute_value([1, 2, 3.4, 5]),
-            "different types in attribute value sequence",
+            "Mixed types int and float in attribute value sequence",
         )
-        self.assertIsNone(
-            trace.Span._check_attribute_value([1, 2, 3, 5])
-        )
+        self.assertIsNone(trace.Span._check_attribute_value([1, 2, 3, 5]))
         self.assertIsNone(
             trace.Span._check_attribute_value([1.2, 2.3, 3.4, 4.5])
         )
-        self.assertIsNone(
-            trace.Span._check_attribute_value([True, False])
-        )
+        self.assertIsNone(trace.Span._check_attribute_value([True, False]))
         self.assertIsNone(
             trace.Span._check_attribute_value(["ss", "dw", "fw"])
         )
-        self.assertIsNone(
-            trace.Span._check_attribute_value([])
-        )
-
+        self.assertIsNone(trace.Span._check_attribute_value([]))
 
         self.assertEqual(
             trace.Span._check_attribute_value(dict()),
-            "invalid type for attribute value",
+            "Invalid type dict for attribute value. Expected one of ['bool', 'str', 'int', 'float']",
         )
-        self.assertIsNone(
-            trace.Span._check_attribute_value(True)
-        )
-        self.assertIsNone(
-            trace.Span._check_attribute_value('hi')
-        )
-        self.assertIsNone(
-            trace.Span._check_attribute_value(3.4)
-        )
-        self.assertIsNone(
-            trace.Span._check_attribute_value(15)
-        )
-
+        self.assertIsNone(trace.Span._check_attribute_value(True))
+        self.assertIsNone(trace.Span._check_attribute_value("hi"))
+        self.assertIsNone(trace.Span._check_attribute_value(3.4))
+        self.assertIsNone(trace.Span._check_attribute_value(15))
 
     def test_sampling_attributes(self):
         decision_attributes = {
@@ -583,7 +565,9 @@ class TestSpan(unittest.TestCase):
 
             # event name and attributes
             now = time_ns()
-            root.add_event("event1", {"name": "pluto", "some_bools": [True, False]})
+            root.add_event(
+                "event1", {"name": "pluto", "some_bools": [True, False]}
+            )
 
             # event name, attributes and timestamp
             now = time_ns()
@@ -604,16 +588,25 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[0].attributes, {})
 
             self.assertEqual(root.events[1].name, "event1")
-            self.assertEqual(root.events[1].attributes, {"name": "pluto", "some_bools": (True, False)})
+            self.assertEqual(
+                root.events[1].attributes,
+                {"name": "pluto", "some_bools": (True, False)},
+            )
 
             self.assertEqual(root.events[2].name, "event2")
-            self.assertEqual(root.events[2].attributes, {"name": ("birthday",)})
+            self.assertEqual(
+                root.events[2].attributes, {"name": ("birthday",)}
+            )
             self.assertEqual(root.events[2].timestamp, now)
 
             self.assertEqual(root.events[3].name, "event3")
-            self.assertEqual(root.events[3].attributes, {"name": ("original_contents",)})
+            self.assertEqual(
+                root.events[3].attributes, {"name": ("original_contents",)}
+            )
             mutable_list = ["new_contents"]
-            self.assertEqual(root.events[3].attributes, {"name": ("original_contents",)})
+            self.assertEqual(
+                root.events[3].attributes, {"name": ("original_contents",)}
+            )
 
             self.assertEqual(root.events[4].name, "event4")
             self.assertEqual(root.events[4].attributes, {"name": "hello"})
@@ -623,7 +616,7 @@ class TestSpan(unittest.TestCase):
         self.assertIsNone(self.tracer.get_current_span())
 
         with self.tracer.start_as_current_span("root") as root:
-            root.add_event("event0", {"attr1": True, "attr2": ['hi', False]})
+            root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
             root.add_event("event0", {"attr1": dict()})
             root.add_event("event0", {"attr1": [[True]]})
             root.add_event("event0", {"attr1": [dict()]})
@@ -923,4 +916,3 @@ class TestSpanProcessor(unittest.TestCase):
         expected_list.append(span_event_end_fmt("SP1", "foo"))
 
         self.assertListEqual(spans_calls_list, expected_list)
-        

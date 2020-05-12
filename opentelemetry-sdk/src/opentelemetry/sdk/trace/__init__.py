@@ -248,14 +248,30 @@ class Span(trace_api.Span):
         if attributes is None:
             self.attributes = Span._empty_attributes
         else:
-            self.attributes = BoundedDict.from_map(
-                MAX_NUM_ATTRIBUTES, attributes
-            )
+            self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+            for attr_key, attr_value in attributes.items():
+                error_message = self._check_attribute_value(attr_value)
+                if error_message:
+                    logger.warning(error_message)
+                else:
+                    self.attributes[attr_key] = attr_value
 
         if events is None:
             self.events = Span._empty_events
         else:
-            self.events = BoundedList.from_seq(MAX_NUM_EVENTS, events)
+            self.events = BoundedList(MAX_NUM_EVENTS)
+            for event in events:
+                good_event = True
+                for attr_key, attr_value in list(event.attributes.items()):
+                    error_message = self._check_attribute_value(attr_value)
+                    if error_message:
+                        logger.warning(error_message)
+                        good_event = False
+                        break
+                    if isinstance(attr_value, MutableSequence):
+                        attributes[attr_key] = tuple(attr_value)
+                if good_event:
+                    self.events.append(event)
 
         if links is None:
             self.links = Span._empty_links
@@ -387,23 +403,30 @@ class Span(trace_api.Span):
         """
         Checks if sequence items are valid and are of the same type
         """
+        valid_types = (bool, str, int, float)
         if isinstance(value, Sequence):
             if len(value) == 0:
                 return None
 
             first_element_type = type(value[0])
 
-            if first_element_type not in (bool, str, int, float):
-                return "invalid type in attribute value sequence"
+            if first_element_type not in valid_types:
+                return "Invalid type {} in attribute value sequence. Expected one of {}".format(
+                    first_element_type.__name__,
+                    [valid_type.__name__ for valid_type in valid_types],
+                )
 
             for element in value:
                 if not isinstance(element, first_element_type):
-                    return "different types in attribute value sequence"
+                    return "Mixed types {} and {} in attribute value sequence".format(
+                        first_element_type.__name__, type(element).__name__
+                    )
             return None
-        elif not isinstance(value, (bool, str, int, float)):
-            return "invalid type for attribute value"
-        return None
-
+        elif not isinstance(value, valid_types):
+            return "Invalid type {} for attribute value. Expected one of {}".format(
+                type(value).__name__,
+                [valid_type.__name__ for valid_type in valid_types],
+            )
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
