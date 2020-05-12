@@ -246,7 +246,7 @@ class Span(trace_api.Span):
         self._lock = threading.Lock()
 
         self._filter_attribute_values(attributes)
-        if attributes is None or len(attributes) == 0:
+        if not attributes:
             self.attributes = Span._empty_attributes
         else:
             self.attributes = BoundedDict.from_map(MAX_NUM_ATTRIBUTES, attributes)
@@ -446,7 +446,7 @@ class Span(trace_api.Span):
         timestamp: Optional[int] = None,
     ) -> None:
         self._filter_attribute_values(attributes)
-        if attributes is None or len(attributes) == 0:
+        if not attributes:
             attributes = Span._empty_attributes
         self._add_event(
             Event(
