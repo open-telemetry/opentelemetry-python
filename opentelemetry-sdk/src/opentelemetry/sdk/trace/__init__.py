@@ -17,7 +17,6 @@ import abc
 import atexit
 import json
 import logging
-import os
 import random
 import threading
 from collections import OrderedDict
@@ -41,6 +40,7 @@ logger = logging.getLogger(__name__)
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
 MAX_NUM_LINKS = 32
+VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 
 
 class SpanProcessor:
@@ -187,6 +187,40 @@ class LazyEvent(EventBase):
     @property
     def attributes(self) -> types.Attributes:
         return self._event_formatter()
+
+def is_valid_attribute_value(value: types.AttributeValue) -> bool:
+    """Checks if attribute value is valid.
+
+    An attribute value is valid if it is one of the valid types. If the value is a sequence, it is only valid
+    if all items in the sequence are of valid type, not a sequence, and are of the same type.
+    """
+
+    if isinstance(value, Sequence):
+        if len(value) == 0:
+            return True
+
+        first_element_type = type(value[0])
+
+        if first_element_type not in VALID_ATTR_VALUE_TYPES:
+            logger.warning("Invalid type {} in attribute value sequence. Expected one of {} or a sequence of those types".format(
+                first_element_type.__name__,
+                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
+            ))
+            return False
+
+        for element in list(value)[1:]:
+            if not isinstance(element, first_element_type):
+                logger.warning("Mixed types {} and {} in attribute value sequence".format(
+                    first_element_type.__name__, type(element).__name__
+                ))
+                return False
+    elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
+        logger.warning("Invalid type {} for attribute value. Expected one of {} or a sequence of those types".format(
+            type(value).__name__,
+            [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
+        ))
+        return False
+    return True
 
 
 class Span(trace_api.Span):
@@ -374,59 +408,23 @@ class Span(trace_api.Span):
             logger.warning("invalid key (empty or null)")
             return
 
-        error_message = self._check_attribute_value(value)
-        if error_message is not None:
-            logger.warning(error_message)
-            return
-        # Freeze mutable sequences defensively
-        if isinstance(value, MutableSequence):
-            value = tuple(value)
-
-        self.attributes[key] = value
-
-    @staticmethod
-    def _check_attribute_value(value: types.AttributeValue) -> Optional[str]:
-        """
-        Checks if attribute value is valid.
-        An attribute value is valid if it is one of the valid types. If the value is a sequence, it is only valid
-        if all items in the sequence are of valid type, not a sequence, and are of the same type.
-        """
-        valid_types = (bool, str, int, float)
-        if isinstance(value, Sequence):
-            if len(value) == 0:
-                return None
-
-            first_element_type = type(value[0])
-
-            if first_element_type not in valid_types:
-                return "Invalid type {} in attribute value sequence. Expected one of {} or a sequence of those types".format(
-                    first_element_type.__name__,
-                    [valid_type.__name__ for valid_type in valid_types],
-                )
-
-            for element in list(value)[1:]:
-                if not isinstance(element, first_element_type):
-                    return "Mixed types {} and {} in attribute value sequence".format(
-                        first_element_type.__name__, type(element).__name__
-                    )
-            return None
-        elif not isinstance(value, valid_types):
-            return "Invalid type {} for attribute value. Expected one of {} or a sequence of those types".format(
-                type(value).__name__,
-                [valid_type.__name__ for valid_type in valid_types],
-            )
+        if is_valid_attribute_value(value):
+            # Freeze mutable sequences defensively
+            if isinstance(value, MutableSequence):
+                value = tuple(value)
+            with self._lock:
+                self.attributes[key] = value
 
     def _filter_attribute_values(self, attributes: types.Attributes):
         if attributes:
             for attr_key, attr_value in list(attributes.items()):
-                error_message = self._check_attribute_value(attr_value)
-                if error_message:
-                    attributes.pop(attr_key)
-                    logger.warning(error_message)
-                elif isinstance(attr_value, MutableSequence):
-                    attributes[attr_key] = tuple(attr_value)
+                if is_valid_attribute_value(attr_value):
+                    if isinstance(attr_value, MutableSequence):
+                        attributes[attr_key] = tuple(attr_value)
+                    else:
+                        attributes[attr_key] = attr_value
                 else:
-                    attributes[attr_key] = attr_value
+                    attributes.pop(attr_key)
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:

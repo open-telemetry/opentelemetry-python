@@ -489,40 +489,20 @@ class TestSpan(unittest.TestCase):
 
     def test_check_attribute_helper(self):
         # pylint: disable=protected-access
-        self.assertEqual(
-            trace.Span._check_attribute_value([1, 2, 3.4, "ss", 4]),
-            "Mixed types int and float in attribute value sequence",
-        )
-        self.assertEqual(
-            trace.Span._check_attribute_value([dict(), 1, 2, 3.4, 4]),
-            "Invalid type dict in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types",
-        )
-        self.assertEqual(
-            trace.Span._check_attribute_value(["sw", "lf", 3.4, "ss"]),
-            "Mixed types str and float in attribute value sequence",
-        )
-        self.assertEqual(
-            trace.Span._check_attribute_value([1, 2, 3.4, 5]),
-            "Mixed types int and float in attribute value sequence",
-        )
-        self.assertIsNone(trace.Span._check_attribute_value([1, 2, 3, 5]))
-        self.assertIsNone(
-            trace.Span._check_attribute_value([1.2, 2.3, 3.4, 4.5])
-        )
-        self.assertIsNone(trace.Span._check_attribute_value([True, False]))
-        self.assertIsNone(
-            trace.Span._check_attribute_value(["ss", "dw", "fw"])
-        )
-        self.assertIsNone(trace.Span._check_attribute_value([]))
-
-        self.assertEqual(
-            trace.Span._check_attribute_value(dict()),
-            "Invalid type dict for attribute value. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types",
-        )
-        self.assertIsNone(trace.Span._check_attribute_value(True))
-        self.assertIsNone(trace.Span._check_attribute_value("hi"))
-        self.assertIsNone(trace.Span._check_attribute_value(3.4))
-        self.assertIsNone(trace.Span._check_attribute_value(15))
+        self.assertFalse(trace.is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
+        self.assertFalse(trace.is_valid_attribute_value([dict(), 1, 2, 3.4, 4]))
+        self.assertFalse(trace.is_valid_attribute_value(["sw", "lf", 3.4, "ss"]))
+        self.assertFalse(trace.is_valid_attribute_value([1, 2, 3.4, 5]))
+        self.assertTrue(trace.is_valid_attribute_value([1, 2, 3, 5]))
+        self.assertTrue(trace.is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
+        self.assertTrue(trace.is_valid_attribute_value([True, False]))
+        self.assertTrue(trace.is_valid_attribute_value(["ss", "dw", "fw"]))
+        self.assertTrue(trace.is_valid_attribute_value([]))
+        self.assertFalse(trace.is_valid_attribute_value(dict()))
+        self.assertTrue(trace.is_valid_attribute_value(True))
+        self.assertTrue(trace.is_valid_attribute_value("hi"))
+        self.assertTrue(trace.is_valid_attribute_value(3.4))
+        self.assertTrue(trace.is_valid_attribute_value(15))
 
     def test_sampling_attributes(self):
         decision_attributes = {
