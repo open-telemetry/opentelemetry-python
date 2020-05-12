@@ -387,7 +387,9 @@ class Span(trace_api.Span):
     @staticmethod
     def _check_attribute_value(value: types.AttributeValue) -> Optional[str]:
         """
-        Checks if sequence items are valid and are of the same type
+        Checks if attribute value is valid.
+        An attribute value is valid if it is one of the valid types. If the value is a sequence, it is only valid
+        if all items in the sequence are of valid type, not a sequence, and are of the same type.
         """
         valid_types = (bool, str, int, float)
         if isinstance(value, Sequence):
