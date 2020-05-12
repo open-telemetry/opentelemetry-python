@@ -48,12 +48,22 @@ import typing
 import pymysql
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.ext.dbapi import unwrap_connect, wrap_connect
+from opentelemetry.ext import dbapi
 from opentelemetry.ext.pymysql.version import __version__
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
 class PyMySQLInstrumentor(BaseInstrumentor):
+    _CONNECTION_ATTRIBUTES = {
+        "database": "db",
+        "port": "port",
+        "host": "host",
+        "user": "user",
+    }
+
+    _DATABASE_COMPONENT = "mysql"
+    _DATABASE_TYPE = "sql"
+
     def _instrument(self, **kwargs):
         """Integrate with the PyMySQL library.
         https://github.com/PyMySQL/PyMySQL/
@@ -62,15 +72,46 @@ class PyMySQLInstrumentor(BaseInstrumentor):
 
         tracer = get_tracer(__name__, __version__, tracer_provider)
 
-        connection_attributes = {
-            "database": "db",
-            "port": "port",
-            "host": "host",
-            "user": "user",
-        }
-        wrap_connect(
-            tracer, pymysql, "connect", "mysql", "sql", connection_attributes
+        dbapi.wrap_connect(
+            tracer,
+            pymysql,
+            "connect",
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
         )
 
     def _uninstrument(self, **kwargs):
-        unwrap_connect(pymysql, "connect")
+        """"Disable PyMySQL instrumentation"""
+        dbapi.unwrap_connect(pymysql, "connect")
+
+    # pylint:disable=no-self-use
+    def instrument_connection(self, connection):
+        """Enable instrumentation in a PyMySQL connection.
+
+        Args:
+            connection: The connection to instrument.
+
+        Returns:
+            An instrumented connection.
+        """
+        tracer = get_tracer(__name__, __version__)
+
+        return dbapi.instrument_connection(
+            tracer,
+            connection,
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
+        )
+
+    def uninstrument_connection(self, connection):
+        """Disable instrumentation in a PyMySQL connection.
+
+        Args:
+            connection: The connection to uninstrument.
+
+        Returns:
+            An uninstrumented connection.
+        """
+        return dbapi.uninstrument_connection(connection)
