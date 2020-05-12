@@ -164,6 +164,7 @@ class _InterceptorStreamStreamMultiCallable(grpc.StreamStreamMultiCallable):
         )
 
 
+# pylint: disable=abstract-method
 class _InterceptorChannel(grpc.Channel):
     def __init__(self, channel, interceptor):
         self._channel = channel

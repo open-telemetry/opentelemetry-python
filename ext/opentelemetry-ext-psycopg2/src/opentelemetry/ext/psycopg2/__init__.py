@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The integration with PostgreSQL supports the `Psycopg`_ library and is specified
-to ``trace_integration`` using ``'PostgreSQL'``.
+The integration with PostgreSQL supports the `Psycopg`_ library, it can be enabled by
+using ``Psycopg2Instrumentor``.
 
 .. _Psycopg: http://initd.org/psycopg/
 
@@ -26,11 +26,12 @@ Usage
     import psycopg2
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.trace.ext.psycopg2 import trace_integration
+    from opentelemetry.trace.ext.psycopg2 import Psycopg2Instrumentor
 
     trace.set_tracer_provider(TracerProvider())
 
-    trace_integration()
+    Psycopg2Instrumentor().instrument()
+
     cnx = psycopg2.connect(database='Database')
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)")
@@ -41,83 +42,77 @@ API
 ---
 """
 
-import logging
 import typing
 
 import psycopg2
 import wrapt
-from psycopg2.sql import Composable
 
-from opentelemetry.ext.dbapi import DatabaseApiIntegration, TracedCursor
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.ext import dbapi
 from opentelemetry.ext.psycopg2.version import __version__
-from opentelemetry.trace import Tracer, get_tracer
-
-logger = logging.getLogger(__name__)
-
-DATABASE_COMPONENT = "postgresql"
-DATABASE_TYPE = "sql"
+from opentelemetry.trace import TracerProvider, get_tracer
 
 
-def trace_integration(tracer_provider=None):
-    """Integrate with PostgreSQL Psycopg library.
-       Psycopg: http://initd.org/psycopg/
-    """
-
-    tracer = get_tracer(__name__, __version__, tracer_provider)
-
-    connection_attributes = {
+class Psycopg2Instrumentor(BaseInstrumentor):
+    _CONNECTION_ATTRIBUTES = {
         "database": "info.dbname",
         "port": "info.port",
         "host": "info.host",
         "user": "info.user",
     }
-    db_integration = DatabaseApiIntegration(
-        tracer,
-        DATABASE_COMPONENT,
-        database_type=DATABASE_TYPE,
-        connection_attributes=connection_attributes,
-    )
 
-    # pylint: disable=unused-argument
-    def wrap_connect(
-        connect_func: typing.Callable[..., any],
-        instance: typing.Any,
-        args: typing.Tuple[any, any],
-        kwargs: typing.Dict[any, any],
-    ):
-        connection = connect_func(*args, **kwargs)
-        db_integration.get_connection_attributes(connection)
-        connection.cursor_factory = PsycopgTraceCursor
-        return connection
+    _DATABASE_COMPONENT = "postgresql"
+    _DATABASE_TYPE = "sql"
 
-    try:
-        wrapt.wrap_function_wrapper(psycopg2, "connect", wrap_connect)
-    except Exception as ex:  # pylint: disable=broad-except
-        logger.warning("Failed to integrate with pyscopg2. %s", str(ex))
+    def _instrument(self, **kwargs):
+        """Integrate with PostgreSQL Psycopg library.
+           Psycopg: http://initd.org/psycopg/
+        """
 
-    class PsycopgTraceCursor(psycopg2.extensions.cursor):
-        def __init__(self, *args, **kwargs):
-            self._traced_cursor = TracedCursor(db_integration)
-            super(PsycopgTraceCursor, self).__init__(*args, **kwargs)
+        tracer_provider = kwargs.get("tracer_provider")
 
-        # pylint: disable=redefined-builtin
-        def execute(self, query, vars=None):
-            if isinstance(query, Composable):
-                query = query.as_string(self)
-            return self._traced_cursor.traced_execution(
-                super(PsycopgTraceCursor, self).execute, query, vars
-            )
+        tracer = get_tracer(__name__, __version__, tracer_provider)
 
-        # pylint: disable=redefined-builtin
-        def executemany(self, query, vars):
-            if isinstance(query, Composable):
-                query = query.as_string(self)
-            return self._traced_cursor.traced_execution(
-                super(PsycopgTraceCursor, self).executemany, query, vars
-            )
+        dbapi.wrap_connect(
+            tracer,
+            psycopg2,
+            "connect",
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
+        )
 
-        # pylint: disable=redefined-builtin
-        def callproc(self, procname, vars=None):
-            return self._traced_cursor.traced_execution(
-                super(PsycopgTraceCursor, self).callproc, procname, vars
-            )
+    def _uninstrument(self, **kwargs):
+        """"Disable Psycopg2 instrumentation"""
+        dbapi.unwrap_connect(psycopg2, "connect")
+
+    # pylint:disable=no-self-use
+    def instrument_connection(self, connection):
+        """Enable instrumentation in a Psycopg2 connection.
+
+        Args:
+            connection: The connection to instrument.
+
+        Returns:
+            An instrumented connection.
+        """
+        tracer = get_tracer(__name__, __version__)
+
+        return dbapi.instrument_connection(
+            tracer,
+            connection,
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
+        )
+
+    def uninstrument_connection(self, connection):
+        """Disable instrumentation in a Psycopg2 connection.
+
+        Args:
+            connection: The connection to uninstrument.
+
+        Returns:
+            An uninstrumented connection.
+        """
+        return dbapi.uninstrument_connection(connection)
