@@ -188,7 +188,8 @@ class LazyEvent(EventBase):
     def attributes(self) -> types.Attributes:
         return self._event_formatter()
 
-def is_valid_attribute_value(value: types.AttributeValue) -> bool:
+
+def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
     An attribute value is valid if it is one of the valid types. If the value is a sequence, it is only valid
@@ -202,23 +203,32 @@ def is_valid_attribute_value(value: types.AttributeValue) -> bool:
         first_element_type = type(value[0])
 
         if first_element_type not in VALID_ATTR_VALUE_TYPES:
-            logger.warning("Invalid type {} in attribute value sequence. Expected one of {} or a sequence of those types".format(
-                first_element_type.__name__,
-                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
-            ))
+            logger.warning(
+                "Invalid type {} in attribute value sequence. Expected one of {} or a sequence of those types".format(
+                    first_element_type.__name__,
+                    [
+                        valid_type.__name__
+                        for valid_type in VALID_ATTR_VALUE_TYPES
+                    ],
+                )
+            )
             return False
 
         for element in list(value)[1:]:
             if not isinstance(element, first_element_type):
-                logger.warning("Mixed types {} and {} in attribute value sequence".format(
-                    first_element_type.__name__, type(element).__name__
-                ))
+                logger.warning(
+                    "Mixed types {} and {} in attribute value sequence".format(
+                        first_element_type.__name__, type(element).__name__
+                    )
+                )
                 return False
     elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
-        logger.warning("Invalid type {} for attribute value. Expected one of {} or a sequence of those types".format(
-            type(value).__name__,
-            [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
-        ))
+        logger.warning(
+            "Invalid type {} for attribute value. Expected one of {} or a sequence of those types".format(
+                type(value).__name__,
+                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
+            )
+        )
         return False
     return True
 
@@ -283,7 +293,9 @@ class Span(trace_api.Span):
         if not attributes:
             self.attributes = Span._empty_attributes
         else:
-            self.attributes = BoundedDict.from_map(MAX_NUM_ATTRIBUTES, attributes)
+            self.attributes = BoundedDict.from_map(
+                MAX_NUM_ATTRIBUTES, attributes
+            )
 
         if events is None:
             self.events = Span._empty_events
@@ -408,7 +420,7 @@ class Span(trace_api.Span):
             logger.warning("invalid key (empty or null)")
             return
 
-        if is_valid_attribute_value(value):
+        if _is_valid_attribute_value(value):
             # Freeze mutable sequences defensively
             if isinstance(value, MutableSequence):
                 value = tuple(value)
@@ -418,7 +430,7 @@ class Span(trace_api.Span):
     def _filter_attribute_values(self, attributes: types.Attributes):
         if attributes:
             for attr_key, attr_value in list(attributes.items()):
-                if is_valid_attribute_value(attr_value):
+                if _is_valid_attribute_value(attr_value):
                     if isinstance(attr_value, MutableSequence):
                         attributes[attr_key] = tuple(attr_value)
                     else:
@@ -537,7 +549,6 @@ class Span(trace_api.Span):
             and self._set_status_on_exception
             and exc_val is not None
         ):
-
             self.set_status(
                 Status(
                     canonical_code=StatusCanonicalCode.UNKNOWN,
