@@ -397,19 +397,19 @@ class Span(trace_api.Span):
             first_element_type = type(value[0])
 
             if first_element_type not in valid_types:
-                return "Invalid type {} in attribute value sequence. Expected one of {}".format(
+                return "Invalid type {} in attribute value sequence. Expected one of {} or a sequence of those types".format(
                     first_element_type.__name__,
                     [valid_type.__name__ for valid_type in valid_types],
                 )
 
-            for element in value:
+            for element in list(value)[1:]:
                 if not isinstance(element, first_element_type):
                     return "Mixed types {} and {} in attribute value sequence".format(
                         first_element_type.__name__, type(element).__name__
                     )
             return None
         elif not isinstance(value, valid_types):
-            return "Invalid type {} for attribute value. Expected one of {}".format(
+            return "Invalid type {} for attribute value. Expected one of {} or a sequence of those types".format(
                 type(value).__name__,
                 [valid_type.__name__ for valid_type in valid_types],
             )

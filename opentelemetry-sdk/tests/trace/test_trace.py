@@ -495,7 +495,7 @@ class TestSpan(unittest.TestCase):
         )
         self.assertEqual(
             trace.Span._check_attribute_value([dict(), 1, 2, 3.4, 4]),
-            "Invalid type dict in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float']",
+            "Invalid type dict in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types",
         )
         self.assertEqual(
             trace.Span._check_attribute_value(["sw", "lf", 3.4, "ss"]),
@@ -517,7 +517,7 @@ class TestSpan(unittest.TestCase):
 
         self.assertEqual(
             trace.Span._check_attribute_value(dict()),
-            "Invalid type dict for attribute value. Expected one of ['bool', 'str', 'int', 'float']",
+            "Invalid type dict for attribute value. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types",
         )
         self.assertIsNone(trace.Span._check_attribute_value(True))
         self.assertIsNone(trace.Span._check_attribute_value("hi"))
