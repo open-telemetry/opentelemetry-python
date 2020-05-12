@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.7b0
+
+Released 2020-05-12
+
 - Rename package to opentelemetry-ext-requests
   ([#619](https://github.com/open-telemetry/opentelemetry-python/pull/619))
 - Implement instrumentor interface, enabling auto-instrumentation
