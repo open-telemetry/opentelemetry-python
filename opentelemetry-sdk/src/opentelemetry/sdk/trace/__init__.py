@@ -192,8 +192,9 @@ class LazyEvent(EventBase):
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
-    An attribute value is valid if it is one of the valid types. If the value is a sequence, it is only valid
-    if all items in the sequence are of valid type, not a sequence, and are of the same type.
+    An attribute value is valid if it is one of the valid types. If the value
+    is a sequence, it is only valid if all items in the sequence are of valid
+    type, not a sequence, and are of the same type.
     """
 
     if isinstance(value, Sequence):
@@ -204,7 +205,8 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
 
         if first_element_type not in VALID_ATTR_VALUE_TYPES:
             logger.warning(
-                "Invalid type %s in attribute value sequence. Expected one of %s or a sequence of those types",
+                "Invalid type %s in attribute value sequence. Expected one of "
+                "%s or a sequence of those types",
                 first_element_type.__name__,
                 [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
             )
@@ -220,7 +222,8 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
                 return False
     elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
         logger.warning(
-            "Invalid type %s for attribute value. Expected one of %s or a sequence of those types",
+            "Invalid type %s for attribute value. Expected one of %s or a "
+            "sequence of those types",
             type(value).__name__,
             [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
         )
