@@ -12,27 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Note: This package is not named "boto" because of
-# https://github.com/PyCQA/pylint/issues/2648
-
 """
-This library builds on the OpenTelemetry WSGI middleware to track web requests
-in Boto applications. In addition to opentelemetry-ext-wsgi, it supports
-boto-specific features such as:
-
-* The Boto endpoint name is used as the Span name.
-* The ``http.route`` Span attribute is set so that one can see which URL rule
-  matched a request.
-
-Usage
------
-
-.. code-block:: python
-
-    # FIXME add example
-
-API
----
+Opentelemetry instrumentation for Boto
 """
 
 import logging
@@ -78,7 +59,7 @@ def _get_instance_region_name(instance):
 
 
 class BotoInstrumentor(BaseInstrumentor):
-    """A instrumentor for boto.Boto
+    """A instrumentor for Boto
 
     See `BaseInstrumentor`
     """

@@ -1,13 +1,12 @@
 OpenTelemetry Boto Tracing
-===========================
+==========================
 
 |pypi|
 
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-boto.svg
    :target: https://pypi.org/project/opentelemetry-ext-boto/
 
-This library builds on the OpenTelemetry WSGI middleware to track web requests
-in Boto applications.
+This library allows tracing requests made by the Boto library.
 
 Installation
 ------------
