@@ -19,9 +19,9 @@ import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.trace.v1 import trace_pb2
 
-import opentelemetry.ext.otcollector.util as utils
+import opentelemetry.ext.opencensus.util as utils
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.otcollector.trace_exporter import (
+from opentelemetry.ext.opencensus.trace_exporter import (
     CollectorSpanExporter,
     translate_to_collector,
 )
@@ -35,7 +35,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
     def test_constructor(self):
         mock_get_node = mock.Mock()
         patch = mock.patch(
-            "opentelemetry.ext.otcollector.util.get_node",
+            "opentelemetry.ext.opencensus.util.get_node",
             side_effect=mock_get_node,
         )
         service_name = "testServiceName"

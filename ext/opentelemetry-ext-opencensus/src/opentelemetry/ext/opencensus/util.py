@@ -21,8 +21,8 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.agent.common.v1 import common_pb2
 from opencensus.proto.trace.v1 import trace_pb2
 
-from opentelemetry.ext.otcollector.version import (
-    __version__ as otcollector_exporter_version,
+from opentelemetry.ext.opencensus.version import (
+    __version__ as opencensus_exporter_version,
 )
 from opentelemetry.trace import SpanKind
 
@@ -96,7 +96,7 @@ def get_node(service_name, host_name):
         ),
         library_info=common_pb2.LibraryInfo(
             language=common_pb2.LibraryInfo.Language.Value("PYTHON"),
-            exporter_version=otcollector_exporter_version,
+            exporter_version=opencensus_exporter_version,
             core_library_version=OPENTELEMETRY_VERSION,
         ),
         service_info=common_pb2.ServiceInfo(name=service_name),

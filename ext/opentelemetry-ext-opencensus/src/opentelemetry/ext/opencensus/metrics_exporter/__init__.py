@@ -24,7 +24,7 @@ from opencensus.proto.agent.metrics.v1 import (
 )
 from opencensus.proto.metrics.v1 import metrics_pb2
 
-import opentelemetry.ext.otcollector.util as utils
+import opentelemetry.ext.opencensus.util as utils
 from opentelemetry.sdk.metrics import Counter, Metric
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
