@@ -4,10 +4,10 @@ language: python
 
 cache: pip
 
-
 matrix:
   include:
-    - env: TOXENV=lint
+    - python: 3.8
+      env: TOXENV=lint
     - python: pypy3
     - python: 3.8
     - python: 3.4
@@ -16,7 +16,8 @@ matrix:
     - python: 3.7
     - python: 3.8
       env: TOXENV=docker-tests
-    - env: TOXENV=docs
+    - python: 3.8
+      env: TOXENV=docs
 
 #matrix:
 #  allow_failures:
@@ -29,7 +30,7 @@ install:
   - pip install tox-travis
 
 script:
-  - alias pip="time pip"; alias python="time python"; tox
+  - tox | ./scripts/debug.sh
 
 after_success:
   - pip install codecov
