@@ -4,6 +4,9 @@ language: python
 
 cache: pip
 
+env:
+  - TOX_PARALLEL_NO_SPINNER=1
+
 python:
   - 'pypy3'
   - '3.8'
