@@ -23,7 +23,7 @@ install:
   - pip install tox-travis
 
 script:
-  - tox
+  - tox -p auto
 
 after_success:
   - pip install codecov
