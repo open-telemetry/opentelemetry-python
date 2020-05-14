@@ -14,7 +14,8 @@ matrix:
     - python: 3.5
     - python: 3.6
     - python: 3.7
-    - env: TOXENV=docker-tests
+    - python: 3.8
+      env: TOXENV=docker-tests
     - env: TOXENV=docs
 
 #matrix:
@@ -28,7 +29,7 @@ install:
   - pip install tox-travis
 
 script:
-  - tox
+  - tox | ts '%s'
 
 after_success:
   - pip install codecov
