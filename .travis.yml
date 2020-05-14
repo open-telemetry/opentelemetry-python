@@ -29,7 +29,7 @@ install:
   - pip install tox-travis
 
 script:
-  - tox | ts '%s'
+  - alias pip="time pip" && alias python="time python" && tox
 
 after_success:
   - pip install codecov
