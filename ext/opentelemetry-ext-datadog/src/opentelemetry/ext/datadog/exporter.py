@@ -50,8 +50,8 @@ class DatadogSpanExporter(SpanExporter):
     """Datadog span exporter for OpenTelemetry.
 
     Args:
-        agent_url: The url of the Datadog Agent or use `DD_TRACE_AGENT_URL` environment variable
-        service: The service to be used for the application or use `DD_SERVICE` environment variable
+        agent_url: The url of the Datadog Agent or use ``DD_TRACE_AGENT_URL`` environment variable
+        service: The service to be used for the application or use ``DD_SERVICE`` environment variable
     """
 
     def __init__(self, agent_url=None, service=None):
