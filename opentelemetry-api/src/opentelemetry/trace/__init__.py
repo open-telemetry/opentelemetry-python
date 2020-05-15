@@ -273,18 +273,6 @@ class Tracer(abc.ABC):
     CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
     @abc.abstractmethod
-    def get_current_span(self) -> "Span":  # noqa
-        """Gets the currently active span from the context.
-
-        If there is no current span, return a placeholder span with an invalid
-        context.
-
-        Returns:
-            The currently active :class:`.Span`, or a placeholder span with an
-            invalid :class:`.SpanContext`.
-        """
-
-    @abc.abstractmethod
     def start_span(
         self,
         name: str,
@@ -355,11 +343,11 @@ class Tracer(abc.ABC):
 
             with tracer.start_as_current_span("one") as parent:
                 parent.add_event("parent's event")
-                with tracer.start_as_current_span("two") as child:
+                with trace.start_as_current_span("two") as child:
                     child.add_event("child's event")
-                    tracer.get_current_span()  # returns child
-                tracer.get_current_span()      # returns parent
-            tracer.get_current_span()          # returns previously active span
+                    trace.get_current_span()  # returns child
+                trace.get_current_span()      # returns parent
+            trace.get_current_span()          # returns previously active span
 
         This is a convenience method for creating spans attached to the
         tracer's context. Applications that need more control over the span
@@ -412,10 +400,6 @@ class DefaultTracer(Tracer):
 
     All operations are no-op.
     """
-
-    def get_current_span(self) -> "Span":  # noqa
-        # pylint: disable=no-self-use
-        return INVALID_SPAN
 
     def start_span(
         self,

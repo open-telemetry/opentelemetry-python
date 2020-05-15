@@ -593,9 +593,6 @@ class Tracer(trace_api.Tracer):
         self.source = source
         self.instrumentation_info = instrumentation_info
 
-    def get_current_span(self):  # pylint: disable
-        return self.source.get_current_span()
-
     def start_as_current_span(
         self,
         name: str,
@@ -618,7 +615,7 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
         if parent is Tracer.CURRENT_SPAN:
-            parent = self.get_current_span()
+            parent = trace_api.get_current_span()
 
         parent_context = parent
         if isinstance(parent_context, trace_api.Span):
