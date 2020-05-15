@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.7b1
+
+Released 2020-05-12
+
 - Add reset for the global configuration object, for testing purposes
   ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
 - tracer.get_tracer now optionally accepts a TracerProvider
