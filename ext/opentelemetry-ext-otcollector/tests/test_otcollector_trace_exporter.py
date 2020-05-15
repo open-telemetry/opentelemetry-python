@@ -272,7 +272,6 @@ class TestCollectorSpanExporter(unittest.TestCase):
             output_spans[1].status.code,
             trace_api.status.StatusCanonicalCode.INTERNAL.value,
         )
-        self.assertEqual(output_spans[1].status.message, "")
         self.assertEqual(
             output_spans[2].links.link[0].type,
             trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN,

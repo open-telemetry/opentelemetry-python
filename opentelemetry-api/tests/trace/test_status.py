@@ -25,13 +25,11 @@ class TestStatus(unittest.TestCase):
         self.assertIsNone(status.description)
 
         status = Status(StatusCanonicalCode.UNAVAILABLE, "unavailable")
-        self.assertIs(
-            status.canonical_code, StatusCanonicalCode.UNAVAILABLE
-        )
+        self.assertIs(status.canonical_code, StatusCanonicalCode.UNAVAILABLE)
         self.assertEqual(status.description, "unavailable")
 
     def test_invalid_description(self):
         with self.assertLogs(level=WARNING):
-            status = Status(description={"test": "val"}) # type: ignore
+            status = Status(description={"test": "val"})  # type: ignore
             self.assertIs(status.canonical_code, StatusCanonicalCode.OK)
-            self.assertEqual(status.description, "")
+            self.assertEqual(status.description, None)
