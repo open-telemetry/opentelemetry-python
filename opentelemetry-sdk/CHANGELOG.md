@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Validate span attribute types in SDK (#678)
+
 ## 0.7b1
 
 Released 2020-05-12
