@@ -470,7 +470,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
             shim and is likely to be handled in future versions.
         """
 
-        span = self._tracer.unwrap().get_current_span()
+        span = trace_api.get_current_span()
         if span is None:
             return None
 
