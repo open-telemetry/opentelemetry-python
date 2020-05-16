@@ -40,6 +40,10 @@ API
 ---
 """
 
+import json
+
+import bson.json_util
+
 from pymongo import monitoring
 
 from opentelemetry import trace
@@ -92,7 +96,8 @@ class CommandTracer(monitoring.CommandListener):
             self._span_dict[_get_span_dict_key(event)] = span
         except Exception as ex:  # noqa pylint: disable=broad-except
             if span is not None:
-                span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
+                span.
+                (Status(StatusCanonicalCode.INTERNAL, str(ex)))
                 span.end()
                 self._pop_span(event)
 
@@ -104,7 +109,7 @@ class CommandTracer(monitoring.CommandListener):
         if span is None:
             return
         span.set_attribute("db.mongo.duration_micros", event.duration_micros)
-        span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+        span.set_status(Status(StatusCanonicalCode.OK, json.loads(bson.json_util.dumps(event.reply)))))
         span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):
@@ -115,7 +120,7 @@ class CommandTracer(monitoring.CommandListener):
         if span is None:
             return
         span.set_attribute("db.mongo.duration_micros", event.duration_micros)
-        span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
+        span.set_status(Status(StatusCanonicalCode.UNKNOWN, json.loads(bson.json_util.dumps(event.failure))))
         span.end()
 
     def _pop_span(self, event):
