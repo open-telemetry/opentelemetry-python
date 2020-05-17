@@ -40,6 +40,10 @@ API
 ---
 """
 
+import json
+
+import bson.json_util
+
 from pymongo import monitoring
 
 from opentelemetry import trace
@@ -66,8 +70,8 @@ class CommandTracer(monitoring.CommandListener):
         name = DATABASE_TYPE + "." + event.command_name
         statement = event.command_name
         if command:
-            name += "." + command
-            statement += " " + command
+            name += "." + str(command)
+            statement += " " + str(command)
 
         try:
             span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
@@ -104,7 +108,11 @@ class CommandTracer(monitoring.CommandListener):
         if span is None:
             return
         span.set_attribute("db.mongo.duration_micros", event.duration_micros)
-        span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+        span.set_status(
+            Status(
+                StatusCanonicalCode.OK, json.loads(bson.json_util.dumps(event.reply))
+            )
+        )
         span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):
@@ -115,7 +123,12 @@ class CommandTracer(monitoring.CommandListener):
         if span is None:
             return
         span.set_attribute("db.mongo.duration_micros", event.duration_micros)
-        span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
+        span.set_status(
+            Status(
+                StatusCanonicalCode.UNKNOWN,
+                json.loads(bson.json_util.dumps(event.failure)),
+            )
+        )
         span.end()
 
     def _pop_span(self, event):
