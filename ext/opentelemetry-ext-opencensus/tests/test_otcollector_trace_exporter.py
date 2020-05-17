@@ -22,7 +22,7 @@ from opencensus.proto.trace.v1 import trace_pb2
 import opentelemetry.ext.opencensus.util as utils
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.opencensus.trace_exporter import (
-    CollectorSpanExporter,
+    OpenCensusCollectorSpanExporter,
     translate_to_collector,
 )
 from opentelemetry.sdk import trace
@@ -43,7 +43,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         client = grpc.insecure_channel("")
         endpoint = "testEndpoint"
         with patch:
-            exporter = CollectorSpanExporter(
+            exporter = OpenCensusCollectorSpanExporter(
                 service_name=service_name,
                 host_name=host_name,
                 endpoint=endpoint,
@@ -289,7 +289,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         mock_export = mock.MagicMock()
         mock_client.Export = mock_export
         host_name = "testHostName"
-        collector_exporter = CollectorSpanExporter(
+        collector_exporter = OpenCensusCollectorSpanExporter(
             client=mock_client, host_name=host_name
         )
 

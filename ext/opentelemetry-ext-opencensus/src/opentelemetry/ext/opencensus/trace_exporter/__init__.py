@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""OpenTelemetry Collector Exporter."""
+"""OpenCensus Collector Span Exporter."""
 
 import logging
-from typing import Optional, Sequence
+from typing import Sequence
 
 import grpc
 from opencensus.proto.agent.trace.v1 import (
@@ -25,10 +25,8 @@ from opencensus.proto.agent.trace.v1 import (
 from opencensus.proto.trace.v1 import trace_pb2
 
 import opentelemetry.ext.opencensus.util as utils
-import opentelemetry.trace as trace_api
-from opentelemetry.sdk.trace import Span, SpanContext
+from opentelemetry.sdk.trace import Span
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace import SpanKind, TraceState
 
 DEFAULT_ENDPOINT = "localhost:55678"
 
@@ -36,11 +34,11 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=no-member
-class CollectorSpanExporter(SpanExporter):
-    """OpenTelemetry Collector span exporter.
+class OpenCensusCollectorSpanExporter(SpanExporter):
+    """OpenCensus Collector span exporter.
 
     Args:
-        endpoint: OpenTelemetry Collector OpenCensus receiver endpoint.
+        endpoint: OpenCensus Collector receiver endpoint.
         service_name: Name of Collector service.
         host_name: Host name.
         client: TraceService client stub.

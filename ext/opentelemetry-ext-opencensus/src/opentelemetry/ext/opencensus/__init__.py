@@ -13,12 +13,13 @@
 # limitations under the License.
 
 """
-The **OpenTelemetry Collector Exporter** allows to export OpenTelemetry traces to OpenTelemetry Collector.
+The **OpenCensus Collector Exporter** allows to export OpenTelemetry traces to
+OpenCensus Collector.
 
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.ext.opencensus.trace_exporter import CollectorSpanExporter
+    from opentelemetry.ext.opencensus.trace_exporter import OpenCensusCollectorSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 

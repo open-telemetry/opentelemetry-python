@@ -55,7 +55,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         client = grpc.insecure_channel("")
         endpoint = "testEndpoint"
         with patch:
-            exporter = metrics_exporter.CollectorMetricsExporter(
+            exporter = metrics_exporter.OpenCensusCollectorMetricsExporter(
                 service_name=service_name,
                 host_name=host_name,
                 endpoint=endpoint,
@@ -115,7 +115,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         mock_export = mock.MagicMock()
         mock_client.Export = mock_export
         host_name = "testHostName"
-        collector_exporter = metrics_exporter.CollectorMetricsExporter(
+        collector_exporter = metrics_exporter.OpenCensusCollectorMetricsExporter(
             client=mock_client, host_name=host_name
         )
         test_metric = self._meter.create_metric(

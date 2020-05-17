@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""OpenTelemetry Collector Metrics Exporter."""
+"""OpenCensus Collector Metrics Exporter."""
 
 import logging
 from typing import Sequence
@@ -39,11 +39,11 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=no-member
-class CollectorMetricsExporter(MetricsExporter):
-    """OpenTelemetry Collector metrics exporter.
+class OpenCensusCollectorMetricsExporter(MetricsExporter):
+    """OpenCensus Collector metrics exporter.
 
     Args:
-        endpoint: OpenTelemetry Collector OpenCensus receiver endpoint.
+        endpoint: OpenCensus Collector receiver endpoint.
         service_name: Name of Collector service.
         host_name: Host name.
         client: MetricsService client stub.
