@@ -71,7 +71,6 @@ from thrift.transport import THttpClient, TTransport
 import opentelemetry.trace as trace_api
 from opentelemetry.ext.jaeger.gen.agent import Agent as agent
 from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
-from opentelemetry.sdk.resources import EMPTY_RESOURCE
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCanonicalCode
 
@@ -198,7 +197,7 @@ def _translate_to_jaeger(spans: Span):
         parent_id = span.parent.span_id if span.parent else 0
 
         tags = _extract_tags(span.attributes)
-        if span.resource is not EMPTY_RESOURCE:
+        if span.resource:
             tags.extend(_extract_tags(span.resource.labels))
 
         tags.extend(

@@ -33,13 +33,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource.labels, labels)
 
         resource = resources.Resource.create_empty()
-        self.assertIs(resource, resources.EMPTY_RESOURCE)
+        self.assertIs(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create(None)
-        self.assertIs(resource, resources.EMPTY_RESOURCE)
+        self.assertIs(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create({})
-        self.assertIs(resource, resources.EMPTY_RESOURCE)
+        self.assertIs(resource, resources._EMPTY_RESOURCE)
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})

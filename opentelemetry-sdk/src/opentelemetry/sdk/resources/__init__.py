@@ -25,12 +25,12 @@ class Resource:
     @staticmethod
     def create(labels: Labels) -> "Resource":
         if not labels:
-            return EMPTY_RESOURCE
+            return _EMPTY_RESOURCE
         return Resource(labels)
 
     @staticmethod
     def create_empty() -> "Resource":
-        return EMPTY_RESOURCE
+        return _EMPTY_RESOURCE
 
     @property
     def labels(self) -> Labels:
@@ -50,4 +50,4 @@ class Resource:
         return self._labels == other._labels
 
 
-EMPTY_RESOURCE = Resource({})
+_EMPTY_RESOURCE = Resource({})
