@@ -17,13 +17,13 @@ This example shows how to export metrics to the OT collector.
 """
 
 from opentelemetry import metrics
-from opentelemetry.ext.opencensus.metrics_exporter import (
-    CollectorMetricsExporter,
+from opentelemetry.ext.opencensusexporter.metrics_exporter import (
+    OpenCensusMetricsExporter,
 )
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-exporter = CollectorMetricsExporter(
+exporter = OpenCensusMetricsExporter(
     service_name="basic-service", endpoint="localhost:55678"
 )
 

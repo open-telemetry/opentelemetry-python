@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 from opentelemetry import trace
-from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
+from opentelemetry.ext.opencensusexporter.trace_exporter import OpenCensusSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-exporter = CollectorSpanExporter(
+exporter = OpenCensusSpanExporter(
     service_name="basic-service", endpoint="localhost:55678"
 )
 
