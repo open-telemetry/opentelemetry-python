@@ -4,7 +4,7 @@ OpenTelemetry Collector Metrics OpenCensus Exporter Example
 This example shows how to use the OpenCensus Exporter to export metrics to
 the OpenTelemetry collector.
 
-The source files of this example are available :scm_web:`here <docs/examples/opencensus-exporter-tracer/>`.
+The source files of this example are available :scm_web:`here <docs/examples/opencensus-exporter-metrics/>`.
 
 Installation
 ------------
@@ -19,7 +19,7 @@ Run the Example
 ---------------
 
 Before running the example, it's necessary to run the OpenTelemetry collector
-and Prometheus.  The :scm_web:`docker <docs/examples/opencensus-metrics/docker/>`
+and Prometheus.  The :scm_web:`docker <docs/examples/opencensus-exporter-metrics/docker/>`
 folder contains the a docker-compose template with the configuration of those
 services.
 
@@ -44,9 +44,9 @@ Useful links
 ------------
 
 - OpenTelemetry_
-- OpenCensus_
-- :doc:`../../api/metrics`
-- :doc:`../../ext/opencensus/opencensus`
+- `OpenTelemetry Collector`_
+- :doc:`../../api/trace`
+- :doc:`../../ext/opencensusexporter/opencensusexporter`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
-.. _OpenCensus: https://github.com/open-telemetry/open-collector
+.. _OpenTelemetry Collector: https://github.com/open-telemetry/opentelemetry-collector

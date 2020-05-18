@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""OpenCensus Collector Span Exporter."""
+"""OpenCensus Span Exporter."""
 
 import logging
 from typing import Sequence
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=no-member
-class OpenCensusCollectorSpanExporter(SpanExporter):
+class OpenCensusSpanExporter(SpanExporter):
     """OpenCensus Collector span exporter.
 
     Args:

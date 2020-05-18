@@ -30,7 +30,6 @@ from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
     MetricsExportResult,
-    aggregate,
 )
 
 DEFAULT_ENDPOINT = "localhost:55678"
@@ -39,8 +38,8 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=no-member
-class OpenCensusCollectorMetricsExporter(MetricsExporter):
-    """OpenCensus Collector metrics exporter.
+class OpenCensusMetricsExporter(MetricsExporter):
+    """OpenCensus metrics exporter.
 
     Args:
         endpoint: OpenCensus Collector receiver endpoint.

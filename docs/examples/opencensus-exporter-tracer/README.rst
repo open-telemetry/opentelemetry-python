@@ -19,7 +19,7 @@ Run the Example
 ---------------
 
 Before running the example, it's necessary to run the OpenTelemetry collector
-and Jaeger.  The :scm_web:`docker <docs/examples/opencensus-tracer/docker/>`
+and Jaeger.  The :scm_web:`docker <docs/examples/opencensus-exporter-tracer/docker/>`
 folder contains a ``docker-compose`` template with the configuration of those
 services.
 
