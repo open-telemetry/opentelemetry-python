@@ -1,9 +1,10 @@
-OT Collector Metrics Exporter Example
-=====================================
+OpenTelemetry Collector Metrics OpenCensus Exporter Example
+===========================================================
 
-This example shows how to export metrics to the OT collector.
+This example shows how to use the OpenCensus Exporter to export metrics to
+the OpenTelemetry collector.
 
-The source files of this example are available :scm_web:`here <docs/examples/opencensus-metrics/>`.
+The source files of this example are available :scm_web:`here <docs/examples/opencensus-exporter-tracer/>`.
 
 Installation
 ------------
@@ -12,7 +13,7 @@ Installation
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-ext-opencensus
+    pip install opentelemetry-ext-opencensusexporter
 
 Run the Example
 ---------------
