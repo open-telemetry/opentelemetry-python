@@ -18,11 +18,11 @@ import logging
 from typing import Sequence
 
 import grpc
-from opencensusexporter.proto.agent.metrics.v1 import (
+from opencensus.proto.agent.metrics.v1 import (
     metrics_service_pb2,
     metrics_service_pb2_grpc,
 )
-from opencensusexporter.proto.metrics.v1 import metrics_pb2
+from opencensus.proto.metrics.v1 import metrics_pb2
 
 import opentelemetry.ext.opencensusexporter.util as utils
 from opentelemetry.sdk.metrics import Counter, Metric

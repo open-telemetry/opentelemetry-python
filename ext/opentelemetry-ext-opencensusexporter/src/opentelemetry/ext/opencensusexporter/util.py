@@ -18,8 +18,8 @@ import time
 
 import pkg_resources
 from google.protobuf.timestamp_pb2 import Timestamp
-from opencensusexporter.proto.agent.common.v1 import common_pb2
-from opencensusexporter.proto.trace.v1 import trace_pb2
+from opencensus.proto.agent.common.v1 import common_pb2
+from opencensus.proto.trace.v1 import trace_pb2
 
 from opentelemetry.ext.opencensusexporter.version import (
     __version__ as opencensusexporter_exporter_version,

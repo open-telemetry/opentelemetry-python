@@ -18,11 +18,11 @@ import logging
 from typing import Sequence
 
 import grpc
-from opencensusexporter.proto.agent.trace.v1 import (
+from opencensus.proto.agent.trace.v1 import (
     trace_service_pb2,
     trace_service_pb2_grpc,
 )
-from opencensusexporter.proto.trace.v1 import trace_pb2
+from opencensus.proto.trace.v1 import trace_pb2
 
 import opentelemetry.ext.opencensusexporter.util as utils
 from opentelemetry.sdk.trace import Span

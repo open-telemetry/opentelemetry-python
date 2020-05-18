@@ -17,7 +17,7 @@ from unittest import mock
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
-from opencensusexporter.proto.metrics.v1 import metrics_pb2
+from opencensus.proto.metrics.v1 import metrics_pb2
 
 from opentelemetry import metrics
 from opentelemetry.ext.opencensusexporter import metrics_exporter
