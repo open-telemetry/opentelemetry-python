@@ -43,14 +43,12 @@ API
 import json
 
 import bson.json_util
-
-from pymongo import monitoring
-
 from opentelemetry import trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.pymongo.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
+from pymongo import monitoring
 
 DATABASE_TYPE = "mongodb"
 COMMAND_ATTRIBUTES = ["filter", "sort", "skip", "limit", "pipeline"]
@@ -110,7 +108,8 @@ class CommandTracer(monitoring.CommandListener):
         span.set_attribute("db.mongo.duration_micros", event.duration_micros)
         span.set_status(
             Status(
-                StatusCanonicalCode.OK, json.loads(bson.json_util.dumps(event.reply))
+                StatusCanonicalCode.OK,
+                json.loads(bson.json_util.dumps(event.reply)),
             )
         )
         span.end()
