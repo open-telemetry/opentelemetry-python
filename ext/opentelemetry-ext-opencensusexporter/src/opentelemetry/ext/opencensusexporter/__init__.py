@@ -19,7 +19,7 @@ OpenCensus Collector.
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.ext.opencensus.trace_exporter import OpenCensusCollectorSpanExporter
+    from opentelemetry.ext.opencensusexporter.trace_exporter import OpenCensusCollectorSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
@@ -51,7 +51,7 @@ The **OpenTelemetry Collector Exporter** allows to export OpenTelemetry metrics 
 .. code:: python
 
     from opentelemetry import metrics
-    from opentelemetry.ext.opencensus.metrics_exporter import CollectorMetricsExporter
+    from opentelemetry.ext.opencensusexporter.metrics_exporter import CollectorMetricsExporter
     from opentelemetry.sdk.metrics import Counter, MeterProvider
     from opentelemetry.sdk.metrics.export.controller import PushController
 
