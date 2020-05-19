@@ -175,7 +175,7 @@ class ZipkinSpanExporter(SpanExporter):
                 "duration": duration_mus,
                 "localEndpoint": local_endpoint,
                 "kind": SPAN_KIND_MAP[span.kind],
-                "tags": _extract_tags_from_span(span.attributes),
+                "tags": _extract_tags_from_span(span),
                 "annotations": _extract_annotations_from_events(span.events),
             }
 
@@ -196,11 +196,11 @@ class ZipkinSpanExporter(SpanExporter):
         pass
 
 
-def _extract_tags_from_span(attr):
-    if not attr:
+def _extract_tags_from_dict(tags_dict):
+    if not tags_dict:
         return None
     tags = {}
-    for attribute_key, attribute_value in attr.items():
+    for attribute_key, attribute_value in tags_dict.items():
         if isinstance(attribute_value, (int, bool, float)):
             value = str(attribute_value)
         elif isinstance(attribute_value, str):
@@ -209,6 +209,17 @@ def _extract_tags_from_span(attr):
             logger.warning("Could not serialize tag %s", attribute_key)
             continue
         tags[attribute_key] = value
+    return tags
+
+
+def _extract_tags_from_span(span: Span):
+    tags = _extract_tags_from_dict(span.attributes)
+    if span.resource:
+        resource_tags = _extract_tags_from_dict(span.resource.labels)
+        if tags:
+            tags.update(resource_tags)
+        else:
+            tags = resource_tags
     return tags
 
 
