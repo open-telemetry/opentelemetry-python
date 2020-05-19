@@ -70,13 +70,7 @@ class OpenCensusMetricsExporter(MetricsExporter):
         self, metric_records: Sequence[MetricRecord]
     ) -> MetricsExportResult:
         try:
-            responses = self.client.Export(
-                self.generate_metrics_requests(metric_records)
-            )
-
-            # Read response
-            for _ in responses:
-                pass
+            self.client.Export(self.generate_metrics_requests(metric_records))
 
         except grpc.RpcError:
             return MetricsExportResult.FAILURE

@@ -12,31 +12,113 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opentelemetry.ext.opencensusexporter.trace_exporter import (
+    OpenCensusSpanExporter,
+)
 from opentelemetry.ext.opencensusexporter.metrics_exporter import (
     OpenCensusMetricsExporter,
 )
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
-from opentelemetry import trace
+from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry import trace, metrics
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.test.test_base import TestBase
+from opentelemetry.context import attach, detach, set_value
+from opentelemetry.sdk.metrics.export.controller import PushController
+from time import sleep
 
 
-class TestOpenCensusExporter(TestBase):
+class ExportStatusSpanProcessor(SimpleExportSpanProcessor):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.export_status = []
+
+    def on_end(self, span):
+        token = attach(set_value("suppress_instrumentation", True))
+        self.export_status.append(self.span_exporter.export((span,)))
+        detach(token)
+
+
+class ExportStatusMetricController(PushController):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.export_status = []
+
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.tick()
+
+    def tick(self):
+        # Collect all of the meter's metrics to be exported
+        self.meter.collect()
+        token = attach(set_value("suppress_instrumentation", True))
+        # Export the given metrics in the batcher
+        self.export_status.append(
+            self.exporter.export(self.meter.batcher.checkpoint_set())
+        )
+        detach(token)
+        # Perform post-exporting logic based on batcher configuration
+        self.meter.batcher.finished_collection()
+
+
+class TestOpenCensusSpanExporter(TestBase):
 
     def setUp(self):
         super().setUp()
 
-        exporter = OpenCensusMetricsExporter(
-            service_name="basic-service", endpoint="localhost:55678"
-        )
         trace.set_tracer_provider(TracerProvider())
         self.tracer = trace.get_tracer(__name__)
-        span_processor = BatchExportSpanProcessor(exporter)
+        self.span_processor = ExportStatusSpanProcessor(
+            OpenCensusSpanExporter(
+                service_name="basic-service", endpoint="localhost:55678"
+            )
+        )
 
-        trace.get_tracer_provider().add_span_processor(span_processor)
+        trace.get_tracer_provider().add_span_processor(self.span_processor)
 
-    def test_long_command(self):
+    def test_export(self):
         with self.tracer.start_as_current_span("foo"):
             with self.tracer.start_as_current_span("bar"):
                 with self.tracer.start_as_current_span("baz"):
-                    print("Hello world from OpenTelemetry Python!")
+                    pass
+
+        self.assertTrue(len(self.span_processor.export_status), 3)
+
+        for export_status in self.span_processor.export_status:
+            self.assertEqual(export_status.name, "SUCCESS")
+            self.assertEqual(export_status.value, 0)
+
+
+class TestOpenCensusMetricsExporter(TestBase):
+
+    def setUp(self):
+        super().setUp()
+
+        metrics.set_meter_provider(MeterProvider())
+        self.meter = metrics.get_meter(__name__)
+        self.controller = ExportStatusMetricController(
+            self.meter,
+            OpenCensusMetricsExporter(
+                service_name="basic-service", endpoint="localhost:55678"
+            ),
+            1
+        )
+
+    def test_export(self):
+
+        self.meter.create_metric(
+            name="requests",
+            description="number of requests",
+            unit="1",
+            value_type=int,
+            metric_type=Counter,
+            label_keys=("environment",),
+        ).add(25, {"environment": "staging"})
+
+        sleep(2)
+
+        self.assertEqual(len(self.controller.export_status), 1)
+        self.assertEqual(self.controller.export_status[0].name, "SUCCESS")
+        self.assertEqual(self.controller.export_status[0].value, 0)
