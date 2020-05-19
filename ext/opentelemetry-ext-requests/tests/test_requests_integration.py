@@ -229,3 +229,13 @@ class TestRequestsIntegration(TestBase):
         span = span_list[0]
 
         self.assertIs(span.resource, resource)
+
+    def test_if_headers_equals_none(self):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+        RequestsInstrumentor().uninstrument()
+        RequestsInstrumentor().instrument(tracer_provider=tracer_provider)
+
+        result = requests.get(self.URL, headers=None)
+        self.assertEqual(result.text, "Hello!")

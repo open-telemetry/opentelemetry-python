@@ -92,8 +92,9 @@ def _instrument(tracer_provider=None, span_callback=None):
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
-            headers = kwargs.setdefault("headers", {})
+            headers = kwargs.get("headers", {}) or {}
             propagators.inject(type(headers).__setitem__, headers)
+            kwargs["headers"] = headers
             result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
             span.set_attribute("http.status_code", result.status_code)
