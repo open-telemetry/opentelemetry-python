@@ -25,7 +25,7 @@ Usage
     import opentelemetry.ext.requests
 
     # You can optionally pass a custom TracerProvider to RequestInstrumentor.instrument()
-    opentelemetry.ext.requests.RequestInstrumentor.instrument()
+    opentelemetry.ext.requests.RequestsInstrumentor().instrument()
     response = requests.get(url="https://www.example.org/")
 
 Limitations
@@ -55,7 +55,7 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
 # pylint: disable=unused-argument
-def _instrument(tracer_provider=None):
+def _instrument(tracer_provider=None, span_callback=None):
     """Enables tracing of all requests calls that go through
       :code:`requests.session.Session.request` (this includes
       :code:`requests.get`, etc.)."""
@@ -101,6 +101,8 @@ def _instrument(tracer_provider=None):
             span.set_status(
                 Status(_http_status_to_canonical_code(result.status_code))
             )
+            if span_callback is not None:
+                span_callback(span, result)
 
             return result
 
@@ -156,8 +158,22 @@ def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
 
 
 class RequestsInstrumentor(BaseInstrumentor):
+    """An instrumentor for requests
+    See `BaseInstrumentor`
+    """
+
     def _instrument(self, **kwargs):
-        _instrument(tracer_provider=kwargs.get("tracer_provider"))
+        """Instruments requests module
+
+        Args:
+            **kwargs: Optional arguments
+                ``tracer_provider``: a TracerProvider, defaults to global
+                ``span_callback``: An optional callback invoked before returning the http response. Invoked with Span and requests.Response
+        """
+        _instrument(
+            tracer_provider=kwargs.get("tracer_provider"),
+            span_callback=kwargs.get("span_callback"),
+        )
 
     def _uninstrument(self, **kwargs):
         _uninstrument()

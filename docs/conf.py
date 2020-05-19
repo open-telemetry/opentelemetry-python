@@ -15,6 +15,15 @@ import sys
 from os import listdir
 from os.path import isdir, join
 
+# configure django to avoid the following exception:
+# django.core.exceptions.ImproperlyConfigured: Requested settings, but settings
+# are not configured. You must either define the environment variable
+# DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
+from django.conf import settings
+
+settings.configure()
+
+
 source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
     os.path.abspath("../opentelemetry-sdk/src/"),
@@ -68,6 +77,9 @@ intersphinx_mapping = {
         "https://opentracing-python.readthedocs.io/en/latest/",
         None,
     ),
+    "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
+    "wrapt": ("https://wrapt.readthedocs.io/en/latest/", None),
+    "pymongo": ("https://pymongo.readthedocs.io/en/stable/", None),
 }
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
@@ -79,8 +91,22 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "ValueT"),
     ("py:class", "MetricT"),
-    ("py:class", "typing.Tuple"),
-    ("py:class", "pymongo.monitoring.CommandListener"),
+    # Even if wrapt is added to intersphinx_mapping, sphinx keeps failing
+    # with "class reference target not found: ObjectProxy".
+    ("py:class", "ObjectProxy"),
+    # TODO: Understand why sphinx is not able to find this local class
+    (
+        "py:class",
+        "opentelemetry.trace.propagation.httptextformat.HTTPTextFormat",
+    ),
+    (
+        "any",
+        "opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract",
+    ),
+    (
+        "any",
+        "opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.

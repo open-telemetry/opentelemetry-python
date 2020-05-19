@@ -13,8 +13,9 @@
 # limitations under the License.
 
 """
-The trace integration with Database API supports libraries following the
-`Python Database API Specification v2.0. <https://www.python.org/dev/peps/pep-0249/>`_
+The trace integration with Database API supports libraries that follow the
+Python Database API Specification v2.0.
+`<https://www.python.org/dev/peps/pep-0249/>`_
 
 Usage
 -----
@@ -53,7 +54,7 @@ logger = logging.getLogger(__name__)
 
 
 def trace_integration(
-    connect_module: typing.Callable[..., any],
+    connect_module: typing.Callable[..., typing.Any],
     connect_method_name: str,
     database_component: str,
     database_type: str = "",
@@ -66,10 +67,13 @@ def trace_integration(
         Args:
             connect_module: Module name where connect method is available.
             connect_method_name: The connect method name.
-            database_component: Database driver name or database name "JDBI", "jdbc", "odbc", "postgreSQL".
+            database_component: Database driver name or database name "JDBI",
+                "jdbc", "odbc", "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
-            connection_attributes: Attribute names for database, port, host and user in Connection object.
-            tracer_provider: The :class:`TracerProvider` to use. If ommited the current configured one is used.
+            connection_attributes: Attribute names for database, port, host and
+                user in Connection object.
+            tracer_provider: The :class:`opentelemetry.trace.TracerProvider` to
+                use. If ommited the current configured one is used.
     """
     tracer = get_tracer(__name__, __version__, tracer_provider)
     wrap_connect(
@@ -84,7 +88,7 @@ def trace_integration(
 
 def wrap_connect(
     tracer: Tracer,
-    connect_module: typing.Callable[..., any],
+    connect_module: typing.Callable[..., typing.Any],
     connect_method_name: str,
     database_component: str,
     database_type: str = "",
@@ -94,20 +98,22 @@ def wrap_connect(
         https://www.python.org/dev/peps/pep-0249/
 
         Args:
-            tracer: The :class:`Tracer` to use.
+            tracer: The :class:`opentelemetry.trace.Tracer` to use.
             connect_module: Module name where connect method is available.
             connect_method_name: The connect method name.
-            database_component: Database driver name or database name "JDBI", "jdbc", "odbc", "postgreSQL".
+            database_component: Database driver name or database name "JDBI",
+                "jdbc", "odbc", "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
-            connection_attributes: Attribute names for database, port, host and user in Connection object.
+            connection_attributes: Attribute names for database, port, host and
+                user in Connection object.
     """
 
     # pylint: disable=unused-argument
     def wrap_connect_(
-        wrapped: typing.Callable[..., any],
+        wrapped: typing.Callable[..., typing.Any],
         instance: typing.Any,
-        args: typing.Tuple[any, any],
-        kwargs: typing.Dict[any, any],
+        args: typing.Tuple[typing.Any, typing.Any],
+        kwargs: typing.Dict[typing.Any, typing.Any],
     ):
         db_integration = DatabaseApiIntegration(
             tracer,
@@ -126,11 +132,65 @@ def wrap_connect(
 
 
 def unwrap_connect(
-    connect_module: typing.Callable[..., any], connect_method_name: str,
+    connect_module: typing.Callable[..., typing.Any], connect_method_name: str,
 ):
+    """Disable integration with DB API library.
+        https://www.python.org/dev/peps/pep-0249/
+
+        Args:
+            connect_module: Module name where the connect method is available.
+            connect_method_name: The connect method name.
+    """
     conn = getattr(connect_module, connect_method_name, None)
     if isinstance(conn, wrapt.ObjectProxy):
         setattr(connect_module, connect_method_name, conn.__wrapped__)
+
+
+def instrument_connection(
+    tracer,
+    connection,
+    database_component: str,
+    database_type: str = "",
+    connection_attributes: typing.Dict = None,
+):
+    """Enable instrumentation in a database connection.
+
+    Args:
+        tracer: The :class:`opentelemetry.trace.Tracer` to use.
+        connection: The connection to instrument.
+        database_component: Database driver name or database name "JDBI",
+            "jdbc", "odbc", "postgreSQL".
+        database_type: The Database type. For any SQL database, "sql".
+        connection_attributes: Attribute names for database, port, host and
+            user in a connection object.
+
+    Returns:
+        An instrumented connection.
+    """
+    db_integration = DatabaseApiIntegration(
+        tracer,
+        database_component,
+        database_type,
+        connection_attributes=connection_attributes,
+    )
+    db_integration.get_connection_attributes(connection)
+    return TracedConnectionProxy(connection, db_integration)
+
+
+def uninstrument_connection(connection):
+    """Disable instrumentation in a database connection.
+
+    Args:
+        connection: The connection to uninstrument.
+
+    Returns:
+        An uninstrumented connection.
+    """
+    if isinstance(connection, wrapt.ObjectProxy):
+        return connection.__wrapped__
+
+    logger.warning("Connection is not instrumented")
+    return connection
 
 
 class DatabaseApiIntegration:
@@ -159,16 +219,15 @@ class DatabaseApiIntegration:
 
     def wrapped_connection(
         self,
-        connect_method: typing.Callable[..., any],
-        args: typing.Tuple[any, any],
-        kwargs: typing.Dict[any, any],
+        connect_method: typing.Callable[..., typing.Any],
+        args: typing.Tuple[typing.Any, typing.Any],
+        kwargs: typing.Dict[typing.Any, typing.Any],
     ):
         """Add object proxy to connection object.
         """
         connection = connect_method(*args, **kwargs)
         self.get_connection_attributes(connection)
-        traced_connection = TracedConnectionProxy(connection, self)
-        return traced_connection
+        return TracedConnectionProxy(connection, self)
 
     def get_connection_attributes(self, connection):
         # Populate span fields using connection
@@ -226,9 +285,9 @@ class TracedCursor:
 
     def traced_execution(
         self,
-        query_method: typing.Callable[..., any],
-        *args: typing.Tuple[any, any],
-        **kwargs: typing.Dict[any, any]
+        query_method: typing.Callable[..., typing.Any],
+        *args: typing.Tuple[typing.Any, typing.Any],
+        **kwargs: typing.Dict[typing.Any, typing.Any]
     ):
 
         statement = args[0] if args else ""

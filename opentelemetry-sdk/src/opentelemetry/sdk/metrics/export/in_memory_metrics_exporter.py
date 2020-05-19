@@ -19,7 +19,7 @@ from . import MetricRecord, MetricsExporter, MetricsExportResult
 
 
 class InMemoryMetricsExporter(MetricsExporter):
-    """ Implementation of `MetricsExporter` thta stores metrics in memory.
+    """Implementation of `MetricsExporter` that stores metrics in memory.
 
     This class can be used for testing purposes. It stores exported metrics
     in a list in memory that can be retrieved using the
@@ -38,7 +38,10 @@ class InMemoryMetricsExporter(MetricsExporter):
 
     def export(
         self, metric_records: Sequence[MetricRecord]
-    ) -> "MetricsExportResult":
+    ) -> MetricsExportResult:
+        if self._stopped:
+            return MetricsExportResult.FAILURE
+
         with self._lock:
             self._exported_metrics.extend(metric_records)
         return MetricsExportResult.SUCCESS
@@ -47,3 +50,10 @@ class InMemoryMetricsExporter(MetricsExporter):
         """Get list of collected metrics."""
         with self._lock:
             return tuple(self._exported_metrics)
+
+    def shutdown(self) -> None:
+        """Shuts down the exporter.
+
+        Called when the SDK is shut down.
+        """
+        self._stopped = True

@@ -63,7 +63,7 @@ class TestBase(unittest.TestCase):
 
         Returns:
             A list with the tracer provider in the first element and the
-            memory exporter in the second.
+            in-memory span exporter in the second.
         """
         tracer_provider = TracerProvider(**kwargs)
         memory_exporter = InMemorySpanExporter()
@@ -74,6 +74,14 @@ class TestBase(unittest.TestCase):
 
     @staticmethod
     def create_meter_provider(**kwargs):
+        """Helper to create a configured meter provider
+
+        Creates a `MeterProvider` and an `InMemoryMetricsExporter`.
+
+        Returns:
+            A list with the meter provider in the first element and the
+            in-memory metrics exporter in the second
+        """
         meter_provider = MeterProvider(**kwargs)
         memory_exporter = InMemoryMetricsExporter()
         return meter_provider, memory_exporter
