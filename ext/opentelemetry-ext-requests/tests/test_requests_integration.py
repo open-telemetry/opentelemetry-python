@@ -22,6 +22,7 @@ import opentelemetry.ext.requests
 from opentelemetry import context, propagators, trace
 from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 from opentelemetry.test.test_base import TestBase
 
@@ -231,11 +232,8 @@ class TestRequestsIntegration(TestBase):
         self.assertIs(span.resource, resource)
 
     def test_if_headers_equals_none(self):
-        resource = resources.Resource.create({})
-        result = self.create_tracer_provider(resource=resource)
-        tracer_provider, exporter = result
         RequestsInstrumentor().uninstrument()
-        RequestsInstrumentor().instrument(tracer_provider=tracer_provider)
+        RequestsInstrumentor().instrument(tracer_provider=TracerProvider())
 
         result = requests.get(self.URL, headers=None)
         self.assertEqual(result.text, "Hello!")
