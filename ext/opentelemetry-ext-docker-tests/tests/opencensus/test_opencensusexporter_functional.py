@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.ext.opencensusexporter.trace_exporter import (
-    OpenCensusSpanExporter,
-)
+from time import sleep
+
+from opentelemetry import metrics, trace
+from opentelemetry.context import attach, detach, set_value
 from opentelemetry.ext.opencensusexporter.metrics_exporter import (
     OpenCensusMetricsExporter,
 )
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.ext.opencensusexporter.trace_exporter import (
+    OpenCensusSpanExporter,
+)
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry import trace, metrics
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.test.test_base import TestBase
-from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.metrics.export.controller import PushController
-from time import sleep
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.test.test_base import TestBase
 
 
 class ExportStatusSpanProcessor(SimpleExportSpanProcessor):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.export_status = []
@@ -41,7 +41,6 @@ class ExportStatusSpanProcessor(SimpleExportSpanProcessor):
 
 
 class ExportStatusMetricController(PushController):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.export_status = []
@@ -64,7 +63,6 @@ class ExportStatusMetricController(PushController):
 
 
 class TestOpenCensusSpanExporter(TestBase):
-
     def setUp(self):
         super().setUp()
 
@@ -92,7 +90,6 @@ class TestOpenCensusSpanExporter(TestBase):
 
 
 class TestOpenCensusMetricsExporter(TestBase):
-
     def setUp(self):
         super().setUp()
 
@@ -103,7 +100,7 @@ class TestOpenCensusMetricsExporter(TestBase):
             OpenCensusMetricsExporter(
                 service_name="basic-service", endpoint="localhost:55678"
             ),
-            1
+            1,
         )
 
     def test_export(self):

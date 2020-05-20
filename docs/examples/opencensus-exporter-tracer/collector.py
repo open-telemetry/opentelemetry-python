@@ -15,7 +15,9 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.ext.opencensusexporter.trace_exporter import OpenCensusSpanExporter
+from opentelemetry.ext.opencensusexporter.trace_exporter import (
+    OpenCensusSpanExporter,
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
