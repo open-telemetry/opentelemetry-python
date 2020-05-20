@@ -24,7 +24,7 @@ from functools import wraps
 
 from asgiref.compatibility import guarantee_single_callable
 
-from opentelemetry import propagators, trace
+from opentelemetry import context, propagators, trace
 from opentelemetry.ext.asgi.version import __version__  # noqa
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -79,7 +79,7 @@ def http_status_to_canonical_code(code: int, allow_redirect: bool = True):
 def collect_request_attributes(scope):
     """Collects HTTP request attributes from the ASGI scope and returns a
     dictionary to be used as span creation attributes."""
-    server = scope.get("server") or ['0.0.0.0', 80]
+    server = scope.get("server") or ["0.0.0.0", 80]
     port = server[1]
     server_host = server[0] + (":" + str(port) if port != 80 else "")
     http_url = scope.get("scheme") + "://" + server_host + scope.get("path")
@@ -98,7 +98,7 @@ def collect_request_attributes(scope):
     }
     http_host_value = ",".join(get_header_from_scope(scope, "host"))
     if http_host_value:
-        result['http.server_name'] = http_host_value
+        result["http.server_name"] = http_host_value
 
     if "client" in scope and scope["client"] is not None:
         result["net.peer.ip"] = scope.get("client")[0]
@@ -143,7 +143,7 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, app, name_callback=None):
         self.app = guarantee_single_callable(app)
-        self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
+        self.tracer = trace.get_tracer(__name__, __version__)
         self.name_callback = name_callback or get_default_span_name
 
     async def __call__(self, scope, receive, send):
@@ -155,44 +155,48 @@ class OpenTelemetryMiddleware:
             send: An awaitable callable taking a single dictionary as argument.
         """
 
-        parent_span = propagators.extract(get_header_from_scope, scope)
+        token = context.attach(
+            propagators.extract(get_header_from_scope, scope)
+        )
         span_name = self.name_callback(scope)
 
-        with self.tracer.start_as_current_span(
-            span_name + " (asgi.connection)",
-            parent_span,
-            kind=trace.SpanKind.SERVER,
-            attributes=collect_request_attributes(scope),
-        ):
+        try:
+            with self.tracer.start_as_current_span(
+                span_name + " (asgi.connection)",
+                kind=trace.SpanKind.SERVER,
+                attributes=collect_request_attributes(scope),
+            ):
 
-            @wraps(receive)
-            async def wrapped_receive():
-                with self.tracer.start_as_current_span(
-                    span_name + " (asgi." + scope["type"] + ".receive)"
-                ) as receive_span:
-                    payload = await receive()
-                    if payload["type"] == "websocket.receive":
-                        set_status_code(receive_span, 200)
-                        receive_span.set_attribute(
-                            "http.status_text", payload["text"]
-                        )
-                    receive_span.set_attribute("type", payload["type"])
-                return payload
+                @wraps(receive)
+                async def wrapped_receive():
+                    with self.tracer.start_as_current_span(
+                        span_name + " (asgi." + scope["type"] + ".receive)"
+                    ) as receive_span:
+                        payload = await receive()
+                        if payload["type"] == "websocket.receive":
+                            set_status_code(receive_span, 200)
+                            receive_span.set_attribute(
+                                "http.status_text", payload["text"]
+                            )
+                        receive_span.set_attribute("type", payload["type"])
+                    return payload
 
-            @wraps(send)
-            async def wrapped_send(payload):
-                with self.tracer.start_as_current_span(
-                    span_name + " (asgi." + scope["type"] + ".send)"
-                ) as send_span:
-                    if payload["type"] == "http.response.start":
-                        status_code = payload["status"]
-                        set_status_code(send_span, status_code)
-                    elif payload["type"] == "websocket.send":
-                        set_status_code(send_span, 200)
-                        send_span.set_attribute(
-                            "http.status_text", payload["text"]
-                        )
-                    send_span.set_attribute("type", payload["type"])
-                    await send(payload)
+                @wraps(send)
+                async def wrapped_send(payload):
+                    with self.tracer.start_as_current_span(
+                        span_name + " (asgi." + scope["type"] + ".send)"
+                    ) as send_span:
+                        if payload["type"] == "http.response.start":
+                            status_code = payload["status"]
+                            set_status_code(send_span, status_code)
+                        elif payload["type"] == "websocket.send":
+                            set_status_code(send_span, 200)
+                            send_span.set_attribute(
+                                "http.status_text", payload["text"]
+                            )
+                        send_span.set_attribute("type", payload["type"])
+                        await send(payload)
 
-            await self.app(scope, wrapped_receive, wrapped_send)
+                await self.app(scope, wrapped_receive, wrapped_send)
+        finally:
+            context.detach(token)
