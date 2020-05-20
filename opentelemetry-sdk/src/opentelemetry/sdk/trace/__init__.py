@@ -252,10 +252,6 @@ class Span(trace_api.Span):
             this `Span`.
     """
 
-    # Initialize these lazily assuming most spans won't have them.
-    _empty_events = BoundedList(MAX_NUM_EVENTS)
-    _empty_links = BoundedList(MAX_NUM_LINKS)
-
     def __init__(
         self,
         name: str,
@@ -295,7 +291,7 @@ class Span(trace_api.Span):
             )
 
         if events is None:
-            self.events = Span._empty_events
+            self.events = BoundedList(MAX_NUM_EVENTS)
         else:
             self.events = BoundedList(MAX_NUM_EVENTS)
             for event in events:
@@ -303,7 +299,7 @@ class Span(trace_api.Span):
                 self.events.append(event)
 
         if links is None:
-            self.links = Span._empty_links
+            self.links = BoundedList(MAX_NUM_LINKS)
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
@@ -438,9 +434,7 @@ class Span(trace_api.Span):
             if not self.is_recording_events():
                 return
             has_ended = self.end_time is not None
-            if not has_ended:
-                if self.events is Span._empty_events:
-                    self.events = BoundedList(MAX_NUM_EVENTS)
+
         if has_ended:
             logger.warning("Calling add_event() on an ended span.")
             return
