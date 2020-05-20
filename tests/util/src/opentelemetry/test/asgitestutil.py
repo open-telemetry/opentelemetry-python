@@ -2,7 +2,7 @@ import asyncio
 
 from asgiref.testing import ApplicationCommunicator
 
-from opentelemetry.ext.testutil.spantestutil import SpanTestBase
+from opentelemetry.test.spantestutil import SpanTestBase
 
 
 def setup_testing_defaults(scope):

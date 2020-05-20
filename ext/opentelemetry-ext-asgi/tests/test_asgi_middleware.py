@@ -18,7 +18,7 @@ import unittest.mock as mock
 
 import opentelemetry.ext.asgi as otel_asgi
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.testutil.asgitestutil import (
+from opentelemetry.test.asgitestutil import (
     AsgiTestBase,
     setup_testing_defaults,
 )
@@ -153,14 +153,18 @@ class TestAsgiApplication(AsgiTestBase):
     def test_override_span_name(self):
         """Test that span_names can be overwritten by our callback function."""
         span_name = "Dymaxion"
+
+        # pylint:disable=unused-argument
         def get_predefined_span_name(scope):
             return span_name
+
         def update_expected_span_name(expected):
             for entry in expected:
-                entry['name'] = " ".join(
-                    [span_name] + entry['name'].split(' ')[-1:]
+                entry["name"] = " ".join(
+                    [span_name] + entry["name"].split(" ")[-1:]
                 )
             return expected
+
         app = otel_asgi.OpenTelemetryMiddleware(
             simple_asgi, name_callback=get_predefined_span_name
         )
@@ -171,13 +175,17 @@ class TestAsgiApplication(AsgiTestBase):
 
     def test_behavior_with_scope_server_as_none(self):
         """Test that middleware is ok when server is none in scope."""
+
         def update_expected_server(expected):
-            expected[3]['attributes'].update({
-                'http.host': '0.0.0.0',
-                'host.port': 80,
-                'http.url': 'http://0.0.0.0/'
-            })
+            expected[3]["attributes"].update(
+                {
+                    "http.host": "0.0.0.0",
+                    "host.port": 80,
+                    "http.url": "http://0.0.0.0/",
+                }
+            )
             return expected
+
         self.scope["server"] = None
         app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
         self.seed_app(app)
@@ -188,18 +196,19 @@ class TestAsgiApplication(AsgiTestBase):
     def test_host_header(self):
         """Test that host header is converted to http.server_name."""
         hostname = b"server_name_1"
+
         def update_expected_server(expected):
-            expected[3]['attributes'].update({
-                'http.server_name': hostname.decode('utf8')
-            })
+            expected[3]["attributes"].update(
+                {"http.server_name": hostname.decode("utf8")}
+            )
             return expected
-        self.scope["headers"].append([b'host', hostname])
+
+        self.scope["headers"].append([b"host", hostname])
         app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
         self.seed_app(app)
         self.send_default_request()
         outputs = self.get_all_output()
         self.validate_outputs(outputs, modifiers=[update_expected_server])
-
 
 
 class TestAsgiAttributes(unittest.TestCase):
