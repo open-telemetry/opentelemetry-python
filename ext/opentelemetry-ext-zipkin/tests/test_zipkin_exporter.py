@@ -247,7 +247,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": None,
+                "tags": {},
                 "annotations": None,
             },
         ]

@@ -197,9 +197,9 @@ class ZipkinSpanExporter(SpanExporter):
 
 
 def _extract_tags_from_dict(tags_dict):
-    if not tags_dict:
-        return None
     tags = {}
+    if not tags_dict:
+        return tags
     for attribute_key, attribute_value in tags_dict.items():
         if isinstance(attribute_value, (int, bool, float)):
             value = str(attribute_value)
@@ -215,11 +215,7 @@ def _extract_tags_from_dict(tags_dict):
 def _extract_tags_from_span(span: Span):
     tags = _extract_tags_from_dict(span.attributes)
     if span.resource:
-        resource_tags = _extract_tags_from_dict(span.resource.labels)
-        if tags:
-            tags.update(resource_tags)
-        else:
-            tags = resource_tags
+        tags.update(_extract_tags_from_dict(span.resource.labels))
     return tags
 
 
