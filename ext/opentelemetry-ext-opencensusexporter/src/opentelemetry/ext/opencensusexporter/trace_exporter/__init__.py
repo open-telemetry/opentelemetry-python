@@ -64,7 +64,11 @@ class OpenCensusSpanExporter(SpanExporter):
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         try:
-            self.client.Export(self.generate_span_requests(spans))
+            responses = self.client.Export(self.generate_span_requests(spans))
+
+            # Read response
+            for _ in responses:
+                pass
 
         except grpc.RpcError:
             return SpanExportResult.FAILURE
