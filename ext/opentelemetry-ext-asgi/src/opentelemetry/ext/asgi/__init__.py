@@ -99,6 +99,9 @@ def collect_request_attributes(scope):
     http_host_value = ",".join(get_header_from_scope(scope, "host"))
     if http_host_value:
         result["http.server_name"] = http_host_value
+    http_user_agent = get_header_from_scope(scope, "user-agent")
+    if len(http_user_agent) > 0:
+        result["http.user_agent"] = http_user_agent[0]
 
     if "client" in scope and scope["client"] is not None:
         result["net.peer.ip"] = scope.get("client")[0]

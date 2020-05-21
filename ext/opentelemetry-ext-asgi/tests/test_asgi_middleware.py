@@ -210,6 +210,22 @@ class TestAsgiApplication(AsgiTestBase):
         outputs = self.get_all_output()
         self.validate_outputs(outputs, modifiers=[update_expected_server])
 
+    def test_user_agent(self):
+        """Test that host header is converted to http.server_name."""
+        user_agent = b"test-agent"
+
+        def update_expected_user_agent(expected):
+            expected[3]["attributes"].update(
+                {"http.user_agent": user_agent.decode("utf8")}
+            )
+            return expected
+
+        self.scope["headers"].append([b"user-agent", user_agent])
+        app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        self.validate_outputs(outputs, modifiers=[update_expected_user_agent])
 
 class TestAsgiAttributes(unittest.TestCase):
     def setUp(self):
