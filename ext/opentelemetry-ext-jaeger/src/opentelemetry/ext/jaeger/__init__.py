@@ -1,5 +1,5 @@
 # Copyright 2018, OpenCensus Authors
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Jaeger Span Exporter for OpenTelemetry."""
+"""
+The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
+This exporter always send traces to the configured agent using Thrift compact protocol over UDP.
+An optional collector can be configured, in this case Thrift binary protocol over HTTP is used.
+gRPC is still not supported by this implementation.
+
+Usage
+-----
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.ext import jaeger
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+
+    trace.set_tracer_provider(TracerProvider())
+    tracer = trace.get_tracer(__name__)
+
+    # create a JaegerSpanExporter
+    jaeger_exporter = jaeger.JaegerSpanExporter(
+        service_name='my-helloworld-service',
+        # configure agent
+        agent_host_name='localhost',
+        agent_port=6831,
+        # optional: configure also collector
+        # collector_host_name='localhost',
+        # collector_port=14268,
+        # collector_endpoint='/api/traces?format=jaeger.thrift',
+        # username=xxxx, # optional
+        # password=xxxx, # optional
+    )
+
+    # Create a BatchExportSpanProcessor and add the exporter to it
+    span_processor = BatchExportSpanProcessor(jaeger_exporter)
+
+    # add to the tracer
+    trace.get_tracer_provider().add_span_processor(span_processor)
+
+    with tracer.start_as_current_span('foo'):
+        print('Hello world!')
+
+API
+---
+.. _Jaeger: https://www.jaegertracing.io/
+.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+"""
 
 import base64
 import logging
@@ -26,6 +72,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry.ext.jaeger.gen.agent import Agent as agent
 from opentelemetry.ext.jaeger.gen.jaeger import Collector as jaeger
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
+from opentelemetry.trace.status import StatusCanonicalCode
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
@@ -145,21 +192,30 @@ def _translate_to_jaeger(spans: Span):
         start_time_us = _nsec_to_usec_round(span.start_time)
         duration_us = _nsec_to_usec_round(span.end_time - span.start_time)
 
-        parent_id = 0
-        if isinstance(span.parent, trace_api.Span):
-            parent_id = span.parent.get_context().span_id
-        elif isinstance(span.parent, trace_api.SpanContext):
-            parent_id = span.parent.span_id
+        status = span.status
+
+        parent_id = span.parent.span_id if span.parent else 0
 
         tags = _extract_tags(span.attributes)
+        if span.resource:
+            tags.extend(_extract_tags(span.resource.labels))
 
-        # TODO: status is missing:
-        # https://github.com/open-telemetry/opentelemetry-python/issues/98
+        tags.extend(
+            [
+                _get_long_tag("status.code", status.canonical_code.value),
+                _get_string_tag("status.message", status.description),
+                _get_string_tag("span.kind", span.kind.name),
+            ]
+        )
+
+        # Ensure that if Status.Code is not OK, that we set the "error" tag on the Jaeger span.
+        if status.canonical_code is not StatusCanonicalCode.OK:
+            tags.append(_get_bool_tag("error", True))
 
         refs = _extract_refs_from_span(span)
         logs = _extract_logs_from_span(span)
 
-        flags = int(ctx.trace_options)
+        flags = int(ctx.trace_flags)
 
         jaeger_span = jaeger.Span(
             traceIdHigh=_get_trace_id_high(trace_id),
@@ -222,9 +278,7 @@ def _extract_logs_from_span(span):
     logs = []
 
     for event in span.events:
-        fields = []
-        if event.attributes is not None:
-            fields = _extract_tags(event.attributes)
+        fields = _extract_tags(event.attributes)
 
         fields.append(
             jaeger.Tag(
@@ -241,7 +295,7 @@ def _extract_logs_from_span(span):
 
 def _extract_tags(attr):
     if not attr:
-        return None
+        return []
     tags = []
     for attribute_key, attribute_value in attr.items():
         tag = _convert_attribute_to_tag(attribute_key, attribute_value)
@@ -263,6 +317,18 @@ def _convert_attribute_to_tag(key, attr):
         return jaeger.Tag(key=key, vDouble=attr, vType=jaeger.TagType.DOUBLE)
     logger.warning("Could not serialize attribute %s:%r to tag", key, attr)
     return None
+
+
+def _get_long_tag(key, val):
+    return jaeger.Tag(key=key, vLong=val, vType=jaeger.TagType.LONG)
+
+
+def _get_string_tag(key, val):
+    return jaeger.Tag(key=key, vStr=val, vType=jaeger.TagType.STRING)
+
+
+def _get_bool_tag(key, val):
+    return jaeger.Tag(key=key, vBool=val, vType=jaeger.TagType.BOOL)
 
 
 class AgentClientUDP:
@@ -320,23 +386,15 @@ class Collector:
     Args:
         thrift_url: URL of the Jaeger HTTP Thrift.
         auth: Auth tuple that contains username and password for Basic Auth.
-        client: Class for creating a Jaeger collector client.
-        http_transport: Class for creating new client for Thrift HTTP server.
     """
 
-    def __init__(
-        self,
-        thrift_url="",
-        auth=None,
-        client=jaeger.Client,
-        http_transport=THttpClient.THttpClient,
-    ):
+    def __init__(self, thrift_url="", auth=None):
         self.thrift_url = thrift_url
         self.auth = auth
-        self.http_transport = http_transport(uri_or_host=thrift_url)
-        self.client = client(
-            iprot=TBinaryProtocol.TBinaryProtocol(trans=self.http_transport)
+        self.http_transport = THttpClient.THttpClient(
+            uri_or_host=self.thrift_url
         )
+        self.protocol = TBinaryProtocol.TBinaryProtocol(self.http_transport)
 
         # set basic auth header
         if auth is not None:
@@ -351,18 +409,13 @@ class Collector:
         Args:
             batch: Object to emit Jaeger spans.
         """
-        try:
-            self.client.submitBatches([batch])
-            # it will call http_transport.flush() and
-            # status code and message will be updated
-            code = self.http_transport.code
-            msg = self.http_transport.message
-            if code >= 300 or code < 200:
-                logger.error(
-                    "Traces cannot be uploaded; HTTP status code: %s, message %s",
-                    code,
-                    msg,
-                )
-        finally:
-            if self.http_transport.isOpen():
-                self.http_transport.close()
+        batch.write(self.protocol)
+        self.http_transport.flush()
+        code = self.http_transport.code
+        msg = self.http_transport.message
+        if code >= 300 or code < 200:
+            logger.error(
+                "Traces cannot be uploaded; HTTP status code: %s, message: %s",
+                code,
+                msg,
+            )

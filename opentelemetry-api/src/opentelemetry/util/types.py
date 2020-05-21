@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,17 @@
 # limitations under the License.
 
 
-import typing
+from typing import Callable, Dict, Optional, Sequence, Union
 
-AttributeValue = typing.Union[str, bool, float]
-Attributes = typing.Optional[typing.Dict[str, AttributeValue]]
+AttributeValue = Union[
+    str,
+    bool,
+    int,
+    float,
+    Sequence[str],
+    Sequence[bool],
+    Sequence[int],
+    Sequence[float],
+]
+Attributes = Optional[Dict[str, AttributeValue]]
+AttributesFormatter = Callable[[], Optional[Dict[str, AttributeValue]]]

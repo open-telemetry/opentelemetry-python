@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +13,48 @@
 # limitations under the License.
 
 import logging
-from typing import Sequence, Tuple, Type
+import threading
+from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk.metrics.export.aggregate import Aggregator
+from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 logger = logging.getLogger(__name__)
 
 
-class BaseHandle:
+def get_labels_as_key(labels: Dict[str, str]) -> Tuple[Tuple[str, str]]:
+    """Gets a list of labels that can be used as a key in a dictionary."""
+    return tuple(sorted(labels.items()))
+
+
+class BaseBoundInstrument:
+    """Class containing common behavior for all bound metric instruments.
+
+    Bound metric instruments are responsible for operating on data for metric
+    instruments for a specific set of labels.
+
+    Args:
+        value_type: The type of values for this bound instrument (int, float).
+        enabled: True if the originating instrument is enabled.
+        aggregator: The aggregator for this bound metric instrument. Will
+            handle aggregation upon updates and checkpointing of values for
+            exporting.
+    """
+
     def __init__(
         self,
         value_type: Type[metrics_api.ValueT],
         enabled: bool,
-        monotonic: bool,
+        aggregator: Aggregator,
     ):
-        self.data = value_type()
         self.value_type = value_type
         self.enabled = enabled
-        self.monotonic = monotonic
+        self.aggregator = aggregator
+        self._ref_count = 0
+        self._ref_count_lock = threading.Lock()
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
         if not self.enabled:
@@ -42,41 +66,54 @@ class BaseHandle:
             return False
         return True
 
+    def update(self, value: metrics_api.ValueT):
+        self.aggregator.update(value)
 
-class CounterHandle(metrics_api.CounterHandle, BaseHandle):
+    def release(self):
+        self.decrease_ref_count()
+
+    def decrease_ref_count(self):
+        with self._ref_count_lock:
+            self._ref_count -= 1
+
+    def increase_ref_count(self):
+        with self._ref_count_lock:
+            self._ref_count += 1
+
+    def ref_count(self):
+        with self._ref_count_lock:
+            return self._ref_count
+
+    def __repr__(self):
+        return '{}(data="{}")'.format(
+            type(self).__name__, self.aggregator.current
+        )
+
+
+class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
     def add(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.CounterHandle.add`."""
+        """See `opentelemetry.metrics.BoundCounter.add`."""
         if self._validate_update(value):
-            if self.monotonic and value < 0:
-                logger.warning("Monotonic counter cannot descend.")
-                return
-            self.data += value
+            self.update(value)
 
 
-class GaugeHandle(metrics_api.GaugeHandle, BaseHandle):
-    def set(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.GaugeHandle.set`."""
-        if self._validate_update(value):
-            if self.monotonic and value < self.data:
-                logger.warning("Monotonic gauge cannot descend.")
-                return
-            self.data = value
-
-
-class MeasureHandle(metrics_api.MeasureHandle, BaseHandle):
+class BoundMeasure(metrics_api.BoundMeasure, BaseBoundInstrument):
     def record(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.MeasureHandle.record`."""
+        """See `opentelemetry.metrics.BoundMeasure.record`."""
         if self._validate_update(value):
-            if self.monotonic and value < 0:
-                logger.warning("Monotonic measure cannot accept negatives.")
-                return
-            # TODO: record
+            self.update(value)
 
 
 class Metric(metrics_api.Metric):
-    """See `opentelemetry.metrics.Metric`."""
+    """Base class for all metric types.
 
-    HANDLE_TYPE = BaseHandle
+    Also known as metric instrument. This is the class that is used to
+    represent a metric that is to be continuously recorded and tracked. Each
+    metric has a set of bound metrics that are created from the metric. See
+    `BaseBoundInstrument` for information on bound metric instruments.
+    """
+
+    BOUND_INSTR_TYPE = BaseBoundInstrument
 
     def __init__(
         self,
@@ -84,158 +121,228 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
+        meter: "Meter",
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = False,
     ):
         self.name = name
         self.description = description
         self.unit = unit
         self.value_type = value_type
+        self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
-        self.monotonic = monotonic
-        self.handles = {}
+        self.bound_instruments = {}
+        self.bound_instruments_lock = threading.Lock()
 
-    def get_handle(self, label_values: Sequence[str]) -> BaseHandle:
-        """See `opentelemetry.metrics.Metric.get_handle`."""
-        handle = self.handles.get(label_values)
-        if not handle:
-            handle = self.HANDLE_TYPE(
-                self.value_type, self.enabled, self.monotonic
-            )
-        self.handles[label_values] = handle
-        return handle
+    def bind(self, labels: Dict[str, str]) -> BaseBoundInstrument:
+        """See `opentelemetry.metrics.Metric.bind`."""
+        key = get_labels_as_key(labels)
+        with self.bound_instruments_lock:
+            bound_instrument = self.bound_instruments.get(key)
+            if bound_instrument is None:
+                bound_instrument = self.BOUND_INSTR_TYPE(
+                    self.value_type,
+                    self.enabled,
+                    # Aggregator will be created based off type of metric
+                    self.meter.batcher.aggregator_for(self.__class__),
+                )
+                self.bound_instruments[key] = bound_instrument
+        bound_instrument.increase_ref_count()
+        return bound_instrument
+
+    def __repr__(self):
+        return '{}(name="{}", description="{}")'.format(
+            type(self).__name__, self.name, self.description
+        )
 
     UPDATE_FUNCTION = lambda x, y: None  # noqa: E731
 
 
 class Counter(Metric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
-
-    By default, counter values can only go up (monotonic). Negative inputs
-    will be discarded for monotonic counter metrics. Counter metrics that
-    have a monotonic option set to False allows negative inputs.
     """
 
-    HANDLE_TYPE = CounterHandle
+    BOUND_INSTR_TYPE = BoundCounter
 
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
-        enabled: bool = True,
-        monotonic: bool = True,
-    ):
-        super().__init__(
-            name,
-            description,
-            unit,
-            value_type,
-            label_keys=label_keys,
-            enabled=enabled,
-            monotonic=monotonic,
-        )
-
-    def add(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
+    def add(self, value: metrics_api.ValueT, labels: Dict[str, str]) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
-        self.get_handle(label_values).add(value)
+        bound_intrument = self.bind(labels)
+        bound_intrument.add(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = add
 
 
-class Gauge(Metric, metrics_api.Gauge):
-    """See `opentelemetry.metrics.Gauge`.
-
-    By default, gauge values can go both up and down (non-monotonic).
-    Negative inputs will be discarded for monotonic gauge metrics.
-    """
-
-    HANDLE_TYPE = GaugeHandle
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
-        enabled: bool = True,
-        monotonic: bool = False,
-    ):
-        super().__init__(
-            name,
-            description,
-            unit,
-            value_type,
-            label_keys=label_keys,
-            enabled=enabled,
-            monotonic=monotonic,
-        )
-
-    def set(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
-    ) -> None:
-        """See `opentelemetry.metrics.Gauge.set`."""
-        self.get_handle(label_values).set(value)
-
-    UPDATE_FUNCTION = set
-
-
 class Measure(Metric, metrics_api.Measure):
-    """See `opentelemetry.metrics.Measure`.
+    """See `opentelemetry.metrics.Measure`."""
 
-    By default, measure metrics can accept both positive and negatives.
-    Negative inputs will be discarded when monotonic is True.
-    """
-
-    HANDLE_TYPE = MeasureHandle
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[metrics_api.ValueT],
-        label_keys: Sequence[str] = None,
-        enabled: bool = False,
-        monotonic: bool = False,
-    ):
-        super().__init__(
-            name,
-            description,
-            unit,
-            value_type,
-            label_keys=label_keys,
-            enabled=enabled,
-            monotonic=monotonic,
-        )
+    BOUND_INSTR_TYPE = BoundMeasure
 
     def record(
-        self, label_values: Sequence[str], value: metrics_api.ValueT
+        self, value: metrics_api.ValueT, labels: Dict[str, str]
     ) -> None:
         """See `opentelemetry.metrics.Measure.record`."""
-        self.get_handle(label_values).record(value)
+        bound_intrument = self.bind(labels)
+        bound_intrument.record(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = record
 
 
+class Observer(metrics_api.Observer):
+    """See `opentelemetry.metrics.Observer`."""
+
+    def __init__(
+        self,
+        callback: metrics_api.ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[metrics_api.ValueT],
+        meter: "Meter",
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ):
+        self.callback = callback
+        self.name = name
+        self.description = description
+        self.unit = unit
+        self.value_type = value_type
+        self.meter = meter
+        self.label_keys = label_keys
+        self.enabled = enabled
+
+        self.aggregators = {}
+
+    def observe(
+        self, value: metrics_api.ValueT, labels: Dict[str, str]
+    ) -> None:
+        if not self.enabled:
+            return
+        if not isinstance(value, self.value_type):
+            logger.warning(
+                "Invalid value passed for %s.", self.value_type.__name__
+            )
+            return
+
+        key = get_labels_as_key(labels)
+        if key not in self.aggregators:
+            # TODO: how to cleanup aggregators?
+            self.aggregators[key] = self.meter.batcher.aggregator_for(
+                self.__class__
+            )
+        aggregator = self.aggregators[key]
+        aggregator.update(value)
+
+    def run(self) -> bool:
+        try:
+            self.callback(self)
+        # pylint: disable=broad-except
+        except Exception as exc:
+            logger.warning(
+                "Exception while executing observer callback: %s.", exc
+            )
+            return False
+        return True
+
+    def __repr__(self):
+        return '{}(name="{}", description="{}")'.format(
+            type(self).__name__, self.name, self.description
+        )
+
+
+class Record:
+    """Container class used for processing in the `Batcher`"""
+
+    def __init__(
+        self,
+        metric: metrics_api.MetricT,
+        labels: Dict[str, str],
+        aggregator: Aggregator,
+    ):
+        self.metric = metric
+        self.labels = labels
+        self.aggregator = aggregator
+
+
 class Meter(metrics_api.Meter):
-    """See `opentelemetry.metrics.Meter`."""
+    """See `opentelemetry.metrics.Meter`.
+
+    Args:
+        instrumentation_info: The `InstrumentationInfo` for this meter.
+        stateful: Indicates whether the meter is stateful.
+    """
+
+    def __init__(
+        self,
+        instrumentation_info: "InstrumentationInfo",
+        stateful: bool,
+        resource: Resource = Resource.create_empty(),
+    ):
+        self.instrumentation_info = instrumentation_info
+        self.metrics = set()
+        self.observers = set()
+        self.batcher = UngroupedBatcher(stateful)
+        self.observers_lock = threading.Lock()
+        self.resource = resource
+
+    def collect(self) -> None:
+        """Collects all the metrics created with this `Meter` for export.
+
+        Utilizes the batcher to create checkpoints of the current values in
+        each aggregator belonging to the metrics that were created with this
+        meter instance.
+        """
+
+        self._collect_metrics()
+        self._collect_observers()
+
+    def _collect_metrics(self) -> None:
+        for metric in self.metrics:
+            if not metric.enabled:
+                continue
+
+            to_remove = []
+
+            with metric.bound_instruments_lock:
+                for labels, bound_instr in metric.bound_instruments.items():
+                    # TODO: Consider storing records in memory?
+                    record = Record(metric, labels, bound_instr.aggregator)
+                    # Checkpoints the current aggregators
+                    # Applies different batching logic based on type of batcher
+                    self.batcher.process(record)
+
+                    if bound_instr.ref_count() == 0:
+                        to_remove.append(labels)
+
+                # Remove handles that were released
+                for labels in to_remove:
+                    del metric.bound_instruments[labels]
+
+    def _collect_observers(self) -> None:
+        with self.observers_lock:
+            for observer in self.observers:
+                if not observer.enabled:
+                    continue
+
+                if not observer.run():
+                    continue
+
+                for labels, aggregator in observer.aggregators.items():
+                    record = Record(observer, labels, aggregator)
+                    self.batcher.process(record)
 
     def record_batch(
         self,
-        label_values: Sequence[str],
+        labels: Dict[str, str],
         record_tuples: Sequence[Tuple[metrics_api.Metric, metrics_api.ValueT]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
+        # TODO: Avoid enconding the labels for each instrument, encode once
+        # and reuse.
         for metric, value in record_tuples:
-            metric.UPDATE_FUNCTION(label_values, value)
+            metric.UPDATE_FUNCTION(value, labels)
 
     def create_metric(
         self,
@@ -244,21 +351,68 @@ class Meter(metrics_api.Meter):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         metric_type: Type[metrics_api.MetricT],
-        label_keys: Sequence[str] = None,
+        label_keys: Sequence[str] = (),
         enabled: bool = True,
-        monotonic: bool = False,
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
-        return metric_type(  # type: ignore
+        metric = metric_type(  # type: ignore
             name,
             description,
             unit,
             value_type,
+            self,
             label_keys=label_keys,
             enabled=enabled,
-            monotonic=monotonic,
         )
+        self.metrics.add(metric)
+        return metric
+
+    def register_observer(
+        self,
+        callback: metrics_api.ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[metrics_api.ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> metrics_api.Observer:
+        ob = Observer(
+            callback,
+            name,
+            description,
+            unit,
+            value_type,
+            self,
+            label_keys,
+            enabled,
+        )
+        with self.observers_lock:
+            self.observers.add(ob)
+        return ob
+
+    def unregister_observer(self, observer: "Observer") -> None:
+        with self.observers_lock:
+            self.observers.remove(observer)
 
 
-meter = Meter()
+class MeterProvider(metrics_api.MeterProvider):
+    def __init__(self, resource: Resource = Resource.create_empty()):
+        self.resource = resource
+
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        stateful=True,
+        instrumenting_library_version: str = "",
+    ) -> "metrics_api.Meter":
+        if not instrumenting_module_name:  # Reject empty strings too.
+            raise ValueError("get_meter called with missing module name.")
+        return Meter(
+            InstrumentationInfo(
+                instrumenting_module_name, instrumenting_library_version
+            ),
+            stateful=stateful,
+            resource=self.resource,
+        )

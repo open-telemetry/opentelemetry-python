@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import enum
+import logging
 import typing
+
+logger = logging.getLogger(__name__)
 
 
 class StatusCanonicalCode(enum.Enum):
@@ -163,14 +166,18 @@ class Status:
 
     def __init__(
         self,
-        canonical_code: "StatusCanonicalCode" = StatusCanonicalCode.OK,
+        canonical_code: StatusCanonicalCode = StatusCanonicalCode.OK,
         description: typing.Optional[str] = None,
     ):
         self._canonical_code = canonical_code
-        self._description = description
+        self._description = None
+        if description is not None and not isinstance(description, str):
+            logger.warning("Invalid status description type, expected str")
+        else:
+            self._description = description
 
     @property
-    def canonical_code(self) -> "StatusCanonicalCode":
+    def canonical_code(self) -> StatusCanonicalCode:
         """Represents the canonical status code of a finished Span."""
         return self._canonical_code
 

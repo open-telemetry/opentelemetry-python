@@ -1,5 +1,5 @@
 # Copyright 2018, OpenCensus Authors
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import opentelemetry.ext.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import Resource
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
 class TestJaegerSpanExporter(unittest.TestCase):
@@ -30,6 +32,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
         )
 
         self._test_span = trace.Span("test_span", context=context)
@@ -132,9 +135,15 @@ class TestJaegerSpanExporter(unittest.TestCase):
             start_times[2] + durations[2],
         )
 
-        span_context = trace_api.SpanContext(trace_id, span_id)
-        parent_context = trace_api.SpanContext(trace_id, parent_id)
-        other_context = trace_api.SpanContext(trace_id, other_id)
+        span_context = trace_api.SpanContext(
+            trace_id, span_id, is_remote=False
+        )
+        parent_context = trace_api.SpanContext(
+            trace_id, parent_id, is_remote=False
+        )
+        other_context = trace_api.SpanContext(
+            trace_id, other_id, is_remote=False
+        )
 
         event_attributes = {
             "annotation_bool": True,
@@ -143,7 +152,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         }
 
         event_timestamp = base_time + 50 * 10 ** 6
-        event = trace_api.Event(
+        event = trace.Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
@@ -155,6 +164,22 @@ class TestJaegerSpanExporter(unittest.TestCase):
             context=other_context, attributes=link_attributes
         )
 
+        default_tags = [
+            jaeger.Tag(
+                key="status.code",
+                vType=jaeger.TagType.LONG,
+                vLong=StatusCanonicalCode.OK.value,
+            ),
+            jaeger.Tag(
+                key="status.message", vType=jaeger.TagType.STRING, vStr=None
+            ),
+            jaeger.Tag(
+                key="span.kind",
+                vType=jaeger.TagType.STRING,
+                vStr=trace_api.SpanKind.INTERNAL.name,
+            ),
+        ]
+
         otel_spans = [
             trace.Span(
                 name=span_names[0],
@@ -162,6 +187,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 parent=parent_context,
                 events=(event,),
                 links=(link,),
+                kind=trace_api.SpanKind.CLIENT,
             ),
             trace.Span(
                 name=span_names[1], context=parent_context, parent=None
@@ -169,18 +195,24 @@ class TestJaegerSpanExporter(unittest.TestCase):
             trace.Span(name=span_names[2], context=other_context, parent=None),
         ]
 
-        otel_spans[0].start_time = start_times[0]
+        otel_spans[0].start(start_time=start_times[0])
         # added here to preserve order
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
-        otel_spans[0].end_time = end_times[0]
+        otel_spans[0].resource = Resource(
+            labels={"key_resource": "some_resource"}
+        )
+        otel_spans[0].set_status(
+            Status(StatusCanonicalCode.UNKNOWN, "Example description")
+        )
+        otel_spans[0].end(end_time=end_times[0])
 
-        otel_spans[1].start_time = start_times[1]
-        otel_spans[1].end_time = end_times[1]
+        otel_spans[1].start(start_time=start_times[1])
+        otel_spans[1].end(end_time=end_times[1])
 
-        otel_spans[2].start_time = start_times[2]
-        otel_spans[2].end_time = end_times[2]
+        otel_spans[2].start(start_time=start_times[2])
+        otel_spans[2].end(end_time=end_times[2])
 
         # pylint: disable=protected-access
         spans = jaeger_exporter._translate_to_jaeger(otel_spans)
@@ -208,6 +240,29 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         key="key_float",
                         vType=jaeger.TagType.DOUBLE,
                         vDouble=111.22,
+                    ),
+                    jaeger.Tag(
+                        key="key_resource",
+                        vType=jaeger.TagType.STRING,
+                        vStr="some_resource",
+                    ),
+                    jaeger.Tag(
+                        key="status.code",
+                        vType=jaeger.TagType.LONG,
+                        vLong=StatusCanonicalCode.UNKNOWN.value,
+                    ),
+                    jaeger.Tag(
+                        key="status.message",
+                        vType=jaeger.TagType.STRING,
+                        vStr="Example description",
+                    ),
+                    jaeger.Tag(
+                        key="span.kind",
+                        vType=jaeger.TagType.STRING,
+                        vStr=trace_api.SpanKind.CLIENT.name,
+                    ),
+                    jaeger.Tag(
+                        key="error", vType=jaeger.TagType.BOOL, vBool=True
                     ),
                 ],
                 references=[
@@ -255,6 +310,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 startTime=start_times[1] // 10 ** 3,
                 duration=durations[1] // 10 ** 3,
                 flags=0,
+                tags=default_tags,
             ),
             jaeger.Span(
                 operationName=span_names[2],
@@ -265,6 +321,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 startTime=start_times[2] // 10 ** 3,
                 duration=durations[2] // 10 ** 3,
                 flags=0,
+                tags=default_tags,
             ),
         ]
 

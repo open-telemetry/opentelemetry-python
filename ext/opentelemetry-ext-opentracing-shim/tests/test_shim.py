@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,33 +12,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
+
 import time
-import unittest
+from unittest import TestCase
 
 import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
-from opentelemetry import trace
+from opentelemetry import propagators, trace
 from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.sdk.trace import Tracer
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 
 
-class TestShim(unittest.TestCase):
+class TestShim(TestCase):
     # pylint: disable=too-many-public-methods
 
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
-
-        self.tracer = trace.tracer()
-        self.shim = opentracingshim.create_tracer(self.tracer)
+        trace.set_tracer_provider(TracerProvider())
+        self.shim = opentracingshim.create_tracer(trace.get_tracer_provider())
 
     @classmethod
     def setUpClass(cls):
-        """Set preferred tracer implementation only once rather than before
-        every test method.
-        """
+        # Save current propagator to be restored on teardown.
+        cls._previous_propagator = propagators.get_global_httptextformat()
 
-        trace.set_preferred_tracer_implementation(lambda T: Tracer())
+        # Set mock propagator for testing.
+        propagators.set_global_httptextformat(MockHTTPTextFormat())
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore previous propagator.
+        propagators.set_global_httptextformat(cls._previous_propagator)
 
     def test_shim_type(self):
         # Verify shim is an OpenTracing tracer.
@@ -120,8 +128,8 @@ class TestShim(unittest.TestCase):
         now = time.time()
         with self.shim.start_active_span("TestSpan", start_time=now) as scope:
             result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
-            # Tolerate inaccuracies of less than a microsecond.
-            # TODO: Put a link to an explanation in the docs.
+            # Tolerate inaccuracies of less than a microsecond. See Note:
+            # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.ext.opentracing_shim.html
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
@@ -134,8 +142,8 @@ class TestShim(unittest.TestCase):
         span.finish(now)
 
         end_time = util.time_seconds_from_ns(span.unwrap().end_time)
-        # Tolerate inaccuracies of less than a microsecond.
-        # TODO: Put a link to an explanation in the docs.
+        # Tolerate inaccuracies of less than a microsecond. See Note:
+        # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.ext.opentracing_shim.html
         # TODO: This seems to work consistently, but we should find out the
         # biggest possible loss of precision.
         self.assertAlmostEqual(end_time, now, places=6)
@@ -273,7 +281,8 @@ class TestShim(unittest.TestCase):
 
                 self.assertEqual(parent_trace_id, child_trace_id)
                 self.assertEqual(
-                    child.span.unwrap().parent, parent.span.unwrap()
+                    child.span.unwrap().parent,
+                    parent.span.unwrap().get_context(),
                 )
 
             # Verify parent span becomes the active span again.
@@ -301,7 +310,9 @@ class TestShim(unittest.TestCase):
                 child_trace_id = child.span.unwrap().get_context().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
-                self.assertEqual(child.span.unwrap().parent, parent.unwrap())
+                self.assertEqual(
+                    child.span.unwrap().parent, parent.unwrap().get_context()
+                )
 
         with self.shim.start_span("ParentSpan") as parent:
             child = self.shim.start_span("ChildSpan", child_of=parent)
@@ -310,7 +321,9 @@ class TestShim(unittest.TestCase):
             child_trace_id = child.unwrap().get_context().trace_id
 
             self.assertEqual(child_trace_id, parent_trace_id)
-            self.assertEqual(child.unwrap().parent, parent.unwrap())
+            self.assertEqual(
+                child.unwrap().parent, parent.unwrap().get_context()
+            )
 
             child.finish()
 
@@ -400,8 +413,8 @@ class TestShim(unittest.TestCase):
                 span.unwrap().events[1].timestamp
             )
             self.assertEqual(span.unwrap().events[1].attributes["foo"], "bar")
-            # Tolerate inaccuracies of less than a microsecond.
-            # TODO: Put a link to an explanation in the docs.
+            # Tolerate inaccuracies of less than a microsecond. See Note:
+            # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.ext.opentracing_shim.html
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
@@ -431,7 +444,7 @@ class TestShim(unittest.TestCase):
     def test_span_context(self):
         """Test construction of `SpanContextShim` objects."""
 
-        otel_context = trace.SpanContext(1234, 5678)
+        otel_context = trace.SpanContext(1234, 5678, is_remote=False)
         context = opentracingshim.SpanContextShim(otel_context)
 
         self.assertIsInstance(context, opentracing.SpanContext)
@@ -450,6 +463,73 @@ class TestShim(unittest.TestCase):
 
         # Verify exception details have been added to span.
         self.assertEqual(scope.span.unwrap().attributes["error"], True)
-        self.assertEqual(
-            scope.span.unwrap().events[0].attributes["error.kind"], Exception
+
+    def test_inject_http_headers(self):
+        """Test `inject()` method for Format.HTTP_HEADERS."""
+
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
         )
+        context = opentracingshim.SpanContextShim(otel_context)
+
+        headers = {}
+        self.shim.inject(context, opentracing.Format.HTTP_HEADERS, headers)
+        self.assertEqual(headers[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
+        self.assertEqual(headers[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
+
+    def test_inject_text_map(self):
+        """Test `inject()` method for Format.TEXT_MAP."""
+
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
+        context = opentracingshim.SpanContextShim(otel_context)
+
+        # Verify Format.TEXT_MAP
+        text_map = {}
+        self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
+        self.assertEqual(text_map[MockHTTPTextFormat.TRACE_ID_KEY], str(1220))
+        self.assertEqual(text_map[MockHTTPTextFormat.SPAN_ID_KEY], str(7478))
+
+    def test_inject_binary(self):
+        """Test `inject()` method for Format.BINARY."""
+
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
+        context = opentracingshim.SpanContextShim(otel_context)
+
+        # Verify exception for non supported binary format.
+        with self.assertRaises(opentracing.UnsupportedFormatException):
+            self.shim.inject(context, opentracing.Format.BINARY, bytearray())
+
+    def test_extract_http_headers(self):
+        """Test `extract()` method for Format.HTTP_HEADERS."""
+
+        carrier = {
+            MockHTTPTextFormat.TRACE_ID_KEY: 1220,
+            MockHTTPTextFormat.SPAN_ID_KEY: 7478,
+        }
+
+        ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
+        self.assertEqual(ctx.unwrap().trace_id, 1220)
+        self.assertEqual(ctx.unwrap().span_id, 7478)
+
+    def test_extract_text_map(self):
+        """Test `extract()` method for Format.TEXT_MAP."""
+
+        carrier = {
+            MockHTTPTextFormat.TRACE_ID_KEY: 1220,
+            MockHTTPTextFormat.SPAN_ID_KEY: 7478,
+        }
+
+        ctx = self.shim.extract(opentracing.Format.TEXT_MAP, carrier)
+        self.assertEqual(ctx.unwrap().trace_id, 1220)
+        self.assertEqual(ctx.unwrap().span_id, 7478)
+
+    def test_extract_binary(self):
+        """Test `extract()` method for Format.BINARY."""
+
+        # Verify exception for non supported binary format.
+        with self.assertRaises(opentracing.UnsupportedFormatException):
+            self.shim.extract(opentracing.Format.BINARY, bytearray())

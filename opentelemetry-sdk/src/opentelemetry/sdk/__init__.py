@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The OpenTelemetry SDK package is an implementation of the OpenTelemetry
+API
+"""
 from . import metrics, trace, util
 
 __all__ = ["metrics", "trace", "util"]

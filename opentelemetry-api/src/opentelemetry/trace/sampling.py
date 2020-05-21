@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@ from typing import Dict, Mapping, Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.trace import Link, SpanContext
-from opentelemetry.util.types import AttributeValue
+from opentelemetry.util.types import Attributes, AttributeValue
 
 
 class Decision:
     """A sampling decision as applied to a newly-created Span.
 
     Args:
-        sampled: Whether the `Span` should be sampled.
-        attributes: Attributes to add to the `Span`.
+        sampled: Whether the `opentelemetry.trace.Span` should be sampled.
+        attributes: Attributes to add to the `opentelemetry.trace.Span`.
     """
 
     def __repr__(self) -> str:
@@ -36,7 +36,7 @@ class Decision:
     def __init__(
         self,
         sampled: bool = False,
-        attributes: Mapping[str, "AttributeValue"] = None,
+        attributes: Optional[Mapping[str, "AttributeValue"]] = None,
     ) -> None:
         self.sampled = sampled  # type: bool
         if attributes is None:
@@ -53,6 +53,7 @@ class Sampler(abc.ABC):
         trace_id: int,
         span_id: int,
         name: str,
+        attributes: Optional[Attributes] = None,
         links: Sequence["Link"] = (),
     ) -> "Decision":
         pass
@@ -70,6 +71,7 @@ class StaticSampler(Sampler):
         trace_id: int,
         span_id: int,
         name: str,
+        attributes: Optional[Attributes] = None,
         links: Sequence["Link"] = (),
     ) -> "Decision":
         return self._decision
@@ -80,13 +82,13 @@ class ProbabilitySampler(Sampler):
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
 
-    # The sampler checks the last 8 bytes of the trace ID to decide whether to
-    # sample a given trace.
-    CHECK_BYTES = 0xFFFFFFFFFFFFFFFF
+    # For compatibility with 64 bit trace IDs, the sampler checks the 64
+    # low-order bits of the trace ID to decide whether to sample a given trace.
+    TRACE_ID_LIMIT = (1 << 64) - 1
 
     @classmethod
     def get_bound_for_rate(cls, rate: float) -> int:
-        return round(rate * (cls.CHECK_BYTES + 1))
+        return round(rate * (cls.TRACE_ID_LIMIT + 1))
 
     @property
     def rate(self) -> float:
@@ -107,12 +109,13 @@ class ProbabilitySampler(Sampler):
         trace_id: int,
         span_id: int,
         name: str,
+        attributes: Optional[Attributes] = None,  # TODO
         links: Sequence["Link"] = (),
     ) -> "Decision":
         if parent_context is not None:
-            return Decision(parent_context.trace_options.sampled)
+            return Decision(parent_context.trace_flags.sampled)
 
-        return Decision(trace_id & self.CHECK_BYTES < self.bound)
+        return Decision(trace_id & self.TRACE_ID_LIMIT < self.bound)
 
 
 # Samplers that ignore the parent sampling decision and never/always sample.

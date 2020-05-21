@@ -20,11 +20,13 @@ lib
 lib64
 __pycache__
 venv*/
+.venv*/
 
 # Installer logs
 pip-log.txt
 
 # Unit test / coverage reports
+coverage.xml
 .coverage
 .nox
 .tox
@@ -54,3 +56,7 @@ _build/
 # mypy
 .mypy_cache/
 target
+
+# Django example
+
+docs/examples/django/db.sqlite3

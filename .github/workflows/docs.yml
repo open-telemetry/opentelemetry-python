@@ -4,7 +4,12 @@ on:
   push:
     branches:
     - master
-
+    paths:
+    - 'docs/**'
+    - 'ext/**'
+    - 'opentelemetry-python/opentelemetry-api/src/opentelemetry/**'
+    - 'opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/**'
+    
 jobs:
   docs:
     runs-on: ubuntu-latest

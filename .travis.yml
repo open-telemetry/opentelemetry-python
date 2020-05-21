@@ -2,20 +2,29 @@ dist: xenial
 
 language: python
 
+cache: pip
+
 python:
+  - 'pypy3'
+  - '3.8'
   - '3.4'
   - '3.5'
   - '3.6'
   - '3.7'
-  - 'pypy3.5'
-  - '3.8-dev'
 
-matrix:
-  allow_failures:
-    - python: '3.8-dev'
+#matrix:
+#  allow_failures:
+#    - python: '3.8-dev'
+
+services:
+  - docker
 
 install:
   - pip install tox-travis
 
 script:
   - tox
+
+after_success:
+  - pip install codecov
+  - codecov -v
