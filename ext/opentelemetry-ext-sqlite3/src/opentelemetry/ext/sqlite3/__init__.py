@@ -34,7 +34,7 @@ Usage
 
     cnx = sqlite3.connect('example.db')
     cursor = cnx.cursor()
-    cursor.execute("INSERT INTO test (testField) VALUES (123)"
+    cursor.execute("INSERT INTO test (testField) VALUES (123)")
     cursor.close()
     cnx.close()
 
