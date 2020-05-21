@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,32 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
+# flask_example.py
+import flask
 import requests
 
 from opentelemetry import trace
+from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
-    BatchExportSpanProcessor,
     ConsoleSpanExporter,
+    SimpleExportSpanProcessor,
 )
 
-# The preferred tracer implementation must be set, as the opentelemetry-api
-# defines the interface with a no-op implementation.
-# It must be done before instrumenting any library.
 trace.set_tracer_provider(TracerProvider())
+trace.get_tracer_provider().add_span_processor(
+    SimpleExportSpanProcessor(ConsoleSpanExporter())
+)
 
-# Enable instrumentation in the requests library.
+app = flask.Flask(__name__)
+FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
-# Configure a console span exporter.
-exporter = ConsoleSpanExporter()
-span_processor = BatchExportSpanProcessor(exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
 
-# Integrations are the glue that binds the OpenTelemetry API and the
-# frameworks and libraries that are used together, automatically creating
-# Spans and propagating context as appropriate.
-response = requests.get(url="http://127.0.0.1:5000/")
+@app.route("/")
+def hello():
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span("example-request"):
+        requests.get("http://www.example.com")
+    return "hello"
+
+
+app.run(debug=True, port=5000)
