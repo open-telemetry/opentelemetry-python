@@ -28,8 +28,6 @@ from opentelemetry import context, propagators, trace
 from opentelemetry.ext.asgi.version import __version__  # noqa
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-_HTTP_VERSION_PREFIX = "HTTP/"
-
 
 def get_header_from_scope(scope: dict, header_name: str) -> typing.List[str]:
     """Retrieve a HTTP header value from the ASGI scope.
@@ -88,7 +86,6 @@ def collect_request_attributes(scope):
 
     result = {
         "component": scope.get("type"),
-        "http.method": scope.get("method"),
         "http.scheme": scope.get("scheme"),
         "http.host": server_host,
         "host.port": port,
@@ -96,6 +93,9 @@ def collect_request_attributes(scope):
         "http.target": scope.get("path"),
         "http.url": http_url,
     }
+    http_method = scope.get("method")
+    if http_method:
+        result["http.method"] = http_method
     http_host_value = ",".join(get_header_from_scope(scope, "host"))
     if http_host_value:
         result["http.server_name"] = http_host_value
@@ -127,15 +127,10 @@ def set_status_code(span, status_code):
 
 
 def get_default_span_name(scope):
-    """Default implementation for name_callback, returns HTTP {METHOD_NAME or PATH}."""
-    span_name = "HTTP"
-
+    """Default implementation for name_callback"""
     method_or_path = scope.get("method") or scope.get("path")
 
-    if method_or_path:
-        return span_name + " " + method_or_path
-
-    return span_name
+    return method_or_path
 
 
 class OpenTelemetryMiddleware:
@@ -174,7 +169,7 @@ class OpenTelemetryMiddleware:
 
         try:
             with self.tracer.start_as_current_span(
-                span_name + " (asgi.connection)",
+                span_name + " asgi",
                 kind=trace.SpanKind.SERVER,
                 attributes=collect_request_attributes(scope),
             ):
@@ -182,30 +177,24 @@ class OpenTelemetryMiddleware:
                 @wraps(receive)
                 async def wrapped_receive():
                     with self.tracer.start_as_current_span(
-                        span_name + " (asgi." + scope["type"] + ".receive)"
+                        span_name + " asgi." + scope["type"] + ".receive"
                     ) as receive_span:
                         payload = await receive()
                         if payload["type"] == "websocket.receive":
                             set_status_code(receive_span, 200)
-                            receive_span.set_attribute(
-                                "http.status_text", payload["text"]
-                            )
                         receive_span.set_attribute("type", payload["type"])
                     return payload
 
                 @wraps(send)
                 async def wrapped_send(payload):
                     with self.tracer.start_as_current_span(
-                        span_name + " (asgi." + scope["type"] + ".send)"
+                        span_name + " asgi." + scope["type"] + ".send"
                     ) as send_span:
                         if payload["type"] == "http.response.start":
                             status_code = payload["status"]
                             set_status_code(send_span, status_code)
                         elif payload["type"] == "websocket.send":
                             set_status_code(send_span, 200)
-                            send_span.set_attribute(
-                                "http.status_text", payload["text"]
-                            )
                         send_span.set_attribute("type", payload["type"])
                         await send(payload)
 

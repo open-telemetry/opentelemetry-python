@@ -24,9 +24,7 @@ from opentelemetry.test.asgitestutil import (
 )
 
 
-async def simple_asgi(scope, receive, send):
-    assert isinstance(scope, dict)
-    assert scope.get("type") == "http"
+async def http_app(scope, receive, send):
     payload = await receive()
     if payload.get("type") == "http.request":
         await send(
@@ -37,6 +35,28 @@ async def simple_asgi(scope, receive, send):
             }
         )
         await send({"type": "http.response.body", "body": b"*"})
+
+
+async def websocket_app(scope, receive, send):
+    while True:
+        payload = await receive()
+        if payload.get("type") == "websocket.connect":
+            await send({"type": "websocket.accept"})
+
+        if payload.get("type") == "websocket.receive":
+            if payload.get("text") == "ping":
+                await send({"type": "websocket.send", "text": "pong"})
+
+        if payload.get("type") == "websocket.disconnect":
+            break
+
+
+async def simple_asgi(scope, receive, send):
+    assert isinstance(scope, dict)
+    if scope["type"] == "http":
+        await http_app(scope, receive, send)
+    elif scope["type"] == "websocket":
+        await websocket_app(scope, receive, send)
 
 
 async def error_asgi(scope, receive, send):
@@ -91,12 +111,12 @@ class TestAsgiApplication(AsgiTestBase):
         self.assertEqual(len(span_list), 4)
         expected = [
             {
-                "name": "HTTP GET (asgi.http.receive)",
+                "name": "GET asgi.http.receive",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {"type": "http.request"},
             },
             {
-                "name": "HTTP GET (asgi.http.send)",
+                "name": "GET asgi.http.send",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {
                     "http.status_code": 200,
@@ -104,12 +124,12 @@ class TestAsgiApplication(AsgiTestBase):
                 },
             },
             {
-                "name": "HTTP GET (asgi.http.send)",
+                "name": "GET asgi.http.send",
                 "kind": trace_api.SpanKind.INTERNAL,
                 "attributes": {"type": "http.response.body"},
             },
             {
-                "name": "HTTP GET (asgi.connection)",
+                "name": "GET asgi",
                 "kind": trace_api.SpanKind.SERVER,
                 "attributes": {
                     "component": "http",
@@ -228,41 +248,38 @@ class TestAsgiApplication(AsgiTestBase):
         self.validate_outputs(outputs, modifiers=[update_expected_user_agent])
 
     def test_websocket(self):
-        async def app_asgi(scope, receive, send):
-            assert scope["type"] == "websocket"
-            payload = await receive()
-            if payload.get("type") == "http.request":
-                await send(
-                    {
-                        "type": "http.response.start",
-                        "status": 200,
-                        "headers": [[b"Content-Type", b"text/plain"]],
-                    }
-                )
-            await send({"type": "http.response.body", "body": b"*"})
-
-        self.scope["type"] = "websocket"
-        app = otel_asgi.OpenTelemetryMiddleware(app_asgi)
+        self.scope = {
+            "type": "websocket",
+            "http_version": "1.1",
+            "scheme": "ws",
+            "path": "/",
+            "query_string": b"",
+            "headers": [],
+            "client": ("127.0.0.1", 32767),
+            "server": ("127.0.0.1", 80),
+        }
+        app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
         self.seed_app(app)
-        self.send_default_request()
+        self.send_input({"type": "websocket.connect"})
+        self.send_input({"type": "websocket.receive", "text": "ping"})
+        self.send_input({"type": "websocket.disconnect"})
+        outputs = self.get_all_output()
         span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 4)
+        self.assertEqual(len(span_list), 6)
         expected = [
-            "HTTP GET (asgi.websocket.receive)",
-            "HTTP GET (asgi.websocket.send)",
-            "HTTP GET (asgi.websocket.send)",
+            "/ asgi.websocket.receive",
+            "/ asgi.websocket.send",
+            "/ asgi.websocket.receive",
+            "/ asgi.websocket.send",
+            "/ asgi.websocket.receive",
+            "/ asgi",
         ]
         actual = [span.name for span in span_list]
-        self.assertListEqual(actual[:3], expected)
+        self.assertListEqual(actual, expected)
 
     def test_lifespan(self):
-        async def app_asgi(scope, receive, send):
-            assert scope["type"] == "lifespan"
-            await receive()
-            await send({})
-
         self.scope["type"] = "lifespan"
-        app = otel_asgi.OpenTelemetryMiddleware(app_asgi)
+        app = otel_asgi.OpenTelemetryMiddleware(simple_asgi)
         self.seed_app(app)
         self.send_default_request()
         span_list = self.memory_exporter.get_finished_spans()
