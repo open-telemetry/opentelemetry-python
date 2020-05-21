@@ -127,8 +127,15 @@ def set_status_code(span, status_code):
 
 
 def get_default_span_name(scope):
-    """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
-    return "HTTP " + scope.get("method")
+    """Default implementation for name_callback, returns HTTP {METHOD_NAME or PATH}."""
+    span_name = "HTTP"
+
+    method_or_path = scope.get("method") or scope.get("path")
+
+    if method_or_path:
+        return span_name + " " + method_or_path
+
+    return span_name
 
 
 class OpenTelemetryMiddleware:
