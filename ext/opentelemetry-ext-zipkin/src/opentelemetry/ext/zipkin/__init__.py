@@ -213,7 +213,7 @@ def _extract_tags_from_dict(tags_dict):
 
 
 def _extract_tags_from_span(span: Span):
-    tags = _extract_tags_from_dict(span.attributes)
+    tags = _extract_tags_from_dict(getattr(span, "attributes", None))
     if span.resource:
         tags.update(_extract_tags_from_dict(span.resource.labels))
     return tags
