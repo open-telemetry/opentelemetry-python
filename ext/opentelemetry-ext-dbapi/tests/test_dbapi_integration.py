@@ -125,7 +125,6 @@ class TestDBApiIntegration(TestBase):
         dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
         connection = mock_dbapi.connect()
         self.assertEqual(mock_dbapi.connect.call_count, 1)
-        self.assertIsInstance(connection, dbapi.TracedConnectionProxy)
         self.assertIsInstance(connection.__wrapped__, mock.Mock)
 
     @mock.patch("opentelemetry.ext.dbapi")
@@ -133,7 +132,6 @@ class TestDBApiIntegration(TestBase):
         dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
         connection = mock_dbapi.connect()
         self.assertEqual(mock_dbapi.connect.call_count, 1)
-        self.assertIsInstance(connection, dbapi.TracedConnectionProxy)
 
         dbapi.unwrap_connect(mock_dbapi, "connect")
         connection = mock_dbapi.connect()
@@ -145,7 +143,6 @@ class TestDBApiIntegration(TestBase):
         # Avoid get_attributes failing because can't concatenate mock
         connection.database = "-"
         connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
-        self.assertIsInstance(connection2, dbapi.TracedConnectionProxy)
         self.assertIs(connection2.__wrapped__, connection)
 
     def test_uninstrument_connection(self):
@@ -154,7 +151,6 @@ class TestDBApiIntegration(TestBase):
         # be concatenated
         connection.database = "-"
         connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
-        self.assertIsInstance(connection2, dbapi.TracedConnectionProxy)
         self.assertIs(connection2.__wrapped__, connection)
 
         connection3 = dbapi.uninstrument_connection(connection2)
