@@ -272,6 +272,7 @@ class Meter(metrics_api.Meter):
     Args:
         instrumentation_info: The `InstrumentationInfo` for this meter.
         stateful: Indicates whether the meter is stateful.
+        resource: The `Resource` associated with this `Meter`.
     """
 
     def __init__(

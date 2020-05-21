@@ -85,6 +85,8 @@ def extract(
             which understands how to extract a value from it.
         context: an optional Context to use. Defaults to current
             context if not set.
+    Returns:
+        The extracted context.
     """
     return get_global_httptextformat().extract(
         get_from_carrier, carrier, context

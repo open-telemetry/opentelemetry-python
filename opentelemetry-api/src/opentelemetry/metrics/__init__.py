@@ -103,6 +103,8 @@ class Metric(abc.ABC):
 
         Args:
             labels: Labels to associate with the bound instrument.
+        Returns:
+            A new bound metric instrument.
         """
 
 
@@ -114,6 +116,8 @@ class DefaultMetric(Metric):
 
         Args:
             labels: Labels to associate with the bound instrument.
+        Returns:
+            A new bound metric instrument.
         """
         return DefaultBoundInstrument()
 
@@ -138,7 +142,13 @@ class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
     def bind(self, labels: Dict[str, str]) -> "BoundCounter":
-        """Gets a `BoundCounter`."""
+        """Gets a `BoundCounter`.
+
+        Args:
+            labels: Labels to associate with the bound instrument.
+        Returns:
+            A new bound metric instrument.
+        """
         return BoundCounter()
 
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
@@ -157,7 +167,13 @@ class Measure(Metric):
     """
 
     def bind(self, labels: Dict[str, str]) -> "BoundMeasure":
-        """Gets a `BoundMeasure`."""
+        """Gets a `BoundMeasure`.
+
+        Args:
+            labels: Labels to associate with the bound instrument.
+        Returns:
+            A new bound metric instrument.
+        """
         return BoundMeasure()
 
     def record(self, value: ValueT, labels: Dict[str, str]) -> None:

@@ -248,8 +248,12 @@ class Span(trace_api.Span):
         attributes: The span's attributes to be exported
         events: Timestamped events to be exported
         links: Links to other spans to be exported
+        kind: The span kind.
         span_processor: `SpanProcessor` to invoke when starting and ending
             this `Span`.
+        instrumentation_info: Optional instrumentation info.
+        set_status_on_exception: Whether to populate the span's status with
+            error details when handling an exception.
     """
 
     # Initialize these lazily assuming most spans won't have them.
@@ -580,9 +584,8 @@ class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
     Args:
-        name: The name of the tracer.
-        shutdown_on_exit: Register an atexit hook to shut down the tracer when
-            the application exits.
+        source: The parent `TracerProvider`.
+        instrumentation_info: Information about the instrumenting library.
     """
 
     def __init__(
