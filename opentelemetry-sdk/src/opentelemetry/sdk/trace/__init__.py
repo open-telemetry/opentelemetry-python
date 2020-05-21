@@ -314,7 +314,7 @@ class Span(trace_api.Span):
             f_links.append(f_link)
         return f_links
 
-    def to_json(self):
+    def to_json(self, indent=4):
         parent_id = None
         if self.parent is not None:
             if isinstance(self.parent, Span):
@@ -351,7 +351,7 @@ class Span(trace_api.Span):
         f_span["events"] = self._format_events(self.events)
         f_span["links"] = self._format_links(self.links)
 
-        return json.dumps(f_span, indent=4)
+        return json.dumps(f_span, indent=indent)
 
     def get_context(self):
         return self.context
