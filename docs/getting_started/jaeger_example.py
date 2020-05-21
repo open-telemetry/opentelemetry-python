@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,28 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
+# jaeger_example.py
 from opentelemetry import trace
+from opentelemetry.ext import jaeger
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchExportSpanProcessor,
-    ConsoleSpanExporter,
-)
+from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-# The preferred tracer implementation must be set, as the opentelemetry-api
-# defines the interface with a no-op implementation.
 trace.set_tracer_provider(TracerProvider())
 
-# We tell OpenTelemetry who it is that is creating spans. In this case, we have
-# no real name (no setup.py), so we make one up. If we had a version, we would
-# also specify it here.
-tracer = trace.get_tracer(__name__)
+jaeger_exporter = jaeger.JaegerSpanExporter(
+    service_name="my-helloworld-service",
+    agent_host_name="localhost",
+    agent_port=6831,
+)
 
-# SpanExporter receives the spans and send them to the target location.
-exporter = ConsoleSpanExporter()
-span_processor = BatchExportSpanProcessor(exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+trace.get_tracer_provider().add_span_processor(
+    BatchExportSpanProcessor(jaeger_exporter)
+)
+
+tracer = trace.get_tracer(__name__)
 
 with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
