@@ -227,6 +227,48 @@ class TestAsgiApplication(AsgiTestBase):
         outputs = self.get_all_output()
         self.validate_outputs(outputs, modifiers=[update_expected_user_agent])
 
+    def test_websocket(self):
+        async def app_asgi(scope, receive, send):
+            payload = await receive()
+            if payload.get("type") == "http.request":
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [[b"Content-Type", b"text/plain"]],
+                    }
+                )
+            await send({"type": "http.response.body", "body": b"*"})
+
+        self.scope["type"] = "websocket"
+        app = otel_asgi.OpenTelemetryMiddleware(app_asgi)
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 4)
+        expected = [
+            "HTTP GET (asgi.websocket.receive)",
+            "HTTP GET (asgi.websocket.send)",
+            "HTTP GET (asgi.websocket.send)",
+        ]
+        actual = [span.name for span in span_list]
+        self.assertListEqual(actual[:3], expected)
+
+    def test_lifespan(self):
+        async def app_asgi(scope, receive, send):
+            await receive()
+            await send({})
+
+        self.scope["type"] = "lifespan"
+        app = otel_asgi.OpenTelemetryMiddleware(app_asgi)
+        self.seed_app(app)
+        self.send_default_request()
+        outputs = self.get_all_output()
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 0)
+
+
 class TestAsgiAttributes(unittest.TestCase):
     def setUp(self):
         self.scope = {}

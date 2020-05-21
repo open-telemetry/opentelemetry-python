@@ -157,6 +157,8 @@ class OpenTelemetryMiddleware:
             receive: An awaitable callable yielding dictionaries
             send: An awaitable callable taking a single dictionary as argument.
         """
+        if scope.get("type") not in ("http", "websocket"):
+            return await self.app(scope, receive, send)
 
         token = context.attach(
             propagators.extract(get_header_from_scope, scope)
