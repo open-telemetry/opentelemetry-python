@@ -229,6 +229,7 @@ class TestAsgiApplication(AsgiTestBase):
 
     def test_websocket(self):
         async def app_asgi(scope, receive, send):
+            assert scope["type"] == "websocket"
             payload = await receive()
             if payload.get("type") == "http.request":
                 await send(
@@ -244,7 +245,6 @@ class TestAsgiApplication(AsgiTestBase):
         app = otel_asgi.OpenTelemetryMiddleware(app_asgi)
         self.seed_app(app)
         self.send_default_request()
-        outputs = self.get_all_output()
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 4)
         expected = [
@@ -257,6 +257,7 @@ class TestAsgiApplication(AsgiTestBase):
 
     def test_lifespan(self):
         async def app_asgi(scope, receive, send):
+            assert scope["type"] == "lifespan"
             await receive()
             await send({})
 
@@ -264,7 +265,6 @@ class TestAsgiApplication(AsgiTestBase):
         app = otel_asgi.OpenTelemetryMiddleware(app_asgi)
         self.seed_app(app)
         self.send_default_request()
-        outputs = self.get_all_output()
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 0)
 
