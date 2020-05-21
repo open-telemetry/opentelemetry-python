@@ -14,7 +14,10 @@
 
 from logging import getLogger
 
-from django.utils.deprecation import MiddlewareMixin
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError as e:
+    MiddlewareMixin = object
 
 from opentelemetry.context import attach, detach
 from opentelemetry.ext.django.version import __version__
