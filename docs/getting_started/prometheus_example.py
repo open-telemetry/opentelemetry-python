@@ -11,25 +11,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-"""
-This example shows how to export metrics to the OT collector.
-"""
+
+# prometheus.py
+import sys
+import time
+
+from prometheus_client import start_http_server
 
 from opentelemetry import metrics
-from opentelemetry.ext.otcollector.metrics_exporter import (
-    CollectorMetricsExporter,
-)
+from opentelemetry.ext.prometheus import PrometheusMetricsExporter
 from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-exporter = CollectorMetricsExporter(
-    service_name="basic-service", endpoint="localhost:55678"
-)
+# Start Prometheus client
+start_http_server(port=8000, addr="localhost")
 
+batcher_mode = "stateful"
 metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__)
+meter = metrics.get_meter(__name__, batcher_mode == "stateful")
+exporter = PrometheusMetricsExporter("MyAppPrefix")
 controller = PushController(meter, exporter, 5)
+
+staging_labels = {"environment": "staging"}
 
 requests_counter = meter.create_metric(
     name="requests",
@@ -40,8 +44,11 @@ requests_counter = meter.create_metric(
     label_keys=("environment",),
 )
 
-staging_labels = {"environment": "staging"}
 requests_counter.add(25, staging_labels)
+time.sleep(5)
 
-print("Metrics are available now at http://localhost:9090/graph")
+requests_counter.add(20, staging_labels)
+time.sleep(5)
+
+# This line is added to keep the HTTP server up long enough to scrape.
 input("Press any key to exit...")
