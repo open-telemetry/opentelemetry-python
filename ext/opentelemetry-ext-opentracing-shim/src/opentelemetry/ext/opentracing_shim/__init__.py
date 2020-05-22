@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,14 +29,14 @@ following example::
     import time
 
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerSource
+    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.ext.opentracing_shim import create_tracer
 
     # Tell OpenTelemetry which Tracer implementation to use.
-    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+    trace.set_tracer_provider(TracerProvider())
 
     # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.tracer_source().get_tracer(__name__)
+    otel_tracer = trace.get_tracer(__name__)
 
     # Create an OpenTracing shim.
     shim = create_tracer(otel_tracer)
@@ -76,9 +76,14 @@ Note:
     While testing this library, the aforementioned imprecisions were observed
     to be of *less than a microsecond*.
 
+API
+---
 .. _Floating Point Arithmetic\\: Issues and Limitations:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """
+
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
 
 import logging
 
@@ -89,28 +94,33 @@ import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
+from opentelemetry.trace import DefaultSpan
+from opentelemetry.trace.propagation import (
+    get_span_from_context,
+    set_span_in_context,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def create_tracer(otel_tracer_source):
+def create_tracer(otel_tracer_provider):
     """Creates a :class:`TracerShim` object from the provided OpenTelemetry
-    :class:`opentelemetry.trace.TracerSource`.
+    :class:`opentelemetry.trace.TracerProvider`.
 
     The returned :class:`TracerShim` is an implementation of
     :class:`opentracing.Tracer` using OpenTelemetry under the hood.
 
     Args:
-        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be used for
-            constructing the :class:`TracerShim`. A tracer from this source will be used
-            to perform the actual tracing when user code is instrumented using
-            the OpenTracing API.
+        otel_tracer_provider: A :class:`opentelemetry.trace.TracerProvider` to be
+            used for constructing the :class:`TracerShim`. A tracer from this
+            source will be used to perform the actual tracing when user code is
+            instrumented using the OpenTracing API.
 
     Returns:
         The created :class:`TracerShim`.
     """
 
-    return TracerShim(otel_tracer_source.get_tracer(__name__, __version__))
+    return TracerShim(otel_tracer_provider.get_tracer(__name__, __version__))
 
 
 class SpanContextShim(opentracing.SpanContext):
@@ -231,8 +241,7 @@ class SpanShim(opentracing.Span):
     def log_kv(self, key_values, timestamp=None):
         """Implements the ``log_kv()`` method from the base class.
 
-        Logs an :class:`opentelemetry.trace.Event` for the wrapped
-        OpenTelemetry span.
+        Logs an event for the wrapped OpenTelemetry span.
 
         Note:
             The OpenTracing API defines the values of *key_values* to be of any
@@ -265,7 +274,7 @@ class SpanShim(opentracing.Span):
     def log_event(self, event, payload=None):
         super().log_event(event, payload=payload)
 
-    def set_baggage_item(self, key, value):
+    def set_baggage_item(self, key, value):  # pylint:disable=unused-argument
         """Implements the ``set_baggage_item()`` method from the base class.
 
         Warning:
@@ -278,7 +287,7 @@ class SpanShim(opentracing.Span):
         )
         # TODO: Implement.
 
-    def get_baggage_item(self, key):
+    def get_baggage_item(self, key):  # pylint:disable=unused-argument
         """Implements the ``get_baggage_item()`` method from the base class.
 
         Warning:
@@ -667,13 +676,14 @@ class TracerShim(opentracing.Tracer):
         # uses the configured propagators in opentelemetry.propagators.
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
+
         if format not in self._supported_formats:
             raise opentracing.UnsupportedFormatException
 
         propagator = propagators.get_global_httptextformat()
-        propagator.inject(
-            span_context.unwrap(), type(carrier).__setitem__, carrier
-        )
+
+        ctx = set_span_in_context(DefaultSpan(span_context.unwrap()))
+        propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
 
     def extract(self, format, carrier):
         """Implements the ``extract`` method from the base class."""
@@ -692,6 +702,7 @@ class TracerShim(opentracing.Tracer):
             return [value] if value is not None else []
 
         propagator = propagators.get_global_httptextformat()
-        otel_context = propagator.extract(get_as_list, carrier)
+        ctx = propagator.extract(get_as_list, carrier)
+        otel_context = get_span_from_context(ctx).get_context()
 
         return SpanContextShim(otel_context)

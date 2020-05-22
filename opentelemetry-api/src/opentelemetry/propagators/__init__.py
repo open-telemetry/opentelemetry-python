@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,49 +12,91 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+API for propagation of context.
+
+Example::
+
+    import flask
+    import requests
+    from opentelemetry import propagators
+
+
+    PROPAGATOR = propagators.get_global_httptextformat()
+
+
+    def get_header_from_flask_request(request, key):
+        return request.headers.get_all(key)
+
+    def set_header_into_requests_request(request: requests.Request,
+                                            key: str, value: str):
+        request.headers[key] = value
+
+    def example_route():
+        context = PROPAGATOR.extract(
+            get_header_from_flask_request,
+            flask.request
+        )
+        request_to_downstream = requests.Request(
+            "GET", "http://httpbin.org/get"
+        )
+        PROPAGATOR.inject(
+            set_header_into_requests_request,
+            request_to_downstream,
+            context=context
+        )
+        session = requests.Session()
+        session.send(request_to_downstream.prepare())
+
+
+.. _Propagation API Specification:
+    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
+"""
+
 import typing
 
-import opentelemetry.context.propagation.httptextformat as httptextformat
 import opentelemetry.trace as trace
-from opentelemetry.context.propagation.tracecontexthttptextformat import (
+from opentelemetry.context import get_current
+from opentelemetry.context.context import Context
+from opentelemetry.correlationcontext.propagation import (
+    CorrelationContextPropagator,
+)
+from opentelemetry.propagators import composite
+from opentelemetry.trace.propagation import httptextformat
+from opentelemetry.trace.propagation.tracecontexthttptextformat import (
     TraceContextHTTPTextFormat,
 )
 
-_T = typing.TypeVar("_T")
-
 
 def extract(
-    get_from_carrier: httptextformat.Getter[_T], carrier: _T
-) -> trace.SpanContext:
-    """Load the parent SpanContext from values in the carrier.
-
-    Using the specified HTTPTextFormatter, the propagator will
-    extract a SpanContext from the carrier. If one is found,
-    it will be set as the parent context of the current span.
+    get_from_carrier: httptextformat.Getter[httptextformat.HTTPTextFormatT],
+    carrier: httptextformat.HTTPTextFormatT,
+    context: typing.Optional[Context] = None,
+) -> Context:
+    """ Uses the configured propagator to extract a Context from the carrier.
 
     Args:
         get_from_carrier: a function that can retrieve zero
             or more values from the carrier. In the case that
             the value does not exist, return an empty list.
         carrier: and object which contains values that are
-            used to construct a SpanContext. This object
+            used to construct a Context. This object
             must be paired with an appropriate get_from_carrier
             which understands how to extract a value from it.
+        context: an optional Context to use. Defaults to current
+            context if not set.
     """
-    return get_global_httptextformat().extract(get_from_carrier, carrier)
+    return get_global_httptextformat().extract(
+        get_from_carrier, carrier, context
+    )
 
 
 def inject(
-    tracer: trace.Tracer,
-    set_in_carrier: httptextformat.Setter[_T],
-    carrier: _T,
+    set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
+    carrier: httptextformat.HTTPTextFormatT,
+    context: typing.Optional[Context] = None,
 ) -> None:
-    """Inject values from the current context into the carrier.
-
-    inject enables the propagation of values into HTTP clients or
-    other objects which perform an HTTP request. Implementations
-    should use the set_in_carrier method to set values on the
-    carrier.
+    """ Uses the configured propagator to inject a Context into the carrier.
 
     Args:
         set_in_carrier: A setter function that can set values
@@ -62,14 +104,14 @@ def inject(
         carrier: An object that contains a representation of HTTP
             headers. Should be paired with set_in_carrier, which
             should know how to set header values on the carrier.
+        context: an optional Context to use. Defaults to current
+            context if not set.
     """
-    get_global_httptextformat().inject(
-        tracer.get_current_span().get_context(), set_in_carrier, carrier
-    )
+    get_global_httptextformat().inject(set_in_carrier, carrier, context)
 
 
-_HTTP_TEXT_FORMAT = (
-    TraceContextHTTPTextFormat()
+_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(
+    [TraceContextHTTPTextFormat(), CorrelationContextPropagator()],
 )  # type: httptextformat.HTTPTextFormat
 
 

@@ -479,7 +479,13 @@ def lint_args(args):
     runsubprocess(args.dry_run, ("flake8", rootdir), check=True)
     execute_args(
         parse_subargs(
-            args, ("exec", "pylint {}", "--all", "--mode", "lintroots",),
+            args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
+        )
+    )
+    execute_args(
+        parse_subargs(
+            args,
+            ("exec", "python scripts/check_for_valid_readme.py {}", "--all",),
         )
     )
 

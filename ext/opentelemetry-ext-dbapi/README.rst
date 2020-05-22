@@ -1,25 +1,21 @@
 OpenTelemetry Database API integration
-=================================
+======================================
 
-The trace integration with Database API supports libraries following the specification.
+|pypi|
 
-.. PEP 249 -- Python Database API Specification v2.0: https://www.python.org/dev/peps/pep-0249/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-dbapi.svg
+   :target: https://pypi.org/project/opentelemetry-ext-dbapi/
 
-Usage
------
+Installation
+------------
 
-.. code:: python
+::
 
-    import mysql.connector
-    from opentelemetry.trace import tracer
-    from opentelemetry.ext.dbapi import trace_integration
-
-
-    # Ex: mysql.connector
-    trace_integration(tracer(), mysql.connector, "connect", "mysql")
+    pip install opentelemetry-ext-dbapi
 
 
 References
 ----------
 
+* `OpenTelemetry Database API integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/dbapi/dbapi.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_

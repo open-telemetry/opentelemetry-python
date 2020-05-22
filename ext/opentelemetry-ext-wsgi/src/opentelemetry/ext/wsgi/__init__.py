@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,17 +13,55 @@
 # limitations under the License.
 
 """
-The opentelemetry-ext-wsgi package provides a WSGI middleware that can be used
-on any WSGI framework (such as Django / Flask) to track requests timing through
-OpenTelemetry.
+This library provides a WSGI middleware that can be used on any WSGI framework
+(such as Django / Flask) to track requests timing through OpenTelemetry.
+
+Usage (Flask)
+-------------
+
+.. code-block:: python
+
+    from flask import Flask
+    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+
+    app = Flask(__name__)
+    app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
+
+    @app.route("/")
+    def hello():
+        return "Hello!"
+
+    if __name__ == "__main__":
+        app.run(debug=True)
+
+
+Usage (Django)
+--------------
+
+Modify the application's ``wsgi.py`` file as shown below.
+
+.. code-block:: python
+
+    import os
+    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+    from django.core.wsgi import get_wsgi_application
+
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'application.settings')
+
+    application = get_wsgi_application()
+    application = OpenTelemetryMiddleware(application)
+
+API
+---
 """
 
 import functools
 import typing
 import wsgiref.util as wsgiref_util
 
-from opentelemetry import propagators, trace
+from opentelemetry import context, propagators, trace
 from opentelemetry.ext.wsgi.version import __version__
+from opentelemetry.trace.propagation import get_span_from_context
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -162,7 +200,7 @@ class OpenTelemetryMiddleware:
 
     def __init__(self, wsgi):
         self.wsgi = wsgi
-        self.tracer = trace.tracer_source().get_tracer(__name__, __version__)
+        self.tracer = trace.get_tracer(__name__, __version__)
 
     @staticmethod
     def _create_start_response(span, start_response):
@@ -181,12 +219,13 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        parent_span = propagators.extract(get_header_from_environ, environ)
+        token = context.attach(
+            propagators.extract(get_header_from_environ, environ)
+        )
         span_name = get_default_span_name(environ)
 
         span = self.tracer.start_span(
             span_name,
-            parent_span,
             kind=trace.SpanKind.SERVER,
             attributes=collect_request_attributes(environ),
         )
@@ -197,17 +236,20 @@ class OpenTelemetryMiddleware:
                     span, start_response
                 )
                 iterable = self.wsgi(environ, start_response)
-                return _end_span_after_iterating(iterable, span, self.tracer)
+                return _end_span_after_iterating(
+                    iterable, span, self.tracer, token
+                )
         except:  # noqa
             # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
             span.end()
+            context.detach(token)
             raise
 
 
 # Put this in a subfunction to not delay the call to the wrapped
 # WSGI application (instrumentation should change the application
 # behavior as little as possible).
-def _end_span_after_iterating(iterable, span, tracer):
+def _end_span_after_iterating(iterable, span, tracer, token):
     try:
         with tracer.use_span(span):
             for yielded in iterable:
@@ -217,3 +259,4 @@ def _end_span_after_iterating(iterable, span, tracer):
         if close:
             close()
         span.end()
+        context.detach(token)

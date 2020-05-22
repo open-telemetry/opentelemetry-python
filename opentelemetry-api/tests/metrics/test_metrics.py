@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,75 +18,44 @@ from opentelemetry import metrics
 
 
 # pylint: disable=no-self-use
-class TestMeter(unittest.TestCase):
-    def setUp(self):
-        self.meter = metrics.Meter()
-
-    def test_record_batch(self):
-        counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        self.meter.record_batch(label_set, ((counter, 1),))
-
-    def test_create_metric(self):
-        metric = self.meter.create_metric("", "", "", float, metrics.Counter)
-        self.assertIsInstance(metric, metrics.DefaultMetric)
-
-    def test_get_label_set(self):
-        metric = self.meter.get_label_set({})
-        self.assertIsInstance(metric, metrics.DefaultLabelSet)
-
-
 class TestMetrics(unittest.TestCase):
     def test_default(self):
         default = metrics.DefaultMetric()
-        default_ls = metrics.DefaultLabelSet()
-        handle = default.get_handle(default_ls)
-        self.assertIsInstance(handle, metrics.DefaultMetricHandle)
+        bound_metric_instr = default.bind({})
+        self.assertIsInstance(
+            bound_metric_instr, metrics.DefaultBoundInstrument
+        )
 
     def test_counter(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        handle = counter.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.CounterHandle)
+        bound_counter = counter.bind({})
+        self.assertIsInstance(bound_counter, metrics.BoundCounter)
 
     def test_counter_add(self):
         counter = metrics.Counter()
-        label_set = metrics.LabelSet()
-        counter.add(label_set, 1)
-
-    def test_gauge(self):
-        gauge = metrics.Gauge()
-        label_set = metrics.LabelSet()
-        handle = gauge.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.GaugeHandle)
-
-    def test_gauge_set(self):
-        gauge = metrics.Gauge()
-        label_set = metrics.LabelSet()
-        gauge.set(label_set, 1)
+        counter.add(1, {})
 
     def test_measure(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        handle = measure.get_handle(label_set)
-        self.assertIsInstance(handle, metrics.MeasureHandle)
+        bound_measure = measure.bind({})
+        self.assertIsInstance(bound_measure, metrics.BoundMeasure)
 
     def test_measure_record(self):
         measure = metrics.Measure()
-        label_set = metrics.LabelSet()
-        measure.record(label_set, 1)
+        measure.record(1, {})
 
-    def test_default_handle(self):
-        metrics.DefaultMetricHandle()
+    def test_default_bound_metric(self):
+        bound_instrument = metrics.DefaultBoundInstrument()
+        bound_instrument.release()
 
-    def test_counter_handle(self):
-        handle = metrics.CounterHandle()
-        handle.add(1)
+    def test_bound_counter(self):
+        bound_counter = metrics.BoundCounter()
+        bound_counter.add(1)
 
-    def test_gauge_handle(self):
-        handle = metrics.GaugeHandle()
-        handle.set(1)
+    def test_bound_measure(self):
+        bound_measure = metrics.BoundMeasure()
+        bound_measure.record(1)
 
-    def test_measure_handle(self):
-        handle = metrics.MeasureHandle()
-        handle.record(1)
+    def test_observer(self):
+        observer = metrics.DefaultObserver()
+        observer.observe(1, {})

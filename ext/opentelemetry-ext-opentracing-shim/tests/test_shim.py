@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,41 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO: make pylint use 3p opentracing module for type inference
+# pylint:disable=no-member
+
 import time
-import unittest
+from unittest import TestCase
 
 import opentracing
 
 import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
-from opentelemetry.context.propagation.httptextformat import HTTPTextFormat
 from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.sdk.trace import TracerSource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 
 
-class TestShim(unittest.TestCase):
+class TestShim(TestCase):
     # pylint: disable=too-many-public-methods
 
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
-
-        self.shim = opentracingshim.create_tracer(trace.tracer_source())
+        trace.set_tracer_provider(TracerProvider())
+        self.shim = opentracingshim.create_tracer(trace.get_tracer_provider())
 
     @classmethod
     def setUpClass(cls):
-        """Set preferred tracer implementation only once rather than before
-        every test method.
-        """
-
-        trace.set_preferred_tracer_source_implementation(
-            lambda T: TracerSource()
-        )
-
         # Save current propagator to be restored on teardown.
         cls._previous_propagator = propagators.get_global_httptextformat()
 
         # Set mock propagator for testing.
-        propagators.set_global_httptextformat(MockHTTPTextFormat)
+        propagators.set_global_httptextformat(MockHTTPTextFormat())
 
     @classmethod
     def tearDownClass(cls):
@@ -286,7 +281,8 @@ class TestShim(unittest.TestCase):
 
                 self.assertEqual(parent_trace_id, child_trace_id)
                 self.assertEqual(
-                    child.span.unwrap().parent, parent.span.unwrap()
+                    child.span.unwrap().parent,
+                    parent.span.unwrap().get_context(),
                 )
 
             # Verify parent span becomes the active span again.
@@ -314,7 +310,9 @@ class TestShim(unittest.TestCase):
                 child_trace_id = child.span.unwrap().get_context().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
-                self.assertEqual(child.span.unwrap().parent, parent.unwrap())
+                self.assertEqual(
+                    child.span.unwrap().parent, parent.unwrap().get_context()
+                )
 
         with self.shim.start_span("ParentSpan") as parent:
             child = self.shim.start_span("ChildSpan", child_of=parent)
@@ -323,7 +321,9 @@ class TestShim(unittest.TestCase):
             child_trace_id = child.unwrap().get_context().trace_id
 
             self.assertEqual(child_trace_id, parent_trace_id)
-            self.assertEqual(child.unwrap().parent, parent.unwrap())
+            self.assertEqual(
+                child.unwrap().parent, parent.unwrap().get_context()
+            )
 
             child.finish()
 
@@ -444,7 +444,7 @@ class TestShim(unittest.TestCase):
     def test_span_context(self):
         """Test construction of `SpanContextShim` objects."""
 
-        otel_context = trace.SpanContext(1234, 5678)
+        otel_context = trace.SpanContext(1234, 5678, is_remote=False)
         context = opentracingshim.SpanContextShim(otel_context)
 
         self.assertIsInstance(context, opentracing.SpanContext)
@@ -463,14 +463,13 @@ class TestShim(unittest.TestCase):
 
         # Verify exception details have been added to span.
         self.assertEqual(scope.span.unwrap().attributes["error"], True)
-        self.assertEqual(
-            scope.span.unwrap().events[0].attributes["error.kind"], Exception
-        )
 
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""
 
-        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
         context = opentracingshim.SpanContextShim(otel_context)
 
         headers = {}
@@ -481,7 +480,9 @@ class TestShim(unittest.TestCase):
     def test_inject_text_map(self):
         """Test `inject()` method for Format.TEXT_MAP."""
 
-        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
         context = opentracingshim.SpanContextShim(otel_context)
 
         # Verify Format.TEXT_MAP
@@ -493,7 +494,9 @@ class TestShim(unittest.TestCase):
     def test_inject_binary(self):
         """Test `inject()` method for Format.BINARY."""
 
-        otel_context = trace.SpanContext(trace_id=1220, span_id=7478)
+        otel_context = trace.SpanContext(
+            trace_id=1220, span_id=7478, is_remote=False
+        )
         context = opentracingshim.SpanContextShim(otel_context)
 
         # Verify exception for non supported binary format.
@@ -530,27 +533,3 @@ class TestShim(unittest.TestCase):
         # Verify exception for non supported binary format.
         with self.assertRaises(opentracing.UnsupportedFormatException):
             self.shim.extract(opentracing.Format.BINARY, bytearray())
-
-
-class MockHTTPTextFormat(HTTPTextFormat):
-    """Mock propagator for testing purposes."""
-
-    TRACE_ID_KEY = "mock-traceid"
-    SPAN_ID_KEY = "mock-spanid"
-
-    @classmethod
-    def extract(cls, get_from_carrier, carrier):
-        trace_id_list = get_from_carrier(carrier, cls.TRACE_ID_KEY)
-        span_id_list = get_from_carrier(carrier, cls.SPAN_ID_KEY)
-
-        if not trace_id_list or not span_id_list:
-            return trace.INVALID_SPAN_CONTEXT
-
-        return trace.SpanContext(
-            trace_id=int(trace_id_list[0]), span_id=int(span_id_list[0])
-        )
-
-    @classmethod
-    def inject(cls, context, set_in_carrier, carrier):
-        set_in_carrier(carrier, cls.TRACE_ID_KEY, str(context.trace_id))
-        set_in_carrier(carrier, cls.SPAN_ID_KEY, str(context.span_id))

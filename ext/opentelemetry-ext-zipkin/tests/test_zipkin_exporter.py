@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,9 @@ from unittest.mock import MagicMock, patch
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.zipkin import ZipkinSpanExporter
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
-from opentelemetry.trace import TraceOptions
+from opentelemetry.trace import TraceFlags
 
 
 class MockResponse:
@@ -35,6 +36,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
+            is_remote=False,
         )
 
         self._test_span = trace.Span("test_span", context=context)
@@ -94,7 +96,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
     # pylint: disable=too-many-locals
     def test_export(self):
 
-        span_names = ("test1", "test2", "test3")
+        span_names = ("test1", "test2", "test3", "test4")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
         parent_id = 0x1111111111111111
@@ -105,21 +107,28 @@ class TestZipkinSpanExporter(unittest.TestCase):
             base_time,
             base_time + 150 * 10 ** 6,
             base_time + 300 * 10 ** 6,
+            base_time + 400 * 10 ** 6,
         )
-        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
+        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6, 300 * 10 ** 6)
         end_times = (
             start_times[0] + durations[0],
             start_times[1] + durations[1],
             start_times[2] + durations[2],
+            start_times[3] + durations[3],
         )
 
         span_context = trace_api.SpanContext(
             trace_id,
             span_id,
-            trace_options=TraceOptions(TraceOptions.SAMPLED),
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
-        parent_context = trace_api.SpanContext(trace_id, parent_id)
-        other_context = trace_api.SpanContext(trace_id, other_id)
+        parent_context = trace_api.SpanContext(
+            trace_id, parent_id, is_remote=False
+        )
+        other_context = trace_api.SpanContext(
+            trace_id, other_id, is_remote=False
+        )
 
         event_attributes = {
             "annotation_bool": True,
@@ -128,7 +137,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         }
 
         event_timestamp = base_time + 50 * 10 ** 6
-        event = trace_api.Event(
+        event = trace.Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
@@ -152,6 +161,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 name=span_names[1], context=parent_context, parent=None
             ),
             trace.Span(name=span_names[2], context=other_context, parent=None),
+            trace.Span(name=span_names[3], context=other_context, parent=None),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
@@ -162,16 +172,23 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
+        otel_spans[1].resource = Resource(
+            labels={"key_resource": "some_resource"}
+        )
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
+        otel_spans[2].set_attribute("key_string", "hello_world")
+        otel_spans[2].resource = Resource(
+            labels={"key_resource": "some_resource"}
+        )
         otel_spans[2].end(end_time=end_times[2])
 
+        otel_spans[3].start(start_time=start_times[3])
+        otel_spans[3].end(end_time=end_times[3])
+
         service_name = "test-service"
-        local_endpoint = {
-            "serviceName": service_name,
-            "port": 9411,
-        }
+        local_endpoint = {"serviceName": service_name, "port": 9411}
 
         exporter = ZipkinSpanExporter(service_name)
         expected = [
@@ -194,7 +211,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "value": "event0",
                     }
                 ],
-                "debug": 1,
+                "debug": True,
                 "parentId": format(parent_id, "x"),
             },
             {
@@ -205,7 +222,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[1] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": None,
+                "tags": {"key_resource": "some_resource"},
                 "annotations": None,
             },
             {
@@ -216,7 +233,21 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[2] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": None,
+                "tags": {
+                    "key_string": "hello_world",
+                    "key_resource": "some_resource",
+                },
+                "annotations": None,
+            },
+            {
+                "traceId": format(trace_id, "x"),
+                "id": format(other_id, "x"),
+                "name": span_names[3],
+                "timestamp": start_times[3] // 10 ** 3,
+                "duration": durations[3] // 10 ** 3,
+                "localEndpoint": local_endpoint,
+                "kind": None,
+                "tags": {},
                 "annotations": None,
             },
         ]
@@ -239,4 +270,4 @@ class TestZipkinSpanExporter(unittest.TestCase):
         spans = []
         exporter = ZipkinSpanExporter("test-service")
         status = exporter.export(spans)
-        self.assertEqual(SpanExportResult.FAILED_NOT_RETRYABLE, status)
+        self.assertEqual(SpanExportResult.FAILURE, status)

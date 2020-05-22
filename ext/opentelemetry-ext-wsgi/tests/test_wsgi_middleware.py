@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ from urllib.parse import urlsplit
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.testutil.wsgitestutil import WsgiTestBase
+from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 
 class Response:

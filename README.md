@@ -1,6 +1,42 @@
-# OpenTelemetry Python
-[![Gitter chat](https://img.shields.io/gitter/room/opentelemetry/opentelemetry-python)](https://gitter.im/open-telemetry/opentelemetry-python)
-[![Build status](https://travis-ci.org/open-telemetry/opentelemetry-python.svg?branch=master)](https://travis-ci.org/open-telemetry/opentelemetry-python)
+---
+<p align="center">
+  <strong>
+    <a href="https://opentelemetry-python.readthedocs.io/en/stable/getting-started.html">Getting Started<a/>
+    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    <a href="https://opentelemetry-python.readthedocs.io/">API Documentation<a/>
+    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    <a href="https://gitter.im/open-telemetry/opentelemetry-python">Getting In Touch (Gitter)<a/>
+  </strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/open-telemetry/opentelemetry-python/releases">
+    <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=for-the-badge">
+  </a>
+  <a href="https://codecov.io/gh/open-telemetry/opentelemetry-python/branch/master/">
+    <img alt="Codecov Status" src="https://img.shields.io/codecov/c/github/open-telemetry/opentelemetry-python?style=for-the-badge">
+  </a>
+  <a href="https://github.com/open-telemetry/opentelemetry-python/blob/master/LICENSE">
+    <img alt="license" src="https://img.shields.io/badge/license-Apache_2.0-green.svg?style=for-the-badge">
+  </a>
+  <br/>
+  <a href="https://travis-ci.org/open-telemetry/opentelemetry-python">
+    <img alt="Build Status" src="https://travis-ci.org/open-telemetry/opentelemetry-python.svg?branch=master">
+  </a>
+  <img alt="Beta" src="https://img.shields.io/badge/status-beta-informational?logo=data:image/png;base64,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">
+</p>
+
+<p align="center">
+  <strong>
+    <a href="CONTRIBUTING.md">Contributing<a/>
+    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    <a href="https://opentelemetry-python.readthedocs.io/en/stable/#examples">Examples<a/>
+  </strong>
+</p>
+
+---
+
+## About this project
 
 The Python [OpenTelemetry](https://opentelemetry.io/) client.
 
@@ -16,8 +52,8 @@ Libraries that produce telemetry data should only depend on `opentelemetry-api`,
 and defer the choice of the SDK to the application developer. Applications may
 depend on `opentelemetry-sdk` or another package that implements the API.
 
-**Please note** that this library is currently in _alpha_, and shouldn't be
-used in production environments.
+**Please note** that this library is currently in _beta_, and shouldn't
+generally be used in production environments.
 
 The API and SDK packages are available on PyPI, and can installed via `pip`:
 
@@ -45,71 +81,21 @@ pip install -e ./opentelemetry-sdk
 pip install -e ./ext/opentelemetry-ext-{integration}
 ```
 
-## Quick Start
+## Documentation
 
-### Tracing
+The online documentation is available at https://opentelemetry-python.readthedocs.io/,
+if you want to access the documentation for the latest version use
+https://opentelemetry-python.readthedocs.io/en/latest/.
 
-```python
-from opentelemetry import trace
-from opentelemetry.context import Context
-from opentelemetry.sdk.trace import TracerSource
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+## Compatible Exporters
 
-trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-trace.tracer_source().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
-)
-tracer = trace.tracer_source().get_tracer(__name__)
-with tracer.start_as_current_span('foo'):
-    with tracer.start_as_current_span('bar'):
-        with tracer.start_as_current_span('baz'):
-            print(Context)
-```
-
-### Metrics
-
-```python
-from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Meter
-from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-
-metrics.set_preferred_meter_implementation(lambda T: Meter())
-meter = metrics.meter()
-exporter = ConsoleMetricsExporter()
-
-counter = meter.create_metric(
-    "available memory",
-    "available memory",
-    "bytes",
-    int,
-    Counter,
-    ("environment",),
-)
-
-label_values = ("staging",)
-counter_handle = counter.get_handle(label_values)
-counter_handle.add(100)
-
-exporter.export([(counter, label_values)])
-exporter.shutdown()
-```
-
-See the [API documentation](https://open-telemetry.github.io/opentelemetry-python/) for more detail, and the [examples folder](./examples) for a more sample code.
-
-## Extensions
-
-### Third-party exporters
-
-OpenTelemetry supports integration with the following third-party exporters.
-
--  [Azure Monitor](https://github.com/microsoft/opentelemetry-exporters-python/tree/master/azure_monitor)
+See the [OpenTelemetry registry](https://opentelemetry.io/registry/?s=python) for a list of exporters available.
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-We meet weekly on Thursday at 8AM PT. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
+We meet weekly on Thursday, and the time of the meeting alternates between 9AM PT and 4PM PT. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
 
 Meetings take place via [Zoom video conference](https://zoom.us/j/6729396170).
 
@@ -117,9 +103,12 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
+- [Alex Boten](https://github.com/codeboten), LightStep
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
 - [Christian Neumüller](https://github.com/Oberon00), Dynatrace
+- [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
 - [Leighton Chen](https://github.com/lzchen), Microsoft
+- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Reiley Yang](https://github.com/reyang), Microsoft
 
 *Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
@@ -138,8 +127,8 @@ OpenTelemetry Python is under active development.
 The library is not yet _generally available_, and releases aren't guaranteed to
 conform to a specific version of the specification. Future releases will not
 attempt to maintain backwards compatibility with previous releases. Each alpha
-release includes significant changes to the API and SDK packages, making them
-incompatible with each other.
+and beta release includes significant changes to the API and SDK packages,
+making them incompatible with each other.
 
 The [v0.1 alpha
 release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.1.0)
@@ -169,20 +158,40 @@ includes:
 - Flask Integration
 - PyMongo Integration
 
+The [v0.4 alpha
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.4.0)
+includes:
+
+- Metrics MinMaxSumCount Aggregator
+- Context API
+- Full Metrics SDK Pipeline
+- Metrics STDOUT Exporter
+- Dbapi2 Integration
+- MySQL Integration
+- Psycopg2 Integration
+- Zipkin Exporter
+- Prometheus Metrics Exporter
+- New Examples and Improvements to Existing Examples
+
+The [v0.5 beta
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.5.0)
+includes:
+
+- W3C Correlation Context Propagation
+- OpenTelemetry Collector Exporter Integration for both metrics and traces
+- Metrics SDK
+- Global configuration module
+- Documentation improvements
+
+The [v0.6 beta
+release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.6.0)
+includes:
+
+- API changes and bugfixes
+- An autoinstrumentation package and updated Flask instrumentation
+- gRPC integration
+
 See the [project
 milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
-for details on upcoming releases. The dates and features described here are
-estimates, and subject to change.
-
-Future releases targets include:
-
-| Component                           | Version    | Target Date      |
-| ----------------------------------- | ---------- | ---------------- |
-| Zipkin Trace Exporter               | Alpha v0.4 | January 28 2020  |
-| W3C Correlation Context Propagation | Alpha v0.4 | January 28 2020  |
-| Support for Tags/Baggage            | Alpha v0.4 | January 28 2020  |
-| Metrics Aggregation                 | Alpha v0.4 | January 28 2020  |
-| gRPC Integrations                   | Alpha v0.4 | January 28 2020  |
-| Prometheus Metrics Exporter         | Alpha v0.4 | January 28 2020  |
-| OpenCensus Bridge                   | Alpha v0.4 | January 28 2020  |
-| Metrics SDK (Complete)              | Alpha v0.4 | January 28 2020  |
+for details on upcoming releases. The dates and features described in issues
+and milestones are estimates, and subject to change.

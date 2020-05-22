@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
 
 import collections
 import logging
+import os
+import sys
 import threading
 import typing
 from enum import Enum
 
-from opentelemetry.context import Context
+from opentelemetry.context import attach, detach, get_current, set_value
+from opentelemetry.trace import DefaultSpan
 from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
@@ -28,8 +31,7 @@ logger = logging.getLogger(__name__)
 
 class SpanExportResult(Enum):
     SUCCESS = 0
-    FAILED_RETRYABLE = 1
-    FAILED_NOT_RETRYABLE = 2
+    FAILURE = 1
 
 
 class SpanExporter:
@@ -73,15 +75,20 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        with Context.use(suppress_instrumentation=True):
-            try:
-                self.span_exporter.export((span,))
-            # pylint: disable=broad-except
-            except Exception:
-                logger.exception("Exception while exporting Span.")
+        token = attach(set_value("suppress_instrumentation", True))
+        try:
+            self.span_exporter.export((span,))
+        # pylint: disable=broad-except
+        except Exception:
+            logger.exception("Exception while exporting Span.")
+        detach(token)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        # pylint: disable=unused-argument
+        return True
 
 
 class BatchExportSpanProcessor(SpanProcessor):
@@ -90,6 +97,8 @@ class BatchExportSpanProcessor(SpanProcessor):
     BatchExportSpanProcessor is an implementation of `SpanProcessor` that
     batches ended spans and pushes them to the configured `SpanExporter`.
     """
+
+    _FLUSH_TOKEN_SPAN = DefaultSpan(context=None)
 
     def __init__(
         self,
@@ -120,6 +129,9 @@ class BatchExportSpanProcessor(SpanProcessor):
         )  # type: typing.Deque[Span]
         self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.condition = threading.Condition(threading.Lock())
+        self.flush_condition = threading.Condition(threading.Lock())
+        # flag to indicate that there is a flush operation on progress
+        self._flushing = False
         self.schedule_delay_millis = schedule_delay_millis
         self.max_export_batch_size = max_export_batch_size
         self.max_queue_size = max_queue_size
@@ -153,7 +165,10 @@ class BatchExportSpanProcessor(SpanProcessor):
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
         while not self.done:
-            if len(self.queue) < self.max_export_batch_size:
+            if (
+                len(self.queue) < self.max_export_batch_size
+                and not self._flushing
+            ):
                 with self.condition:
                     self.condition.wait(timeout)
                     if not self.queue:
@@ -171,36 +186,69 @@ class BatchExportSpanProcessor(SpanProcessor):
             timeout = self.schedule_delay_millis / 1e3 - duration
 
         # be sure that all spans are sent
-        self._flush()
+        self._drain_queue()
 
     def export(self) -> None:
         """Exports at most max_export_batch_size spans."""
         idx = 0
-
+        notify_flush = False
         # currently only a single thread acts as consumer, so queue.pop() will
         # not raise an exception
         while idx < self.max_export_batch_size and self.queue:
-            self.spans_list[idx] = self.queue.pop()
-            idx += 1
-        with Context.use(suppress_instrumentation=True):
-            try:
-                # Ignore type b/c the Optional[None]+slicing is too "clever"
-                # for mypy
-                self.span_exporter.export(
-                    self.spans_list[:idx]
-                )  # type: ignore
-            # pylint: disable=broad-except
-            except Exception:
-                logger.exception("Exception while exporting Span batch.")
+            span = self.queue.pop()
+            if span is self._FLUSH_TOKEN_SPAN:
+                notify_flush = True
+            else:
+                self.spans_list[idx] = span
+                idx += 1
+        token = attach(set_value("suppress_instrumentation", True))
+        try:
+            # Ignore type b/c the Optional[None]+slicing is too "clever"
+            # for mypy
+            self.span_exporter.export(self.spans_list[:idx])  # type: ignore
+        # pylint: disable=broad-except
+        except Exception:
+            logger.exception("Exception while exporting Span batch.")
+        detach(token)
+
+        if notify_flush:
+            with self.flush_condition:
+                self.flush_condition.notify()
 
         # clean up list
         for index in range(idx):
             self.spans_list[index] = None
 
-    def _flush(self):
-        # export all elements until queue is empty
+    def _drain_queue(self):
+        """"Export all elements until queue is empty.
+
+        Can only be called from the worker thread context because it invokes
+        `export` that is not thread safe.
+        """
         while self.queue:
             self.export()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        if self.done:
+            logger.warning("Already shutdown, ignoring call to force_flush().")
+            return True
+
+        self._flushing = True
+        self.queue.appendleft(self._FLUSH_TOKEN_SPAN)
+
+        # wake up worker thread
+        with self.condition:
+            self.condition.notify_all()
+
+        # wait for token to be processed
+        with self.flush_condition:
+            ret = self.flush_condition.wait(timeout_millis / 1e3)
+
+        self._flushing = False
+
+        if not ret:
+            logger.warning("Timeout was exceeded in force_flush().")
+        return ret
 
     def shutdown(self) -> None:
         # signal the worker thread to finish and then wait for it
@@ -219,7 +267,17 @@ class ConsoleSpanExporter(SpanExporter):
     spans to the console STDOUT.
     """
 
+    def __init__(
+        self,
+        out: typing.IO = sys.stdout,
+        formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
+        + os.linesep,
+    ):
+        self.out = out
+        self.formatter = formatter
+
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
-            print(span)
+            self.out.write(self.formatter(span))
+        self.out.flush()
         return SpanExportResult.SUCCESS
