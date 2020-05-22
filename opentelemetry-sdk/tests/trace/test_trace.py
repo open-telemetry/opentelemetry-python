@@ -915,7 +915,7 @@ class TestSpanProcessor(unittest.TestCase):
         span = trace.Span("span-name", context)
 
         self.assertEqual(
-            span.to_json(indent=None),
+            span.to_json(),
             """{
     "name": "span-name",
     "context": {
