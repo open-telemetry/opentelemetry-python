@@ -80,8 +80,12 @@ def collect_request_attributes(scope):
     server = scope.get("server") or ["0.0.0.0", 80]
     port = server[1]
     server_host = server[0] + (":" + str(port) if port != 80 else "")
-    http_url = scope.get("scheme") + "://" + server_host + scope.get("path")
-    if scope.get("query_string"):
+    http_url = (
+        scope.get("scheme") + "://" + server_host + scope.get("path", "")
+        if scope.get("scheme") and server_host and scope.get("path")
+        else None
+    )
+    if scope.get("query_string") and http_url:
         http_url = http_url + ("?" + scope.get("query_string").decode("utf8"))
 
     result = {
@@ -106,6 +110,9 @@ def collect_request_attributes(scope):
     if "client" in scope and scope["client"] is not None:
         result["net.peer.ip"] = scope.get("client")[0]
         result["net.peer.port"] = scope.get("client")[1]
+
+    # remove None values
+    result = {k: v for k, v in result.items() if v is not None}
 
     return result
 
