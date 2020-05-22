@@ -26,6 +26,7 @@ from opentelemetry.test.asgitestutil import (
 
 async def http_app(scope, receive, send):
     payload = await receive()
+    assert scope["type"] == "http"
     if payload.get("type") == "http.request":
         await send(
             {
@@ -38,6 +39,7 @@ async def http_app(scope, receive, send):
 
 
 async def websocket_app(scope, receive, send):
+    assert scope["type"] == "websocket"
     while True:
         payload = await receive()
         if payload.get("type") == "websocket.connect":
@@ -263,7 +265,7 @@ class TestAsgiApplication(AsgiTestBase):
         self.send_input({"type": "websocket.connect"})
         self.send_input({"type": "websocket.receive", "text": "ping"})
         self.send_input({"type": "websocket.disconnect"})
-        outputs = self.get_all_output()
+        self.get_all_output()
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 6)
         expected = [
