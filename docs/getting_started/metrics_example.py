@@ -11,26 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-"""
-This example shows how to export metrics to Prometheus.
-"""
 
-from prometheus_client import start_http_server
+# metrics.py
+import time
 
 from opentelemetry import metrics
-from opentelemetry.ext.prometheus import PrometheusMetricsExporter
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-# Start Prometheus client
-start_http_server(port=8000, addr="localhost")
-
 metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__)
-
-exporter = PrometheusMetricsExporter(prefix="MyAppPrefix")
+meter = metrics.get_meter(__name__, True)
+exporter = ConsoleMetricsExporter()
 controller = PushController(meter, exporter, 5)
+
+staging_labels = {"environment": "staging"}
 
 requests_counter = meter.create_metric(
     name="requests",
@@ -41,8 +36,8 @@ requests_counter = meter.create_metric(
     label_keys=("environment",),
 )
 
-staging_labels = {"environment": "staging"}
 requests_counter.add(25, staging_labels)
+time.sleep(5)
 
-print("Metrics are available now at http://localhost:8000/")
-input("Press any key to exit...")
+requests_counter.add(20, staging_labels)
+time.sleep(5)

@@ -13,26 +13,26 @@
 # limitations under the License.
 
 """
-The integration with PostgreSQL supports the `Psycopg`_ library, it can be enabled by
-using ``Psycopg2Instrumentor``.
+SQLite instrumentation supporting `sqlite3`_, it can be enabled by
+using ``SQLite3Instrumentor``.
 
-.. _Psycopg: http://initd.org/psycopg/
+.. _sqlite3: https://docs.python.org/3/library/sqlite3.html
 
 Usage
 -----
 
-.. code-block:: python
+.. code:: python
 
-    import psycopg2
+    import sqlite3
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.trace.ext.psycopg2 import Psycopg2Instrumentor
+    from opentelemetry.trace import TracerProvider
+    from opentelemetry.ext.sqlite3 import SQLite3Instrumentor
 
     trace.set_tracer_provider(TracerProvider())
 
-    Psycopg2Instrumentor().instrument()
+    SQLite3Instrumentor().instrument()
 
-    cnx = psycopg2.connect(database='Database')
+    cnx = sqlite3.connect('example.db')
     cursor = cnx.cursor()
     cursor.execute("INSERT INTO test (testField) VALUES (123)")
     cursor.close()
@@ -42,40 +42,33 @@ API
 ---
 """
 
+import sqlite3
 import typing
-
-import psycopg2
-import wrapt
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext import dbapi
-from opentelemetry.ext.psycopg2.version import __version__
+from opentelemetry.ext.sqlite3.version import __version__
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
-class Psycopg2Instrumentor(BaseInstrumentor):
-    _CONNECTION_ATTRIBUTES = {
-        "database": "info.dbname",
-        "port": "info.port",
-        "host": "info.host",
-        "user": "info.user",
-    }
+class SQLite3Instrumentor(BaseInstrumentor):
+    # No useful attributes of sqlite3 connection object
+    _CONNECTION_ATTRIBUTES = {}
 
-    _DATABASE_COMPONENT = "postgresql"
+    _DATABASE_COMPONENT = "sqlite3"
     _DATABASE_TYPE = "sql"
 
     def _instrument(self, **kwargs):
-        """Integrate with PostgreSQL Psycopg library.
-           Psycopg: http://initd.org/psycopg/
+        """Integrate with SQLite3 Python library.
+        https://docs.python.org/3/library/sqlite3.html
         """
-
         tracer_provider = kwargs.get("tracer_provider")
 
         tracer = get_tracer(__name__, __version__, tracer_provider)
 
         dbapi.wrap_connect(
             tracer,
-            psycopg2,
+            sqlite3,
             "connect",
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
@@ -83,12 +76,12 @@ class Psycopg2Instrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self, **kwargs):
-        """"Disable Psycopg2 instrumentation"""
-        dbapi.unwrap_connect(psycopg2, "connect")
+        """"Disable SQLite3 instrumentation"""
+        dbapi.unwrap_connect(sqlite3, "connect")
 
     # pylint:disable=no-self-use
     def instrument_connection(self, connection):
-        """Enable instrumentation in a Psycopg2 connection.
+        """Enable instrumentation in a SQLite connection.
 
         Args:
             connection: The connection to instrument.
@@ -107,7 +100,7 @@ class Psycopg2Instrumentor(BaseInstrumentor):
         )
 
     def uninstrument_connection(self, connection):
-        """Disable instrumentation in a Psycopg2 connection.
+        """Disable instrumentation in a SQLite connection.
 
         Args:
             connection: The connection to uninstrument.

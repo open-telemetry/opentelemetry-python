@@ -12,38 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import time
-
-import psycopg2
+import sqlite3
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.psycopg2 import Psycopg2Instrumentor
+from opentelemetry.ext.sqlite3 import SQLite3Instrumentor
 from opentelemetry.test.test_base import TestBase
 
-POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")
-POSTGRES_PORT = int(os.getenv("POSTGRESQL_PORT ", "5432"))
-POSTGRES_DB_NAME = os.getenv("POSTGRESQL_DB_NAME ", "opentelemetry-tests")
-POSTGRES_PASSWORD = os.getenv("POSTGRESQL_HOST ", "testpassword")
-POSTGRES_USER = os.getenv("POSTGRESQL_HOST ", "testuser")
 
-
-class TestFunctionalPsycopg(TestBase):
+class TestSQLite3(TestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls._connection = None
         cls._cursor = None
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        Psycopg2Instrumentor().instrument(tracer_provider=cls.tracer_provider)
-        cls._connection = psycopg2.connect(
-            dbname=POSTGRES_DB_NAME,
-            user=POSTGRES_USER,
-            password=POSTGRES_PASSWORD,
-            host=POSTGRES_HOST,
-            port=POSTGRES_PORT,
-        )
-        cls._connection.set_session(autocommit=True)
+        SQLite3Instrumentor().instrument(tracer_provider=cls.tracer_provider)
+        cls._connection = sqlite3.connect(":memory:")
         cls._cursor = cls._connection.cursor()
 
     @classmethod
@@ -52,7 +36,6 @@ class TestFunctionalPsycopg(TestBase):
             cls._cursor.close()
         if cls._connection:
             cls._connection.close()
-        Psycopg2Instrumentor().uninstrument()
 
     def validate_spans(self):
         spans = self.memory_exporter.get_finished_spans()
@@ -67,15 +50,10 @@ class TestFunctionalPsycopg(TestBase):
         self.assertIsNotNone(root_span)
         self.assertIsNotNone(child_span)
         self.assertEqual(root_span.name, "rootSpan")
-        self.assertEqual(child_span.name, "postgresql.opentelemetry-tests")
+        self.assertEqual(child_span.name, "sqlite3")
         self.assertIsNotNone(child_span.parent)
         self.assertIs(child_span.parent, root_span.get_context())
         self.assertIs(child_span.kind, trace_api.SpanKind.CLIENT)
-        self.assertEqual(
-            child_span.attributes["db.instance"], POSTGRES_DB_NAME
-        )
-        self.assertEqual(child_span.attributes["net.peer.name"], POSTGRES_HOST)
-        self.assertEqual(child_span.attributes["net.peer.port"], POSTGRES_PORT)
 
     def test_execute(self):
         """Should create a child span for execute method
@@ -90,8 +68,8 @@ class TestFunctionalPsycopg(TestBase):
         """Should create a child span for executemany
         """
         with self._tracer.start_as_current_span("rootSpan"):
-            data = (("1",), ("2",), ("3",))
-            stmt = "INSERT INTO test (id) VALUES (%s)"
+            data = [("1",), ("2",), ("3",)]
+            stmt = "INSERT INTO test (id) VALUES (?)"
             self._cursor.executemany(stmt, data)
         self.validate_spans()
 

@@ -174,7 +174,7 @@ def instrument_connection(
         connection_attributes=connection_attributes,
     )
     db_integration.get_connection_attributes(connection)
-    return TracedConnectionProxy(connection, db_integration)
+    return get_traced_connection_proxy(connection, db_integration)
 
 
 def uninstrument_connection(connection):
@@ -227,7 +227,7 @@ class DatabaseApiIntegration:
         """
         connection = connect_method(*args, **kwargs)
         self.get_connection_attributes(connection)
-        return TracedConnectionProxy(connection, self)
+        return get_traced_connection_proxy(connection, self)
 
     def get_connection_attributes(self, connection):
         # Populate span fields using connection
@@ -260,23 +260,21 @@ class DatabaseApiIntegration:
             self.span_attributes["net.peer.port"] = port
 
 
-# pylint: disable=abstract-method
-class TracedConnectionProxy(wrapt.ObjectProxy):
-    # pylint: disable=unused-argument
-    def __init__(
-        self,
-        connection,
-        db_api_integration: DatabaseApiIntegration,
-        *args,
-        **kwargs
-    ):
-        wrapt.ObjectProxy.__init__(self, connection)
-        self._db_api_integration = db_api_integration
+def get_traced_connection_proxy(
+    connection, db_api_integration, *args, **kwargs
+):
+    # pylint: disable=abstract-method
+    class TracedConnectionProxy(wrapt.ObjectProxy):
+        # pylint: disable=unused-argument
+        def __init__(self, connection, *args, **kwargs):
+            wrapt.ObjectProxy.__init__(self, connection)
 
-    def cursor(self, *args, **kwargs):
-        return TracedCursorProxy(
-            self.__wrapped__.cursor(*args, **kwargs), self._db_api_integration
-        )
+        def cursor(self, *args, **kwargs):
+            return get_traced_cursor_proxy(
+                self.__wrapped__.cursor(*args, **kwargs), db_api_integration
+            )
+
+    return TracedConnectionProxy(connection, *args, **kwargs)
 
 
 class TracedCursor:
@@ -323,31 +321,28 @@ class TracedCursor:
                 raise ex
 
 
-# pylint: disable=abstract-method
-class TracedCursorProxy(wrapt.ObjectProxy):
+def get_traced_cursor_proxy(cursor, db_api_integration, *args, **kwargs):
+    _traced_cursor = TracedCursor(db_api_integration)
+    # pylint: disable=abstract-method
+    class TracedCursorProxy(wrapt.ObjectProxy):
 
-    # pylint: disable=unused-argument
-    def __init__(
-        self,
-        cursor,
-        db_api_integration: DatabaseApiIntegration,
-        *args,
-        **kwargs
-    ):
-        wrapt.ObjectProxy.__init__(self, cursor)
-        self._traced_cursor = TracedCursor(db_api_integration)
+        # pylint: disable=unused-argument
+        def __init__(self, cursor, *args, **kwargs):
+            wrapt.ObjectProxy.__init__(self, cursor)
 
-    def execute(self, *args, **kwargs):
-        return self._traced_cursor.traced_execution(
-            self.__wrapped__.execute, *args, **kwargs
-        )
+        def execute(self, *args, **kwargs):
+            return _traced_cursor.traced_execution(
+                self.__wrapped__.execute, *args, **kwargs
+            )
 
-    def executemany(self, *args, **kwargs):
-        return self._traced_cursor.traced_execution(
-            self.__wrapped__.executemany, *args, **kwargs
-        )
+        def executemany(self, *args, **kwargs):
+            return _traced_cursor.traced_execution(
+                self.__wrapped__.executemany, *args, **kwargs
+            )
 
-    def callproc(self, *args, **kwargs):
-        return self._traced_cursor.traced_execution(
-            self.__wrapped__.callproc, *args, **kwargs
-        )
+        def callproc(self, *args, **kwargs):
+            return _traced_cursor.traced_execution(
+                self.__wrapped__.callproc, *args, **kwargs
+            )
+
+    return TracedCursorProxy(cursor, *args, **kwargs)
