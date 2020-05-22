@@ -904,3 +904,29 @@ class TestSpanProcessor(unittest.TestCase):
         expected_list.append(span_event_end_fmt("SP1", "foo"))
 
         self.assertListEqual(spans_calls_list, expected_list)
+
+    def test_to_span(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+        )
+        span = trace.Span("span-name", context)
+
+        self.assertEqual(span.to_json(), '''{
+    "name": "span-name",
+    "context": {
+        "trace_id": "0x000000000000000000000000deadbeef",
+        "span_id": "0x00000000deadbef0",
+        "trace_state": "{}"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": null,
+    "start_time": null,
+    "end_time": null,
+    "attributes": {},
+    "events": [],
+    "links": []
+}''')
+        self.assertEqual(span.to_json(indent=None), '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": []}')
