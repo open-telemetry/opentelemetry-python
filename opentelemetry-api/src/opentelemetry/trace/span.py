@@ -27,7 +27,7 @@ class Span(abc.ABC):
         used to create new child spans.
 
         Returns:
-            A :class:`.SpanContext` with a copy of this span's immutable state.
+            A :class:`opentelemetry.trace.SpanContext` with a copy of this span's immutable state.
         """
 
     @abc.abstractmethod
@@ -68,7 +68,7 @@ class Span(abc.ABC):
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
-        This will override the name provided via :func:`Tracer.start_span`.
+        This will override the name provided via :func:`opentelemetry.trace.Tracer.start_span`.
 
         Upon this update, any sampling behavior based on Span name will depend
         on the implementation.

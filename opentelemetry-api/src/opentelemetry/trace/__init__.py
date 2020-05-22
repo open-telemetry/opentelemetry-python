@@ -289,7 +289,7 @@ class Tracer(abc.ABC):
         span in this tracer's context.
 
         By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a `Span` or a `SpanContext`. If
+        parent can also be specified, either a `Span` or a `opentelemetry.trace.SpanContext`. If
         the specified value is `None`, the created span will be a root span.
 
         The span can be used as context manager. On exiting, the span will be
