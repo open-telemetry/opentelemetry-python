@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from time import sleep
-
-from opentelemetry import metrics, trace
+from opentelemetry import trace
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.ext.opencensusexporter.metrics_exporter import (
-    OpenCensusMetricsExporter,
-)
 from opentelemetry.ext.opencensusexporter.trace_exporter import (
     OpenCensusSpanExporter,
 )
-from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.test.test_base import TestBase
@@ -38,28 +31,6 @@ class ExportStatusSpanProcessor(SimpleExportSpanProcessor):
         token = attach(set_value("suppress_instrumentation", True))
         self.export_status.append(self.span_exporter.export((span,)))
         detach(token)
-
-
-class ExportStatusMetricController(PushController):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.export_status = []
-
-    def run(self):
-        while not self.finished.wait(self.interval):
-            self.tick()
-
-    def tick(self):
-        # Collect all of the meter's metrics to be exported
-        self.meter.collect()
-        token = attach(set_value("suppress_instrumentation", True))
-        # Export the given metrics in the batcher
-        self.export_status.append(
-            self.exporter.export(self.meter.batcher.checkpoint_set())
-        )
-        detach(token)
-        # Perform post-exporting logic based on batcher configuration
-        self.meter.batcher.finished_collection()
 
 
 class TestOpenCensusSpanExporter(TestBase):
@@ -89,33 +60,70 @@ class TestOpenCensusSpanExporter(TestBase):
             self.assertEqual(export_status.value, 0)
 
 
-class TestOpenCensusMetricsExporter(TestBase):
-    def setUp(self):
-        super().setUp()
+# FIXME This test fails because of an issue in the OpenCensus collector
+# reported here:
+# https://github.com/census-instrumentation/opencensus-service/issues/641
+# Uncomment this test when this issue gets fixed.
 
-        metrics.set_meter_provider(MeterProvider())
-        self.meter = metrics.get_meter(__name__)
-        self.controller = ExportStatusMetricController(
-            self.meter,
-            OpenCensusMetricsExporter(
-                service_name="basic-service", endpoint="localhost:55678"
-            ),
-            1,
-        )
+# from time import sleep
+# from opentelemetry.ext.opencensusexporter.metrics_exporter import (
+#     OpenCensusMetricsExporter,
+# )
+# from opentelemetry.sdk.metrics import Counter, MeterProvider
+# from opentelemetry.sdk.metrics.export.controller import PushController
 
-    def test_export(self):
-
-        self.meter.create_metric(
-            name="requests",
-            description="number of requests",
-            unit="1",
-            value_type=int,
-            metric_type=Counter,
-            label_keys=("environment",),
-        ).add(25, {"environment": "staging"})
-
-        sleep(2)
-
-        self.assertEqual(len(self.controller.export_status), 1)
-        self.assertEqual(self.controller.export_status[0].name, "SUCCESS")
-        self.assertEqual(self.controller.export_status[0].value, 0)
+# from opentelemetry import metrics
+#
+#
+# class ExportStatusMetricController(PushController):
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#        self.export_status = []
+#
+#    def run(self):
+#        while not self.finished.wait(self.interval):
+#            self.tick()
+#
+#    def tick(self):
+#        # Collect all of the meter's metrics to be exported
+#        self.meter.collect()
+#        token = attach(set_value("suppress_instrumentation", True))
+#        # Export the given metrics in the batcher
+#        self.export_status.append(
+#            self.exporter.export(self.meter.batcher.checkpoint_set())
+#        )
+#        detach(token)
+#        # Perform post-exporting logic based on batcher configuration
+#        self.meter.batcher.finished_collection()
+#
+#
+# class TestOpenCensusMetricsExporter(TestBase):
+#    def setUp(self):
+#        super().setUp()
+#
+#        metrics.set_meter_provider(MeterProvider())
+#        self.meter = metrics.get_meter(__name__)
+#        self.controller = ExportStatusMetricController(
+#            self.meter,
+#            OpenCensusMetricsExporter(
+#                service_name="basic-service", endpoint="localhost:55678"
+#            ),
+#            1,
+#        )
+#
+#    def test_export(self):
+#
+#        self.meter.create_metric(
+#            name="requests",
+#            description="number of requests",
+#            unit="1",
+#            value_type=int,
+#            metric_type=Counter,
+#            label_keys=("environment",),
+#        ).add(25, {"environment": "staging"})
+#
+#        sleep(2)
+#
+#        self.assertEqual(len(self.controller.export_status), 1)
+#        self.assertEqual(self.controller.export_status[0].name, "SUCCESS")
+#        self.assertEqual(self.controller.export_status[0].value, 0)
