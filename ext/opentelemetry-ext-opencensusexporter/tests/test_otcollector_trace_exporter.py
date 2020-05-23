@@ -19,10 +19,10 @@ import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.trace.v1 import trace_pb2
 
-import opentelemetry.ext.otcollector.util as utils
+import opentelemetry.ext.opencensusexporter.util as utils
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.otcollector.trace_exporter import (
-    CollectorSpanExporter,
+from opentelemetry.ext.opencensusexporter.trace_exporter import (
+    OpenCensusSpanExporter,
     translate_to_collector,
 )
 from opentelemetry.sdk import trace
@@ -35,7 +35,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
     def test_constructor(self):
         mock_get_node = mock.Mock()
         patch = mock.patch(
-            "opentelemetry.ext.otcollector.util.get_node",
+            "opentelemetry.ext.opencensusexporter.util.get_node",
             side_effect=mock_get_node,
         )
         service_name = "testServiceName"
@@ -43,7 +43,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         client = grpc.insecure_channel("")
         endpoint = "testEndpoint"
         with patch:
-            exporter = CollectorSpanExporter(
+            exporter = OpenCensusSpanExporter(
                 service_name=service_name,
                 host_name=host_name,
                 endpoint=endpoint,
@@ -289,7 +289,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         mock_export = mock.MagicMock()
         mock_client.Export = mock_export
         host_name = "testHostName"
-        collector_exporter = CollectorSpanExporter(
+        collector_exporter = OpenCensusSpanExporter(
             client=mock_client, host_name=host_name
         )
 
