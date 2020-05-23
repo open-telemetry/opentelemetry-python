@@ -7,4 +7,5 @@ OpenTelemetry Python SDK
     :maxdepth: 1
 
     metrics
+    resources
     trace
