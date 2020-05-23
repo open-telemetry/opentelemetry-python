@@ -905,7 +905,7 @@ class TestSpanProcessor(unittest.TestCase):
 
         self.assertListEqual(spans_calls_list, expected_list)
 
-    def test_to_span(self):
+    def test_to_json(self):
         context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
