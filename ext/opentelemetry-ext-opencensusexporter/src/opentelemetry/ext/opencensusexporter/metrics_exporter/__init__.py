@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""OpenTelemetry Collector Metrics Exporter."""
+"""OpenCensus Collector Metrics Exporter."""
 
 import logging
 from typing import Sequence
@@ -24,13 +24,12 @@ from opencensus.proto.agent.metrics.v1 import (
 )
 from opencensus.proto.metrics.v1 import metrics_pb2
 
-import opentelemetry.ext.otcollector.util as utils
+import opentelemetry.ext.opencensusexporter.util as utils
 from opentelemetry.sdk.metrics import Counter, Metric
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
     MetricsExportResult,
-    aggregate,
 )
 
 DEFAULT_ENDPOINT = "localhost:55678"
@@ -39,11 +38,11 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=no-member
-class CollectorMetricsExporter(MetricsExporter):
-    """OpenTelemetry Collector metrics exporter.
+class OpenCensusMetricsExporter(MetricsExporter):
+    """OpenCensus metrics exporter.
 
     Args:
-        endpoint: OpenTelemetry Collector OpenCensus receiver endpoint.
+        endpoint: OpenCensus Collector receiver endpoint.
         service_name: Name of Collector service.
         host_name: Host name.
         client: MetricsService client stub.
