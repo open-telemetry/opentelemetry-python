@@ -20,7 +20,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.metrics.v1 import metrics_pb2
 
 from opentelemetry import metrics
-from opentelemetry.ext.otcollector import metrics_exporter
+from opentelemetry.ext.opencensusexporter import metrics_exporter
 from opentelemetry.sdk.metrics import (
     Counter,
     Measure,
@@ -47,7 +47,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
     def test_constructor(self):
         mock_get_node = mock.Mock()
         patch = mock.patch(
-            "opentelemetry.ext.otcollector.util.get_node",
+            "opentelemetry.ext.opencensusexporter.util.get_node",
             side_effect=mock_get_node,
         )
         service_name = "testServiceName"
@@ -55,7 +55,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         client = grpc.insecure_channel("")
         endpoint = "testEndpoint"
         with patch:
-            exporter = metrics_exporter.CollectorMetricsExporter(
+            exporter = metrics_exporter.OpenCensusMetricsExporter(
                 service_name=service_name,
                 host_name=host_name,
                 endpoint=endpoint,
@@ -115,7 +115,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         mock_export = mock.MagicMock()
         mock_client.Export = mock_export
         host_name = "testHostName"
-        collector_exporter = metrics_exporter.CollectorMetricsExporter(
+        collector_exporter = metrics_exporter.OpenCensusMetricsExporter(
             client=mock_client, host_name=host_name
         )
         test_metric = self._meter.create_metric(
