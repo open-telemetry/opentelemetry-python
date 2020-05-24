@@ -264,7 +264,7 @@ class Span(trace_api.Span):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: None = None,
+        resource: Resource = Resource.create_empty(),
         attributes: types.Attributes = None,  # TODO
         events: Sequence[Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
