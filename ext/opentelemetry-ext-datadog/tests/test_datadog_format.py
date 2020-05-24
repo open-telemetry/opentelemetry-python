@@ -18,7 +18,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.ext.datadog import constants, propagator
 from opentelemetry.sdk import trace
 from opentelemetry.trace.propagation import (
-    get_span_from_context,
+    get_current_span,
     set_span_in_context,
 )
 
@@ -45,7 +45,7 @@ class TestDatadogFormat(unittest.TestCase):
         """Test with no Datadog headers"""
         malformed_trace_id_key = FORMAT.TRACE_ID_KEY + "-x"
         malformed_parent_id_key = FORMAT.PARENT_ID_KEY + "-x"
-        context = get_span_from_context(
+        context = get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -66,7 +66,7 @@ class TestDatadogFormat(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_span_from_context(ctx).get_context()
+        span_context = get_current_span(ctx).get_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     def test_missing_parent_id(self):
@@ -76,12 +76,12 @@ class TestDatadogFormat(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_span_from_context(ctx).get_context()
+        span_context = get_current_span(ctx).get_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
     def test_context_propagation(self):
         """Test the propagation of Datadog headers."""
-        parent_context = get_span_from_context(
+        parent_context = get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -138,7 +138,7 @@ class TestDatadogFormat(unittest.TestCase):
 
     def test_sampling_priority_auto_reject(self):
         """Test sampling priority rejected."""
-        parent_context = get_span_from_context(
+        parent_context = get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
