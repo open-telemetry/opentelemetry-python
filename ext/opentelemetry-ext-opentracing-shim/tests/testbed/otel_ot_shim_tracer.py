@@ -13,12 +13,12 @@ class MockTracer(opentracingshim.TracerShim):
     span exporter that can be used to get the list of finished spans."""
 
     def __init__(self):
-        tracer_source = trace.TracerSource()
-        oteltracer = tracer_source.get_tracer(__name__)
+        tracer_provider = trace.TracerProvider()
+        oteltracer = tracer_provider.get_tracer(__name__)
         super(MockTracer, self).__init__(oteltracer)
         exporter = InMemorySpanExporter()
         span_processor = SimpleExportSpanProcessor(exporter)
-        tracer_source.add_span_processor(span_processor)
+        tracer_provider.add_span_processor(span_processor)
 
         self.exporter = exporter
 
