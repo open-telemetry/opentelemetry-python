@@ -284,22 +284,20 @@ class Span(trace_api.Span):
 
         self._filter_attribute_values(attributes)
         if not attributes:
-            self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+            self.attributes = self._new_attributes()
         else:
             self.attributes = BoundedDict.from_map(
                 MAX_NUM_ATTRIBUTES, attributes
             )
 
-        if events is None:
-            self.events = BoundedList(MAX_NUM_EVENTS)
-        else:
-            self.events = BoundedList(MAX_NUM_EVENTS)
+        self.events = self._new_events()
+        if events:
             for event in events:
                 self._filter_attribute_values(event.attributes)
                 self.events.append(event)
 
         if links is None:
-            self.links = BoundedList(MAX_NUM_LINKS)
+            self.links = self._new_links()
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
@@ -319,6 +317,18 @@ class Span(trace_api.Span):
         return '{}(name="{}", context={})'.format(
             type(self).__name__, self.name, self.context
         )
+
+    @staticmethod
+    def _new_attributes():
+        return BoundedDict(MAX_NUM_ATTRIBUTES)
+
+    @staticmethod
+    def _new_events():
+        return BoundedList(MAX_NUM_EVENTS)
+
+    @staticmethod
+    def _new_links():
+        return BoundedList(MAX_NUM_LINKS)
 
     @staticmethod
     def _format_context(context):
@@ -448,7 +458,7 @@ class Span(trace_api.Span):
     ) -> None:
         self._filter_attribute_values(attributes)
         if not attributes:
-            attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
+            attributes = self._new_attributes()
         self._add_event(
             Event(
                 name=name,
