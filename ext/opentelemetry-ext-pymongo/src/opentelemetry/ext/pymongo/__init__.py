@@ -26,7 +26,7 @@ Usage
     from pymongo import MongoClient
     from opentelemetry import trace
     from opentelemetry.trace import TracerProvider
-    from opentelemetry.trace.ext.pymongo import PymongoInstrumentor
+    from opentelemetry.ext.pymongo import PymongoInstrumentor
 
     trace.set_tracer_provider(TracerProvider())
 
