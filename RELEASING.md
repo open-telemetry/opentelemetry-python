@@ -65,7 +65,7 @@ git cherry-pick $(git log -n 1 origin/release/0.7b0 --format="%H")
 # update the version number, make it a "dev" greater than release number, e.g. 0.8.dev0
 perl -i -p -e 's/0.7b0/0.8.dev0/' $(git grep -l "0.7b0" | grep -vi CHANGELOG)
 # open a PR targeting master see #331
-git commit -m 
+git commit -m
 ```
 
 ## Troubleshooting

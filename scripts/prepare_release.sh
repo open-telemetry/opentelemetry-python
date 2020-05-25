@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -x
 #
 # This script:
 #   1. parses the version number from the branch name
@@ -82,8 +82,7 @@ git push origin release/${VERSION}
 git checkout -b release/${VERSION}-auto
 update_version_file
 update_changelog
-
 git commit -m "updating changelogs and version to ${VERSION}"
 
-echo "Time to create a relase, here's a sample title:"
+echo "Time to create a release, here's a sample title:"
 echo "[pre-release] Update changelogs, version [${VERSION}]"
