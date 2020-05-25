@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 #
 # This script:
 #   1. parses the version number from the branch name
@@ -72,10 +72,18 @@ function update_changelog() {
     fi
 }
 
+# create the release branch
+git fetch origin/master
+git rebase origin/master
+git checkout -b release/${VERSION}
+git push origin release/${VERSION}
+
+# create a temporary branch to create a PR for updated version and changelogs
+git checkout -b release/${VERSION}-auto
 update_version_file
 update_changelog
 
-git config --local user.email "action@github.com"
-git config --local user.name "GitHub Action"
 git commit -m "updating changelogs and version to ${VERSION}"
-echo "::set-output name=version_updated::1"
+
+echo "Time to create a relase, here's a sample title:"
+echo "[pre-release] Update changelogs, version [${VERSION}]"
