@@ -113,16 +113,11 @@ class TestMiddleware(WsgiTestBase):
         )
         self.assertEqual(span.attributes["http.scheme"], "http")
 
-    @patch.dict(
-        "os.environ",  # type: ignore
-        {
-            "OPENTELEMETRY_PYTHON_DJANGO_EXCLUDED_HOSTS": (
-                "http://testserver/excluded/"
-            ),
-            "OPENTELEMETRY_PYTHON_DJANGO_EXCLUDED_PATHS": "excluded2/",
-        },
-    )
-    def test_exclude(self):
+    @patch("opentelemetry.ext.django.middleware.get_excluded_hosts")
+    @patch("opentelemetry.ext.django.middleware.get_excluded_paths")
+    def test_exclude(self, path_mock, host_mock):
+        host_mock.return_value = ["http://testserver/excluded/"]
+        host_mock.return_value = "excluded2/"
         Client().get("/traced/")
         Client().get("/excluded/")
         Client().get("/excluded2/")
