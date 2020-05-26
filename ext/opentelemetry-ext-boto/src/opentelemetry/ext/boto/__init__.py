@@ -169,17 +169,8 @@ class BotoInstrumentor(BaseInstrumentor):
             return result
 
     def _patched_auth_request(self, original_func, instance, args, kwargs):
-        # Catching the name of the operation that called make_request()
         operation_name = None
 
-        # Go up the stack until we get the first non-ddtrace module
-        # DEV: For `lambda.list_functions()` this should be:
-        #        - ddtrace.contrib.boto.patch
-        #        - ddtrace.vendor.wrapt.wrappers
-        #        - boto.awslambda.layer1 (make_request)
-        #        - boto.awslambda.layer1 (list_functions)
-        # But can vary depending on Python versions; that"s why we use an
-        # heuristic
         frame = currentframe().f_back
         operation_name = None
         while frame:
