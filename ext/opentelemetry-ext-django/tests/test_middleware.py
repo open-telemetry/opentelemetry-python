@@ -119,13 +119,13 @@ class TestMiddleware(WsgiTestBase):
             "OPENTELEMETRY_PYTHON_DJANGO_EXCLUDED_HOSTS": (
                 "http://testserver/excluded/"
             ),
-            "OPENTELEMETRY_PYTHON_DJANGO_EXCLUDED_PATHS": "excluded2",
+            "OPENTELEMETRY_PYTHON_DJANGO_EXCLUDED_PATHS": "excluded2/",
         },
     )
     def test_exclude(self):
         Client().get("/traced/")
         Client().get("/excluded/")
-        Client().get("/excluded2/")
+        Client().get("/excluded2")
 
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)

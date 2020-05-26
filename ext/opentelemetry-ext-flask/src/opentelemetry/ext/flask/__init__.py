@@ -69,7 +69,7 @@ _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
 _ENVIRON_TOKEN = "opentelemetry-flask.token"
 
 
-def _disable_trace(url, path):
+def _disable_trace(url):
     excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
     excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
 
@@ -79,7 +79,7 @@ def _disable_trace(url, path):
             return True
     if excluded_paths:
         excluded_paths = str.split(excluded_paths, ",")
-        if disable_tracing_path(path, excluded_paths):
+        if disable_tracing_path(url, excluded_paths):
             return True
     return False
 
@@ -94,7 +94,7 @@ def _rewrapped_app(wsgi_app):
 
         def _start_response(status, response_headers, *args, **kwargs):
 
-            if not _disable_trace(flask.request.url, flask.request.path[1:]):
+            if not _disable_trace(flask.request.url):
 
                 span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
 
@@ -117,7 +117,7 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
-    if _disable_trace(flask.request.url, flask.request.path[1:]):
+    if _disable_trace(flask.request.url):
         return
 
     environ = flask.request.environ

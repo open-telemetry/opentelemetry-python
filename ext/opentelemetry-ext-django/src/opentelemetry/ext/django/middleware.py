@@ -34,7 +34,7 @@ except ImportError:
 _logger = getLogger(__name__)
 
 
-def _disable_trace(url, path):
+def _disable_trace(url):
     excluded_hosts = configuration.Configuration().DJANGO_EXCLUDED_HOSTS
     excluded_paths = configuration.Configuration().DJANGO_EXCLUDED_PATHS
 
@@ -44,7 +44,7 @@ def _disable_trace(url, path):
             return True
     if excluded_paths:
         excluded_paths = str.split(excluded_paths, ",")
-        if disable_tracing_path(path, excluded_paths):
+        if disable_tracing_path(url, excluded_paths):
             return True
     return False
 
@@ -70,7 +70,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         #     key.lower().replace('_', '-').replace("http-", "", 1): value
         #     for key, value in request.META.items()
         # }
-        if _disable_trace(request.build_absolute_uri("?"), request.path[1:]):
+        if _disable_trace(request.build_absolute_uri("?")):
             return
 
         environ = request.META
@@ -101,7 +101,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         # Django can call this method and process_response later. In order
         # to avoid __exit__ and detach from being called twice then, the
         # respective keys are being removed here.
-        if _disable_trace(request.build_absolute_uri("?"), request.path[1:]):
+        if _disable_trace(request.build_absolute_uri("?")):
             return
         if self._environ_activation_key in request.META.keys():
             request.META[self._environ_activation_key].__exit__(
@@ -115,7 +115,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             request.META.pop(self._environ_token, None)
 
     def process_response(self, request, response):
-        if _disable_trace(request.build_absolute_uri("?"), request.path[1:]):
+        if _disable_trace(request.build_absolute_uri("?")):
             return response
         if (
             self._environ_activation_key in request.META.keys()
