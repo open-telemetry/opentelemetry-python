@@ -14,12 +14,14 @@ jobs:
         python-version: '3.7'
     - name: Build wheels
       run: ./scripts/build.sh
+    - name: Install twine
+      run: |
+        pip install twine
     - name: Publish to TestPyPI
       env:
         TWINE_USERNAME: ${{ secrets.test_pypi_username }}
         TWINE_PASSWORD: ${{ secrets.test_pypi_password }}
       run: |
-        pip install twine
         twine upload --repository testpypi --skip-existing --verbose dist/*
     - name: Publish to PyPI
       env:
