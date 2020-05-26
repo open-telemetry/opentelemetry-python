@@ -52,6 +52,7 @@ def _load_provider(
         logger.error("Failed to load configured provider %s", provider)
         raise
 
+
 # Pattern for matching up until the first '/' after the 'https://' part.
 _URL_PATTERN = r"(https?|ftp)://.*?/"
 
