@@ -74,8 +74,7 @@ function update_changelog() {
 
 # create the release branch
 git checkout master
-git fetch origin/master
-git rebase origin/master
+git reset --hard origin/master
 git checkout -b release/${VERSION}
 git push origin release/${VERSION}
 
