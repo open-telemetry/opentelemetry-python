@@ -14,8 +14,6 @@
 
 from logging import getLogger
 
-from django.utils.deprecation import MiddlewareMixin
-
 from opentelemetry.context import attach, detach
 from opentelemetry.ext.django.version import __version__
 from opentelemetry.ext.wsgi import (
@@ -25,6 +23,11 @@ from opentelemetry.ext.wsgi import (
 )
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
+
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    MiddlewareMixin = object
 
 _logger = getLogger(__name__)
 
