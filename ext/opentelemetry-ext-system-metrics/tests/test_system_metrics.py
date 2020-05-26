@@ -29,6 +29,16 @@ class TestSystemMetrics(TestBase):
             mock_get_meter.return_value = meter
             SystemMetrics(self.memory_metrics_exporter)
         self.assertEqual(len(meter.observers), 5)
+        observer_names = [
+            "system.mem",
+            "system.cpu",
+            "system.net.bytes",
+            "runtime.python.mem",
+            "runtime.python.gc.count",
+        ]
+        for observer in meter.observers:
+            self.assertIn(observer.name, observer_names)
+            observer_names.remove(observer.name)
 
     @mock.patch("psutil.cpu_times")
     def test_system_cpu(self, mock_cpu_times):
