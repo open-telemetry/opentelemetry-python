@@ -60,9 +60,6 @@ class TestSystemMetrics(TestBase):
                 observer.aggregators[(("type", "user"),)].current, 332277.48
             )
             self.assertEqual(
-                observer.aggregators[(("type", "nice"),)].current, 0.0
-            )
-            self.assertEqual(
                 observer.aggregators[(("type", "system"),)].current, 309836.43
             )
             self.assertEqual(
@@ -117,17 +114,6 @@ class TestSystemMetrics(TestBase):
             self.assertEqual(
                 observer.aggregators[(("type", "free"),)].current, 266964992
             )
-            self.assertEqual(
-                observer.aggregators[(("type", "active"),)].current, 5282459648
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "inactive"),)].current,
-                5148700672,
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "wired"),)].current, 4981530624
-            )
-            self.assertNotIn((("type", "percent"),), observer.aggregators)
 
     @mock.patch("psutil.net_io_counters")
     def test_network_bytes(self, mock_net_io_counters):
@@ -187,12 +173,6 @@ class TestSystemMetrics(TestBase):
                 self.assertEqual(
                     observer.aggregators[(("type", "vms"),)].current,
                     4385665024,
-                )
-                self.assertEqual(
-                    observer.aggregators[(("type", "pfaults"),)].current, 2631,
-                )
-                self.assertEqual(
-                    observer.aggregators[(("type", "pageins"),)].current, 49,
                 )
 
     @mock.patch("gc.get_count")

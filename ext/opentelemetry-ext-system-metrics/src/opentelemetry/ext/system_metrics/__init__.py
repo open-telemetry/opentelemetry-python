@@ -44,7 +44,6 @@ from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 
-
 class SystemMetrics:
     def __init__(
         self,
@@ -123,11 +122,17 @@ class SystemMetrics:
             observer: the observer to update
         """
         system_memory = psutil.virtual_memory()
-        for key, value in system_memory._asdict().items():
-            if not isinstance(value, int):
-                continue
-            self._system_memory_labels["type"] = key
-            observer.observe(value, self._system_memory_labels)
+        _metrics = [
+            "total",
+            "available",
+            "used",
+            "free",
+        ]
+        for metric in _metrics:
+            self._system_memory_labels["type"] = metric
+            observer.observe(
+                getattr(system_memory, metric), self._system_memory_labels
+            )
 
     def _get_system_cpu(self, observer: metrics.Observer) -> None:
         """Observer callback for system cpu
@@ -135,10 +140,17 @@ class SystemMetrics:
         Args:
             observer: the observer to update
         """
+        _metrics = [
+            "user",
+            "system",
+            "idle",
+        ]
         cpu_times = psutil.cpu_times()
-        for key, value in cpu_times._asdict().items():
-            self._system_cpu_labels["type"] = key
-            observer.observe(value, self._system_cpu_labels)
+        for metric in _metrics:
+            self._system_cpu_labels["type"] = metric
+            observer.observe(
+                getattr(cpu_times, metric), self._system_cpu_labels
+            )
 
     def _get_network_bytes(self, observer: metrics.Observer) -> None:
         """Observer callback for network bytes
@@ -146,11 +158,11 @@ class SystemMetrics:
         Args:
             observer: the observer to update
         """
-        net_io = psutil.net_io_counters()
         _metrics = [
             "bytes_recv",
             "bytes_sent",
         ]
+        net_io = psutil.net_io_counters()
         for metric in _metrics:
             self._network_bytes_labels["type"] = metric
             observer.observe(
@@ -163,10 +175,16 @@ class SystemMetrics:
         Args:
             observer: the observer to update
         """
+        _metrics = [
+            "rss",
+            "vms",
+        ]
         proc_memory = self._proc.memory_info()
-        for key, value in proc_memory._asdict().items():
-            self._runtime_memory_labels["type"] = key
-            observer.observe(value, self._runtime_memory_labels)
+        for metric in _metrics:
+            self._runtime_memory_labels["type"] = metric
+            observer.observe(
+                getattr(proc_memory, metric), self._runtime_memory_labels
+            )
 
     def _get_runtime_gc_count(self, observer: metrics.Observer) -> None:
         """Observer callback for garbage collection
