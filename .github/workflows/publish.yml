@@ -17,6 +17,12 @@ jobs:
     - name: Install twine
       run: |
         pip install twine
+    # The step below publishes to testpypi in order to catch any issues
+    # with the package configuration that would cause a failure to upload
+    # to pypi. One example of such a failure is if a classifier is
+    # rejected by pypi (e.g "3 - Beta"). This would cause a failure during the
+    # middle of the package upload causing the action to fail, and certain packages
+    # might have already been updated, this would be bad.
     - name: Publish to TestPyPI
       env:
         TWINE_USERNAME: ${{ secrets.test_pypi_username }}
