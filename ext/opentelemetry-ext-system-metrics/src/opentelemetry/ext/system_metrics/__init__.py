@@ -43,23 +43,21 @@ from opentelemetry import metrics
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-_DEFAULT_INTERVAL = 30
 
 
 class SystemMetrics:
     def __init__(
         self,
         exporter: MetricsExporter,
-        interval: int = _DEFAULT_INTERVAL,
+        interval: int = 30,
         labels: typing.Optional[typing.Dict[str, str]] = None,
     ):
-        labels = {} if labels is None else labels
+        self._labels = {} if labels is None else labels
         self.meter = metrics.get_meter(__name__)
         self.controller = PushController(
             meter=self.meter, exporter=exporter, interval=interval
         )
         self._proc = psutil.Process(os.getpid())
-        self._labels = labels
         self._system_memory_labels = {}
         self._system_cpu_labels = {}
         self._network_bytes_labels = {}
