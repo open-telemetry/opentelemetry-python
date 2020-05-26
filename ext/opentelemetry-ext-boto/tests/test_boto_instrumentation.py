@@ -39,8 +39,6 @@ def assert_span_http_status_code(span, code):
 class TestBotoInstrumentor(TestBase):
     """Botocore integration testsuite"""
 
-    TEST_SERVICE = "test-boto-tracing"
-
     def setUp(self):
         super().setUp()
         BotoInstrumentor().instrument()
