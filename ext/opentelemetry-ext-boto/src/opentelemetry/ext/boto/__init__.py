@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Opentelemetry instrumentation for Boto
+OpenTelemetry instrumentation for Boto
 """
 
 import logging
