@@ -1,0 +1,20 @@
+version: "2"
+services:
+
+  # Collector
+  collector:
+    image: omnition/opentelemetry-collector-contrib:latest
+    command: ["--config=/conf/collector-config.yaml", "--log-level=DEBUG"]
+    volumes:
+      - ./collector-config.yaml:/conf/collector-config.yaml
+    ports:
+      - "55678:55678"
+
+  jaeger-all-in-one:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "14268"
+      - "14250"
