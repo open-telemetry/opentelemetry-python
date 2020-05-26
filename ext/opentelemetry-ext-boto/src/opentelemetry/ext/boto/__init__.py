@@ -220,8 +220,8 @@ class BotoInstrumentor(BaseInstrumentor):
 
 
 def truncate_arg_value(value, max_len=1024):
-    """Truncate values which are bytes and greater than `max_len`.
-    Useful for parameters like "Body" in `put_object` operations.
+    """Truncate values which are bytes and greater than ``max_len``.
+    Useful for parameters like "Body" in ``put_object`` operations.
     """
     if isinstance(value, bytes) and len(value) > max_len:
         return b"..."
