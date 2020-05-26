@@ -8,7 +8,7 @@ OpenTelemetry ASGI Middleware
 
 
 This library provides a ASGI middleware that can be used on any ASGI framework
-(such as Django / Flask) to track requests timing through OpenTelemetry.
+(such as Django, Starlette, FastAPI or Quart) to track requests timing through OpenTelemetry.
 
 Installation
 ------------

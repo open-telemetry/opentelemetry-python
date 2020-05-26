@@ -38,9 +38,9 @@ class AsgiTestBase(SpanTestBase):
     def seed_app(self, app):
         self.communicator = ApplicationCommunicator(app, self.scope)
 
-    def send_input(self, payload):
+    def send(self, message):
         asyncio.get_event_loop().run_until_complete(
-            self.communicator.send_input(payload)
+            self.communicator.send_input(message)
         )
 
     def send_default_request(self):

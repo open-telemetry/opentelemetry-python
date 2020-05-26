@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ def collect_request_attributes(scope):
     port = server[1]
     server_host = server[0] + (":" + str(port) if port != 80 else "")
     http_url = (
-        scope.get("scheme") + "://" + server_host + scope.get("path", "")
+        scope.get("scheme", "http") + "://" + server_host + scope.get("path", "")
         if scope.get("scheme") and server_host and scope.get("path")
         else None
     )
@@ -89,7 +89,7 @@ def collect_request_attributes(scope):
         http_url = http_url + ("?" + scope.get("query_string").decode("utf8"))
 
     result = {
-        "component": scope.get("type"),
+        "component": scope["type"]
         "http.scheme": scope.get("scheme"),
         "http.host": server_host,
         "host.port": port,
@@ -186,14 +186,14 @@ class OpenTelemetryMiddleware:
                     with self.tracer.start_as_current_span(
                         span_name + " asgi." + scope["type"] + ".receive"
                     ) as receive_span:
-                        payload = await receive()
+                        message = await receive()
                         if payload["type"] == "websocket.receive":
                             set_status_code(receive_span, 200)
                         receive_span.set_attribute("type", payload["type"])
                     return payload
 
                 @wraps(send)
-                async def wrapped_send(payload):
+                async def wrapped_send(message):
                     with self.tracer.start_as_current_span(
                         span_name + " asgi." + scope["type"] + ".send"
                     ) as send_span:
