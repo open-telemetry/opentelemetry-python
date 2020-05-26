@@ -13,7 +13,42 @@
 # limitations under the License.
 
 """
-Instrumentation for Botocore
+Instrument `Botocore`_ to trace service requests.
+
+There are two options for instrumenting code. The first option is to use the
+``opentelemetry-auto-instrumentation`` executable which will automatically
+instrument your Botocore client. The second is to programmatically enable
+instrumentation via the following code:
+
+.. _boto: https://pypi.org/project/botocore/
+
+Usage
+-----
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.ext.botocore import BotocoreInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    import botocore
+
+    trace.set_tracer_provider(TracerProvider())
+
+    # Instrument Botocore
+    BotocoreInstrumentor().instrument(
+        tracer_provider=trace.get_tracer_provider()
+    )
+
+    # This will create a span with Boto-specific attributes
+    session = botocore.session.get_session()
+    session.set_credentials(
+        access_key="access-key", secret_key="secret-key"
+    )
+    ec2 = self.session.create_client("ec2", region_name="us-west-2")
+    ec2.describe_instances()
+
+API
+---
 """
 
 import logging
@@ -31,7 +66,7 @@ ARGS_NAME = ("action", "params", "path", "verb")
 TRACED_ARGS = ["params", "path", "verb"]
 
 
-class BotoInstrumentor(BaseInstrumentor):
+class BotocoreInstrumentor(BaseInstrumentor):
     """A instrumentor for Botocore
 
     See `BaseInstrumentor`

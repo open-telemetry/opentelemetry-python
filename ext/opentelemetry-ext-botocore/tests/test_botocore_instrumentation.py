@@ -9,7 +9,7 @@ from moto import (  # pylint: disable=import-error
     mock_s3,
     mock_sqs,
 )
-from opentelemetry.ext.botocore import BotoInstrumentor
+from opentelemetry.ext.botocore import BotocoreInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 
@@ -19,12 +19,12 @@ def assert_span_http_status_code(span, code):
     assert tag == code, "%r != %r" % (tag, code)
 
 
-class TestBotoInstrumentor(TestBase):
+class TestBotocoreInstrumentor(TestBase):
     """Botocore integration testsuite"""
 
     def setUp(self):
         super().setUp()
-        BotoInstrumentor().instrument()
+        BotocoreInstrumentor().instrument()
 
         self.session = botocore.session.get_session()
         self.session.set_credentials(
@@ -33,7 +33,7 @@ class TestBotoInstrumentor(TestBase):
 
     def tearDown(self):
         super().tearDown()
-        BotoInstrumentor().uninstrument()
+        BotocoreInstrumentor().uninstrument()
 
     @mock_ec2
     def test_traced_client(self):
@@ -144,7 +144,7 @@ class TestBotoInstrumentor(TestBase):
             "kinesis", region_name="us-east-1"
         )
 
-        BotoInstrumentor().uninstrument()
+        BotocoreInstrumentor().uninstrument()
 
         kinesis.list_streams()
         spans = self.memory_exporter.get_finished_spans()
@@ -154,8 +154,8 @@ class TestBotoInstrumentor(TestBase):
     def test_double_patch(self):
         sqs = self.session.create_client("sqs", region_name="us-east-1")
 
-        BotoInstrumentor().instrument()
-        BotoInstrumentor().instrument()
+        BotocoreInstrumentor().instrument()
+        BotocoreInstrumentor().instrument()
 
         sqs.list_queues()
 
