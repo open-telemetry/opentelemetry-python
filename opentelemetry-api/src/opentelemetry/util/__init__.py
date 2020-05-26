@@ -58,11 +58,9 @@ _URL_PATTERN = r"(https?|ftp)://.*?/"
 
 
 def disable_tracing_path(url: str, excluded_paths: Sequence[str]) -> bool:
-    print(url)
     if excluded_paths:
         # Match only the part after the first '/' that is not in _URL_PATTERN
         regex = "{}({})".format(_URL_PATTERN, "|".join(excluded_paths))
-        print(regex)
         if re.match(regex, url):
             return True
     return False
@@ -72,3 +70,12 @@ def disable_tracing_hostname(
     url: str, excluded_hostnames: Sequence[str]
 ) -> bool:
     return url in excluded_hostnames
+
+
+def disable_trace(
+    url: str,
+    excluded_hosts: Sequence[str],
+    excluded_paths: Sequence[str]
+) -> bool:
+    return disable_tracing_hostname(url, excluded_hosts) or \
+        disable_tracing_path(url, excluded_paths)

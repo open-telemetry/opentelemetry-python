@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import patch
-
 from flask import Flask, request
 
 from opentelemetry import trace
@@ -141,20 +139,3 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
-
-    @patch.dict(
-        "os.environ",  # type: ignore
-        {
-            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS": (
-                "http://localhost/excluded"
-            ),
-            "OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS": "excluded2",
-        },
-    )
-    def test_excluded_path(self):
-        self.client.get("/hello/123")
-        self.client.get("/excluded")
-        self.client.get("/excluded2")
-        span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "_hello_endpoint")
