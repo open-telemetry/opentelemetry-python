@@ -14,7 +14,7 @@
 
 from logging import getLogger
 
-from opentelemetry import configuration
+from opentelemetry.configuration import Configuration
 from opentelemetry.context import attach, detach
 from opentelemetry.ext.django.version import __version__
 from opentelemetry.ext.wsgi import (
@@ -34,20 +34,6 @@ except ImportError:
 _logger = getLogger(__name__)
 
 
-def get_excluded_hosts():
-    hosts = configuration.Configuration().DJANGO_EXCLUDED_HOSTS or []
-    if hosts:
-        hosts = str.split(hosts, ",")
-    return hosts
-
-
-def get_excluded_paths():
-    paths = configuration.Configuration().DJANGO_EXCLUDED_PATHS or []
-    if paths:
-        paths = str.split(paths, ",")
-    return paths
-
-
 class _DjangoMiddleware(MiddlewareMixin):
     """Django Middleware for OpenTelemetry
     """
@@ -58,8 +44,12 @@ class _DjangoMiddleware(MiddlewareMixin):
     _environ_token = "opentelemetry-instrumentor-django.token"
     _environ_span_key = "opentelemetry-instrumentor-django.span_key"
 
-    _excluded_hosts = get_excluded_hosts()
-    _excluded_paths = get_excluded_paths()
+    _excluded_hosts = Configuration().DJANGO_EXCLUDED_HOSTS or []
+    _excluded_paths = Configuration().DJANGO_EXCLUDED_PATHS or []
+    if _excluded_hosts:
+        _excluded_hosts = str.split(_excluded_hosts, ",")
+    if _excluded_paths:
+        _excluded_paths = str.split(_excluded_paths, ",")
     def process_view(
         self, request, view_func, view_args, view_kwargs
     ):  # pylint: disable=unused-argument

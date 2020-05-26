@@ -112,28 +112,3 @@ class TestMiddleware(WsgiTestBase):
             span.attributes["http.url"], "http://testserver/error/"
         )
         self.assertEqual(span.attributes["http.scheme"], "http")
-
-    @patch("opentelemetry.ext.django.middleware.get_excluded_hosts")
-    @patch("opentelemetry.ext.django.middleware.get_excluded_paths")
-    def test_exclude(self, path_mock, host_mock):
-        host_mock.return_value = ["http://testserver/excluded/"]
-        host_mock.return_value = "excluded2/"
-        Client().get("/traced/")
-        Client().get("/excluded/")
-        Client().get("/excluded2/")
-
-        spans = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(spans), 1)
-
-        span = spans[0]
-
-        self.assertEqual(span.name, "traced")
-        self.assertEqual(span.kind, SpanKind.SERVER)
-        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
-        self.assertEqual(span.attributes["http.method"], "GET")
-        self.assertEqual(
-            span.attributes["http.url"], "http://testserver/traced/"
-        )
-        self.assertEqual(span.attributes["http.scheme"], "http")
-        self.assertEqual(span.attributes["http.status_code"], 200)
-        self.assertEqual(span.attributes["http.status_text"], "OK")
