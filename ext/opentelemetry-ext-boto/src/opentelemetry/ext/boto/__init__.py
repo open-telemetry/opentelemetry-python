@@ -11,9 +11,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
-OpenTelemetry instrumentation for Boto
+Instrument `Boto`_ to trace service requests.
+
+There are two options for instrumenting code. The first option is to use the
+``opentelemetry-auto-instrumentation`` executable which will automatically
+instrument your Boto client. The second is to programmatically enable
+instrumentation via the following code:
+
+.. _boto: https://pypi.org/project/boto/
+
+Usage
+-----
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.ext.boto import BotoInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    import boto
+
+    trace.set_tracer_provider(TracerProvider())
+
+    # Instrument Boto
+    BotoInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+
+    # This will create a span with Boto-specific attributes
+    ec2 = boto.ec2.connect_to_region("us-west-2")
+    ec2.get_all_instances()
+
+API
+---
 """
 
 import logging
