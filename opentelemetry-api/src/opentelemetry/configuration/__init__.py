@@ -29,7 +29,7 @@ For example, these environment variables will be read:
 2. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_``
 3. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND__ELSE``
 4. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND_else``
-4. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND_else2``
+5. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND_else2``
 
 These won't:
 
@@ -74,9 +74,23 @@ setup.py file::
 
 To use the meter provider above, then the
 ``OPENTELEMETRY_PYTHON_METER_PROVIDER`` should be set to
-"default_meter_provider" (this is not actually necessary since the
+``"default_meter_provider"`` (this is not actually necessary since the
 OpenTelemetry API provided providers are the default ones used if no
 configuration is found in the environment variables).
+
+Configuration values that are exactly ``"True"`` or ``"False"`` will be
+converted to its boolean values of ``True`` and ``False`` respectively.
+
+Configuration values that can be casted to integers or floats will be casted.
+
+This object can be used by any OpenTelemetry component, native or external.
+For that reason, the ``Configuration`` object is designed to be immutable.
+If a component would change the value of one of the ``Configuration`` object
+attributes then another component that relied on that value may break, leading
+to bugs that are very hard to debug. To avoid this situation, the preferred
+approach for components that need a different value than the one provided by
+the ``Configuration`` object is to implement a mechanism that allows the user
+to override this value instead of changing it.
 """
 
 from os import environ
@@ -100,6 +114,20 @@ class Configuration:
                 if match is not None:
 
                     key = match.group(1)
+
+                    if value == "True":
+                        value = True
+                    elif value == "False":
+                        value = False
+                    else:
+                        try:
+                            value = int(value)
+                        except ValueError:
+                            pass
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            pass
 
                     setattr(Configuration, "_{}".format(key), value)
                     setattr(

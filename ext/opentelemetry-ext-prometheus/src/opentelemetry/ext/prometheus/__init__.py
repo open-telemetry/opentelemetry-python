@@ -94,7 +94,7 @@ class PrometheusMetricsExporter(MetricsExporter):
 
     Args:
         prefix: single-word application prefix relevant to the domain
-        the metric belongs to.
+            the metric belongs to.
     """
 
     def __init__(self, prefix: str = ""):

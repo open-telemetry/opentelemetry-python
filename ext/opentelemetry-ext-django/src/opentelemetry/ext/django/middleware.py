@@ -14,8 +14,6 @@
 
 from logging import getLogger
 
-from django.utils.deprecation import MiddlewareMixin
-
 from opentelemetry import configuration
 from opentelemetry.context import attach, detach
 from opentelemetry.ext.django.version import __version__
@@ -27,6 +25,11 @@ from opentelemetry.ext.wsgi import (
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.util import disable_tracing_hostname, disable_tracing_path
+
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    MiddlewareMixin = object
 
 _logger = getLogger(__name__)
 
@@ -100,10 +103,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         # respective keys are being removed here.
         if _disable_trace(request.build_absolute_uri("?"), request.path[1:]):
             return
-        if (
-            self._environ_activation_key in request.META.keys()
-            and self._environ_token in request.META.keys()
-        ):
+        if self._environ_activation_key in request.META.keys():
             request.META[self._environ_activation_key].__exit__(
                 type(exception),
                 exception,

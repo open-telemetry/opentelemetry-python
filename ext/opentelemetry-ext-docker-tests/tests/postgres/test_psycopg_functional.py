@@ -18,7 +18,7 @@ import time
 import psycopg2
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.psycopg2 import trace_integration
+from opentelemetry.ext.psycopg2 import Psycopg2Instrumentor
 from opentelemetry.test.test_base import TestBase
 
 POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")
@@ -35,7 +35,7 @@ class TestFunctionalPsycopg(TestBase):
         cls._connection = None
         cls._cursor = None
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        trace_integration(cls.tracer_provider)
+        Psycopg2Instrumentor().instrument(tracer_provider=cls.tracer_provider)
         cls._connection = psycopg2.connect(
             dbname=POSTGRES_DB_NAME,
             user=POSTGRES_USER,
@@ -52,6 +52,7 @@ class TestFunctionalPsycopg(TestBase):
             cls._cursor.close()
         if cls._connection:
             cls._connection.close()
+        Psycopg2Instrumentor().uninstrument()
 
     def validate_spans(self):
         spans = self.memory_exporter.get_finished_spans()

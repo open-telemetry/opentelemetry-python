@@ -25,7 +25,7 @@ Usage
     import opentelemetry.ext.requests
 
     # You can optionally pass a custom TracerProvider to RequestInstrumentor.instrument()
-    opentelemetry.ext.requests.RequestInstrumentor.instrument()
+    opentelemetry.ext.requests.RequestsInstrumentor().instrument()
     response = requests.get(url="https://www.example.org/")
 
 Limitations
