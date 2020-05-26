@@ -20,7 +20,7 @@ There are two options for instrumenting code. The first option is to use the
 instrument your Botocore client. The second is to programmatically enable
 instrumentation via the following code:
 
-.. _boto: https://pypi.org/project/botocore/
+.. _Botocore: https://pypi.org/project/botocore/
 
 Usage
 -----
@@ -39,7 +39,7 @@ Usage
         tracer_provider=trace.get_tracer_provider()
     )
 
-    # This will create a span with Boto-specific attributes
+    # This will create a span with Botocore-specific attributes
     session = botocore.session.get_session()
     session.set_credentials(
         access_key="access-key", secret_key="secret-key"
@@ -186,8 +186,8 @@ def flatten_dict(dict_, sep=".", prefix=""):
 
 def deep_getattr(obj, attr_string, default=None):
     """
-    Returns the attribute of `obj` at the dotted path given by `attr_string`
-    If no such attribute is reachable, returns `default`
+    Returns the attribute of ``obj`` at the dotted path given by
+    ``attr_string``, if no such attribute is reachable, returns ``default``.
 
     >>> deep_getattr(cass, "cluster")
     <cassandra.cluster.Cluster object at 0xa20c350
