@@ -295,7 +295,7 @@ class TestAsgiAttributes(unittest.TestCase):
         setup_testing_defaults(self.scope)
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
 
-    def test_query_string_utf8(self):
+    def test_request_attributes(self):
         self.scope["query_string"] = b"foo=bar"
 
         attrs = otel_asgi.collect_request_attributes(self.scope)
@@ -315,25 +315,20 @@ class TestAsgiAttributes(unittest.TestCase):
             },
         )
 
-    def test_query_string_percent_encoding(self):
-        self.scope["query_string"] = urllib.parse.quote(b"foo=bar")
-
+    def test_query_string(self):
+        self.scope["query_string"] = b"foo=bar"
         attrs = otel_asgi.collect_request_attributes(self.scope)
-        self.assertDictEqual(
-            attrs,
-            {
-                "component": "http",
-                "http.method": "GET",
-                "http.host": "127.0.0.1",
-                "http.target": "/",
-                "http.url": "http://127.0.0.1/?foo=bar",
-                "host.port": 80,
-                "http.scheme": "http",
-                "http.flavor": "1.0",
-                "net.peer.ip": "127.0.0.1",
-                "net.peer.port": 32767,
-            },
-        )
+        self.assertEqual(attrs["http.url"], "http://127.0.0.1/?foo=bar")
+
+    def test_query_string_percent_bytes(self):
+        self.scope["query_string"] = b"foo%3Dbar"
+        attrs = otel_asgi.collect_request_attributes(self.scope)
+        self.assertEqual(attrs["http.url"], "http://127.0.0.1/?foo=bar")
+
+    def test_query_string_percent_str(self):
+        self.scope["query_string"] = "foo%3Dbar"
+        attrs = otel_asgi.collect_request_attributes(self.scope)
+        self.assertEqual(attrs["http.url"], "http://127.0.0.1/?foo=bar")
 
     def test_response_attributes(self):
         otel_asgi.set_status_code(self.span, 404)

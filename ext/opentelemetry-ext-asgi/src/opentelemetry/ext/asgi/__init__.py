@@ -83,11 +83,11 @@ def collect_request_attributes(scope):
     server_host = server[0] + (":" + str(port) if port != 80 else "")
     full_path = scope.get("root_path", "") + scope.get("path", "")
     http_url = scope.get("scheme", "http") + "://" + server_host + full_path
-    if scope.get("query_string") and http_url:
-        if isinstance(scope["query_string"], bytes):
-            http_url = http_url + ("?" + scope.get("query_string").decode("utf8"))
-        else:
-            http_url = http_url + ("?" + urllib.parse.unquote(scope.get("query_string")))
+    query_string = scope.get("query_string")
+    if query_string and http_url:
+        if isinstance(query_string, bytes):
+            query_string = query_string.decode("utf8")
+        http_url = http_url + ("?" + urllib.parse.unquote(query_string))
 
     result = {
         "component": scope["type"],
