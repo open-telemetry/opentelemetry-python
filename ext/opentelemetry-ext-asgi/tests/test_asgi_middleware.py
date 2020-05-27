@@ -15,6 +15,7 @@
 import sys
 import unittest
 import unittest.mock as mock
+import urllib
 
 import opentelemetry.ext.asgi as otel_asgi
 from opentelemetry import trace as trace_api
@@ -25,9 +26,9 @@ from opentelemetry.test.asgitestutil import (
 
 
 async def http_app(scope, receive, send):
-    payload = await receive()
+    message = await receive()
     assert scope["type"] == "http"
-    if payload.get("type") == "http.request":
+    if message.get("type") == "http.request":
         await send(
             {
                 "type": "http.response.start",
@@ -41,15 +42,15 @@ async def http_app(scope, receive, send):
 async def websocket_app(scope, receive, send):
     assert scope["type"] == "websocket"
     while True:
-        payload = await receive()
-        if payload.get("type") == "websocket.connect":
+        message = await receive()
+        if message.get("type") == "websocket.connect":
             await send({"type": "websocket.accept"})
 
-        if payload.get("type") == "websocket.receive":
-            if payload.get("text") == "ping":
+        if message.get("type") == "websocket.receive":
+            if message.get("text") == "ping":
                 await send({"type": "websocket.send", "text": "pong"})
 
-        if payload.get("type") == "websocket.disconnect":
+        if message.get("type") == "websocket.disconnect":
             break
 
 
@@ -63,9 +64,9 @@ async def simple_asgi(scope, receive, send):
 
 async def error_asgi(scope, receive, send):
     assert isinstance(scope, dict)
-    assert scope.get("type") == "http"
-    payload = await receive()
-    if payload.get("type") == "http.request":
+    assert scope["type"] == "http"
+    message = await receive()
+    if message.get("type") == "http.request":
         try:
             raise ValueError
         except ValueError:
@@ -294,8 +295,28 @@ class TestAsgiAttributes(unittest.TestCase):
         setup_testing_defaults(self.scope)
         self.span = mock.create_autospec(trace_api.Span, spec_set=True)
 
-    def test_request_attributes(self):
+    def test_query_string_utf8(self):
         self.scope["query_string"] = b"foo=bar"
+
+        attrs = otel_asgi.collect_request_attributes(self.scope)
+        self.assertDictEqual(
+            attrs,
+            {
+                "component": "http",
+                "http.method": "GET",
+                "http.host": "127.0.0.1",
+                "http.target": "/",
+                "http.url": "http://127.0.0.1/?foo=bar",
+                "host.port": 80,
+                "http.scheme": "http",
+                "http.flavor": "1.0",
+                "net.peer.ip": "127.0.0.1",
+                "net.peer.port": 32767,
+            },
+        )
+
+    def test_query_string_percent_encoding(self):
+        self.scope["query_string"] = urllib.parse.quote(b"foo=bar")
 
         attrs = otel_asgi.collect_request_attributes(self.scope)
         self.assertDictEqual(

@@ -37,23 +37,22 @@ Usage (Quart)
         app.run(debug=True)
 
 
-Usage (Django)
---------------
+Usage (Django 3.0)
+------------------
 
 Modify the application's ``asgi.py`` file as shown below.
 
 .. code-block:: python
 
     import os
-    import django
-    from channels.routing import get_default_application
+    from django.core.asgi import get_asgi_application
     from opentelemetry.ext.asgi import OpenTelemetryMiddleware
 
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'application.settings')
-    django.setup()
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'asgi_example.settings')
 
-    application = get_default_application()
+    application = get_asgi_application()
     application = OpenTelemetryMiddleware(application)
+
 
 References
 ----------

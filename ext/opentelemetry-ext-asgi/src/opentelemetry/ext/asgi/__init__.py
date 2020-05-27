@@ -20,6 +20,7 @@ timing through OpenTelemetry.
 
 import operator
 import typing
+import urllib
 from functools import wraps
 
 from asgiref.compatibility import guarantee_single_callable
@@ -80,16 +81,16 @@ def collect_request_attributes(scope):
     server = scope.get("server") or ["0.0.0.0", 80]
     port = server[1]
     server_host = server[0] + (":" + str(port) if port != 80 else "")
-    http_url = (
-        scope.get("scheme", "http") + "://" + server_host + scope.get("path", "")
-        if scope.get("scheme") and server_host and scope.get("path")
-        else None
-    )
+    full_path = scope.get("root_path", "") + scope.get("path", "")
+    http_url = scope.get("scheme", "http") + "://" + server_host + full_path
     if scope.get("query_string") and http_url:
-        http_url = http_url + ("?" + scope.get("query_string").decode("utf8"))
+        if isinstance(scope["query_string"], bytes):
+            http_url = http_url + ("?" + scope.get("query_string").decode("utf8"))
+        else:
+            http_url = http_url + ("?" + urllib.parse.unquote(scope.get("query_string")))
 
     result = {
-        "component": scope["type"]
+        "component": scope["type"],
         "http.scheme": scope.get("scheme"),
         "http.host": server_host,
         "host.port": port,
@@ -166,7 +167,7 @@ class OpenTelemetryMiddleware:
             receive: An awaitable callable yielding dictionaries
             send: An awaitable callable taking a single dictionary as argument.
         """
-        if scope.get("type") not in ("http", "websocket"):
+        if scope["type"] not in ("http", "websocket"):
             return await self.app(scope, receive, send)
 
         token = context.attach(
@@ -187,23 +188,23 @@ class OpenTelemetryMiddleware:
                         span_name + " asgi." + scope["type"] + ".receive"
                     ) as receive_span:
                         message = await receive()
-                        if payload["type"] == "websocket.receive":
+                        if message["type"] == "websocket.receive":
                             set_status_code(receive_span, 200)
-                        receive_span.set_attribute("type", payload["type"])
-                    return payload
+                        receive_span.set_attribute("type", message["type"])
+                    return message
 
                 @wraps(send)
                 async def wrapped_send(message):
                     with self.tracer.start_as_current_span(
                         span_name + " asgi." + scope["type"] + ".send"
                     ) as send_span:
-                        if payload["type"] == "http.response.start":
-                            status_code = payload["status"]
+                        if message["type"] == "http.response.start":
+                            status_code = message["status"]
                             set_status_code(send_span, status_code)
-                        elif payload["type"] == "websocket.send":
+                        elif message["type"] == "websocket.send":
                             set_status_code(send_span, 200)
-                        send_span.set_attribute("type", payload["type"])
-                        await send(payload)
+                        send_span.set_attribute("type", message["type"])
+                        await send(message)
 
                 await self.app(scope, wrapped_receive, wrapped_send)
         finally:
