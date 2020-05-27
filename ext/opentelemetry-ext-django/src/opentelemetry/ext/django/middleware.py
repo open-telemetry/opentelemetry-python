@@ -50,6 +50,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         _excluded_hosts = str.split(_excluded_hosts, ",")
     if _excluded_paths:
         _excluded_paths = str.split(_excluded_paths, ",")
+
     def process_view(
         self, request, view_func, view_args, view_kwargs
     ):  # pylint: disable=unused-argument
@@ -64,7 +65,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         if disable_trace(
             request.build_absolute_uri("?"),
             self._excluded_hosts,
-            self._excluded_paths
+            self._excluded_paths,
         ):
             return
 
@@ -99,7 +100,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         if disable_trace(
             request.build_absolute_uri("?"),
             self._excluded_hosts,
-            self._excluded_paths
+            self._excluded_paths,
         ):
             return
 
@@ -118,7 +119,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         if disable_trace(
             request.build_absolute_uri("?"),
             self._excluded_hosts,
-            self._excluded_paths
+            self._excluded_paths,
         ):
             return response
 

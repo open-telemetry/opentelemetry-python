@@ -55,10 +55,7 @@ import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
-from opentelemetry.util import (
-    disable_trace,
-    time_ns,
-)
+from opentelemetry.util import disable_trace, time_ns
 
 _logger = getLogger(__name__)
 
@@ -96,9 +93,7 @@ def _rewrapped_app(wsgi_app):
 
         def _start_response(status, response_headers, *args, **kwargs):
             if not disable_trace(
-                flask.request.url,
-                _excluded_hosts,
-                _excluded_paths
+                flask.request.url, _excluded_hosts, _excluded_paths
             ):
                 span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
 
@@ -121,11 +116,7 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
-    if disable_trace(
-        flask.request.url,
-        _excluded_hosts,
-        _excluded_paths
-    ):
+    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
         return
 
     environ = flask.request.environ
@@ -157,11 +148,7 @@ def _before_request():
 
 
 def _teardown_request(exc):
-    if disable_trace(
-        flask.request.url,
-        _excluded_hosts,
-        _excluded_paths
-    ):
+    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
         return
 
     activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
