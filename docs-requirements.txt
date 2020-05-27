@@ -3,7 +3,7 @@ sphinx-rtd-theme~=0.4
 sphinx-autodoc-typehints~=1.10.2
 
 # Required by ext packages
-asgiref~=3.2.3
+asgiref~=3.0
 ddtrace>=0.34.0
 aiohttp ~= 3.0
 Deprecated>=1.2.6
