@@ -22,6 +22,10 @@ from opentelemetry.test.test_base import TestBase
 
 
 class TestSystemMetrics(TestBase):
+    def setUp(self):
+        super().setUp()
+        self.memory_metrics_exporter.clear()
+
     def test_system_metrics_constructor(self):
         # ensure the observers have been registered
         meter = metrics.get_meter(__name__)
@@ -40,6 +44,25 @@ class TestSystemMetrics(TestBase):
             self.assertIn(observer.name, observer_names)
             observer_names.remove(observer.name)
 
+    def _assert_metrics(self, system_metrics, expected):
+        system_metrics.controller.tick()
+        assertions = 0
+        for metric in self.memory_metrics_exporter._exported_metrics:
+            if metric.labels in expected:
+                self.assertEqual(
+                    metric.aggregator.checkpoint.last, expected[metric.labels],
+                )
+                assertions += 1
+        self.assertEqual(len(expected), assertions)
+
+    def _test_metrics(self, expected):
+        meter = self.meter_provider.get_meter(__name__)
+
+        with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
+            mock_get_meter.return_value = meter
+            system_metrics = SystemMetrics(self.memory_metrics_exporter)
+            self._assert_metrics(system_metrics, expected)
+
     @mock.patch("psutil.cpu_times")
     def test_system_cpu(self, mock_cpu_times):
         CPUTimes = namedtuple("CPUTimes", ["user", "nice", "system", "idle"])
@@ -47,24 +70,12 @@ class TestSystemMetrics(TestBase):
             user=332277.48, nice=0.0, system=309836.43, idle=6724698.94
         )
 
-        meter = self.meter_provider.get_meter(__name__)
-        with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
-            mock_get_meter.return_value = meter
-            system_metrics = SystemMetrics(self.memory_metrics_exporter)
-            # pylint: disable=protected-access
-            observer = Observer(
-                None, "test-name", "test-desc", "test-unit", float, meter,
-            )
-            system_metrics._get_system_cpu(observer)
-            self.assertEqual(
-                observer.aggregators[(("type", "user"),)].current, 332277.48
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "system"),)].current, 309836.43
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "idle"),)].current, 6724698.94
-            )
+        expected = {
+            (("type", "user"),): 332277.48,
+            (("type", "system"),): 309836.43,
+            (("type", "idle"),): 6724698.94,
+        }
+        self._test_metrics(expected)
 
     @mock.patch("psutil.virtual_memory")
     def test_system_memory(self, mock_virtual_memory):
@@ -92,28 +103,13 @@ class TestSystemMetrics(TestBase):
             wired=4981530624,
         )
 
-        meter = self.meter_provider.get_meter(__name__)
-        with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
-            mock_get_meter.return_value = meter
-            system_metrics = SystemMetrics(self.memory_metrics_exporter)
-            # pylint: disable=protected-access
-            observer = Observer(
-                None, "test-name", "test-desc", "test-unit", int, meter,
-            )
-            system_metrics._get_system_memory(observer)
-            self.assertEqual(
-                observer.aggregators[(("type", "total"),)].current, 17179869184
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "available"),)].current,
-                5520928768,
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "used"),)].current, 10263990272
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "free"),)].current, 266964992
-            )
+        expected = {
+            (("type", "total"),): 17179869184,
+            (("type", "used"),): 10263990272,
+            (("type", "available"),): 5520928768,
+            (("type", "free"),): 266964992,
+        }
+        self._test_metrics(expected)
 
     @mock.patch("psutil.net_io_counters")
     def test_network_bytes(self, mock_net_io_counters):
@@ -128,23 +124,11 @@ class TestSystemMetrics(TestBase):
             packets_recv=53205738,
         )
 
-        meter = self.meter_provider.get_meter(__name__)
-        with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
-            mock_get_meter.return_value = meter
-            system_metrics = SystemMetrics(self.memory_metrics_exporter)
-            # pylint: disable=protected-access
-            observer = Observer(
-                None, "test-name", "test-desc", "test-unit", int, meter,
-            )
-            system_metrics._get_network_bytes(observer)
-            self.assertEqual(
-                observer.aggregators[(("type", "bytes_recv"),)].current,
-                46798894080,
-            )
-            self.assertEqual(
-                observer.aggregators[(("type", "bytes_sent"),)].current,
-                23920188416,
-            )
+        expected = {
+            (("type", "bytes_recv"),): 46798894080,
+            (("type", "bytes_sent"),): 23920188416,
+        }
+        self._test_metrics(expected)
 
     def test_runtime_memory(self):
         meter = self.meter_provider.get_meter(__name__)
@@ -162,18 +146,11 @@ class TestSystemMetrics(TestBase):
                 mock_runtime_memory.return_value = RuntimeMemory(
                     rss=9777152, vms=4385665024, pfaults=2631, pageins=49
                 )
-                observer = Observer(
-                    None, "test-name", "test-desc", "test-unit", int, meter,
-                )
-                # pylint: disable=protected-access
-                system_metrics._get_runtime_memory(observer)
-                self.assertEqual(
-                    observer.aggregators[(("type", "rss"),)].current, 9777152,
-                )
-                self.assertEqual(
-                    observer.aggregators[(("type", "vms"),)].current,
-                    4385665024,
-                )
+                expected = {
+                    (("type", "rss"),): 9777152,
+                    (("type", "vms"),): 4385665024,
+                }
+                self._assert_metrics(system_metrics, expected)
 
     @mock.patch("gc.get_count")
     def test_runtime_gc_count(self, mock_gc):
@@ -182,21 +159,10 @@ class TestSystemMetrics(TestBase):
             50,  # gen1
             10,  # gen2
         ]
-        meter = self.meter_provider.get_meter(__name__)
-        with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
-            mock_get_meter.return_value = meter
-            system_metrics = SystemMetrics(self.memory_metrics_exporter)
-            observer = Observer(
-                None, "test-name", "test-desc", "test-unit", int, meter,
-            )
-            # pylint: disable=protected-access
-            system_metrics._get_runtime_gc_count(observer)
-            self.assertEqual(
-                observer.aggregators[(("count", "0"),)].current, 100
-            )
-            self.assertEqual(
-                observer.aggregators[(("count", "1"),)].current, 50
-            )
-            self.assertEqual(
-                observer.aggregators[(("count", "2"),)].current, 10
-            )
+
+        expected = {
+            (("count", "0"),): 100,
+            (("count", "1"),): 50,
+            (("count", "2"),): 10,
+        }
+        self._test_metrics(expected)
