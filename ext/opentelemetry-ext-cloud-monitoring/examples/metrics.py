@@ -11,12 +11,12 @@ from opentelemetry.context import attach, detach, set_value
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__, True)
 exporter = ConsoleMetricsExporter()
-cloud_exporter = CloudMonitoringMetricsExporter('aaxue-starter')
+cloud_exporter = CloudMonitoringMetricsExporter("aaxue-starter")
 
 exporters = [cloud_exporter]
 
 staging_labels = {"environment": "staging"}
-other_labels = {"label1": "s", 'label2': 'b'}
+other_labels = {"label1": "s", "label2": "b"}
 
 requests_counter = meter.create_metric(
     name="num_requests",
@@ -33,8 +33,9 @@ double_counter = meter.create_metric(
     unit="unit double name",
     value_type=float,
     metric_type=Counter,
-    label_keys=("label1", 'label1'),
+    label_keys=("label1", "label1"),
 )
+
 
 def _ghetto_export():
     for exporter in exporters:
@@ -45,6 +46,7 @@ def _ghetto_export():
         detach(token)
         # Perform post-exporting logic based on batcher configuration
         meter.batcher.finished_collection()
+
 
 requests_counter.add(25, staging_labels)
 double_counter.add(2.3, other_labels)

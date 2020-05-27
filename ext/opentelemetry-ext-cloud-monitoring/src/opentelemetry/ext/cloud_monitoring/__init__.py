@@ -10,6 +10,7 @@ from opentelemetry.sdk.metrics.export import (
 
 MAX_BATCH_WRITE = 200
 
+
 class CloudMonitoringMetricsExporter(MetricsExporter):
     """
     Implementation of Metrics Exporter that sends metrics to Google Cloud
@@ -17,7 +18,6 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
     """
 
     def __init__(self, project_id, client=None):
-        # TODO cloud monitoring seems to only allow 1 write a minute per time series
         self.client = client or MetricServiceClient()
         self.project_id = project_id
         self.project_name = self.client.project_path(project_id)
@@ -41,11 +41,14 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         """
         write_ind = 0
         while write_ind < len(series):
-            self.client.create_time_series(self.project_name, series[write_ind: write_ind + MAX_BATCH_WRITE])
+            self.client.create_time_series(
+                self.project_name,
+                series[write_ind : write_ind + MAX_BATCH_WRITE],
+            )
             write_ind += MAX_BATCH_WRITE
 
     def export(
-            self, metric_records: Sequence[MetricRecord]
+        self, metric_records: Sequence[MetricRecord]
     ) -> "MetricsExportResult":
         all_series = []
         for record in metric_records:
