@@ -175,9 +175,7 @@ def create_trace_config(
             trace.propagation.set_span_in_context(trace_config_ctx.span)
         )
 
-        propagators.inject(
-            tracer, type(params.headers).__setitem__, params.headers
-        )
+        propagators.inject(type(params.headers).__setitem__, params.headers)
 
     async def on_request_end(
         unused_session: aiohttp.ClientSession,
