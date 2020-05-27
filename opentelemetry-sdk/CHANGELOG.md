@@ -10,6 +10,8 @@
   ([#724](https://github.com/open-telemetry/opentelemetry-python/pull/724))
 - bugfix: Fix error message
   ([#729](https://github.com/open-telemetry/opentelemetry-python/pull/729))
+- deep copy empty attributes
+  ([#714](https://github.com/open-telemetry/opentelemetry-python/pull/714))
 
 ## 0.7b1
 
