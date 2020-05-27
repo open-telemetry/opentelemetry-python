@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from sys import modules
-from unittest.mock import patch
 
 from django.conf import settings
 from django.conf.urls import url
