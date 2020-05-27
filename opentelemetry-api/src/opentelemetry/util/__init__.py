@@ -70,3 +70,11 @@ def disable_tracing_hostname(
     url: str, excluded_hostnames: Sequence[str]
 ) -> bool:
     return url in excluded_hostnames
+
+
+def disable_trace(
+    url: str, excluded_hosts: Sequence[str], excluded_paths: Sequence[str]
+) -> bool:
+    return disable_tracing_hostname(
+        url, excluded_hosts
+    ) or disable_tracing_path(url, excluded_paths)
