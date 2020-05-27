@@ -15,11 +15,12 @@
 Instrument to report system (CPU, memory, network) and
 process (CPU, memory, garbage collection) metrics. By default, the
 following metrics are configured:
-    "system_memory": ["total", "available", "used", "free"],
-    "system_cpu": ["user", "system", "idle"],
-    "network_bytes": ["bytes_recv", "bytes_sent"],
-    "runtime_memory": ["rss", "vms"],
-    "runtime_cpu": ["user", "system"],
+
+"system_memory": ["total", "available", "used", "free"],
+"system_cpu": ["user", "system", "idle"],
+"network_bytes": ["bytes_recv", "bytes_sent"],
+"runtime_memory": ["rss", "vms"],
+"runtime_cpu": ["user", "system"],
 
 
 Usage

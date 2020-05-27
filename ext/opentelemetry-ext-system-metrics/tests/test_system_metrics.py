@@ -17,7 +17,6 @@ from unittest import mock
 
 from opentelemetry import metrics
 from opentelemetry.ext.system_metrics import SystemMetrics
-from opentelemetry.sdk.metrics import Observer
 from opentelemetry.test.test_base import TestBase
 
 
