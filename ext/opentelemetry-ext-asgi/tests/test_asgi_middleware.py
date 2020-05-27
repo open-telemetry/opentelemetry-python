@@ -15,7 +15,6 @@
 import sys
 import unittest
 import unittest.mock as mock
-import urllib
 
 import opentelemetry.ext.asgi as otel_asgi
 from opentelemetry import trace as trace_api
