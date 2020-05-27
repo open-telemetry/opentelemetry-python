@@ -23,6 +23,7 @@ Released 2020-05-27
   ([#729](https://github.com/open-telemetry/opentelemetry-python/pull/729))
 - deep copy empty attributes
   ([#714](https://github.com/open-telemetry/opentelemetry-python/pull/714))
+- add cloud monitoring exporter
 
 ## 0.7b1
 
