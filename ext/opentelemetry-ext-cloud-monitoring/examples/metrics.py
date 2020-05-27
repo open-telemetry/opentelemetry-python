@@ -47,11 +47,11 @@ def _ghetto_export():
         # Perform post-exporting logic based on batcher configuration
         meter.batcher.finished_collection()
 
-
-requests_counter.add(25, staging_labels)
-double_counter.add(2.3, other_labels)
-_ghetto_export()
-time.sleep(3)
-requests_counter.add(20, staging_labels)
-double_counter.add(2.53, other_labels)
-_ghetto_export()
+for i in range(20):
+    requests_counter.add(25, staging_labels)
+    double_counter.add(2.3, other_labels)
+    _ghetto_export()
+    time.sleep(10)
+    requests_counter.add(20, staging_labels)
+    double_counter.add(2.53, other_labels)
+    _ghetto_export()
