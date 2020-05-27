@@ -32,36 +32,44 @@ class TestSystemMetrics(TestBase):
         with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
             mock_get_meter.return_value = meter
             SystemMetrics(self.memory_metrics_exporter)
-        self.assertEqual(len(meter.observers), 5)
+        self.assertEqual(len(meter.observers), 6)
         observer_names = [
             "system.mem",
             "system.cpu",
             "system.net.bytes",
             "runtime.python.mem",
+            "runtime.python.cpu",
             "runtime.python.gc.count",
         ]
         for observer in meter.observers:
             self.assertIn(observer.name, observer_names)
             observer_names.remove(observer.name)
 
-    def _assert_metrics(self, system_metrics, expected):
+    def _assert_metrics(self, observer_name, system_metrics, expected):
         system_metrics.controller.tick()
         assertions = 0
-        for metric in self.memory_metrics_exporter._exported_metrics:
-            if metric.labels in expected:
+        for (
+            metric
+        ) in (
+            self.memory_metrics_exporter._exported_metrics  # pylint: disable=protected-access
+        ):
+            if (
+                metric.labels in expected
+                and metric.metric.name == observer_name
+            ):
                 self.assertEqual(
                     metric.aggregator.checkpoint.last, expected[metric.labels],
                 )
                 assertions += 1
         self.assertEqual(len(expected), assertions)
 
-    def _test_metrics(self, expected):
+    def _test_metrics(self, observer_name, expected):
         meter = self.meter_provider.get_meter(__name__)
 
         with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
             mock_get_meter.return_value = meter
             system_metrics = SystemMetrics(self.memory_metrics_exporter)
-            self._assert_metrics(system_metrics, expected)
+            self._assert_metrics(observer_name, system_metrics, expected)
 
     @mock.patch("psutil.cpu_times")
     def test_system_cpu(self, mock_cpu_times):
@@ -75,7 +83,7 @@ class TestSystemMetrics(TestBase):
             (("type", "system"),): 309836.43,
             (("type", "idle"),): 6724698.94,
         }
-        self._test_metrics(expected)
+        self._test_metrics("system.cpu", expected)
 
     @mock.patch("psutil.virtual_memory")
     def test_system_memory(self, mock_virtual_memory):
@@ -109,7 +117,7 @@ class TestSystemMetrics(TestBase):
             (("type", "available"),): 5520928768,
             (("type", "free"),): 266964992,
         }
-        self._test_metrics(expected)
+        self._test_metrics("system.mem", expected)
 
     @mock.patch("psutil.net_io_counters")
     def test_network_bytes(self, mock_net_io_counters):
@@ -128,7 +136,7 @@ class TestSystemMetrics(TestBase):
             (("type", "bytes_recv"),): 46798894080,
             (("type", "bytes_sent"),): 23920188416,
         }
-        self._test_metrics(expected)
+        self._test_metrics("system.net.bytes", expected)
 
     def test_runtime_memory(self):
         meter = self.meter_provider.get_meter(__name__)
@@ -150,7 +158,35 @@ class TestSystemMetrics(TestBase):
                     (("type", "rss"),): 9777152,
                     (("type", "vms"),): 4385665024,
                 }
-                self._assert_metrics(system_metrics, expected)
+                self._assert_metrics(
+                    "runtime.python.mem", system_metrics, expected
+                )
+
+    def test_runtime_cpu(self):
+        meter = self.meter_provider.get_meter(__name__)
+        with mock.patch("opentelemetry.metrics.get_meter") as mock_get_meter:
+            mock_get_meter.return_value = meter
+            system_metrics = SystemMetrics(self.memory_metrics_exporter)
+
+            with mock.patch.object(
+                system_metrics._proc,  # pylint: disable=protected-access
+                "cpu_times",
+            ) as mock_runtime_cpu_times:
+                RuntimeCPU = namedtuple(
+                    "RuntimeCPU", ["user", "nice", "system"]
+                )
+                mock_runtime_cpu_times.return_value = RuntimeCPU(
+                    user=100.48, nice=0.0, system=200.43
+                )
+
+                expected = {
+                    (("type", "user"),): 100.48,
+                    (("type", "system"),): 200.43,
+                }
+
+                self._assert_metrics(
+                    "runtime.python.cpu", system_metrics, expected
+                )
 
     @mock.patch("gc.get_count")
     def test_runtime_gc_count(self, mock_gc):
@@ -165,4 +201,4 @@ class TestSystemMetrics(TestBase):
             (("count", "1"),): 50,
             (("count", "2"),): 10,
         }
-        self._test_metrics(expected)
+        self._test_metrics("runtime.python.gc.count", expected)

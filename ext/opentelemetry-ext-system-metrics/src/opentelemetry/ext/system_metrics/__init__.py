@@ -13,7 +13,14 @@
 # limitations under the License.
 """
 Instrument to report system (CPU, memory, network) and
-process (CPU, memory, garbage collection) metrics.
+process (CPU, memory, garbage collection) metrics. By default, the
+following metrics are configured:
+    "system_memory": ["total", "available", "used", "free"],
+    "system_cpu": ["user", "system", "idle"],
+    "network_bytes": ["bytes_recv", "bytes_sent"],
+    "runtime_memory": ["rss", "vms"],
+    "runtime_cpu": ["user", "system"],
+
 
 Usage
 -----
@@ -63,6 +70,7 @@ class SystemMetrics:
                 "system_cpu": ["user", "system", "idle"],
                 "network_bytes": ["bytes_recv", "bytes_sent"],
                 "runtime_memory": ["rss", "vms"],
+                "runtime_cpu": ["user", "system"],
             }
         else:
             self._config = config
@@ -71,6 +79,7 @@ class SystemMetrics:
         self._system_cpu_labels = {}
         self._network_bytes_labels = {}
         self._runtime_memory_labels = {}
+        self._runtime_cpu_labels = {}
         self._runtime_gc_labels = {}
         # create the label set for each observer once
         for key, value in self._labels.items():
@@ -110,6 +119,14 @@ class SystemMetrics:
             description="Runtime memory",
             unit="bytes",
             value_type=int,
+        )
+
+        self.meter.register_observer(
+            callback=self._get_runtime_cpu,
+            name="runtime.python.cpu",
+            description="Runtime CPU",
+            unit="seconds",
+            value_type=float,
         )
 
         self.meter.register_observer(
@@ -170,6 +187,19 @@ class SystemMetrics:
             self._runtime_memory_labels["type"] = _type
             observer.observe(
                 getattr(proc_memory, _type), self._runtime_memory_labels
+            )
+
+    def _get_runtime_cpu(self, observer: metrics.Observer) -> None:
+        """Observer callback for runtime CPU
+
+        Args:
+            observer: the observer to update
+        """
+        proc_cpu = self._proc.cpu_times()
+        for _type in self._config["runtime_cpu"]:
+            self._runtime_cpu_labels["type"] = _type
+            observer.observe(
+                getattr(proc_cpu, _type), self._runtime_cpu_labels
             )
 
     def _get_runtime_gc_count(self, observer: metrics.Observer) -> None:
