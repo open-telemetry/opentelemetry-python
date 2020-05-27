@@ -25,7 +25,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint:disable=relative-beyond-top-level
-from .constants import DD_ORIGIN
+from .constants import DD_ORIGIN, SAMPLE_RATE_METRIC_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +136,10 @@ class DatadogSpanExporter(SpanExporter):
             if origin and parent_id == 0:
                 datadog_span.set_tag(DD_ORIGIN, origin)
 
+            sampling_rate = _get_sampling_rate(span)
+            if sampling_rate:
+                datadog_span.set_metric(SAMPLE_RATE_METRIC_KEY, sampling_rate)
+
             # span events and span links are not supported
 
             datadog_spans.append(datadog_span)
@@ -216,3 +220,13 @@ def _get_origin(span):
     ctx = span.get_context()
     origin = ctx.trace_state.get(DD_ORIGIN)
     return origin
+
+
+def _get_sampling_rate(span):
+    ctx = span.get_context()
+    return (
+        span.sampler.rate
+        if ctx.trace_flags.sampled
+        and isinstance(span.sampler, trace_api.sampling.ProbabilitySampler)
+        else None
+    )
