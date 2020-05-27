@@ -50,12 +50,22 @@ class SystemMetrics:
         exporter: MetricsExporter,
         interval: int = 30,
         labels: typing.Optional[typing.Dict[str, str]] = None,
+        config: typing.Optional[typing.Dict[str, typing.List[str]]] = None,
     ):
         self._labels = {} if labels is None else labels
         self.meter = metrics.get_meter(__name__)
         self.controller = PushController(
             meter=self.meter, exporter=exporter, interval=interval
         )
+        if config is None:
+            self._config = {
+                "system_memory": ["total", "available", "used", "free"],
+                "system_cpu": ["user", "system", "idle"],
+                "network_bytes": ["bytes_recv", "bytes_sent"],
+                "runtime_memory": ["rss", "vms"],
+            }
+        else:
+            self._config = config
         self._proc = psutil.Process(os.getpid())
         self._system_memory_labels = {}
         self._system_cpu_labels = {}
@@ -76,7 +86,6 @@ class SystemMetrics:
             description="System memory",
             unit="bytes",
             value_type=int,
-            label_keys=self._labels.keys(),
         )
 
         self.meter.register_observer(
@@ -85,7 +94,6 @@ class SystemMetrics:
             description="System CPU",
             unit="seconds",
             value_type=float,
-            label_keys=self._labels.keys(),
         )
 
         self.meter.register_observer(
@@ -94,7 +102,6 @@ class SystemMetrics:
             description="System network bytes",
             unit="bytes",
             value_type=int,
-            label_keys=self._labels.keys(),
         )
 
         self.meter.register_observer(
@@ -103,7 +110,6 @@ class SystemMetrics:
             description="Runtime memory",
             unit="bytes",
             value_type=int,
-            label_keys=self._labels.keys(),
         )
 
         self.meter.register_observer(
@@ -112,7 +118,6 @@ class SystemMetrics:
             description="Runtime: gc objects",
             unit="objects",
             value_type=int,
-            label_keys=self._labels.keys(),
         )
 
     def _get_system_memory(self, observer: metrics.Observer) -> None:
@@ -122,13 +127,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         system_memory = psutil.virtual_memory()
-        _metrics = [
-            "total",
-            "available",
-            "used",
-            "free",
-        ]
-        for metric in _metrics:
+        for metric in self._config["system_memory"]:
             self._system_memory_labels["type"] = metric
             observer.observe(
                 getattr(system_memory, metric), self._system_memory_labels
@@ -140,16 +139,11 @@ class SystemMetrics:
         Args:
             observer: the observer to update
         """
-        _metrics = [
-            "user",
-            "system",
-            "idle",
-        ]
         cpu_times = psutil.cpu_times()
-        for metric in _metrics:
-            self._system_cpu_labels["type"] = metric
+        for _type in self._config["system_cpu"]:
+            self._system_cpu_labels["type"] = _type
             observer.observe(
-                getattr(cpu_times, metric), self._system_cpu_labels
+                getattr(cpu_times, _type), self._system_cpu_labels
             )
 
     def _get_network_bytes(self, observer: metrics.Observer) -> None:
@@ -158,15 +152,11 @@ class SystemMetrics:
         Args:
             observer: the observer to update
         """
-        _metrics = [
-            "bytes_recv",
-            "bytes_sent",
-        ]
         net_io = psutil.net_io_counters()
-        for metric in _metrics:
-            self._network_bytes_labels["type"] = metric
+        for _type in self._config["network_bytes"]:
+            self._network_bytes_labels["type"] = _type
             observer.observe(
-                getattr(net_io, metric), self._network_bytes_labels
+                getattr(net_io, _type), self._network_bytes_labels
             )
 
     def _get_runtime_memory(self, observer: metrics.Observer) -> None:
@@ -175,15 +165,11 @@ class SystemMetrics:
         Args:
             observer: the observer to update
         """
-        _metrics = [
-            "rss",
-            "vms",
-        ]
         proc_memory = self._proc.memory_info()
-        for metric in _metrics:
-            self._runtime_memory_labels["type"] = metric
+        for _type in self._config["runtime_memory"]:
+            self._runtime_memory_labels["type"] = _type
             observer.observe(
-                getattr(proc_memory, metric), self._runtime_memory_labels
+                getattr(proc_memory, _type), self._runtime_memory_labels
             )
 
     def _get_runtime_gc_count(self, observer: metrics.Observer) -> None:
