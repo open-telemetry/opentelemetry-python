@@ -14,6 +14,7 @@
 
 from logging import getLogger
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.context import attach, detach
 from opentelemetry.ext.django.version import __version__
 from opentelemetry.ext.wsgi import (
@@ -23,6 +24,7 @@ from opentelemetry.ext.wsgi import (
 )
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
+from opentelemetry.util import disable_trace
 
 try:
     from django.utils.deprecation import MiddlewareMixin
@@ -42,6 +44,13 @@ class _DjangoMiddleware(MiddlewareMixin):
     _environ_token = "opentelemetry-instrumentor-django.token"
     _environ_span_key = "opentelemetry-instrumentor-django.span_key"
 
+    _excluded_hosts = Configuration().DJANGO_EXCLUDED_HOSTS or []
+    _excluded_paths = Configuration().DJANGO_EXCLUDED_PATHS or []
+    if _excluded_hosts:
+        _excluded_hosts = str.split(_excluded_hosts, ",")
+    if _excluded_paths:
+        _excluded_paths = str.split(_excluded_paths, ",")
+
     def process_view(
         self, request, view_func, view_args, view_kwargs
     ):  # pylint: disable=unused-argument
@@ -53,6 +62,12 @@ class _DjangoMiddleware(MiddlewareMixin):
         #     key.lower().replace('_', '-').replace("http-", "", 1): value
         #     for key, value in request.META.items()
         # }
+        if disable_trace(
+            request.build_absolute_uri("?"),
+            self._excluded_hosts,
+            self._excluded_paths,
+        ):
+            return
 
         environ = request.META
 
@@ -82,6 +97,13 @@ class _DjangoMiddleware(MiddlewareMixin):
         # Django can call this method and process_response later. In order
         # to avoid __exit__ and detach from being called twice then, the
         # respective keys are being removed here.
+        if disable_trace(
+            request.build_absolute_uri("?"),
+            self._excluded_hosts,
+            self._excluded_paths,
+        ):
+            return
+
         if self._environ_activation_key in request.META.keys():
             request.META[self._environ_activation_key].__exit__(
                 type(exception),
@@ -94,6 +116,13 @@ class _DjangoMiddleware(MiddlewareMixin):
             request.META.pop(self._environ_token, None)
 
     def process_response(self, request, response):
+        if disable_trace(
+            request.build_absolute_uri("?"),
+            self._excluded_hosts,
+            self._excluded_paths,
+        ):
+            return response
+
         if (
             self._environ_activation_key in request.META.keys()
             and self._environ_span_key in request.META.keys()
