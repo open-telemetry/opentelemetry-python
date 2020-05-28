@@ -32,7 +32,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 import abc
 from logging import getLogger
-from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
+from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import _load_provider
 
@@ -244,7 +244,6 @@ class DefaultMeterProvider(MeterProvider):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         # pylint:disable=no-self-use,unused-argument
@@ -387,15 +386,19 @@ _METER_PROVIDER = None
 
 def get_meter(
     instrumenting_module_name: str,
-    stateful: bool = True,
     instrumenting_library_version: str = "",
+    meter_provider: Optional[MeterProvider] = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
     This function is a convenience wrapper for
     opentelemetry.metrics.get_meter_provider().get_meter
+
+    If meter_provider is ommited the current configured one is used.
     """
-    return get_meter_provider().get_meter(
-        instrumenting_module_name, stateful, instrumenting_library_version
+    if meter_provider is None:
+        meter_provider = get_meter_provider()
+    return meter_provider.get_meter(
+        instrumenting_module_name, instrumenting_library_version
     )
 
 

@@ -24,13 +24,10 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-# Configure a stateful batcher
-batcher = UngroupedBatcher(stateful=True)
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 exporter = ConsoleMetricsExporter()
 controller = PushController(meter=meter, exporter=exporter, interval=2)
-
 
 # Callback to gather cpu usage
 def get_cpu_usage_callback(observer):

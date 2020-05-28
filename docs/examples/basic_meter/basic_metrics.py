@@ -50,13 +50,13 @@ print(
 )
 
 
+# Stateful determines whether how metrics are collected: if true, metrics
+# accumulate over the process lifetime. If false, metrics are reset at the
+# beginning of each collection interval.
+metrics.set_meter_provider(MeterProvider(batcher_mode == "stateful"))
 # The Meter is responsible for creating and recording metrics. Each meter has a
-# unique name, which we set as the module's name here. The second argument
-# determines whether how metrics are collected: if true, metrics accumulate
-# over the process lifetime. If false, metrics are reset at the beginning of
-# each collection interval.
-metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__, batcher_mode == "stateful")
+# unique name, which we set as the module's name here.
+meter = metrics.get_meter(__name__)
 
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()

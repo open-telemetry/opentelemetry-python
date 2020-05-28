@@ -270,22 +270,21 @@ class Meter(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`.
 
     Args:
+        source: The `MeterProvider` that created this meter.
         instrumentation_info: The `InstrumentationInfo` for this meter.
-        stateful: Indicates whether the meter is stateful.
     """
 
     def __init__(
         self,
+        source: "MeterProvider",
         instrumentation_info: "InstrumentationInfo",
-        stateful: bool,
-        resource: Resource = Resource.create_empty(),
     ):
         self.instrumentation_info = instrumentation_info
+        self.batcher = UngroupedBatcher(source.stateful)
+        self.resource = source.resource
         self.metrics = set()
         self.observers = set()
-        self.batcher = UngroupedBatcher(stateful)
         self.observers_lock = threading.Lock()
-        self.resource = resource
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -398,21 +397,30 @@ class Meter(metrics_api.Meter):
 
 
 class MeterProvider(metrics_api.MeterProvider):
-    def __init__(self, resource: Resource = Resource.create_empty()):
+    """See `opentelemetry.metrics.MeterProvider`.
+
+    Args:
+        stateful: Indicates whether meters created are going to be stateful
+        resource: Resource for this MeterProvider
+    """
+    def __init__(
+        self,
+        stateful=True,
+        resource: Resource = Resource.create_empty()
+    ):
+        self.stateful = stateful
         self.resource = resource
 
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful=True,
         instrumenting_library_version: str = "",
     ) -> "metrics_api.Meter":
         if not instrumenting_module_name:  # Reject empty strings too.
             raise ValueError("get_meter called with missing module name.")
         return Meter(
+            self,
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
             ),
-            stateful=stateful,
-            resource=self.resource,
         )
