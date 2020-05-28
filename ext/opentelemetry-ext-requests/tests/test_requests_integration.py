@@ -22,7 +22,6 @@ import opentelemetry.ext.requests
 from opentelemetry import context, propagators, trace
 from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 from opentelemetry.test.test_base import TestBase
 
