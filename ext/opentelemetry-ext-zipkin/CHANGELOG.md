@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Transform resource to tags when exporting
+  ([#707](https://github.com/open-telemetry/opentelemetry-python/pull/707))
+
 ## 0.7b1
 
 Released 2020-05-12

@@ -19,16 +19,20 @@ from django.conf.urls import url
 from django.test import Client
 from django.test.utils import setup_test_environment, teardown_test_environment
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.ext.django import DjangoInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
 
-from .views import error, traced  # pylint: disable=import-error
+# pylint: disable=import-error
+from .views import error, excluded, excluded2, traced
 
 urlpatterns = [
     url(r"^traced/", traced),
     url(r"^error/", error),
+    url(r"^excluded/", excluded),
+    url(r"^excluded2/", excluded2),
 ]
 _django_instrumentor = DjangoInstrumentor()
 
@@ -43,6 +47,7 @@ class TestMiddleware(WsgiTestBase):
         super().setUp()
         setup_test_environment()
         _django_instrumentor.instrument()
+        Configuration._reset()  # pylint: disable=protected-access
 
     def tearDown(self):
         super().tearDown()
