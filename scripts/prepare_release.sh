@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # This script:
 #   1. parses the version number from the branch name
@@ -73,6 +73,7 @@ function update_changelog() {
 }
 
 # create the release branch
+git fetch origin master
 git checkout master
 git reset --hard origin/master
 git checkout -b release/${VERSION}
