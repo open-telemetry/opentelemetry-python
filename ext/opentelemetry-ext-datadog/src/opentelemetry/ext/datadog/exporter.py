@@ -137,7 +137,7 @@ class DatadogSpanExporter(SpanExporter):
                 datadog_span.set_tag(DD_ORIGIN, origin)
 
             sampling_rate = _get_sampling_rate(span)
-            if sampling_rate:
+            if sampling_rate is not None:
                 datadog_span.set_metric(SAMPLE_RATE_METRIC_KEY, sampling_rate)
 
             # span events and span links are not supported
