@@ -44,6 +44,7 @@ class PushController(threading.Thread):
 
     def shutdown(self):
         self.finished.set()
+        self.tick()
         self.exporter.shutdown()
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)

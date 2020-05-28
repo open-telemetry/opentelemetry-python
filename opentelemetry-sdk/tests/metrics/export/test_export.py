@@ -601,6 +601,10 @@ class TestController(unittest.TestCase):
         self.assertTrue(controller.finished.isSet())
         exporter.shutdown.assert_any_call()
 
+        # shutdown should flush the meter
+        meter.collect.assert_called_once()
+        exporter.export.assert_called_once()
+
     def test_push_controller_suppress_instrumentation(self):
         meter = mock.Mock()
         exporter = mock.Mock()
