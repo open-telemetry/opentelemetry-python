@@ -37,6 +37,16 @@ Usage
     # metrics are collected asynchronously
     input("...")
 
+    # to configure custom metrics
+    configuration = {
+        "system_memory": ["total", "available", "used", "free", "active", "inactive", "wired"],
+        "system_cpu": ["user", "nice", "system", "idle"],
+        "network_bytes": ["bytes_recv", "bytes_sent"],
+        "runtime_memory": ["rss", "vms"],
+        "runtime_cpu": ["user", "system"],
+    }
+    SystemMetrics(exporter, config=configuration)
+
 API
 ---
 """
