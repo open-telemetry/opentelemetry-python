@@ -440,3 +440,35 @@ class TestDatadogSpanExporter(unittest.TestCase):
         ]
         expected = ["origin-service", None]
         self.assertListEqual(actual, expected)
+
+    def test_sampling_rate(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x34BF92DEEFC58C92,
+            is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+        )
+        sampler = trace_api.sampling.ProbabilitySampler(0.5)
+
+        span = trace.Span(
+            name="sampled", context=context, parent=None, sampler=sampler
+        )
+        span.start()
+        span.end()
+
+        # pylint: disable=protected-access
+        exporter = datadog.DatadogSpanExporter()
+        datadog_spans = [
+            span.to_dict() for span in exporter._translate_to_datadog([span])
+        ]
+
+        self.assertEqual(len(datadog_spans), 1)
+
+        actual = [
+            span["metrics"].get(datadog.constants.SAMPLE_RATE_METRIC_KEY)
+            if "metrics" in span
+            else None
+            for span in datadog_spans
+        ]
+        expected = [0.5]
+        self.assertListEqual(actual, expected)
