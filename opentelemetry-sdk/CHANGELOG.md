@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.8b0
+
+Released 2020-05-27
+
 - Validate span attribute types in SDK
   ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
 - Specify to_json indent from arguments
