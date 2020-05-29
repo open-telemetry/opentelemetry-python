@@ -44,6 +44,7 @@ class PushController(threading.Thread):
 
     def shutdown(self):
         self.finished.set()
+        # Run one more collection pass to flush metrics batched in the meter
         self.tick()
         self.exporter.shutdown()
         if self._atexit_handler is not None:
