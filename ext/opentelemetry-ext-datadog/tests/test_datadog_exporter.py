@@ -403,3 +403,72 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.assertEqual(len(datadog_spans), 1)
 
         tracer_provider.shutdown()
+
+    def test_origin(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=trace_api.INVALID_SPAN,
+            is_remote=True,
+            trace_state=trace_api.TraceState(
+                {datadog.constants.DD_ORIGIN: "origin-service"}
+            ),
+        )
+
+        root_span = trace.Span(name="root", context=context, parent=None)
+        child_span = trace.Span(
+            name="child", context=context, parent=root_span
+        )
+        root_span.start()
+        child_span.start()
+        child_span.end()
+        root_span.end()
+
+        # pylint: disable=protected-access
+        exporter = datadog.DatadogSpanExporter()
+        datadog_spans = [
+            span.to_dict()
+            for span in exporter._translate_to_datadog([root_span, child_span])
+        ]
+
+        self.assertEqual(len(datadog_spans), 2)
+
+        actual = [
+            span["meta"].get(datadog.constants.DD_ORIGIN)
+            if "meta" in span
+            else None
+            for span in datadog_spans
+        ]
+        expected = ["origin-service", None]
+        self.assertListEqual(actual, expected)
+
+    def test_sampling_rate(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x34BF92DEEFC58C92,
+            is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+        )
+        sampler = trace_api.sampling.ProbabilitySampler(0.5)
+
+        span = trace.Span(
+            name="sampled", context=context, parent=None, sampler=sampler
+        )
+        span.start()
+        span.end()
+
+        # pylint: disable=protected-access
+        exporter = datadog.DatadogSpanExporter()
+        datadog_spans = [
+            span.to_dict() for span in exporter._translate_to_datadog([span])
+        ]
+
+        self.assertEqual(len(datadog_spans), 1)
+
+        actual = [
+            span["metrics"].get(datadog.constants.SAMPLE_RATE_METRIC_KEY)
+            if "metrics" in span
+            else None
+            for span in datadog_spans
+        ]
+        expected = [0.5]
+        self.assertListEqual(actual, expected)
