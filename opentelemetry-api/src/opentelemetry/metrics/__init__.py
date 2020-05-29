@@ -393,7 +393,7 @@ def get_meter(
     This function is a convenience wrapper for
     opentelemetry.metrics.get_meter_provider().get_meter
 
-    If meter_provider is ommited the current configured one is used.
+    If meter_provider is omitted the current configured one is used.
     """
     if meter_provider is None:
         meter_provider = get_meter_provider()
