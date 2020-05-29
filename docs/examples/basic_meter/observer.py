@@ -29,6 +29,7 @@ meter = metrics.get_meter(__name__)
 exporter = ConsoleMetricsExporter()
 controller = PushController(meter=meter, exporter=exporter, interval=2)
 
+
 # Callback to gather cpu usage
 def get_cpu_usage_callback(observer):
     for (number, percent) in enumerate(psutil.cpu_percent(percpu=True)):
