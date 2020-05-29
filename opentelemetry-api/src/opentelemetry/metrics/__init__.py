@@ -206,7 +206,6 @@ class MeterProvider(abc.ABC):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
@@ -222,12 +221,6 @@ class MeterProvider(abc.ABC):
                 instrumented but the name of the module doing the instrumentation.
                 E.g., instead of ``"requests"``, use
                 ``"opentelemetry.ext.requests"``.
-
-            stateful: True/False to indicate whether the meter will be
-                    stateful. True indicates the meter computes checkpoints
-                    from over the process lifetime. False indicates the meter
-                    computes checkpoints which describe the updates of a single
-                    collection period (deltas).
 
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
