@@ -252,11 +252,6 @@ class Span(trace_api.Span):
             this `Span`.
     """
 
-    # Initialize these lazily assuming most spans won't have them.
-    _empty_attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
-    _empty_events = BoundedList(MAX_NUM_EVENTS)
-    _empty_links = BoundedList(MAX_NUM_LINKS)
-
     def __init__(
         self,
         name: str,
@@ -289,22 +284,20 @@ class Span(trace_api.Span):
 
         self._filter_attribute_values(attributes)
         if not attributes:
-            self.attributes = Span._empty_attributes
+            self.attributes = self._new_attributes()
         else:
             self.attributes = BoundedDict.from_map(
                 MAX_NUM_ATTRIBUTES, attributes
             )
 
-        if events is None:
-            self.events = Span._empty_events
-        else:
-            self.events = BoundedList(MAX_NUM_EVENTS)
+        self.events = self._new_events()
+        if events:
             for event in events:
                 self._filter_attribute_values(event.attributes)
                 self.events.append(event)
 
         if links is None:
-            self.links = Span._empty_links
+            self.links = self._new_links()
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
@@ -324,6 +317,18 @@ class Span(trace_api.Span):
         return '{}(name="{}", context={})'.format(
             type(self).__name__, self.name, self.context
         )
+
+    @staticmethod
+    def _new_attributes():
+        return BoundedDict(MAX_NUM_ATTRIBUTES)
+
+    @staticmethod
+    def _new_events():
+        return BoundedList(MAX_NUM_EVENTS)
+
+    @staticmethod
+    def _new_links():
+        return BoundedList(MAX_NUM_LINKS)
 
     @staticmethod
     def _format_context(context):
@@ -407,9 +412,6 @@ class Span(trace_api.Span):
             if not self.is_recording_events():
                 return
             has_ended = self.end_time is not None
-            if not has_ended:
-                if self.attributes is Span._empty_attributes:
-                    self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         if has_ended:
             logger.warning("Setting attribute on ended span.")
             return
@@ -442,9 +444,7 @@ class Span(trace_api.Span):
             if not self.is_recording_events():
                 return
             has_ended = self.end_time is not None
-            if not has_ended:
-                if self.events is Span._empty_events:
-                    self.events = BoundedList(MAX_NUM_EVENTS)
+
         if has_ended:
             logger.warning("Calling add_event() on an ended span.")
             return
@@ -458,7 +458,7 @@ class Span(trace_api.Span):
     ) -> None:
         self._filter_attribute_values(attributes)
         if not attributes:
-            attributes = Span._empty_attributes
+            attributes = self._new_attributes()
         self._add_event(
             Event(
                 name=name,

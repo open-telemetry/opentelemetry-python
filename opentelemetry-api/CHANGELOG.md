@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.8b0
+
+Released 2020-05-27
+
+- Handle boolean, integer and float values in Configuration
+  ([#662](https://github.com/open-telemetry/opentelemetry-python/pull/662))
+- bugfix: ensure status is always string
+  ([#640](https://github.com/open-telemetry/opentelemetry-python/pull/640))
+
 ## 0.7b1
 
 Released 2020-05-12
