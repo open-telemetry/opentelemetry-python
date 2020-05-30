@@ -597,9 +597,14 @@ class TestController(unittest.TestCase):
         controller = PushController(meter, exporter, 5.0)
         meter.collect.assert_not_called()
         exporter.export.assert_not_called()
+
         controller.shutdown()
         self.assertTrue(controller.finished.isSet())
         exporter.shutdown.assert_any_call()
+
+        # shutdown should flush the meter
+        self.assertEqual(meter.collect.call_count, 1)
+        self.assertEqual(exporter.export.call_count, 1)
 
     def test_push_controller_suppress_instrumentation(self):
         meter = mock.Mock()
