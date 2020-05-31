@@ -24,7 +24,7 @@ import sys
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics import Counter, ValueRecorder, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
@@ -80,7 +80,7 @@ requests_size = meter.create_metric(
     description="size of requests",
     unit="1",
     value_type=int,
-    metric_type=Measure,
+    metric_type=ValueRecorder,
     label_keys=("environment",),
 )
 

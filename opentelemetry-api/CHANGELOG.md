@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Rename Measure to ValueRecorder in metrics
+  ([#662](https://github.com/open-telemetry/opentelemetry-python/pull/662))
+
 ## 0.8b0
 
 Released 2020-05-27
