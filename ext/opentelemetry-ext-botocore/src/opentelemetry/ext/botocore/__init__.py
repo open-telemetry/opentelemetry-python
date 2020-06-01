@@ -154,7 +154,7 @@ def add_span_arg_tags(span, endpoint_name, args, args_names, args_traced):
 
         return value
 
-    if endpoint_name not in ["kms", "sts"]:
+    if endpoint_name not in {"kms", "sts"}:
         tags = dict(
             (name, value)
             for (name, value) in zip(args_names, args)
