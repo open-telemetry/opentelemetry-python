@@ -19,14 +19,15 @@ from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
+
 from opentelemetry.exporter.cloud_trace import (
     CloudTraceSpanExporter,
     _extract_attributes,
     _extract_events,
     _extract_links,
     _extract_status,
-    _truncate_str,
     _format_attribute_value,
+    _truncate_str,
 )
 from opentelemetry.sdk.trace import Event, Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
