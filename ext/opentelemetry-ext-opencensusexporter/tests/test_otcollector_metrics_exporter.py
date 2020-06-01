@@ -18,13 +18,12 @@ from unittest import mock
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.metrics.v1 import metrics_pb2
-
 from opentelemetry import metrics
 from opentelemetry.ext.opencensusexporter import metrics_exporter
 from opentelemetry.sdk.metrics import (
     Counter,
-    ValueRecorder,
     MeterProvider,
+    ValueRecorder,
     get_labels_as_key,
 )
 from opentelemetry.sdk.metrics.export import (

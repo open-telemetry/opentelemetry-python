@@ -19,7 +19,7 @@ It shows the usage of the direct, bound and batch calling conventions.
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, ValueRecorder, MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider, ValueRecorder
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
