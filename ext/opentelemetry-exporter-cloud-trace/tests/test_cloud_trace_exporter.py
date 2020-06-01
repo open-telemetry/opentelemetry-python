@@ -19,7 +19,6 @@ from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
-
 from opentelemetry.exporter.cloud_trace import (
     CloudTraceSpanExporter,
     _extract_attributes,
@@ -27,9 +26,10 @@ from opentelemetry.exporter.cloud_trace import (
     _extract_links,
     _extract_status,
     _truncate_str,
+    _format_attribute_value,
 )
 from opentelemetry.sdk.trace import Event, Span
-from opentelemetry.trace import DefaultSpan, Link, SpanContext, SpanKind
+from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status as SpanStatus
 from opentelemetry.trace.status import StatusCanonicalCode
 
@@ -249,6 +249,55 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                             "attribute_map": {
                                 "int_attr_value": AttributeValue(int_value=123)
                             }
+                        },
+                    },
+                ]
+            ),
+        )
+
+    def test_truncate_string(self):
+        str_300 = "a" * 300
+        str_256 = "a" * 256
+        str_128 = "a" * 128
+        self.assertEqual(_truncate_str("aaaa", 1), ("a", 3))
+        self.assertEqual(_truncate_str("aaaa", 5), ("aaaa", 0))
+        self.assertEqual(_truncate_str("aaaa", 4), ("aaaa", 0))
+
+        self.assertEqual(
+            _format_attribute_value(str_300),
+            AttributeValue(
+                string_value=TruncatableString(
+                    value=str_256, truncated_byte_count=300 - 256
+                )
+            ),
+        )
+        self.assertEqual(
+            _extract_attributes({str_300: str_300}),
+            ProtoSpan.Attributes(
+                attribute_map={
+                    str_128: AttributeValue(
+                        string_value=TruncatableString(
+                            value=str_256, truncated_byte_count=300 - 256
+                        )
+                    )
+                }
+            ),
+        )
+
+        time_in_ns1 = 1589919268850900051
+        time_in_ms_and_ns1 = {"seconds": 1589919268, "nanos": 850899968}
+        event1 = Event(name=str_300, attributes={}, timestamp=time_in_ns1)
+        self.assertEqual(
+            _extract_events([event1]),
+            ProtoSpan.TimeEvents(
+                time_event=[
+                    {
+                        "time": time_in_ms_and_ns1,
+                        "annotation": {
+                            "description": TruncatableString(
+                                value=str_256, truncated_byte_count=300 - 256
+                            ),
+                            "attributes": {},
                         },
                     },
                 ]

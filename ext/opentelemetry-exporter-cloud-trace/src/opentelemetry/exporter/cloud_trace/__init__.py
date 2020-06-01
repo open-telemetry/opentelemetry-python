@@ -44,21 +44,17 @@ import logging
 from typing import Any, Dict, List, Sequence, Tuple
 
 import google.auth
+import opentelemetry.trace as trace_api
 from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
-
-import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
-
-# Max length is 128 bytes for a truncatable string.
-MAX_LENGTH = 128
 
 
 class CloudTraceSpanExporter(SpanExporter):
@@ -138,7 +134,9 @@ class CloudTraceSpanExporter(SpanExporter):
                 {
                     "name": span_name,
                     "span_id": span_id,
-                    "display_name": _get_truncatable_str_object(span.name),
+                    "display_name": _get_truncatable_str_object(
+                        span.name, 128
+                    ),
                     "start_time": start_time,
                     "end_time": end_time,
                     "parent_span_id": parent_id,
@@ -174,9 +172,7 @@ def _get_time_from_ns(nanoseconds: int) -> Dict:
     return {"seconds": int(seconds), "nanos": int(nanos)}
 
 
-def _get_truncatable_str_object(
-    str_to_convert: str, max_length: int = MAX_LENGTH
-):
+def _get_truncatable_str_object(str_to_convert: str, max_length: int):
     """Truncate the string if it exceeds the length limit and record the
     truncated bytes count."""
     truncated, truncated_byte_count = _truncate_str(str_to_convert, max_length)
@@ -186,21 +182,9 @@ def _get_truncatable_str_object(
     )
 
 
-def _truncate_str(
-    str_to_check: str, limit: int = MAX_LENGTH
-) -> Tuple[str, int]:
+def _truncate_str(str_to_check: str, limit: int) -> Tuple[str, int]:
     """Check the length of a string. If exceeds limit, then truncate it."""
-    str_bytes = str_to_check.encode("utf-8")
-    str_len = len(str_bytes)
-    truncated_byte_count = 0
-
-    if str_len > limit:
-        truncated_byte_count = str_len - limit
-        str_bytes = str_bytes[:limit]
-
-    result = str(str_bytes.decode("utf-8", errors="ignore"))
-
-    return result, truncated_byte_count
+    return str_to_check[:limit], max(0, len(str_to_check) - limit)
 
 
 def _extract_status(status: trace_api.Status) -> Status:
@@ -268,7 +252,7 @@ def _extract_attributes(attrs: types.Attributes) -> ProtoSpan.Attributes:
     attributes_dict = {}
 
     for key, value in attrs.items():
-        key = _truncate_str(key)[0]
+        key = _truncate_str(key, 128)[0]
         value = _format_attribute_value(value)
 
         if value is not None:
@@ -283,10 +267,10 @@ def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
         value_type = "int_value"
     elif isinstance(value, str):
         value_type = "string_value"
-        value = _get_truncatable_str_object(value)
+        value = _get_truncatable_str_object(value, 256)
     elif isinstance(value, float):
         value_type = "string_value"
-        value = _get_truncatable_str_object("{:0.4f}".format(value))
+        value = _get_truncatable_str_object("{:0.4f}".format(value), 256)
     else:
         logger.warning(
             "ignoring attribute value %s of type %s. Values type must be one "
