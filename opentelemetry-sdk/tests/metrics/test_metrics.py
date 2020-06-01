@@ -271,7 +271,9 @@ class TestCounter(unittest.TestCase):
 class TestValueRecorder(unittest.TestCase):
     def test_record(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.ValueRecorder("name", "desc", "unit", int, meter, ("key",))
+        metric = metrics.ValueRecorder(
+            "name", "desc", "unit", int, meter, ("key",)
+        )
         labels = {"key": "value"}
         bound_valuerecorder = metric.bind(labels)
         values = (37, 42, 7)
@@ -384,7 +386,9 @@ class TestBoundValueRecorder(unittest.TestCase):
 
     def test_record_disabled(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_valuerecorder = metrics.BoundValueRecorder(int, False, aggregator)
+        bound_valuerecorder = metrics.BoundValueRecorder(
+            int, False, aggregator
+        )
         bound_valuerecorder.record(3)
         self.assertEqual(
             bound_valuerecorder.aggregator.current, (None, None, None, 0)
@@ -404,4 +408,6 @@ class TestBoundValueRecorder(unittest.TestCase):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_valuerecorder = metrics.BoundValueRecorder(int, True, aggregator)
         bound_valuerecorder.update(4.0)
-        self.assertEqual(bound_valuerecorder.aggregator.current, (4.0, 4.0, 4.0, 1))
+        self.assertEqual(
+            bound_valuerecorder.aggregator.current, (4.0, 4.0, 4.0, 1)
+        )
