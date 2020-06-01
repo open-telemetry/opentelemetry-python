@@ -53,12 +53,6 @@ from opentelemetry.ext.requests.version import __version__
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-# StackDriver exporter spins up a new thread (that doesn't inherit the
-# "suppress_instrumentation" context) that makes a request call. We need to
-# manually blacklist the url to avoid falling into an infinite loop.
-# https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/3
-SUPPRESSION_BLACKLIST = ["https://oauth2.googleapis.com/token"]
-
 
 # pylint: disable=unused-argument
 def _instrument(tracer_provider=None, span_callback=None):
@@ -79,10 +73,7 @@ def _instrument(tracer_provider=None, span_callback=None):
 
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
-        if (
-            context.get_value("suppress_instrumentation")
-            or url in SUPPRESSION_BLACKLIST
-        ):
+        if context.get_value("suppress_instrumentation"):
             return wrapped(self, method, url, *args, **kwargs)
 
         # See
