@@ -108,7 +108,7 @@ class BotocoreInstrumentor(BaseInstrumentor):
                 endpoint_name,
                 args,
                 ("action", "params", "path", "verb"),
-                {"params", "path", "verb"}
+                {"params", "path", "verb"},
             )
 
             region_name = deep_getattr(instance, "meta.region_name")
