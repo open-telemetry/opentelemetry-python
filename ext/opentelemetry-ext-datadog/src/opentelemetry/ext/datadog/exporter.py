@@ -16,10 +16,11 @@ import logging
 import os
 from urllib.parse import urlparse
 
-import opentelemetry.trace as trace_api
 from ddtrace.ext import SpanTypes as DatadogSpanTypes
 from ddtrace.internal.writer import AgentWriter
 from ddtrace.span import Span as DatadogSpan
+
+import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCanonicalCode
 

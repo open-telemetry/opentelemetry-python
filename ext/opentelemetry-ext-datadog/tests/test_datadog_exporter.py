@@ -19,6 +19,7 @@ import unittest
 from unittest import mock
 
 from ddtrace.internal.writer import AgentWriter
+
 from opentelemetry import trace as trace_api
 from opentelemetry.ext import datadog
 from opentelemetry.sdk import trace
