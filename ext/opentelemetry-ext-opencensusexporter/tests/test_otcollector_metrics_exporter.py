@@ -23,7 +23,7 @@ from opentelemetry import metrics
 from opentelemetry.ext.opencensusexporter import metrics_exporter
 from opentelemetry.sdk.metrics import (
     Counter,
-    Measure,
+    ValueRecorder,
     MeterProvider,
     get_labels_as_key,
 )
@@ -76,7 +76,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         )
         self.assertIs(result, metrics_pb2.MetricDescriptor.CUMULATIVE_DOUBLE)
         result = metrics_exporter.get_collector_metric_type(
-            Measure("testName", "testDescription", "unit", None, None)
+            ValueRecorder("testName", "testDescription", "unit", None, None)
         )
         self.assertIs(result, metrics_pb2.MetricDescriptor.UNSPECIFIED)
 
@@ -88,8 +88,8 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         float_counter = self._meter.create_metric(
             "testName", "testDescription", "unit", float, Counter
         )
-        measure = self._meter.create_metric(
-            "testName", "testDescription", "unit", float, Measure
+        valuerecorder = self._meter.create_metric(
+            "testName", "testDescription", "unit", float, ValueRecorder
         )
         result = metrics_exporter.get_collector_point(
             MetricRecord(aggregator, self._key_labels, int_counter)
@@ -106,7 +106,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         self.assertRaises(
             TypeError,
             metrics_exporter.get_collector_point(
-                MetricRecord(aggregator, self._key_labels, measure)
+                MetricRecord(aggregator, self._key_labels, valuerecorder)
             ),
         )
 

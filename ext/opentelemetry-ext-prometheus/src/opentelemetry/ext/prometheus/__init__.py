@@ -79,7 +79,7 @@ from prometheus_client.core import (
     UnknownMetricFamily,
 )
 
-from opentelemetry.metrics import Counter, Measure, Metric
+from opentelemetry.metrics import Counter, ValueRecorder, Metric
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -164,7 +164,7 @@ class CustomCollector:
                 labels=label_values, value=metric_record.aggregator.checkpoint
             )
         # TODO: Add support for histograms when supported in OT
-        elif isinstance(metric_record.metric, Measure):
+        elif isinstance(metric_record.metric, ValueRecorder):
             prometheus_metric = UnknownMetricFamily(
                 name=metric_name,
                 documentation=metric_record.metric.description,
