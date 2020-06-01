@@ -227,7 +227,7 @@ class TestBotoInstrumentor(TestBase):
         False,
         (
             "Test to reproduce the case where args sent to patched function "
-            "are None, can't be mocked: needs AWS crendentials"
+            "are None, can't be mocked: needs AWS credentials"
         ),
     )
     def test_elasticache_client(self):
