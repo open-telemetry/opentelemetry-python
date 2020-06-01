@@ -405,7 +405,9 @@ class MeterProvider(metrics_api.MeterProvider):
     """
 
     def __init__(
-        self, stateful=True, resource: Resource = Resource.create_empty()
+        self,
+        stateful=True,
+        resource: Resource = Resource.create_empty(),
     ):
         self.stateful = stateful
         self.resource = resource

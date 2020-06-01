@@ -30,30 +30,14 @@ from opentelemetry.sdk.metrics.export.controller import PushController
 
 stateful = True
 
-
-def usage(argv):
-    print("usage:")
-    print("{} [mode]".format(argv[0]))
-    print("mode: stateful (default) or stateless")
-
-
-if len(sys.argv) >= 2:
-    batcher_mode = sys.argv[1]
-    if batcher_mode not in ("stateful", "stateless"):
-        print("bad mode specified.")
-        usage(sys.argv)
-        sys.exit(1)
-    stateful = batcher_mode == "stateful"
-
 print(
     "Starting example, values will be printed to the console every 5 seconds."
 )
 
-
 # Stateful determines whether how metrics are collected: if true, metrics
 # accumulate over the process lifetime. If false, metrics are reset at the
 # beginning of each collection interval.
-metrics.set_meter_provider(MeterProvider(batcher_mode == "stateful"))
+metrics.set_meter_provider(MeterProvider(stateful))
 # The Meter is responsible for creating and recording metrics. Each meter has a
 # unique name, which we set as the module's name here.
 meter = metrics.get_meter(__name__)
