@@ -62,9 +62,6 @@ from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
 
-ARGS_NAME = ("action", "params", "path", "verb")
-TRACED_ARGS = ["params", "path", "verb"]
-
 
 class BotocoreInstrumentor(BaseInstrumentor):
     """A instrumentor for Botocore
@@ -107,7 +104,11 @@ class BotocoreInstrumentor(BaseInstrumentor):
                 span.resource = endpoint_name
 
             add_span_arg_tags(
-                span, endpoint_name, args, ARGS_NAME, TRACED_ARGS
+                span,
+                endpoint_name,
+                args,
+                ("action", "params", "path", "verb"),
+                {"params", "path", "verb"}
             )
 
             region_name = deep_getattr(instance, "meta.region_name")
