@@ -59,7 +59,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 "bool_key": AttributeValue(bool_value=False),
                 "double_key": AttributeValue(
                     string_value=TruncatableString(
-                        value="1.421", truncated_byte_count=0
+                        value="1.4210", truncated_byte_count=0
                     )
                 ),
                 "int_key": AttributeValue(int_value=123),
