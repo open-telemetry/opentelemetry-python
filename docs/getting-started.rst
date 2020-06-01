@@ -28,69 +28,69 @@ how long the action took, or add arbitrary attributes to the span that may provi
 
 Here's an example of a script that emits a trace containing three named spans: "foo", "bar", and "baz":
 
-.. code-block:: python
-
-    # tracing.py
-    from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-    from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-
-    trace.set_tracer_provider(TracerProvider())
-    trace.get_tracer_provider().add_span_processor(
-        SimpleExportSpanProcessor(ConsoleSpanExporter())
-    )
-    tracer = trace.get_tracer(__name__)
-    with tracer.start_as_current_span('foo'):
-        with tracer.start_as_current_span('bar'):
-            with tracer.start_as_current_span('baz'):
-                print("Hello world from OpenTelemetry Python!")
+.. literalinclude:: getting_started/tracing_example.py
+    :language: python
+    :lines: 15-
 
 We can run it, and see the traces print to your console:
 
 .. code-block:: sh
 
-    $ python tracing.py
-    Hello world from OpenTelemetry Python!
-    Span(name="baz",
-         context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
-                             span_id=0xfacbb82a4d0cf5dd,
-                             trace_state={}
-         ),
-         kind=SpanKind.INTERNAL,
-         parent=Span(name="bar",
-                     context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
-                                         span_id=0xb1894e8d588f5f62,
-                                         trace_state={})
-         ),
-         start_time=2020-03-15T05:12:08.345394Z,
-         end_time=2020-03-15T05:12:08.345450Z
-     )
-    Span(name="bar",
-         context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
-                             span_id=0xb1894e8d588f5f62,
-                             trace_state={}
-         ),
-         kind=SpanKind.INTERNAL,
-         parent=Span(name="foo",
-                     context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
-                                         span_id=0xde5ea23d6a9e4180,
-                                         trace_state={})
-         ),
-         start_time=2020-03-15T05:12:08.345360Z,
-         end_time=2020-03-15T05:12:08.345597Z
-    )
-    Span(name="foo",
-         context=SpanContext(trace_id=0x37c1b154d9ab5a4b94b0046484b90400,
-                             span_id=0xde5ea23d6a9e4180,
-                             trace_state={}
-         ),
-         kind=SpanKind.INTERNAL,
-         parent=None,
-         start_time=2020-03-15T05:12:08.345287Z,
-         end_time=2020-03-15T05:12:08.345673Z
-    )
-
+    $ python tracing_example.py
+    {
+        "name": "baz",
+        "context": {
+            "trace_id": "0xb51058883c02f880111c959f3aa786a2",
+            "span_id": "0xb2fa4c39f5f35e13",
+            "trace_state": "{}"
+        },
+        "kind": "SpanKind.INTERNAL",
+        "parent_id": "0x77e577e6a8813bf4",
+        "start_time": "2020-05-07T14:39:52.906272Z",
+        "end_time": "2020-05-07T14:39:52.906343Z",
+        "status": {
+            "canonical_code": "OK"
+        },
+        "attributes": {},
+        "events": [],
+        "links": []
+    }
+    {
+        "name": "bar",
+        "context": {
+            "trace_id": "0xb51058883c02f880111c959f3aa786a2",
+            "span_id": "0x77e577e6a8813bf4",
+            "trace_state": "{}"
+        },
+        "kind": "SpanKind.INTERNAL",
+        "parent_id": "0x3791d950cc5140c5",
+        "start_time": "2020-05-07T14:39:52.906230Z",
+        "end_time": "2020-05-07T14:39:52.906601Z",
+        "status": {
+            "canonical_code": "OK"
+        },
+        "attributes": {},
+        "events": [],
+        "links": []
+    }
+    {
+        "name": "foo",
+        "context": {
+            "trace_id": "0xb51058883c02f880111c959f3aa786a2",
+            "span_id": "0x3791d950cc5140c5",
+            "trace_state": "{}"
+        },
+        "kind": "SpanKind.INTERNAL",
+        "parent_id": null,
+        "start_time": "2020-05-07T14:39:52.906157Z",
+        "end_time": "2020-05-07T14:39:52.906743Z",
+        "status": {
+            "canonical_code": "OK"
+        },
+        "attributes": {},
+        "events": [],
+        "links": []
+    }
 
 Each span typically represents a single operation or unit of work.
 Spans can be nested, and have a parent-child relationship with other spans.
@@ -126,34 +126,15 @@ for Jaeger, but you can install that as a separate package:
 
 Once installed, update your code to import the Jaeger exporter, and use that instead:
 
-.. code-block:: python
-
-    # jaeger-example.py
-    from opentelemetry import trace
-    from opentelemetry.ext import jaeger
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-
-    trace.set_tracer_provider(TracerProvider())
-
-    jaeger_exporter = jaeger.JaegerSpanExporter(
-        service_name="my-helloworld-service", agent_host_name="localhost", agent_port=6831
-    )
-
-    trace.get_tracer_provider().add_span_processor(
-        SimpleExportSpanProcessor(jaeger_exporter)
-    )
-    tracer = trace.get_tracer(__name__)
-    with tracer.start_as_current_span('foo'):
-        with tracer.start_as_current_span('bar'):
-            with tracer.start_as_current_span('baz'):
-                print("Hello world from OpenTelemetry Python!")
+.. literalinclude:: getting_started/jaeger_example.py
+    :language: python
+    :lines: 15-
 
 Run the script:
 
 .. code-block:: python
 
-    python jaeger-example.py
+    python jaeger_example.py
 
 You can then visit the jaeger UI, see you service under "services", and find your traces!
 
@@ -176,42 +157,14 @@ We will now instrument a basic Flask application that uses the requests library 
 .. code-block:: sh
 
     pip install opentelemetry-ext-flask
-    pip install opentelemetry-ext-http-requests
+    pip install opentelemetry-ext-requests
 
 
 And let's write a small Flask application that sends an HTTP request, activating each instrumentation during the initialization:
 
-.. code-block:: python
-
-    # flask_example.py
-    from opentelemetry.ext.flask import FlaskInstrumentor
-    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
-
-    import flask
-    import requests
-
-    import opentelemetry.ext.http_requests
-    from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-    from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-
-    trace.set_tracer_provider(TracerProvider())
-    trace.get_tracer_provider().add_span_processor(
-        SimpleExportSpanProcessor(ConsoleSpanExporter())
-    )
-
-    app = flask.Flask(__name__)
-    opentelemetry.ext.http_requests.enable(trace.get_tracer_provider())
-
-    @app.route("/")
-    def hello():
-        tracer = trace.get_tracer(__name__)
-        with tracer.start_as_current_span("example-request"):
-            requests.get("http://www.example.com")
-        return "hello"
-
-    app.run(debug=True, port=5000)
+.. literalinclude:: getting_started/flask_example.py
+    :language: python
+    :lines: 15-
 
 
 Now run the above script, hit the root url (http://localhost:5000/) a few times, and watch your spans be emitted!
@@ -234,45 +187,15 @@ subdivision of the measurements the metric represents.
 
 The following is an example of emitting metrics to console, in a similar fashion to the trace example:
 
-.. code-block:: python
-
-    # metrics.py
-    import sys
-    import time
-
-    from opentelemetry import metrics
-    from opentelemetry.sdk.metrics import Counter, MeterProvider
-    from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-    from opentelemetry.sdk.metrics.export.controller import PushController
-
-    metrics.set_meter_provider(MeterProvider())
-    meter = metrics.get_meter(__name__, True)
-    exporter = ConsoleMetricsExporter()
-    controller = PushController(meter, exporter, 5)
-
-    staging_labels = {"environment": "staging"}
-
-    requests_counter = meter.create_metric(
-        name="requests",
-        description="number of requests",
-        unit="1",
-        value_type=int,
-        metric_type=Counter,
-        label_keys=("environment",),
-    )
-
-    requests_counter.add(25, staging_labels)
-    time.sleep(5)
-
-    requests_counter.add(20, staging_labels)
-    time.sleep(5)
-
+.. literalinclude:: getting_started/metrics_example.py
+    :language: python
+    :lines: 15-
 
 The sleeps will cause the script to take a while, but running it should yield:
 
 .. code-block:: sh
 
-    $ python metrics.py
+    $ python metrics_example.py
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=25)
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
 
@@ -310,48 +233,9 @@ For our Python application, we will need to install an exporter specific to Prom
 
 And use that instead of the `ConsoleMetricsExporter`:
 
-.. code-block:: python
-
-    # prometheus.py
-    import sys
-    import time
-
-    from opentelemetry import metrics
-    from opentelemetry.ext.prometheus import PrometheusMetricsExporter
-    from opentelemetry.sdk.metrics import Counter, MeterProvider
-    from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-    from opentelemetry.sdk.metrics.export.controller import PushController
-    from prometheus_client import start_http_server
-
-    # Start Prometheus client
-    start_http_server(port=8000, addr="localhost")
-
-    batcher_mode = "stateful"
-    metrics.set_meter_provider(MeterProvider())
-    meter = metrics.get_meter(__name__, batcher_mode == "stateful")
-    exporter = PrometheusMetricsExporter("MyAppPrefix")
-    controller = PushController(meter, exporter, 5)
-
-    staging_labels = {"environment": "staging"}
-
-    requests_counter = meter.create_metric(
-        name="requests",
-        description="number of requests",
-        unit="1",
-        value_type=int,
-        metric_type=Counter,
-        label_keys=("environment",),
-    )
-
-    requests_counter.add(25, staging_labels)
-    time.sleep(5)
-
-    requests_counter.add(20, staging_labels)
-    time.sleep(5)
-
-    # This line is added to keep the HTTP server up long enough to scrape.
-    input("Press any key to exit...")
-
+.. literalinclude:: getting_started/prometheus_example.py
+    :language: python
+    :lines: 15-
 
 The Prometheus server will run locally on port 8000, and the instrumented code will make metrics available to Prometheus via the `PrometheusMetricsExporter`.
 Visit the Prometheus UI (http://localhost:9090) to view your metrics.
@@ -409,64 +293,6 @@ Install the OpenTelemetry Collector exporter:
 
 And execute the following script:
 
-.. code-block:: python
-
-    # otcollector.py
-    import time
-    from opentelemetry import trace
-    from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
-    from opentelemetry import metrics
-    from opentelemetry.ext.otcollector.metrics_exporter import CollectorMetricsExporter
-    from opentelemetry.sdk.metrics import Counter, MeterProvider
-    from opentelemetry.sdk.metrics.export.controller import PushController
-
-
-    # create a CollectorSpanExporter
-    span_exporter = CollectorSpanExporter(
-        # optional:
-        # endpoint="myCollectorUrl:55678",
-        # service_name="test_service",
-        # host_name="machine/container name",
-    )
-    tracer_provider = TracerProvider()
-    trace.set_tracer_provider(tracer_provider)
-    span_processor = BatchExportSpanProcessor(span_exporter)
-    tracer_provider.add_span_processor(span_processor)
-
-    # create a CollectorMetricsExporter
-    metric_exporter = CollectorMetricsExporter(
-        # optional:
-        # endpoint="myCollectorUrl:55678",
-        # service_name="test_service",
-        # host_name="machine/container name",
-    )
-
-    # Meter is responsible for creating and recording metrics
-    metrics.set_meter_provider(MeterProvider())
-    meter = metrics.get_meter(__name__)
-    # controller collects metrics created from meter and exports it via the
-    # exporter every interval
-    controller = PushController(meter, metric_exporter, 5)
-
-    # Configure the tracer to use the collector exporter
-    tracer = trace.get_tracer_provider().get_tracer(__name__)
-
-    with tracer.start_as_current_span("foo"):
-        print("Hello world!")
-
-    requests_counter = meter.create_metric(
-        name="requests",
-        description="number of requests",
-        unit="1",
-        value_type=int,
-        metric_type=Counter,
-        label_keys=("environment",),
-    )
-    # Labels are used to identify key-values that are associated with a specific
-    # metric that you want to record. These are useful for pre-aggregation and can
-    # be used to store custom dimensions pertaining to a metric
-    labels = {"environment": "staging"}
-    requests_counter.add(25, labels)
-    time.sleep(10)  # give push_controller time to push metrics
+.. literalinclude:: getting_started/otcollector_example.py
+    :language: python
+    :lines: 15-

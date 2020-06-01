@@ -17,7 +17,7 @@ import os
 from pymongo import MongoClient
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymongo import trace_integration
+from opentelemetry.ext.pymongo import PymongoInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 MONGODB_HOST = os.getenv("MONGODB_HOST ", "localhost")
@@ -31,7 +31,7 @@ class TestFunctionalPymongo(TestBase):
     def setUpClass(cls):
         super().setUpClass()
         cls._tracer = cls.tracer_provider.get_tracer(__name__)
-        trace_integration(cls.tracer_provider)
+        PymongoInstrumentor().instrument()
         client = MongoClient(
             MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000
         )
@@ -51,7 +51,7 @@ class TestFunctionalPymongo(TestBase):
         self.assertIsNot(root_span, None)
         self.assertIsNot(pymongo_span, None)
         self.assertIsNotNone(pymongo_span.parent)
-        self.assertEqual(pymongo_span.parent.name, root_span.name)
+        self.assertIs(pymongo_span.parent, root_span.get_context())
         self.assertIs(pymongo_span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(
             pymongo_span.attributes["db.instance"], MONGODB_DB_NAME
@@ -94,3 +94,23 @@ class TestFunctionalPymongo(TestBase):
         with self._tracer.start_as_current_span("rootSpan"):
             self._collection.delete_one({"name": "testName"})
         self.validate_spans()
+
+    def test_uninstrument(self):
+        # check that integration is working
+        self._collection.find_one()
+        spans = self.memory_exporter.get_finished_spans()
+        self.memory_exporter.clear()
+        self.assertEqual(len(spans), 1)
+
+        # uninstrument and check not new spans are created
+        PymongoInstrumentor().uninstrument()
+        self._collection.find_one()
+        spans = self.memory_exporter.get_finished_spans()
+        self.memory_exporter.clear()
+        self.assertEqual(len(spans), 0)
+
+        # re-enable and check that it works again
+        PymongoInstrumentor().instrument()
+        self._collection.find_one()
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
