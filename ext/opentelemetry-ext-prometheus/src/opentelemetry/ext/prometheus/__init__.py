@@ -71,18 +71,19 @@ import logging
 import re
 from typing import Sequence
 
-from opentelemetry.metrics import Counter, Metric, ValueRecorder
-from opentelemetry.sdk.metrics.export import (
-    MetricRecord,
-    MetricsExporter,
-    MetricsExportResult,
-)
 from prometheus_client import start_http_server
 from prometheus_client.core import (
     REGISTRY,
     CollectorRegistry,
     CounterMetricFamily,
     UnknownMetricFamily,
+)
+
+from opentelemetry.metrics import Counter, Metric, ValueRecorder
+from opentelemetry.sdk.metrics.export import (
+    MetricRecord,
+    MetricsExporter,
+    MetricsExportResult,
 )
 
 logger = logging.getLogger(__name__)
