@@ -117,7 +117,7 @@ class Configuration:
                 if match is not None:
 
                     key = match.group(1)
-                    value: ConfigValue = value_str
+                    value = value_str  # type: ConfigValue
 
                     if value_str == "True":
                         value = True
