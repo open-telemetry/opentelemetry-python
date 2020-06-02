@@ -253,8 +253,7 @@ class DefaultMeterProvider(MeterProvider):
 
 MetricT = TypeVar("MetricT", Counter, ValueRecorder)
 InstrumentT = TypeVar("InstrumentT", Counter, Observer, ValueRecorder)
-# TODO: Will populate with other observers when implemented
-ObserverT = TypeVar("ObserverT", DefaultObserver, ValueObserver)
+ObserverT = TypeVar("ObserverT", bound=Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -305,7 +304,6 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
-            observer_type: The type of observer being registered.
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
@@ -334,6 +332,7 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
+            observer_type: The type of observer being registered.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
         Returns: A new ``Observer`` metric instrument.
