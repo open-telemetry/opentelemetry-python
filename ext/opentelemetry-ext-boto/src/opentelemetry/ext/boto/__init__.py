@@ -56,18 +56,6 @@ from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
 
-AWS_QUERY_ARGS_NAME = ("operation_name", "params", "path", "verb")
-AWS_AUTH_ARGS_NAME = (
-    "method",
-    "path",
-    "headers",
-    "data",
-    "host",
-    "auth_path",
-    "sender",
-)
-AWS_QUERY_TRACED_ARGS = ["operation_name", "params", "path"]
-AWS_AUTH_TRACED_ARGS = ["path", "data", "host"]
 BLACKLIST_ENDPOINT_TAGS = {
     "s3": ["params.Body"],
 }
@@ -124,60 +112,16 @@ class BotoInstrumentor(BaseInstrumentor):
         unwrap(AWSQueryConnection, "make_request")
         unwrap(AWSAuthConnection, "make_request")
 
-    def _patched_query_request(self, original_func, instance, args, kwargs):
-
-        endpoint_name = getattr(instance, "host").split(".")[0]
-
-        with self._tracer.start_as_current_span(
-            "{}.command".format(endpoint_name), kind=SpanKind.CONSUMER,
-        ) as span:
-            operation_name = None
-            if args:
-                operation_name = args[0]
-                span.resource = "{}.{}".format(
-                    endpoint_name, operation_name.lower()
-                )
-            else:
-                span.resource = endpoint_name
-
-            add_span_arg_tags(
-                span,
-                endpoint_name,
-                args,
-                AWS_QUERY_ARGS_NAME,
-                AWS_QUERY_TRACED_ARGS,
-            )
-
-            # Obtaining region name
-            region_name = _get_instance_region_name(instance)
-
-            meta = {
-                AGENT: "boto",
-                OPERATION: operation_name,
-            }
-            if region_name:
-                meta[REGION] = region_name
-
-            for key, value in meta.items():
-                span.set_attribute(key, value)
-
-            # Original func returns a boto.connection.HTTPResponse object
-            result = original_func(*args, **kwargs)
-            span.set_attribute("http.status_code", getattr(result, "status"))
-            span.set_attribute("http.method", getattr(result, "_method"))
-
-            return result
-
-    def _patched_auth_request(self, original_func, instance, args, kwargs):
-        operation_name = None
-
-        frame = currentframe().f_back
-        operation_name = None
-        while frame:
-            if frame.f_code.co_name == "make_request":
-                operation_name = frame.f_back.f_code.co_name
-                break
-            frame = frame.f_back
+    def _common_request(
+        self,
+        args_name,
+        traced_args,
+        operation_name,
+        original_func,
+        instance,
+        args,
+        kwargs
+    ):
 
         endpoint_name = getattr(instance, "host").split(".")[0]
 
@@ -194,8 +138,8 @@ class BotoInstrumentor(BaseInstrumentor):
                 span,
                 endpoint_name,
                 args,
-                AWS_AUTH_ARGS_NAME,
-                AWS_AUTH_TRACED_ARGS,
+                args_name,
+                traced_args,
             )
 
             # Obtaining region name
@@ -217,6 +161,47 @@ class BotoInstrumentor(BaseInstrumentor):
             span.set_attribute("http.method", getattr(result, "_method"))
 
             return result
+
+    def _patched_query_request(self, original_func, instance, args, kwargs):
+
+        return self._common_request(
+            ("operation_name", "params", "path", "verb"),
+            ["operation_name", "params", "path"],
+            args[0] if args else None,
+            original_func,
+            instance,
+            args,
+            kwargs
+        )
+
+    def _patched_auth_request(self, original_func, instance, args, kwargs):
+        operation_name = None
+
+        frame = currentframe().f_back
+        operation_name = None
+        while frame:
+            if frame.f_code.co_name == "make_request":
+                operation_name = frame.f_back.f_code.co_name
+                break
+            frame = frame.f_back
+
+        return self._common_request(
+            (
+                "method",
+                "path",
+                "headers",
+                "data",
+                "host",
+                "auth_path",
+                "sender",
+            ),
+            ["path", "data", "host"],
+            operation_name,
+            original_func,
+            instance,
+            args,
+            kwargs
+        )
 
 
 def truncate_arg_value(value, max_len=1024):
