@@ -378,7 +378,7 @@ class Meter(metrics_api.Meter):
         observer_type=Type[metrics_api.ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> metrics_api.ObserverT:
+    ) -> metrics_api.Observer:
         ob = observer_type(
             callback,
             name,
@@ -393,7 +393,7 @@ class Meter(metrics_api.Meter):
             self.observers.add(ob)
         return ob
 
-    def unregister_observer(self, observer: metrics_api.ObserverT) -> None:
+    def unregister_observer(self, observer: metrics_api.Observer) -> None:
         with self.observers_lock:
             self.observers.remove(observer)
 
