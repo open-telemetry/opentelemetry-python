@@ -389,6 +389,7 @@ class DefaultMeter(Meter):
         description: str,
         unit: str,
         value_type: Type[ValueT],
+        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Observer":
