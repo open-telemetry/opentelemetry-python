@@ -21,6 +21,10 @@ from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
 
 from opentelemetry.exporter.cloud_trace import (
+    MAX_EVENT_ATTRS,
+    MAX_LINK_ATTRS,
+    MAX_NUM_EVENTS,
+    MAX_NUM_LINKS,
     CloudTraceSpanExporter,
     _extract_attributes,
     _extract_events,
@@ -47,7 +51,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "bool_key": False,
             "double_key": 1.421,
             "int_key": 123,
-            "int_key2": 1234,
         }
         self.extracted_attributes_variety_pack = ProtoSpan.Attributes(
             attribute_map={
@@ -63,7 +66,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                     )
                 ),
                 "int_key": AttributeValue(int_value=123),
-                "int_key2": AttributeValue(int_value=1234),
             }
         )
 
@@ -141,17 +143,23 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_extract_attributes(self):
         self.assertEqual(
-            _extract_attributes({}), ProtoSpan.Attributes(attribute_map={})
+            _extract_attributes({}, 4), ProtoSpan.Attributes(attribute_map={})
         )
         self.assertEqual(
-            _extract_attributes(self.attributes_variety_pack),
+            _extract_attributes(self.attributes_variety_pack, 4),
             self.extracted_attributes_variety_pack,
         )
         # Test ignoring attributes with illegal value type
         self.assertEqual(
-            _extract_attributes({"illegal_attribute_value": dict()}),
-            ProtoSpan.Attributes(attribute_map={}),
+            _extract_attributes({"illegal_attribute_value": dict()}, 4),
+            ProtoSpan.Attributes(attribute_map={}, dropped_attributes_count=1),
         )
+
+        too_many_attrs = {}
+        for attr_key in range(5):
+            too_many_attrs[str(attr_key)] = 0
+        proto_attrs = _extract_attributes(too_many_attrs, 4)
+        self.assertEqual(proto_attrs.dropped_attributes_count, 1)
 
     def test_extract_events(self):
         self.assertIsNone(_extract_events([]))
@@ -189,7 +197,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                                 value="event2", truncated_byte_count=0
                             ),
                             "attributes": ProtoSpan.Attributes(
-                                attribute_map={}
+                                attribute_map={}, dropped_attributes_count=1
                             ),
                         },
                     },
@@ -249,20 +257,27 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         "attributes": {
                             "attribute_map": {
                                 "int_attr_value": AttributeValue(int_value=123)
-                            }
+                            },
+                            "dropped_attributes_count": 1,
                         },
                     },
                 ]
             ),
         )
 
-    def test_truncate_string(self):
+    # pylint:disable=too-many-locals
+    def test_truncate(self):
+        """Cloud Trace API imposes limits on the length of many things,
+        e.g. strings, number of events, number of attributes. We truncate
+        these things before sending it to the API as an optimization.
+        """
         str_300 = "a" * 300
         str_256 = "a" * 256
         str_128 = "a" * 128
         self.assertEqual(_truncate_str("aaaa", 1), ("a", 3))
         self.assertEqual(_truncate_str("aaaa", 5), ("aaaa", 0))
         self.assertEqual(_truncate_str("aaaa", 4), ("aaaa", 0))
+        self.assertEqual(_truncate_str("中文翻译", 4), ("中", 9))
 
         self.assertEqual(
             _format_attribute_value(str_300),
@@ -272,8 +287,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 )
             ),
         )
+
         self.assertEqual(
-            _extract_attributes({str_300: str_300}),
+            _extract_attributes({str_300: str_300}, 4),
             ProtoSpan.Attributes(
                 attribute_map={
                     str_128: AttributeValue(
@@ -303,4 +319,83 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                     },
                 ]
             ),
+        )
+
+        trace_id = "6e0c63257de34c92bf9efcd03927272e"
+        span_id = "95bb5edabd45950f"
+        link = Link(
+            context=SpanContext(
+                trace_id=int(trace_id, 16),
+                span_id=int(span_id, 16),
+                is_remote=False,
+            ),
+            attributes={},
+        )
+        too_many_links = [link] * (MAX_NUM_LINKS + 1)
+        self.assertEqual(
+            _extract_links(too_many_links),
+            ProtoSpan.Links(
+                link=[
+                    {
+                        "trace_id": trace_id,
+                        "span_id": span_id,
+                        "type": "TYPE_UNSPECIFIED",
+                        "attributes": {},
+                    }
+                ]
+                * MAX_NUM_LINKS,
+                dropped_links_count=len(too_many_links) - MAX_NUM_LINKS,
+            ),
+        )
+
+        link_attrs = {}
+        for attr_key in range(MAX_LINK_ATTRS + 1):
+            link_attrs[str(attr_key)] = 0
+        attr_link = Link(
+            context=SpanContext(
+                trace_id=int(trace_id, 16),
+                span_id=int(span_id, 16),
+                is_remote=False,
+            ),
+            attributes=link_attrs,
+        )
+
+        proto_link = _extract_links([attr_link])
+        self.assertEqual(
+            len(proto_link.link[0].attributes.attribute_map), MAX_LINK_ATTRS
+        )
+
+        too_many_events = [event1] * (MAX_NUM_EVENTS + 1)
+        self.assertEqual(
+            _extract_events(too_many_events),
+            ProtoSpan.TimeEvents(
+                time_event=[
+                    {
+                        "time": time_in_ms_and_ns1,
+                        "annotation": {
+                            "description": TruncatableString(
+                                value=str_256, truncated_byte_count=300 - 256
+                            ),
+                            "attributes": {},
+                        },
+                    },
+                ]
+                * MAX_NUM_EVENTS,
+                dropped_annotations_count=len(too_many_events)
+                - MAX_NUM_EVENTS,
+            ),
+        )
+
+        time_in_ns1 = 1589919268850900051
+        event_attrs = {}
+        for attr_key in range(MAX_EVENT_ATTRS + 1):
+            event_attrs[str(attr_key)] = 0
+        proto_events = _extract_events(
+            [Event(name="a", attributes=event_attrs, timestamp=time_in_ns1)]
+        )
+        self.assertEqual(
+            len(
+                proto_events.time_event[0].annotation.attributes.attribute_map
+            ),
+            MAX_EVENT_ATTRS,
         )

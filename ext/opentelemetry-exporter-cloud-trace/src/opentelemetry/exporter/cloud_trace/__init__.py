@@ -53,9 +53,16 @@ from google.rpc.status_pb2 import Status
 import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
+from opentelemetry.sdk.util import BoundedDict
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
+
+MAX_NUM_LINKS = 128
+MAX_NUM_EVENTS = 32
+MAX_EVENT_ATTRS = 4
+MAX_LINK_ATTRS = 32
+MAX_SPAN_ATTRS = 32
 
 
 class CloudTraceSpanExporter(SpanExporter):
@@ -129,7 +136,11 @@ class CloudTraceSpanExporter(SpanExporter):
             start_time = _get_time_from_ns(span.start_time)
             end_time = _get_time_from_ns(span.end_time)
 
-            attributes = _extract_attributes(span.attributes)
+            if len(span.attributes) > MAX_SPAN_ATTRS:
+                logger.warning(
+                    "Span has more then %s attributes, some will be truncated",
+                    MAX_SPAN_ATTRS,
+                )
 
             cloud_trace_spans.append(
                 {
@@ -141,7 +152,9 @@ class CloudTraceSpanExporter(SpanExporter):
                     "start_time": start_time,
                     "end_time": end_time,
                     "parent_span_id": parent_id,
-                    "attributes": attributes,
+                    "attributes": _extract_attributes(
+                        span.attributes, MAX_SPAN_ATTRS
+                    ),
                     "links": _extract_links(span.links),
                     "status": _extract_status(span.status),
                     "time_events": _extract_events(span.events),
@@ -185,7 +198,9 @@ def _get_truncatable_str_object(str_to_convert: str, max_length: int):
 
 def _truncate_str(str_to_check: str, limit: int) -> Tuple[str, int]:
     """Check the length of a string. If exceeds limit, then truncate it."""
-    return str_to_check[:limit], max(0, len(str_to_check) - limit)
+    encoded = str_to_check.encode("utf-8")
+    truncated_str = encoded[:limit].decode("utf-8", errors="ignore")
+    return truncated_str, len(encoded) - len(truncated_str.encode("utf-8"))
 
 
 def _extract_status(status: trace_api.Status) -> Status:
@@ -205,7 +220,20 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
     if not links:
         return None
     extracted_links = []
+    dropped_links = 0
+    if len(links) > MAX_NUM_LINKS:
+        logger.warning(
+            "Exporting more then %s links, some will be truncated",
+            MAX_NUM_LINKS,
+        )
+        dropped_links = len(links) - MAX_NUM_LINKS
+        links = links[:MAX_NUM_LINKS]
     for link in links:
+        if len(link.attributes) > MAX_LINK_ATTRS:
+            logger.warning(
+                "Link has more then %s attributes, some will be truncated",
+                MAX_LINK_ATTRS,
+            )
         trace_id = _get_hexadecimal_trace_id(link.context.trace_id)
         span_id = _get_hexadecimal_span_id(link.context.span_id)
         extracted_links.append(
@@ -213,10 +241,14 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
                 "trace_id": trace_id,
                 "span_id": span_id,
                 "type": "TYPE_UNSPECIFIED",
-                "attributes": _extract_attributes(link.attributes),
+                "attributes": _extract_attributes(
+                    link.attributes, MAX_LINK_ATTRS
+                ),
             }
         )
-    return ProtoSpan.Links(link=extracted_links, dropped_links_count=0)
+    return ProtoSpan.Links(
+        link=extracted_links, dropped_links_count=dropped_links
+    )
 
 
 def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
@@ -224,11 +256,20 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
     if not events:
         return None
     logs = []
+    dropped_annontations = 0
+    if len(events) > MAX_NUM_EVENTS:
+        logger.warning(
+            "Exporting more then %s annotations, some will be truncated",
+            MAX_NUM_EVENTS,
+        )
+        dropped_annontations = len(events) - MAX_NUM_EVENTS
+        events = events[:MAX_NUM_EVENTS]
     for event in events:
-        if len(event.attributes) > 4:
+        if len(event.attributes) > MAX_EVENT_ATTRS:
             logger.warning(
-                "Event %s has more then 4 attributes, some will be truncated",
+                "Event %s has more then %s attributes, some will be truncated",
                 event.name,
+                MAX_EVENT_ATTRS,
             )
         logs.append(
             {
@@ -237,20 +278,24 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
                     "description": _get_truncatable_str_object(
                         event.name, 256
                     ),
-                    "attributes": _extract_attributes(event.attributes),
+                    "attributes": _extract_attributes(
+                        event.attributes, MAX_EVENT_ATTRS
+                    ),
                 },
             }
         )
     return ProtoSpan.TimeEvents(
         time_event=logs,
-        dropped_annotations_count=0,
+        dropped_annotations_count=dropped_annontations,
         dropped_message_events_count=0,
     )
 
 
-def _extract_attributes(attrs: types.Attributes) -> ProtoSpan.Attributes:
+def _extract_attributes(
+    attrs: types.Attributes, num_attrs_limit: int
+) -> ProtoSpan.Attributes:
     """Convert span.attributes to dict."""
-    attributes_dict = {}
+    attributes_dict = BoundedDict(num_attrs_limit)
 
     for key, value in attrs.items():
         key = _truncate_str(key, 128)[0]
@@ -258,7 +303,10 @@ def _extract_attributes(attrs: types.Attributes) -> ProtoSpan.Attributes:
 
         if value is not None:
             attributes_dict[key] = value
-    return ProtoSpan.Attributes(attribute_map=attributes_dict)
+    return ProtoSpan.Attributes(
+        attribute_map=attributes_dict,
+        dropped_attributes_count=len(attrs) - len(attributes_dict),
+    )
 
 
 def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
