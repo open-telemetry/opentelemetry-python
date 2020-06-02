@@ -79,7 +79,7 @@ class ConsoleMetricsExporter(MetricsExporter):
             print(
                 '{}(data="{}", labels="{}", value={})'.format(
                     type(self).__name__,
-                    record.metric,
+                    record.instrument,
                     record.labels,
                     record.aggregator.checkpoint,
                 )

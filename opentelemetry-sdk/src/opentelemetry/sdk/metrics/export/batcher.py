@@ -63,8 +63,8 @@ class Batcher(abc.ABC):
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for (metric, labels), aggregator in self._batch_map.items():
-            metric_records.append(MetricRecord(aggregator, labels, metric))
+        for (instrument, labels), aggregator in self._batch_map.items():
+            metric_records.append(MetricRecord(aggregator, labels, instrument))
         return metric_records
 
     def finished_collection(self):
@@ -90,7 +90,7 @@ class UngroupedBatcher(Batcher):
     def process(self, record):
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.take_checkpoint()
-        batch_key = (record.metric, record.labels)
+        batch_key = (record.instrument, record.labels)
         batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator
         if batch_value:

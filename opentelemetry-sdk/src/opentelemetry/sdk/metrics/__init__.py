@@ -393,7 +393,7 @@ class Meter(metrics_api.Meter):
             self.observers.add(ob)
         return ob
 
-    def unregister_observer(self, observer: "Observer") -> None:
+    def unregister_observer(self, observer: metrics_api.ObserverT) -> None:
         with self.observers_lock:
             self.observers.remove(observer)
 
