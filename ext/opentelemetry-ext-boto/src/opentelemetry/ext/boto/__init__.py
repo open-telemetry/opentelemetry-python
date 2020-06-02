@@ -56,13 +56,6 @@ from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
 
-BLACKLIST_ENDPOINT_TAGS = {
-    "s3": ["params.Body"],
-}
-REGION = "aws.region"
-AGENT = "aws.agent"
-OPERATION = "aws.operation"
-
 
 def _get_instance_region_name(instance):
     region = getattr(instance, "region", None)
@@ -146,11 +139,11 @@ class BotoInstrumentor(BaseInstrumentor):
             region_name = _get_instance_region_name(instance)
 
             meta = {
-                AGENT: "boto",
-                OPERATION: operation_name,
+                "aws.agent": "boto",
+                "aws.operation": operation_name,
             }
             if region_name:
-                meta[REGION] = region_name
+                meta["aws.region"] = region_name
 
             for key, value in meta.items():
                 span.set_attribute(key, value)
