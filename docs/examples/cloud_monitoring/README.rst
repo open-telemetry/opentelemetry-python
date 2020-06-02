@@ -1,7 +1,7 @@
-Cloud Trace Exporter Example
-============================
+Cloud Monitoring Exporter Example
+=================================
 
-These examples show how to use OpenTelemetry to send tracing data to Cloud Trace.
+These examples show how to use OpenTelemetry to send tracing data to Cloud Monitoring.
 
 
 Basic Example
@@ -18,7 +18,7 @@ To use this exporter you first need to:
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-ext-cloud-monitoring
+    pip install opentelemetry-exporter-cloud-monitoring
 
 * Run example
 
@@ -31,5 +31,5 @@ Checking Output
 
 After running any of these examples, to see the results
     * Go to `Cloud Monitoring overview <https://console.cloud.google.com/monitoring/metrics-explorer>`_ to see the results.
-    * In "Find resource type and metric" enter "OpenTelemetry/<your_metric_name"
+    * In "Find resource type and metric" enter "OpenTelemetry/<your_metric_name>"
     * You can filter by labels and change the graphical output here as well
