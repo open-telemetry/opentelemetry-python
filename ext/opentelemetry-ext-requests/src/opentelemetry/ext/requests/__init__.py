@@ -45,12 +45,13 @@ import functools
 import types
 from urllib.parse import urlparse
 
+from requests import RequestException, Response
 from requests.sessions import Session
 
 from opentelemetry import context, propagators, trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.requests.version import __version__
-from opentelemetry.trace import SpanKind, get_tracer
+from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
@@ -87,6 +88,8 @@ def _instrument(tracer_provider=None, span_callback=None):
                 path = "<URL parses to None>"
             path = parsed_url.path
 
+        exception = None
+
         with tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", "http")
             span.set_attribute("http.method", method.upper())
@@ -94,17 +97,27 @@ def _instrument(tracer_provider=None, span_callback=None):
 
             headers = kwargs.setdefault("headers", {})
             propagators.inject(type(headers).__setitem__, headers)
-            result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
 
-            span.set_attribute("http.status_code", result.status_code)
-            span.set_attribute("http.status_text", result.reason)
-            span.set_status(
-                Status(_http_status_to_canonical_code(result.status_code))
-            )
+            try:
+                result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
+            except Exception as e:
+                exception = e
+                result = getattr(e, "response", None)
+
+            if result is not None:
+                span.set_attribute("http.status_code", result.status_code)
+                span.set_attribute("http.status_text", result.reason)
+                span.set_status(Status(_http_status_to_canonical_code(result.status_code)))
+            else:
+                span.set_status(Status(StatusCanonicalCode.UNKNOWN))
+
             if span_callback is not None:
                 span_callback(span, result)
 
-            return result
+        if exception is not None:
+            raise exception.with_traceback(exception.__traceback__)
+
+        return result
 
     instrumented_request.opentelemetry_ext_requests_applied = True
 
@@ -182,7 +195,7 @@ class RequestsInstrumentor(BaseInstrumentor):
     def uninstrument_session(session):
         """Disables instrumentation on the session object."""
         if getattr(
-            session.request, "opentelemetry_ext_requests_applied", False
+                session.request, "opentelemetry_ext_requests_applied", False
         ):
             original = session.request.__wrapped__  # pylint:disable=no-member
             session.request = types.MethodType(original, session)

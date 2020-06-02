@@ -13,17 +13,18 @@
 # limitations under the License.
 
 import sys
+from unittest import mock
 
 import httpretty
+import opentelemetry.ext.requests
 import requests
 import urllib3
-
-import opentelemetry.ext.requests
 from opentelemetry import context, propagators, trace
 from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
 from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 from opentelemetry.test.test_base import TestBase
+from opentelemetry.trace.status import StatusCanonicalCode
 
 
 class TestRequestsIntegration(TestBase):
@@ -94,7 +95,7 @@ class TestRequestsIntegration(TestBase):
         url = "http://[::1/nope"
         exception_type = requests.exceptions.InvalidURL
         if sys.version_info[:2] < (3, 5) and tuple(
-            map(int, urllib3.__version__.split(".")[:2])
+                map(int, urllib3.__version__.split(".")[:2])
         ) < (1, 25):
             exception_type = ValueError
 
@@ -229,3 +230,50 @@ class TestRequestsIntegration(TestBase):
         span = span_list[0]
 
         self.assertIs(span.resource, resource)
+
+    @mock.patch("requests.Session.send", side_effect=requests.RequestException)
+    def test_requests_exception_without_response(self, *_, **__):
+
+        with self.assertRaises(requests.RequestException):
+            requests.get(self.URL)
+
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+        self.assertEqual(span.attributes, {
+            "component": "http",
+            "http.method": "GET",
+            "http.url": self.URL
+        })
+        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.UNKNOWN)
+
+    mocked_response = requests.Response()
+    mocked_response.status_code = 500
+    mocked_response.reason = "Internal Server Error"
+
+    @mock.patch("requests.Session.send", side_effect=requests.RequestException(response=mocked_response))
+    def test_requests_exception_with_response(self, *_, **__):
+
+        with self.assertRaises(requests.RequestException):
+            requests.get(self.URL)
+
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+        self.assertEqual(span.attributes, {
+            "component": "http",
+            "http.method": "GET",
+            "http.url": self.URL,
+            "http.status_code": 500,
+            "http.status_text": "Internal Server Error",
+        })
+        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.INTERNAL)
+
+    @mock.patch("requests.Session.send", side_effect=Exception)
+    def test_requests_basic_exception(self, *_, **__):
+
+        with self.assertRaises(Exception):
+            requests.get(self.URL)
+
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
