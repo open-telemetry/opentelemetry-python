@@ -27,6 +27,7 @@ _PORT = "net.peer.port"
 _DB = "db.type"
 _URL = "db.url"
 
+
 def _get_address_attributes(instance):
     """Attempt to get host and port from Client instance."""
     address_attributes = {}
@@ -57,7 +58,7 @@ def _get_query_string(args):
     If there are multiple query values, they are joined together
     space-separated.
     """
-    keys = ''
+    keys = ""
 
     # shortcut if no args
     if not args:
@@ -76,8 +77,8 @@ def _get_query_string(args):
         keys = arg.decode()
     elif type(arg) is list and len(arg):
         if type(arg[0]) is str:
-            keys = ' '.join(arg)
+            keys = " ".join(arg)
         elif type(arg[0]) is bytes:
-            keys = b' '.join(arg).decode()
+            keys = b" ".join(arg).decode()
 
     return keys
