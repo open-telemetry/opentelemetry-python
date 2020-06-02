@@ -45,7 +45,8 @@ import functools
 import types
 from urllib.parse import urlparse
 
-from requests import RequestException, Response
+from requests import Timeout, URLRequired
+from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from requests.sessions import Session
 
 from opentelemetry import context, propagators, trace
@@ -81,16 +82,15 @@ def _instrument(tracer_provider=None, span_callback=None):
         # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#http-client
         try:
             parsed_url = urlparse(url)
+            span_name = parsed_url.path
         except ValueError as exc:  # Invalid URL
-            path = "<Unparsable URL: {}>".format(exc)
-        else:
-            if parsed_url is None:
-                path = "<URL parses to None>"
-            path = parsed_url.path
+            span_name = "<Unparsable URL: {}>".format(exc)
 
         exception = None
 
-        with tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
+        with tracer.start_as_current_span(
+            span_name, kind=SpanKind.CLIENT
+        ) as span:
             span.set_attribute("component", "http")
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
@@ -99,17 +99,24 @@ def _instrument(tracer_provider=None, span_callback=None):
             propagators.inject(type(headers).__setitem__, headers)
 
             try:
-                result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
-            except Exception as e:
-                exception = e
-                result = getattr(e, "response", None)
+                result = wrapped(
+                    self, method, url, *args, **kwargs
+                )  # *** PROCEED
+            except Exception as exc:  # pylint: disable=W0703
+                exception = exc
+                result = getattr(exc, "response", None)
+
+            if exception is not None:
+                span.set_status(
+                    Status(_exception_to_canonical_code(exception))
+                )
 
             if result is not None:
                 span.set_attribute("http.status_code", result.status_code)
                 span.set_attribute("http.status_text", result.reason)
-                span.set_status(Status(_http_status_to_canonical_code(result.status_code)))
-            else:
-                span.set_status(Status(StatusCanonicalCode.UNKNOWN))
+                span.set_status(
+                    Status(_http_status_to_canonical_code(result.status_code))
+                )
 
             if span_callback is not None:
                 span_callback(span, result)
@@ -170,6 +177,19 @@ def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
     return StatusCanonicalCode.UNKNOWN
 
 
+def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
+    if isinstance(
+        exc, (InvalidURL, InvalidSchema, MissingSchema, URLRequired)
+    ):
+        return StatusCanonicalCode.INVALID_ARGUMENT
+    if isinstance(exc, Timeout):
+        return StatusCanonicalCode.DEADLINE_EXCEEDED
+    if isinstance(exc, ValueError):
+        if len(exc.args) > 0 and exc.args[0] in ["Invalid IPv6 URL"]:
+            return StatusCanonicalCode.INVALID_ARGUMENT
+    return StatusCanonicalCode.UNKNOWN
+
+
 class RequestsInstrumentor(BaseInstrumentor):
     """An instrumentor for requests
     See `BaseInstrumentor`
@@ -195,7 +215,7 @@ class RequestsInstrumentor(BaseInstrumentor):
     def uninstrument_session(session):
         """Disables instrumentation on the session object."""
         if getattr(
-                session.request, "opentelemetry_ext_requests_applied", False
+            session.request, "opentelemetry_ext_requests_applied", False
         ):
             original = session.request.__wrapped__  # pylint:disable=no-member
             session.request = types.MethodType(original, session)
