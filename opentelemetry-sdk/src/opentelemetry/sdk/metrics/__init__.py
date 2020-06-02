@@ -97,9 +97,9 @@ class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
             self.update(value)
 
 
-class BoundMeasure(metrics_api.BoundMeasure, BaseBoundInstrument):
+class BoundValueRecorder(metrics_api.BoundValueRecorder, BaseBoundInstrument):
     def record(self, value: metrics_api.ValueT) -> None:
-        """See `opentelemetry.metrics.BoundMeasure.record`."""
+        """See `opentelemetry.metrics.BoundValueRecorder.record`."""
         if self._validate_update(value):
             self.update(value)
 
@@ -174,15 +174,15 @@ class Counter(Metric, metrics_api.Counter):
     UPDATE_FUNCTION = add
 
 
-class Measure(Metric, metrics_api.Measure):
-    """See `opentelemetry.metrics.Measure`."""
+class ValueRecorder(Metric, metrics_api.ValueRecorder):
+    """See `opentelemetry.metrics.ValueRecorder`."""
 
-    BOUND_INSTR_TYPE = BoundMeasure
+    BOUND_INSTR_TYPE = BoundValueRecorder
 
     def record(
         self, value: metrics_api.ValueT, labels: Dict[str, str]
     ) -> None:
-        """See `opentelemetry.metrics.Measure.record`."""
+        """See `opentelemetry.metrics.ValueRecorder.record`."""
         bound_intrument = self.bind(labels)
         bound_intrument.record(value)
         bound_intrument.release()

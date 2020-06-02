@@ -4,6 +4,8 @@
 
 - Rename Observer to ValueObserver
   ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+- Rename Measure to ValueRecorder in metrics
+  ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
 
 ## 0.8b0
 

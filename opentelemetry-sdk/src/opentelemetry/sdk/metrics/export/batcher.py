@@ -15,7 +15,7 @@
 import abc
 from typing import Sequence, Type
 
-from opentelemetry.metrics import Counter, InstrumentT, Measure, ValueObserver
+from opentelemetry.metrics import Counter, InstrumentT, ValueRecorder, ValueObserver
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
     Aggregator,
@@ -49,7 +49,7 @@ class Batcher(abc.ABC):
         # pylint:disable=R0201
         if issubclass(instrument_type, Counter):
             return CounterAggregator()
-        if issubclass(instrument_type, Measure):
+        if issubclass(instrument_type, ValueRecorder):
             return MinMaxSumCountAggregator()
         if issubclass(instrument_type, ValueObserver):
             return ValueObserverAggregator()
