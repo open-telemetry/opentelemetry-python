@@ -12,29 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
+
+import logging
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.dbapi import DatabaseApiIntegration
+from opentelemetry.ext import dbapi
+from opentelemetry.test.test_base import TestBase
 
 
-class TestDBApiIntegration(unittest.TestCase):
+class TestDBApiIntegration(TestBase):
     def setUp(self):
-        self.tracer = trace_api.DefaultTracer()
-        self.span = MockSpan()
-        self.start_current_span_patcher = mock.patch.object(
-            self.tracer,
-            "start_as_current_span",
-            autospec=True,
-            spec_set=True,
-            return_value=self.span,
-        )
-
-        self.start_as_current_span = self.start_current_span_patcher.start()
-
-    def tearDown(self):
-        self.start_current_span_patcher.stop()
+        super().setUp()
+        self.tracer = self.tracer_provider.get_tracer(__name__)
 
     def test_span_succeeded(self):
         connection_props = {
@@ -49,7 +39,7 @@ class TestDBApiIntegration(unittest.TestCase):
             "host": "server_host",
             "user": "user",
         }
-        db_integration = DatabaseApiIntegration(
+        db_integration = dbapi.DatabaseApiIntegration(
             self.tracer, "testcomponent", "testtype", connection_attributes
         )
         mock_connection = db_integration.wrapped_connection(
@@ -57,70 +47,118 @@ class TestDBApiIntegration(unittest.TestCase):
         )
         cursor = mock_connection.cursor()
         cursor.execute("Test query", ("param1Value", False))
-        self.assertTrue(self.start_as_current_span.called)
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+        self.assertEqual(span.name, "testcomponent.testdatabase")
+        self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
+
+        self.assertEqual(span.attributes["component"], "testcomponent")
+        self.assertEqual(span.attributes["db.type"], "testtype")
+        self.assertEqual(span.attributes["db.instance"], "testdatabase")
+        self.assertEqual(span.attributes["db.statement"], "Test query")
         self.assertEqual(
-            self.start_as_current_span.call_args[0][0],
-            "testcomponent.testdatabase",
-        )
-        self.assertIs(
-            self.start_as_current_span.call_args[1]["kind"],
-            trace_api.SpanKind.CLIENT,
-        )
-        self.assertEqual(self.span.attributes["component"], "testcomponent")
-        self.assertEqual(self.span.attributes["db.type"], "testtype")
-        self.assertEqual(self.span.attributes["db.instance"], "testdatabase")
-        self.assertEqual(self.span.attributes["db.statement"], "Test query")
-        self.assertEqual(
-            self.span.attributes["db.statement.parameters"],
+            span.attributes["db.statement.parameters"],
             "('param1Value', False)",
         )
-        self.assertEqual(self.span.attributes["db.user"], "testuser")
-        self.assertEqual(self.span.attributes["net.peer.name"], "testhost")
-        self.assertEqual(self.span.attributes["net.peer.port"], 123)
+        self.assertEqual(span.attributes["db.user"], "testuser")
+        self.assertEqual(span.attributes["net.peer.name"], "testhost")
+        self.assertEqual(span.attributes["net.peer.port"], 123)
         self.assertIs(
-            self.span.status.canonical_code,
+            span.status.canonical_code,
             trace_api.status.StatusCanonicalCode.OK,
         )
 
     def test_span_failed(self):
-        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        db_integration = dbapi.DatabaseApiIntegration(
+            self.tracer, "testcomponent"
+        )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, {}
         )
         cursor = mock_connection.cursor()
-        try:
+        with self.assertRaises(Exception):
             cursor.execute("Test query", throw_exception=True)
-        except Exception:  # pylint: disable=broad-except
-            self.assertEqual(
-                self.span.attributes["db.statement"], "Test query"
-            )
-            self.assertIs(
-                self.span.status.canonical_code,
-                trace_api.status.StatusCanonicalCode.UNKNOWN,
-            )
-            self.assertEqual(self.span.status.description, "Test Exception")
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+        self.assertEqual(span.attributes["db.statement"], "Test query")
+        self.assertIs(
+            span.status.canonical_code,
+            trace_api.status.StatusCanonicalCode.UNKNOWN,
+        )
+        self.assertEqual(span.status.description, "Test Exception")
 
     def test_executemany(self):
-        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        db_integration = dbapi.DatabaseApiIntegration(
+            self.tracer, "testcomponent"
+        )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, {}
         )
         cursor = mock_connection.cursor()
         cursor.executemany("Test query")
-        self.assertTrue(self.start_as_current_span.called)
-        self.assertEqual(self.span.attributes["db.statement"], "Test query")
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+        self.assertEqual(span.attributes["db.statement"], "Test query")
 
     def test_callproc(self):
-        db_integration = DatabaseApiIntegration(self.tracer, "testcomponent")
+        db_integration = dbapi.DatabaseApiIntegration(
+            self.tracer, "testcomponent"
+        )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, {}
         )
         cursor = mock_connection.cursor()
         cursor.callproc("Test stored procedure")
-        self.assertTrue(self.start_as_current_span.called)
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
         self.assertEqual(
-            self.span.attributes["db.statement"], "Test stored procedure"
+            span.attributes["db.statement"], "Test stored procedure"
         )
+
+    @mock.patch("opentelemetry.ext.dbapi")
+    def test_wrap_connect(self, mock_dbapi):
+        dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
+        connection = mock_dbapi.connect()
+        self.assertEqual(mock_dbapi.connect.call_count, 1)
+        self.assertIsInstance(connection.__wrapped__, mock.Mock)
+
+    @mock.patch("opentelemetry.ext.dbapi")
+    def test_unwrap_connect(self, mock_dbapi):
+        dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
+        connection = mock_dbapi.connect()
+        self.assertEqual(mock_dbapi.connect.call_count, 1)
+
+        dbapi.unwrap_connect(mock_dbapi, "connect")
+        connection = mock_dbapi.connect()
+        self.assertEqual(mock_dbapi.connect.call_count, 2)
+        self.assertIsInstance(connection, mock.Mock)
+
+    def test_instrument_connection(self):
+        connection = mock.Mock()
+        # Avoid get_attributes failing because can't concatenate mock
+        connection.database = "-"
+        connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
+        self.assertIs(connection2.__wrapped__, connection)
+
+    def test_uninstrument_connection(self):
+        connection = mock.Mock()
+        # Set connection.database to avoid a failure because mock can't
+        # be concatenated
+        connection.database = "-"
+        connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
+        self.assertIs(connection2.__wrapped__, connection)
+
+        connection3 = dbapi.uninstrument_connection(connection2)
+        self.assertIs(connection3, connection)
+
+        with self.assertLogs(level=logging.WARNING):
+            connection4 = dbapi.uninstrument_connection(connection)
+        self.assertIs(connection4, connection)
 
 
 # pylint: disable=unused-argument
@@ -159,23 +197,3 @@ class MockCursor:
     def callproc(self, query, params=None, throw_exception=False):
         if throw_exception:
             raise Exception("Test Exception")
-
-
-class MockSpan:
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
-
-    def __init__(self):
-        self.status = None
-        self.name = ""
-        self.kind = trace_api.SpanKind.INTERNAL
-        self.attributes = {}
-
-    def set_attribute(self, key, value):
-        self.attributes[key] = value
-
-    def set_status(self, status):
-        self.status = status

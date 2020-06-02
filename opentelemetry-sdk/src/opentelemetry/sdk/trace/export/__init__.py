@@ -31,8 +31,7 @@ logger = logging.getLogger(__name__)
 
 class SpanExportResult(Enum):
     SUCCESS = 0
-    FAILED_RETRYABLE = 1
-    FAILED_NOT_RETRYABLE = 2
+    FAILURE = 1
 
 
 class SpanExporter:
@@ -121,7 +120,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if max_export_batch_size > max_queue_size:
             raise ValueError(
-                "max_export_batch_size must be less than and equal to max_export_batch_size."
+                "max_export_batch_size must be less than and equal to max_queue_size."
             )
 
         self.span_exporter = span_exporter
@@ -271,7 +270,7 @@ class ConsoleSpanExporter(SpanExporter):
     def __init__(
         self,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[Span], str] = lambda span: str(span)
+        formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
         + os.linesep,
     ):
         self.out = out

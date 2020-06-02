@@ -1,5 +1,5 @@
-pylint~=2.3
-flake8~=3.7
+pylint==2.4.4
+flake8==3.7.9
 isort~=4.3
 black>=19.3b0,==19.*
 mypy==0.740

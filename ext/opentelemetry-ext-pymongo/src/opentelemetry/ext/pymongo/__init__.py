@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The integration with MongoDB supports the `pymongo`_ library and is specified
-to ``trace_integration`` using ``'pymongo'``.
+The integration with MongoDB supports the `pymongo`_ library, it can be
+enabled using the ``PymongoInstrumentor``.
 
 .. _pymongo: https://pypi.org/project/pymongo
 
@@ -24,13 +24,13 @@ Usage
 .. code:: python
 
     from pymongo import MongoClient
+    from opentelemetry import trace
     from opentelemetry.trace import TracerProvider
-    from opentelemetry.trace.ext.pymongo import trace_integration
+    from opentelemetry.ext.pymongo import PymongoInstrumentor
 
     trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
 
-    trace_integration(tracer)
+    PymongoInstrumentor().instrument()
     client = MongoClient()
     db = client["MongoDB_Database"]
     collection = db["MongoDB_Collection"]
@@ -42,30 +42,26 @@ API
 
 from pymongo import monitoring
 
-from opentelemetry.trace import SpanKind
+from opentelemetry import trace
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.ext.pymongo.version import __version__
+from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 DATABASE_TYPE = "mongodb"
 COMMAND_ATTRIBUTES = ["filter", "sort", "skip", "limit", "pipeline"]
 
 
-def trace_integration(tracer=None):
-    """Integrate with pymongo to trace it using event listener.
-       https://api.mongodb.com/python/current/api/pymongo/monitoring.html
-    """
-
-    monitoring.register(CommandTracer(tracer))
-
-
 class CommandTracer(monitoring.CommandListener):
     def __init__(self, tracer):
-        if tracer is None:
-            raise ValueError("The tracer is not provided.")
         self._tracer = tracer
         self._span_dict = {}
+        self.is_enabled = True
 
     def started(self, event: monitoring.CommandStartedEvent):
         """ Method to handle a pymongo CommandStartedEvent """
+        if not self.is_enabled:
+            return
         command = event.command.get(event.command_name, "")
         name = DATABASE_TYPE + "." + event.command_name
         statement = event.command_name
@@ -98,38 +94,70 @@ class CommandTracer(monitoring.CommandListener):
             if span is not None:
                 span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
                 span.end()
-                self._remove_span(event)
+                self._pop_span(event)
 
     def succeeded(self, event: monitoring.CommandSucceededEvent):
         """ Method to handle a pymongo CommandSucceededEvent """
-        span = self._get_span(event)
-        if span is not None:
-            span.set_attribute(
-                "db.mongo.duration_micros", event.duration_micros
-            )
-            span.set_status(Status(StatusCanonicalCode.OK, event.reply))
-            span.end()
-            self._remove_span(event)
+        if not self.is_enabled:
+            return
+        span = self._pop_span(event)
+        if span is None:
+            return
+        span.set_attribute("db.mongo.duration_micros", event.duration_micros)
+        span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+        span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):
         """ Method to handle a pymongo CommandFailedEvent """
-        span = self._get_span(event)
-        if span is not None:
-            span.set_attribute(
-                "db.mongo.duration_micros", event.duration_micros
-            )
-            span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
-            span.end()
-            self._remove_span(event)
+        if not self.is_enabled:
+            return
+        span = self._pop_span(event)
+        if span is None:
+            return
+        span.set_attribute("db.mongo.duration_micros", event.duration_micros)
+        span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
+        span.end()
 
-    def _get_span(self, event):
-        return self._span_dict.get(_get_span_dict_key(event))
-
-    def _remove_span(self, event):
-        self._span_dict.pop(_get_span_dict_key(event))
+    def _pop_span(self, event):
+        return self._span_dict.pop(_get_span_dict_key(event), None)
 
 
 def _get_span_dict_key(event):
     if event.connection_id is not None:
         return (event.request_id, event.connection_id)
     return event.request_id
+
+
+class PymongoInstrumentor(BaseInstrumentor):
+    _commandtracer_instance = None  # type CommandTracer
+    # The instrumentation for PyMongo is based on the event listener interface
+    # https://api.mongodb.com/python/current/api/pymongo/monitoring.html.
+    # This interface only allows to register listeners and does not provide
+    # an unregister API. In order to provide a mechanishm to disable
+    # instrumentation an enabled flag is implemented in CommandTracer,
+    # it's checked in the different listeners.
+
+    def _instrument(self, **kwargs):
+        """Integrate with pymongo to trace it using event listener.
+        https://api.mongodb.com/python/current/api/pymongo/monitoring.html
+
+        Args:
+            tracer_provider: The `TracerProvider` to use. If none is passed the
+                current configured one is used.
+        """
+
+        tracer_provider = kwargs.get("tracer_provider")
+
+        # Create and register a CommandTracer only the first time
+        if self._commandtracer_instance is None:
+            tracer = get_tracer(__name__, __version__, tracer_provider)
+
+            self._commandtracer_instance = CommandTracer(tracer)
+            monitoring.register(self._commandtracer_instance)
+
+        # If already created, just enable it
+        self._commandtracer_instance.is_enabled = True
+
+    def _uninstrument(self, **kwargs):
+        if self._commandtracer_instance is not None:
+            self._commandtracer_instance.is_enabled = False

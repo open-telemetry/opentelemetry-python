@@ -24,24 +24,57 @@ _LOG = getLogger(__name__)
 
 
 class BaseInstrumentor(ABC):
-    """An ABC for instrumentors"""
+    """An ABC for instrumentors
 
-    def __init__(self):
-        self._is_instrumented = False
+    Child classes of this ABC should instrument specific third
+    party libraries or frameworks either by using the
+    ``opentelemetry-auto-instrumentation`` command or by calling their methods
+    directly.
+
+    Since every third party library or framework is different and has different
+    instrumentation needs, more methods can be added to the child classes as
+    needed to provide practical instrumentation to the end user.
+    """
+
+    _instance = None
+    _is_instrumented = False
+
+    def __new__(cls):
+
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+
+        return cls._instance
 
     @abstractmethod
-    def _instrument(self) -> None:
-        """Instrument"""
+    def _instrument(self, **kwargs):
+        """Instrument the library"""
 
     @abstractmethod
-    def _uninstrument(self) -> None:
-        """Uninstrument"""
+    def _uninstrument(self, **kwargs):
+        """Uninstrument the library"""
 
-    def instrument(self) -> None:
-        """Instrument"""
+    def instrument(self, **kwargs):
+        """Instrument the library
+
+        This method will be called without any optional arguments by the
+        ``opentelemetry-auto-instrumentation`` command. The configuration of
+        the instrumentation when done in this way should be done by previously
+        setting the configuration (using environment variables or any other
+        mechanism) that will be used later by the code in the ``instrument``
+        implementation via the global ``Configuration`` object.
+
+        The ``instrument`` methods ``kwargs`` should default to values from the
+        ``Configuration`` object.
+
+        This means that calling this method directly without passing any
+        optional values should do the very same thing that the
+        ``opentelemetry-auto-instrumentation`` command does. This approach is
+        followed because the ``Configuration`` object is immutable.
+        """
 
         if not self._is_instrumented:
-            result = self._instrument()
+            result = self._instrument(**kwargs)
             self._is_instrumented = True
             return result
 
@@ -49,11 +82,15 @@ class BaseInstrumentor(ABC):
 
         return None
 
-    def uninstrument(self) -> None:
-        """Uninstrument"""
+    def uninstrument(self, **kwargs):
+        """Uninstrument the library
+
+        See ``BaseInstrumentor.instrument`` for more information regarding the
+        usage of ``kwargs``.
+        """
 
         if self._is_instrumented:
-            result = self._uninstrument()
+            result = self._uninstrument(**kwargs)
             self._is_instrumented = False
             return result
 

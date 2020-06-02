@@ -241,8 +241,7 @@ class SpanShim(opentracing.Span):
     def log_kv(self, key_values, timestamp=None):
         """Implements the ``log_kv()`` method from the base class.
 
-        Logs an :class:`opentelemetry.trace.Event` for the wrapped
-        OpenTelemetry span.
+        Logs an event for the wrapped OpenTelemetry span.
 
         Note:
             The OpenTracing API defines the values of *key_values* to be of any

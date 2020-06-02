@@ -12,33 +12,102 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest import mock
 
 import mysql.connector
 
-from opentelemetry import trace as trace_api
-from opentelemetry.ext.mysql import trace_integration
+import opentelemetry.ext.mysql
+from opentelemetry.ext.mysql import MySQLInstrumentor
+from opentelemetry.sdk import resources
+from opentelemetry.test.test_base import TestBase
 
 
-class TestMysqlIntegration(unittest.TestCase):
-    def test_trace_integration(self):
-        tracer = trace_api.DefaultTracer()
-        span = mock.create_autospec(trace_api.Span, spec_set=True)
-        start_current_span_patcher = mock.patch.object(
-            tracer,
-            "start_as_current_span",
-            autospec=True,
-            spec_set=True,
-            return_value=span,
-        )
-        start_as_current_span = start_current_span_patcher.start()
+class TestMysqlIntegration(TestBase):
+    def tearDown(self):
+        super().tearDown()
+        with self.disable_logging():
+            MySQLInstrumentor().uninstrument()
 
-        with mock.patch("mysql.connector.connect") as mock_connect:
-            mock_connect.get.side_effect = mysql.connector.MySQLConnection()
-            trace_integration(tracer)
-            cnx = mysql.connector.connect(database="test")
-            cursor = cnx.cursor()
-            query = "SELECT * FROM test"
-            cursor.execute(query)
-            self.assertTrue(start_as_current_span.called)
+    @mock.patch("mysql.connector.connect")
+    # pylint: disable=unused-argument
+    def test_instrumentor(self, mock_connect):
+        MySQLInstrumentor().instrument()
+
+        cnx = mysql.connector.connect(database="test")
+        cursor = cnx.cursor()
+        query = "SELECT * FROM test"
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        # Check version and name in span's instrumentation info
+        self.check_span_instrumentation_info(span, opentelemetry.ext.mysql)
+
+        # check that no spans are generated after uninstrumen
+        MySQLInstrumentor().uninstrument()
+
+        cnx = mysql.connector.connect(database="test")
+        cursor = cnx.cursor()
+        query = "SELECT * FROM test"
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+
+    @mock.patch("mysql.connector.connect")
+    # pylint: disable=unused-argument
+    def test_custom_tracer_provider(self, mock_connect):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+
+        MySQLInstrumentor().instrument(tracer_provider=tracer_provider)
+        cnx = mysql.connector.connect(database="test")
+        cursor = cnx.cursor()
+        query = "SELECT * FROM test"
+        cursor.execute(query)
+
+        span_list = exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        span = span_list[0]
+
+        self.assertIs(span.resource, resource)
+
+    @mock.patch("mysql.connector.connect")
+    # pylint: disable=unused-argument
+    def test_instrument_connection(self, mock_connect):
+        cnx = mysql.connector.connect(database="test")
+        query = "SELECT * FROM test"
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 0)
+
+        cnx = MySQLInstrumentor().instrument_connection(cnx)
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+
+    @mock.patch("mysql.connector.connect")
+    # pylint: disable=unused-argument
+    def test_uninstrument_connection(self, mock_connect):
+        MySQLInstrumentor().instrument()
+        cnx = mysql.connector.connect(database="test")
+        query = "SELECT * FROM test"
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+
+        cnx = MySQLInstrumentor().uninstrument_connection(cnx)
+        cursor = cnx.cursor()
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)

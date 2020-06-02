@@ -281,7 +281,8 @@ class TestShim(TestCase):
 
                 self.assertEqual(parent_trace_id, child_trace_id)
                 self.assertEqual(
-                    child.span.unwrap().parent, parent.span.unwrap()
+                    child.span.unwrap().parent,
+                    parent.span.unwrap().get_context(),
                 )
 
             # Verify parent span becomes the active span again.
@@ -309,7 +310,9 @@ class TestShim(TestCase):
                 child_trace_id = child.span.unwrap().get_context().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
-                self.assertEqual(child.span.unwrap().parent, parent.unwrap())
+                self.assertEqual(
+                    child.span.unwrap().parent, parent.unwrap().get_context()
+                )
 
         with self.shim.start_span("ParentSpan") as parent:
             child = self.shim.start_span("ChildSpan", child_of=parent)
@@ -318,7 +321,9 @@ class TestShim(TestCase):
             child_trace_id = child.unwrap().get_context().trace_id
 
             self.assertEqual(child_trace_id, parent_trace_id)
-            self.assertEqual(child.unwrap().parent, parent.unwrap())
+            self.assertEqual(
+                child.unwrap().parent, parent.unwrap().get_context()
+            )
 
             child.finish()
 
@@ -458,9 +463,6 @@ class TestShim(TestCase):
 
         # Verify exception details have been added to span.
         self.assertEqual(scope.span.unwrap().attributes["error"], True)
-        self.assertEqual(
-            scope.span.unwrap().events[0].attributes["error.kind"], Exception
-        )
 
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""

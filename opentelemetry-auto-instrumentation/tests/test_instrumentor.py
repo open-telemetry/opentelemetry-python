@@ -20,15 +20,15 @@ from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 
 
 class TestInstrumentor(TestCase):
+    class Instrumentor(BaseInstrumentor):
+        def _instrument(self, **kwargs):
+            return "instrumented"
+
+        def _uninstrument(self, **kwargs):
+            return "uninstrumented"
+
     def test_protect(self):
-        class Instrumentor(BaseInstrumentor):
-            def _instrument(self):
-                return "instrumented"
-
-            def _uninstrument(self):
-                return "uninstrumented"
-
-        instrumentor = Instrumentor()
+        instrumentor = self.Instrumentor()
 
         with self.assertLogs(level=WARNING):
             self.assertIs(instrumentor.uninstrument(), None)
@@ -42,3 +42,6 @@ class TestInstrumentor(TestCase):
 
         with self.assertLogs(level=WARNING):
             self.assertIs(instrumentor.uninstrument(), None)
+
+    def test_singleton(self):
+        self.assertIs(self.Instrumentor(), self.Instrumentor())

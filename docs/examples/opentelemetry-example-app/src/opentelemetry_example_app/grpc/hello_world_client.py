@@ -64,7 +64,6 @@ trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
-tracer = trace.get_tracer(__name__)
 
 
 def run():
@@ -73,7 +72,7 @@ def run():
     # of the code.
     with grpc.insecure_channel("localhost:50051") as channel:
 
-        channel = intercept_channel(channel, client_interceptor(tracer))
+        channel = intercept_channel(channel, client_interceptor())
 
         stub = helloworld_pb2_grpc.GreeterStub(channel)
 
