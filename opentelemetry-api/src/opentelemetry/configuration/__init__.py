@@ -92,7 +92,7 @@ to override this value instead of changing it.
 
 from os import environ
 from re import fullmatch
-from typing import Union, Type, Optional, Dict, TypeVar
+from typing import Dict, Optional, Type, TypeVar, Union
 
 ConfigValue = Union[str, bool, int, float]
 

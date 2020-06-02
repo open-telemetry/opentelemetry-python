@@ -14,7 +14,7 @@
 import re
 import time
 from logging import getLogger
-from typing import Sequence, Union, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence, Union, cast
 
 from pkg_resources import iter_entry_points
 
