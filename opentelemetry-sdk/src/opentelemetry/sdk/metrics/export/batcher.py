@@ -18,8 +18,8 @@ from typing import Sequence, Type
 from opentelemetry.metrics import (
     Counter,
     InstrumentT,
-    ValueRecorder,
     ValueObserver,
+    ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
