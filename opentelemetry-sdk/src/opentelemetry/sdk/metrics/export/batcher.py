@@ -41,17 +41,17 @@ class Batcher(abc.ABC):
         # (deltas)
         self.stateful = stateful
 
-    def aggregator_for(self, metric_type: Type[MetricT]) -> Aggregator:
-        """Returns an aggregator based on metric type.
+    def aggregator_for(self, instrument_type: Type[InstrumentT]) -> Aggregator:
+        """Returns an aggregator based on metric instrument type.
 
         Aggregators keep track of and updates values when metrics get updated.
         """
         # pylint:disable=R0201
-        if issubclass(metric_type, Counter):
+        if issubclass(instrument_type, Counter):
             return CounterAggregator()
-        if issubclass(metric_type, Measure):
+        if issubclass(instrument_type, Measure):
             return MinMaxSumCountAggregator()
-        if issubclass(metric_type, ValueObserver):
+        if issubclass(instrument_type, ValueObserver):
             return ValueObserverAggregator()
         # TODO: Add other aggregators
         return CounterAggregator()
