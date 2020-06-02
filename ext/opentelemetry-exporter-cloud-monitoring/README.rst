@@ -1,7 +1,7 @@
-OpenTelemetry Cloud Trace Exporters
-===================================
+OpenTelemetry Cloud Monitoring Exporters
+========================================
 
-This library provides classes for exporting trace data to Google Cloud Trace.
+This library provides classes for exporting metrics data to Google Cloud Monitoring.
 
 Installation
 ------------
