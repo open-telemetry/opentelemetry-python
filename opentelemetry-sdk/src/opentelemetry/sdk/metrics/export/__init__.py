@@ -27,13 +27,13 @@ class MetricsExportResult(Enum):
 class MetricRecord:
     def __init__(
         self,
-        aggregator: Aggregator,
+        instrument: metrics_api.InstrumentT,
         labels: Tuple[Tuple[str, str]],
-        metric: metrics_api.MetricT,
+        aggregator: Aggregator,
     ):
-        self.aggregator = aggregator
+        self.instrument = instrument
         self.labels = labels
-        self.metric = metric
+        self.aggregator = aggregator
 
 
 class MetricsExporter:

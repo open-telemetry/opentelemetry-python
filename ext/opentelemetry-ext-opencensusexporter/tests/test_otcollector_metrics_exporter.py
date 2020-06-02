@@ -92,7 +92,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testName", "testDescription", "unit", float, Measure
         )
         result = metrics_exporter.get_collector_point(
-            MetricRecord(aggregator, self._key_labels, int_counter)
+            MetricRecord(int_counter, self._key_labels, aggregator)
         )
         self.assertIsInstance(result, metrics_pb2.Point)
         self.assertIsInstance(result.timestamp, Timestamp)
@@ -100,13 +100,13 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator.update(123.5)
         aggregator.take_checkpoint()
         result = metrics_exporter.get_collector_point(
-            MetricRecord(aggregator, self._key_labels, float_counter)
+            MetricRecord(float_counter, self._key_labels, aggregator)
         )
         self.assertEqual(result.double_value, 123.5)
         self.assertRaises(
             TypeError,
             metrics_exporter.get_collector_point(
-                MetricRecord(aggregator, self._key_labels, measure)
+                MetricRecord(measure, self._key_labels, aggregator)
             ),
         )
 
@@ -122,7 +122,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
         record = MetricRecord(
-            aggregate.CounterAggregator(), self._key_labels, test_metric
+            test_metric, self._key_labels, aggregate.CounterAggregator(),
         )
 
         result = collector_exporter.export([record])
@@ -147,7 +147,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator = aggregate.CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, self._key_labels, test_metric)
+        record = MetricRecord(test_metric, self._key_labels, aggregator,)
         output_metrics = metrics_exporter.translate_to_collector([record])
         self.assertEqual(len(output_metrics), 1)
         self.assertIsInstance(output_metrics[0], metrics_pb2.Metric)

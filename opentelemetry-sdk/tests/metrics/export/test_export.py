@@ -48,7 +48,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         )
         labels = {"environment": "staging"}
         aggregator = CounterAggregator()
-        record = MetricRecord(aggregator, labels, metric)
+        record = MetricRecord(metric, labels, aggregator)
         result = '{}(data="{}", labels="{}", value={})'.format(
             ConsoleMetricsExporter.__name__,
             metric,

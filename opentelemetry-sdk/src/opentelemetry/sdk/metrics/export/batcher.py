@@ -64,7 +64,7 @@ class Batcher(abc.ABC):
         """
         metric_records = []
         for (instrument, labels), aggregator in self._batch_map.items():
-            metric_records.append(MetricRecord(aggregator, labels, instrument))
+            metric_records.append(MetricRecord(instrument, labels, aggregator))
         return metric_records
 
     def finished_collection(self):
