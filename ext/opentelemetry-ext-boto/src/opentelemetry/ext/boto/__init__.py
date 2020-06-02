@@ -105,7 +105,7 @@ class BotoInstrumentor(BaseInstrumentor):
         unwrap(AWSQueryConnection, "make_request")
         unwrap(AWSAuthConnection, "make_request")
 
-    def _common_request(
+    def _common_request(  # pylint: disable=too-many-locals
         self,
         args_name,
         traced_args,
@@ -113,7 +113,7 @@ class BotoInstrumentor(BaseInstrumentor):
         original_func,
         instance,
         args,
-        kwargs
+        kwargs,
     ):
 
         endpoint_name = getattr(instance, "host").split(".")[0]
@@ -128,11 +128,7 @@ class BotoInstrumentor(BaseInstrumentor):
                 span.resource = endpoint_name
 
             add_span_arg_tags(
-                span,
-                endpoint_name,
-                args,
-                args_name,
-                traced_args,
+                span, endpoint_name, args, args_name, traced_args,
             )
 
             # Obtaining region name
@@ -164,7 +160,7 @@ class BotoInstrumentor(BaseInstrumentor):
             original_func,
             instance,
             args,
-            kwargs
+            kwargs,
         )
 
     def _patched_auth_request(self, original_func, instance, args, kwargs):
@@ -193,7 +189,7 @@ class BotoInstrumentor(BaseInstrumentor):
             original_func,
             instance,
             args,
-            kwargs
+            kwargs,
         )
 
 
