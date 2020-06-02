@@ -84,7 +84,8 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         meter = metrics.DefaultMeter()
         callback = mock.Mock()
         observer = meter.register_observer(
-            callback, "", "", "", int, metrics.ValueObserver)
+            callback, "", "", "", int, metrics.ValueObserver
+        )
         self.assertIsInstance(observer, metrics.DefaultObserver)
 
     def test_unregister_observer(self):
