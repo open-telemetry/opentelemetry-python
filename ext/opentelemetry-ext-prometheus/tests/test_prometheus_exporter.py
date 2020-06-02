@@ -90,7 +90,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         aggregator = CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(metric, key_labels, aggregator, key_labels)
+        record = MetricRecord(metric, key_labels, aggregator)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
 

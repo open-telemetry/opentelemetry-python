@@ -90,7 +90,7 @@ class TestBatcher(unittest.TestCase):
         batcher._batch_map = _batch_map
         records = batcher.checkpoint_set()
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].metric, metric)
+        self.assertEqual(records[0].instrument, metric)
         self.assertEqual(records[0].labels, labels)
         self.assertEqual(records[0].aggregator, aggregator)
 
