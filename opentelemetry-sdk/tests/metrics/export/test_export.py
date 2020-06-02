@@ -479,9 +479,13 @@ class TestValueObserverAggregator(unittest.TestCase):
         mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
         mmsc_checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
 
-        checkpoint1 = ValueObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+        checkpoint1 = ValueObserverAggregator._TYPE(
+            *(mmsc_checkpoint1 + (23,))
+        )
 
-        checkpoint2 = ValueObserverAggregator._TYPE(*(mmsc_checkpoint2 + (27,)))
+        checkpoint2 = ValueObserverAggregator._TYPE(
+            *(mmsc_checkpoint2 + (27,))
+        )
 
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer2.mmsc.checkpoint = mmsc_checkpoint2
@@ -513,9 +517,13 @@ class TestValueObserverAggregator(unittest.TestCase):
         mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
         mmsc_checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
 
-        checkpoint1 = ValueObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+        checkpoint1 = ValueObserverAggregator._TYPE(
+            *(mmsc_checkpoint1 + (23,))
+        )
 
-        checkpoint2 = ValueObserverAggregator._TYPE(*(mmsc_checkpoint2 + (27,)))
+        checkpoint2 = ValueObserverAggregator._TYPE(
+            *(mmsc_checkpoint2 + (27,))
+        )
 
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer2.mmsc.checkpoint = mmsc_checkpoint2
@@ -547,9 +555,13 @@ class TestValueObserverAggregator(unittest.TestCase):
         mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
         mmsc_checkpoint2 = MinMaxSumCountAggregator._TYPE(1, 33, 44, 2)
 
-        checkpoint1 = ValueObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+        checkpoint1 = ValueObserverAggregator._TYPE(
+            *(mmsc_checkpoint1 + (23,))
+        )
 
-        checkpoint2 = ValueObserverAggregator._TYPE(*(mmsc_checkpoint2 + (27,)))
+        checkpoint2 = ValueObserverAggregator._TYPE(
+            *(mmsc_checkpoint2 + (27,))
+        )
 
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer2.mmsc.checkpoint = mmsc_checkpoint2
@@ -579,7 +591,9 @@ class TestValueObserverAggregator(unittest.TestCase):
         observer2 = ValueObserverAggregator()
 
         mmsc_checkpoint1 = MinMaxSumCountAggregator._TYPE(3, 150, 101, 3)
-        checkpoint1 = ValueObserverAggregator._TYPE(*(mmsc_checkpoint1 + (23,)))
+        checkpoint1 = ValueObserverAggregator._TYPE(
+            *(mmsc_checkpoint1 + (23,))
+        )
 
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer1.checkpoint = checkpoint1

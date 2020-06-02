@@ -261,7 +261,7 @@ class Record:
         labels: Dict[str, str],
         aggregator: Aggregator,
     ):
-        self.metric = metric
+        self.instrument = instrument
         self.labels = labels
         self.aggregator = aggregator
 
@@ -375,7 +375,7 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        observer_type = Type[metrics_api.ObserverT],
+        observer_type=Type[metrics_api.ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.ObserverT:
