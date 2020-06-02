@@ -95,6 +95,7 @@ from re import fullmatch
 from typing import Dict, Optional, Type, TypeVar, Union
 
 ConfigValue = Union[str, bool, int, float]
+_T = TypeVar("_T", ConfigValue, Optional[ConfigValue])
 
 
 class Configuration:
@@ -148,7 +149,7 @@ class Configuration:
         else:
             raise AttributeError(key)
 
-    def get(self, name: str, default: ConfigValue) -> ConfigValue:
+    def get(self, name: str, default: _T) -> _T:
         val = self._config_map.get(name, default)
         return val
 

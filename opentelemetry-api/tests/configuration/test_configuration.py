@@ -39,7 +39,7 @@ class TestConfiguration(TestCase):
             "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },
     )
-    def test_environment_variables(self):  # type: ignore
+    def test_environment_variables(self):
         self.assertEqual(
             Configuration().METER_PROVIDER, "meter_provider"
         )  # pylint: disable=no-member
@@ -62,16 +62,21 @@ class TestConfiguration(TestCase):
         with self.assertRaises(AttributeError):
             Configuration().TRACER_PROVIDER = "new_tracer_provider"
 
-    def test_slots(self):
+    def test_slots(self) -> None:
         with self.assertRaises(AttributeError):
             Configuration().XYZ = "xyz"  # pylint: disable=assigning-non-slot
 
-    def test_getattr(self):
+    def test_getattr(self) -> None:
+        # literal access
         self.assertIsNone(Configuration().XYZ)
 
-    def test_reset(self):
+        # dynamic access
+        self.assertIsNone(getattr(Configuration(), "XYZ"))
+        self.assertIsNone(Configuration().get("XYZ", None))
+
+    def test_reset(self) -> None:
         environ_patcher = patch.dict(
-            "os.environ",  # type: ignore
+            "os.environ",
             {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
         )
 
@@ -96,7 +101,7 @@ class TestConfiguration(TestCase):
             "OPENTELEMETRY_PYTHON_FALSE": "False",
         },
     )
-    def test_boolean(self):
+    def test_boolean(self) -> None:
         self.assertIsInstance(
             Configuration().TRUE, bool
         )  # pylint: disable=no-member
@@ -114,7 +119,7 @@ class TestConfiguration(TestCase):
             "OPENTELEMETRY_PYTHON_NON_INTEGER": "-12z3",
         },
     )
-    def test_integer(self):
+    def test_integer(self) -> None:
         self.assertEqual(
             Configuration().POSITIVE_INTEGER, 123
         )  # pylint: disable=no-member
@@ -133,7 +138,7 @@ class TestConfiguration(TestCase):
             "OPENTELEMETRY_PYTHON_NON_FLOAT": "-12z3.123",
         },
     )
-    def test_float(self):
+    def test_float(self) -> None:
         self.assertEqual(
             Configuration().POSITIVE_FLOAT, 123.123
         )  # pylint: disable=no-member
