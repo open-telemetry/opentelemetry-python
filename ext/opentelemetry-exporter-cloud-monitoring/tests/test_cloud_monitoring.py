@@ -15,6 +15,6 @@
 import unittest
 
 
-class TestCloudTraceSpanExporter(unittest.TestCase):
+class TestCloudMonitoringMetricsExporter(unittest.TestCase):
     def test_case(self):
         pass

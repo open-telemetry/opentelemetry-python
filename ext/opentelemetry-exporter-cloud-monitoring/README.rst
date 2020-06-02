@@ -50,5 +50,5 @@ Usage
 References
 ----------
 
-* `Cloud Trace <https://cloud.google.com/trace/>`_
+* `Cloud Monitoring <https://cloud.google.com/monitoring/>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
