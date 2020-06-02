@@ -13,7 +13,7 @@ There are three different examples:
 
 * observer: Shows how to use the observer instrument.
 
-The source files of these examples are available :scm_web:`here <docs/examples/metrics/>`.
+The source files of these examples are available :scm_web:`here <docs/examples/basic_meter/>`.
 
 Installation
 ------------

@@ -41,6 +41,7 @@ class InMemoryMetricsExporter(MetricsExporter):
     ) -> MetricsExportResult:
         if self._stopped:
             return MetricsExportResult.FAILURE
+
         with self._lock:
             self._exported_metrics.extend(metric_records)
         return MetricsExportResult.SUCCESS
