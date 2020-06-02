@@ -179,7 +179,8 @@ def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
     if isinstance(
-        exc, (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError)
+        exc,
+        (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError),
     ):
         return StatusCanonicalCode.INVALID_ARGUMENT
     if isinstance(exc, Timeout):
