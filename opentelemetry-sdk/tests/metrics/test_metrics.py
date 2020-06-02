@@ -83,7 +83,7 @@ class TestMeter(unittest.TestCase):
             self.assertIsInstance(observer, metrics_api.Observer)
             observer.observe(45, {})
 
-        observer = metrics.Observer(
+        observer = metrics.ValueObserver(
             callback, "name", "desc", "unit", int, meter, (), True
         )
 
@@ -160,7 +160,7 @@ class TestMeter(unittest.TestCase):
         callback = mock.Mock()
 
         observer = meter.register_observer(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, metrics.ValueObserver
         )
 
         self.assertIsInstance(observer, metrics_api.Observer)
@@ -180,7 +180,7 @@ class TestMeter(unittest.TestCase):
         callback = mock.Mock()
 
         observer = meter.register_observer(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, metrics.ValueObserver
         )
 
         meter.unregister_observer(observer)
@@ -283,10 +283,10 @@ class TestMeasure(unittest.TestCase):
         )
 
 
-class TestObserver(unittest.TestCase):
+class TestValueObserver(unittest.TestCase):
     def test_observe(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        observer = metrics.Observer(
+        observer = metrics.ValueObserver(
             None, "name", "desc", "unit", int, meter, ("key",), True
         )
         labels = {"key": "value"}
@@ -303,7 +303,7 @@ class TestObserver(unittest.TestCase):
 
     def test_observe_disabled(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        observer = metrics.Observer(
+        observer = metrics.ValueObserver(
             None, "name", "desc", "unit", int, meter, ("key",), False
         )
         labels = {"key": "value"}
@@ -313,7 +313,7 @@ class TestObserver(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
-        observer = metrics.Observer(
+        observer = metrics.ValueObserver(
             None, "name", "desc", "unit", int, meter, ("key",), True
         )
         labels = {"key": "value"}
@@ -325,7 +325,7 @@ class TestObserver(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
 
         callback = mock.Mock()
-        observer = metrics.Observer(
+        observer = metrics.ValueObserver(
             callback, "name", "desc", "unit", int, meter, (), True
         )
 
@@ -339,7 +339,7 @@ class TestObserver(unittest.TestCase):
         callback = mock.Mock()
         callback.side_effect = Exception("We have a problem!")
 
-        observer = metrics.Observer(
+        observer = metrics.ValueObserver(
             callback, "name", "desc", "unit", int, meter, (), True
         )
 

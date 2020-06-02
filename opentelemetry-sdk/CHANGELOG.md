@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Rename Observer to ValueObserver
+  ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+
 ## 0.8b0
 
 Released 2020-05-27

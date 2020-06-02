@@ -125,7 +125,7 @@ class MinMaxSumCountAggregator(Aggregator):
             )
 
 
-class ObserverAggregator(Aggregator):
+class ValueObserverAggregator(Aggregator):
     """Same as MinMaxSumCount but also with last value."""
 
     _TYPE = namedtuple("minmaxsumcountlast", "min max sum count last")

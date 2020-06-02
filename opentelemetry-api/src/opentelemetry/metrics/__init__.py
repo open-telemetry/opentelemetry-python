@@ -173,7 +173,6 @@ class Observer(abc.ABC):
     """An observer type metric instrument used to capture a current set of
     values.
 
-
     Observer instruments are asynchronous, a callback is invoked with the
     observer instrument as argument allowing the user to capture multiple
     values per collection interval.
@@ -197,6 +196,18 @@ class DefaultObserver(Observer):
 
         Args:
             value: The value to capture to this observer metric.
+            labels: Labels associated to ``value``.
+        """
+
+
+class ValueObserver(Observer):
+    """No-op implementation of ``ValueObserver``."""
+
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Captures ``value`` to the valueobserver.
+
+        Args:
+            value: The value to capture to this valueobserver metric.
             labels: Labels associated to ``value``.
         """
 
@@ -251,7 +262,10 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, Measure, Observer)
+MetricT = TypeVar("MetricT", Counter, Measure)
+InstrumentT = TypeVar("InstrumentT", Counter, Measure, Observer)
+# TODO: Will populate with other observers when implemented
+ObserverT = TypeVar("ObserverT", DefaultObserver, ValueObserver)
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -302,6 +316,7 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
+            observer_type: The type of observer being registered.
             metric_type: The type of metric being created.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
@@ -316,6 +331,7 @@ class Meter(abc.ABC):
         description: str,
         unit: str,
         value_type: Type[ValueT],
+        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Observer":

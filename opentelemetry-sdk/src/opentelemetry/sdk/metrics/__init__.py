@@ -190,8 +190,8 @@ class Measure(Metric, metrics_api.Measure):
     UPDATE_FUNCTION = record
 
 
-class Observer(metrics_api.Observer):
-    """See `opentelemetry.metrics.Observer`."""
+class ValueObserver(metrics_api.ValueObserver):
+    """See `opentelemetry.metrics.ValueObserver`."""
 
     def __init__(
         self,
@@ -257,7 +257,7 @@ class Record:
 
     def __init__(
         self,
-        metric: metrics_api.MetricT,
+        instrument: metrics_api.InstrumentT,
         labels: Dict[str, str],
         aggregator: Aggregator,
     ):
@@ -375,10 +375,11 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        observer_type = Type[metrics_api.ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> metrics_api.Observer:
-        ob = Observer(
+    ) -> metrics_api.ObserverT:
+        ob = observer_type(
             callback,
             name,
             description,
