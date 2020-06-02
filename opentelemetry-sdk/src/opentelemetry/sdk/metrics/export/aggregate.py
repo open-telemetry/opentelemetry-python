@@ -72,7 +72,7 @@ class CounterAggregator(Aggregator):
 
 
 class MinMaxSumCountAggregator(Aggregator):
-    """Agregator for Measure metrics that keeps min, max, sum and count."""
+    """Aggregator for ValueRecorder metrics that keeps min, max, sum, count."""
 
     _TYPE = namedtuple("minmaxsumcount", "min max sum count")
     _EMPTY = _TYPE(None, None, None, 0)
