@@ -101,6 +101,6 @@ class UngroupedBatcher(Batcher):
         if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage
-            aggregator = self.aggregator_for(record.metric.__class__)
+            aggregator = self.aggregator_for(record.instrument.__class__)
             aggregator.merge(record.aggregator)
         self._batch_map[batch_key] = aggregator
