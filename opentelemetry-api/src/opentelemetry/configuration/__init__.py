@@ -99,8 +99,8 @@ _T = TypeVar("_T", ConfigValue, Optional[ConfigValue])
 
 
 class Configuration:
-    _instance: Optional["Configuration"] = None
-    _config_map: Dict[str, ConfigValue]
+    _instance = None  # type: Optional["Configuration"]
+    _config_map = {}  # type: Dict[str, ConfigValue]
 
     def __new__(cls) -> "Configuration":
         if cls._instance is not None:
@@ -108,7 +108,6 @@ class Configuration:
         else:
 
             instance = super().__new__(cls)
-            instance._config_map = {}
             for key, value_str in environ.items():
 
                 match = fullmatch(
@@ -150,7 +149,10 @@ class Configuration:
             raise AttributeError(key)
 
     def get(self, name: str, default: _T) -> _T:
-        """Use this typed method for dynamic access instead of `getattr`"""
+        """Use this typed method for dynamic access instead of `getattr`
+
+        :rtype: str or bool or int or float or None
+        """
         val = self._config_map.get(name, default)
         return val
 
