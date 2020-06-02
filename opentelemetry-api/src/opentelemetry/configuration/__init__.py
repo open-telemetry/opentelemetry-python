@@ -150,7 +150,7 @@ class Configuration:
             raise AttributeError(key)
 
     def get(self, name: str, default: _T) -> _T:
-        """Use this typed method for dynamic access instead of `getattr()`"""
+        """Use this typed method for dynamic access instead of `getattr`"""
         val = self._config_map.get(name, default)
         return val
 
