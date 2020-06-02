@@ -15,7 +15,12 @@
 import abc
 from typing import Sequence, Type
 
-from opentelemetry.metrics import Counter, InstrumentT, ValueRecorder, ValueObserver
+from opentelemetry.metrics import (
+    Counter,
+    InstrumentT,
+    ValueRecorder,
+    ValueObserver,
+)
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
     Aggregator,
