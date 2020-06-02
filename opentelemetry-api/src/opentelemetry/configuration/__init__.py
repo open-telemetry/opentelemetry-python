@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# FIXME find a better way to avoid all those "Expression has type "Any"" errors
-# type: ignore
-
 """
 Simple configuration manager
 
@@ -95,17 +92,23 @@ to override this value instead of changing it.
 
 from os import environ
 from re import fullmatch
+from typing import Union, Type, Optional, Dict, TypeVar
+
+ConfigValue = Union[str, bool, int, float]
 
 
 class Configuration:
-    _instance = None
-
-    __slots__ = []
+    _instance: Optional["Configuration"] = None
+    _config_map: Dict[str, ConfigValue]
 
     def __new__(cls) -> "Configuration":
-        if Configuration._instance is None:
+        if cls._instance is not None:
+            instance = cls._instance
+        else:
 
-            for key, value in environ.items():
+            instance = super().__new__(cls)
+            instance._config_map = {}
+            for key, value_str in environ.items():
 
                 match = fullmatch(
                     r"OPENTELEMETRY_PYTHON_([A-Za-z_][\w_]*)", key
@@ -114,45 +117,43 @@ class Configuration:
                 if match is not None:
 
                     key = match.group(1)
+                    value: ConfigValue = value_str
 
-                    if value == "True":
+                    if value_str == "True":
                         value = True
-                    elif value == "False":
+                    elif value_str == "False":
                         value = False
                     else:
                         try:
-                            value = int(value)
+                            value = int(value_str)
                         except ValueError:
                             pass
                         try:
-                            value = float(value)
+                            value = float(value_str)
                         except ValueError:
                             pass
 
-                    setattr(Configuration, "_{}".format(key), value)
-                    setattr(
-                        Configuration,
-                        key,
-                        property(
-                            fget=lambda cls, key=key: getattr(
-                                cls, "_{}".format(key)
-                            )
-                        ),
-                    )
+                    instance._config_map[key] = value
 
-                Configuration.__slots__.append(key)
+            cls._instance = instance
 
-            Configuration.__slots__ = tuple(Configuration.__slots__)
+        return instance
 
-            Configuration._instance = object.__new__(cls)
+    def __getattr__(self, name: str) -> Optional[ConfigValue]:
+        return self._config_map.get(name)
 
-        return cls._instance
+    def __setattr__(self, key: str, val: ConfigValue) -> None:
+        if key == "_config_map":
+            super().__setattr__(key, val)
+        else:
+            raise AttributeError(key)
 
-    def __getattr__(self, name):
-        return None
+    def get(self, name: str, default: ConfigValue) -> ConfigValue:
+        val = self._config_map.get(name, default)
+        return val
 
     @classmethod
-    def _reset(cls):
+    def _reset(cls) -> None:
         """
         This method "resets" the global configuration attributes
 
@@ -160,10 +161,6 @@ class Configuration:
         only.
         """
 
-        for slot in cls.__slots__:
-            if slot in cls.__dict__.keys():
-                delattr(cls, slot)
-                delattr(cls, "_{}".format(slot))
-
-        cls.__slots__ = []
-        cls._instance = None
+        if cls._instance:
+            cls._instance._config_map.clear()  # pylint: disable=protected-access
+            cls._instance = None

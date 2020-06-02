@@ -16,16 +16,16 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.configuration import Configuration  # type: ignore
+from opentelemetry.configuration import Configuration
 
 
 class TestConfiguration(TestCase):
-    def tearDown(self):
+    def tearDown(self) -> None:
         # This call resets the attributes of the Configuration class so that
         # each test is executed in the same conditions.
         Configuration._reset()
 
-    def test_singleton(self):
+    def test_singleton(self) -> None:
         self.assertIsInstance(Configuration(), Configuration)
         self.assertIs(Configuration(), Configuration())
 

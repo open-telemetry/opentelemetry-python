@@ -34,7 +34,7 @@ import abc
 from logging import getLogger
 from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
 
-from opentelemetry.util import _load_provider
+from opentelemetry.util import _load_meter_provider
 
 logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
@@ -410,6 +410,6 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = _load_provider("meter_provider")
+        _METER_PROVIDER = _load_meter_provider("meter_provider")
 
     return _METER_PROVIDER
