@@ -179,14 +179,11 @@ def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
     if isinstance(
-        exc, (InvalidURL, InvalidSchema, MissingSchema, URLRequired)
+        exc, (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError)
     ):
         return StatusCanonicalCode.INVALID_ARGUMENT
     if isinstance(exc, Timeout):
         return StatusCanonicalCode.DEADLINE_EXCEEDED
-    if isinstance(exc, ValueError):
-        if len(exc.args) > 0 and exc.args[0] in ["Invalid IPv6 URL"]:
-            return StatusCanonicalCode.INVALID_ARGUMENT
     return StatusCanonicalCode.UNKNOWN
 
 
