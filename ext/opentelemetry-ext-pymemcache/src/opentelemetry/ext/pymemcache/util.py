@@ -14,7 +14,7 @@
 #
 
 """
-Some utils used by the redis integration
+Some utils used by the pymemcache integration
 """
 
 
