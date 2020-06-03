@@ -47,9 +47,9 @@ API
 import logging
 from inspect import currentframe
 
-from boto.connection import AWSAuthConnection, AWSQueryConnection
 from wrapt import ObjectProxy, wrap_function_wrapper
 
+from boto.connection import AWSAuthConnection, AWSQueryConnection
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.boto.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer

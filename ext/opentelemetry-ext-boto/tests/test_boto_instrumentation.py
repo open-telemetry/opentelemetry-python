@@ -19,7 +19,6 @@ import boto.ec2
 import boto.elasticache
 import boto.s3
 import boto.sts
-
 from moto import (  # pylint: disable=import-error
     mock_ec2_deprecated,
     mock_lambda_deprecated,
