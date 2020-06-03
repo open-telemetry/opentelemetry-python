@@ -32,7 +32,7 @@ class MockSocket:
     def close(self):
         self.closed = True
 
-    def recv(self, size):
+    def recv(self, size):  # pylint: disable=unused-argument
         value = self.recv_bufs.popleft()
         if isinstance(value, Exception):
             raise value
@@ -70,5 +70,5 @@ def _str(string_input):
         return string_input
     if isinstance(string_input, bytes):
         return string_input.decode()
-    
+
     return str(string_input)

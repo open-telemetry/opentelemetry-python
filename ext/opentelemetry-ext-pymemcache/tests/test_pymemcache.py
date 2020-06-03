@@ -34,7 +34,9 @@ TEST_HOST = "localhost"
 TEST_PORT = 117711
 
 
-class PymemcacheClientTestCase(TestBase): # pylint: disable=too-many-public-methods
+class PymemcacheClientTestCase(
+    TestBase
+):  # pylint: disable=too-many-public-methods
     """ Tests for a patched pymemcache.client.base.Client. """
 
     def setUp(self):
@@ -454,7 +456,7 @@ class PymemcacheHashClientTestCase(TestBase):
 
     def make_client_pool(
         self, hostname, mock_socket_values, serializer=None, **kwargs
-    ): # pylint: diisable=no-self-use
+    ):  # pylint: disable=no-self-use
         mock_client = pymemcache.client.base.Client(
             hostname, serializer=serializer, **kwargs
         )
@@ -467,15 +469,17 @@ class PymemcacheHashClientTestCase(TestBase):
 
     def make_client(self, *mock_socket_values, **kwargs):
         current_port = TEST_PORT
-        # pylint: disable=import-outside-toplevel
-        from pymemcache.client.hash import HashClient
-        # pylint disablle=attribute-defined-outside-init
-        self.client = HashClient([], **kwargs)
+
+        from pymemcache.client.hash import HashClient  # pylint: disable=import-outside-toplevel
+
+        self.client = HashClient([], **kwargs)  # pylint: disable=attribute-defined-outside-init
         ip = TEST_HOST
 
         for vals in mock_socket_values:
             url_string = "{}:{}".format(ip, current_port)
-            clnt_pool = self.make_client_pool((ip, current_port), vals, **kwargs)
+            clnt_pool = self.make_client_pool(
+                (ip, current_port), vals, **kwargs
+            )
             self.client.clients[url_string] = clnt_pool
             self.client.hasher.add_node(url_string)
             current_port += 1
