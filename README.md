@@ -103,9 +103,9 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
-- [Alex Boten](https://github.com/codeboten), LightStep
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
-- [Christian Neumüller](https://github.com/Oberon00), Dynatrace
+- [Chris Kleinknecht](https://github.com/c24t), Google
+- [Diego Hurtado](https://github.com/ocelotl)
 - [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
@@ -115,8 +115,14 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
-- [Chris Kleinknecht](https://github.com/c24t), Google
+- [Alex Boten](https://github.com/codeboten), LightStep
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
+
+### Thanks to all the people who already contributed!
+
+<a href="https://github.com/open-telemetry/opentelemetry-python/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-python" />
+</a>
 
 *Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 

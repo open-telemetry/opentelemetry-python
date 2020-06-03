@@ -71,7 +71,8 @@ class TestAioHttpIntegration(TestBase):
         """Helper to start an aiohttp test server and send an actual HTTP request to it."""
 
         async def do_request():
-            async def default_handler(unused_request):
+            async def default_handler(request):
+                assert "traceparent" in request.headers
                 return aiohttp.web.Response(status=int(status_code))
 
             handler = request_handler or default_handler
@@ -281,8 +282,9 @@ class TestAioHttpIntegration(TestBase):
             self.memory_exporter.clear()
 
     def test_timeout(self):
-        async def request_handler(unused_request):
+        async def request_handler(request):
             await asyncio.sleep(1)
+            assert "traceparent" in request.headers
             return aiohttp.web.Response()
 
         host, port = self._http_request(
@@ -312,6 +314,7 @@ class TestAioHttpIntegration(TestBase):
         async def request_handler(request):
             # Create a redirect loop.
             location = request.url
+            assert "traceparent" in request.headers
             raise aiohttp.web.HTTPFound(location=location)
 
         host, port = self._http_request(
