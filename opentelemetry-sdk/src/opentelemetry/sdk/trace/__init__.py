@@ -424,6 +424,8 @@ class Span(trace_api.Span):
             # Freeze mutable sequences defensively
             if isinstance(value, MutableSequence):
                 value = tuple(value)
+            if isinstance(value, bytes):
+                value = value.decode()
             with self._lock:
                 self.attributes[key] = value
 
