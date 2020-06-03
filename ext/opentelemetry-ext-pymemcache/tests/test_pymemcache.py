@@ -13,13 +13,22 @@
 # limitations under the License.
 
 import unittest
+import pytest
 
 import pymemcache
+from pymemcache.exceptions import (
+    MemcacheClientError,
+    MemcacheServerError,
+    MemcacheUnknownCommandError,
+    MemcacheUnknownError,
+    MemcacheIllegalInputError,
+)
 
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.pymemcache import PymemcacheInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace import get_tracer
+from opentelemetry.trace.status import StatusCanonicalCode
 
 from .utils import MockSocket, _str
 
@@ -192,3 +201,254 @@ class PymemcacheClientTestCase(TestBase):
             spans[0].attributes["db.url"],
             "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
         )
+
+    def test_append_stored(self):
+        client = self.make_client([b'STORED\r\n'])
+        result = client.append(b'key', b'value', noreply=False)
+        assert result is True
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['append key'])
+
+    def test_prepend_stored(self):
+        client = self.make_client([b'STORED\r\n'])
+        result = client.prepend(b'key', b'value', noreply=False)
+        assert result is True
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['prepend key'])
+
+    def test_cas_stored(self):
+        client = self.make_client([b'STORED\r\n'])
+        result = client.cas(b'key', b'value', b'cas', noreply=False)
+        assert result is True
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['cas key'])
+
+    def test_cas_exists(self):
+        client = self.make_client([b'EXISTS\r\n'])
+        result = client.cas(b'key', b'value', b'cas', noreply=False)
+        assert result is False
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['cas key'])
+
+    def test_cas_not_found(self):
+        client = self.make_client([b'NOT_FOUND\r\n'])
+        result = client.cas(b'key', b'value', b'cas', noreply=False)
+        assert result is None
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['cas key'])
+
+    def test_delete_exception(self):
+        client = self.make_client([Exception('fail')])
+
+        def _delete():
+            client.delete(b'key', noreply=False)
+
+        pytest.raises(Exception, _delete)
+        spans = self.memory_exporter.get_finished_spans()
+
+        span = spans[0]
+
+        self.assertNotEqual(
+            span.status.canonical_code, StatusCanonicalCode.OK
+        )
+
+        self.check_spans(spans, 1, ['delete key'])
+
+    def test_flush_all(self):
+        client = self.make_client([b'OK\r\n'])
+        result = client.flush_all(noreply=False)
+        assert result is True
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['flush_all'])
+
+    def test_incr_exception(self):
+        client = self.make_client([Exception('fail')])
+
+        def _incr():
+            client.incr(b'key', 1)
+
+        pytest.raises(Exception, _incr)
+        spans = self.memory_exporter.get_finished_spans()
+
+        span = spans[0]
+
+        self.assertNotEqual(
+            span.status.canonical_code, StatusCanonicalCode.OK
+        )
+
+        self.check_spans(spans, 1, ['incr key'])
+
+    def test_get_error(self):
+        client = self.make_client([b'ERROR\r\n'])
+
+        def _get():
+            client.get(b'key')
+
+        pytest.raises(MemcacheUnknownCommandError, _get)
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        span = spans[0]
+
+        self.assertNotEqual(
+            span.status.canonical_code, StatusCanonicalCode.OK
+        )
+        
+        self.check_spans(spans, 1, ['get key'])
+
+
+    def test_get_unknown_error(self):
+        client = self.make_client([b'foobarbaz\r\n'])
+
+        def _get():
+            client.get(b'key')
+
+        pytest.raises(MemcacheUnknownError, _get)
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        span = spans[0]
+
+        self.assertNotEqual(
+            span.status.canonical_code, StatusCanonicalCode.OK
+        )
+
+        self.check_spans(spans, 1, ['get key'])
+
+    def test_gets_found(self):
+        client = self.make_client([b'VALUE key 0 5 10\r\nvalue\r\nEND\r\n'])
+        result = client.gets(b'key')
+        assert result == (b'value', b'10')
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['gets key'])
+
+    def test_touch_not_found(self):
+        client = self.make_client([b'NOT_FOUND\r\n'])
+        result = client.touch(b'key', noreply=False)
+        assert result is False
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['touch key'])
+
+    def test_set_client_error(self):
+        client = self.make_client([b'CLIENT_ERROR some message\r\n'])
+
+        def _set():
+            client.set('key', 'value', noreply=False)
+
+        pytest.raises(MemcacheClientError, _set)
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        span = spans[0]
+
+        self.assertNotEqual(
+            span.status.canonical_code, StatusCanonicalCode.OK
+        )
+
+        self.check_spans(spans, 1, ['set key'])
+
+    def test_set_server_error(self):
+        client = self.make_client([b'SERVER_ERROR some message\r\n'])
+
+        def _set():
+            client.set(b'key', b'value', noreply=False)
+
+        pytest.raises(MemcacheServerError, _set)
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        span = spans[0]
+
+        self.assertNotEqual(
+            span.status.canonical_code, StatusCanonicalCode.OK
+        )
+
+        self.check_spans(spans, 1, ['set key'])
+        
+
+    def test_set_key_with_space(self):
+        client = self.make_client([b''])
+
+        def _set():
+            client.set(b'key has space', b'value', noreply=False)
+
+        pytest.raises(MemcacheIllegalInputError, _set)
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        span = spans[0]
+
+        self.assertNotEqual(
+            span.status.canonical_code, StatusCanonicalCode.OK
+        )
+
+        self.check_spans(spans, 1, ['set key has space'])
+
+    def test_quit(self):
+        client = self.make_client([])
+        result = client.quit()
+        assert result is None
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['quit'])
+
+    def test_replace_not_stored(self):
+        client = self.make_client([b'NOT_STORED\r\n'])
+        result = client.replace(b'key', b'value', noreply=False)
+        assert result is False
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['replace key'])
+
+    def test_version_success(self):
+        client = self.make_client([b'VERSION 1.2.3\r\n'], default_noreply=False)
+        result = client.version()
+        assert result == b'1.2.3'
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['version'])
+
+    def test_stats(self):
+        client = self.make_client([b'STAT fake_stats 1\r\n', b'END\r\n'])
+        result = client.stats()
+        assert client.sock.send_bufs == [b'stats \r\n']
+        assert result == {b'fake_stats': 1}
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 1, ['stats'])
+
+    def test_uninstrumented(self):
+        PymemcacheInstrumentor().uninstrument()
+
+        client = self.make_client(
+            [b"STORED\r\n", b"VALUE key 0 5\r\nvalue\r\nEND\r\n"]
+        )
+        client.set(b"key", b"value", noreply=False)
+        result = client.get(b"key")
+        assert _str(result) == "value"
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.assertEqual(len(spans), 0)
+
+        PymemcacheInstrumentor().instrument()

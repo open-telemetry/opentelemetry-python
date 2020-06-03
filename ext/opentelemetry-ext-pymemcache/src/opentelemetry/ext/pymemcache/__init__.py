@@ -115,7 +115,7 @@ def _wrap_cmd(tracer, cmd, wrapped, instance, args, kwargs):
 
             _set_connection_attributes(span, instance)
         except Exception:
-            print("error")
+            pass
 
         return wrapped(*args, **kwargs)
 
@@ -143,6 +143,5 @@ class PymemcacheInstrumentor(BaseInstrumentor):
             )
 
     def _uninstrument(self, **kwargs):
-
         for command in COMMANDS:
-            _unwrap(pymemcache.client, "{}".format(command))
+            _unwrap(pymemcache.client.base.Client, "{}".format(command))
