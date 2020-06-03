@@ -41,16 +41,15 @@ API
 """
 
 import logging
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple, Optional
 
 import google.auth
+import opentelemetry.trace as trace_api
 from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
-
-import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import BoundedDict
@@ -203,7 +202,7 @@ def _truncate_str(str_to_check: str, limit: int) -> Tuple[str, int]:
     return truncated_str, len(encoded) - len(truncated_str.encode("utf-8"))
 
 
-def _extract_status(status: trace_api.Status) -> Status:
+def _extract_status(status: trace_api.Status) -> Optional[Status]:
     """Convert a Status object to protobuf object."""
     if not status:
         return None
