@@ -11,12 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pkg_resources
 
-# naming the tests module as a namespace package ensures that
-# relative imports will resolve properly for other test packages,
-# as it enables searching for a composite of multiple test modules.
-#
-# only the opentelemetry-api directory needs this code, as it is
-# the first tests module found by pylint during eachdist.py lint
-pkg_resources.declare_namespace(__name__)
+from os import environ
+
+
+def pytest_sessionstart(session):
+    # pylint: disable=unused-argument
+    environ["AWS_ACCESS_KEY_ID"] = "testing"
+    environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    environ["AWS_SECURITY_TOKEN"] = "testing"
+    environ["AWS_SESSION_TOKEN"] = "testing"
+
+
+def pytest_sessionfinish(session):
+    # pylint: disable=unused-argument
+    environ.pop("AWS_ACCESS_KEY_ID")
+    environ.pop("AWS_SECRET_ACCESS_KEY")
+    environ.pop("AWS_SECURITY_TOKEN")
+    environ.pop("AWS_SESSION_TOKEN")
