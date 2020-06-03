@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-
 import pymemcache
 import pytest
 from pymemcache.exceptions import (
@@ -36,7 +34,7 @@ TEST_HOST = "localhost"
 TEST_PORT = 117711
 
 
-class PymemcacheClientTestCase(TestBase):
+class PymemcacheClientTestCase(TestBase): # pylint: disable=too-many-public-methods
     """ Tests for a patched pymemcache.client.base.Client. """
 
     def setUp(self):
@@ -51,6 +49,7 @@ class PymemcacheClientTestCase(TestBase):
         PymemcacheInstrumentor().uninstrument()
 
     def make_client(self, mock_socket_values, **kwargs):
+        # pylint: disable=attribute-defined-outside-init
         self.client = pymemcache.client.base.Client(
             (TEST_HOST, TEST_PORT), **kwargs
         )
@@ -386,8 +385,7 @@ class PymemcacheClientTestCase(TestBase):
 
     def test_quit(self):
         client = self.make_client([])
-        result = client.quit()
-        assert result is None
+        assert client.quit() is None
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -456,7 +454,7 @@ class PymemcacheHashClientTestCase(TestBase):
 
     def make_client_pool(
         self, hostname, mock_socket_values, serializer=None, **kwargs
-    ):
+    ): # pylint: diisable=no-self-use
         mock_client = pymemcache.client.base.Client(
             hostname, serializer=serializer, **kwargs
         )
@@ -469,16 +467,17 @@ class PymemcacheHashClientTestCase(TestBase):
 
     def make_client(self, *mock_socket_values, **kwargs):
         current_port = TEST_PORT
+        # pylint: disable=import-outside-toplevel
         from pymemcache.client.hash import HashClient
-
+        # pylint disablle=attribute-defined-outside-init
         self.client = HashClient([], **kwargs)
         ip = TEST_HOST
 
         for vals in mock_socket_values:
-            s = "{}:{}".format(ip, current_port)
-            c = self.make_client_pool((ip, current_port), vals, **kwargs)
-            self.client.clients[s] = c
-            self.client.hasher.add_node(s)
+            url_string = "{}:{}".format(ip, current_port)
+            clnt_pool = self.make_client_pool((ip, current_port), vals, **kwargs)
+            self.client.clients[url_string] = clnt_pool
+            self.client.hasher.add_node(url_string)
             current_port += 1
         return self.client
 

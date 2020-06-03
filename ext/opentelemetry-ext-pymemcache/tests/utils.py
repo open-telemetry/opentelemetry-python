@@ -16,7 +16,7 @@ import collections
 import socket
 
 
-class MockSocket(object):
+class MockSocket:
     def __init__(self, recv_bufs, connect_failure=None):
         self.recv_bufs = collections.deque(recv_bufs)
         self.send_bufs = []
@@ -50,25 +50,25 @@ class MockSocket(object):
         self.socket_options.append((level, option, value))
 
 
-class MockSocketModule(object):
+class MockSocketModule:
     def __init__(self, connect_failure=None):
         self.connect_failure = connect_failure
         self.sockets = []
 
-    def socket(self, family, type):  # noqa: A002
-        socket = MockSocket([], connect_failure=self.connect_failure)
-        self.sockets.append(socket)
-        return socket
+    def socket(self):  # noqa: A002
+        soket = MockSocket([], connect_failure=self.connect_failure)
+        self.sockets.append(soket)
+        return soket
 
     def __getattr__(self, name):
         return getattr(socket, name)
 
 
 # Compatibility to get a string back from a request
-def _str(s):
-    if type(s) is str:
-        return s
-    elif type(s) is bytes:
-        return s.decode()
-    else:
-        return str(s)
+def _str(string_input):
+    if isinstance(string_input, str):
+        return string_input
+    if isinstance(string_input, bytes):
+        return string_input.decode()
+    
+    return str(string_input)

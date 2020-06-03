@@ -93,8 +93,8 @@ def _with_tracer_wrapper(func):
             # prevent double wrapping
             if hasattr(wrapped, "__wrapped__"):
                 return wrapped(*args, **kwargs)
-            else:
-                return func(tracer, cmd, wrapped, instance, args, kwargs)
+            
+            return func(tracer, cmd, wrapped, instance, args, kwargs)
 
         return wrapper
 
@@ -114,7 +114,7 @@ def _wrap_cmd(tracer, cmd, wrapped, instance, args, kwargs):
             span.set_attribute(_RAWCMD, query)
 
             _set_connection_attributes(span, instance)
-        except Exception:
+        except Exception: # pylint: disable=broad-except
             pass
 
         return wrapped(*args, **kwargs)

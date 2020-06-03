@@ -49,7 +49,7 @@ def _get_address_attributes(instance):
                     instance.server
                 )
 
-    except Exception:
+    except Exception: # pylint: disable=broad-except
         pass
 
     return address_attributes
@@ -72,17 +72,17 @@ def _get_query_string(args):
     arg = args[0]
 
     # if we get a dict, convert to list of keys
-    if type(arg) is dict:
+    if isinstance(arg, dict):
         arg = list(arg)
 
-    if type(arg) is str:
+    if isinstance(arg, str):
         keys = arg
-    elif type(arg) is bytes:
+    elif isinstance(arg, bytes):
         keys = arg.decode()
-    elif type(arg) is list and len(arg):
-        if type(arg[0]) is str:
+    elif isinstance(arg,  list) and len(arg) >= 1:
+        if isinstance(arg[0], str):
             keys = " ".join(arg)
-        elif type(arg[0]) is bytes:
+        elif isinstance(arg[0], bytes):
             keys = b" ".join(arg).decode()
 
     return keys
