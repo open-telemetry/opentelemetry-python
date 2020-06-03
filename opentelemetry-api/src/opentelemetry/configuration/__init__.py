@@ -92,15 +92,15 @@ to override this value instead of changing it.
 
 from os import environ
 from re import fullmatch
-from typing import Dict, Optional, Type, TypeVar, Union
+from typing import Dict, Optional, Type, TypeVar, Union, ClassVar
 
 ConfigValue = Union[str, bool, int, float]
 _T = TypeVar("_T", ConfigValue, Optional[ConfigValue])
 
 
 class Configuration:
-    _instance = None  # type: Optional["Configuration"]
-    _config_map = {}  # type: Dict[str, ConfigValue]
+    _instance = None  # type: ClassVar[Optional[Configuration]]
+    _config_map = {}  # type: ClassVar[Dict[str, ConfigValue]]
 
     def __new__(cls) -> "Configuration":
         if cls._instance is not None:
