@@ -41,9 +41,13 @@ def _get_address_attributes(instance):
                 host, port = instance.server
                 address_attributes[_HOST] = host
                 address_attributes[_PORT] = port
-                address_attributes[_URL] = "memcached://{}:{}".format(host, port)
+                address_attributes[_URL] = "memcached://{}:{}".format(
+                    host, port
+                )
             elif isinstance(instance.server, str):
-                address_attributes[_URL] = "memcached://{}".format(instance.server)
+                address_attributes[_URL] = "memcached://{}".format(
+                    instance.server
+                )
 
     except Exception:
         pass
