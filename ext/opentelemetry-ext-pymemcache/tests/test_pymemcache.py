@@ -438,3 +438,74 @@ class PymemcacheClientTestCase(TestBase):
         self.assertEqual(len(spans), 0)
 
         PymemcacheInstrumentor().instrument()
+
+
+class PymemcacheHashClientTestCase(TestBase):
+    """ Tests for a patched pymemcache.client.hash.HashClient. """
+
+    def setUp(self):
+        super().setUp()
+        PymemcacheInstrumentor().instrument()
+
+        # pylint: disable=protected-access
+        self.tracer = get_tracer(__name__)
+
+    def tearDown(self):
+        super().tearDown()
+        PymemcacheInstrumentor().uninstrument()
+
+    def make_client_pool(
+        self, hostname, mock_socket_values, serializer=None, **kwargs
+    ):
+        mock_client = pymemcache.client.base.Client(
+            hostname, serializer=serializer, **kwargs
+        )
+        mock_client.sock = MockSocket(mock_socket_values)
+        client = pymemcache.client.base.PooledClient(
+            hostname, serializer=serializer
+        )
+        client.client_pool = pymemcache.pool.ObjectPool(lambda: mock_client)
+        return mock_client
+
+    def make_client(self, *mock_socket_values, **kwargs):
+        current_port = TEST_PORT
+        from pymemcache.client.hash import HashClient
+
+        self.client = HashClient([], **kwargs)
+        ip = TEST_HOST
+
+        for vals in mock_socket_values:
+            s = "{}:{}".format(ip, current_port)
+            c = self.make_client_pool((ip, current_port), vals, **kwargs)
+            self.client.clients[s] = c
+            self.client.hasher.add_node(s)
+            current_port += 1
+        return self.client
+
+    def check_spans(self, spans, num_expected, queries_expected):
+        """A helper for validating basic span information."""
+        self.assertEqual(num_expected, len(spans))
+
+        for span, query in zip(spans, queries_expected):
+            self.assertEqual(span.name, "memcached.command")
+            self.assertIs(span.kind, trace_api.SpanKind.INTERNAL)
+            self.assertEqual(
+                span.attributes["net.peer.name"], "{}".format(TEST_HOST)
+            )
+            self.assertEqual(span.attributes["net.peer.port"], TEST_PORT)
+            self.assertEqual(span.attributes["db.type"], "memcached")
+            self.assertEqual(
+                span.attributes["db.url"],
+                "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
+            )
+            self.assertEqual(span.attributes["db.statement"], query)
+
+    def test_delete_many_found(self):
+        client = self.make_client([b"STORED\r", b"\n", b"DELETED\r\n"])
+        result = client.add(b"key", b"value", noreply=False)
+        result = client.delete_many([b"key"], noreply=False)
+        assert result is True
+
+        spans = self.memory_exporter.get_finished_spans()
+
+        self.check_spans(spans, 2, ["add key", "delete key"])
