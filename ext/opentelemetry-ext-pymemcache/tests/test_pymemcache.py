@@ -479,14 +479,10 @@ class PymemcacheHashClientTestCase(TestBase):
         current_port = TEST_PORT
 
         # pylint: disable=import-outside-toplevel
-        from pymemcache.client.hash import (
-            HashClient,
-        )
+        from pymemcache.client.hash import HashClient
 
         # pylint: disable=attribute-defined-outside-init
-        self.client = HashClient(
-            [], **kwargs
-        )
+        self.client = HashClient([], **kwargs)
         ip = TEST_HOST
 
         for vals in mock_socket_values:
