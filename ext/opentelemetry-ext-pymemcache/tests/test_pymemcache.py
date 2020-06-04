@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pymemcache
-import pytest
 from pymemcache.exceptions import (
     MemcacheClientError,
     MemcacheIllegalInputError,
@@ -254,7 +253,9 @@ class PymemcacheClientTestCase(
         def _delete():
             client.delete(b"key", noreply=False)
 
-        pytest.raises(Exception, _delete)
+        with self.assertRaises(Exception):
+            _delete()
+
         spans = self.memory_exporter.get_finished_spans()
 
         span = spans[0]
@@ -278,7 +279,9 @@ class PymemcacheClientTestCase(
         def _incr():
             client.incr(b"key", 1)
 
-        pytest.raises(Exception, _incr)
+        with self.assertRaises(Exception):
+            _incr()
+
         spans = self.memory_exporter.get_finished_spans()
 
         span = spans[0]
@@ -293,7 +296,8 @@ class PymemcacheClientTestCase(
         def _get():
             client.get(b"key")
 
-        pytest.raises(MemcacheUnknownCommandError, _get)
+        with self.assertRaises(MemcacheUnknownCommandError):
+            _get()
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -309,7 +313,8 @@ class PymemcacheClientTestCase(
         def _get():
             client.get(b"key")
 
-        pytest.raises(MemcacheUnknownError, _get)
+        with self.assertRaises(MemcacheUnknownError):
+            _get()
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -343,7 +348,8 @@ class PymemcacheClientTestCase(
         def _set():
             client.set("key", "value", noreply=False)
 
-        pytest.raises(MemcacheClientError, _set)
+        with self.assertRaises(MemcacheClientError):
+            _set()
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -359,7 +365,8 @@ class PymemcacheClientTestCase(
         def _set():
             client.set(b"key", b"value", noreply=False)
 
-        pytest.raises(MemcacheServerError, _set)
+        with self.assertRaises(MemcacheServerError):
+            _set()
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -375,7 +382,8 @@ class PymemcacheClientTestCase(
         def _set():
             client.set(b"key has space", b"value", noreply=False)
 
-        pytest.raises(MemcacheIllegalInputError, _set)
+        with self.assertRaises(MemcacheIllegalInputError):
+            _set()
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -470,13 +478,15 @@ class PymemcacheHashClientTestCase(TestBase):
     def make_client(self, *mock_socket_values, **kwargs):
         current_port = TEST_PORT
 
+        # pylint: disable=import-outside-toplevel
         from pymemcache.client.hash import (
             HashClient,
-        )  # pylint: disable=import-outside-toplevel
+        )
 
+        # pylint: disable=attribute-defined-outside-init
         self.client = HashClient(
             [], **kwargs
-        )  # pylint: disable=attribute-defined-outside-init
+        )
         ip = TEST_HOST
 
         for vals in mock_socket_values:
