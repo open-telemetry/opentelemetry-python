@@ -19,16 +19,13 @@ measurements, as well as metrics with known aggregation and labels.
 The `Meter` class is used to construct `Metric` s to record raw statistics
 as well as metrics with predefined aggregation.
 
+`Meter` s can be obtained via the `MeterProvider`, corresponding to the name
+of the instrumenting library and (optionally) a version.
+
 See the `metrics api`_ spec for terminology and context clarification.
 
 .. _metrics api:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-metrics.md
-
-.. versionadded:: 0.1.0
-.. versionchanged:: 0.5.0
-    ``meter_provider`` was replaced by `get_meter_provider`,
-    ``set_preferred_meter_provider_implementation`` was replaced by
-    `set_meter_provider`.
+    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/metrics/api.md
 """
 import abc
 from logging import getLogger
@@ -54,7 +51,7 @@ class DefaultBoundInstrument:
         """
 
     def record(self, value: ValueT) -> None:
-        """No-op implementation of `BoundMeasure` record.
+        """No-op implementation of `BoundValueRecorder` record.
 
         Args:
             value: The value to record to the bound metric instrument.
@@ -73,12 +70,12 @@ class BoundCounter:
         """
 
 
-class BoundMeasure:
+class BoundValueRecorder:
     def record(self, value: ValueT) -> None:
-        """Records the given ``value`` to this bound measure.
+        """Records the given ``value`` to this bound valuerecorder.
 
         Args:
-            value: The value to record to the bound measure.
+            value: The value to record to the bound valuerecorder.
         """
 
 
@@ -94,12 +91,7 @@ class Metric(abc.ABC):
         """Gets a bound metric instrument.
 
         Bound metric instruments are useful to reduce the cost of repeatedly
-        recording a metric with a pre-defined set of label values. All metric
-        kinds (counter, measure) support declaring a set of required label
-        keys. The values corresponding to these keys should be specified in
-        every bound metric instrument. "Unspecified" label values, in cases
-        where a bound metric instrument is requested but a value was not
-        provided are permitted.
+        recording a metric with a pre-defined set of label values.
 
         Args:
             labels: Labels to associate with the bound instrument.
@@ -126,10 +118,10 @@ class DefaultMetric(Metric):
         """
 
     def record(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """No-op implementation of `Measure` record.
+        """No-op implementation of `ValueRecorder` record.
 
         Args:
-            value: The value to record to this measure metric.
+            value: The value to record to this valuerecorder metric.
             labels: Labels to associate with the bound instrument.
         """
 
@@ -150,21 +142,18 @@ class Counter(Metric):
         """
 
 
-class Measure(Metric):
-    """A measure type metric that represent raw stats that are recorded.
+class ValueRecorder(Metric):
+    """A valuerecorder type metric that represent raw stats."""
 
-    Measure metrics represent raw statistics that are recorded.
-    """
-
-    def bind(self, labels: Dict[str, str]) -> "BoundMeasure":
-        """Gets a `BoundMeasure`."""
-        return BoundMeasure()
+    def bind(self, labels: Dict[str, str]) -> "BoundValueRecorder":
+        """Gets a `BoundValueRecorder`."""
+        return BoundValueRecorder()
 
     def record(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Records the ``value`` to the measure.
+        """Records the ``value`` to the valuerecorder.
 
         Args:
-            value: The value to record to this measure metric.
+            value: The value to record to this valuerecorder metric.
             labels: Labels to associate with the bound instrument.
         """
 
@@ -243,7 +232,7 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, Measure, Observer)
+MetricT = TypeVar("MetricT", Counter, ValueRecorder, Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -251,9 +240,9 @@ ObserverCallbackT = Callable[[Observer], None]
 class Meter(abc.ABC):
     """An interface to allow the recording of metrics.
 
-    `Metric` s are used for recording pre-defined aggregation (counter),
-    or raw values (measure) in which the aggregation and labels
-    for the exported metric are deferred.
+    `Metric` s or metric instruments, are devices used for capturing raw
+    measurements. Each metric instrument supports a single method, each with
+    fixed interpretation to capture measurements.
     """
 
     @abc.abstractmethod

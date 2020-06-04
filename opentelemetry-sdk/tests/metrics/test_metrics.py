@@ -114,14 +114,14 @@ class TestMeter(unittest.TestCase):
         counter = metrics.Counter(
             "name", "desc", "unit", float, meter, label_keys
         )
-        measure = metrics.Measure(
+        valuerecorder = metrics.ValueRecorder(
             "name", "desc", "unit", float, meter, label_keys
         )
-        record_tuples = [(counter, 1.0), (measure, 3.0)]
+        record_tuples = [(counter, 1.0), (valuerecorder, 3.0)]
         meter.record_batch(labels, record_tuples)
         self.assertEqual(counter.bind(labels).aggregator.current, 1.0)
         self.assertEqual(
-            measure.bind(labels).aggregator.current, (3.0, 3.0, 3.0, 1)
+            valuerecorder.bind(labels).aggregator.current, (3.0, 3.0, 3.0, 1)
         )
 
     def test_record_batch_exists(self):
@@ -150,14 +150,14 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(counter.name, "name")
         self.assertIs(counter.meter.resource, resource)
 
-    def test_create_measure(self):
+    def test_create_valuerecorder(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        measure = meter.create_metric(
-            "name", "desc", "unit", float, metrics.Measure, ()
+        valuerecorder = meter.create_metric(
+            "name", "desc", "unit", float, metrics.ValueRecorder, ()
         )
-        self.assertIsInstance(measure, metrics.Measure)
-        self.assertEqual(measure.value_type, float)
-        self.assertEqual(measure.name, "name")
+        self.assertIsInstance(valuerecorder, metrics.ValueRecorder)
+        self.assertEqual(valuerecorder.value_type, float)
+        self.assertEqual(valuerecorder.name, "name")
 
     def test_register_observer(self):
         meter = metrics.MeterProvider().get_meter(__name__)
@@ -202,19 +202,19 @@ class TestMeter(unittest.TestCase):
         meter.metrics.add(counter)
         counter.add(4.0, labels)
 
-        measure = metrics.Measure(
+        valuerecorder = metrics.ValueRecorder(
             "name", "desc", "unit", float, meter, label_keys
         )
-        meter.metrics.add(measure)
-        measure.record(42.0, labels)
+        meter.metrics.add(valuerecorder)
+        valuerecorder.record(42.0, labels)
 
         self.assertEqual(len(counter.bound_instruments), 1)
-        self.assertEqual(len(measure.bound_instruments), 1)
+        self.assertEqual(len(valuerecorder.bound_instruments), 1)
 
         meter.collect()
 
         self.assertEqual(len(counter.bound_instruments), 0)
-        self.assertEqual(len(measure.bound_instruments), 0)
+        self.assertEqual(len(valuerecorder.bound_instruments), 0)
 
     def test_release_bound_instrument(self):
         meter = metrics.MeterProvider().get_meter(__name__)
@@ -228,30 +228,30 @@ class TestMeter(unittest.TestCase):
         bound_counter = counter.bind(labels)
         bound_counter.add(4.0)
 
-        measure = metrics.Measure(
+        valuerecorder = metrics.ValueRecorder(
             "name", "desc", "unit", float, meter, label_keys
         )
-        meter.metrics.add(measure)
-        bound_measure = measure.bind(labels)
-        bound_measure.record(42)
+        meter.metrics.add(valuerecorder)
+        bound_valuerecorder = valuerecorder.bind(labels)
+        bound_valuerecorder.record(42)
 
         bound_counter.release()
-        bound_measure.release()
+        bound_valuerecorder.release()
 
         # be sure that bound instruments are only released after collection
         self.assertEqual(len(counter.bound_instruments), 1)
-        self.assertEqual(len(measure.bound_instruments), 1)
+        self.assertEqual(len(valuerecorder.bound_instruments), 1)
 
         meter.collect()
 
         self.assertEqual(len(counter.bound_instruments), 0)
-        self.assertEqual(len(measure.bound_instruments), 0)
+        self.assertEqual(len(valuerecorder.bound_instruments), 0)
 
 
 class TestMetric(unittest.TestCase):
     def test_bind(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric_types = [metrics.Counter, metrics.Measure]
+        metric_types = [metrics.Counter, metrics.ValueRecorder]
         labels = {"key": "value"}
         key_labels = tuple(sorted(labels.items()))
         for _type in metric_types:
@@ -273,17 +273,19 @@ class TestCounter(unittest.TestCase):
         self.assertEqual(bound_counter.aggregator.current, 5)
 
 
-class TestMeasure(unittest.TestCase):
+class TestValueRecorder(unittest.TestCase):
     def test_record(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.Measure("name", "desc", "unit", int, meter, ("key",))
+        metric = metrics.ValueRecorder(
+            "name", "desc", "unit", int, meter, ("key",)
+        )
         labels = {"key": "value"}
-        bound_measure = metric.bind(labels)
+        bound_valuerecorder = metric.bind(labels)
         values = (37, 42, 7)
         for val in values:
             metric.record(val, labels)
         self.assertEqual(
-            bound_measure.aggregator.current,
+            bound_valuerecorder.aggregator.current,
             (min(values), max(values), sum(values), len(values)),
         )
 
@@ -380,33 +382,37 @@ class TestBoundCounter(unittest.TestCase):
         self.assertEqual(bound_counter.aggregator.current, 4.0)
 
 
-class TestBoundMeasure(unittest.TestCase):
+class TestBoundValueRecorder(unittest.TestCase):
     def test_record(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_measure = metrics.BoundMeasure(int, True, aggregator)
-        bound_measure.record(3)
-        self.assertEqual(bound_measure.aggregator.current, (3, 3, 3, 1))
+        bound_valuerecorder = metrics.BoundValueRecorder(int, True, aggregator)
+        bound_valuerecorder.record(3)
+        self.assertEqual(bound_valuerecorder.aggregator.current, (3, 3, 3, 1))
 
     def test_record_disabled(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_measure = metrics.BoundMeasure(int, False, aggregator)
-        bound_measure.record(3)
+        bound_valuerecorder = metrics.BoundValueRecorder(
+            int, False, aggregator
+        )
+        bound_valuerecorder.record(3)
         self.assertEqual(
-            bound_measure.aggregator.current, (None, None, None, 0)
+            bound_valuerecorder.aggregator.current, (None, None, None, 0)
         )
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_measure = metrics.BoundMeasure(int, True, aggregator)
-        bound_measure.record(3.0)
+        bound_valuerecorder = metrics.BoundValueRecorder(int, True, aggregator)
+        bound_valuerecorder.record(3.0)
         self.assertEqual(
-            bound_measure.aggregator.current, (None, None, None, 0)
+            bound_valuerecorder.aggregator.current, (None, None, None, 0)
         )
         self.assertTrue(logger_mock.warning.called)
 
     def test_update(self):
         aggregator = export.aggregate.MinMaxSumCountAggregator()
-        bound_measure = metrics.BoundMeasure(int, True, aggregator)
-        bound_measure.update(4.0)
-        self.assertEqual(bound_measure.aggregator.current, (4.0, 4.0, 4.0, 1))
+        bound_valuerecorder = metrics.BoundValueRecorder(int, True, aggregator)
+        bound_valuerecorder.update(4.0)
+        self.assertEqual(
+            bound_valuerecorder.aggregator.current, (4.0, 4.0, 4.0, 1)
+        )
