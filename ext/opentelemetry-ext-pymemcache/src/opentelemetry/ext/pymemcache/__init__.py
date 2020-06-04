@@ -15,15 +15,13 @@
 """
 Usage
 -----
-The OpenTelemetry ``jinja2`` integration traces templates loading, compilation
-and rendering.
+The OpenTelemetry ``pymemcache`` integration traces pymemcache client operations
 Usage
 -----
 .. code-block:: python
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.ext.pymemcache import PymemcacheInstrumentor
-    trace.set_tracer_provider(TracerProvider())
     trace.set_tracer_provider(TracerProvider())
     from pymemcache.client.base import Client
     client = Client(('localhost', 11211))
@@ -107,8 +105,6 @@ def _wrap_cmd(tracer, cmd, wrapped, instance, args, kwargs):
         _CMD, kind=SpanKind.INTERNAL, attributes={}
     ) as span:
         try:
-            span.set_attribute("service", tracer.instrumentation_info.name)
-
             vals = _get_query_string(args)
             query = "{}{}{}".format(cmd, " " if vals else "", vals)
             span.set_attribute(_RAWCMD, query)
