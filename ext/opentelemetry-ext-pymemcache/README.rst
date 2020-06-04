@@ -1,5 +1,5 @@
 OpenTelemetry pymemcache Integration
-=================================
+====================================
 
 |pypi|
 
@@ -16,6 +16,5 @@ Installation
 
 References
 ----------
-* `OpenTelemetry pymemcache Integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/pymemcache/pymemcache.html>`_
+* `OpenTelemetry Pymemcache Integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/pymemcache/pymemcache.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-
