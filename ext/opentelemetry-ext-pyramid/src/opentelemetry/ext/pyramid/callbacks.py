@@ -108,63 +108,65 @@ def trace_tween_factory(handler, registry):
     settings = registry.settings
     enabled = asbool(settings.get(SETTING_TRACE_ENABLED, True))
 
-    if enabled:
-        # make a request tracing function
-        def trace_tween(request):
-            if disable_trace(request.url, _excluded_hosts, _excluded_paths):
-                request.environ[_ENVIRON_ENABLED_KEY] = False
-                # short-circuit when we don't want to trace anything
-                return handler(request)
+    if not enabled:
+        # If disabled, make a tween that signals to the
+        # BeforeTraversal subscriber that tracing is disabled
+        def disabled_tween(request):
+            request.environ[_ENVIRON_ENABLED_KEY] = False
+            return handler(request)
 
-            request.environ[_ENVIRON_ENABLED_KEY] = True
-            request.environ[_ENVIRON_STARTTIME_KEY] = time_ns()
+        return disabled_tween
 
-            response = None
-            try:
-                response = handler(request)
-            except HTTPException as exc:
-                # If the exception is a pyramid HTTPException,
-                # that's still valuable information that isn't necessarily
-                # a 500. For instance, HTTPFound is a 302.
-                # As described in docs, Pyramid exceptions are all valid
-                # response types
-                response = exc
-                raise
-            finally:
-                span = request.environ.get(_ENVIRON_SPAN_KEY)
-                enabled = request.environ.get(_ENVIRON_ENABLED_KEY)
-                if not span and enabled:
-                    _logger.warning(
-                        "Pyramid environ's OpenTelemetry span missing."
-                        "If the OpenTelemetry tween was added manually, make sure"
-                        "PyramidInstrumentor().instrument_config(config) is called"
+    # make a request tracing function
+    def trace_tween(request):
+        if disable_trace(request.url, _excluded_hosts, _excluded_paths):
+            request.environ[_ENVIRON_ENABLED_KEY] = False
+            # short-circuit when we don't want to trace anything
+            return handler(request)
+
+        request.environ[_ENVIRON_ENABLED_KEY] = True
+        request.environ[_ENVIRON_STARTTIME_KEY] = time_ns()
+
+        try:
+            response = handler(request)
+            response_or_exception = response
+        except HTTPException as exc:
+            # If the exception is a pyramid HTTPException,
+            # that's still valuable information that isn't necessarily
+            # a 500. For instance, HTTPFound is a 302.
+            # As described in docs, Pyramid exceptions are all valid
+            # response types
+            response_or_exception = exc
+            raise
+        finally:
+            span = request.environ.get(_ENVIRON_SPAN_KEY)
+            enabled = request.environ.get(_ENVIRON_ENABLED_KEY)
+            if not span and enabled:
+                _logger.warning(
+                    "Pyramid environ's OpenTelemetry span missing."
+                    "If the OpenTelemetry tween was added manually, make sure"
+                    "PyramidInstrumentor().instrument_config(config) is called"
+                )
+            elif enabled:
+                otel_wsgi.add_response_attributes(
+                    span,
+                    response_or_exception.status,
+                    response_or_exception.headers,
+                )
+
+                activation = request.environ.get(_ENVIRON_ACTIVATION_KEY)
+
+                if isinstance(response_or_exception, HTTPException):
+                    activation.__exit__(
+                        type(response_or_exception),
+                        response_or_exception,
+                        getattr(response_or_exception, "__traceback__", None),
                     )
-                elif enabled:
-                    if response:
-                        otel_wsgi.add_response_attributes(
-                            span, response.status, response.headers
-                        )
+                else:
+                    activation.__exit__(None, None, None)
 
-                    activation = request.environ.get(_ENVIRON_ACTIVATION_KEY)
+                context.detach(request.environ.get(_ENVIRON_TOKEN))
 
-                    if isinstance(response, HTTPException):
-                        activation.__exit__(
-                            type(response),
-                            response,
-                            getattr(response, "__traceback__", None),
-                        )
-                    else:
-                        activation.__exit__(None, None, None)
+        return response
 
-                    context.detach(request.environ.get(_ENVIRON_TOKEN))
-            return response
-
-        return trace_tween
-
-    # If not enabled, make a tween that signals to the
-    # BeforeTraversal subscriber that tracing is disabled
-    def disabled_tween(request):
-        request.environ[_ENVIRON_ENABLED_KEY] = False
-        return handler(request)
-
-    return disabled_tween
+    return trace_tween

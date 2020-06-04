@@ -72,7 +72,7 @@ import typing
 
 from pyramid.config import Configurator
 from pyramid.path import caller_package
-from pyramid.tweens import EXCVIEW
+from pyramid.settings import aslist
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
@@ -88,18 +88,15 @@ from opentelemetry.trace import TracerProvider, get_tracer
 
 def traced_init(wrapped, instance, args, kwargs):
     settings = kwargs.get("settings", {})
-    tweens = settings.get("pyramid.tweens")
+    tweens = aslist(settings.get("pyramid.tweens", []))
 
-    if tweens and tweens.strip() and TWEEN_NAME not in settings:
+    if tweens and TWEEN_NAME not in settings:
         # pyramid.tweens.EXCVIEW is the name of built-in exception view provided by
         # pyramid.  We need our tween to be before it, otherwise unhandled
         # exceptions will be caught before they reach our tween.
-        idx = tweens.find(EXCVIEW)
-        if idx == -1:
-            tween_list = tweens + "\n" + TWEEN_NAME
-        else:
-            tween_list = tweens[:idx] + TWEEN_NAME + "\n" + tweens[idx:]
-        settings["pyramid.tweens"] = tween_list
+        tweens = [TWEEN_NAME] + tweens
+
+        settings["pyramid.tweens"] = "\n".join(tweens)
 
     kwargs["settings"] = settings
 
