@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.8b0
+
+Released 2020-05-27
+
+- Add a new bootstrap command that enables automatic instrument installations.
+  ([#650](https://github.com/open-telemetry/opentelemetry-python/pull/650))
+
 ## 0.7b1
 
 Released 2020-05-12
