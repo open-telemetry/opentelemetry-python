@@ -423,7 +423,11 @@ class Span(trace_api.Span):
             if isinstance(value, MutableSequence):
                 value = tuple(value)
             if isinstance(value, bytes):
-                value = value.decode()
+                try:
+                    value = value.decode()
+                except ValueError:
+                    logger.warning("Byte attribute could not be decoded.")
+                    return
             with self._lock:
                 self.attributes[key] = value
 
