@@ -1,5 +1,5 @@
 import logging
-from typing import Sequence
+from typing import Optional, Sequence
 
 import google.auth
 from google.api.label_pb2 import LabelDescriptor
@@ -29,10 +29,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             _, self.project_id = google.auth.default()
         else:
             self.project_id = project_id
-        self.project_name = self.client.project_path(project_id)
+        self.project_name = self.client.project_path(self.project_id)
         self._metric_descriptors = {}
 
-    def _add_resource_info(self, series: TimeSeries):
+    def _add_resource_info(self, series: TimeSeries) -> None:
         """ Add Google resource specific information (e.g. instance id, region)
 
         :param series: ProtoBuf TimeSeries
@@ -40,7 +40,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         """
         # TODO: Leverage this better
 
-    def _batch_write(self, series: TimeSeries):
+    def _batch_write(self, series: TimeSeries) -> None:
         """ Cloud Monitoring allows writing up to 200 time series at once
 
         :param series: ProtoBuf TimeSeries
@@ -54,7 +54,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             )
             write_ind += MAX_BATCH_WRITE
 
-    def _get_metric_descriptor(self, record: MetricRecord) -> MetricDescriptor:
+    def _get_metric_descriptor(
+        self, record: MetricRecord
+    ) -> Optional[MetricDescriptor]:
         """ We can map Metric to MetricDescriptor using Metric.name or
         MetricDescriptor.type. We create the MetricDescriptor if it doesn't
         exist already and cache it. Note that recreating MetricDescriptors is
@@ -87,6 +89,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             elif isinstance(value, bool):
                 descriptor["labels"].append(
                     LabelDescriptor(key=key, value_type="BOOL")
+                )
+            else:
+                logger.warning(
+                    "Label value %s is not a string, bool or integer", value
                 )
         if isinstance(record.aggregator, CounterAggregator):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
