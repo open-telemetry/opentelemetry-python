@@ -33,12 +33,8 @@ Be sure rabbitmq is running:
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-
-    trace.set_tracer_provider(TracerProvider())
-    # TODO: configure span exporters
-
     from opentelemetry.ext.celery import CeleryInstrumentor
+
     CeleryInstrumentor().instrument()
 
     from celery import Celery
@@ -56,6 +52,7 @@ API
 """
 
 import logging
+import signal
 
 from celery import registry, signals  # pylint: disable=no-name-in-module
 
@@ -79,6 +76,8 @@ _TASK_APPLY_ASYNC = "apply_async"
 _TASK_RUN = "run"
 
 _TASK_RETRY_REASON_KEY = "celery.retry.reason"
+_TASK_REVOKED_REASON_KEY = "celery.revoked.reason"
+_TASK_REVOKED_TERMINATED_SIGNAL_KEY = "celery.terminated.signal"
 _TASK_NAME_KEY = "celery.task_name"
 _MESSAGE_ID_ATTRIBUTE_NAME = "messaging.message_id"
 
@@ -120,7 +119,6 @@ class CeleryInstrumentor(BaseInstrumentor):
             )
             return
 
-        # TODO: When the span could be SERVER?
         span = self._tracer.start_span(task.name, kind=trace.SpanKind.CONSUMER)
 
         activation = self._tracer.use_span(span, end_on_exit=True)
@@ -166,7 +164,6 @@ class CeleryInstrumentor(BaseInstrumentor):
             )
             return
 
-        # TODO: When the span could be CLIENT?
         span = self._tracer.start_span(task.name, kind=trace.SpanKind.PRODUCER)
 
         # apply some attributes here because most of the data is not available
