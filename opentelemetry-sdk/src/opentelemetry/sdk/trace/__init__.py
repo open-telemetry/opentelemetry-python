@@ -17,7 +17,6 @@ import abc
 import atexit
 import json
 import logging
-import os
 import random
 import threading
 from collections import OrderedDict
@@ -41,6 +40,7 @@ logger = logging.getLogger(__name__)
 MAX_NUM_ATTRIBUTES = 32
 MAX_NUM_EVENTS = 128
 MAX_NUM_LINKS = 32
+VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 
 
 class SpanProcessor:
@@ -189,6 +189,48 @@ class LazyEvent(EventBase):
         return self._event_formatter()
 
 
+def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
+    """Checks if attribute value is valid.
+
+    An attribute value is valid if it is one of the valid types. If the value
+    is a sequence, it is only valid if all items in the sequence are of valid
+    type, not a sequence, and are of the same type.
+    """
+
+    if isinstance(value, Sequence):
+        if len(value) == 0:
+            return True
+
+        first_element_type = type(value[0])
+
+        if first_element_type not in VALID_ATTR_VALUE_TYPES:
+            logger.warning(
+                "Invalid type %s in attribute value sequence. Expected one of "
+                "%s or a sequence of those types",
+                first_element_type.__name__,
+                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
+            )
+            return False
+
+        for element in list(value)[1:]:
+            if not isinstance(element, first_element_type):
+                logger.warning(
+                    "Mixed types %s and %s in attribute value sequence",
+                    first_element_type.__name__,
+                    type(element).__name__,
+                )
+                return False
+    elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
+        logger.warning(
+            "Invalid type %s for attribute value. Expected one of %s or a "
+            "sequence of those types",
+            type(value).__name__,
+            [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
+        )
+        return False
+    return True
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -210,11 +252,6 @@ class Span(trace_api.Span):
             this `Span`.
     """
 
-    # Initialize these lazily assuming most spans won't have them.
-    _empty_attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
-    _empty_events = BoundedList(MAX_NUM_EVENTS)
-    _empty_links = BoundedList(MAX_NUM_LINKS)
-
     def __init__(
         self,
         name: str,
@@ -222,7 +259,7 @@ class Span(trace_api.Span):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: None = None,
+        resource: Resource = Resource.create_empty(),
         attributes: types.Attributes = None,  # TODO
         events: Sequence[Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
@@ -245,20 +282,22 @@ class Span(trace_api.Span):
         self.status = None
         self._lock = threading.Lock()
 
-        if attributes is None:
-            self.attributes = Span._empty_attributes
+        self._filter_attribute_values(attributes)
+        if not attributes:
+            self.attributes = self._new_attributes()
         else:
             self.attributes = BoundedDict.from_map(
                 MAX_NUM_ATTRIBUTES, attributes
             )
 
-        if events is None:
-            self.events = Span._empty_events
-        else:
-            self.events = BoundedList.from_seq(MAX_NUM_EVENTS, events)
+        self.events = self._new_events()
+        if events:
+            for event in events:
+                self._filter_attribute_values(event.attributes)
+                self.events.append(event)
 
         if links is None:
-            self.links = Span._empty_links
+            self.links = self._new_links()
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
@@ -278,6 +317,18 @@ class Span(trace_api.Span):
         return '{}(name="{}", context={})'.format(
             type(self).__name__, self.name, self.context
         )
+
+    @staticmethod
+    def _new_attributes():
+        return BoundedDict(MAX_NUM_ATTRIBUTES)
+
+    @staticmethod
+    def _new_events():
+        return BoundedList(MAX_NUM_EVENTS)
+
+    @staticmethod
+    def _new_links():
+        return BoundedList(MAX_NUM_LINKS)
 
     @staticmethod
     def _format_context(context):
@@ -314,7 +365,7 @@ class Span(trace_api.Span):
             f_links.append(f_link)
         return f_links
 
-    def to_json(self):
+    def to_json(self, indent=4):
         parent_id = None
         if self.parent is not None:
             if isinstance(self.parent, Span):
@@ -351,7 +402,7 @@ class Span(trace_api.Span):
         f_span["events"] = self._format_events(self.events)
         f_span["links"] = self._format_links(self.links)
 
-        return json.dumps(f_span, indent=4)
+        return json.dumps(f_span, indent=indent)
 
     def get_context(self):
         return self.context
@@ -361,9 +412,6 @@ class Span(trace_api.Span):
             if not self.is_recording_events():
                 return
             has_ended = self.end_time is not None
-            if not has_ended:
-                if self.attributes is Span._empty_attributes:
-                    self.attributes = BoundedDict(MAX_NUM_ATTRIBUTES)
         if has_ended:
             logger.warning("Setting attribute on ended span.")
             return
@@ -372,46 +420,31 @@ class Span(trace_api.Span):
             logger.warning("invalid key (empty or null)")
             return
 
-        if isinstance(value, Sequence):
-            error_message = self._check_attribute_value_sequence(value)
-            if error_message is not None:
-                logger.warning("%s in attribute value sequence", error_message)
-                return
+        if _is_valid_attribute_value(value):
             # Freeze mutable sequences defensively
             if isinstance(value, MutableSequence):
                 value = tuple(value)
-        elif not isinstance(value, (bool, str, int, float)):
-            logger.warning("invalid type for attribute value")
-            return
-
-        self.attributes[key] = value
+            with self._lock:
+                self.attributes[key] = value
 
     @staticmethod
-    def _check_attribute_value_sequence(sequence: Sequence) -> Optional[str]:
-        """
-        Checks if sequence items are valid and are of the same type
-        """
-        if len(sequence) == 0:
-            return None
-
-        first_element_type = type(sequence[0])
-
-        if first_element_type not in (bool, str, int, float):
-            return "invalid type"
-
-        for element in sequence:
-            if not isinstance(element, first_element_type):
-                return "different type"
-        return None
+    def _filter_attribute_values(attributes: types.Attributes):
+        if attributes:
+            for attr_key, attr_value in list(attributes.items()):
+                if _is_valid_attribute_value(attr_value):
+                    if isinstance(attr_value, MutableSequence):
+                        attributes[attr_key] = tuple(attr_value)
+                    else:
+                        attributes[attr_key] = attr_value
+                else:
+                    attributes.pop(attr_key)
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
             if not self.is_recording_events():
                 return
             has_ended = self.end_time is not None
-            if not has_ended:
-                if self.events is Span._empty_events:
-                    self.events = BoundedList(MAX_NUM_EVENTS)
+
         if has_ended:
             logger.warning("Calling add_event() on an ended span.")
             return
@@ -423,8 +456,9 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        if attributes is None:
-            attributes = Span._empty_attributes
+        self._filter_attribute_values(attributes)
+        if not attributes:
+            attributes = self._new_attributes()
         self._add_event(
             Event(
                 name=name,
@@ -514,7 +548,6 @@ class Span(trace_api.Span):
             and self._set_status_on_exception
             and exc_val is not None
         ):
-
             self.set_status(
                 Status(
                     canonical_code=StatusCanonicalCode.UNKNOWN,
