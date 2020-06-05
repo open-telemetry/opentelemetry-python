@@ -138,7 +138,7 @@ and run this instead:
 
 .. code:: sh
 
-    $ opentelemetry-instrumentation python server_uninstrumented.py
+    $ opentelemetry-instrument python server_uninstrumented.py
 
 In the console where you previously executed ``client.py``, run again
 this again:

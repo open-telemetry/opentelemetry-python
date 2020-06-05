@@ -66,16 +66,16 @@ Auto-Instrumention Example
 
 .. code-block:: sh
 
-    opentelemetry-instrumentation python server.py
+    opentelemetry-instrument python server.py
 
 * Run client
 
 .. code-block:: sh
 
-    opentelemetry-instrumentation python client.py testing
+    opentelemetry-instrument python client.py testing
 
 * Run client with parameter to raise error
 
 .. code-block:: sh
 
-    opentelemetry-instrumentation python client.py error
+    opentelemetry-instrument python client.py error

@@ -15,7 +15,7 @@
 Instrument `Boto`_ to trace service requests.
 
 There are two options for instrumenting code. The first option is to use the
-``opentelemetry-instrumentation`` executable which will automatically
+``opentelemetry-instrument`` executable which will automatically
 instrument your Boto client. The second is to programmatically enable
 instrumentation via the following code:
 
