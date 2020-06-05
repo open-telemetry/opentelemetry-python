@@ -15,7 +15,7 @@
 import typing
 
 from opentelemetry import trace
-from opentelemetry.context import Context
+from opentelemetry.context import Context, get_current
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -26,6 +26,30 @@ from opentelemetry.trace.propagation.httptextformat import (
     HTTPTextFormatT,
     Setter,
 )
+
+
+class NOOPHTTPTextFormat(HTTPTextFormat):
+    """A propagator that does not extract nor inject.
+
+    This class is useful for catching edge cases assuming
+    a SpanContext will always be present.
+    """
+
+    def extract(
+        self,
+        get_from_carrier: Getter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
+        return get_current()
+
+    def inject(
+        self,
+        set_in_carrier: Setter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
+        context: typing.Optional[Context] = None,
+    ) -> None:
+        return None
 
 
 class MockHTTPTextFormat(HTTPTextFormat):

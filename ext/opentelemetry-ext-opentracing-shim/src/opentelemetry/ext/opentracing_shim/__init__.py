@@ -700,6 +700,10 @@ class TracerShim(opentracing.Tracer):
 
         propagator = propagators.get_global_httptextformat()
         ctx = propagator.extract(get_as_list, carrier)
-        otel_context = trace_api.get_current_span(ctx).get_context()
+        span = trace_api.get_current_span(ctx)
+        if span is not None:
+            otel_context = span.get_context()
+        else:
+            otel_context = trace_api.INVALID_SPAN_CONTEXT
 
         return SpanContextShim(otel_context)

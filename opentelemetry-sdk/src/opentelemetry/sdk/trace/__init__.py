@@ -747,10 +747,6 @@ class TracerProvider(trace_api.TracerProvider):
             ),
         )
 
-    @staticmethod
-    def get_current_span() -> Span:
-        return trace_api.get_current_span()
-
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
 
