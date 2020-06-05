@@ -489,8 +489,12 @@ class TestSpan(unittest.TestCase):
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
-            root.set_attribute("byte-type-attribute", b"byte")
-            self.assertTrue(isinstance(root.attributes["byte-type-attribute"], str))
+            with self.assertLogs(level=WARNING):
+                root.set_attribute("invalid-byte-type-attribute", b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1")
+                self.assertFalse("invalid-byte-type-attribute" in root.attributes)
+
+            root.set_attribute("valid-byte-type-attribute", b"valid byte")
+            self.assertTrue(isinstance(root.attributes["valid-byte-type-attribute"], str))
 
     def test_check_attribute_helper(self):
         # pylint: disable=protected-access
