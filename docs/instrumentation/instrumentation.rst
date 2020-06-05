@@ -1,5 +1,5 @@
-OpenTelemetry Python Autoinstrumentation
-========================================
+OpenTelemetry Python Instrumentation
+====================================
 
 .. automodule:: opentelemetry.instrumentation
     :members:
