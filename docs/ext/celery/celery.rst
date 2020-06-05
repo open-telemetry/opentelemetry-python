@@ -1,5 +1,5 @@
-OpenTelemetry Celery Integration
-================================
+OpenTelemetry Celery Instrumentation
+====================================
 
 .. automodule:: opentelemetry.ext.celery
     :members:
