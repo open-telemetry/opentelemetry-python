@@ -16,9 +16,51 @@
 # pylint:disable=import-self
 # pylint:disable=no-name-in-module
 # pylint:disable=relative-beyond-top-level
-
+import grpc
 from opentelemetry import trace
 from opentelemetry.ext.grpc.version import __version__
+from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.trace import get_tracer
+from wrapt import ObjectProxy
+from wrapt import wrap_function_wrapper as _wrap
+
+class GrpcInstrumentorServer (BaseInstrumentor):
+
+    def _instrument(self, **kwargs):
+        tracer = self.get_trace(kwargs)
+        _wrap(grpc,'server', server_interceptor(tracer_provider = get_tracer_provider(kwargs)))
+        _wrap(grpc, 'secure_channel',server_interceptor(tracer_provider= get_tracer_provider(kwargs)))
+
+        
+
+    def _uninstrument(self, **kwargs):
+        _unwrap(grpc, 'server')
+        
+
+
+class GrpcInstrumeentorClient (BaseInstrumentor):
+
+    def _instrument(self, **kwargs):
+         tracer = self.get_trace(kwargs)
+         _wrap(grpc,'insecure_channel', client_interceptor(tracer_provider = get_tracer_provider(kwargs)))
+         _wrap(grpc, 'secure_channel',client_interceptor(tracer_provider= get_tracer_provider(kwargs)))
+
+
+     
+
+    def _uninstrument(self, **kwargs):
+
+        _unwrap(grpc, 'secure_channel')
+        _unwrap(grpc, 'insecure_channel')
+
+def _unwrap(obj, attr):
+    func = getattr(obj,attr, None)
+
+    if func and isinstance(func, ObjectProxy) and hasattr(func,"__wrapped__"):
+        setattr(obj,attr,func.__wrapped__)
+
+def get_tracer_provider (**kwargs):
+    return  kwargs.get("tracer_provider")
 
 
 def client_interceptor(tracer_provider=None):
