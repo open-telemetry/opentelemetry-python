@@ -123,6 +123,10 @@ class B3Format(HTTPTextFormat):
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context=context)
+
+        if span is None:
+            return
+
         sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
         set_in_carrier(
             carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
