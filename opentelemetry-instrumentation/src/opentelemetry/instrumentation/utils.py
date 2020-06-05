@@ -14,7 +14,7 @@
 
 from wrapt import ObjectProxy
 
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import StatusCanonicalCode
 
 
 def http_status_to_canonical_code(

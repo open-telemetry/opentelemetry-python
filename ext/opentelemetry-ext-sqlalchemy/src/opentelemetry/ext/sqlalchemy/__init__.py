@@ -53,16 +53,7 @@ from opentelemetry.ext.sqlalchemy.engine import (
     _wrap_create_engine,
 )
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-
-
-def _unwrap(obj, attr):
-    func = getattr(obj, attr, None)
-    if (
-        func
-        and isinstance(func, wrapt.ObjectProxy)
-        and hasattr(func, "__wrapped__")
-    ):
-        setattr(obj, attr, func.__wrapped__)
+from opentelemetry.instrumentation.utils import unwrap
 
 
 class SQLAlchemyInstrumentor(BaseInstrumentor):
@@ -96,5 +87,5 @@ class SQLAlchemyInstrumentor(BaseInstrumentor):
         return None
 
     def _uninstrument(self, **kwargs):
-        _unwrap(sqlalchemy, "create_engine")
-        _unwrap(sqlalchemy.engine, "create_engine")
+        unwrap(sqlalchemy, "create_engine")
+        unwrap(sqlalchemy.engine, "create_engine")
