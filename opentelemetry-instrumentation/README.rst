@@ -1,5 +1,5 @@
-OpenTelemetry Auto Instrumentation
-==================================
+OpenTelemetry Instrumentation
+=============================
 
 |pypi|
 
