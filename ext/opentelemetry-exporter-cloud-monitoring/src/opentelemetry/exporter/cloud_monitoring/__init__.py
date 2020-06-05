@@ -16,6 +16,7 @@ from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
+WRITE_INTERVAL = 10
 
 
 # pylint is unable to resolve members of protobuf objects
@@ -31,6 +32,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             self.project_id = project_id
         self.project_name = self.client.project_path(self.project_id)
         self._metric_descriptors = {}
+        self._last_updated = {}
 
     def _add_resource_info(self, series: TimeSeries) -> None:
         """ Add Google resource specific information (e.g. instance id, region)
@@ -71,7 +73,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         if descriptor_type in self._metric_descriptors:
             return self._metric_descriptors[descriptor_type]
         descriptor = {
-            "name": "display_name",
+            "name": None,
             "type": descriptor_type,
             "display_name": record.metric.name,
             "description": record.metric.description,
@@ -82,13 +84,13 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 descriptor["labels"].append(
                     LabelDescriptor(key=key, value_type="STRING")
                 )
-            elif isinstance(value, int):
-                descriptor["labels"].append(
-                    LabelDescriptor(key=key, value_type="INT64")
-                )
             elif isinstance(value, bool):
                 descriptor["labels"].append(
                     LabelDescriptor(key=key, value_type="BOOL")
+                )
+            elif isinstance(value, int):
+                descriptor["labels"].append(
+                    LabelDescriptor(key=key, value_type="INT64")
                 )
             else:
                 logger.warning(
@@ -125,7 +127,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             self._add_resource_info(series)
             series.metric.type = metric_descriptor.type
             for key, value in record.labels:
-                series.metric.labels[key] = value
+                series.metric.labels[key] = str(value)
 
             point = series.points.add()
             if record.metric.value_type == int:
@@ -135,6 +137,13 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             seconds, nanos = divmod(
                 record.aggregator.last_update_timestamp, 1e9
             )
+
+            # Cloud Monitoring API allows, for any combination of labels and metric name, one update per WRITE_INTERVAL seconds
+            updated_key = (metric_descriptor.type, record.labels)
+            last_updated_seconds = self._last_updated.get(updated_key, 0)
+            if seconds <= last_updated_seconds + WRITE_INTERVAL:
+                continue
+            self._last_updated[updated_key] = seconds
             point.interval.end_time.seconds = int(seconds)
             point.interval.end_time.nanos = int(nanos)
             all_series.append(series)
