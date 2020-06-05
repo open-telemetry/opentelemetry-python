@@ -16,7 +16,7 @@
 Instrument `redis`_ to report Redis queries.
 
 There are two options for instrumenting code. The first option is to use the
-``opentelemetry-auto-instrumentation`` executable which will automatically
+``opentelemetry-instrumentation`` executable which will automatically
 instrument your Redis client. The second is to programmatically enable
 instrumentation via the following code:
 
@@ -49,12 +49,12 @@ import redis
 from wrapt import ObjectProxy, wrap_function_wrapper
 
 from opentelemetry import trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.redis.util import (
     _extract_conn_attributes,
     _format_command_args,
 )
 from opentelemetry.ext.redis.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 _DEFAULT_SERVICE = "redis"
 _RAWCMD = "db.statement"

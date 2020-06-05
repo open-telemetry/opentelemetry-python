@@ -72,7 +72,7 @@ Installation
 .. code:: sh
 
     $ pip install opentelemetry-sdk
-    $ pip install opentelemetry-auto-instrumentation
+    $ pip install opentelemetry-instrumentation
     $ pip install opentelemetry-ext-flask
     $ pip install requests
 
@@ -138,7 +138,7 @@ and run this instead:
 
 .. code:: sh
 
-    $ opentelemetry-auto-instrumentation python server_uninstrumented.py
+    $ opentelemetry-instrumentation python server_uninstrumented.py
 
 In the console where you previously executed ``client.py``, run again
 this again:

@@ -16,12 +16,12 @@
 
 This package provides a couple of commands that help automatically instruments a program:
 
-opentelemetry-auto-instrumentation
+opentelemetry-instrumentation
 -----------------------------------
 
 ::
 
-    opentelemetry-auto-instrumentation python program.py
+    opentelemetry-instrumentation python program.py
 
 The code in ``program.py`` needs to use one of the packages for which there is
 an OpenTelemetry integration. For a list of the available integrations please

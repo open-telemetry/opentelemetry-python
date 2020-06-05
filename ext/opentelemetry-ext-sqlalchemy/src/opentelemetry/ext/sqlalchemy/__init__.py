@@ -16,7 +16,7 @@
 Instrument `sqlalchemy`_ to report SQL queries.
 
 There are two options for instrumenting code. The first option is to use
-the ``opentelemetry-auto-instrumentation`` executable which will automatically
+the ``opentelemetry-instrumentation`` executable which will automatically
 instrument your SQLAlchemy engine. The second is to programmatically enable
 instrumentation via the following code:
 
@@ -47,12 +47,12 @@ import sqlalchemy
 import wrapt
 from wrapt import wrap_function_wrapper as _w
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.sqlalchemy.engine import (
     EngineTracer,
     _get_tracer,
     _wrap_create_engine,
 )
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 
 def _unwrap(obj, attr):
