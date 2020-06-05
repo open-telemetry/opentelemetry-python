@@ -17,8 +17,8 @@ import unittest
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
-from opentelemetry.trace.propagation import set_span_in_context
 from opentelemetry.context import get_current
+from opentelemetry.trace.propagation import set_span_in_context
 
 FORMAT = b3_format.B3Format()
 
@@ -257,7 +257,8 @@ class TestB3Format(unittest.TestCase):
         span_context = trace_api.get_current_span(ctx).get_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
-    def test_inject_empty_context(self):
+    @staticmethod
+    def test_inject_empty_context():
         """If the current context has no span, don't add headers"""
         new_carrier = {}
         FORMAT.inject(dict.__setitem__, new_carrier, get_current())
