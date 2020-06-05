@@ -29,7 +29,7 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 import abc
 from logging import getLogger
-from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
+from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry.util import _load_provider
 
@@ -195,7 +195,6 @@ class MeterProvider(abc.ABC):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
@@ -212,12 +211,6 @@ class MeterProvider(abc.ABC):
                 E.g., instead of ``"requests"``, use
                 ``"opentelemetry.ext.requests"``.
 
-            stateful: True/False to indicate whether the meter will be
-                    stateful. True indicates the meter computes checkpoints
-                    from over the process lifetime. False indicates the meter
-                    computes checkpoints which describe the updates of a single
-                    collection period (deltas).
-
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
@@ -233,7 +226,6 @@ class DefaultMeterProvider(MeterProvider):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         # pylint:disable=no-self-use,unused-argument
@@ -376,15 +368,19 @@ _METER_PROVIDER = None
 
 def get_meter(
     instrumenting_module_name: str,
-    stateful: bool = True,
     instrumenting_library_version: str = "",
+    meter_provider: Optional[MeterProvider] = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
     This function is a convenience wrapper for
     opentelemetry.metrics.get_meter_provider().get_meter
+
+    If meter_provider is omitted the current configured one is used.
     """
-    return get_meter_provider().get_meter(
-        instrumenting_module_name, stateful, instrumenting_library_version
+    if meter_provider is None:
+        meter_provider = get_meter_provider()
+    return meter_provider.get_meter(
+        instrumenting_module_name, instrumenting_library_version
     )
 
 
