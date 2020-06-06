@@ -148,7 +148,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 record.aggregator.last_update_timestamp, 1e9
             )
 
-            # Cloud Monitoring API allows, for any combination of labels and metric name, one update per WRITE_INTERVAL seconds
+            # Cloud Monitoring API allows, for any combination of labels and
+            # metric name, one update per WRITE_INTERVAL seconds
             updated_key = (metric_descriptor.type, record.labels)
             last_updated_seconds = self._last_updated.get(updated_key, 0)
             if seconds <= last_updated_seconds + WRITE_INTERVAL:
