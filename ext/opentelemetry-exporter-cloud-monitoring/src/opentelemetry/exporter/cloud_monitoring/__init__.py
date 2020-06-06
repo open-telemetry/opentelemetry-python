@@ -108,9 +108,19 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             descriptor["value_type"] = MetricDescriptor.ValueType.INT64
         elif record.metric.value_type == float:
             descriptor["value_type"] = MetricDescriptor.ValueType.DOUBLE
-        descriptor = self.client.create_metric_descriptor(
-            self.project_name, MetricDescriptor(**descriptor)
-        )
+        proto_descriptor = MetricDescriptor(**descriptor)
+        try:
+            descriptor = self.client.create_metric_descriptor(
+                self.project_name, proto_descriptor
+            )
+        # pylint: disable=broad-except
+        except Exception as ex:
+            logger.error(
+                "Failed to create metric descriptor %s",
+                proto_descriptor,
+                exc_info=ex,
+            )
+            return None
         self._metric_descriptors[descriptor_type] = descriptor
         return descriptor
 
@@ -147,5 +157,12 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             point.interval.end_time.seconds = int(seconds)
             point.interval.end_time.nanos = int(nanos)
             all_series.append(series)
-        self._batch_write(all_series)
+        try:
+            self._batch_write(all_series)
+        # pylint: disable=broad-except
+        except Exception as ex:
+            logger.error(
+                "Error while writing to Cloud Monitoring", exc_info=ex
+            )
+            return MetricsExportResult.FAILURE
         return MetricsExportResult.SUCCESS
