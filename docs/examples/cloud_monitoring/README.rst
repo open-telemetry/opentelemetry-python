@@ -30,6 +30,6 @@ Viewing Output
 --------------------------
 
 After running the example:
-    * Go to `Cloud Monitoring Metrics Explorer page <https://console.cloud.google.com/monitoring/metrics-explorer>`_.
+    * Go to the `Cloud Monitoring Metrics Explorer page <https://console.cloud.google.com/monitoring/metrics-explorer>`_.
     * In "Find resource type and metric" enter "OpenTelemetry/request_counter".
     * You can filter by labels and change the graphical output here as well.
