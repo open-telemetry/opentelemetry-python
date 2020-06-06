@@ -8,7 +8,7 @@ Basic Example
 -------------
 
 To use this exporter you first need to:
-    * A Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
+    * `Create a Google Cloud project <https://console.cloud.google.com/projectcreate>`_.
     * Enable the Cloud Monitoring API (aka Stackdriver Monitoring API) in the project `here <https://console.cloud.google.com/apis/library?q=cloud_monitoring>`_.
     * Enable `Default Application Credentials <https://developers.google.com/identity/protocols/application-default-credentials>`_.
 
