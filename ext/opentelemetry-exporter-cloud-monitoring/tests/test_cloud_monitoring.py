@@ -236,8 +236,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             [mock.call(self.project_name, [series1, series2])]
         )
 
-        # Attempting to export too soon after another export with the exact same labels leads to it
-        # being dropped
+        # Attempting to export too soon after another export with the exact
+        # same labels leads to it being dropped
+
         counter_two = CounterAggregator()
         counter_two.checkpoint = 1
         counter_two.last_update_timestamp = (WRITE_INTERVAL + 2) * 1e9
