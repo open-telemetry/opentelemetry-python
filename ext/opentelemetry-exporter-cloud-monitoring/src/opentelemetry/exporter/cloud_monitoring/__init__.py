@@ -35,10 +35,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self._last_updated = {}
 
     def _add_resource_info(self, series: TimeSeries) -> None:
-        """ Add Google resource specific information (e.g. instance id, region)
+        """Add Google resource specific information (e.g. instance id, region).
 
-        :param series: ProtoBuf TimeSeries
-        :return:
+        Args:
+            series: ProtoBuf TimeSeries
         """
         # TODO: Leverage this better
 
