@@ -29,11 +29,12 @@ Usage
 
 .. code-block:: python
 
-    from opentelemetry.ext.flask import FlaskInstrumentor
-    FlaskInstrumentor().instrument()  # This needs to be executed before importing Flask
     from flask import Flask
+    from opentelemetry.ext.flask import FlaskInstrumentor
 
     app = Flask(__name__)
+
+    FlaskInstrumentor().instrument_app(app)
 
     @app.route("/")
     def hello():
@@ -46,7 +47,7 @@ API
 ---
 """
 
-import logging
+from logging import getLogger
 
 import flask
 
@@ -54,13 +55,9 @@ import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
-from opentelemetry.util import (
-    disable_tracing_hostname,
-    disable_tracing_path,
-    time_ns,
-)
+from opentelemetry.util import disable_trace, time_ns
 
-logger = logging.getLogger(__name__)
+_logger = getLogger(__name__)
 
 _ENVIRON_STARTTIME_KEY = "opentelemetry-flask.starttime_key"
 _ENVIRON_SPAN_KEY = "opentelemetry-flask.span_key"
@@ -68,126 +65,166 @@ _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
 _ENVIRON_TOKEN = "opentelemetry-flask.token"
 
 
+def get_excluded_hosts():
+    hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS or []
+    if hosts:
+        hosts = str.split(hosts, ",")
+    return hosts
+
+
+def get_excluded_paths():
+    paths = configuration.Configuration().FLASK_EXCLUDED_PATHS or []
+    if paths:
+        paths = str.split(paths, ",")
+    return paths
+
+
+_excluded_hosts = get_excluded_hosts()
+_excluded_paths = get_excluded_paths()
+
+
+def _rewrapped_app(wsgi_app):
+    def _wrapped_app(environ, start_response):
+        # We want to measure the time for route matching, etc.
+        # In theory, we could start the span here and use
+        # update_name later but that API is "highly discouraged" so
+        # we better avoid it.
+        environ[_ENVIRON_STARTTIME_KEY] = time_ns()
+
+        def _start_response(status, response_headers, *args, **kwargs):
+            if not disable_trace(
+                flask.request.url, _excluded_hosts, _excluded_paths
+            ):
+                span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
+
+                if span:
+                    otel_wsgi.add_response_attributes(
+                        span, status, response_headers
+                    )
+                else:
+                    _logger.warning(
+                        "Flask environ's OpenTelemetry span "
+                        "missing at _start_response(%s)",
+                        status,
+                    )
+
+            return start_response(status, response_headers, *args, **kwargs)
+
+        return wsgi_app(environ, _start_response)
+
+    return _wrapped_app
+
+
+def _before_request():
+    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
+        return
+
+    environ = flask.request.environ
+    span_name = flask.request.endpoint or otel_wsgi.get_default_span_name(
+        environ
+    )
+    token = context.attach(
+        propagators.extract(otel_wsgi.get_header_from_environ, environ)
+    )
+
+    tracer = trace.get_tracer(__name__, __version__)
+
+    attributes = otel_wsgi.collect_request_attributes(environ)
+    if flask.request.url_rule:
+        # For 404 that result from no route found, etc, we
+        # don't have a url_rule.
+        attributes["http.route"] = flask.request.url_rule.rule
+    span = tracer.start_span(
+        span_name,
+        kind=trace.SpanKind.SERVER,
+        attributes=attributes,
+        start_time=environ.get(_ENVIRON_STARTTIME_KEY),
+    )
+    activation = tracer.use_span(span, end_on_exit=True)
+    activation.__enter__()
+    environ[_ENVIRON_ACTIVATION_KEY] = activation
+    environ[_ENVIRON_SPAN_KEY] = span
+    environ[_ENVIRON_TOKEN] = token
+
+
+def _teardown_request(exc):
+    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
+        return
+
+    activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
+    if not activation:
+        _logger.warning(
+            "Flask environ's OpenTelemetry activation missing"
+            "at _teardown_flask_request(%s)",
+            exc,
+        )
+        return
+
+    if exc is None:
+        activation.__exit__(None, None, None)
+    else:
+        activation.__exit__(
+            type(exc), exc, getattr(exc, "__traceback__", None)
+        )
+    context.detach(flask.request.environ.get(_ENVIRON_TOKEN))
+
+
 class _InstrumentedFlask(flask.Flask):
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        # Single use variable here to avoid recursion issues.
-        wsgi = self.wsgi_app
+        self._original_wsgi_ = self.wsgi_app
+        self.wsgi_app = _rewrapped_app(self.wsgi_app)
 
-        def wrapped_app(environ, start_response):
-            # We want to measure the time for route matching, etc.
-            # In theory, we could start the span here and use
-            # update_name later but that API is "highly discouraged" so
-            # we better avoid it.
-            environ[_ENVIRON_STARTTIME_KEY] = time_ns()
-
-            def _start_response(status, response_headers, *args, **kwargs):
-                if not _disable_trace(flask.request.url):
-                    span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
-                    if span:
-                        otel_wsgi.add_response_attributes(
-                            span, status, response_headers
-                        )
-                    else:
-                        logger.warning(
-                            "Flask environ's OpenTelemetry span "
-                            "missing at _start_response(%s)",
-                            status,
-                        )
-
-                return start_response(
-                    status, response_headers, *args, **kwargs
-                )
-
-            return wsgi(environ, _start_response)
-
-        self.wsgi_app = wrapped_app
-
-        @self.before_request
-        def _before_flask_request():
-            # Do not trace if the url is excluded
-            if _disable_trace(flask.request.url):
-                return
-            environ = flask.request.environ
-            span_name = (
-                flask.request.endpoint
-                or otel_wsgi.get_default_span_name(environ)
-            )
-            token = context.attach(
-                propagators.extract(otel_wsgi.get_header_from_environ, environ)
-            )
-
-            tracer = trace.get_tracer(__name__, __version__)
-
-            attributes = otel_wsgi.collect_request_attributes(environ)
-            if flask.request.url_rule:
-                # For 404 that result from no route found, etc, we
-                # don't have a url_rule.
-                attributes["http.route"] = flask.request.url_rule.rule
-            span = tracer.start_span(
-                span_name,
-                kind=trace.SpanKind.SERVER,
-                attributes=attributes,
-                start_time=environ.get(_ENVIRON_STARTTIME_KEY),
-            )
-            activation = tracer.use_span(span, end_on_exit=True)
-            activation.__enter__()
-            environ[_ENVIRON_ACTIVATION_KEY] = activation
-            environ[_ENVIRON_SPAN_KEY] = span
-            environ[_ENVIRON_TOKEN] = token
-
-        @self.teardown_request
-        def _teardown_flask_request(exc):
-            # Not traced if the url is excluded
-            if _disable_trace(flask.request.url):
-                return
-            activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
-            if not activation:
-                logger.warning(
-                    "Flask environ's OpenTelemetry activation missing"
-                    "at _teardown_flask_request(%s)",
-                    exc,
-                )
-                return
-
-            if exc is None:
-                activation.__exit__(None, None, None)
-            else:
-                activation.__exit__(
-                    type(exc), exc, getattr(exc, "__traceback__", None)
-                )
-            context.detach(flask.request.environ.get(_ENVIRON_TOKEN))
-
-
-def _disable_trace(url):
-    excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
-    excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
-    if excluded_hosts:
-        excluded_hosts = str.split(excluded_hosts, ",")
-        if disable_tracing_hostname(url, excluded_hosts):
-            return True
-    if excluded_paths:
-        excluded_paths = str.split(excluded_paths, ",")
-        if disable_tracing_path(url, excluded_paths):
-            return True
-    return False
+        self.before_request(_before_request)
+        self.teardown_request(_teardown_request)
 
 
 class FlaskInstrumentor(BaseInstrumentor):
-    """A instrumentor for flask.Flask
+    # pylint: disable=protected-access,attribute-defined-outside-init
+    """An instrumentor for flask.Flask
 
     See `BaseInstrumentor`
     """
-
-    def __init__(self):
-        super().__init__()
-        self._original_flask = None
 
     def _instrument(self, **kwargs):
         self._original_flask = flask.Flask
         flask.Flask = _InstrumentedFlask
 
+    def instrument_app(self, app):  # pylint: disable=no-self-use
+        if not hasattr(app, "_is_instrumented"):
+            app._is_instrumented = False
+
+        if not app._is_instrumented:
+            app._original_wsgi_app = app.wsgi_app
+            app.wsgi_app = _rewrapped_app(app.wsgi_app)
+
+            app.before_request(_before_request)
+            app.teardown_request(_teardown_request)
+            app._is_instrumented = True
+        else:
+            _logger.warning(
+                "Attempting to instrument Flask app while already instrumented"
+            )
+
     def _uninstrument(self, **kwargs):
         flask.Flask = self._original_flask
+
+    def uninstrument_app(self, app):  # pylint: disable=no-self-use
+        if not hasattr(app, "_is_instrumented"):
+            app._is_instrumented = False
+
+        if app._is_instrumented:
+            app.wsgi_app = app._original_wsgi_app
+
+            # FIXME add support for other Flask blueprints that are not None
+            app.before_request_funcs[None].remove(_before_request)
+            app.teardown_request_funcs[None].remove(_teardown_request)
+            del app._original_wsgi_app
+
+            app._is_instrumented = False
+        else:
+            _logger.warning(
+                "Attempting to uninstrument Flask "
+                "app while already uninstrumented"
+            )

@@ -20,14 +20,10 @@ from opentelemetry.configuration import Configuration  # type: ignore
 
 
 class TestConfiguration(TestCase):
-    def setUp(self):
-        # This is added here to force a reload of the whole Configuration
-        # class, resetting its internal attributes so that each tests starts
-        # with a clean class.
-        from opentelemetry.configuration import Configuration  # type: ignore
-
     def tearDown(self):
-        from opentelemetry.configuration import Configuration  # type: ignore
+        # This call resets the attributes of the Configuration class so that
+        # each test is executed in the same conditions.
+        Configuration._reset()
 
     def test_singleton(self):
         self.assertIsInstance(Configuration(), Configuration)
@@ -72,3 +68,78 @@ class TestConfiguration(TestCase):
 
     def test_getattr(self):
         self.assertIsNone(Configuration().XYZ)
+
+    def test_reset(self):
+        environ_patcher = patch.dict(
+            "os.environ",  # type: ignore
+            {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
+        )
+
+        environ_patcher.start()
+
+        self.assertEqual(
+            Configuration().TRACER_PROVIDER, "tracer_provider"
+        )  # pylint: disable=no-member
+
+        environ_patcher.stop()
+
+        Configuration._reset()
+
+        self.assertIsNone(
+            Configuration().TRACER_PROVIDER
+        )  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_TRUE": "True",
+            "OPENTELEMETRY_PYTHON_FALSE": "False",
+        },
+    )
+    def test_boolean(self):
+        self.assertIsInstance(
+            Configuration().TRUE, bool
+        )  # pylint: disable=no-member
+        self.assertIsInstance(
+            Configuration().FALSE, bool
+        )  # pylint: disable=no-member
+        self.assertTrue(Configuration().TRUE)  # pylint: disable=no-member
+        self.assertFalse(Configuration().FALSE)  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_POSITIVE_INTEGER": "123",
+            "OPENTELEMETRY_PYTHON_NEGATIVE_INTEGER": "-123",
+            "OPENTELEMETRY_PYTHON_NON_INTEGER": "-12z3",
+        },
+    )
+    def test_integer(self):
+        self.assertEqual(
+            Configuration().POSITIVE_INTEGER, 123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NEGATIVE_INTEGER, -123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NON_INTEGER, "-12z3"
+        )  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OPENTELEMETRY_PYTHON_POSITIVE_FLOAT": "123.123",
+            "OPENTELEMETRY_PYTHON_NEGATIVE_FLOAT": "-123.123",
+            "OPENTELEMETRY_PYTHON_NON_FLOAT": "-12z3.123",
+        },
+    )
+    def test_float(self):
+        self.assertEqual(
+            Configuration().POSITIVE_FLOAT, 123.123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NEGATIVE_FLOAT, -123.123
+        )  # pylint: disable=no-member
+        self.assertEqual(
+            Configuration().NON_FLOAT, "-12z3.123"
+        )  # pylint: disable=no-member

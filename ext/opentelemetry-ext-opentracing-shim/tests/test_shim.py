@@ -463,9 +463,6 @@ class TestShim(TestCase):
 
         # Verify exception details have been added to span.
         self.assertEqual(scope.span.unwrap().attributes["error"], True)
-        self.assertEqual(
-            scope.span.unwrap().events[0].attributes["error.kind"], Exception
-        )
 
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""

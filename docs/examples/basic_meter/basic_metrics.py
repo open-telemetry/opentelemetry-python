@@ -24,39 +24,23 @@ import sys
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider, ValueRecorder
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 stateful = True
 
-
-def usage(argv):
-    print("usage:")
-    print("{} [mode]".format(argv[0]))
-    print("mode: stateful (default) or stateless")
-
-
-if len(sys.argv) >= 2:
-    batcher_mode = sys.argv[1]
-    if batcher_mode not in ("stateful", "stateless"):
-        print("bad mode specified.")
-        usage(sys.argv)
-        sys.exit(1)
-    stateful = batcher_mode == "stateful"
-
 print(
     "Starting example, values will be printed to the console every 5 seconds."
 )
 
-
+# Stateful determines whether how metrics are collected: if true, metrics
+# accumulate over the process lifetime. If false, metrics are reset at the
+# beginning of each collection interval.
+metrics.set_meter_provider(MeterProvider(stateful))
 # The Meter is responsible for creating and recording metrics. Each meter has a
-# unique name, which we set as the module's name here. The second argument
-# determines whether how metrics are collected: if true, metrics accumulate
-# over the process lifetime. If false, metrics are reset at the beginning of
-# each collection interval.
-metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__, batcher_mode == "stateful")
+# unique name, which we set as the module's name here.
+meter = metrics.get_meter(__name__)
 
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
@@ -80,7 +64,7 @@ requests_size = meter.create_metric(
     description="size of requests",
     unit="1",
     value_type=int,
-    metric_type=Measure,
+    metric_type=ValueRecorder,
     label_keys=("environment",),
 )
 

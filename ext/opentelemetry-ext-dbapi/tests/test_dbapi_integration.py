@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import logging
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -123,7 +125,6 @@ class TestDBApiIntegration(TestBase):
         dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
         connection = mock_dbapi.connect()
         self.assertEqual(mock_dbapi.connect.call_count, 1)
-        self.assertIsInstance(connection, dbapi.TracedConnectionProxy)
         self.assertIsInstance(connection.__wrapped__, mock.Mock)
 
     @mock.patch("opentelemetry.ext.dbapi")
@@ -131,12 +132,33 @@ class TestDBApiIntegration(TestBase):
         dbapi.wrap_connect(self.tracer, mock_dbapi, "connect", "-")
         connection = mock_dbapi.connect()
         self.assertEqual(mock_dbapi.connect.call_count, 1)
-        self.assertIsInstance(connection, dbapi.TracedConnectionProxy)
 
         dbapi.unwrap_connect(mock_dbapi, "connect")
         connection = mock_dbapi.connect()
         self.assertEqual(mock_dbapi.connect.call_count, 2)
         self.assertIsInstance(connection, mock.Mock)
+
+    def test_instrument_connection(self):
+        connection = mock.Mock()
+        # Avoid get_attributes failing because can't concatenate mock
+        connection.database = "-"
+        connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
+        self.assertIs(connection2.__wrapped__, connection)
+
+    def test_uninstrument_connection(self):
+        connection = mock.Mock()
+        # Set connection.database to avoid a failure because mock can't
+        # be concatenated
+        connection.database = "-"
+        connection2 = dbapi.instrument_connection(self.tracer, connection, "-")
+        self.assertIs(connection2.__wrapped__, connection)
+
+        connection3 = dbapi.uninstrument_connection(connection2)
+        self.assertIs(connection3, connection)
+
+        with self.assertLogs(level=logging.WARNING):
+            connection4 = dbapi.uninstrument_connection(connection)
+        self.assertIs(connection4, connection)
 
 
 # pylint: disable=unused-argument
