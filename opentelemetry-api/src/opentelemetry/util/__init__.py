@@ -14,11 +14,17 @@
 import re
 import time
 from logging import getLogger
-from typing import Sequence, Union
+from typing import TYPE_CHECKING, Sequence, Union, cast
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration  # type: ignore
+from opentelemetry.configuration import Configuration
+
+if TYPE_CHECKING:
+    from opentelemetry.trace import TracerProvider
+    from opentelemetry.metrics import MeterProvider
+
+Provider = Union["TracerProvider", "MeterProvider"]
 
 logger = getLogger(__name__)
 
@@ -34,23 +40,31 @@ except AttributeError:
         return int(time.time() * 1e9)
 
 
-def _load_provider(
-    provider: str,
-) -> Union["TracerProvider", "MeterProvider"]:  # type: ignore
+def _load_provider(provider: str) -> Provider:
     try:
-        return next(  # type: ignore
+        entry_point = next(
             iter_entry_points(
                 "opentelemetry_{}".format(provider),
-                name=getattr(
-                    Configuration(),  # type: ignore
-                    provider,
-                    "default_{}".format(provider),
+                name=cast(
+                    str,
+                    Configuration().get(
+                        provider, "default_{}".format(provider),
+                    ),
                 ),
             )
-        ).load()()
+        )
+        return cast(Provider, entry_point.load()(),)
     except Exception:  # pylint: disable=broad-except
         logger.error("Failed to load configured provider %s", provider)
         raise
+
+
+def _load_meter_provider(provider: str) -> "MeterProvider":
+    return cast("MeterProvider", _load_provider(provider))
+
+
+def _load_trace_provider(provider: str) -> "TracerProvider":
+    return cast("TracerProvider", _load_provider(provider))
 
 
 # Pattern for matching up until the first '/' after the 'https://' part.
