@@ -8,7 +8,7 @@ OpenTelemetry Collector Exporter
 
 .. FIXME should this exporter export to OTCollector only or to anything that understands OTLP?
 
-This library allows to export data  using OTLP.
+This library allows to export data to the OpenTelemetry Collector using the OpenTelemetry Protocol.
 
 Installation
 ------------
