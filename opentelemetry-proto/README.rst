@@ -13,6 +13,16 @@ Installation
 
     pip install opentelemetry-proto
 
+Code Generation
+---------------
+
+These files were generated automatically. More details on how to generate them
+are available here_.
+
+
+.. _here: https://github.com/open-telemetry/opentelemetry-proto
+
+
 References
 ----------
 
