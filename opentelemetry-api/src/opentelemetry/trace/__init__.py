@@ -97,6 +97,7 @@ __all__ = [
     "get_tracer",
     "get_tracer_provider",
     "set_tracer_provider",
+    "set_span_in_context",
 ]
 
 import abc
@@ -107,7 +108,10 @@ from contextlib import contextmanager
 from logging import getLogger
 
 from opentelemetry.configuration import Configuration  # type: ignore
-from opentelemetry.trace.propagation import get_current_span
+from opentelemetry.trace.propagation import (
+    get_current_span,
+    set_span_in_context,
+)
 from opentelemetry.trace.span import (
     DEFAULT_TRACE_OPTIONS,
     DEFAULT_TRACE_STATE,

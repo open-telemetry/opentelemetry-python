@@ -172,7 +172,7 @@ def create_trace_config(
         )
 
         trace_config_ctx.token = context_api.attach(
-            trace.propagation.set_span_in_context(trace_config_ctx.span)
+            trace.set_span_in_context(trace_config_ctx.span)
         )
 
         propagators.inject(type(params.headers).__setitem__, params.headers)

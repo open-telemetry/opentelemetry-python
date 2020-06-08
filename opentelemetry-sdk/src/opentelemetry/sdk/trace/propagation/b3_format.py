@@ -16,7 +16,6 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.trace.propagation import set_span_in_context
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
@@ -69,7 +68,7 @@ class B3Format(HTTPTextFormat):
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _ = fields
             else:
-                return set_span_in_context(trace.INVALID_SPAN)
+                return trace.set_span_in_context(trace.INVALID_SPAN)
         else:
             trace_id = (
                 _extract_first_element(
@@ -103,7 +102,7 @@ class B3Format(HTTPTextFormat):
         # header is set to allow.
         if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
-        return set_span_in_context(
+        return trace.set_span_in_context(
             trace.DefaultSpan(
                 trace.SpanContext(
                     # trace an span ids are encoded in hex, so must be converted

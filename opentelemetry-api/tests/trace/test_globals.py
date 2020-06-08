@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import patch
 
 from opentelemetry import context, trace
-from opentelemetry.trace.propagation import set_span_in_context
 
 
 class TestGlobals(unittest.TestCase):
@@ -32,7 +31,7 @@ class TestTracer(unittest.TestCase):
         """
         self.assertIs(trace.get_current_span(), None)
         span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
-        ctx = set_span_in_context(span)
+        ctx = trace.set_span_in_context(span)
         token = context.attach(ctx)
         try:
             self.assertIs(trace.get_current_span(), span)

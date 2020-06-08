@@ -17,8 +17,7 @@ import unittest
 
 from opentelemetry import correlationcontext, trace
 from opentelemetry.propagators import extract, inject
-from opentelemetry.trace import get_current_span
-from opentelemetry.trace.propagation import set_span_in_context
+from opentelemetry.trace import get_current_span, set_span_in_context
 
 
 def get_as_list(

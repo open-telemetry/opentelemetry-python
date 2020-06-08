@@ -23,11 +23,27 @@ SPAN_KEY = "current-span"
 def set_span_in_context(
     span: Span, context: Optional[Context] = None
 ) -> Context:
+    """Set the span in the given context.
+
+    Args:
+        span: The Span to set.
+        context: a Context object. if one is not passed, the
+            default current context is used instead.
+    """
     ctx = set_value(SPAN_KEY, span, context=context)
     return ctx
 
 
 def get_current_span(context: Optional[Context] = None) -> Optional[Span]:
+    """Retrieve the current span.
+
+    Args:
+        context: A Context object. If one is not passed, the
+            default current context is used instead.
+
+    Returns:
+        The Span set in the context if it exists. None otherwise.
+    """
     span = get_value(SPAN_KEY, context=context)
     if span is None:
         return None

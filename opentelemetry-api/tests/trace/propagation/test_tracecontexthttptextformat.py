@@ -16,10 +16,7 @@ import typing
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.trace.propagation import (
-    set_span_in_context,
-    tracecontexthttptextformat,
-)
+from opentelemetry.trace.propagation import tracecontexthttptextformat
 
 FORMAT = tracecontexthttptextformat.TraceContextHTTPTextFormat()
 
@@ -75,7 +72,7 @@ class TestTraceContextFormat(unittest.TestCase):
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(span_context)
 
-        ctx = set_span_in_context(span)
+        ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
         self.assertEqual(output["traceparent"], traceparent_value)
         for pair in ["foo=1", "bar=2", "baz=3"]:
@@ -157,7 +154,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.DefaultSpan(
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
-        ctx = set_span_in_context(span)
+        ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
         self.assertTrue("traceparent" in output)
         self.assertFalse("tracestate" in output)
@@ -187,7 +184,7 @@ class TestTraceContextFormat(unittest.TestCase):
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context."""
         output = {}  # type:typing.Dict[str, str]
-        ctx = set_span_in_context(trace.INVALID_SPAN)
+        ctx = trace.set_span_in_context(trace.INVALID_SPAN)
         FORMAT.inject(dict.__setitem__, output, context=ctx)
         self.assertFalse("traceparent" in output)
 

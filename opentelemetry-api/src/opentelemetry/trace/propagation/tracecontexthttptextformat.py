@@ -17,7 +17,7 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import httptextformat, set_span_in_context
+from opentelemetry.trace.propagation import httptextformat
 
 #    Keys and values are strings of up to 256 printable US-ASCII characters.
 #    Implementations should conform to the `W3C Trace Context - Tracestate`_
@@ -73,11 +73,11 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         header = get_from_carrier(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
-            return set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
-            return set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         version = match.group(1)
         trace_id = match.group(2)
@@ -85,13 +85,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         trace_flags = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
-            return set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         if version == "00":
             if match.group(5):
-                return set_span_in_context(trace.INVALID_SPAN, context)
+                return trace.set_span_in_context(trace.INVALID_SPAN, context)
         if version == "ff":
-            return set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         tracestate_headers = get_from_carrier(
             carrier, self._TRACESTATE_HEADER_NAME
@@ -105,7 +105,9 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
             trace_flags=trace.TraceFlags(trace_flags),
             trace_state=tracestate,
         )
-        return set_span_in_context(trace.DefaultSpan(span_context), context)
+        return trace.set_span_in_context(
+            trace.DefaultSpan(span_context), context
+        )
 
     def inject(
         self,

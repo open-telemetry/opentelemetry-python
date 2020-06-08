@@ -17,10 +17,7 @@ import unittest
 from opentelemetry import trace as trace_api
 from opentelemetry.ext.datadog import constants, propagator
 from opentelemetry.sdk import trace
-from opentelemetry.trace.propagation import (
-    get_current_span,
-    set_span_in_context,
-)
+from opentelemetry.trace import get_current_span, set_span_in_context
 
 FORMAT = propagator.DatadogFormat()
 

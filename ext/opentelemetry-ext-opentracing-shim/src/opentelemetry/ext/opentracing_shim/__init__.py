@@ -94,8 +94,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
-from opentelemetry.trace import DefaultSpan
-from opentelemetry.trace.propagation import set_span_in_context
+from opentelemetry.trace import DefaultSpan, set_span_in_context
 
 logger = logging.getLogger(__name__)
 

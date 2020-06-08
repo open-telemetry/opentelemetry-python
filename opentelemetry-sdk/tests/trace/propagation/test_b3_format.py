@@ -18,7 +18,6 @@ import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation import set_span_in_context
 
 FORMAT = b3_format.B3Format()
 
@@ -47,7 +46,7 @@ def get_child_parent_new_carrier(old_carrier):
     )
 
     new_carrier = {}
-    ctx = set_span_in_context(child)
+    ctx = trace_api.set_span_in_context(child)
     FORMAT.inject(dict.__setitem__, new_carrier, context=ctx)
 
     return child, parent, new_carrier

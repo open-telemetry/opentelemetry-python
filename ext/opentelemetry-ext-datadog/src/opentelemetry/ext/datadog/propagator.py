@@ -16,10 +16,7 @@ import typing
 
 from opentelemetry import trace
 from opentelemetry.context import Context
-from opentelemetry.trace.propagation import (
-    get_current_span,
-    set_span_in_context,
-)
+from opentelemetry.trace import get_current_span, set_span_in_context
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,

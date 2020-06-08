@@ -16,10 +16,6 @@ import typing
 
 from opentelemetry import trace
 from opentelemetry.context import Context, get_current
-from opentelemetry.trace.propagation import (
-    get_current_span,
-    set_span_in_context,
-)
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
@@ -68,9 +64,9 @@ class MockHTTPTextFormat(HTTPTextFormat):
         span_id_list = get_from_carrier(carrier, self.SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
-            return set_span_in_context(trace.INVALID_SPAN)
+            return trace.set_span_in_context(trace.INVALID_SPAN)
 
-        return set_span_in_context(
+        return trace.set_span_in_context(
             trace.DefaultSpan(
                 trace.SpanContext(
                     trace_id=int(trace_id_list[0]),
@@ -86,7 +82,7 @@ class MockHTTPTextFormat(HTTPTextFormat):
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        span = get_current_span(context)
+        span = trace.get_current_span(context)
         set_in_carrier(
             carrier, self.TRACE_ID_KEY, str(span.get_context().trace_id)
         )
