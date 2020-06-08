@@ -16,7 +16,7 @@
 Instrument `redis`_ to report Redis queries.
 
 There are two options for instrumenting code. The first option is to use the
-``opentelemetry-auto-instrumentation`` executable which will automatically
+``opentelemetry-instrumentation`` executable which will automatically
 instrument your Redis client. The second is to programmatically enable
 instrumentation via the following code:
 
@@ -49,12 +49,13 @@ import redis
 from wrapt import ObjectProxy, wrap_function_wrapper
 
 from opentelemetry import trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.redis.util import (
     _extract_conn_attributes,
     _format_command_args,
 )
 from opentelemetry.ext.redis.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.utils import unwrap
 
 _DEFAULT_SERVICE = "redis"
 _RAWCMD = "db.statement"
@@ -66,12 +67,6 @@ def _set_connection_attributes(span, conn):
         conn.connection_pool.connection_kwargs
     ).items():
         span.set_attribute(key, value)
-
-
-def _unwrap(obj, attr):
-    func = getattr(obj, attr, None)
-    if isinstance(func, ObjectProxy) and hasattr(func, "__wrapped__"):
-        setattr(obj, attr, func.__wrapped__)
 
 
 def _traced_execute_command(func, instance, args, kwargs):
@@ -145,19 +140,19 @@ class RedisInstrumentor(BaseInstrumentor):
 
     def _uninstrument(self, **kwargs):
         if redis.VERSION < (3, 0, 0):
-            _unwrap(redis.StrictRedis, "execute_command")
-            _unwrap(redis.StrictRedis, "pipeline")
-            _unwrap(redis.Redis, "pipeline")
-            _unwrap(
+            unwrap(redis.StrictRedis, "execute_command")
+            unwrap(redis.StrictRedis, "pipeline")
+            unwrap(redis.Redis, "pipeline")
+            unwrap(
                 redis.client.BasePipeline,  # pylint:disable=no-member
                 "execute",
             )
-            _unwrap(
+            unwrap(
                 redis.client.BasePipeline,  # pylint:disable=no-member
                 "immediate_execute_command",
             )
         else:
-            _unwrap(redis.Redis, "execute_command")
-            _unwrap(redis.Redis, "pipeline")
-            _unwrap(redis.client.Pipeline, "execute")
-            _unwrap(redis.client.Pipeline, "immediate_execute_command")
+            unwrap(redis.Redis, "execute_command")
+            unwrap(redis.Redis, "pipeline")
+            unwrap(redis.client.Pipeline, "execute")
+            unwrap(redis.client.Pipeline, "immediate_execute_command")
