@@ -107,7 +107,6 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Diego Hurtado](https://github.com/ocelotl)
 - [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
-- [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Reiley Yang](https://github.com/reyang), Microsoft
 
@@ -116,15 +115,16 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
 - [Alex Boten](https://github.com/codeboten), LightStep
+- [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
+
+*Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 
 ### Thanks to all the people who already contributed!
 
 <a href="https://github.com/open-telemetry/opentelemetry-python/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-python" />
 </a>
-
-*Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 
 ## Release Schedule
 
