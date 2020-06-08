@@ -1,5 +1,5 @@
-OTLP Exporter
-=============
+OpenTelemetry Collector Exporter
+================================
 
 |pypi|
 
