@@ -17,3 +17,4 @@ References
 ----------
 
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
+* `OpenTelemetry Proto <https://github.com/open-telemetry/opentelemetry-proto>`_
