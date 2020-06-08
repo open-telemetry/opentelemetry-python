@@ -251,7 +251,7 @@ class OTLPSpanExporter(SpanExporter):
         # max_value is set to 900 (900 seconds is 15 minutes) to use the same
         # value as used in the Go implementation.
 
-        max_value = 9000
+        max_value = 900
 
         for delay in expo(max_value=max_value):
 
