@@ -202,6 +202,7 @@ class Observer(metrics_api.Observer):
     lack context. They are permitted to report only one value per distinct
     label set per period.
     """
+
     def __init__(
         self,
         callback: metrics_api.ObserverCallbackT,
@@ -239,9 +240,8 @@ class Observer(metrics_api.Observer):
         aggregator = self.aggregators[key]
         aggregator.update(value)
 
-    def _validate_observe(self,
-        value: metrics_api.ValueT,
-        key: Tuple[Tuple[str, str]],
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
     ):
         if not self.enabled:
             return False
@@ -273,18 +273,17 @@ class Observer(metrics_api.Observer):
 class SumObserver(Observer, metrics_api.SumObserver):
     """See `opentelemetry.metrics.SumObserver`."""
 
-    def _validate_observe(self,
-        value: metrics_api.ValueT,
-        key: Tuple[Tuple[str, str]],
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
     ):
         if super()._validate_observe(value, key):
             # Must be non-decreasing because monotonic
-            if key in self.aggregators and \
-                self.aggregators[key].current is not None:
+            if (
+                key in self.aggregators
+                and self.aggregators[key].current is not None
+            ):
                 if value < self.aggregators[key].current:
-                    logger.warning(
-                        "Value passed must be non-decreasing."
-                    )
+                    logger.warning("Value passed must be non-decreasing.")
                     return False
             return True
         return False
@@ -293,9 +292,8 @@ class SumObserver(Observer, metrics_api.SumObserver):
 class ValueObserver(Observer, metrics_api.ValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
 
-    def _validate_observe(self,
-        value: metrics_api.ValueT,
-        key: Tuple[Tuple[str, str]],
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
     ):
         return super()._validate_observe(value, key)
 
