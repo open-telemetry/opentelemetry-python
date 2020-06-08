@@ -20,7 +20,7 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import StatusCode, server
 
-from opentelemetry.ext.otlpexporter.trace_exporter import OTLPSpanExporter
+from opentelemetry.ext.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
@@ -141,8 +141,8 @@ class TestOTLPSpanExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
-    @patch("opentelemetry.ext.otlpexporter.trace_exporter.expo")
-    @patch("opentelemetry.ext.otlpexporter.trace_exporter.sleep")
+    @patch("opentelemetry.ext.otlp.trace_exporter.expo")
+    @patch("opentelemetry.ext.otlp.trace_exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
@@ -155,8 +155,8 @@ class TestOTLPSpanExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.ext.otlpexporter.trace_exporter.expo")
-    @patch("opentelemetry.ext.otlpexporter.trace_exporter.sleep")
+    @patch("opentelemetry.ext.otlp.trace_exporter.expo")
+    @patch("opentelemetry.ext.otlp.trace_exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
