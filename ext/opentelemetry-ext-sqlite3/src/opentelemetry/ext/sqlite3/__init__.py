@@ -45,9 +45,9 @@ API
 import sqlite3
 import typing
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext import dbapi
 from opentelemetry.ext.sqlite3.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
