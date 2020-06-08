@@ -78,7 +78,7 @@ from contextlib import contextmanager
 from logging import getLogger
 
 from opentelemetry.trace.status import Status
-from opentelemetry.util import _load_provider, types
+from opentelemetry.util import _load_trace_provider, types
 
 logger = getLogger(__name__)
 
@@ -713,6 +713,6 @@ def get_tracer_provider() -> TracerProvider:
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        _TRACER_PROVIDER = _load_provider("tracer_provider")
+        _TRACER_PROVIDER = _load_trace_provider("tracer_provider")
 
     return _TRACER_PROVIDER
