@@ -2,6 +2,7 @@
 This document explains how to publish all OT modules at version x.y.z. Ensure that you’re following semver when choosing a version number.
 
 Release Process:
+* [Checkout a clean repo](#checkout-a-clean-repo)
 * [Create a new branch](#create-a-new-branch)
 * [Open a Pull Request](#open-a-pull-request)
 * [Create a Release](#Create-a-Release)
@@ -10,6 +11,8 @@ Release Process:
 * [Check PyPI](#Check-PyPI)
 * [Troubleshooting](#troubleshooting)
 
+## Checkout a clean repo
+- To avoid pushing untracked changes, check out the repo in a new dir
 
 ## Create a new branch
 The following script does the following:
@@ -74,7 +77,6 @@ git commit -m
 
 If for some reason the action failed, do it manually:
 
-- To avoid pushing untracked changes, check out the repo in a new dir
 - Switch to the release branch (important so we don't publish packages with "dev" versions)
 - Build distributions with `./scripts/build.sh`
 - Delete distributions we don't want to push (e.g. `testutil`)

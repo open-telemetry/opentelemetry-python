@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Move stateful from Meter to MeterProvider
+  ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+- Rename Measure to ValueRecorder in metrics
+  ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
+
+## 0.8b0
+
+Released 2020-05-27
+
 - Handle boolean, integer and float values in Configuration
   ([#662](https://github.com/open-telemetry/opentelemetry-python/pull/662))
 - bugfix: ensure status is always string

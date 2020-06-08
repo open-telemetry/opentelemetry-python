@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Move stateful & resource from Meter to MeterProvider
+  ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+- Rename Measure to ValueRecorder in metrics
+  ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
+- bugfix: byte type attributes are decoded before adding to attributes dict
+  ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
+
+## 0.8b0
+
+Released 2020-05-27
+
 - Validate span attribute types in SDK
   ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
 - Specify to_json indent from arguments
