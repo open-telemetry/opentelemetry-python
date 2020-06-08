@@ -112,7 +112,7 @@ class Metric(metrics_api.Metric):
     inside a request, meaning they have an associated distributed context
     (i.e. Span context, correlation context). Multiple metric events may occur
     for a synchronous instrument within a give collection interval.
-    
+
     Each metric has a set of bound metrics that are created from the metric.
     See `BaseBoundInstrument` for information on bound metric instruments.
     """
