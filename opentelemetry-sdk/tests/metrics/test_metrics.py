@@ -21,6 +21,11 @@ from opentelemetry.sdk.metrics import export
 
 
 class TestMeterProvider(unittest.TestCase):
+    def test_stateful(self):
+        meter_provider = metrics.MeterProvider(stateful=False)
+        meter = meter_provider.get_meter(__name__)
+        self.assertIs(meter.batcher.stateful, False)
+
     def test_resource(self):
         resource = resources.Resource.create({})
         meter_provider = metrics.MeterProvider(resource=resource)
