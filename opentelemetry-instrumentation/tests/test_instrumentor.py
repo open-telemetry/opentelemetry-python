@@ -16,7 +16,7 @@
 from logging import WARNING
 from unittest import TestCase
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 
 class TestInstrumentor(TestCase):

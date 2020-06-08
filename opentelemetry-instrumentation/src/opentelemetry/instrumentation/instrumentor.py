@@ -28,7 +28,7 @@ class BaseInstrumentor(ABC):
 
     Child classes of this ABC should instrument specific third
     party libraries or frameworks either by using the
-    ``opentelemetry-auto-instrumentation`` command or by calling their methods
+    ``opentelemetry-instrument`` command or by calling their methods
     directly.
 
     Since every third party library or framework is different and has different
@@ -58,7 +58,7 @@ class BaseInstrumentor(ABC):
         """Instrument the library
 
         This method will be called without any optional arguments by the
-        ``opentelemetry-auto-instrumentation`` command. The configuration of
+        ``opentelemetry-instrument`` command. The configuration of
         the instrumentation when done in this way should be done by previously
         setting the configuration (using environment variables or any other
         mechanism) that will be used later by the code in the ``instrument``
@@ -69,7 +69,7 @@ class BaseInstrumentor(ABC):
 
         This means that calling this method directly without passing any
         optional values should do the very same thing that the
-        ``opentelemetry-auto-instrumentation`` command does. This approach is
+        ``opentelemetry-instrument`` command does. This approach is
         followed because the ``Configuration`` object is immutable.
         """
 
