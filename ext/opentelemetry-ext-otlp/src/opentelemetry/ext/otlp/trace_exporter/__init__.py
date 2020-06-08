@@ -50,8 +50,13 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=no-member
 class OTLPSpanExporter(SpanExporter):
-    """OTLP span exporter"""
+    """OTLP span exporter
 
+    Args:
+        endpoint: OpenTelemetry Collector receiver endpoint
+        credentials: Credentials object for server authentication
+        metadata: Metadata to send when exporting
+    """
     def __init__(
         self,
         endpoint="localhost:55678",
