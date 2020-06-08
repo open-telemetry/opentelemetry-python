@@ -8,6 +8,10 @@
   ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
 - Adding trace.get_current_span, Removing Tracer.get_current_span
   ([#552](https://github.com/open-telemetry/opentelemetry-python/pull/552))
+- bugfix: byte type attributes are decoded before adding to attributes dict
+  ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
+- Rename Observer to ValueObserver
+  ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
 
 ## 0.8b0
 

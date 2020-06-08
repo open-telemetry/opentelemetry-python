@@ -27,13 +27,13 @@ class MetricsExportResult(Enum):
 class MetricRecord:
     def __init__(
         self,
-        aggregator: Aggregator,
+        instrument: metrics_api.InstrumentT,
         labels: Tuple[Tuple[str, str]],
-        metric: metrics_api.MetricT,
+        aggregator: Aggregator,
     ):
-        self.aggregator = aggregator
+        self.instrument = instrument
         self.labels = labels
-        self.metric = metric
+        self.aggregator = aggregator
 
 
 class MetricsExporter:
@@ -79,7 +79,7 @@ class ConsoleMetricsExporter(MetricsExporter):
             print(
                 '{}(data="{}", labels="{}", value={})'.format(
                     type(self).__name__,
-                    record.metric,
+                    record.instrument,
                     record.labels,
                     record.aggregator.checkpoint,
                 )

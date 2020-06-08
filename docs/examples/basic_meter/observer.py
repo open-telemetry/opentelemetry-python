@@ -19,7 +19,7 @@ asynchronous metrics data.
 import psutil
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider, ValueObserver
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -43,6 +43,7 @@ meter.register_observer(
     description="per-cpu usage",
     unit="1",
     value_type=float,
+    observer_type=ValueObserver,
     label_keys=("cpu_number",),
 )
 
