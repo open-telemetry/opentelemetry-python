@@ -242,9 +242,7 @@ class Observer(metrics_api.Observer):
 
     # pylint: disable=W0613
     def _validate_observe(
-        self,
-        value: metrics_api.ValueT,
-        key: Tuple[Tuple[str, str]] = None,
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]] = None,
     ):
         if not self.enabled:
             return False
@@ -277,9 +275,7 @@ class SumObserver(Observer, metrics_api.SumObserver):
     """See `opentelemetry.metrics.SumObserver`."""
 
     def _validate_observe(
-        self,
-        value: metrics_api.ValueT,
-        key: Tuple[Tuple[str, str]],
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
     ):
         if super()._validate_observe(value, key):
             # Must be non-decreasing because monotonic
