@@ -27,7 +27,7 @@ settings.configure()
 source_dirs = [
     os.path.abspath("../opentelemetry-api/src/"),
     os.path.abspath("../opentelemetry-sdk/src/"),
-    os.path.abspath("../opentelemetry-auto-instrumentation/src/"),
+    os.path.abspath("../opentelemetry-instrumentation/src/"),
 ]
 
 ext = "../ext"

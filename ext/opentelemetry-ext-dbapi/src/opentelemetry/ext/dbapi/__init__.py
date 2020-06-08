@@ -47,6 +47,7 @@ import typing
 import wrapt
 
 from opentelemetry.ext.dbapi.version import __version__
+from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind, Tracer, TracerProvider, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -141,9 +142,7 @@ def unwrap_connect(
             connect_module: Module name where the connect method is available.
             connect_method_name: The connect method name.
     """
-    conn = getattr(connect_module, connect_method_name, None)
-    if isinstance(conn, wrapt.ObjectProxy):
-        setattr(connect_module, connect_method_name, conn.__wrapped__)
+    unwrap(connect_module, connect_method_name)
 
 
 def instrument_connection(

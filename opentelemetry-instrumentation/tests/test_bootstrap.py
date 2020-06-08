@@ -19,7 +19,7 @@ from random import sample
 from unittest import TestCase
 from unittest.mock import call, patch
 
-from opentelemetry.auto_instrumentation import bootstrap
+from opentelemetry.instrumentation import bootstrap
 
 
 def sample_packages(packages, rate):
@@ -45,7 +45,7 @@ class TestBootstrap(TestCase):
         )
 
         cls.pkg_patcher = patch(
-            "opentelemetry.auto_instrumentation.bootstrap._find_installed_libraries",
+            "opentelemetry.instrumentation.bootstrap._find_installed_libraries",
             return_value=cls.installed_libraries,
         )
 
@@ -57,17 +57,17 @@ class TestBootstrap(TestCase):
             pip_freeze_output.append(inst)
 
         cls.pip_freeze_patcher = patch(
-            "opentelemetry.auto_instrumentation.bootstrap._sys_pip_freeze",
+            "opentelemetry.instrumentation.bootstrap._sys_pip_freeze",
             return_value="\n".join(pip_freeze_output),
         )
         cls.pip_install_patcher = patch(
-            "opentelemetry.auto_instrumentation.bootstrap._sys_pip_install",
+            "opentelemetry.instrumentation.bootstrap._sys_pip_install",
         )
         cls.pip_uninstall_patcher = patch(
-            "opentelemetry.auto_instrumentation.bootstrap._sys_pip_uninstall",
+            "opentelemetry.instrumentation.bootstrap._sys_pip_uninstall",
         )
         cls.pip_check_patcher = patch(
-            "opentelemetry.auto_instrumentation.bootstrap._pip_check",
+            "opentelemetry.instrumentation.bootstrap._pip_check",
         )
 
         cls.pkg_patcher.start()

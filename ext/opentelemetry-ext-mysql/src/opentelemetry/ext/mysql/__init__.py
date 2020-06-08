@@ -46,9 +46,9 @@ import typing
 
 import mysql.connector
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext import dbapi
 from opentelemetry.ext.mysql.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
