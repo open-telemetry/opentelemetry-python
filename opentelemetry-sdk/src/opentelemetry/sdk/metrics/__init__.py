@@ -275,12 +275,13 @@ class SumObserver(Observer, metrics_api.SumObserver):
     """See `opentelemetry.metrics.SumObserver`."""
 
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]] = None,
     ):
         if super()._validate_observe(value, key):
             # Must be non-decreasing because monotonic
             if (
-                key in self.aggregators
+                key is not None
+                and key in self.aggregators
                 and self.aggregators[key].current is not None
             ):
                 if value < self.aggregators[key].current:
