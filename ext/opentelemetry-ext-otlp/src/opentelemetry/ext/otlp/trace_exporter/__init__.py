@@ -61,6 +61,7 @@ class OTLPSpanExporter(SpanExporter):
         super().__init__()
 
         self._metadata = metadata
+        self._collector_span_kwargs = None
 
         if credentials is None:
             self._client = TraceServiceStub(insecure_channel(endpoint))
@@ -69,6 +70,7 @@ class OTLPSpanExporter(SpanExporter):
                 secure_channel(endpoint, credentials)
             )
 
+    # pylint: disable=no-self-use
     def _translate_key_values(self, key, value):
         key_value = {"key": key}
 
@@ -123,9 +125,7 @@ class OTLPSpanExporter(SpanExporter):
             self._collector_span_kwargs["trace_state"] = ",".join(
                 [
                     "{}={}".format(key, value)
-                    for key, value in (
-                        sdk_span.context.trace_state.items()
-                    )
+                    for key, value in (sdk_span.context.trace_state.items())
                 ]
             )
 
@@ -181,9 +181,7 @@ class OTLPSpanExporter(SpanExporter):
                     trace_id=(
                         sdk_span_link.context.trace_id.to_bytes(16, "big")
                     ),
-                    span_id=(
-                        sdk_span_link.context.span_id.to_bytes(8, "big")
-                    ),
+                    span_id=(sdk_span_link.context.span_id.to_bytes(8, "big")),
                 )
 
                 for key, value in sdk_span_link.attributes.items():
