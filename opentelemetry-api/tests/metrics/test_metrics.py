@@ -56,6 +56,14 @@ class TestMetrics(unittest.TestCase):
         bound_valuerecorder = metrics.BoundValueRecorder()
         bound_valuerecorder.record(1)
 
-    def test_observer(self):
+    def test_default_observer(self):
         observer = metrics.DefaultObserver()
+        observer.observe(1, {})
+
+    def test_sum_observer(self):
+        observer = metrics.SumObserver()
+        observer.observe(1, {})
+
+    def test_value_observer(self):
+        observer = metrics.ValueObserver()
         observer.observe(1, {})

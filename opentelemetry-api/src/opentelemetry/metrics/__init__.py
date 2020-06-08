@@ -189,6 +189,18 @@ class DefaultObserver(Observer):
         """
 
 
+class SumObserver(Observer):
+    """No-op implementation of ``SumObserver``."""
+
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Captures ``value`` to the sumobserver.
+
+        Args:
+            value: The value to capture to this sumobserver metric.
+            labels: Labels associated to ``value``.
+        """
+
+
 class ValueObserver(Observer):
     """No-op implementation of ``ValueObserver``."""
 
