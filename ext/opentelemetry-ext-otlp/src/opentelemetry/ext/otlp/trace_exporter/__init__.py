@@ -69,32 +69,148 @@ class OTLPSpanExporter(SpanExporter):
                 secure_channel(endpoint, credentials)
             )
 
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    @staticmethod
-    def _translate_spans(
-        sdk_spans: Sequence[SDKSpan],
-    ) -> ExportTraceServiceRequest:
-        def translate_key_values(key, value):
-            key_value = {"key": key}
+    def _translate_key_values(self, key, value):
+        key_value = {"key": key}
 
-            if isinstance(value, bool):
-                key_value["bool_value"] = value
+        if isinstance(value, bool):
+            key_value["bool_value"] = value
 
-            elif isinstance(value, str):
-                key_value["string_value"] = value
+        elif isinstance(value, str):
+            key_value["string_value"] = value
 
-            elif isinstance(value, int):
-                key_value["int_value"] = value
+        elif isinstance(value, int):
+            key_value["int_value"] = value
 
-            elif isinstance(value, float):
-                key_value["double_value"] = value
+        elif isinstance(value, float):
+            key_value["double_value"] = value
 
-            else:
-                raise Exception(
-                    "Invalid type {} of value {}".format(type(value), value)
+        else:
+            raise Exception(
+                "Invalid type {} of value {}".format(type(value), value)
+            )
+
+        return key_value
+
+    def _translate_name(self, sdk_span):
+        self._collector_span_kwargs["name"] = sdk_span.name
+
+    def _translate_start_time(self, sdk_span):
+        self._collector_span_kwargs[
+            "start_time_unix_nano"
+        ] = sdk_span.start_time
+
+    def _translate_end_time(self, sdk_span):
+        self._collector_span_kwargs["end_time_unix_nano"] = sdk_span.end_time
+
+    def _translate_span_id(self, sdk_span):
+        self._collector_span_kwargs[
+            "span_id"
+        ] = sdk_span.context.span_id.to_bytes(8, "big")
+
+    def _translate_trace_id(self, sdk_span):
+        self._collector_span_kwargs[
+            "trace_id"
+        ] = sdk_span.context.trace_id.to_bytes(16, "big")
+
+    def _translate_parent(self, sdk_span):
+        if sdk_span.parent is not None:
+            self._collector_span_kwargs[
+                "parent_span_id"
+            ] = sdk_span.parent.span_id.to_bytes(8, "big")
+
+    def _translate_context_trace_state(self, sdk_span):
+        if sdk_span.context.trace_state is not None:
+            self._collector_span_kwargs["trace_state"] = ",".join(
+                [
+                    "{}={}".format(key, value)
+                    for key, value in (
+                        sdk_span.context.trace_state.items()
+                    )
+                ]
+            )
+
+    def _translate_attributes(self, sdk_span):
+        if sdk_span.attributes:
+
+            self._collector_span_kwargs["attributes"] = []
+
+            for key, value in sdk_span.attributes.items():
+
+                try:
+                    self._collector_span_kwargs["attributes"].append(
+                        AttributeKeyValue(
+                            **self._translate_key_values(key, value)
+                        )
+                    )
+                except Exception as error:  # pylint: disable=broad-except
+                    logger.exception(error)
+
+    def _translate_events(self, sdk_span):
+        if sdk_span.events:
+            self._collector_span_kwargs["events"] = []
+
+            for sdk_span_event in sdk_span.events:
+
+                collector_span_event = CollectorSpan.Event(
+                    name=sdk_span_event.name,
+                    time_unix_nano=sdk_span_event.timestamp,
                 )
 
-            return key_value
+                for key, value in sdk_span_event.attributes.items():
+                    try:
+                        collector_span_event.attributes.append(
+                            AttributeKeyValue(
+                                **self._translate_key_values(key, value)
+                            )
+                        )
+                    # pylint: disable=broad-except
+                    except Exception as error:
+                        logger.exception(error)
+
+                self._collector_span_kwargs["events"].append(
+                    collector_span_event
+                )
+
+    def _translate_links(self, sdk_span):
+        if sdk_span.links:
+            self._collector_span_kwargs["links"] = []
+
+            for sdk_span_link in sdk_span.links:
+
+                collector_span_link = CollectorSpan.Link(
+                    trace_id=(
+                        sdk_span_link.context.trace_id.to_bytes(16, "big")
+                    ),
+                    span_id=(
+                        sdk_span_link.context.span_id.to_bytes(8, "big")
+                    ),
+                )
+
+                for key, value in sdk_span_link.attributes.items():
+                    try:
+                        collector_span_link.attributes.append(
+                            AttributeKeyValue(
+                                **self._translate_key_values(key, value)
+                            )
+                        )
+                    # pylint: disable=broad-except
+                    except Exception as error:
+                        logger.exception(error)
+
+                self._collector_span_kwargs["links"].append(
+                    collector_span_link
+                )
+
+    def _translate_status(self, sdk_span):
+        if sdk_span.status is not None:
+            self._collector_span_kwargs["status"] = Status(
+                code=sdk_span.status.canonical_code.value,
+                message=sdk_span.status.description,
+            )
+
+    def _translate_spans(
+        self, sdk_spans: Sequence[SDKSpan],
+    ) -> ExportTraceServiceRequest:
 
         sdk_resource_instrumentation_library_spans = {}
 
@@ -107,113 +223,27 @@ class OTLPSpanExporter(SpanExporter):
                     sdk_span.resource
                 ] = InstrumentationLibrarySpans()
 
-            collector_span_kwargs = {}
+            self._collector_span_kwargs = {}
 
-            collector_span_kwargs["name"] = sdk_span.name
-            collector_span_kwargs["start_time_unix_nano"] = sdk_span.start_time
-            collector_span_kwargs["end_time_unix_nano"] = sdk_span.end_time
-            collector_span_kwargs[
-                "span_id"
-            ] = sdk_span.context.span_id.to_bytes(8, "big")
-            collector_span_kwargs[
-                "trace_id"
-            ] = sdk_span.context.trace_id.to_bytes(16, "big")
+            self._translate_name(sdk_span)
+            self._translate_start_time(sdk_span)
+            self._translate_end_time(sdk_span)
+            self._translate_span_id(sdk_span)
+            self._translate_trace_id(sdk_span)
+            self._translate_parent(sdk_span)
+            self._translate_context_trace_state(sdk_span)
+            self._translate_attributes(sdk_span)
+            self._translate_events(sdk_span)
+            self._translate_links(sdk_span)
+            self._translate_status(sdk_span)
 
-            if sdk_span.status is not None:
-                collector_span_kwargs["status"] = Status(
-                    code=sdk_span.status.canonical_code.value,
-                    message=sdk_span.status.description,
-                )
-
-            if sdk_span.parent is not None:
-                collector_span_kwargs[
-                    "parent_span_id"
-                ] = sdk_span.parent.span_id.to_bytes(8, "big")
-
-            if sdk_span.context.trace_state is not None:
-                collector_span_kwargs["trace_state"] = ",".join(
-                    [
-                        "{}={}".format(key, value)
-                        for key, value in (
-                            sdk_span.context.trace_state.items()
-                        )
-                    ]
-                )
-
-            if sdk_span.attributes:
-
-                collector_span_kwargs["attributes"] = []
-
-                for key, value in sdk_span.attributes.items():
-
-                    try:
-                        collector_span_kwargs["attributes"].append(
-                            AttributeKeyValue(
-                                **translate_key_values(key, value)
-                            )
-                        )
-                    except Exception as error:  # pylint: disable=broad-except
-                        logger.exception(error)
-
-            if sdk_span.events:
-                collector_span_kwargs["events"] = []
-
-                for sdk_span_event in sdk_span.events:
-
-                    collector_span_event = CollectorSpan.Event(
-                        name=sdk_span_event.name,
-                        time_unix_nano=sdk_span_event.timestamp,
-                    )
-
-                    for key, value in sdk_span_event.attributes.items():
-                        try:
-                            collector_span_event.attributes.append(
-                                AttributeKeyValue(
-                                    **translate_key_values(key, value)
-                                )
-                            )
-                        # pylint: disable=broad-except
-                        except Exception as error:
-                            logger.exception(error)
-
-                    collector_span_kwargs["events"].append(
-                        collector_span_event
-                    )
-
-            if sdk_span.links:
-                collector_span_kwargs["links"] = []
-
-                for sdk_span_link in sdk_span.links:
-
-                    collector_span_link = CollectorSpan.Link(
-                        trace_id=(
-                            sdk_span_link.context.trace_id.to_bytes(16, "big")
-                        ),
-                        span_id=(
-                            sdk_span_link.context.span_id.to_bytes(8, "big")
-                        ),
-                    )
-
-                    for key, value in sdk_span_link.attributes.items():
-                        try:
-                            collector_span_link.attributes.append(
-                                AttributeKeyValue(
-                                    **translate_key_values(key, value)
-                                )
-                            )
-                        # pylint: disable=broad-except
-                        except Exception as error:
-                            logger.exception(error)
-
-                    collector_span_kwargs["links"].append(collector_span_link)
-
-            collector_span_kwargs["kind"] = getattr(
+            self._collector_span_kwargs["kind"] = getattr(
                 CollectorSpan.SpanKind, sdk_span.kind.name
             )
 
             sdk_resource_instrumentation_library_spans[
                 sdk_span.resource
-            ].spans.append(CollectorSpan(**collector_span_kwargs))
+            ].spans.append(CollectorSpan(**self._collector_span_kwargs))
 
         resource_spans = []
 
@@ -228,7 +258,9 @@ class OTLPSpanExporter(SpanExporter):
 
                 try:
                     collector_resource.attributes.append(
-                        AttributeKeyValue(**translate_key_values(key, value))
+                        AttributeKeyValue(
+                            **self._translate_key_values(key, value)
+                        )
                     )
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
