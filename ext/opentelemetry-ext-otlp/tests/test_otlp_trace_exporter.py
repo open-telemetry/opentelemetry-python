@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
@@ -104,7 +105,7 @@ class TestOTLPSpanExporter(TestCase):
         event_mock = Mock(
             **{
                 "timestamp": 1591240820506462784,
-                "attributes": {"a": 1, "b": False},
+                "attributes": OrderedDict([("a", 1), ("b", False)]),
             }
         )
 
@@ -114,21 +115,21 @@ class TestOTLPSpanExporter(TestCase):
             "a",
             context=Mock(
                 **{
-                    "trace_state": {"a": "b", "c": "d"},
+                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource({"a": 1, "b": False}),
+            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
-            attributes={"a": 1, "b": True},
+            attributes=OrderedDict([("a", 1), ("b", True)]),
             events=[event_mock],
             links=[
                 Mock(
                     **{
                         "context.trace_id": 1,
                         "context.span_id": 2,
-                        "attributes": {"a": 1, "b": False},
+                        "attributes": OrderedDict([("a", 1), ("b", False)]),
                         "kind": SpanKind.INTERNAL,
                     }
                 )
