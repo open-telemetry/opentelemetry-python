@@ -1,5 +1,5 @@
 opentelemetry.trace.span
-==========================
+========================
 
 .. automodule:: opentelemetry.trace.span
     :members:
