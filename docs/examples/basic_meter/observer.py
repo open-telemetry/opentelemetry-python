@@ -60,6 +60,7 @@ meter.register_observer(
     description="RAM memory usage",
     unit="1",
     value_type=float,
+    observer_type=ValueObserver,
     label_keys=(),
 )
 
