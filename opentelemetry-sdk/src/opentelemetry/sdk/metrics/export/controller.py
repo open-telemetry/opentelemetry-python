@@ -34,10 +34,7 @@ class PushController(threading.Thread):
     daemon = True
 
     def __init__(
-        self,
-        meter: Meter,
-        exporter: MetricsExporter,
-        interval: float
+        self, meter: Meter, exporter: MetricsExporter, interval: float
     ):
         super().__init__()
         self.meter = meter
