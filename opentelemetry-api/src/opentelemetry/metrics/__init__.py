@@ -29,9 +29,9 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 import abc
 from logging import getLogger
-from typing import Callable, Dict, Sequence, Tuple, Type, TypeVar
+from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
-from opentelemetry.util import _load_provider
+from opentelemetry.util import _load_meter_provider
 
 logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
@@ -162,7 +162,6 @@ class Observer(abc.ABC):
     """An observer type metric instrument used to capture a current set of
     values.
 
-
     Observer instruments are asynchronous, a callback is invoked with the
     observer instrument as argument allowing the user to capture multiple
     values per collection interval.
@@ -190,12 +189,23 @@ class DefaultObserver(Observer):
         """
 
 
+class ValueObserver(Observer):
+    """No-op implementation of ``ValueObserver``."""
+
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Captures ``value`` to the valueobserver.
+
+        Args:
+            value: The value to capture to this valueobserver metric.
+            labels: Labels associated to ``value``.
+        """
+
+
 class MeterProvider(abc.ABC):
     @abc.abstractmethod
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
@@ -212,12 +222,6 @@ class MeterProvider(abc.ABC):
                 E.g., instead of ``"requests"``, use
                 ``"opentelemetry.ext.requests"``.
 
-            stateful: True/False to indicate whether the meter will be
-                    stateful. True indicates the meter computes checkpoints
-                    from over the process lifetime. False indicates the meter
-                    computes checkpoints which describe the updates of a single
-                    collection period (deltas).
-
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
@@ -233,14 +237,15 @@ class DefaultMeterProvider(MeterProvider):
     def get_meter(
         self,
         instrumenting_module_name: str,
-        stateful: bool = True,
         instrumenting_library_version: str = "",
     ) -> "Meter":
         # pylint:disable=no-self-use,unused-argument
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, ValueRecorder, Observer)
+MetricT = TypeVar("MetricT", Counter, ValueRecorder)
+InstrumentT = TypeVar("InstrumentT", Counter, Observer, ValueRecorder)
+ObserverT = TypeVar("ObserverT", bound=Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -305,6 +310,7 @@ class Meter(abc.ABC):
         description: str,
         unit: str,
         value_type: Type[ValueT],
+        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Observer":
@@ -318,6 +324,7 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
+            observer_type: The type of observer being registered.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
         Returns: A new ``Observer`` metric instrument.
@@ -362,6 +369,7 @@ class DefaultMeter(Meter):
         description: str,
         unit: str,
         value_type: Type[ValueT],
+        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Observer":
@@ -376,15 +384,19 @@ _METER_PROVIDER = None
 
 def get_meter(
     instrumenting_module_name: str,
-    stateful: bool = True,
     instrumenting_library_version: str = "",
+    meter_provider: Optional[MeterProvider] = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
     This function is a convenience wrapper for
     opentelemetry.metrics.get_meter_provider().get_meter
+
+    If meter_provider is omitted the current configured one is used.
     """
-    return get_meter_provider().get_meter(
-        instrumenting_module_name, stateful, instrumenting_library_version
+    if meter_provider is None:
+        meter_provider = get_meter_provider()
+    return meter_provider.get_meter(
+        instrumenting_module_name, instrumenting_library_version
     )
 
 
@@ -399,6 +411,6 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = _load_provider("meter_provider")
+        _METER_PROVIDER = _load_meter_provider("meter_provider")
 
     return _METER_PROVIDER

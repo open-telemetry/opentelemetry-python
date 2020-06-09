@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+- Move stateful from Meter to MeterProvider
+  ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
 - Rename Measure to ValueRecorder in metrics
   ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
+- Rename Observer to ValueObserver
+  ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
 
 ## 0.8b0
 

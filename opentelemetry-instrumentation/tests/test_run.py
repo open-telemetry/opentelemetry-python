@@ -18,7 +18,7 @@ from os.path import abspath, dirname, pathsep
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.auto_instrumentation import auto_instrumentation
+from opentelemetry.instrumentation import auto_instrumentation
 
 
 class TestRun(TestCase):
@@ -27,13 +27,13 @@ class TestRun(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.argv_patcher = patch(
-            "opentelemetry.auto_instrumentation.auto_instrumentation.argv"
+            "opentelemetry.instrumentation.auto_instrumentation.argv"
         )
         cls.execl_patcher = patch(
-            "opentelemetry.auto_instrumentation.auto_instrumentation.execl"
+            "opentelemetry.instrumentation.auto_instrumentation.execl"
         )
         cls.which_patcher = patch(
-            "opentelemetry.auto_instrumentation.auto_instrumentation.which"
+            "opentelemetry.instrumentation.auto_instrumentation.which"
         )
 
         cls.argv_patcher.start()
@@ -91,11 +91,11 @@ class TestRun(TestCase):
 
 class TestExecl(TestCase):
     @patch(
-        "opentelemetry.auto_instrumentation.auto_instrumentation.argv",
+        "opentelemetry.instrumentation.auto_instrumentation.argv",
         new=[1, 2, 3],
     )
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.which")
-    @patch("opentelemetry.auto_instrumentation.auto_instrumentation.execl")
+    @patch("opentelemetry.instrumentation.auto_instrumentation.which")
+    @patch("opentelemetry.instrumentation.auto_instrumentation.execl")
     def test_execl(
         self, mock_execl, mock_which
     ):  # pylint: disable=no-self-use

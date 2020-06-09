@@ -67,7 +67,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     def test_export(self):
         with self._registry_register_patch:
             record = MetricRecord(
-                CounterAggregator(), self._labels_key, self._test_metric
+                self._test_metric, self._labels_key, CounterAggregator(),
             )
             exporter = PrometheusMetricsExporter()
             result = exporter.export([record])
@@ -90,7 +90,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         aggregator = CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, key_labels, metric)
+        record = MetricRecord(metric, key_labels, aggregator)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
@@ -118,7 +118,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         )
         labels = {"environment": "staging"}
         key_labels = metrics.get_labels_as_key(labels)
-        record = MetricRecord(None, key_labels, metric)
+        record = MetricRecord(metric, key_labels, None)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
         collector.collect()
