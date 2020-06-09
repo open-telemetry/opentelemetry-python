@@ -15,17 +15,37 @@
 import typing
 
 from opentelemetry import trace
-from opentelemetry.context import Context
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-)
+from opentelemetry.context import Context, get_current
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
     HTTPTextFormatT,
     Setter,
 )
+
+
+class NOOPHTTPTextFormat(HTTPTextFormat):
+    """A propagator that does not extract nor inject.
+
+    This class is useful for catching edge cases assuming
+    a SpanContext will always be present.
+    """
+
+    def extract(
+        self,
+        get_from_carrier: Getter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
+        return get_current()
+
+    def inject(
+        self,
+        set_in_carrier: Setter[HTTPTextFormatT],
+        carrier: HTTPTextFormatT,
+        context: typing.Optional[Context] = None,
+    ) -> None:
+        return None
 
 
 class MockHTTPTextFormat(HTTPTextFormat):
@@ -44,9 +64,9 @@ class MockHTTPTextFormat(HTTPTextFormat):
         span_id_list = get_from_carrier(carrier, self.SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
-            return set_span_in_context(trace.INVALID_SPAN)
+            return trace.set_span_in_context(trace.INVALID_SPAN)
 
-        return set_span_in_context(
+        return trace.set_span_in_context(
             trace.DefaultSpan(
                 trace.SpanContext(
                     trace_id=int(trace_id_list[0]),
@@ -62,7 +82,7 @@ class MockHTTPTextFormat(HTTPTextFormat):
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        span = get_span_from_context(context)
+        span = trace.get_current_span(context)
         set_in_carrier(
             carrier, self.TRACE_ID_KEY, str(span.get_context().trace_id)
         )

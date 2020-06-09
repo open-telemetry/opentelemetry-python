@@ -24,7 +24,10 @@ import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
+from opentelemetry.test.mock_httptextformat import (
+    MockHTTPTextFormat,
+    NOOPHTTPTextFormat,
+)
 
 
 class TestShim(TestCase):
@@ -514,6 +517,20 @@ class TestShim(TestCase):
         ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
         self.assertEqual(ctx.unwrap().trace_id, 1220)
         self.assertEqual(ctx.unwrap().span_id, 7478)
+
+    def test_extract_empty_context_returns_invalid_context(self):
+        """In the case where the propagator cannot extract a
+        SpanContext, extract should return and invalid span context.
+        """
+        _old_propagator = propagators.get_global_httptextformat()
+        propagators.set_global_httptextformat(NOOPHTTPTextFormat())
+        try:
+            carrier = {}
+
+            ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
+            self.assertEqual(ctx.unwrap(), trace.INVALID_SPAN_CONTEXT)
+        finally:
+            propagators.set_global_httptextformat(_old_propagator)
 
     def test_extract_text_map(self):
         """Test `extract()` method for Format.TEXT_MAP."""

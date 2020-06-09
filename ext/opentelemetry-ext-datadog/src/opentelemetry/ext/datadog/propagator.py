@@ -16,10 +16,7 @@ import typing
 
 from opentelemetry import trace
 from opentelemetry.context import Context
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-)
+from opentelemetry.trace import get_current_span, set_span_in_context
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
@@ -88,7 +85,7 @@ class DatadogFormat(HTTPTextFormat):
         carrier: HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        span = get_span_from_context(context=context)
+        span = get_current_span(context)
         sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
         set_in_carrier(
             carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
