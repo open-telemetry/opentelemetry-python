@@ -94,11 +94,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
-from opentelemetry.trace import DefaultSpan
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-)
+from opentelemetry.trace import DefaultSpan, set_span_in_context
 
 logger = logging.getLogger(__name__)
 
@@ -473,7 +469,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
             shim and is likely to be handled in future versions.
         """
 
-        span = self._tracer.unwrap().get_current_span()
+        span = trace_api.get_current_span()
         if span is None:
             return None
 
@@ -703,6 +699,10 @@ class TracerShim(opentracing.Tracer):
 
         propagator = propagators.get_global_httptextformat()
         ctx = propagator.extract(get_as_list, carrier)
-        otel_context = get_span_from_context(ctx).get_context()
+        span = trace_api.get_current_span(ctx)
+        if span is not None:
+            otel_context = span.get_context()
+        else:
+            otel_context = trace_api.INVALID_SPAN_CONTEXT
 
         return SpanContextShim(otel_context)
