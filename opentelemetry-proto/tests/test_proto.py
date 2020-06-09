@@ -15,11 +15,10 @@
 
 from unittest import TestCase
 
-from pkg_resources import require, DistributionNotFound
+from pkg_resources import DistributionNotFound, require
 
 
 class TestInstrumentor(TestCase):
-
     def test_proto(self):
 
         try:
