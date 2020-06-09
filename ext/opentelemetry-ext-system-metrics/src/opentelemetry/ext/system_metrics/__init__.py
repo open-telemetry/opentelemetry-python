@@ -28,9 +28,12 @@ Usage
 
 .. code:: python
 
+    from opentelemetry import metrics
     from opentelemetry.ext.system_metrics import SystemMetrics
+    from opentelemetry.sdk.metrics import MeterProvider,
     from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
+    metrics.set_meter_provider(MeterProvider())
     exporter = ConsoleMetricsExporter()
     SystemMetrics(exporter)
 
