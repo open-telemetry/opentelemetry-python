@@ -30,6 +30,7 @@ Usage
 
     from opentelemetry import metrics
     from opentelemetry.ext.system_metrics import SystemMetrics
+    from opentelemetry.sdk.metrics import MeterProvider,
     from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
     metrics.set_meter_provider(MeterProvider())
@@ -62,6 +63,7 @@ import psutil
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import ValueObserver
 from opentelemetry.sdk.metrics.export import MetricsExporter
+from opentelemetry.sdk.metrics.export.controller import PushController
 
 
 class SystemMetrics:
@@ -74,7 +76,9 @@ class SystemMetrics:
     ):
         self._labels = {} if labels is None else labels
         self.meter = metrics.get_meter(__name__)
-        metrics.get_meter_provider().start_pipeline(self.meter, exporter, interval)
+        self.controller = PushController(
+            meter=self.meter, exporter=exporter, interval=interval
+        )
         if config is None:
             self._config = {
                 "system_memory": ["total", "available", "used", "free"],
