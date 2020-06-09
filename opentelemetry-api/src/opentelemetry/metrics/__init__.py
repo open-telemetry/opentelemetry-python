@@ -137,7 +137,28 @@ class Counter(Metric):
         """Increases the value of the counter by ``value``.
 
         Args:
-            value: The value to add to the counter metric.
+            value: The value to add to the counter metric. Should be positive
+                or zero. For a Counter that can decrease, use
+                `UpDownCounter`.
+            labels: Labels to associate with the bound instrument.
+        """
+
+
+class UpDownCounter(Metric):
+    """A counter type metric that expresses the computation of a sum,
+    allowing negative increments."""
+
+    def bind(self, labels: Dict[str, str]) -> "BoundCounter":
+        """Gets a `BoundCounter`."""
+        return BoundCounter()
+
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Increases the value of the counter by ``value``.
+
+        Args:
+            value: The value to add to the counter metric. Can be positive or
+                negative. For a Counter that is never decreasing, use
+                `Counter`.
             labels: Labels to associate with the bound instrument.
         """
 
@@ -244,7 +265,9 @@ class DefaultMeterProvider(MeterProvider):
 
 
 MetricT = TypeVar("MetricT", Counter, ValueRecorder)
-InstrumentT = TypeVar("InstrumentT", Counter, Observer, ValueRecorder)
+InstrumentT = TypeVar(
+    "InstrumentT", Counter, UpDownCounter, Observer, ValueRecorder
+)
 ObserverT = TypeVar("ObserverT", bound=Observer)
 ObserverCallbackT = Callable[[Observer], None]
 

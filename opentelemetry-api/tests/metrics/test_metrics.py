@@ -35,6 +35,16 @@ class TestMetrics(unittest.TestCase):
         counter = metrics.Counter()
         counter.add(1, {})
 
+    def test_updowncounter(self):
+        counter = metrics.UpDownCounter()
+        bound_counter = counter.bind({})
+        self.assertIsInstance(bound_counter, metrics.BoundCounter)
+
+    def test_updowncounter_add(self):
+        counter = metrics.Counter()
+        counter.add(1, {})
+        counter.add(-1, {})
+
     def test_valuerecorder(self):
         valuerecorder = metrics.ValueRecorder()
         bound_valuerecorder = valuerecorder.bind({})

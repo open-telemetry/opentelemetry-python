@@ -150,6 +150,15 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(counter.name, "name")
         self.assertIs(counter.meter.resource, resource)
 
+    def test_create_updowncounter(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+        updowncounter = meter.create_metric(
+            "name", "desc", "unit", float, metrics.UpDownCounter, ()
+        )
+        self.assertIsInstance(updowncounter, metrics.UpDownCounter)
+        self.assertEqual(updowncounter.value_type, float)
+        self.assertEqual(updowncounter.name, "name")
+
     def test_create_valuerecorder(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         valuerecorder = meter.create_metric(
@@ -271,6 +280,24 @@ class TestCounter(unittest.TestCase):
         metric.add(3, labels)
         metric.add(2, labels)
         self.assertEqual(bound_counter.aggregator.current, 5)
+
+
+class TestUpDownCounter(unittest.TestCase):
+    def test_add(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+        metric = metrics.UpDownCounter(
+            "name", "desc", "unit", int, meter, ("key",)
+        )
+        labels = {"key": "value"}
+        bound_counter = metric.bind(labels)
+        metric.add(3, labels)
+        metric.add(2, labels)
+        self.assertEqual(bound_counter.aggregator.current, 5)
+
+        metric.add(0, labels)
+        metric.add(-3, labels)
+        metric.add(-1, labels)
+        self.assertEqual(bound_counter.aggregator.current, 1)
 
 
 class TestValueRecorder(unittest.TestCase):

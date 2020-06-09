@@ -174,6 +174,21 @@ class Counter(Metric, metrics_api.Counter):
     UPDATE_FUNCTION = add
 
 
+class UpDownCounter(Metric, metrics_api.UpDownCounter):
+    """See `opentelemetry.metrics.UpDownCounter`.
+    """
+
+    BOUND_INSTR_TYPE = BoundCounter
+
+    def add(self, value: metrics_api.ValueT, labels: Dict[str, str]) -> None:
+        """See `opentelemetry.metrics.UpDownCounter.add`."""
+        bound_intrument = self.bind(labels)
+        bound_intrument.add(value)
+        bound_intrument.release()
+
+    UPDATE_FUNCTION = add
+
+
 class ValueRecorder(Metric, metrics_api.ValueRecorder):
     """See `opentelemetry.metrics.ValueRecorder`."""
 
