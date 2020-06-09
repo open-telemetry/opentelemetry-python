@@ -44,7 +44,7 @@ import pymemcache
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.pymemcache.util import _get_address_attributes
 from opentelemetry.ext.pymemcache.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer
