@@ -76,13 +76,14 @@ from pyramid.settings import aslist
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.pyramid.callbacks import (
     SETTING_TRACE_ENABLED,
     TWEEN_NAME,
     trace_tween_factory,
 )
 from opentelemetry.ext.pyramid.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
@@ -111,17 +112,6 @@ def traced_init(wrapped, instance, args, kwargs):
 
     wrapped(*args, **kwargs)
     instance.include("opentelemetry.ext.pyramid.callbacks")
-
-
-def unwrap(obj, attr: str):
-    """Given a function that was wrapped by wrapt.wrap_function_wrapper, unwrap it
-    Args:
-        obj: Object that holds a reference to the wrapped function
-        attr (str): Name of the wrapped function
-    """
-    func = getattr(obj, attr, None)
-    if func and isinstance(func, ObjectProxy) and hasattr(func, "__wrapped__"):
-        setattr(obj, attr, func.__wrapped__)
 
 
 class PyramidInstrumentor(BaseInstrumentor):
