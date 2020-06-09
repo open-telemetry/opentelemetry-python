@@ -56,8 +56,8 @@ import logging
 from botocore.client import BaseClient
 from wrapt import ObjectProxy, wrap_function_wrapper
 
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.botocore.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
