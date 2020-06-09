@@ -439,16 +439,15 @@ class MeterProvider(metrics_api.MeterProvider):
         return Meter(
             self,
             InstrumentationInfo(
-                instrumenting_module_name,
-                instrumenting_library_version,
-            )
+                instrumenting_module_name, instrumenting_library_version,
+            ),
         )
 
     def start_pipeline(
         self,
         meter: metrics_api.Meter,
         exporter: MetricsExporter = None,
-        interval: float = 15.0
+        interval: float = 15.0,
     ) -> None:
         """Method to begin the collect/export pipeline.
         
@@ -461,13 +460,7 @@ class MeterProvider(metrics_api.MeterProvider):
             exporter = ConsoleMetricsExporter()
         self._exporters.add(exporter)
         # TODO: Controller type configurable?
-        self._controllers.append(
-            PushController(
-                meter,
-                exporter,
-                interval
-            )
-        )
+        self._controllers.append(PushController(meter, exporter, interval))
 
     def shutdown(self) -> None:
         for controller in self._controllers:

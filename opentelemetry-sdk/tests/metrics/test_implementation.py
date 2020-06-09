@@ -25,6 +25,7 @@ class TestMeterImplementation(unittest.TestCase):
     to the API with different expected results. See issue for more details:
     https://github.com/open-telemetry/opentelemetry-python/issues/142
     """
+
     def test_meter(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = meter.create_metric("", "", "", float, metrics.Counter)
