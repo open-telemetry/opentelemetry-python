@@ -44,7 +44,7 @@ Auto-Instrumention Example
     pip install opentelemetry-api
     pip install opentelemetry-sdk
     pip install opentelemetry-ext-datadog
-    pip install opentelemetry-auto-instrumentation
+    pip install opentelemetry-instrumentation
     pip install opentelemetry-ext-flask
     pip install flask
     pip install requests
@@ -66,16 +66,16 @@ Auto-Instrumention Example
 
 .. code-block:: sh
 
-    opentelemetry-auto-instrumentation python server.py
+    opentelemetry-instrument python server.py
 
 * Run client
 
 .. code-block:: sh
 
-    opentelemetry-auto-instrumentation python client.py testing
+    opentelemetry-instrument python client.py testing
 
 * Run client with parameter to raise error
 
 .. code-block:: sh
 
-    opentelemetry-auto-instrumentation python client.py error
+    opentelemetry-instrument python client.py error

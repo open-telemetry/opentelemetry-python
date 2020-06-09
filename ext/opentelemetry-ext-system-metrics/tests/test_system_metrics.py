@@ -54,7 +54,7 @@ class TestSystemMetrics(TestBase):
         ):
             if (
                 metric.labels in expected
-                and metric.metric.name == observer_name
+                and metric.instrument.name == observer_name
             ):
                 self.assertEqual(
                     metric.aggregator.checkpoint.last, expected[metric.labels],
