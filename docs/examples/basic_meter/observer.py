@@ -21,17 +21,10 @@ import psutil
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, ValueObserver
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
-from opentelemetry.sdk.metrics.export.controller import PushController
 
-metrics.set_meter_provider(
-    MeterProvider(
-        exporter=ConsoleMetricsExporter(),
-        interval=5,
-    )
-)
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-
+metrics.get_meter_provider().start_pipeline(meter, ConsoleMetricsExporter(), 5)
 
 # Callback to gather cpu usage
 def get_cpu_usage_callback(observer):

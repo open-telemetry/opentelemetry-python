@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import atexit
 import logging
 import threading
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
-from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricsExporter,
+    MetricsExporter,
+)
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -405,40 +409,68 @@ class MeterProvider(metrics_api.MeterProvider):
     Args:
         stateful: Indicates whether meters created are going to be stateful
         resource: Resource for this MeterProvider
+        shutdown_on_exit: Register an atexit hook to shut down when the
+            application exists
     """
 
     def __init__(
         self,
-        exporter=None,
-        interval=15.0,
         stateful=True,
         resource: Resource = Resource.create_empty(),
+        shutdown_on_exit: bool = True,
     ):
-        if not exporter:
-            self.exporter = ConsoleMetricsExporter()
         self.stateful = stateful
         self.resource = resource
-        # InstrumentationInfo to Meter
-        self.meter_registry = {}
-        self.controller = PushController(
-            self.meter_registry,
-            exporter,
-            interval
-        )
+        self._controllers = []
+        self._exporters = set()
+        self._atexit_handler = None
+        if shutdown_on_exit:
+            self._atexit_handler = atexit.register(self.shutdown)
 
     def get_meter(
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
     ) -> "metrics_api.Meter":
+        """See `opentelemetry.metrics.MeterProvider`.get_meter."""
         if not instrumenting_module_name:  # Reject empty strings too.
-            raise ValueError("get_meter called with missing module name.")
-        info = InstrumentationInfo(
-            instrumenting_module_name,
-            instrumenting_library_version,
+            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
+            logger.error("get_meter called with missing module name.")
+        return Meter(
+            self,
+            InstrumentationInfo(
+                instrumenting_module_name,
+                instrumenting_library_version,
+            )
         )
-        meter = self.meter_registry.get(info)
-        if not meter:
-            meter = Meter(self, info)
-            self.meter_registry[info] = meter
-        return meter
+
+    def start_pipeline(
+        self,
+        meter: metrics_api.Meter,
+        exporter: MetricsExporter = None,
+        interval: float = 15.0
+    ) -> None:
+        """Method to begin the collect/export pipeline.
+        
+        Args:
+            meter: The meter to collect metrics from.
+            exporter: The exporter to export metrics to.
+            interval: The collect/export interval in seconds.
+        """
+        if not exporter:
+            exporter = ConsoleMetricsExporter()
+        self._exporters.add(exporter)
+        # TODO: Controller type configurable?
+        self._controllers.append(
+            PushController(
+                meter,
+                exporter,
+                interval
+            )
+        )
+
+    def shutdown(self) -> None:
+        for controller in self._controllers:
+            controller.shutdown()
+        for exporter in self._exporters:
+            exporter.shutdown()

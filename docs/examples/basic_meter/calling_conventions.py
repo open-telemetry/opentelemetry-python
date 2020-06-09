@@ -21,16 +21,11 @@ import time
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, MeterProvider, ValueRecorder
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Use the meter type provided by the SDK package
-metrics.set_meter_provider(
-    MeterProvider(
-        exporter=ConsoleMetricsExporter(),
-        interval=5
-    )
-)
+metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
+metrics.get_meter_provider().start_pipeline(meter, ConsoleMetricsExporter(), 5)
 
 requests_counter = meter.create_metric(
     name="requests",

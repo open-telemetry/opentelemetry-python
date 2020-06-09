@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import atexit
 import threading
 
 from opentelemetry.context import attach, detach, set_value
 
 
 class PushController(threading.Thread):
-    """A push based controller, used for exporting.
+    """A push based controller, used for collecting and exporting.
 
     Uses a worker thread that periodically collects metrics for exporting,
     exports them and performs some post-processing.
@@ -27,45 +26,29 @@ class PushController(threading.Thread):
 
     daemon = True
 
-    def __init__(
-        self,
-        meter_registry,
-        exporter,
-        interval,
-        shutdown_on_exit=True,
-    ):
+    def __init__(self, meter, exporter, interval):
         super().__init__()
-        self.meter_registry = meter_registry
+        self.meter = meter
         self.exporter = exporter
         self.interval = interval
         self.finished = threading.Event()
-        self._atexit_handler = None
-        if shutdown_on_exit:
-            self._atexit_handler = atexit.register(self.shutdown)
         self.start()
 
     def run(self):
         while not self.finished.wait(self.interval):
-            # Only run if meters exist
-            if self.meter_registry:
-                self.tick()
+            self.tick()
 
     def shutdown(self):
         self.finished.set()
         # Run one more collection pass to flush metrics batched in the meter
         self.tick()
-        self.exporter.shutdown()
-        if self._atexit_handler is not None:
-            atexit.unregister(self._atexit_handler)
-            self._atexit_handler = None
 
     def tick(self):
         # Collect all of the meter's metrics to be exported
+        self.meter.collect()
+        # Export the collected metrics
         token = attach(set_value("suppress_instrumentation", True))
-        for meter in self.meter_registry.values():
-            meter.collect()
-            # Export the collected metrics
-            self.exporter.export(meter.batcher.checkpoint_set())
-            # Perform post-exporting logic
-            meter.batcher.finished_collection()
+        self.exporter.export(self.meter.batcher.checkpoint_set())
         detach(token)
+        # Perform post-exporting logic
+        self.meter.batcher.finished_collection()

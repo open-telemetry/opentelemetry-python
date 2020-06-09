@@ -10,7 +10,7 @@
   ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
 - Rename Observer to ValueObserver
   ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
-- Move exporter and controller as part of MeterProvider
+- Add start_pipeline to MeterProvider
   ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
 
 ## 0.8b0
