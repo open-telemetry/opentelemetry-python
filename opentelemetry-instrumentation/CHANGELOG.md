@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Rename opentelemetry-auto-instrumentation to opentelemetry-instrumentation,
+  and console script `opentelemetry-auto-instrumentation` to `opentelemetry-instrument`
+
 ## 0.8b0
 
 Released 2020-05-27

@@ -50,9 +50,10 @@ from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from requests.sessions import Session
 
 from opentelemetry import context, propagators, trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.requests.version import __version__
-from opentelemetry.trace import SpanKind
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
@@ -95,8 +96,9 @@ def _instrument(tracer_provider=None, span_callback=None):
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
-            headers = kwargs.setdefault("headers", {})
+            headers = kwargs.get("headers", {}) or {}
             propagators.inject(type(headers).__setitem__, headers)
+            kwargs["headers"] = headers
 
             try:
                 result = wrapped(
@@ -115,7 +117,7 @@ def _instrument(tracer_provider=None, span_callback=None):
                 span.set_attribute("http.status_code", result.status_code)
                 span.set_attribute("http.status_text", result.reason)
                 span.set_status(
-                    Status(_http_status_to_canonical_code(result.status_code))
+                    Status(http_status_to_canonical_code(result.status_code))
                 )
 
             if span_callback is not None:
@@ -144,37 +146,6 @@ def _uninstrument():
     if getattr(Session.request, "opentelemetry_ext_requests_applied", False):
         original = Session.request.__wrapped__  # pylint:disable=no-member
         Session.request = original
-
-
-def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
-    # pylint:disable=too-many-branches,too-many-return-statements
-    if code < 100:
-        return StatusCanonicalCode.UNKNOWN
-    if code <= 299:
-        return StatusCanonicalCode.OK
-    if code <= 399:
-        if allow_redirect:
-            return StatusCanonicalCode.OK
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
-    if code <= 499:
-        if code == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCanonicalCode.UNAUTHENTICATED
-        if code == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCanonicalCode.PERMISSION_DENIED
-        if code == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCanonicalCode.NOT_FOUND
-        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCanonicalCode.RESOURCE_EXHAUSTED
-        return StatusCanonicalCode.INVALID_ARGUMENT
-    if code <= 599:
-        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCanonicalCode.UNIMPLEMENTED
-        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCanonicalCode.UNAVAILABLE
-        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCanonicalCode.DEADLINE_EXCEEDED
-        return StatusCanonicalCode.INTERNAL
-    return StatusCanonicalCode.UNKNOWN
 
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:

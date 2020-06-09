@@ -240,7 +240,7 @@ class Span(trace_api.Span):
     Args:
         name: The name of the operation this span represents
         context: The immutable span context
-        parent: This span's parent's `SpanContext`, or
+        parent: This span's parent's `opentelemetry.trace.SpanContext`, or
             null if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
@@ -599,9 +599,6 @@ class Tracer(trace_api.Tracer):
         self.source = source
         self.instrumentation_info = instrumentation_info
 
-    def get_current_span(self):
-        return self.source.get_current_span()
-
     def start_as_current_span(
         self,
         name: str,
@@ -624,7 +621,7 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
         if parent is Tracer.CURRENT_SPAN:
-            parent = self.get_current_span()
+            parent = trace_api.get_current_span()
 
         parent_context = parent
         if isinstance(parent_context, trace_api.Span):
@@ -755,10 +752,6 @@ class TracerProvider(trace_api.TracerProvider):
                 instrumenting_module_name, instrumenting_library_version
             ),
         )
-
-    @staticmethod
-    def get_current_span() -> Span:
-        return context_api.get_value(SPAN_KEY)  # type: ignore
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
