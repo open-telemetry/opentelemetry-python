@@ -105,12 +105,16 @@ class BoundValueRecorder(metrics_api.BoundValueRecorder, BaseBoundInstrument):
 
 
 class Metric(metrics_api.Metric):
-    """Base class for all metric types.
+    """Base class for all synchronous metric types.
 
-    Also known as metric instrument. This is the class that is used to
-    represent a metric that is to be continuously recorded and tracked. Each
-    metric has a set of bound metrics that are created from the metric. See
-    `BaseBoundInstrument` for information on bound metric instruments.
+    This is the class that is used to represent a metric that is to be
+    synchronously recorded and tracked. Synchronous instruments are called
+    inside a request, meaning they have an associated distributed context
+    (i.e. Span context, correlation context). Multiple metric events may occur
+    for a synchronous instrument within a give collection interval.
+
+    Each metric has a set of bound metrics that are created from the metric.
+    See `BaseBoundInstrument` for information on bound metric instruments.
     """
 
     BOUND_INSTR_TYPE = BaseBoundInstrument
@@ -190,8 +194,14 @@ class ValueRecorder(Metric, metrics_api.ValueRecorder):
     UPDATE_FUNCTION = record
 
 
-class ValueObserver(metrics_api.ValueObserver):
-    """See `opentelemetry.metrics.ValueObserver`."""
+class Observer(metrics_api.Observer):
+    """Base class for all asynchronous metric types.
+
+    Also known as Observers, observer metric instruments are asynchronous in
+    that they are reported by a callback, once per collection interval, and
+    lack context. They are permitted to report only one value per distinct
+    label set per period.
+    """
 
     def __init__(
         self,
@@ -218,15 +228,10 @@ class ValueObserver(metrics_api.ValueObserver):
     def observe(
         self, value: metrics_api.ValueT, labels: Dict[str, str]
     ) -> None:
-        if not self.enabled:
-            return
-        if not isinstance(value, self.value_type):
-            logger.warning(
-                "Invalid value passed for %s.", self.value_type.__name__
-            )
+        key = get_labels_as_key(labels)
+        if not self._validate_observe(value, key):
             return
 
-        key = get_labels_as_key(labels)
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
             self.aggregators[key] = self.meter.batcher.aggregator_for(
@@ -234,6 +239,20 @@ class ValueObserver(metrics_api.ValueObserver):
             )
         aggregator = self.aggregators[key]
         aggregator.update(value)
+
+    # pylint: disable=W0613
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+    ) -> bool:
+        if not self.enabled:
+            return False
+        if not isinstance(value, self.value_type):
+            logger.warning(
+                "Invalid value passed for %s.", self.value_type.__name__
+            )
+            return False
+
+        return True
 
     def run(self) -> bool:
         try:
@@ -250,6 +269,33 @@ class ValueObserver(metrics_api.ValueObserver):
         return '{}(name="{}", description="{}")'.format(
             type(self).__name__, self.name, self.description
         )
+
+
+class SumObserver(Observer, metrics_api.SumObserver):
+    """See `opentelemetry.metrics.SumObserver`."""
+
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+    ) -> bool:
+        if not super()._validate_observe(value, key):
+            return False
+        # Must be non-decreasing because monotonic
+        if (
+            key in self.aggregators
+            and self.aggregators[key].current is not None
+        ):
+            if value < self.aggregators[key].current:
+                logger.warning("Value passed must be non-decreasing.")
+                return False
+        return True
+
+
+class UpDownSumObserver(Observer, metrics_api.UpDownSumObserver):
+    """See `opentelemetry.metrics.UpDownSumObserver`."""
+
+
+class ValueObserver(Observer, metrics_api.ValueObserver):
+    """See `opentelemetry.metrics.ValueObserver`."""
 
 
 class Record:
