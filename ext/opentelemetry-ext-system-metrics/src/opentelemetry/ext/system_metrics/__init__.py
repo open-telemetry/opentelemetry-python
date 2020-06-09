@@ -74,7 +74,7 @@ class SystemMetrics:
     ):
         self._labels = {} if labels is None else labels
         self.meter = metrics.get_meter(__name__)
-        metrics.get_meter_provider().start_pipeline(meter, exporter, interval)
+        metrics.get_meter_provider().start_pipeline(self.meter, exporter, interval)
         if config is None:
             self._config = {
                 "system_memory": ["total", "available", "used", "free"],

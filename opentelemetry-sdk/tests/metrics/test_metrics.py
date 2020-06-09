@@ -44,9 +44,11 @@ class TestMeterProvider(unittest.TestCase):
         meter = meter_provider.get_meter(__name__)
         # pylint: disable=protected-access
         meter_provider.start_pipeline(meter, exporter, 6)
-        self.assertEqual(len(meter_provider._exporters), 1)
-        self.assertEqual(len(meter_provider._controllers), 1)
-        meter_provider.shutdown()
+        try:
+            self.assertEqual(len(meter_provider._exporters), 1)
+            self.assertEqual(len(meter_provider._controllers), 1)
+        finally:
+            meter_provider.shutdown()
 
     def test_shutdown(self):
         controller = mock.Mock()
