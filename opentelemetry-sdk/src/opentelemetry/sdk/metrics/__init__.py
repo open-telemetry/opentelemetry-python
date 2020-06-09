@@ -290,14 +290,15 @@ class SumObserver(Observer, metrics_api.SumObserver):
         return True
 
 
-
 class UpDownSumObserver(Observer, metrics_api.UpDownSumObserver):
     """See `opentelemetry.metrics.UpDownSumObserver`."""
+
     pass
 
 
 class ValueObserver(Observer, metrics_api.ValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
+
     pass
 
 
