@@ -24,10 +24,13 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-metrics.set_meter_provider(MeterProvider())
+metrics.set_meter_provider(
+    MeterProvider(
+        exporter=ConsoleMetricsExporter(),
+        interval=5,
+    )
+)
 meter = metrics.get_meter(__name__)
-exporter = ConsoleMetricsExporter()
-controller = PushController(meter=meter, exporter=exporter, interval=2)
 
 
 # Callback to gather cpu usage
@@ -60,6 +63,7 @@ meter.register_observer(
     description="RAM memory usage",
     unit="1",
     value_type=float,
+    observer_type=ValueObserver,
     label_keys=(),
 )
 

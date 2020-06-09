@@ -27,9 +27,15 @@ class PushController(threading.Thread):
 
     daemon = True
 
-    def __init__(self, meter, exporter, interval, shutdown_on_exit=True):
+    def __init__(
+        self,
+        meter_registry,
+        exporter,
+        interval,
+        shutdown_on_exit=True,
+    ):
         super().__init__()
-        self.meter = meter
+        self.meter_registry = meter_registry
         self.exporter = exporter
         self.interval = interval
         self.finished = threading.Event()
@@ -40,7 +46,9 @@ class PushController(threading.Thread):
 
     def run(self):
         while not self.finished.wait(self.interval):
-            self.tick()
+            # Only run if meters exist
+            if self.meter_registry:
+                self.tick()
 
     def shutdown(self):
         self.finished.set()
@@ -53,10 +61,11 @@ class PushController(threading.Thread):
 
     def tick(self):
         # Collect all of the meter's metrics to be exported
-        self.meter.collect()
         token = attach(set_value("suppress_instrumentation", True))
-        # Export the given metrics in the batcher
-        self.exporter.export(self.meter.batcher.checkpoint_set())
+        for meter in self.meter_registry.values():
+            meter.collect()
+            # Export the collected metrics
+            self.exporter.export(meter.batcher.checkpoint_set())
+            # Perform post-exporting logic
+            meter.batcher.finished_collection()
         detach(token)
-        # Perform post-exporting logic based on batcher configuration
-        self.meter.batcher.finished_collection()

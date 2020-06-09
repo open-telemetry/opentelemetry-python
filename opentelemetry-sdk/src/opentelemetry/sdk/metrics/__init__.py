@@ -17,8 +17,10 @@ import threading
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -406,10 +408,23 @@ class MeterProvider(metrics_api.MeterProvider):
     """
 
     def __init__(
-        self, stateful=True, resource: Resource = Resource.create_empty(),
+        self,
+        exporter=None,
+        interval=15.0,
+        stateful=True,
+        resource: Resource = Resource.create_empty(),
     ):
+        if not exporter:
+            self.exporter = ConsoleMetricsExporter()
         self.stateful = stateful
         self.resource = resource
+        # InstrumentationInfo to Meter
+        self.meter_registry = {}
+        self.controller = PushController(
+            self.meter_registry,
+            exporter,
+            interval
+        )
 
     def get_meter(
         self,
@@ -418,9 +433,12 @@ class MeterProvider(metrics_api.MeterProvider):
     ) -> "metrics_api.Meter":
         if not instrumenting_module_name:  # Reject empty strings too.
             raise ValueError("get_meter called with missing module name.")
-        return Meter(
-            self,
-            InstrumentationInfo(
-                instrumenting_module_name, instrumenting_library_version
-            ),
+        info = InstrumentationInfo(
+            instrumenting_module_name,
+            instrumenting_library_version,
         )
+        meter = self.meter_registry.get(info)
+        if not meter:
+            meter = Meter(self, info)
+            self.meter_registry[info] = meter
+        return meter

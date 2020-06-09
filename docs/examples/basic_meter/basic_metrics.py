@@ -28,8 +28,6 @@ from opentelemetry.sdk.metrics import Counter, MeterProvider, ValueRecorder
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-stateful = True
-
 print(
     "Starting example, values will be printed to the console every 5 seconds."
 )
@@ -37,17 +35,21 @@ print(
 # Stateful determines whether how metrics are collected: if true, metrics
 # accumulate over the process lifetime. If false, metrics are reset at the
 # beginning of each collection interval.
-metrics.set_meter_provider(MeterProvider(stateful))
-# The Meter is responsible for creating and recording metrics. Each meter has a
-# unique name, which we set as the module's name here.
-meter = metrics.get_meter(__name__)
+stateful = True
 
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 
-# A PushController collects metrics created from meter and exports it via the
-# exporter every interval
-controller = PushController(meter=meter, exporter=exporter, interval=5)
+metrics.set_meter_provider(
+    MeterProvider(
+        exporter=exporter,
+        interval=5,
+        stateful=stateful
+    )
+)
+# The Meter is responsible for creating and recording metrics. Each meter has a
+# unique name, which we set as the module's name here.
+meter = metrics.get_meter(__name__)
 
 # Metric instruments allow to capture measurements
 requests_counter = meter.create_metric(
