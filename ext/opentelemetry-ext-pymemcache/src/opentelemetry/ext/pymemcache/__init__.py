@@ -44,9 +44,9 @@ import pymemcache
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.pymemcache.util import _get_address_attributes
 from opentelemetry.ext.pymemcache.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -119,7 +119,9 @@ def _wrap_cmd(tracer, cmd, wrapped, instance, args, kwargs):
 
             _set_connection_attributes(span, instance)
         except Exception as ex:  # pylint: disable=broad-except
-            logger.warning("Failed to set attributes for pymemcache span %s", str(ex))
+            logger.warning(
+                "Failed to set attributes for pymemcache span %s", str(ex)
+            )
 
         return wrapped(*args, **kwargs)
 
