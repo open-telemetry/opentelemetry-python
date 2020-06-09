@@ -46,6 +46,7 @@ class TestMeterProvider(unittest.TestCase):
         meter_provider.start_pipeline(meter, exporter, 6)
         self.assertEqual(len(meter_provider._exporters), 1)
         self.assertEqual(len(meter_provider._controllers), 1)
+        meter_provider.shutdown()
 
     def test_shutdown(self):
         controller = mock.Mock()
@@ -57,6 +58,7 @@ class TestMeterProvider(unittest.TestCase):
         meter_provider.shutdown()
         self.assertEqual(controller.shutdown.call_count, 1)
         self.assertEqual(exporter.shutdown.call_count, 1)
+        self.assertIsNone(meter_provider._atexit_handler)
 
 
 class TestMeter(unittest.TestCase):

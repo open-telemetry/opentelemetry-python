@@ -21,7 +21,6 @@ from opentelemetry.ext.opencensusexporter.metrics_exporter import (
     OpenCensusMetricsExporter,
 )
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export.controller import PushController
 
 exporter = OpenCensusMetricsExporter(
     service_name="basic-service", endpoint="localhost:55678"
@@ -29,7 +28,7 @@ exporter = OpenCensusMetricsExporter(
 
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-controller = PushController(meter, exporter, 5)
+metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
 requests_counter = meter.create_metric(
     name="requests",

@@ -450,7 +450,7 @@ class MeterProvider(metrics_api.MeterProvider):
         interval: float = 15.0,
     ) -> None:
         """Method to begin the collect/export pipeline.
-        
+
         Args:
             meter: The meter to collect metrics from.
             exporter: The exporter to export metrics to.
@@ -467,3 +467,6 @@ class MeterProvider(metrics_api.MeterProvider):
             controller.shutdown()
         for exporter in self._exporters:
             exporter.shutdown()
+        if self._atexit_handler is not None:
+            atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None

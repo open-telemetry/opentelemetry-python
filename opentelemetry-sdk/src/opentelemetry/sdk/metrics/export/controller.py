@@ -15,6 +15,8 @@
 import threading
 
 from opentelemetry.context import attach, detach, set_value
+from opentelemetry.metrics import Meter
+from opentelemetry.sdk.metrics.export import MetricsExporter
 
 
 class PushController(threading.Thread):
@@ -22,11 +24,21 @@ class PushController(threading.Thread):
 
     Uses a worker thread that periodically collects metrics for exporting,
     exports them and performs some post-processing.
+
+    Args:
+        meter: The meter used to collect metrics.
+        exporter: The exporter used to export metrics.
+        interval: The collect/export interval in seconds.
     """
 
     daemon = True
 
-    def __init__(self, meter, exporter, interval):
+    def __init__(
+        self,
+        meter: Meter,
+        exporter: MetricsExporter,
+        interval: float
+    ):
         super().__init__()
         self.meter = meter
         self.exporter = exporter

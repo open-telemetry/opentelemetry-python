@@ -26,6 +26,7 @@ metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 metrics.get_meter_provider().start_pipeline(meter, ConsoleMetricsExporter(), 5)
 
+
 # Callback to gather cpu usage
 def get_cpu_usage_callback(observer):
     for (number, percent) in enumerate(psutil.cpu_percent(percpu=True)):

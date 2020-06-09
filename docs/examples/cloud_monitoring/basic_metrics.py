@@ -20,14 +20,10 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export.controller import PushController
 
-meter = metrics.get_meter(__name__, True)
-
-# Gather and export metrics every 5 seconds
-controller = PushController(
-    meter=meter, exporter=CloudMonitoringMetricsExporter(), interval=5
-)
+metrics.set_meter_provider(MeterProvider())
+meter = metrics.get_meter(__name__)
+metrics.get_meter_provider().start_pipeline(meter, CloudMonitoringMetricsExporter(), 5)
 
 requests_counter = meter.create_metric(
     name="request_counter",
