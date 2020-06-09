@@ -46,6 +46,8 @@ meter = metrics.get_meter(__name__)
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 
+# start_pipeline will notify the MeterProvider to begin collecting/exporting
+# metrics with the given meter, exporter and interval in seconds
 metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
 # Metric instruments allow to capture measurements

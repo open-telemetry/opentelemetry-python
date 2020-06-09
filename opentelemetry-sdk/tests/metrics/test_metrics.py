@@ -38,6 +38,26 @@ class TestMeterProvider(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertIs(meter.resource, resources._EMPTY_RESOURCE)
 
+    def test_start_pipeline(self):
+        exporter = mock.Mock()
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        # pylint: disable=protected-access
+        meter_provider.start_pipeline(meter, exporter, 6)
+        self.assertEqual(len(meter_provider._exporters), 1)
+        self.assertEqual(len(meter_provider._controllers), 1)
+
+    def test_shutdown(self):
+        controller = mock.Mock()
+        exporter = mock.Mock()
+        meter_provider = metrics.MeterProvider()
+        # pylint: disable=protected-access
+        meter_provider._controllers = [controller]
+        meter_provider._exporters = [exporter]
+        meter_provider.shutdown()
+        self.assertEqual(controller.shutdown.call_count, 1)
+        self.assertEqual(exporter.shutdown.call_count, 1)
+
 
 class TestMeter(unittest.TestCase):
     def test_extends_api(self):
