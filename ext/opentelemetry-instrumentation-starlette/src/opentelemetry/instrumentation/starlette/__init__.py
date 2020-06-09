@@ -19,24 +19,39 @@ timing through OpenTelemetry.
 """
 
 from opentelemetry.ext.asgi import OpenTelemetryMiddleware
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.starlette.version import __version__  # noqa
 
-from starlette.applications import Starlette
+from starlette import applications
 from starlette.middleware import Middleware
 from starlette.routing import Match
 
 
-# class StarletteInstrumentor(BaseInstrumentor):
-#     """An instrumentor for starlette
-#
-#     See `BaseInstrumentor`
-#     """
-#
-#     def _instrument(self, )
+class StarletteInstrumentor(BaseInstrumentor):
+    """An instrumentor for starlette
+
+    See `BaseInstrumentor`
+    """
+
+    @staticmethod
+    def instrument_app(app: applications.Starlette):
+        """Instrument a previously instrumented Starlette application.
+        """
+        if not getattr(app, "_is_instrumented_by_opentelemetry", False):
+            app.add_middleware(
+                OpenTelemetryMiddleware, name_callback=_get_route_name
+            )
+            app._is_instrumented_by_opentelemetry = True
+
+    def _instrument(self, **kwargs):
+        self._original_starlette = applications.Starlette
+        applications.Starlette = _InstrumentedStarlette
+
+    def _uninstrument(self, **kwargs):
+        application.Starlette = self._original_starlette
 
 
-class _InstrumentedStarlette(Starlette):
+class _InstrumentedStarlette(applications.Starlette):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_middleware(
