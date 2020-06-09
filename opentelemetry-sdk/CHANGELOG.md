@@ -6,6 +6,8 @@
   ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
 - Rename Measure to ValueRecorder in metrics
   ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
+- Adding trace.get_current_span, Removing Tracer.get_current_span
+  ([#552](https://github.com/open-telemetry/opentelemetry-python/pull/552))
 - bugfix: byte type attributes are decoded before adding to attributes dict
   ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
 - Rename Observer to ValueObserver
