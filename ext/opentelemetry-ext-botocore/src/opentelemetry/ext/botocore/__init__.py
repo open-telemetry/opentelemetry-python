@@ -16,7 +16,7 @@
 Instrument `Botocore`_ to trace service requests.
 
 There are two options for instrumenting code. The first option is to use the
-``opentelemetry-auto-instrumentation`` executable which will automatically
+``opentelemetry-instrument`` executable which will automatically
 instrument your Botocore client. The second is to programmatically enable
 instrumentation via the following code:
 
@@ -56,7 +56,7 @@ import logging
 from botocore.client import BaseClient
 from wrapt import ObjectProxy, wrap_function_wrapper
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.botocore.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer
 
