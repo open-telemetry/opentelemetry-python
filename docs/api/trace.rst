@@ -8,6 +8,7 @@ Submodules
 
    trace.sampling
    trace.status
+   trace.span
 
 Module contents
 ---------------
