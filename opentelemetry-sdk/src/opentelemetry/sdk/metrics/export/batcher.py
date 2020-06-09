@@ -19,6 +19,7 @@ from opentelemetry.metrics import (
     Counter,
     InstrumentT,
     SumObserver,
+    UpDownSumObserver,
     ValueObserver,
     ValueRecorder,
 )
@@ -56,7 +57,8 @@ class Batcher(abc.ABC):
         # pylint:disable=R0201
         if issubclass(instrument_type, Counter):
             return CounterAggregator()
-        if issubclass(instrument_type, SumObserver):
+        if issubclass(instrument_type, SumObserver) or \
+            issubclass(instrument_type, UpDownSumObserver):
             return LastValueAggregator()
         if issubclass(instrument_type, ValueRecorder):
             return MinMaxSumCountAggregator()

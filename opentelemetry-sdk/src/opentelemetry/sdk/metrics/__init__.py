@@ -291,6 +291,16 @@ class SumObserver(Observer, metrics_api.SumObserver):
         return False
 
 
+class UpDownSumObserver(Observer, metrics_api.UpDownSumObserver):
+    """See `opentelemetry.metrics.UpDownSumObserver`."""
+
+    # pylint: disable=W0235
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]] = None,
+    ):
+        return super()._validate_observe(value, key)
+
+
 class ValueObserver(Observer, metrics_api.ValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
 

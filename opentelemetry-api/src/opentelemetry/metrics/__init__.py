@@ -201,6 +201,18 @@ class SumObserver(Observer):
         """
 
 
+class UpDownSumObserver(Observer):
+    """No-op implementation of ``UpDownSumObserver``."""
+
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Captures ``value`` to the updownsumobserver.
+
+        Args:
+            value: The value to capture to this updownsumobserver metric.
+            labels: Labels associated to ``value``.
+        """
+
+
 class ValueObserver(Observer):
     """No-op implementation of ``ValueObserver``."""
 

@@ -64,6 +64,10 @@ class TestMetrics(unittest.TestCase):
         observer = metrics.SumObserver()
         observer.observe(1, {})
 
+    def test_updown_sum_observer(self):
+        observer = metrics.UpDownSumObserver()
+        observer.observe(1, {})
+
     def test_value_observer(self):
         observer = metrics.ValueObserver()
         observer.observe(1, {})
