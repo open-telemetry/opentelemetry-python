@@ -43,6 +43,7 @@ setuptools.setup(
         "requests",
         "protobuf~=3.11",
     ],
+    extras_require={"test": []},
     license="Apache-2.0",
     package_dir={"": "src"},
     packages=setuptools.find_namespace_packages(where="src"),
