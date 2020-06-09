@@ -12,8 +12,10 @@
   ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
 - Rename Observer to ValueObserver
   ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
+- Add SumObserver, UpDownSumObserver and LastValueAggregator in metrics
+  ([#789](https://github.com/open-telemetry/opentelemetry-python/pull/789))
 - Add start_pipeline to MeterProvider
-  ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
+  ([#791](https://github.com/open-telemetry/opentelemetry-python/pull/791))
 
 ## 0.8b0
 
