@@ -13,19 +13,26 @@
 # limitations under the License.
 
 """
+
 Usage
 -----
+
 The OpenTelemetry ``pymemcache`` integration traces pymemcache client operations
+
 Usage
 -----
+
 .. code-block:: python
+
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.ext.pymemcache import PymemcacheInstrumentor
     trace.set_tracer_provider(TracerProvider())
+    PymemcacheInstrumentor().instrument()
     from pymemcache.client.base import Client
     client = Client(('localhost', 11211))
     client.set('some_key', 'some_value')
+
 API
 ---
 """
@@ -38,10 +45,7 @@ from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.ext.pymemcache.util import (
-    _get_address_attributes,
-    _get_query_string,
-)
+from opentelemetry.ext.pymemcache.util import _get_address_attributes
 from opentelemetry.ext.pymemcache.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
@@ -105,15 +109,44 @@ def _wrap_cmd(tracer, cmd, wrapped, instance, args, kwargs):
         _CMD, kind=SpanKind.INTERNAL, attributes={}
     ) as span:
         try:
-            vals = _get_query_string(args)
+            if not args:
+                vals = ""
+            else:
+                vals = _get_query_string(args[0])
+
             query = "{}{}{}".format(cmd, " " if vals else "", vals)
             span.set_attribute(_RAWCMD, query)
 
             _set_connection_attributes(span, instance)
-        except Exception:  # pylint: disable=broad-except
-            pass
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Failed to set attributes for pymemcache span %s", str(ex))
 
         return wrapped(*args, **kwargs)
+
+
+def _get_query_string(arg):
+
+    """Return the query values given the first argument to a pymemcache command.
+
+    If there are multiple query values, they are joined together
+    space-separated.
+    """
+    keys = ""
+
+    if isinstance(arg, dict):
+        arg = list(arg)
+
+    if isinstance(arg, str):
+        keys = arg
+    elif isinstance(arg, bytes):
+        keys = arg.decode()
+    elif isinstance(arg, list) and len(arg) >= 1:
+        if isinstance(arg[0], str):
+            keys = " ".join(arg)
+        elif isinstance(arg[0], bytes):
+            keys = b" ".join(arg).decode()
+
+    return keys
 
 
 def _unwrap(obj, attr):
@@ -123,9 +156,7 @@ def _unwrap(obj, attr):
 
 
 class PymemcacheInstrumentor(BaseInstrumentor):
-    """An instrumentor for pymemcache
-    See `BaseInstrumentor`
-    """
+    """An instrumentor for pymemcache See `BaseInstrumentor`"""
 
     def _instrument(self, **kwargs):
         tracer_provider = kwargs.get("tracer_provider")

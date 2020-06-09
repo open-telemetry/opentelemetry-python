@@ -35,54 +35,17 @@ def _get_address_attributes(instance):
 
     # client.base.Client contains server attribute which is either a host/port tuple, or unix socket path string
     # https://github.com/pinterest/pymemcache/blob/f02ddf73a28c09256589b8afbb3ee50f1171cac7/pymemcache/client/base.py#L228
-    try:
-        if hasattr(instance, "server"):
-            if isinstance(instance.server, tuple):
-                host, port = instance.server
-                address_attributes[_HOST] = host
-                address_attributes[_PORT] = port
-                address_attributes[_URL] = "memcached://{}:{}".format(
-                    host, port
-                )
-            elif isinstance(instance.server, str):
-                address_attributes[_URL] = "memcached://{}".format(
-                    instance.server
-                )
-
-    except Exception:  # pylint: disable=broad-except
-        pass
+    if hasattr(instance, "server"):
+        if isinstance(instance.server, tuple):
+            host, port = instance.server
+            address_attributes[_HOST] = host
+            address_attributes[_PORT] = port
+            address_attributes[_URL] = "memcached://{}:{}".format(
+                host, port
+            )
+        elif isinstance(instance.server, str):
+            address_attributes[_URL] = "memcached://{}".format(
+                instance.server
+            )
 
     return address_attributes
-
-
-def _get_query_string(args):
-
-    """Return the query values given the arguments to a pymemcache command.
-
-    If there are multiple query values, they are joined together
-    space-separated.
-    """
-    keys = ""
-
-    # shortcut if no args
-    if not args:
-        return keys
-
-    # pull out the first arg which will contain any key
-    arg = args[0]
-
-    # if we get a dict, convert to list of keys
-    if isinstance(arg, dict):
-        arg = list(arg)
-
-    if isinstance(arg, str):
-        keys = arg
-    elif isinstance(arg, bytes):
-        keys = arg.decode()
-    elif isinstance(arg, list) and len(arg) >= 1:
-        if isinstance(arg[0], str):
-            keys = " ".join(arg)
-        elif isinstance(arg[0], bytes):
-            keys = b" ".join(arg).decode()
-
-    return keys

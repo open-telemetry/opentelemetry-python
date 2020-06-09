@@ -78,7 +78,7 @@ class PymemcacheClientTestCase(
     def test_set_success(self):
         client = self.make_client([b"STORED\r\n"])
         result = client.set(b"key", b"value", noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -107,7 +107,7 @@ class PymemcacheClientTestCase(
         client = self.make_client([b"STORED\r\n"])
         # Alias for set_many, a convienance function that calls set for every key
         result = client.set_multi({b"key": b"value"}, noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -157,7 +157,7 @@ class PymemcacheClientTestCase(
     def test_add_stored(self):
         client = self.make_client([b"STORED\r", b"\n"])
         result = client.add(b"key", b"value", noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -168,7 +168,7 @@ class PymemcacheClientTestCase(
         result = client.add(b"key", b"value", noreply=False)
         # a convienance function that calls delete for every key
         result = client.delete_many([b"key"], noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -180,7 +180,7 @@ class PymemcacheClientTestCase(
         client = self.make_client([b"STORED\r\n"])
         # a convienance function that calls set for every key
         result = client.set_many({b"key": b"value"}, noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -205,7 +205,7 @@ class PymemcacheClientTestCase(
     def test_append_stored(self):
         client = self.make_client([b"STORED\r\n"])
         result = client.append(b"key", b"value", noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -214,7 +214,7 @@ class PymemcacheClientTestCase(
     def test_prepend_stored(self):
         client = self.make_client([b"STORED\r\n"])
         result = client.prepend(b"key", b"value", noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -223,7 +223,7 @@ class PymemcacheClientTestCase(
     def test_cas_stored(self):
         client = self.make_client([b"STORED\r\n"])
         result = client.cas(b"key", b"value", b"cas", noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -267,7 +267,7 @@ class PymemcacheClientTestCase(
     def test_flush_all(self):
         client = self.make_client([b"OK\r\n"])
         result = client.flush_all(noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
@@ -517,7 +517,7 @@ class PymemcacheHashClientTestCase(TestBase):
         client = self.make_client([b"STORED\r", b"\n", b"DELETED\r\n"])
         result = client.add(b"key", b"value", noreply=False)
         result = client.delete_many([b"key"], noreply=False)
-        assert result is True
+        self.assertTrue(result)
 
         spans = self.memory_exporter.get_finished_spans()
 
