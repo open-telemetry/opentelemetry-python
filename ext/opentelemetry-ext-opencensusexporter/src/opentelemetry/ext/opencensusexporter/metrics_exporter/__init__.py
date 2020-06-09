@@ -114,10 +114,10 @@ def translate_to_collector(
             )
 
         metric_descriptor = metrics_pb2.MetricDescriptor(
-            name=metric_record.metric.name,
-            description=metric_record.metric.description,
-            unit=metric_record.metric.unit,
-            type=get_collector_metric_type(metric_record.metric),
+            name=metric_record.instrument.name,
+            description=metric_record.instrument.description,
+            unit=metric_record.instrument.unit,
+            type=get_collector_metric_type(metric_record.instrument),
             label_keys=label_keys,
         )
 
@@ -151,14 +151,14 @@ def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
             metric_record.aggregator.last_update_timestamp
         )
     )
-    if metric_record.metric.value_type == int:
+    if metric_record.instrument.value_type == int:
         point.int64_value = metric_record.aggregator.checkpoint
-    elif metric_record.metric.value_type == float:
+    elif metric_record.instrument.value_type == float:
         point.double_value = metric_record.aggregator.checkpoint
     else:
         raise TypeError(
             "Unsupported metric type: {}".format(
-                metric_record.metric.value_type
+                metric_record.instrument.value_type
             )
         )
     return point
