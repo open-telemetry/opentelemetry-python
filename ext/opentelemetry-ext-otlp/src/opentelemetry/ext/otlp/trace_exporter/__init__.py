@@ -57,6 +57,7 @@ class OTLPSpanExporter(SpanExporter):
         credentials: Credentials object for server authentication
         metadata: Metadata to send when exporting
     """
+
     def __init__(
         self,
         endpoint="localhost:55678",
