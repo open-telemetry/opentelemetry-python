@@ -47,7 +47,7 @@ class StarletteInstrumentor(BaseInstrumentor):
         applications.Starlette = _InstrumentedStarlette
 
     def _uninstrument(self, **kwargs):
-        application.Starlette = self._original_starlette
+        applications.Starlette = self._original_starlette
 
 
 class _InstrumentedStarlette(applications.Starlette):

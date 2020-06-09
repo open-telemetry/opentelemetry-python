@@ -30,7 +30,7 @@ class TestStarletteApplication(TestBase):
         self._client = TestClient(self._app)
 
     def test_basic_starlette_call(self):
-        response = self._client.get("/foobar")
+        self._client.get("/foobar")
         spans = self.memory_exporter.get_finished_spans()
         self.assertEquals(len(spans), 3)
         for span in spans:
