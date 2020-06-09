@@ -57,9 +57,7 @@ class Batcher(abc.ABC):
         # pylint:disable=R0201
         if issubclass(instrument_type, Counter):
             return CounterAggregator()
-        if issubclass(instrument_type, SumObserver) or issubclass(
-            instrument_type, UpDownSumObserver
-        ):
+        if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
             return LastValueAggregator()
         if issubclass(instrument_type, ValueRecorder):
             return MinMaxSumCountAggregator()

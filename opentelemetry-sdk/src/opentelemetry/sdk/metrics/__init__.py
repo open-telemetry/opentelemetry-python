@@ -242,8 +242,8 @@ class Observer(metrics_api.Observer):
 
     # pylint: disable=W0613
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]] = None,
-    ):
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+    ) -> bool:
         if not self.enabled:
             return False
         if not isinstance(value, self.value_type):
@@ -275,40 +275,30 @@ class SumObserver(Observer, metrics_api.SumObserver):
     """See `opentelemetry.metrics.SumObserver`."""
 
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]] = None,
-    ):
-        if super()._validate_observe(value, key):
-            # Must be non-decreasing because monotonic
-            if (
-                key is not None
-                and key in self.aggregators
-                and self.aggregators[key].current is not None
-            ):
-                if value < self.aggregators[key].current:
-                    logger.warning("Value passed must be non-decreasing.")
-                    return False
-            return True
-        return False
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+    ) -> bool:
+        if not super()._validate_observe(value, key):
+            return False
+        # Must be non-decreasing because monotonic
+        if (
+            key in self.aggregators
+            and self.aggregators[key].current is not None
+        ):
+            if value < self.aggregators[key].current:
+                logger.warning("Value passed must be non-decreasing.")
+                return False
+        return True
+
 
 
 class UpDownSumObserver(Observer, metrics_api.UpDownSumObserver):
     """See `opentelemetry.metrics.UpDownSumObserver`."""
-
-    # pylint: disable=W0235
-    def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]] = None,
-    ):
-        return super()._validate_observe(value, key)
+    pass
 
 
 class ValueObserver(Observer, metrics_api.ValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
-
-    # pylint: disable=W0235
-    def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]] = None,
-    ):
-        return super()._validate_observe(value, key)
+    pass
 
 
 class Record:
