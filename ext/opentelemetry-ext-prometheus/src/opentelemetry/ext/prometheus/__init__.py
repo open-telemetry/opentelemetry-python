@@ -29,7 +29,6 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
     from opentelemetry import metrics
     from opentelemetry.ext.prometheus import PrometheusMetricsExporter
     from opentelemetry.sdk.metrics import Counter, Meter
-    from opentelemetry.sdk.metrics.export.controller import PushController
     from prometheus_client import start_http_server
 
     # Start Prometheus client
@@ -37,13 +36,12 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
 
     # Meter is responsible for creating and recording metrics
     metrics.set_meter_provider(MeterProvider())
-    meter = metrics.meter()
+    meter = metrics.get_meter(__name__)
     # exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"
     exporter = PrometheusMetricsExporter(prefix)
-    # controller collects metrics created from meter and exports it via the
-    # exporter every interval
-    controller = PushController(meter, exporter, 5)
+    # Starts the collect/export pipeline for metrics
+    metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
     counter = meter.create_metric(
         "requests",
