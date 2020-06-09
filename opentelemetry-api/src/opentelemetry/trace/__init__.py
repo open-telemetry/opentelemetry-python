@@ -107,7 +107,7 @@ import typing
 from contextlib import contextmanager
 from logging import getLogger
 
-from opentelemetry.configuration import Configuration  # type: ignore
+from opentelemetry.configuration import Configuration
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
