@@ -2,7 +2,29 @@
 
 ## Unreleased
 
-- Validate span attribute types in SDK (#678)
+- Move stateful & resource from Meter to MeterProvider
+  ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+- Rename Measure to ValueRecorder in metrics
+  ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
+- bugfix: byte type attributes are decoded before adding to attributes dict
+  ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
+- Rename Observer to ValueObserver
+  ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
+
+## 0.8b0
+
+Released 2020-05-27
+
+- Validate span attribute types in SDK
+  ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
+- Specify to_json indent from arguments
+  ([#718](https://github.com/open-telemetry/opentelemetry-python/pull/718))
+- Span.resource will now default to an empty resource
+  ([#724](https://github.com/open-telemetry/opentelemetry-python/pull/724))
+- bugfix: Fix error message
+  ([#729](https://github.com/open-telemetry/opentelemetry-python/pull/729))
+- deep copy empty attributes
+  ([#714](https://github.com/open-telemetry/opentelemetry-python/pull/714))
 
 ## 0.7b1
 

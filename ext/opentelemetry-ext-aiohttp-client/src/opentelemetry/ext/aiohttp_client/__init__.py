@@ -52,36 +52,9 @@ import aiohttp
 from opentelemetry import context as context_api
 from opentelemetry import propagators, trace
 from opentelemetry.ext.aiohttp_client.version import __version__
+from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
-
-
-# TODO: refactor this code to some common utility
-def http_status_to_canonical_code(status: int) -> StatusCanonicalCode:
-    # pylint:disable=too-many-branches,too-many-return-statements
-    if status < 100:
-        return StatusCanonicalCode.UNKNOWN
-    if status <= 399:
-        return StatusCanonicalCode.OK
-    if status <= 499:
-        if status == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCanonicalCode.UNAUTHENTICATED
-        if status == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCanonicalCode.PERMISSION_DENIED
-        if status == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCanonicalCode.NOT_FOUND
-        if status == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCanonicalCode.RESOURCE_EXHAUSTED
-        return StatusCanonicalCode.INVALID_ARGUMENT
-    if status <= 599:
-        if status == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCanonicalCode.UNIMPLEMENTED
-        if status == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCanonicalCode.UNAVAILABLE
-        if status == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCanonicalCode.DEADLINE_EXCEEDED
-        return StatusCanonicalCode.INTERNAL
-    return StatusCanonicalCode.UNKNOWN
 
 
 def url_path_span_name(params: aiohttp.TraceRequestStartParams) -> str:
@@ -175,9 +148,7 @@ def create_trace_config(
             trace.propagation.set_span_in_context(trace_config_ctx.span)
         )
 
-        propagators.inject(
-            tracer, type(params.headers).__setitem__, params.headers
-        )
+        propagators.inject(type(params.headers).__setitem__, params.headers)
 
     async def on_request_end(
         unused_session: aiohttp.ClientSession,

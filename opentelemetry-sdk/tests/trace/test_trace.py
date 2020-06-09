@@ -487,6 +487,22 @@ class TestSpan(unittest.TestCase):
 
             self.assertEqual(len(root.attributes), 0)
 
+    def test_byte_type_attribute_value(self):
+        with self.tracer.start_as_current_span("root") as root:
+            with self.assertLogs(level=WARNING):
+                root.set_attribute(
+                    "invalid-byte-type-attribute",
+                    b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+                )
+                self.assertFalse(
+                    "invalid-byte-type-attribute" in root.attributes
+                )
+
+            root.set_attribute("valid-byte-type-attribute", b"valid byte")
+            self.assertTrue(
+                isinstance(root.attributes["valid-byte-type-attribute"], str)
+            )
+
     def test_check_attribute_helper(self):
         # pylint: disable=protected-access
         self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
@@ -904,3 +920,35 @@ class TestSpanProcessor(unittest.TestCase):
         expected_list.append(span_event_end_fmt("SP1", "foo"))
 
         self.assertListEqual(spans_calls_list, expected_list)
+
+    def test_to_json(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+        )
+        span = trace.Span("span-name", context)
+
+        self.assertEqual(
+            span.to_json(),
+            """{
+    "name": "span-name",
+    "context": {
+        "trace_id": "0x000000000000000000000000deadbeef",
+        "span_id": "0x00000000deadbef0",
+        "trace_state": "{}"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": null,
+    "start_time": null,
+    "end_time": null,
+    "attributes": {},
+    "events": [],
+    "links": []
+}""",
+        )
+        self.assertEqual(
+            span.to_json(indent=None),
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": []}',
+        )

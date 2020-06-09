@@ -48,8 +48,9 @@ import jinja2
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.jinja2.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -115,12 +116,6 @@ def _wrap_load_template(tracer, wrapped, _, args, kwargs):
                 )
 
 
-def _unwrap(obj, attr):
-    func = getattr(obj, attr, None)
-    if func and isinstance(func, ObjectProxy) and hasattr(func, "__wrapped__"):
-        setattr(obj, attr, func.__wrapped__)
-
-
 class Jinja2Instrumentor(BaseInstrumentor):
     """An instrumentor for jinja2
 
@@ -141,7 +136,7 @@ class Jinja2Instrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self, **kwargs):
-        _unwrap(jinja2.Template, "render")
-        _unwrap(jinja2.Template, "generate")
-        _unwrap(jinja2.Environment, "compile")
-        _unwrap(jinja2.Environment, "_load_template")
+        unwrap(jinja2.Template, "render")
+        unwrap(jinja2.Template, "generate")
+        unwrap(jinja2.Environment, "compile")
+        unwrap(jinja2.Environment, "_load_template")
