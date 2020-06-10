@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry import trace
+from opentelemetry import propagators, trace
 from opentelemetry.ext.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
+from opentelemetry.ext.datadog.propagator import DatadogFormat
 from opentelemetry.sdk.trace import TracerProvider
 
 trace.set_tracer_provider(TracerProvider())
@@ -30,6 +31,21 @@ exporter = DatadogSpanExporter(
 
 span_processor = DatadogExportSpanProcessor(exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
+
+# add Datadog format alongside the default propagators if already set
+global_httptextformat = propagators.get_global_httptextformat()
+if isinstance(
+    global_httptextformat, propagators.composite.CompositeHTTPPropagator
+) and not any(
+    isinstance(p, DatadogFormat) for p in global_httptextformat._propagators
+):
+    propagators.set_global_httptextformat(
+        propagators.composite.CompositeHTTPPropagator(
+            global_httptextformat._propagators + [DatadogFormat()]
+        )
+    )
+else:
+    propagators.set_global_httptextformat(DatadogFormat())
 
 with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
