@@ -323,9 +323,7 @@ class OTLPSpanExporter(SpanExporter):
                             + retry_info.retry_delay.nanos / 1.0e9
                         )
 
-                    logger.debug(
-                        "Waiting %ss before retrying export of span"
-                    )
+                    logger.debug("Waiting %ss before retrying export of span")
                     sleep(delay)
                     continue
 
