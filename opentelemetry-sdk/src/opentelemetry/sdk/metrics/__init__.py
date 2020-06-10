@@ -103,16 +103,16 @@ class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
             self.update(value)
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
-        if super()._validate_update(value):
-            if value >= 0:
-                return True
+        if not super()._validate_update(value):
+            return False
+        if value < 0:
             logger.warning(
-                "Invalid value %s passed to Counter, value must be "
-                "non-negative. For a Counter that can decrease, use "
-                "UpDownCounter.",
+                "Invalid value %s passed to Counter, value must be non-negative. "
+                "For a Counter that can decrease, use UpDownCounter.",
                 value,
             )
-        return False
+            return False
+        return True
 
 
 class BoundUpDownCounter(metrics_api.BoundUpDownCounter, BaseBoundInstrument):
