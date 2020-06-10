@@ -34,20 +34,21 @@ def async_call(coro):
 class TestAiopgInstrumentor(TestBase):
     def setUp(self):
         super().setUp()
-        # pylint: disable=protected-access
         if aiopg.version_info.major >= 1:
             self.origin_aiopg_connect = aiopg.connect
+            aiopg.connect = mock_connect
         else:
+            # pylint: disable=protected-access
             self.origin_aiopg_connect = aiopg.connection._connect
-        # pylint: disable=protected-access
-        aiopg.connection._connect = mock_connect
+            # pylint: disable=protected-access
+            aiopg.connection._connect = mock_connect
 
     def tearDown(self):
         super().tearDown()
-        # pylint: disable=protected-access
         if aiopg.version_info.major >= 1:
             aiopg.connect = self.origin_aiopg_connect
         else:
+            # pylint: disable=protected-access
             aiopg.connection._connect = self.origin_aiopg_connect
         with self.disable_logging():
             AiopgInstrumentor().uninstrument()
