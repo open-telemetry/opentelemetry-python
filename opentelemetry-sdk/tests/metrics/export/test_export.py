@@ -623,7 +623,6 @@ class TestController(unittest.TestCase):
 
         controller.shutdown()
         self.assertTrue(controller.finished.isSet())
-        exporter.shutdown.assert_any_call()
 
         # shutdown should flush the meter
         self.assertEqual(meter.collect.call_count, 1)
