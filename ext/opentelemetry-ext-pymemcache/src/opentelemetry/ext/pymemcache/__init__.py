@@ -47,6 +47,7 @@ from wrapt import wrap_function_wrapper as _wrap
 from opentelemetry.ext.pymemcache.util import _get_address_attributes
 from opentelemetry.ext.pymemcache.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
@@ -150,12 +151,6 @@ def _get_query_string(arg):
     return keys
 
 
-def _unwrap(obj, attr):
-    func = getattr(obj, attr, None)
-    if func and isinstance(func, ObjectProxy) and hasattr(func, "__wrapped__"):
-        setattr(obj, attr, func.__wrapped__)
-
-
 class PymemcacheInstrumentor(BaseInstrumentor):
     """An instrumentor for pymemcache See `BaseInstrumentor`"""
 
@@ -172,4 +167,4 @@ class PymemcacheInstrumentor(BaseInstrumentor):
 
     def _uninstrument(self, **kwargs):
         for command in COMMANDS:
-            _unwrap(pymemcache.client.base.Client, "{}".format(command))
+            unwrap(pymemcache.client.base.Client, "{}".format(command))
