@@ -15,6 +15,7 @@ opentracing~=2.2.0
 prometheus_client>=0.5.0,<1.0.0
 psycopg2-binary>=2.7.3.1
 pymongo~=3.1
+pyramid>=1.7
 redis>=2.6
 sqlalchemy>=1.0
 thrift>=0.10.0
