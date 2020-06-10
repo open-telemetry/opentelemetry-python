@@ -791,6 +791,7 @@ class Tracer(trace_api.Tracer):
                 # apply sampling decision attributes after initial attributes
                 span_attributes = attributes.copy()
                 span_attributes.update(sampling_decision.attributes)
+            # pylint:disable=protected-access
             span = Span(
                 name=name,
                 context=context,
@@ -798,7 +799,7 @@ class Tracer(trace_api.Tracer):
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=span_attributes,
-                span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
+                span_processor=self.source._active_span_processor,
                 kind=kind,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
