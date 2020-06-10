@@ -331,7 +331,7 @@ class OTLPSpanExporter(SpanExporter):
                     continue
 
                 if error.code() == StatusCode.OK:
-                    return SpanExportResult.SUCESS
+                    return SpanExportResult.SUCCESS
 
                 return SpanExportResult.FAILURE
 
