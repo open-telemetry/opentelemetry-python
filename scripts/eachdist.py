@@ -434,8 +434,10 @@ def install_args(args):
     extras = []
     if args.with_test_deps:
         extras.append("test")
+    if extras:
+        allfmt += "[{}]".format(",".join(extras))
     # note the trailing single quote, to close the quote opened above.
-    allfmt += "[{}]'".format(",".join(extras))
+    allfmt += "'"
     execute_args(
         parse_subargs(
             args,
