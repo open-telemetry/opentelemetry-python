@@ -16,11 +16,7 @@ import typing
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.trace.propagation import (
-    get_span_from_context,
-    set_span_in_context,
-    tracecontexthttptextformat,
-)
+from opentelemetry.trace.propagation import tracecontexthttptextformat
 
 FORMAT = tracecontexthttptextformat.TraceContextHTTPTextFormat()
 
@@ -46,7 +42,7 @@ class TestTraceContextFormat(unittest.TestCase):
         trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span = get_span_from_context(FORMAT.extract(get_as_list, output))
+        span = trace.get_current_span(FORMAT.extract(get_as_list, output))
         self.assertIsInstance(span.get_context(), trace.SpanContext)
 
     def test_headers_with_tracestate(self):
@@ -58,7 +54,7 @@ class TestTraceContextFormat(unittest.TestCase):
             span_id=format(self.SPAN_ID, "016x"),
         )
         tracestate_value = "foo=1,bar=2,baz=3"
-        span_context = get_span_from_context(
+        span_context = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -76,7 +72,7 @@ class TestTraceContextFormat(unittest.TestCase):
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(span_context)
 
-        ctx = set_span_in_context(span)
+        ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
         self.assertEqual(output["traceparent"], traceparent_value)
         for pair in ["foo=1", "bar=2", "baz=3"]:
@@ -102,7 +98,7 @@ class TestTraceContextFormat(unittest.TestCase):
         Note that the opposite is not true: failure to parse tracestate MUST
         NOT affect the parsing of traceparent.
         """
-        span = get_span_from_context(
+        span = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -133,7 +129,7 @@ class TestTraceContextFormat(unittest.TestCase):
         Note that the opposite is not true: failure to parse tracestate MUST
         NOT affect the parsing of traceparent.
         """
-        span = get_span_from_context(
+        span = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -158,7 +154,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.DefaultSpan(
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
-        ctx = set_span_in_context(span)
+        ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
         self.assertTrue("traceparent" in output)
         self.assertFalse("tracestate" in output)
@@ -171,7 +167,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
         If the version cannot be parsed, return an invalid trace header.
         """
-        span = get_span_from_context(
+        span = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -188,14 +184,14 @@ class TestTraceContextFormat(unittest.TestCase):
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context."""
         output = {}  # type:typing.Dict[str, str]
-        ctx = set_span_in_context(trace.INVALID_SPAN)
+        ctx = trace.set_span_in_context(trace.INVALID_SPAN)
         FORMAT.inject(dict.__setitem__, output, context=ctx)
         self.assertFalse("traceparent" in output)
 
     def test_tracestate_empty_header(self):
         """Test tracestate with an additional empty header (should be ignored)
         """
-        span = get_span_from_context(
+        span = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -211,7 +207,7 @@ class TestTraceContextFormat(unittest.TestCase):
     def test_tracestate_header_with_trailing_comma(self):
         """Do not propagate invalid trace context.
         """
-        span = get_span_from_context(
+        span = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -235,7 +231,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 "foo-_*/bar=bar4",
             ]
         )
-        span = get_span_from_context(
+        span = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
