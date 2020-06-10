@@ -48,6 +48,29 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 logger = logging.getLogger(__name__)
 
 
+def _translate_key_values(key, value):
+    key_value = {"key": key}
+
+    if isinstance(value, bool):
+        key_value["bool_value"] = value
+
+    elif isinstance(value, str):
+        key_value["string_value"] = value
+
+    elif isinstance(value, int):
+        key_value["int_value"] = value
+
+    elif isinstance(value, float):
+        key_value["double_value"] = value
+
+    else:
+        raise Exception(
+            "Invalid type {} of value {}".format(type(value), value)
+        )
+
+    return key_value
+
+
 # pylint: disable=no-member
 class OTLPSpanExporter(SpanExporter):
     """OTLP span exporter
@@ -75,29 +98,6 @@ class OTLPSpanExporter(SpanExporter):
             self._client = TraceServiceStub(
                 secure_channel(endpoint, credentials)
             )
-
-    # pylint: disable=no-self-use
-    def _translate_key_values(self, key, value):
-        key_value = {"key": key}
-
-        if isinstance(value, bool):
-            key_value["bool_value"] = value
-
-        elif isinstance(value, str):
-            key_value["string_value"] = value
-
-        elif isinstance(value, int):
-            key_value["int_value"] = value
-
-        elif isinstance(value, float):
-            key_value["double_value"] = value
-
-        else:
-            raise Exception(
-                "Invalid type {} of value {}".format(type(value), value)
-            )
-
-        return key_value
 
     def _translate_name(self, sdk_span):
         self._collector_span_kwargs["name"] = sdk_span.name
@@ -144,9 +144,7 @@ class OTLPSpanExporter(SpanExporter):
 
                 try:
                     self._collector_span_kwargs["attributes"].append(
-                        AttributeKeyValue(
-                            **self._translate_key_values(key, value)
-                        )
+                        AttributeKeyValue(**_translate_key_values(key, value))
                     )
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
@@ -166,7 +164,7 @@ class OTLPSpanExporter(SpanExporter):
                     try:
                         collector_span_event.attributes.append(
                             AttributeKeyValue(
-                                **self._translate_key_values(key, value)
+                                **_translate_key_values(key, value)
                             )
                         )
                     # pylint: disable=broad-except
@@ -194,7 +192,7 @@ class OTLPSpanExporter(SpanExporter):
                     try:
                         collector_span_link.attributes.append(
                             AttributeKeyValue(
-                                **self._translate_key_values(key, value)
+                                **_translate_key_values(key, value)
                             )
                         )
                     # pylint: disable=broad-except
@@ -262,9 +260,7 @@ class OTLPSpanExporter(SpanExporter):
 
                 try:
                     collector_resource.attributes.append(
-                        AttributeKeyValue(
-                            **self._translate_key_values(key, value)
-                        )
+                        AttributeKeyValue(**_translate_key_values(key, value))
                     )
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
