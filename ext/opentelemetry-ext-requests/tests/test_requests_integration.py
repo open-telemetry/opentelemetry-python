@@ -228,6 +228,10 @@ class TestRequestsIntegration(TestBase):
 
         self.assertIs(span.resource, resource)
 
+    def test_if_headers_equals_none(self):
+        result = requests.get(self.URL, headers=None)
+        self.assertEqual(result.text, "Hello!")
+
     @mock.patch("requests.Session.send", side_effect=requests.RequestException)
     def test_requests_exception_without_response(self, *_, **__):
 

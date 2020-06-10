@@ -125,6 +125,34 @@ class MinMaxSumCountAggregator(Aggregator):
             )
 
 
+class LastValueAggregator(Aggregator):
+    """Aggregator that stores last value results."""
+
+    def __init__(self):
+        super().__init__()
+        self._lock = threading.Lock()
+        self.last_update_timestamp = None
+
+    def update(self, value):
+        with self._lock:
+            self.current = value
+            self.last_update_timestamp = time_ns()
+
+    def take_checkpoint(self):
+        with self._lock:
+            self.checkpoint = self.current
+            self.current = None
+
+    def merge(self, other):
+        last = self.checkpoint.last
+        self.last_update_timestamp = get_latest_timestamp(
+            self.last_update_timestamp, other.last_update_timestamp
+        )
+        if self.last_update_timestamp == other.last_update_timestamp:
+            last = other.checkpoint.last
+        self.checkpoint = last
+
+
 class ValueObserverAggregator(Aggregator):
     """Same as MinMaxSumCount but also with last value."""
 
