@@ -102,7 +102,7 @@ class SpanProcessor:
 
 class SynchronousMultiSpanProcessor(SpanProcessor):
     """Implementation of class:`SpanProcessor` that forwards all received
-    events to a list of `SpanProcessor`s sequentially.
+    events to a list of span processors sequentially.
 
     The underlying span processors are called in sequential order as they were
     added.
@@ -128,23 +128,23 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             sp.on_end(span)
 
     def shutdown(self) -> None:
-        """Sequentially shuts down all underlying :class:`SpanProcessor`s
+        """Sequentially shuts down all underlying span processors.
         """
         for sp in self._span_processors:
             sp.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Sequentially calls force_flush on all underlying
-        :class:`SpanProcessor`s
+        :class:`SpanProcessor`
 
         Args:
-            timeout_millis: The maximum amount of time over all SpanProcessor`s
+            timeout_millis: The maximum amount of time over all span processors
                 to wait for spans to be exported. In case the first n span
                 processors exceeded the timeout followup span processors will be
                 skipped.
 
         Returns:
-            True if all :class:`SpanProcessor`s flushed their spans within the
+            True if all span processors flushed their spans within the
             given timeout, False otherwise.
         """
         deadline_ns = time_ns() + timeout_millis * 1000000
@@ -161,9 +161,9 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
 
 class ConcurrentMultiSpanProcessor(SpanProcessor):
     """Implementation of :class:`SpanProcessor` that forwards all received
-    events to a list of `SpanProcessor`s in parallel.
+    events to a list of span processors in parallel.
 
-    Calls to the underlying `SpanProcessor`s are forwarded in parallel by
+    Calls to the underlying span processors are forwarded in parallel by
     submitting them to a thread pool executor and waiting until each span
     processor finished its work.
 
@@ -203,20 +203,18 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self._submit_and_await(lambda sp: sp.on_end, span)
 
     def shutdown(self) -> None:
-        """Shuts down all underlying :class:`SpanProcessor`s in parallel.
-        """
+        """Shuts down all underlying span processors in parallel."""
         self._submit_and_await(lambda sp: sp.shutdown)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
-        """Calls force_flush on all underlying :class:`SpanProcessor`s in
-        parallel.
+        """Calls force_flush on all underlying span processors in parallel.
 
         Args:
             timeout_millis: The maximum amount of time to wait for spans to be
                 exported.
 
         Returns:
-            True if all `SpanProcessor`s flushed their spans within the given
+            True if all span processors flushed their spans within the given
             timeout, False otherwise.
         """
         futures = []
