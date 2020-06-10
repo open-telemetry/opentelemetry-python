@@ -105,12 +105,12 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         self.assertIsNone(
             exporter._get_metric_descriptor(
-                MetricRecord(UnsupportedAggregator(), (), MockMetric())
+                MetricRecord(MockMetric(), (), UnsupportedAggregator())
             )
         )
 
         record = MetricRecord(
-            CounterAggregator(), (("label1", "value1"),), MockMetric()
+            MockMetric(), (("label1", "value1"),), CounterAggregator(),
         )
         metric_descriptor = exporter._get_metric_descriptor(record)
         client.create_metric_descriptor.assert_called_with(
@@ -138,14 +138,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         # Drop labels with values that aren't string, int or bool
         exporter._get_metric_descriptor(
             MetricRecord(
-                CounterAggregator(),
+                MockMetric(name="name2", value_type=float),
                 (
                     ("label1", "value1"),
                     ("label2", dict()),
                     ("label3", 3),
                     ("label4", False),
                 ),
-                MockMetric(name="name2", value_type=float),
+                CounterAggregator(),
             )
         )
         client.create_metric_descriptor.assert_called_with(
@@ -175,9 +175,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    UnsupportedAggregator(),
-                    (("label1", "value1"),),
                     MockMetric(),
+                    (("label1", "value1"),),
+                    UnsupportedAggregator(),
                 )
             ]
         )
@@ -204,14 +204,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    counter_one,
-                    (("label1", "value1"), ("label2", 1),),
                     MockMetric(),
+                    (("label1", "value1"), ("label2", 1),),
+                    counter_one,
                 ),
                 MetricRecord(
-                    counter_one,
-                    (("label1", "value2"), ("label2", 2),),
                     MockMetric(),
+                    (("label1", "value2"), ("label2", 2),),
+                    counter_one,
                 ),
             ]
         )
@@ -245,14 +245,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    counter_two,
-                    (("label1", "value1"), ("label2", 1),),
                     MockMetric(),
+                    (("label1", "value1"), ("label2", 1),),
+                    counter_two,
                 ),
                 MetricRecord(
-                    counter_two,
-                    (("label1", "value2"), ("label2", 2),),
                     MockMetric(),
+                    (("label1", "value2"), ("label2", 2),),
+                    counter_two,
                 ),
             ]
         )
@@ -263,9 +263,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    counter_two,
-                    (("label1", "changed_label"), ("label2", 2),),
                     MockMetric(),
+                    (("label1", "changed_label"), ("label2", 2),),
+                    counter_two,
                 ),
             ]
         )
