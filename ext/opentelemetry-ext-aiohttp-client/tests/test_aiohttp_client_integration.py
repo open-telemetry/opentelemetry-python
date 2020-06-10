@@ -98,43 +98,6 @@ class TestAioHttpIntegration(TestBase):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(do_request())
 
-    def test_http_status_to_canonical_code(self):
-        for status_code, expected in (
-            (HTTPStatus.OK, StatusCanonicalCode.OK),
-            (HTTPStatus.ACCEPTED, StatusCanonicalCode.OK),
-            (HTTPStatus.IM_USED, StatusCanonicalCode.OK),
-            (HTTPStatus.MULTIPLE_CHOICES, StatusCanonicalCode.OK),
-            (HTTPStatus.BAD_REQUEST, StatusCanonicalCode.INVALID_ARGUMENT),
-            (HTTPStatus.UNAUTHORIZED, StatusCanonicalCode.UNAUTHENTICATED),
-            (HTTPStatus.FORBIDDEN, StatusCanonicalCode.PERMISSION_DENIED),
-            (HTTPStatus.NOT_FOUND, StatusCanonicalCode.NOT_FOUND),
-            (
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                StatusCanonicalCode.INVALID_ARGUMENT,
-            ),
-            (
-                HTTPStatus.TOO_MANY_REQUESTS,
-                StatusCanonicalCode.RESOURCE_EXHAUSTED,
-            ),
-            (HTTPStatus.NOT_IMPLEMENTED, StatusCanonicalCode.UNIMPLEMENTED),
-            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCanonicalCode.UNAVAILABLE),
-            (
-                HTTPStatus.GATEWAY_TIMEOUT,
-                StatusCanonicalCode.DEADLINE_EXCEEDED,
-            ),
-            (
-                HTTPStatus.HTTP_VERSION_NOT_SUPPORTED,
-                StatusCanonicalCode.INTERNAL,
-            ),
-            (600, StatusCanonicalCode.UNKNOWN),
-            (99, StatusCanonicalCode.UNKNOWN),
-        ):
-            with self.subTest(status_code=status_code):
-                actual = opentelemetry.ext.aiohttp_client.http_status_to_canonical_code(
-                    int(status_code)
-                )
-                self.assertEqual(actual, expected, status_code)
-
     def test_status_codes(self):
         for status_code, span_status in (
             (HTTPStatus.OK, StatusCanonicalCode.OK),

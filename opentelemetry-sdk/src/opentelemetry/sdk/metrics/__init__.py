@@ -12,13 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import atexit
 import logging
 import threading
 from typing import Dict, Sequence, Tuple, Type
 
 from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricsExporter,
+    MetricsExporter,
+)
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -105,12 +111,16 @@ class BoundValueRecorder(metrics_api.BoundValueRecorder, BaseBoundInstrument):
 
 
 class Metric(metrics_api.Metric):
-    """Base class for all metric types.
+    """Base class for all synchronous metric types.
 
-    Also known as metric instrument. This is the class that is used to
-    represent a metric that is to be continuously recorded and tracked. Each
-    metric has a set of bound metrics that are created from the metric. See
-    `BaseBoundInstrument` for information on bound metric instruments.
+    This is the class that is used to represent a metric that is to be
+    synchronously recorded and tracked. Synchronous instruments are called
+    inside a request, meaning they have an associated distributed context
+    (i.e. Span context, correlation context). Multiple metric events may occur
+    for a synchronous instrument within a give collection interval.
+
+    Each metric has a set of bound metrics that are created from the metric.
+    See `BaseBoundInstrument` for information on bound metric instruments.
     """
 
     BOUND_INSTR_TYPE = BaseBoundInstrument
@@ -191,7 +201,13 @@ class ValueRecorder(Metric, metrics_api.ValueRecorder):
 
 
 class Observer(metrics_api.Observer):
-    """See `opentelemetry.metrics.Observer`."""
+    """Base class for all asynchronous metric types.
+
+    Also known as Observers, observer metric instruments are asynchronous in
+    that they are reported by a callback, once per collection interval, and
+    lack context. They are permitted to report only one value per distinct
+    label set per period.
+    """
 
     def __init__(
         self,
@@ -218,15 +234,10 @@ class Observer(metrics_api.Observer):
     def observe(
         self, value: metrics_api.ValueT, labels: Dict[str, str]
     ) -> None:
-        if not self.enabled:
-            return
-        if not isinstance(value, self.value_type):
-            logger.warning(
-                "Invalid value passed for %s.", self.value_type.__name__
-            )
+        key = get_labels_as_key(labels)
+        if not self._validate_observe(value, key):
             return
 
-        key = get_labels_as_key(labels)
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
             self.aggregators[key] = self.meter.batcher.aggregator_for(
@@ -234,6 +245,20 @@ class Observer(metrics_api.Observer):
             )
         aggregator = self.aggregators[key]
         aggregator.update(value)
+
+    # pylint: disable=W0613
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+    ) -> bool:
+        if not self.enabled:
+            return False
+        if not isinstance(value, self.value_type):
+            logger.warning(
+                "Invalid value passed for %s.", self.value_type.__name__
+            )
+            return False
+
+        return True
 
     def run(self) -> bool:
         try:
@@ -252,16 +277,43 @@ class Observer(metrics_api.Observer):
         )
 
 
+class SumObserver(Observer, metrics_api.SumObserver):
+    """See `opentelemetry.metrics.SumObserver`."""
+
+    def _validate_observe(
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+    ) -> bool:
+        if not super()._validate_observe(value, key):
+            return False
+        # Must be non-decreasing because monotonic
+        if (
+            key in self.aggregators
+            and self.aggregators[key].current is not None
+        ):
+            if value < self.aggregators[key].current:
+                logger.warning("Value passed must be non-decreasing.")
+                return False
+        return True
+
+
+class UpDownSumObserver(Observer, metrics_api.UpDownSumObserver):
+    """See `opentelemetry.metrics.UpDownSumObserver`."""
+
+
+class ValueObserver(Observer, metrics_api.ValueObserver):
+    """See `opentelemetry.metrics.ValueObserver`."""
+
+
 class Record:
     """Container class used for processing in the `Batcher`"""
 
     def __init__(
         self,
-        metric: metrics_api.MetricT,
+        instrument: metrics_api.InstrumentT,
         labels: Dict[str, str],
         aggregator: Aggregator,
     ):
-        self.metric = metric
+        self.instrument = instrument
         self.labels = labels
         self.aggregator = aggregator
 
@@ -374,10 +426,11 @@ class Meter(metrics_api.Meter):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        observer_type=Type[metrics_api.ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.Observer:
-        ob = Observer(
+        ob = observer_type(
             callback,
             name,
             description,
@@ -391,7 +444,7 @@ class Meter(metrics_api.Meter):
             self.observers.add(ob)
         return ob
 
-    def unregister_observer(self, observer: "Observer") -> None:
+    def unregister_observer(self, observer: metrics_api.Observer) -> None:
         with self.observers_lock:
             self.observers.remove(observer)
 
@@ -402,24 +455,64 @@ class MeterProvider(metrics_api.MeterProvider):
     Args:
         stateful: Indicates whether meters created are going to be stateful
         resource: Resource for this MeterProvider
+        shutdown_on_exit: Register an atexit hook to shut down when the
+            application exists
     """
 
     def __init__(
-        self, stateful=True, resource: Resource = Resource.create_empty(),
+        self,
+        stateful=True,
+        resource: Resource = Resource.create_empty(),
+        shutdown_on_exit: bool = True,
     ):
         self.stateful = stateful
         self.resource = resource
+        self._controllers = []
+        self._exporters = set()
+        self._atexit_handler = None
+        if shutdown_on_exit:
+            self._atexit_handler = atexit.register(self.shutdown)
 
     def get_meter(
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
     ) -> "metrics_api.Meter":
+        """See `opentelemetry.metrics.MeterProvider`.get_meter."""
         if not instrumenting_module_name:  # Reject empty strings too.
-            raise ValueError("get_meter called with missing module name.")
+            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
+            logger.error("get_meter called with missing module name.")
         return Meter(
             self,
             InstrumentationInfo(
-                instrumenting_module_name, instrumenting_library_version
+                instrumenting_module_name, instrumenting_library_version,
             ),
         )
+
+    def start_pipeline(
+        self,
+        meter: metrics_api.Meter,
+        exporter: MetricsExporter = None,
+        interval: float = 15.0,
+    ) -> None:
+        """Method to begin the collect/export pipeline.
+
+        Args:
+            meter: The meter to collect metrics from.
+            exporter: The exporter to export metrics to.
+            interval: The collect/export interval in seconds.
+        """
+        if not exporter:
+            exporter = ConsoleMetricsExporter()
+        self._exporters.add(exporter)
+        # TODO: Controller type configurable?
+        self._controllers.append(PushController(meter, exporter, interval))
+
+    def shutdown(self) -> None:
+        for controller in self._controllers:
+            controller.shutdown()
+        for exporter in self._exporters:
+            exporter.shutdown()
+        if self._atexit_handler is not None:
+            atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None

@@ -21,10 +21,6 @@ class TestTracer(unittest.TestCase):
     def setUp(self):
         self.tracer = trace.DefaultTracer()
 
-    def test_get_current_span(self):
-        span = self.tracer.get_current_span()
-        self.assertIsInstance(span, trace.Span)
-
     def test_start_span(self):
         with self.tracer.start_span("") as span:
             self.assertIsInstance(span, trace.Span)

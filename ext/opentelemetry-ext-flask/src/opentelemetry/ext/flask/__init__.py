@@ -53,8 +53,8 @@ import flask
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.util import disable_trace, time_ns
 
 _logger = getLogger(__name__)

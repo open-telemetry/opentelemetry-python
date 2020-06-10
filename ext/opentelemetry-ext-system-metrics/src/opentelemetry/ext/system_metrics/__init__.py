@@ -28,9 +28,12 @@ Usage
 
 .. code:: python
 
+    from opentelemetry import metrics
     from opentelemetry.ext.system_metrics import SystemMetrics
+    from opentelemetry.sdk.metrics import MeterProvider,
     from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
+    metrics.set_meter_provider(MeterProvider())
     exporter = ConsoleMetricsExporter()
     SystemMetrics(exporter)
 
@@ -58,6 +61,7 @@ import typing
 import psutil
 
 from opentelemetry import metrics
+from opentelemetry.sdk.metrics import ValueObserver
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
@@ -106,6 +110,7 @@ class SystemMetrics:
             description="System memory",
             unit="bytes",
             value_type=int,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -114,6 +119,7 @@ class SystemMetrics:
             description="System CPU",
             unit="seconds",
             value_type=float,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -122,6 +128,7 @@ class SystemMetrics:
             description="System network bytes",
             unit="bytes",
             value_type=int,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -130,6 +137,7 @@ class SystemMetrics:
             description="Runtime memory",
             unit="bytes",
             value_type=int,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -138,6 +146,7 @@ class SystemMetrics:
             description="Runtime CPU",
             unit="seconds",
             value_type=float,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -146,9 +155,10 @@ class SystemMetrics:
             description="Runtime: gc objects",
             unit="objects",
             value_type=int,
+            observer_type=ValueObserver,
         )
 
-    def _get_system_memory(self, observer: metrics.Observer) -> None:
+    def _get_system_memory(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for memory available
 
         Args:
@@ -161,7 +171,7 @@ class SystemMetrics:
                 getattr(system_memory, metric), self._system_memory_labels
             )
 
-    def _get_system_cpu(self, observer: metrics.Observer) -> None:
+    def _get_system_cpu(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for system cpu
 
         Args:
@@ -174,7 +184,7 @@ class SystemMetrics:
                 getattr(cpu_times, _type), self._system_cpu_labels
             )
 
-    def _get_network_bytes(self, observer: metrics.Observer) -> None:
+    def _get_network_bytes(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for network bytes
 
         Args:
@@ -187,7 +197,7 @@ class SystemMetrics:
                 getattr(net_io, _type), self._network_bytes_labels
             )
 
-    def _get_runtime_memory(self, observer: metrics.Observer) -> None:
+    def _get_runtime_memory(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for runtime memory
 
         Args:
@@ -200,7 +210,7 @@ class SystemMetrics:
                 getattr(proc_memory, _type), self._runtime_memory_labels
             )
 
-    def _get_runtime_cpu(self, observer: metrics.Observer) -> None:
+    def _get_runtime_cpu(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for runtime CPU
 
         Args:
@@ -213,7 +223,7 @@ class SystemMetrics:
                 getattr(proc_cpu, _type), self._runtime_cpu_labels
             )
 
-    def _get_runtime_gc_count(self, observer: metrics.Observer) -> None:
+    def _get_runtime_gc_count(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for garbage collection
 
         Args:

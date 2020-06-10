@@ -31,7 +31,7 @@ import abc
 from logging import getLogger
 from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
 
-from opentelemetry.util import _load_provider
+from opentelemetry.util import _load_meter_provider
 
 logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
@@ -162,7 +162,6 @@ class Observer(abc.ABC):
     """An observer type metric instrument used to capture a current set of
     values.
 
-
     Observer instruments are asynchronous, a callback is invoked with the
     observer instrument as argument allowing the user to capture multiple
     values per collection interval.
@@ -186,6 +185,42 @@ class DefaultObserver(Observer):
 
         Args:
             value: The value to capture to this observer metric.
+            labels: Labels associated to ``value``.
+        """
+
+
+class SumObserver(Observer):
+    """No-op implementation of ``SumObserver``."""
+
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Captures ``value`` to the sumobserver.
+
+        Args:
+            value: The value to capture to this sumobserver metric.
+            labels: Labels associated to ``value``.
+        """
+
+
+class UpDownSumObserver(Observer):
+    """No-op implementation of ``UpDownSumObserver``."""
+
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Captures ``value`` to the updownsumobserver.
+
+        Args:
+            value: The value to capture to this updownsumobserver metric.
+            labels: Labels associated to ``value``.
+        """
+
+
+class ValueObserver(Observer):
+    """No-op implementation of ``ValueObserver``."""
+
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Captures ``value`` to the valueobserver.
+
+        Args:
+            value: The value to capture to this valueobserver metric.
             labels: Labels associated to ``value``.
         """
 
@@ -232,7 +267,9 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, ValueRecorder, Observer)
+MetricT = TypeVar("MetricT", Counter, ValueRecorder)
+InstrumentT = TypeVar("InstrumentT", Counter, Observer, ValueRecorder)
+ObserverT = TypeVar("ObserverT", bound=Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -297,6 +334,7 @@ class Meter(abc.ABC):
         description: str,
         unit: str,
         value_type: Type[ValueT],
+        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Observer":
@@ -310,6 +348,7 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
+            observer_type: The type of observer being registered.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
         Returns: A new ``Observer`` metric instrument.
@@ -354,6 +393,7 @@ class DefaultMeter(Meter):
         description: str,
         unit: str,
         value_type: Type[ValueT],
+        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Observer":
@@ -395,6 +435,6 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = _load_provider("meter_provider")
+        _METER_PROVIDER = _load_meter_provider("meter_provider")
 
     return _METER_PROVIDER
