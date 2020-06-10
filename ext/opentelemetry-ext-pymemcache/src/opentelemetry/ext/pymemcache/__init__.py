@@ -44,13 +44,21 @@ import pymemcache
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
-from opentelemetry.ext.pymemcache.util import _get_address_attributes
 from opentelemetry.ext.pymemcache.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
+
+# Network attribute semantic convention here:
+# https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes
+_HOST = "net.peer.name"
+_PORT = "net.peer.port"
+# Database semantic conventions here:
+# https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
+_DB = "db.type"
+_URL = "db.url"
 
 _DEFAULT_SERVICE = "memcached"
 _RAWCMD = "db.statement"
@@ -149,6 +157,25 @@ def _get_query_string(arg):
             keys = b" ".join(arg).decode()
 
     return keys
+
+
+def _get_address_attributes(instance):
+    """Attempt to get host and port from Client instance."""
+    address_attributes = {}
+    address_attributes[_DB] = "memcached"
+
+    # client.base.Client contains server attribute which is either a host/port tuple, or unix socket path string
+    # https://github.com/pinterest/pymemcache/blob/f02ddf73a28c09256589b8afbb3ee50f1171cac7/pymemcache/client/base.py#L228
+    if hasattr(instance, "server"):
+        if isinstance(instance.server, tuple):
+            host, port = instance.server
+            address_attributes[_HOST] = host
+            address_attributes[_PORT] = port
+            address_attributes[_URL] = "memcached://{}:{}".format(host, port)
+        elif isinstance(instance.server, str):
+            address_attributes[_URL] = "memcached://{}".format(instance.server)
+
+    return address_attributes
 
 
 class PymemcacheInstrumentor(BaseInstrumentor):
