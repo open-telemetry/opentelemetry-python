@@ -48,7 +48,6 @@ from opentelemetry.ext.pymemcache.util import _get_address_attributes
 from opentelemetry.ext.pymemcache.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind, get_tracer
-from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
 
