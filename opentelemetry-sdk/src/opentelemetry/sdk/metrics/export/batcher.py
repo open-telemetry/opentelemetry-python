@@ -18,8 +18,8 @@ from typing import Sequence, Type
 from opentelemetry.metrics import (
     Counter,
     InstrumentT,
-    UpDownCounter,
     SumObserver,
+    UpDownCounter,
     UpDownSumObserver,
     ValueObserver,
     ValueRecorder,
