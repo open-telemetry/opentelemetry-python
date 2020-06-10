@@ -117,6 +117,17 @@ tracer_provider.add_span_processor(mock_processor)
             with tracer.use_span(default_span):
                 raise TestUseSpanException()
 
+    def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
+        span_processor = trace.ConcurrentMultiSpanProcessor(2)
+        tracer_provider = trace.TracerProvider(
+            active_span_processor=span_processor
+        )
+
+        # pylint: disable=protected-access
+        self.assertEqual(
+            span_processor, tracer_provider._active_span_processor
+        )
+
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):
