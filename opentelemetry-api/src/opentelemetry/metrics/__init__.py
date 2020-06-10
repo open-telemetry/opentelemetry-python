@@ -66,7 +66,17 @@ class BoundCounter:
         """Increases the value of the bound counter by ``value``.
 
         Args:
-            value: The value to add to the bound counter.
+            value: The value to add to the bound counter. Must be positive.
+        """
+
+
+class BoundUpDownCounter:
+    def add(self, value: ValueT) -> None:
+        """Increases the value of the bound counter by ``value``.
+
+        Args:
+            value: The value to add to the bound counter. Can be positive or
+                negative.
         """
 
 
@@ -148,9 +158,9 @@ class UpDownCounter(Metric):
     """A counter type metric that expresses the computation of a sum,
     allowing negative increments."""
 
-    def bind(self, labels: Dict[str, str]) -> "BoundCounter":
-        """Gets a `BoundCounter`."""
-        return BoundCounter()
+    def bind(self, labels: Dict[str, str]) -> "BoundUpDownCounter":
+        """Gets a `BoundUpDownCounter`."""
+        return BoundUpDownCounter()
 
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.

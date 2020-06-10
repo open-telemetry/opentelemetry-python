@@ -38,7 +38,7 @@ class TestMetrics(unittest.TestCase):
     def test_updowncounter(self):
         counter = metrics.UpDownCounter()
         bound_counter = counter.bind({})
-        self.assertIsInstance(bound_counter, metrics.BoundCounter)
+        self.assertIsInstance(bound_counter, metrics.BoundUpDownCounter)
 
     def test_updowncounter_add(self):
         counter = metrics.Counter()

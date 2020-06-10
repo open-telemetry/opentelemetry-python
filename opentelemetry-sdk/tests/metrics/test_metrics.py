@@ -305,9 +305,37 @@ class TestCounter(unittest.TestCase):
         metric.add(2, labels)
         self.assertEqual(bound_counter.aggregator.current, 5)
 
+    @mock.patch("opentelemetry.sdk.metrics.logger")
+    def test_add_non_decreasing_int_error(self, logger_mock):
+        meter = metrics.MeterProvider().get_meter(__name__)
+        metric = metrics.Counter("name", "desc", "unit", int, meter, ("key",))
+        labels = {"key": "value"}
+        bound_counter = metric.bind(labels)
+        metric.add(3, labels)
+        metric.add(0, labels)
+        metric.add(-1, labels)
+        self.assertEqual(bound_counter.aggregator.current, 3)
+        self.assertEqual(logger_mock.warning.call_count, 1)
+
+    @mock.patch("opentelemetry.sdk.metrics.logger")
+    def test_add_non_decreasing_float_error(self, logger_mock):
+        meter = metrics.MeterProvider().get_meter(__name__)
+        metric = metrics.Counter(
+            "name", "desc", "unit", float, meter, ("key",)
+        )
+        labels = {"key": "value"}
+        bound_counter = metric.bind(labels)
+        metric.add(3.3, labels)
+        metric.add(0.0, labels)
+        metric.add(0.1, labels)
+        metric.add(-0.1, labels)
+        self.assertEqual(bound_counter.aggregator.current, 3.4)
+        self.assertEqual(logger_mock.warning.call_count, 1)
+
 
 class TestUpDownCounter(unittest.TestCase):
-    def test_add(self):
+    @mock.patch("opentelemetry.sdk.metrics.logger")
+    def test_add(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.UpDownCounter(
             "name", "desc", "unit", int, meter, ("key",)
@@ -322,6 +350,7 @@ class TestUpDownCounter(unittest.TestCase):
         metric.add(-3, labels)
         metric.add(-1, labels)
         self.assertEqual(bound_counter.aggregator.current, 1)
+        self.assertEqual(logger_mock.warning.call_count, 0)
 
 
 class TestValueRecorder(unittest.TestCase):
