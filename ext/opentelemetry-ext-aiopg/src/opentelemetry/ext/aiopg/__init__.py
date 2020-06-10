@@ -70,18 +70,31 @@ class AiopgInstrumentor(BaseInstrumentor):
 
         tracer = get_tracer(__name__, __version__, tracer_provider)
 
-        aiopg_dbapi.wrap_connect(
-            tracer,
-            aiopg.connection,
-            "_connect",
-            self._DATABASE_COMPONENT,
-            self._DATABASE_TYPE,
-            self._CONNECTION_ATTRIBUTES,
-        )
+        if aiopg.version_info.major >= 1:
+            aiopg_dbapi.wrap_connect(
+                tracer,
+                aiopg,
+                "connect",
+                self._DATABASE_COMPONENT,
+                self._DATABASE_TYPE,
+                self._CONNECTION_ATTRIBUTES,
+            )
+        else:
+            aiopg_dbapi.wrap_connect(
+                tracer,
+                aiopg.connection,
+                "_connect",
+                self._DATABASE_COMPONENT,
+                self._DATABASE_TYPE,
+                self._CONNECTION_ATTRIBUTES,
+            )
 
     def _uninstrument(self, **kwargs):
         """"Disable aiopg instrumentation"""
-        aiopg_dbapi.unwrap_connect(aiopg.connection, "_connect")
+        if aiopg.version_info.major >= 1:
+            aiopg_dbapi.unwrap_connect(aiopg, "connect")
+        else:
+            aiopg_dbapi.unwrap_connect(aiopg.connection, "_connect")
 
     # pylint:disable=no-self-use
     def instrument_connection(self, connection):
