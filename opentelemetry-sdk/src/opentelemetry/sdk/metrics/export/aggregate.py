@@ -43,7 +43,7 @@ class Aggregator(abc.ABC):
         """Combines two aggregator values."""
 
 
-class CounterAggregator(Aggregator):
+class SumAggregator(Aggregator):
     """Aggregator for Counter metrics."""
 
     def __init__(self):
