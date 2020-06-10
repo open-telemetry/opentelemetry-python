@@ -38,8 +38,8 @@ class TestAiopgInstrumentor(TestBase):
             self.origin_aiopg_connect = aiopg.connect
             aiopg.connect = mock_connect
         else:
-            # pylint: disable=protected-access
-            self.origin_aiopg_connect = aiopg.connection._connect
+
+            self.origin_aiopg_connect = aiopg.connection._connect  # pylint: disable=protected-access
             # pylint: disable=protected-access
             aiopg.connection._connect = mock_connect
 
@@ -48,8 +48,7 @@ class TestAiopgInstrumentor(TestBase):
         if aiopg.version_info.major >= 1:
             aiopg.connect = self.origin_aiopg_connect
         else:
-            # pylint: disable=protected-access
-            aiopg.connection._connect = self.origin_aiopg_connect
+            aiopg.connection._connect = self.origin_aiopg_connect  # pylint: disable=protected-access
         with self.disable_logging():
             AiopgInstrumentor().uninstrument()
 
@@ -100,8 +99,10 @@ class TestAiopgInstrumentor(TestBase):
         self.assertIs(span.resource, resource)
 
     def test_instrument_connection(self):
-        # pylint: disable=protected-access
-        cnx = async_call(aiopg.connection._connect(database="test"))
+        if aiopg.version_info.major >= 1:
+            cnx = async_call(aiopg.connect(database="test"))
+        else:
+            cnx = async_call(aiopg.connection._connect(database="test"))  # pylint: disable=protected-access
         query = "SELECT * FROM test"
         cursor = async_call(cnx.cursor())
         async_call(cursor.execute(query))
@@ -118,8 +119,10 @@ class TestAiopgInstrumentor(TestBase):
 
     def test_uninstrument_connection(self):
         AiopgInstrumentor().instrument()
-        # pylint: disable=protected-access
-        cnx = async_call(aiopg.connection._connect(database="test"))
+        if aiopg.version_info.major >= 1:
+            cnx = async_call(aiopg.connect(database="test"))
+        else:
+            cnx = async_call(aiopg.connection._connect(database="test"))  # pylint: disable=protected-access
         query = "SELECT * FROM test"
         cursor = async_call(cnx.cursor())
         async_call(cursor.execute(query))
