@@ -102,6 +102,25 @@ class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
         if self._validate_update(value):
             self.update(value)
 
+    def _validate_update(self, value: metrics_api.ValueT) -> bool:
+        if not super()._validate_update(value):
+            return False
+        if value < 0:
+            logger.warning(
+                "Invalid value %s passed to Counter, value must be non-negative. "
+                "For a Counter that can decrease, use UpDownCounter.",
+                value,
+            )
+            return False
+        return True
+
+
+class BoundUpDownCounter(metrics_api.BoundUpDownCounter, BaseBoundInstrument):
+    def add(self, value: metrics_api.ValueT) -> None:
+        """See `opentelemetry.metrics.BoundUpDownCounter.add`."""
+        if self._validate_update(value):
+            self.update(value)
+
 
 class BoundValueRecorder(metrics_api.BoundValueRecorder, BaseBoundInstrument):
     def record(self, value: metrics_api.ValueT) -> None:
@@ -177,6 +196,21 @@ class Counter(Metric, metrics_api.Counter):
 
     def add(self, value: metrics_api.ValueT, labels: Dict[str, str]) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
+        bound_intrument = self.bind(labels)
+        bound_intrument.add(value)
+        bound_intrument.release()
+
+    UPDATE_FUNCTION = add
+
+
+class UpDownCounter(Metric, metrics_api.UpDownCounter):
+    """See `opentelemetry.metrics.UpDownCounter`.
+    """
+
+    BOUND_INSTR_TYPE = BoundUpDownCounter
+
+    def add(self, value: metrics_api.ValueT, labels: Dict[str, str]) -> None:
+        """See `opentelemetry.metrics.UpDownCounter.add`."""
         bound_intrument = self.bind(labels)
         bound_intrument.add(value)
         bound_intrument.release()
