@@ -22,7 +22,6 @@ from opentelemetry.ext.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.starlette.version import __version__  # noqa
 from starlette import applications
-from starlette.middleware import Middleware
 from starlette.routing import Match
 
 
