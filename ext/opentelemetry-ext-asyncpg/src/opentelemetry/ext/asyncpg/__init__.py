@@ -1,13 +1,13 @@
 import functools
 
-from asyncpg import Connection, connect_utils
+from asyncpg import Connection
 from asyncpg import exceptions
 from opentelemetry import trace
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode, Status
 
-_OPENTELEMETRY_EXT_ASYNCPG_APPLIED = "_opentelemetry_ext_asyncpg_applied"
+_APPLIED = "_opentelemetry_ext_asyncpg_applied"
 
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
@@ -27,20 +27,22 @@ def _hydrate_span_from_args(span, *args, **__):
     if len(args) <= 0:
         return span
 
-    connection: Connection = args[0]
-    if connection is not None and isinstance(connection, Connection):
-        params: connect_utils._ConnectionParameters = getattr(connection, "_params", None)
-        if params is not None and isinstance(params, connect_utils._ConnectionParameters):
-            database_name = params.database
-            database_user = params.user
+    connection = args[0]
+    if connection is not None:
+        params = getattr(connection, "_params", None)
+        if params is not None:
+            database_name = getattr(params, "database", None)
+            if database_name is not None:
+                span.set_attribute("db.instance", database_name)
 
-            span.set_attribute("db.user", database_user)
-            span.set_attribute("db.instance	", database_name)
+            database_user = getattr(params, "user", None)
+            if database_user is not None:
+                span.set_attribute("db.user", database_user)
 
-    if len(args) > 0 and args[1] is not None:
+    if len(args) > 1 and args[1] is not None:
         span.set_attribute("db.statement", args[1])
 
-    if len(args) > 1 and args[2] is not None and len(args[2]) > 0:
+    if len(args) > 2 and args[2] is not None and len(args[2]) > 0:
         span.set_attribute("db.statement.parameters", args[2])
 
     return span
@@ -73,7 +75,7 @@ def _execute(wrapped, tracer_provider):
 
         return result
 
-    setattr(_method, _OPENTELEMETRY_EXT_ASYNCPG_APPLIED, True)
+    setattr(_method, _APPLIED, True)
     return _method
 
 
@@ -89,18 +91,16 @@ class AsyncPGInstrumentor(BaseInstrumentor):
     def _instrument(**kwargs):
         tracer_provider = kwargs.get("tracer_provider")
 
-        _original_execute = Connection._execute
-        _original_executemany = Connection._executemany
-
-        Connection._execute = _execute(_original_execute, tracer_provider)
-        Connection._executemany = _execute(_original_executemany, tracer_provider)
+        for method in ["_execute", "_executemany"]:
+            _original = getattr(Connection, method, None)
+            if hasattr(_original, _APPLIED) is False:
+                setattr(Connection, method, _execute(_original, tracer_provider))
 
     @staticmethod
     def _uninstrument(**__):
-        if getattr(Connection._execute, _OPENTELEMETRY_EXT_ASYNCPG_APPLIED, False):
-            original = Connection._execute.__wrapped__  # pylint:disable=no-member
-            Connection._execute = original
-
-        if getattr(Connection._executemany, _OPENTELEMETRY_EXT_ASYNCPG_APPLIED, False):
-            original = Connection._executemany.__wrapped__  # pylint:disable=no-member
-            Connection._executemany = original
+        for method in ["_execute", "_executemany"]:
+            _connection_method = getattr(Connection, method, None)
+            if _connection_method is not None and getattr(_connection_method, _APPLIED, False):
+                original = getattr(_connection_method, "__wrapped__", None)
+                if original is not None:
+                    setattr(Connection, method, original)
