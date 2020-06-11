@@ -15,9 +15,44 @@ import os
 
 import setuptools
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry_example_app", "version.py"
+setuptools.setup(
+    name="opentelemetry-example-app",
+    version="0.9b0",
+    author="OpenTelemetry Authors",
+    author_email="cncf-opentelemetry-contributors@lists.cncf.io",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+    ],
+    description="OpenTelemetry Python API",
+    include_package_data=True,
+    long_description=open("README.rst").read(),
+    install_requires=[
+        "typing; python_version<'3.5'",
+        "opentelemetry-api",
+        "opentelemetry-sdk",
+        "opentelemetry-ext-requests",
+        "opentelemetry-ext-flask",
+        "flask",
+        "requests",
+        "protobuf~=3.11",
+    ],
+    extras_require={"test": []},
+    license="Apache-2.0",
+    package_dir={"": "src"},
+    packages=setuptools.find_namespace_packages(where="src"),
+    url=(
+        "https://github.com/open-telemetry/opentelemetry-python"
+        "/tree/master/opentelemetry-example-app"
+    ),
+    zip_safe=False,
 )
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
