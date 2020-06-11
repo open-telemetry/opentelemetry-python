@@ -75,6 +75,14 @@ class TestBatcher(unittest.TestCase):
             )
         )
 
+    def test_aggregator_for_updowncounter(self):
+        batcher = UngroupedBatcher(True)
+        self.assertTrue(
+            isinstance(
+                batcher.aggregator_for(metrics.UpDownCounter), SumAggregator,
+            )
+        )
+
     # TODO: Add other aggregator tests
 
     def test_checkpoint_set(self):
