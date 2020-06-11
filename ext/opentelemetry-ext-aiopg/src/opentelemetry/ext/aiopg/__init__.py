@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The integration with PostgreSQL supports the `aiopg`_ library, it can be enabled by
-using ``AiopgInstrumentor``.
+The integration with PostgreSQL supports the `aiopg`_ library,
+it can be enabled by using ``AiopgInstrumentor``.
 
 .. aiopg: https://github.com/aio-libs/aiopg
 
@@ -38,13 +38,20 @@ Usage
     cursor.close()
     cnx.close()
 
+    pool = await aiopg.create_pool(database='Database')
+    cnx = await pool.acquire()
+    cursor = await cnx.cursor()
+    await cursor.execute("INSERT INTO test (testField) VALUES (123)")
+    cursor.close()
+    cnx.close()
+
 API
 ---
 """
 
 import aiopg
 
-from opentelemetry.ext.aiopg import aiopg_dbapi
+from opentelemetry.ext.aiopg import wrappers
 from opentelemetry.ext.aiopg.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import get_tracer
@@ -70,31 +77,28 @@ class AiopgInstrumentor(BaseInstrumentor):
 
         tracer = get_tracer(__name__, __version__, tracer_provider)
 
-        if aiopg.version_info.major >= 1:
-            aiopg_dbapi.wrap_connect(
-                tracer,
-                aiopg,
-                "connect",
-                self._DATABASE_COMPONENT,
-                self._DATABASE_TYPE,
-                self._CONNECTION_ATTRIBUTES,
-            )
-        else:
-            aiopg_dbapi.wrap_connect(
-                tracer,
-                aiopg.connection,
-                "_connect",
-                self._DATABASE_COMPONENT,
-                self._DATABASE_TYPE,
-                self._CONNECTION_ATTRIBUTES,
-            )
+        wrappers.wrap_connect(
+            tracer,
+            aiopg,
+            "connect",
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
+        )
+
+        wrappers.wrap_create_pool(
+            tracer,
+            aiopg,
+            "create_pool",
+            self._DATABASE_COMPONENT,
+            self._DATABASE_TYPE,
+            self._CONNECTION_ATTRIBUTES,
+        )
 
     def _uninstrument(self, **kwargs):
         """"Disable aiopg instrumentation"""
-        if aiopg.version_info.major >= 1:
-            aiopg_dbapi.unwrap_connect(aiopg, "connect")
-        else:
-            aiopg_dbapi.unwrap_connect(aiopg.connection, "_connect")
+        wrappers.unwrap_connect(aiopg, "connect")
+        wrappers.unwrap_create_pool(aiopg, "create_pool")
 
     # pylint:disable=no-self-use
     def instrument_connection(self, connection):
@@ -108,7 +112,7 @@ class AiopgInstrumentor(BaseInstrumentor):
         """
         tracer = get_tracer(__name__, __version__)
 
-        return aiopg_dbapi.instrument_connection(
+        return wrappers.instrument_connection(
             tracer,
             connection,
             self._DATABASE_COMPONENT,
@@ -125,4 +129,4 @@ class AiopgInstrumentor(BaseInstrumentor):
         Returns:
             An uninstrumented connection.
         """
-        return aiopg_dbapi.uninstrument_connection(connection)
+        return wrappers.uninstrument_connection(connection)

@@ -17,11 +17,12 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import aiopg
-from aiopg.utils import _ContextManager
+from aiopg.utils import _ContextManager, _PoolAcquireContextManager
 
 import opentelemetry.ext.aiopg
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.aiopg import AiopgInstrumentor, aiopg_dbapi
+from opentelemetry.ext.aiopg import AiopgInstrumentor, wrappers
+from opentelemetry.ext.aiopg.aiopg_integration import AiopgIntegration
 from opentelemetry.sdk import resources
 from opentelemetry.test.test_base import TestBase
 
@@ -34,25 +35,19 @@ def async_call(coro):
 class TestAiopgInstrumentor(TestBase):
     def setUp(self):
         super().setUp()
-        if aiopg.version_info.major >= 1:
-            self.origin_aiopg_connect = aiopg.connect
-            aiopg.connect = mock_connect
-        else:
-
-            self.origin_aiopg_connect = aiopg.connection._connect  # pylint: disable=protected-access
-            # pylint: disable=protected-access
-            aiopg.connection._connect = mock_connect
+        self.origin_aiopg_connect = aiopg.connect
+        self.origin_aiopg_create_pool = aiopg.create_pool
+        aiopg.connect = mock_connect
+        aiopg.create_pool = mock_create_pool
 
     def tearDown(self):
         super().tearDown()
-        if aiopg.version_info.major >= 1:
-            aiopg.connect = self.origin_aiopg_connect
-        else:
-            aiopg.connection._connect = self.origin_aiopg_connect  # pylint: disable=protected-access
+        aiopg.connect = self.origin_aiopg_connect
+        aiopg.create_pool = self.origin_aiopg_create_pool
         with self.disable_logging():
             AiopgInstrumentor().uninstrument()
 
-    def test_instrumentor(self):
+    def test_instrumentor_connect(self):
         AiopgInstrumentor().instrument()
 
         cnx = async_call(aiopg.connect(database="test"))
@@ -80,7 +75,36 @@ class TestAiopgInstrumentor(TestBase):
         spans_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans_list), 1)
 
-    def test_custom_tracer_provider(self):
+    def test_instrumentor_create_pool(self):
+        AiopgInstrumentor().instrument()
+
+        pool = async_call(aiopg.create_pool(database="test"))
+        cnx = async_call(pool.acquire())
+        cursor = async_call(cnx.cursor())
+
+        query = "SELECT * FROM test"
+        async_call(cursor.execute(query))
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        # Check version and name in span's instrumentation info
+        self.check_span_instrumentation_info(span, opentelemetry.ext.aiopg)
+
+        # check that no spans are generated after uninstrument
+        AiopgInstrumentor().uninstrument()
+
+        pool = async_call(aiopg.create_pool(database="test"))
+        cnx = async_call(pool.acquire())
+        cursor = async_call(cnx.cursor())
+        query = "SELECT * FROM test"
+        cursor.execute(query)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+
+    def test_custom_tracer_provider_connect(self):
         resource = resources.Resource.create({})
         result = self.create_tracer_provider(resource=resource)
         tracer_provider, exporter = result
@@ -98,11 +122,27 @@ class TestAiopgInstrumentor(TestBase):
 
         self.assertIs(span.resource, resource)
 
+    def test_custom_tracer_provider_create_pool(self):
+        resource = resources.Resource.create({})
+        result = self.create_tracer_provider(resource=resource)
+        tracer_provider, exporter = result
+
+        AiopgInstrumentor().instrument(tracer_provider=tracer_provider)
+
+        pool = async_call(aiopg.create_pool(database="test"))
+        cnx = async_call(pool.acquire())
+        cursor = async_call(cnx.cursor())
+        query = "SELECT * FROM test"
+        async_call(cursor.execute(query))
+
+        spans_list = exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+
+        self.assertIs(span.resource, resource)
+
     def test_instrument_connection(self):
-        if aiopg.version_info.major >= 1:
-            cnx = async_call(aiopg.connect(database="test"))
-        else:
-            cnx = async_call(aiopg.connection._connect(database="test"))  # pylint: disable=protected-access
+        cnx = async_call(aiopg.connect(database="test"))
         query = "SELECT * FROM test"
         cursor = async_call(cnx.cursor())
         async_call(cursor.execute(query))
@@ -119,10 +159,7 @@ class TestAiopgInstrumentor(TestBase):
 
     def test_uninstrument_connection(self):
         AiopgInstrumentor().instrument()
-        if aiopg.version_info.major >= 1:
-            cnx = async_call(aiopg.connect(database="test"))
-        else:
-            cnx = async_call(aiopg.connection._connect(database="test"))  # pylint: disable=protected-access
+        cnx = async_call(aiopg.connect(database="test"))
         query = "SELECT * FROM test"
         cursor = async_call(cnx.cursor())
         async_call(cursor.execute(query))
@@ -156,7 +193,7 @@ class TestAiopgIntegration(TestBase):
             "host": "server_host",
             "user": "user",
         }
-        db_integration = aiopg_dbapi.AiopgIntegration(
+        db_integration = AiopgIntegration(
             self.tracer, "testcomponent", "testtype", connection_attributes
         )
         mock_connection = async_call(
@@ -189,9 +226,7 @@ class TestAiopgIntegration(TestBase):
         )
 
     def test_span_failed(self):
-        db_integration = aiopg_dbapi.AiopgIntegration(
-            self.tracer, "testcomponent"
-        )
+        db_integration = AiopgIntegration(self.tracer, "testcomponent")
         mock_connection = async_call(
             db_integration.wrapped_connection(mock_connect, {}, {})
         )
@@ -210,9 +245,7 @@ class TestAiopgIntegration(TestBase):
         self.assertEqual(span.status.description, "Test Exception")
 
     def test_executemany(self):
-        db_integration = aiopg_dbapi.AiopgIntegration(
-            self.tracer, "testcomponent"
-        )
+        db_integration = AiopgIntegration(self.tracer, "testcomponent")
         mock_connection = async_call(
             db_integration.wrapped_connection(mock_connect, {}, {})
         )
@@ -224,9 +257,7 @@ class TestAiopgIntegration(TestBase):
         self.assertEqual(span.attributes["db.statement"], "Test query")
 
     def test_callproc(self):
-        db_integration = aiopg_dbapi.AiopgIntegration(
-            self.tracer, "testcomponent"
-        )
+        db_integration = AiopgIntegration(self.tracer, "testcomponent")
         mock_connection = async_call(
             db_integration.wrapped_connection(mock_connect, {}, {})
         )
@@ -240,28 +271,46 @@ class TestAiopgIntegration(TestBase):
         )
 
     def test_wrap_connect(self):
-        aiopg_dbapi.wrap_connect(self.tracer, AiopgMock, "connect", "-")
+        wrappers.wrap_connect(self.tracer, AiopgMock, "connect", "-")
         aiopg_mock = AiopgMock()
         connection = async_call(aiopg_mock.connect())
-        self.assertEqual(aiopg_mock.call_count, 1)
+        self.assertEqual(aiopg_mock.connect_call_count, 1)
         self.assertIsInstance(connection.__wrapped__, mock.Mock)
 
     def test_unwrap_connect(self):
-        aiopg_dbapi.wrap_connect(self.tracer, AiopgMock, "connect", "-")
+        wrappers.wrap_connect(self.tracer, AiopgMock, "connect", "-")
         aiopg_mock = AiopgMock()
         connection = async_call(aiopg_mock.connect())
-        self.assertEqual(aiopg_mock.call_count, 1)
+        self.assertEqual(aiopg_mock.connect_call_count, 1)
 
-        aiopg_dbapi.unwrap_connect(AiopgMock, "connect")
+        wrappers.unwrap_connect(AiopgMock, "connect")
         connection = async_call(aiopg_mock.connect())
-        self.assertEqual(aiopg_mock.call_count, 2)
+        self.assertEqual(aiopg_mock.connect_call_count, 2)
         self.assertIsInstance(connection, mock.Mock)
+
+    def test_wrap_create_pool(self):
+        wrappers.wrap_create_pool(self.tracer, AiopgMock, "create_pool", "-")
+        aiopg_mock = AiopgMock()
+        connection = async_call(aiopg_mock.create_pool())
+        self.assertEqual(aiopg_mock.create_pool_call_count, 1)
+        self.assertIsInstance(connection.__wrapped__, mock.Mock)
+
+    def test_unwrap_create_pool(self):
+        wrappers.wrap_create_pool(self.tracer, AiopgMock, "create_pool", "-")
+        aiopg_mock = AiopgMock()
+        pool = async_call(aiopg_mock.create_pool())
+        self.assertEqual(aiopg_mock.create_pool_call_count, 1)
+
+        wrappers.unwrap_create_pool(AiopgMock, "create_pool")
+        pool = async_call(aiopg_mock.create_pool())
+        self.assertEqual(aiopg_mock.create_pool_call_count, 2)
+        self.assertIsInstance(pool, mock.Mock)
 
     def test_instrument_connection(self):
         connection = mock.Mock()
         # Avoid get_attributes failing because can't concatenate mock
         connection.database = "-"
-        connection2 = aiopg_dbapi.instrument_connection(
+        connection2 = wrappers.instrument_connection(
             self.tracer, connection, "-"
         )
         self.assertIs(connection2.__wrapped__, connection)
@@ -271,16 +320,16 @@ class TestAiopgIntegration(TestBase):
         # Set connection.database to avoid a failure because mock can't
         # be concatenated
         connection.database = "-"
-        connection2 = aiopg_dbapi.instrument_connection(
+        connection2 = wrappers.instrument_connection(
             self.tracer, connection, "-"
         )
         self.assertIs(connection2.__wrapped__, connection)
 
-        connection3 = aiopg_dbapi.uninstrument_connection(connection2)
+        connection3 = wrappers.uninstrument_connection(connection2)
         self.assertIs(connection3, connection)
 
         with self.assertLogs(level=logging.WARNING):
-            connection4 = aiopg_dbapi.uninstrument_connection(connection)
+            connection4 = wrappers.uninstrument_connection(connection)
         self.assertIs(connection4, connection)
 
 
@@ -292,6 +341,35 @@ def mock_connect(*args, **kwargs):
     server_port = kwargs.get("server_port")
     user = kwargs.get("user")
     return MockConnection(database, server_port, server_host, user)
+
+
+@asyncio.coroutine
+def mock_create_pool(*args, **kwargs):
+    database = kwargs.get("database")
+    server_host = kwargs.get("server_host")
+    server_port = kwargs.get("server_port")
+    user = kwargs.get("user")
+    return MockPool(database, server_port, server_host, user)
+
+
+class MockPool:
+    def __init__(self, database, server_port, server_host, user):
+        self.database = database
+        self.server_port = server_port
+        self.server_host = server_host
+        self.user = user
+
+    def acquire(self):
+        """Acquire free connection from the pool."""
+        coro = self._acquire()
+        return _PoolAcquireContextManager(coro, self)
+
+    @asyncio.coroutine
+    def _acquire(self):
+        connect = yield from mock_connect(
+            self.database, self.server_port, self.server_host, self.user
+        )
+        return connect
 
 
 class MockConnection:
@@ -333,9 +411,15 @@ class MockCursor:
 
 class AiopgMock:
     def __init__(self):
-        self.call_count = 0
+        self.connect_call_count = 0
+        self.create_pool_call_count = 0
 
     @asyncio.coroutine
     def connect(self, *args, **kwargs):
-        self.call_count += 1
+        self.connect_call_count += 1
+        return MagicMock()
+
+    @asyncio.coroutine
+    def create_pool(self, *args, **kwargs):
+        self.create_pool_call_count += 1
         return MagicMock()
