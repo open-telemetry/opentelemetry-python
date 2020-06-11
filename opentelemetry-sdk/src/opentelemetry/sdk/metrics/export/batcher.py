@@ -19,6 +19,7 @@ from opentelemetry.metrics import (
     Counter,
     InstrumentT,
     SumObserver,
+    UpDownCounter,
     UpDownSumObserver,
     ValueObserver,
     ValueRecorder,
@@ -55,7 +56,7 @@ class Batcher(abc.ABC):
         Aggregators keep track of and updates values when metrics get updated.
         """
         # pylint:disable=R0201
-        if issubclass(instrument_type, Counter):
+        if issubclass(instrument_type, (Counter, UpDownCounter)):
             return CounterAggregator()
         if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
             return LastValueAggregator()

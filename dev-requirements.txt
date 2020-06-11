@@ -9,6 +9,3 @@ sphinx-autodoc-typehints~=1.10.2
 pytest!=5.2.3
 pytest-cov>=2.8
 readme-renderer~=24.0
-httpretty~=1.0
-opentracing~=2.2.0
-starlette
