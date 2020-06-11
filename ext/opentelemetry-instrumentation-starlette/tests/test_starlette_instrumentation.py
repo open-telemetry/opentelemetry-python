@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import unittest
-import unittest.mock as mock
 
-import opentelemetry.instrumentation.starlette as otel_starlette
-from opentelemetry.test.test_base import TestBase
 from starlette import applications
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
+
+import opentelemetry.instrumentation.starlette as otel_starlette
+from opentelemetry.test.test_base import TestBase
 
 
 class TestStarletteManualInstrumentation(TestBase):
@@ -56,7 +55,7 @@ class TestStarletteManualInstrumentation(TestBase):
 
     @staticmethod
     def _create_starlette_app():
-        def home(request):
+        def home(_):
             return PlainTextResponse("hi")
 
         app = applications.Starlette(

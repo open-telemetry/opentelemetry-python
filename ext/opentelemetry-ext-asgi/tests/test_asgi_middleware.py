@@ -177,8 +177,8 @@ class TestAsgiApplication(AsgiTestBase):
         span_name = "Dymaxion"
 
         # pylint:disable=unused-argument
-        def get_predefined_span_name(scope):
-            return span_name
+        def get_predefined_span_details(scope):
+            return span_name, {}
 
         def update_expected_span_name(expected):
             for entry in expected:
@@ -188,7 +188,7 @@ class TestAsgiApplication(AsgiTestBase):
             return expected
 
         app = otel_asgi.OpenTelemetryMiddleware(
-            simple_asgi, name_callback=get_predefined_span_name
+            simple_asgi, span_details_callback=get_predefined_span_details
         )
         self.seed_app(app)
         self.send_default_request()

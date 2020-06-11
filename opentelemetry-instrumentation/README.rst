@@ -25,7 +25,7 @@ opentelemetry-instrument
 
 The code in ``program.py`` needs to use one of the packages for which there is
 an OpenTelemetry integration. For a list of the available integrations please
-check :doc:`here <../../index>`.
+check `here <https://opentelemetry-python.readthedocs.io/en/stable/index.html#integrations>`_
 
 
 opentelemetry-bootstrap

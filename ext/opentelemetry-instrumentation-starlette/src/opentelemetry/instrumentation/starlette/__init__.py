@@ -11,11 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Optional
+
+from starlette import applications
+from starlette.routing import Match
+
 from opentelemetry.ext.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.starlette.version import __version__  # noqa
-from starlette import applications
-from starlette.routing import Match
 
 
 class StarletteInstrumentor(BaseInstrumentor):
@@ -24,16 +27,18 @@ class StarletteInstrumentor(BaseInstrumentor):
     See `BaseInstrumentor`
     """
 
+    _original_starlette = None
+
     @staticmethod
     def instrument_app(app: applications.Starlette):
         """Instrument a previously instrumented Starlette application.
         """
-        if not getattr(app, "_is_instrumented_by_opentelemetry", False):
+        if not getattr(app, "is_instrumented_by_opentelemetry", False):
             app.add_middleware(
                 OpenTelemetryMiddleware,
                 span_details_callback=_get_route_details,
             )
-            app._is_instrumented_by_opentelemetry = True
+            app.is_instrumented_by_opentelemetry = True
 
     def _instrument(self, **kwargs):
         self._original_starlette = applications.Starlette
@@ -66,7 +71,7 @@ def _get_route_details(scope):
         if match == Match.FULL:
             route = starlette_route.path
             break
-        elif match == Match.PARTIAL:
+        if match == Match.PARTIAL:
             route = starlette_route.path
     # method only exists for http, if websocket
     # leave it blank.
