@@ -3,8 +3,8 @@ OpenTelemetry aiopg integration
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-dbapi.svg
-   :target: https://pypi.org/project/opentelemetry-ext-dbapi/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-aiopg.svg
+   :target: https://pypi.org/project/opentelemetry-ext-aiopg/
 
 Installation
 ------------
