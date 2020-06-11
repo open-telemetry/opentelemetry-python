@@ -103,7 +103,8 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
-- [Carlos Alberto Cortez](https://github.com/carlosalberto), LightStep
+- [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
+- [Tahir H. Butt](https://github.com/majorgreys) DataDog
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Diego Hurtado](https://github.com/ocelotl)
 - [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
@@ -114,7 +115,7 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
-- [Alex Boten](https://github.com/codeboten), LightStep
+- [Alex Boten](https://github.com/codeboten), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Zillow Group
 
