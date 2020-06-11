@@ -18,7 +18,6 @@ from unittest import mock
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
-
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
     WRITE_INTERVAL,
@@ -71,7 +70,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_batch_write(self):
         client = mock.Mock()
-        exporter = CloudMonitoringMetricsExporter(project_id=self.project_id, client=client)
+        exporter = CloudMonitoringMetricsExporter(
+            project_id=self.project_id, client=client
+        )
         exporter.project_name = self.project_name
         exporter._batch_write(range(2 * MAX_BATCH_WRITE + 1))
         client.create_time_series.assert_has_calls(
@@ -100,7 +101,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_get_metric_descriptor(self):
         client = mock.Mock()
-        exporter = CloudMonitoringMetricsExporter(project_id=self.project_id, client=client)
+        exporter = CloudMonitoringMetricsExporter(
+            project_id=self.project_id, client=client
+        )
         exporter.project_name = self.project_name
 
         self.assertIsNone(
@@ -169,7 +172,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_export(self):
         client = mock.Mock()
-        exporter = CloudMonitoringMetricsExporter(project_id=self.project_id, client=client)
+        exporter = CloudMonitoringMetricsExporter(
+            project_id=self.project_id, client=client
+        )
         exporter.project_name = self.project_name
 
         exporter.export(
