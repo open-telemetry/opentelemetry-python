@@ -10,6 +10,11 @@ from opentelemetry.sdk.trace import Span
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 
+if hasattr(Connection, "__execute") is False:
+    _do_execute_return_value = ((None, bytes(), None), None)  # asyncpg >= 0.13.0
+else:
+    _do_execute_return_value = (None, bytes(), None)  # asyncpg < 0.13.0
+
 
 def _await(coro: Coroutine):
     loop = asyncio.get_event_loop()
@@ -24,6 +29,40 @@ def _coroutine_mock(return_value: Any = None,
     coroutine_function = Mock(name="CoroutineFunction", side_effect=coroutine(coro))
     coroutine_function.coro = coro
     return coroutine_function
+
+
+def _get_connection() -> Connection:
+    class ProtocolSettings:
+        def __init__(self):
+            self.server_version = "1"
+
+    class Protocol:
+
+        def __init__(self):
+            self.is_connected = lambda *args, **kwargs: True
+
+        def get_settings(self):
+            return ProtocolSettings()
+
+        def _get_timeout(self, *_, **__):
+            return object()
+
+        @property
+        def is_in_transaction(self, *_, **__):
+            return lambda *_, **__: False
+
+        async def query(self, *_, **__):
+            return None, None, None
+
+    return Connection(protocol=Protocol(),
+                      transport=object(),
+                      addr="addr",
+                      config=connect_utils._ClientConfiguration(statement_cache_size=1,
+                                                                max_cached_statement_lifetime=1,
+                                                                command_timeout=1,
+                                                                max_cacheable_statement_size=1),
+                      loop=asyncio.get_event_loop(),
+                      params=None)
 
 
 class ConnectionParamsMock:
@@ -134,38 +173,11 @@ class TestAsyncPGWrapper(TestBase):
 
 class TestAsyncPGInstrumentation(TestBase):
 
-    @staticmethod
-    def _get_connection() -> Connection:
-        class ProtocolSettings:
-            def __init__(self):
-                self.server_version = "1"
-
-        class Protocol:
-
-            def __init__(self):
-                self.is_connected = lambda *args, **kwargs: True
-
-            def get_settings(self):
-                return ProtocolSettings()
-
-            def _get_timeout(self, *_, **__):
-                return object()
-
-        return Connection(protocol=Protocol(),
-                          transport=object(),
-                          addr="addr",
-                          config=connect_utils._ClientConfiguration(statement_cache_size=1,
-                                                                    max_cached_statement_lifetime=1,
-                                                                    command_timeout=1,
-                                                                    max_cacheable_statement_size=1),
-                          loop=asyncio.get_event_loop(),
-                          params=None)
-
     @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
-                return_value=((None, bytes(), None), None))
-    def test_instrumented_execute_method(self, *args, **kwargs):
+                return_value=_do_execute_return_value)
+    def test_instrumented_connection(self, *args, **kwargs):
         AsyncPGInstrumentor().instrument()
-        connection = self._get_connection()
+        connection = _get_connection()
         _await(connection.execute("SELECT 42;", 1, 2, 3))
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
@@ -179,45 +191,11 @@ class TestAsyncPGInstrumentation(TestBase):
         )
 
     @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
-                return_value=((None, bytes(), None), None))
-    def test_instrumented_fetch_method(self, *args, **kwargs):
-        AsyncPGInstrumentor().instrument()
-        connection = self._get_connection()
-        _await(connection.fetch("SELECT 42;", 1, 2, 3))
-        spans = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(spans), 1)
-        self.assertEqual(
-            spans[0].attributes,
-            {
-                "db.type": "sql",
-                "db.statement.parameters": (1, 2, 3),
-                "db.statement": "SELECT 42;"
-            }
-        )
-
-    @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
-                return_value=((None, bytes(), None), None))
-    def test_instrumented_executemany_method(self, *args, **kwargs):
-        AsyncPGInstrumentor().instrument()
-        connection = self._get_connection()
-        _await(connection.executemany("SELECT 42;", (1, 2, 3)))
-        spans = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(spans), 1)
-        self.assertEqual(
-            spans[0].attributes,
-            {
-                "db.type": "sql",
-                "db.statement.parameters": (1, 2, 3),
-                "db.statement": "SELECT 42;"
-            }
-        )
-
-    @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
-                return_value=((None, bytes(), None), None))
+                return_value=_do_execute_return_value)
     def test_uninstrumented_connection(self, *args, **kwargs):
         AsyncPGInstrumentor().uninstrument()
         self.memory_exporter.clear()
-        connection = self._get_connection()
+        connection = _get_connection()
         _await(connection.execute("SELECT 42;", 1, 2, 3))
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 0)
@@ -254,3 +232,85 @@ class TestAsyncPGInstrumentation(TestBase):
 
         with self.assertRaises(AttributeError):
             self.assertEqual(getattr(Connection._executemany, "_opentelemetry_ext_asyncpg_applied"))
+
+
+class TestAsyncPGConnectionMethods(TestBase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        AsyncPGInstrumentor().instrument(tracer_provider=cls.tracer_provider)
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        AsyncPGInstrumentor().uninstrument()
+
+    @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
+                return_value=_do_execute_return_value)
+    def test_instrumented_execute_method(self, *args, **kwargs):
+        connection = _get_connection()
+        _await(connection.execute("SELECT 42;", 1, 2, 3))
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(
+            spans[0].attributes,
+            {
+                "db.type": "sql",
+                "db.statement.parameters": (1, 2, 3),
+                "db.statement": "SELECT 42;"
+            }
+        )
+
+    @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
+                return_value=_do_execute_return_value)
+    def test_instrumented_fetch_method(self, *args, **kwargs):
+        connection = _get_connection()
+        _await(connection.fetch("SELECT 42;", 1, 2, 3))
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(
+            spans[0].attributes,
+            {
+                "db.type": "sql",
+                "db.statement.parameters": (1, 2, 3),
+                "db.statement": "SELECT 42;"
+            }
+        )
+
+    @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
+                return_value=_do_execute_return_value)
+    def test_instrumented_executemany_method(self, *args, **kwargs):
+        connection = _get_connection()
+        _await(connection.executemany("SELECT 42;", (1, 2, 3)))
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(
+            spans[0].attributes,
+            {
+                "db.type": "sql",
+                "db.statement.parameters": (1, 2, 3),
+                "db.statement": "SELECT 42;"
+            }
+        )
+
+    @mock.patch("asyncpg.Connection._do_execute", new_callable=_coroutine_mock,
+                return_value=_do_execute_return_value)
+    def test_instrumented_transaction_method(self, *args, **kwargs):
+        async def _transaction_execute():
+            connection = _get_connection()
+            async with connection.transaction():
+                await connection.execute("SELECT 42;", 1, 2, 3)
+
+        _await(_transaction_execute())
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(
+            spans[0].attributes,
+            {
+                "db.type": "sql",
+                "db.statement.parameters": (1, 2, 3),
+                "db.statement": "SELECT 42;"
+            }
+        )
