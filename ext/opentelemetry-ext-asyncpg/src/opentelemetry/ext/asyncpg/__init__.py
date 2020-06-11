@@ -1,20 +1,53 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+This library allows tracing PostgreSQL queries made by the
+`asyncpg <https://magicstack.github.io/asyncpg/current/>`_ library.
+
+Usage
+-----
+
+.. code-block:: python
+
+    import asyncpg
+    import opentelemetry.ext.asyncpg
+
+    # You can optionally pass a custom TracerProvider to AsyncPGInstrumentor.instrument()
+    opentelemetry.ext.asyncpg.AsyncPGInstrumentor().instrument()
+    conn = await asyncpg.connect(user='user', password='password',
+                                 database='database', host='127.0.0.1')
+    values = await conn.fetch('''SELECT 42;''')
+
+API
+---
+"""
+
 import functools
 
-from asyncpg import Connection
-from asyncpg import exceptions
+from asyncpg import Connection, exceptions
+
 from opentelemetry import trace
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind
-from opentelemetry.trace.status import StatusCanonicalCode, Status
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _APPLIED = "_opentelemetry_ext_asyncpg_applied"
 
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
-    if isinstance(
-            exc,
-            (exceptions.InterfaceError,),
-    ):
+    if isinstance(exc, (exceptions.InterfaceError,),):
         return StatusCanonicalCode.INVALID_ARGUMENT
     if isinstance(exc, exceptions.IdleInTransactionSessionTimeoutError):
         return StatusCanonicalCode.DEADLINE_EXCEEDED
@@ -56,17 +89,21 @@ def _execute(wrapped, tracer_provider):
 
         exception = None
 
-        with tracer.start_as_current_span("postgresql", kind=SpanKind.CLIENT) as span:
+        with tracer.start_as_current_span(
+            "postgresql", kind=SpanKind.CLIENT
+        ) as span:
 
             span = _hydrate_span_from_args(span, *args, **kwargs)
 
             try:
                 result = await wrapped(*args, **kwargs)
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=W0703
                 exception = exc
 
             if exception is not None:
-                span.set_status(Status(_exception_to_canonical_code(exception)))
+                span.set_status(
+                    Status(_exception_to_canonical_code(exception))
+                )
             else:
                 span.set_status(Status(StatusCanonicalCode.OK))
 
@@ -80,7 +117,6 @@ def _execute(wrapped, tracer_provider):
 
 
 class AsyncPGInstrumentor(BaseInstrumentor):
-
     def instrument(self, **kwargs):
         self._instrument(**kwargs)
 
@@ -94,13 +130,17 @@ class AsyncPGInstrumentor(BaseInstrumentor):
         for method in ["_execute", "_executemany"]:
             _original = getattr(Connection, method, None)
             if hasattr(_original, _APPLIED) is False:
-                setattr(Connection, method, _execute(_original, tracer_provider))
+                setattr(
+                    Connection, method, _execute(_original, tracer_provider)
+                )
 
     @staticmethod
     def _uninstrument(**__):
         for method in ["_execute", "_executemany"]:
             _connection_method = getattr(Connection, method, None)
-            if _connection_method is not None and getattr(_connection_method, _APPLIED, False):
+            if _connection_method is not None and getattr(
+                _connection_method, _APPLIED, False
+            ):
                 original = getattr(_connection_method, "__wrapped__", None)
                 if original is not None:
                     setattr(Connection, method, original)
