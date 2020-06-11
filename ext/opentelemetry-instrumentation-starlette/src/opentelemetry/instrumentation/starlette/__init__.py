@@ -37,7 +37,7 @@ class StarletteInstrumentor(BaseInstrumentor):
         """
         if not getattr(app, "_is_instrumented_by_opentelemetry", False):
             app.add_middleware(
-                OpenTelemetryMiddleware, name_callback=_get_route_name
+                OpenTelemetryMiddleware, span_details_callback=_get_route_name
             )
             app._is_instrumented_by_opentelemetry = True
 
@@ -53,18 +53,21 @@ class _InstrumentedStarlette(applications.Starlette):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_middleware(
-            OpenTelemetryMiddleware, name_callback=_get_route_name
+            OpenTelemetryMiddleware, span_details_callback=_get_route_name
         )
 
 
 def _get_route_name(scope):
     """Callback to retrieve the starlette route being served.
     """
+    import pdb
+
+    pdb.set_trace()
     app = scope["app"]
     for route in app.routes:
         match, _ = route.matches(scope)
         if match == Match.FULL:
-            return route.path
+            return route.path, {}
     # method only exists for http, if websocket
     # leave it blank.
-    return scope.get("method", "")
+    return scope.get("method", ""), {}
