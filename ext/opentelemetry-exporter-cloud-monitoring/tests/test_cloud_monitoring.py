@@ -136,7 +136,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         # Getting a cached metric descriptor shouldn't use another call
         cached_metric_descriptor = exporter._get_metric_descriptor(record)
-        client.create_metric_descriptor.assert_called_once()
+        self.assertEqual(client.create_metric_descriptor.call_count, 1)
         self.assertEqual(metric_descriptor, cached_metric_descriptor)
 
         # Drop labels with values that aren't string, int or bool
