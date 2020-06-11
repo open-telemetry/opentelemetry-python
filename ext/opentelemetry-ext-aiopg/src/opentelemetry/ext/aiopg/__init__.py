@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-The integration with PostgreSQL supports the `aiopg`_ library,
+The integration with PostgreSQL supports the aiopg library,
 it can be enabled by using ``AiopgInstrumentor``.
 
 .. aiopg: https://github.com/aio-libs/aiopg
@@ -25,8 +25,8 @@ Usage
 
     import aiopg
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.ext.aiopg import AiopgInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
 
