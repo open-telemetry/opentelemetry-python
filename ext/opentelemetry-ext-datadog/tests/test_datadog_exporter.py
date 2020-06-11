@@ -222,8 +222,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
     def test_resources(self):
         test_attributes = [
             {},
-            {"http.method": "GET", "http.route": "/foo"},
-            {"http.method": "GET", "http.path": "/foo"},
+            {"http.method": "GET", "http.route": "/foo/<int:id>"},
+            {"http.method": "GET", "http.target": "/foo/200"},
         ]
 
         for index, test in enumerate(test_attributes):
@@ -235,7 +235,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.assertEqual(len(datadog_spans), 3)
 
         actual = [span["resource"] for span in datadog_spans]
-        expected = ["0", "GET /foo", "GET /foo"]
+        expected = ["0", "GET /foo/<int:id>", "GET /foo/200"]
 
         self.assertEqual(actual, expected)
 
