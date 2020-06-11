@@ -11,13 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""
-The opentelemetry-instrumentation-starlette package provides an ASGI middleware that can be used
-on any ASGI framework (such as Django-channels / Quart) to track requests
-timing through OpenTelemetry.
-"""
-
 from opentelemetry.ext.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.starlette.version import __version__  # noqa
@@ -37,7 +30,8 @@ class StarletteInstrumentor(BaseInstrumentor):
         """
         if not getattr(app, "_is_instrumented_by_opentelemetry", False):
             app.add_middleware(
-                OpenTelemetryMiddleware, span_details_callback=_get_route_name
+                OpenTelemetryMiddleware,
+                span_details_callback=_get_route_details,
             )
             app._is_instrumented_by_opentelemetry = True
 
@@ -53,21 +47,31 @@ class _InstrumentedStarlette(applications.Starlette):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_middleware(
-            OpenTelemetryMiddleware, span_details_callback=_get_route_name
+            OpenTelemetryMiddleware, span_details_callback=_get_route_details
         )
 
 
-def _get_route_name(scope):
+def _get_route_details(scope):
     """Callback to retrieve the starlette route being served.
-    """
-    import pdb
 
-    pdb.set_trace()
+    TODO: there is currently no way to retrieve the path from
+    a starlette application from scope.
+
+    See: https://github.com/encode/starlette/pull/804
+    """
     app = scope["app"]
-    for route in app.routes:
-        match, _ = route.matches(scope)
+    route = None
+    for starlette_route in app.routes:
+        match, _ = starlette_route.matches(scope)
         if match == Match.FULL:
-            return route.path, {}
+            route = starlette_route.path
+            break
+        elif match == Match.PARTIAL:
+            route = starlette_route.path
     # method only exists for http, if websocket
     # leave it blank.
-    return scope.get("method", ""), {}
+    span_name = route or scope.get("method", "")
+    attributes = {}
+    if route:
+        attributes["http.route"] = route
+    return span_name, attributes

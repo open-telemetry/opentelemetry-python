@@ -18,31 +18,83 @@ import unittest.mock as mock
 
 import opentelemetry.instrumentation.starlette as otel_starlette
 from opentelemetry.test.test_base import TestBase
+from starlette import applications
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
 
-class TestStarletteApplication(TestBase):
+class TestStarletteManualInstrumentation(TestBase):
+    def _create_app(self):
+        app = self._create_starlette_app()
+        self._instrumentor.instrument_app(app)
+        return app
+
     def setUp(self):
         super().setUp()
-        self._app = self._create_instrumented_app()
+        self._instrumentor = otel_starlette.StarletteInstrumentor()
+        self._app = self._create_app()
         self._client = TestClient(self._app)
 
     def test_basic_starlette_call(self):
         self._client.get("/foobar")
         spans = self.memory_exporter.get_finished_spans()
-        self.assertEquals(len(spans), 3)
+        self.assertEqual(len(spans), 3)
         for span in spans:
-            self.assertIn("foobar", span.name)
+            self.assertIn("/foobar", span.name)
+
+    def test_starlette_route_attribute_added(self):
+        """Ensure that starlette routes are used as the span name."""
+        self._client.get("/user/123")
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 3)
+        for span in spans:
+            self.assertIn("/user/{username}", span.name)
+        self.assertEqual(
+            spans[-1].attributes["http.route"], "/user/{username}"
+        )
 
     @staticmethod
-    def _create_instrumented_app():
-        """Create an instrumented starlette application"""
-
+    def _create_starlette_app():
         def home(request):
             return PlainTextResponse("hi")
 
-        return otel_starlette._InstrumentedStarlette(
-            routes=[Route("/foobar", home)]
+        app = applications.Starlette(
+            routes=[Route("/foobar", home), Route("/user/{username}", home)]
         )
+        return app
+
+
+class TestAutoInstrumentation(TestStarletteManualInstrumentation):
+    """Test the auto-instrumented variant
+
+    Extending the manual instrumentation as most test cases apply
+    to both.
+    """
+
+    def _create_app(self):
+        # instrumentation is handled by the instrument call
+        self._instrumentor.instrument()
+        return self._create_starlette_app()
+
+    def tearDown(self):
+        self._instrumentor.uninstrument()
+        super().tearDown()
+
+    def test_uninstrument(self):
+        """ verify uninstrumented un-monkeypatches."""
+
+
+class TestAutoInstrumentationLogic(unittest.TestCase):
+    def test_instrumentation(self):
+        instrumentor = otel_starlette.StarletteInstrumentor()
+        original = applications.Starlette
+        instrumentor.instrument()
+        try:
+            instrumented = applications.Starlette
+            self.assertIsNot(original, instrumented)
+        finally:
+            instrumentor.uninstrument()
+
+        should_be_original = applications.Starlette
+        self.assertIs(original, should_be_original)
