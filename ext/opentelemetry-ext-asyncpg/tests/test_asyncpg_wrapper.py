@@ -1,6 +1,5 @@
 import asyncio
 from asyncio import coroutine
-from typing import Any, Coroutine, List
 from unittest import mock
 from unittest.mock import Mock
 
@@ -12,7 +11,6 @@ from asyncpg import (
 )
 
 from opentelemetry.ext.asyncpg import AsyncPGInstrumentor, _execute
-from opentelemetry.sdk.trace import Span
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 
@@ -25,12 +23,12 @@ else:
     _do_execute_return_value = (None, bytes(), None)  # asyncpg < 0.13.0
 
 
-def _await(coro: Coroutine):
+def _await(coro):
     loop = asyncio.get_event_loop()
     return loop.run_until_complete(coro)
 
 
-def _coroutine_mock(return_value: Any = None, raise_exception: Any = None):
+def _coroutine_mock(return_value=None, raise_exception=None):
     coro = Mock(name="CoroutineResult")
     coro.return_value = return_value
     coro.side_effect = raise_exception
@@ -41,7 +39,7 @@ def _coroutine_mock(return_value: Any = None, raise_exception: Any = None):
     return coroutine_function
 
 
-def _get_connection() -> Connection:
+def _get_connection():
     class ProtocolSettings:
         def __init__(self):
             self.server_version = "1"
@@ -88,7 +86,7 @@ class ConnectionParamsMock:
 
 
 class ConnectionMock:
-    def __init__(self, params: ConnectionParamsMock):
+    def __init__(self, params):
         self._params = params
 
 
@@ -109,7 +107,7 @@ class TestAsyncPGWrapper(TestBase):
 
         wrapped = _execute(_method, self.tracer_provider)
         result = _await(wrapped())
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(1, len(spans))
         self.assertEqual("foobar", result)
         self.assertEqual(
@@ -124,7 +122,7 @@ class TestAsyncPGWrapper(TestBase):
 
         with self.assertRaises(Exception):
             _await(wrapped())
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(1, len(spans))
         self.assertEqual(
             StatusCanonicalCode.UNKNOWN, spans[0].status.canonical_code
@@ -138,7 +136,7 @@ class TestAsyncPGWrapper(TestBase):
 
         with self.assertRaises(InterfaceError):
             _await(wrapped())
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(
             StatusCanonicalCode.INVALID_ARGUMENT,
             spans[0].status.canonical_code,
@@ -152,7 +150,7 @@ class TestAsyncPGWrapper(TestBase):
 
         with self.assertRaises(IdleInTransactionSessionTimeoutError):
             _await(wrapped())
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(
             StatusCanonicalCode.DEADLINE_EXCEEDED,
             spans[0].status.canonical_code,
@@ -164,7 +162,7 @@ class TestAsyncPGWrapper(TestBase):
 
         wrapped = _execute(_method, self.tracer_provider)
         _await(wrapped())
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(spans[0].attributes, {"db.type": "sql"})
 
     def test_attributes_hydration_span_with_connection_argument(self):
@@ -181,7 +179,7 @@ class TestAsyncPGWrapper(TestBase):
                 )
             )
         )
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(
             spans[0].attributes,
             {"db.type": "sql", "db.instance": "database", "db.user": "user"},
@@ -193,7 +191,7 @@ class TestAsyncPGWrapper(TestBase):
 
         wrapped = _execute(_method, self.tracer_provider)
         _await(wrapped(None, "SELECT 42;"))
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(
             spans[0].attributes,
             {"db.type": "sql", "db.statement": "SELECT 42;"},
@@ -205,7 +203,7 @@ class TestAsyncPGWrapper(TestBase):
 
         wrapped = _execute(_method, self.tracer_provider)
         _await(wrapped(None, None, (1, 2, 3)))
-        spans: List[Span] = self.memory_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(
             spans[0].attributes,
             {"db.type": "sql", "db.statement.parameters": (1, 2, 3)},
