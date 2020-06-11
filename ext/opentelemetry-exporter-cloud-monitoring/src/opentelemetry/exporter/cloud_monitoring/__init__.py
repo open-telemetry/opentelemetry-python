@@ -12,7 +12,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
     MetricsExportResult,
 )
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
@@ -96,7 +96,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 logger.warning(
                     "Label value %s is not a string, bool or integer", value
                 )
-        if isinstance(record.aggregator, CounterAggregator):
+        if isinstance(record.aggregator, SumAggregator):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
         else:
             logger.warning(
