@@ -18,6 +18,7 @@ from unittest import mock
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
     WRITE_INTERVAL,
