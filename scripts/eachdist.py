@@ -516,28 +516,28 @@ def lint_args(args):
 
 
 def update_changelog(path, version, new_entry):
-    unreleased_changes = 0
+    unreleased_changes = False
     try:
         with open(path) as changelog:
             text = changelog.read()
-            if version in text:
+            if "## Version {}".format(version) in text:
                 raise AttributeError(
                     "{} already contans version {}".format(path, version)
                 )
         with open(path) as changelog:
             for line in changelog:
                 if line.startswith("## Unreleased"):
-                    unreleased_changes = 0
+                    unreleased_changes = False
                 elif line.startswith("## "):
                     break
                 elif len(line.strip()) > 0:
-                    unreleased_changes += 1
+                    unreleased_changes = True
 
     except FileNotFoundError:
         print("file missing: {}".format(path))
         return
 
-    if unreleased_changes > 0:
+    if unreleased_changes:
         print("updating: {}".format(path))
         text = re.sub("## Unreleased", new_entry, text)
         with open(path, "w") as changelog:
@@ -550,7 +550,7 @@ def update_changelogs(targets, version):
     new_entry = "## Unreleased\n\n## Version {}\n\nReleased {}".format(
         version, today
     )
-    errors = 0
+    errors = False
     for target in targets:
         try:
             update_changelog(
@@ -558,9 +558,9 @@ def update_changelogs(targets, version):
             )
         except Exception as err:  # pylint: disable=broad-except
             print(str(err))
-            errors += 1
+            errors = True
 
-    if errors != 0:
+    if errors:
         sys.exit(1)
 
 
@@ -594,7 +594,7 @@ def update_dependencies(targets, version):
 
 
 def update_files(targets, version, filename, search, replace):
-    errors = 0
+    errors = False
     for target in targets:
         curr_file = find(filename, target)
         if curr_file is None:
@@ -606,13 +606,13 @@ def update_files(targets, version, filename, search, replace):
 
         if version in text:
             print("{} already contans version {}".format(curr_file, version))
-            errors += 1
+            errors = True
             continue
 
         with open(curr_file, "w") as _file:
             _file.write(re.sub(search, replace, text))
 
-    if errors != 0:
+    if errors:
         sys.exit(1)
 
 
