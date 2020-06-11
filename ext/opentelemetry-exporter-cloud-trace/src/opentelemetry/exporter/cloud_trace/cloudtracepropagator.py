@@ -13,41 +13,35 @@
 # limitations under the License.
 #
 
-import logging
 import re
-
-from opentelemetry.trace.span import SpanContext, TraceFlags
 import typing
-import urllib.parse
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
 from opentelemetry.trace.propagation import httptextformat
-from opentelemetry import correlationcontext
-from opentelemetry.context import get_current
-from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import httptextformat
+from opentelemetry.trace.span import (
+    SpanContext,
+    TraceFlags,
+    get_hexadecimal_trace_id,
+)
+
+_TRACE_ID_DELIMETER = "/"
+_SPAN_ID_DELIMETER = ";"
 
 
-_TRACE_ID_DELIMETER = '/'
-_SPAN_ID_DELIMETER = ';'
-
-def _get_hexadecimal_trace_id(trace_id: int) -> str:
-    return "{:032x}".format(trace_id)
-
-def _get_hexadecimal_span_id(span_id: int) -> str:
-    return "{:016x}".format(span_id)
-
-class GoogleCloudFormatPropagator(object):
+class GoogleCloudFormatPropagator(httptextformat.HTTPTextFormat):
     """This class is for converting the trace header in google cloud format
     and generate a SpanContext, or converting a SpanContext to a google cloud
     format header. Later we will add implementation for supporting other
     format like binary format and zipkin, opencensus format.
     """
 
-    _TRACE_CONTEXT_HEADER_NAME = 'X-Cloud-Trace-Context'
-    _TRACE_CONTEXT_HEADER_FORMAT = r'([0-9a-f]{32})(\/([\d]{0,20}))?(;o=(\d+))?'
+    _TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
+    _TRACE_CONTEXT_HEADER_FORMAT = (
+        r"([0-9a-f]{32})(\/([\d]{0,20}))?(;o=(\d+))?"
+    )
     _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
+
     def extract(
         self,
         get_from_carrier: httptextformat.Getter[
@@ -84,7 +78,8 @@ class GoogleCloudFormatPropagator(object):
             trace_id=int(trace_id, 16),
             span_id=int(span_id),
             is_remote=True,
-            trace_flags=TraceFlags(trace_options))
+            trace_flags=TraceFlags(trace_options),
+        )
         return trace.set_span_in_context(
             trace.DefaultSpan(span_context), context
         )
@@ -102,12 +97,10 @@ class GoogleCloudFormatPropagator(object):
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
-        span_context.trace_id = 73219319914394507742097529490853462358
-        span_context.span_id = 2287284940105775652
-        span_context.trace_flags = TraceFlags(1)
-        header = '{}/{};o={}'.format(
-            _get_hexadecimal_trace_id(span_context.trace_id),
+        header = "{}/{};o={}".format(
+            get_hexadecimal_trace_id(span_context.trace_id),
             span_context.span_id,
-            int(span_context.trace_flags))
+            int(span_context.trace_flags),
+        )
 
         set_in_carrier(carrier, self._TRACE_CONTEXT_HEADER_NAME, header)
