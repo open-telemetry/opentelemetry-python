@@ -19,13 +19,13 @@ import boto.ec2
 import boto.elasticache
 import boto.s3
 import boto.sts
+
 from moto import (  # pylint: disable=import-error
     mock_ec2_deprecated,
     mock_lambda_deprecated,
     mock_s3_deprecated,
     mock_sts_deprecated,
 )
-
 from opentelemetry.ext.boto import BotoInstrumentor
 from opentelemetry.test.test_base import TestBase
 
