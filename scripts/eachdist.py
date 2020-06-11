@@ -556,8 +556,8 @@ def update_changelogs(targets, version):
             update_changelog(
                 "{}/CHANGELOG.md".format(target), version, new_entry
             )
-        except Exception as e:
-            print(str(e))
+        except Exception as err:  # pylint: disable=broad-except
+            print(str(err))
             errors += 1
 
     if errors != 0:
@@ -565,9 +565,10 @@ def update_changelogs(targets, version):
 
 
 def find(name, path):
-    for root, dirs, files in os.walk(path):
+    for root, _, files in os.walk(path):
         if name in files:
             return os.path.join(root, name)
+    return None
 
 
 def update_version_files(targets, version):
@@ -600,16 +601,16 @@ def update_files(targets, version, filename, search, replace):
             print("file missing: {}/{}".format(target, filename))
             continue
 
-        with open(curr_file) as f:
-            text = f.read()
+        with open(curr_file) as _file:
+            text = _file.read()
 
         if version in text:
             print("{} already contans version {}".format(curr_file, version))
             errors += 1
             continue
 
-        with open(curr_file, "w") as f:
-            f.write(re.sub(search, replace, text))
+        with open(curr_file, "w") as _file:
+            _file.write(re.sub(search, replace, text))
 
     if errors != 0:
         sys.exit(1)
