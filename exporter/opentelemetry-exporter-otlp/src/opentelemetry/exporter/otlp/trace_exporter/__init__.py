@@ -1,5 +1,4 @@
 # Copyright The OpenTelemetry Authors
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -19,16 +18,10 @@ from collections.abc import Mapping, Sequence
 from time import sleep
 from typing import Sequence as TypingSequence
 
-from backoff import expo
-from google.rpc.error_details_pb2 import RetryInfo
-from grpc import (
-    ChannelCredentials,
-    RpcError,
-    StatusCode,
-    insecure_channel,
-    secure_channel,
+from opentelemetry.ext.otlp.exporter import (
+    OTLPExporterMixin,
+    translate_key_values,
 )
-
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
 )
@@ -78,7 +71,7 @@ def _translate_key_values(key, value):
 
 
 # pylint: disable=no-member
-class OTLPSpanExporter(SpanExporter):
+class OTLPSpanExporter(SpanExporter, OTLPExporterMixin):
     """OTLP span exporter
 
     Args:
@@ -86,6 +79,9 @@ class OTLPSpanExporter(SpanExporter):
         credentials: Credentials object for server authentication
         metadata: Metadata to send when exporting
     """
+
+    _result = SpanExportResult
+    _stub = TraceServiceStub
 
     def __init__(
         self,
@@ -218,7 +214,7 @@ class OTLPSpanExporter(SpanExporter):
 
         sdk_resource_instrumentation_library_spans = {}
 
-        for sdk_span in sdk_spans:
+        for sdk_span in data:
 
             if sdk_span.resource not in (
                 sdk_resource_instrumentation_library_spans.keys()

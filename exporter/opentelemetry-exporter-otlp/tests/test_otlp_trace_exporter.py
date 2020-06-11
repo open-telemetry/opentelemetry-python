@@ -274,4 +274,4 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         # pylint: disable=protected-access
-        self.assertEqual(expected, self.exporter._translate_spans([self.span]))
+        self.assertEqual(expected, self.exporter._translate_data([self.span]))
