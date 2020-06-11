@@ -42,6 +42,9 @@ Troubleshooting
 --------------------------
 
 Running basic_trace.py hangs:
+#############################
     * Make sure you've setup Application Default Credentials. Either run ``gcloud auth application-default login`` or set the ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable to be a path to a service account token file.
+
 Getting error ``google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted``:
+################################################################################################
     * Check that you've enabled the `Cloud Trace (Stackdriver Trace) API <https://console.cloud.google.com/apis/library?q=cloud_trace>`_
