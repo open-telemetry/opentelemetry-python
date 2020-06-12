@@ -78,24 +78,41 @@ jobs:
       - run: tox -e lint
       - save_tox_cache
 
-  py38:
+  py38-core:
     executor: python38
     steps:
       - checkout
       - setup_tox
       - restore_tox_cache
-      - run: tox -f py38
+      - run: tox -f py38-core
       - save_tox_cache
 
-  pypy3:
+  py38-ext:
+    executor: python38
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run: tox -f py38-ext
+      - save_tox_cache
+
+  pypy3-core:
     executor: pypy3
     steps:
       - checkout
       - setup_tox
       - restore_tox_cache
-      - run: tox -f pypy3
+      - run: tox -f pypy3-core
       - save_tox_cache
 
+  pypy3-ext:
+    executor: pypy3
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run: tox -f pypy3-ext
+      - save_tox_cache
 
 workflows:
   main:
@@ -103,5 +120,7 @@ workflows:
       - docs
       - docker-tests
       - lint
-      - pypy3
-      - py38
+      - pypy3-core
+      - pypy3-ext
+      - py38-core
+      - py38-ext
