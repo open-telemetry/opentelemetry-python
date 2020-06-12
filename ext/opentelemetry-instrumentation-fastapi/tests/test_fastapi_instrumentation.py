@@ -21,7 +21,7 @@ import opentelemetry.instrumentation.fastapi as otel_fastapi
 from opentelemetry.test.test_base import TestBase
 
 
-class TestStarletteManualInstrumentation(TestBase):
+class TestFastAPIManualInstrumentation(TestBase):
     def _create_app(self):
         app = self._create_fastapi_app()
         self._instrumentor.instrument_app(app)
@@ -66,7 +66,7 @@ class TestStarletteManualInstrumentation(TestBase):
         return app
 
 
-class TestAutoInstrumentation(TestStarletteManualInstrumentation):
+class TestAutoInstrumentation(TestFastAPIManualInstrumentation):
     """Test the auto-instrumented variant
 
     Extending the manual instrumentation as most test cases apply

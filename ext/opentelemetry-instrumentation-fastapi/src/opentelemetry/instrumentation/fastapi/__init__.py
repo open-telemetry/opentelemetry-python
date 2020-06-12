@@ -31,7 +31,7 @@ class FastAPIInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def instrument_app(app: fastapi.FastAPI):
-        """Instrument a previously instrumented Starlette application.
+        """Instrument a FastAPI application.
         """
         if not getattr(app, "is_instrumented_by_opentelemetry", False):
             app.add_middleware(
