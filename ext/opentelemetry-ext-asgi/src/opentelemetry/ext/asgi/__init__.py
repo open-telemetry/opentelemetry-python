@@ -128,7 +128,7 @@ class OpenTelemetryMiddleware:
 
     Args:
         app: The ASGI application callable to forward requests to.
-        span_details_callbackj: Callback which calculates a generic span
+        span_details_callback: Callback which calculates a generic span
             name for an incoming HTTP request based on the ASGI scope.
             Optional: Defaults to get_default_span_name.
     """

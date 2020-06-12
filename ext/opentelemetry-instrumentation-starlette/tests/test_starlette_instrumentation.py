@@ -52,6 +52,9 @@ class TestStarletteManualInstrumentation(TestBase):
         self.assertEqual(
             spans[-1].attributes["http.route"], "/user/{username}"
         )
+        # ensure that at least one attribute that is populated by
+        # the asgi instrumentation is successfully feeding though.
+        self.assertEqual(spans[-1].attributes["http.flavor"], "1.1")
 
     @staticmethod
     def _create_starlette_app():
@@ -80,12 +83,12 @@ class TestAutoInstrumentation(TestStarletteManualInstrumentation):
         self._instrumentor.uninstrument()
         super().tearDown()
 
-    def test_uninstrument(self):
-        """ verify uninstrumented un-monkeypatches."""
-
 
 class TestAutoInstrumentationLogic(unittest.TestCase):
     def test_instrumentation(self):
+        """Verify that instrumentation methods are instrumenting and
+        removing as expected.
+        """
         instrumentor = otel_starlette.StarletteInstrumentor()
         original = applications.Starlette
         instrumentor.instrument()
