@@ -95,14 +95,28 @@ jobs:
   py34-core:
     executor: python34
     steps:
-      - run_tox_scenario:
-          pattern: py34-core
+      - checkout
+      - run:
+          name: "Install tox"
+          command: sudo pip install -U tox virtualenv tox-factor
+      - restore_tox_cache
+      - run:
+          name: "Run scripts/run-tox-scenario"
+          command: tox -f py34-core
+      - save_tox_cache
 
   py34-ext:
     executor: python34
     steps:
-      - run_tox_scenario:
-          pattern: py34-ext
+      - checkout
+      - run:
+          name: "Install tox"
+          command: sudo pip install -U tox virtualenv tox-factor
+      - restore_tox_cache
+      - run:
+          name: "Run scripts/run-tox-scenario"
+          command: tox -f py34-ext
+      - save_tox_cache
 
   py35-core:
     executor: python35
