@@ -49,6 +49,21 @@ commands:
           paths:
             - ".tox"
 
+  run_tox_scenario:
+    description: "Run scripts/run-tox-scenario with setup, caching and persistence"
+    parameters:
+      pattern:
+        type: string
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run:
+          name: "Run scripts/run-tox-scenario"
+          command: scripts/run-tox-scenario '<< parameters.pattern >>'
+      - save_results
+      - save_tox_cache
+
 jobs:
   docs:
     executor: python38
@@ -78,41 +93,77 @@ jobs:
       - run: tox -e lint
       - save_tox_cache
 
+  py34-core:
+    executor: python34
+    steps:
+      - run_tox_scenario:
+          pattern: py34-core
+
+  py34-ext:
+    executor: python34
+    steps:
+      - run_tox_scenario:
+          pattern: py34-ext
+
+  py35-core:
+    executor: python35
+    steps:
+      - run_tox_scenario:
+          pattern: py35-core
+
+  py35-ext:
+    executor: python35
+    steps:
+      - run_tox_scenario:
+          pattern: py35-ext
+
+  py36-core:
+    executor: python36
+    steps:
+      - run_tox_scenario:
+          pattern: py36-core
+
+  py36-ext:
+    executor: python36
+    steps:
+      - run_tox_scenario:
+          pattern: py36-ext
+
+  py37-core:
+    executor: python37
+    steps:
+      - run_tox_scenario:
+          pattern: py37-core
+
+  py37-ext:
+    executor: python37
+    steps:
+      - run_tox_scenario:
+          pattern: py37-ext
+
   py38-core:
     executor: python38
     steps:
-      - checkout
-      - setup_tox
-      - restore_tox_cache
-      - run: tox -f py38-core
-      - save_tox_cache
+      - run_tox_scenario:
+          pattern: py38-core
 
   py38-ext:
     executor: python38
     steps:
-      - checkout
-      - setup_tox
-      - restore_tox_cache
-      - run: tox -f py38-ext
-      - save_tox_cache
+      - run_tox_scenario:
+          pattern: py38-ext
 
   pypy3-core:
     executor: pypy3
     steps:
-      - checkout
-      - setup_tox
-      - restore_tox_cache
-      - run: tox -f pypy3-core
-      - save_tox_cache
+      - run_tox_scenario:
+          pattern: pypy3-core
 
   pypy3-ext:
     executor: pypy3
     steps:
-      - checkout
-      - setup_tox
-      - restore_tox_cache
-      - run: tox -f pypy3-ext
-      - save_tox_cache
+      - run_tox_scenario:
+          pattern: pypy3-ext
 
 workflows:
   main:
@@ -124,3 +175,11 @@ workflows:
       - pypy3-ext
       - py38-core
       - py38-ext
+      - py37-core
+      - py37-ext
+      - py36-core
+      - py36-ext
+      - py35-core
+      - py35-ext
+      - py34-core
+      - py34-ext
