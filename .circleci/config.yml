@@ -3,19 +3,75 @@ version: 2.1
 orbs:
   python: circleci/python@0.2.1
 
+executors:
+  python38:
+    docker:
+      - image: circleci/python:3.8
+  python37:
+    docker:
+      - image: circleci/python:3.7
+  python36:
+    docker:
+      - image: circleci/python:3.6
+  python35:
+    docker:
+      - image: circleci/python:3.5
+  python34:
+    docker:
+      - image: circleci/python:3.4
+  pypy3:
+    docker:
+      - image: circleci/pypy:3
+
+commands:
+  setup_tox:
+    description: "Install tox"
+    steps:
+      - run: pip install -U tox virtualenv
+
+  restore_tox_cache:
+    description: "Restore .tox directory from previous runs for faster installs"
+    steps:
+      - restore_cache:
+          # In the cache key:
+          #   - .Environment.CIRCLE_JOB: We do separate tox environments by job name, so caching and restoring is
+          #                              much faster.
+          key: tox-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "tox.ini" }}
+
+  save_tox_cache:
+    description: "Save .tox directory into cache for faster installs next time"
+    steps:
+      - save_cache:
+          # In the cache key:
+          #   - .Environment.CIRCLE_JOB: We do separate tox environments by job name, so caching and restoring is
+          #                              much faster.
+          key: tox-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "tox.ini" }}
+          paths:
+            - ".tox"
+
 jobs:
-  build-and-test:
-    executor: python/default
+  docs:
+    executor: python38
     steps:
       - checkout
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
-      - run:
-          command: ./manage.py test
-          name: Test
+      - setup_tox
+      - run: tox -e docs
+  docker-tests:
+    executor: python38
+    steps:
+      - checkout
+      - setup_tox
+      - run: tox -e docker-tests
+  lint:
+    executor: python38
+    steps:
+      - checkout
+      - setup_tox
+      - run: tox -e lint
 
 workflows:
   main:
     jobs:
-      - build-and-test
+      - docs
+      - docker-tests
+      - lint
