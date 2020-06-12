@@ -27,7 +27,7 @@ commands:
   setup_tox:
     description: "Install tox"
     steps:
-      - run: pip install -U tox virtualenv
+      - run: pip install -U tox virtualenv tox-factor
 
   restore_tox_cache:
     description: "Restore .tox directory from previous runs for faster installs"
@@ -58,6 +58,7 @@ jobs:
       - restore_tox_cache
       - run: tox -e docs
       - save_tox_cache
+
   docker-tests:
     executor: python38
     steps:
@@ -65,13 +66,9 @@ jobs:
       - setup_tox
       - restore_tox_cache
       - setup_remote_docker
-      - run:
-          name: Start container and verify it's working
-          command: |
-            set -x
-            docker-compose up -d
       - run: tox -e docker-tests
       - save_tox_cache
+
   lint:
     executor: python38
     steps:
@@ -81,9 +78,30 @@ jobs:
       - run: tox -e lint
       - save_tox_cache
 
+  py38:
+    executor: python38
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run: tox -f py38
+      - save_tox_cache
+
+  pypy3:
+    executor: pypy3
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run: tox -f pypy3
+      - save_tox_cache
+
+
 workflows:
   main:
     jobs:
       - docs
       - docker-tests
       - lint
+      - pypy3
+      - py38
