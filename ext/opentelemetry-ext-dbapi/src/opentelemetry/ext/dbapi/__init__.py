@@ -273,6 +273,13 @@ def get_traced_connection_proxy(
                 self.__wrapped__.cursor(*args, **kwargs), db_api_integration
             )
 
+        def __enter__(self):
+            self.__wrapped__.__enter__()
+            return self
+
+        def __exit__(self, *args, **kwargs):
+            self.__wrapped__.__exit__(*args, **kwargs)
+
     return TracedConnectionProxy(connection, *args, **kwargs)
 
 
@@ -343,5 +350,12 @@ def get_traced_cursor_proxy(cursor, db_api_integration, *args, **kwargs):
             return _traced_cursor.traced_execution(
                 self.__wrapped__.callproc, *args, **kwargs
             )
+
+        def __enter__(self):
+            self.__wrapped__.__enter__()
+            return self
+
+        def __exit__(self, *args, **kwargs):
+            self.__wrapped__.__exit__(*args, **kwargs)
 
     return TracedCursorProxy(cursor, *args, **kwargs)
