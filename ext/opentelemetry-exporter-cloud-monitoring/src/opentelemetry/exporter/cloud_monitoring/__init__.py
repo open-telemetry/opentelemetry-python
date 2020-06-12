@@ -67,16 +67,17 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         :param record:
         :return:
         """
+        instrument = record.instrument
         descriptor_type = "custom.googleapis.com/OpenTelemetry/{}".format(
-            record.metric.name
+            instrument.name
         )
         if descriptor_type in self._metric_descriptors:
             return self._metric_descriptors[descriptor_type]
         descriptor = {
             "name": None,
             "type": descriptor_type,
-            "display_name": record.metric.name,
-            "description": record.metric.description,
+            "display_name": instrument.name,
+            "description": instrument.description,
             "labels": [],
         }
         for key, value in record.labels:
@@ -104,9 +105,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 type(record.aggregator).__name__,
             )
             return None
-        if record.metric.value_type == int:
+        if instrument.value_type == int:
             descriptor["value_type"] = MetricDescriptor.ValueType.INT64
-        elif record.metric.value_type == float:
+        elif instrument.value_type == float:
             descriptor["value_type"] = MetricDescriptor.ValueType.DOUBLE
         proto_descriptor = MetricDescriptor(**descriptor)
         try:
@@ -129,6 +130,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
     ) -> "MetricsExportResult":
         all_series = []
         for record in metric_records:
+            instrument = record.instrument
             metric_descriptor = self._get_metric_descriptor(record)
             if not metric_descriptor:
                 continue
@@ -140,9 +142,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 series.metric.labels[key] = str(value)
 
             point = series.points.add()
-            if record.metric.value_type == int:
+            if instrument.value_type == int:
                 point.value.int64_value = record.aggregator.checkpoint
-            elif record.metric.value_type == float:
+            elif instrument.value_type == float:
                 point.value.double_value = record.aggregator.checkpoint
             seconds, nanos = divmod(
                 record.aggregator.last_update_timestamp, 1e9

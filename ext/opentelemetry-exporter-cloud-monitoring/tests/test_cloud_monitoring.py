@@ -71,7 +71,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_batch_write(self):
         client = mock.Mock()
-        exporter = CloudMonitoringMetricsExporter(client=client)
+        exporter = CloudMonitoringMetricsExporter(
+            project_id=self.project_id, client=client
+        )
         exporter.project_name = self.project_name
         exporter._batch_write(range(2 * MAX_BATCH_WRITE + 1))
         client.create_time_series.assert_has_calls(
@@ -100,17 +102,19 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_get_metric_descriptor(self):
         client = mock.Mock()
-        exporter = CloudMonitoringMetricsExporter(client=client)
+        exporter = CloudMonitoringMetricsExporter(
+            project_id=self.project_id, client=client
+        )
         exporter.project_name = self.project_name
 
         self.assertIsNone(
             exporter._get_metric_descriptor(
-                MetricRecord(UnsupportedAggregator(), (), MockMetric())
+                MetricRecord(MockMetric(), (), UnsupportedAggregator())
             )
         )
 
         record = MetricRecord(
-            SumAggregator(), (("label1", "value1"),), MockMetric()
+            MockMetric(), (("label1", "value1"),), SumAggregator(),
         )
         metric_descriptor = exporter._get_metric_descriptor(record)
         client.create_metric_descriptor.assert_called_with(
@@ -132,20 +136,20 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         # Getting a cached metric descriptor shouldn't use another call
         cached_metric_descriptor = exporter._get_metric_descriptor(record)
-        client.create_metric_descriptor.assert_called_once()
+        self.assertEqual(client.create_metric_descriptor.call_count, 1)
         self.assertEqual(metric_descriptor, cached_metric_descriptor)
 
         # Drop labels with values that aren't string, int or bool
         exporter._get_metric_descriptor(
             MetricRecord(
-                SumAggregator(),
+                MockMetric(name="name2", value_type=float),
                 (
                     ("label1", "value1"),
                     ("label2", dict()),
                     ("label3", 3),
                     ("label4", False),
                 ),
-                MockMetric(name="name2", value_type=float),
+                SumAggregator(),
             )
         )
         client.create_metric_descriptor.assert_called_with(
@@ -169,15 +173,17 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_export(self):
         client = mock.Mock()
-        exporter = CloudMonitoringMetricsExporter(client=client)
+        exporter = CloudMonitoringMetricsExporter(
+            project_id=self.project_id, client=client
+        )
         exporter.project_name = self.project_name
 
         exporter.export(
             [
                 MetricRecord(
-                    UnsupportedAggregator(),
-                    (("label1", "value1"),),
                     MockMetric(),
+                    (("label1", "value1"),),
+                    UnsupportedAggregator(),
                 )
             ]
         )
@@ -204,14 +210,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    sum_agg_one,
-                    (("label1", "value1"), ("label2", 1),),
                     MockMetric(),
+                    (("label1", "value1"), ("label2", 1),),
+                    sum_agg_one,
                 ),
                 MetricRecord(
-                    sum_agg_one,
-                    (("label1", "value2"), ("label2", 2),),
                     MockMetric(),
+                    (("label1", "value2"), ("label2", 2),),
+                    sum_agg_one,
                 ),
             ]
         )
@@ -245,14 +251,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    sum_agg_two,
-                    (("label1", "value1"), ("label2", 1),),
                     MockMetric(),
+                    (("label1", "value1"), ("label2", 1),),
+                    sum_agg_two,
                 ),
                 MetricRecord(
-                    sum_agg_two,
-                    (("label1", "value2"), ("label2", 2),),
                     MockMetric(),
+                    (("label1", "value2"), ("label2", 2),),
+                    sum_agg_two,
                 ),
             ]
         )
@@ -263,9 +269,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    sum_agg_two,
-                    (("label1", "changed_label"), ("label2", 2),),
                     MockMetric(),
+                    (("label1", "changed_label"), ("label2", 2),),
+                    sum_agg_two,
                 ),
             ]
         )
