@@ -176,8 +176,7 @@ class TestAsgiApplication(AsgiTestBase):
         """Test that span_names can be overwritten by our callback function."""
         span_name = "Dymaxion"
 
-        # pylint:disable=unused-argument
-        def get_predefined_span_details(scope):
+        def get_predefined_span_details(_):
             return span_name, {}
 
         def update_expected_span_name(expected):

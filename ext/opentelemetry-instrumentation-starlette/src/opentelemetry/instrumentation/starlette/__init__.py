@@ -59,7 +59,7 @@ class _InstrumentedStarlette(applications.Starlette):
 def _get_route_details(scope):
     """Callback to retrieve the starlette route being served.
 
-    TODO: there is currently no way to retrieve the path from
+    TODO: there is currently no way to retrieve http.route from
     a starlette application from scope.
 
     See: https://github.com/encode/starlette/pull/804

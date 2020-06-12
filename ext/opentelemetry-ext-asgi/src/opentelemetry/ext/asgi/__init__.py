@@ -128,9 +128,10 @@ class OpenTelemetryMiddleware:
 
     Args:
         app: The ASGI application callable to forward requests to.
-        span_details_callback: Callback which calculates a generic span
-            name for an incoming HTTP request based on the ASGI scope.
-            Optional: Defaults to get_default_span_name.
+        span_details_callback: Callback which should return a string
+            and a tuple, representing the desired span name and a
+            dictionary with any additional span attributes to set.
+            Optional: Defaults to get_default_span_details.
     """
 
     def __init__(self, app, span_details_callback=None):
