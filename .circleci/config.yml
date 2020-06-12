@@ -60,7 +60,7 @@ commands:
       - restore_tox_cache
       - run:
           name: "Run scripts/run-tox-scenario"
-          command: scripts/run-tox-scenario '<< parameters.pattern >>'
+          command: tox -f '<< parameters.pattern >>'
       - save_tox_cache
 
 jobs:
