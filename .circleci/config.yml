@@ -55,19 +55,25 @@ jobs:
     steps:
       - checkout
       - setup_tox
+      - restore_tox_cache
       - run: tox -e docs
+      - save_tox_cache
   docker-tests:
     executor: python38
     steps:
       - checkout
       - setup_tox
+      - restore_tox_cache
       - run: tox -e docker-tests
+      - save_tox_cache
   lint:
     executor: python38
     steps:
       - checkout
       - setup_tox
+      - restore_tox_cache
       - run: tox -e lint
+      - save_tox_cache
 
 workflows:
   main:
