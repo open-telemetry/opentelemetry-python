@@ -61,7 +61,6 @@ commands:
       - run:
           name: "Run scripts/run-tox-scenario"
           command: scripts/run-tox-scenario '<< parameters.pattern >>'
-      - save_results
       - save_tox_cache
 
 jobs:
