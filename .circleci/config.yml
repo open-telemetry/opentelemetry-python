@@ -21,7 +21,7 @@ executors:
       - image: circleci/python:3.4
   pypy3:
     docker:
-      - image: circleci/pypy:3
+      - image: pypy:3
 
 commands:
   setup_tox:
