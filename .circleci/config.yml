@@ -62,9 +62,14 @@ jobs:
     executor: python38
     steps:
       - checkout
-      - setup_remote_docker
       - setup_tox
       - restore_tox_cache
+      - setup_remote_docker
+      - run:
+          name: Start container and verify it's working
+          command: |
+            set -x
+            docker-compose up -d
       - run: tox -e docker-tests
       - save_tox_cache
   lint:
