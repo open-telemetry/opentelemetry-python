@@ -21,13 +21,10 @@ import psutil
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, ValueObserver
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
-from opentelemetry.sdk.metrics.export.controller import PushController
 
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-exporter = ConsoleMetricsExporter()
-controller = PushController(meter=meter, exporter=exporter, interval=2)
+metrics.get_meter_provider().start_pipeline(meter, ConsoleMetricsExporter(), 5)
 
 
 # Callback to gather cpu usage
@@ -60,6 +57,7 @@ meter.register_observer(
     description="RAM memory usage",
     unit="1",
     value_type=float,
+    observer_type=ValueObserver,
     label_keys=(),
 )
 
