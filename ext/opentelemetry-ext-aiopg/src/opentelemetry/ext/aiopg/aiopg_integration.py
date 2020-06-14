@@ -9,6 +9,33 @@ from opentelemetry.trace import SpanKind, Tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
+# pylint: disable=abstract-method
+class AsyncProxyObject(wrapt.ObjectProxy):
+    def __aiter__(self):
+        return self.__wrapped__.__aiter__()
+
+    @asyncio.coroutine
+    def __anext__(self):
+        result = yield from self.__wrapped__.__anext__()
+        return result
+
+    @asyncio.coroutine
+    def __aenter__(self):
+        result = yield from self.__wrapped__.__aenter__()
+        return result
+
+    @asyncio.coroutine
+    def __aexit__(self, exc_type, exc_val, exc_tb):
+        result = yield from self.__wrapped__.__aexit__(
+            exc_type, exc_val, exc_tb
+        )
+        return result
+
+    def __await__(self):
+        result = yield from self.__wrapped__.__await__()
+        return result
+
+
 class AiopgIntegration:
     def __init__(
         self,
@@ -87,10 +114,10 @@ def get_traced_connection_proxy(
     connection, db_api_integration, *args, **kwargs
 ):
     # pylint: disable=abstract-method
-    class TracedConnectionProxy(wrapt.ObjectProxy):
+    class TracedConnectionProxy(AsyncProxyObject):
         # pylint: disable=unused-argument
         def __init__(self, connection, *args, **kwargs):
-            wrapt.ObjectProxy.__init__(self, connection)
+            super().__init__(connection)
 
         def cursor(self, *args, **kwargs):
             coro = self._cursor(*args, **kwargs)
@@ -102,23 +129,15 @@ def get_traced_connection_proxy(
             cursor = yield from self.__wrapped__._cursor(*args, **kwargs)
             return get_traced_cursor_proxy(cursor, db_api_integration)
 
-        @asyncio.coroutine
-        def __aenter__(self):
-            return self.__wrapped__.__aenter__()
-
-        @asyncio.coroutine
-        def __aexit__(self, exc_type, exc_val, exc_tb):
-            self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)
-
     return TracedConnectionProxy(connection, *args, **kwargs)
 
 
 def get_traced_pool_proxy(pool, db_api_integration, *args, **kwargs):
     # pylint: disable=abstract-method
-    class TracedPoolProxy(wrapt.ObjectProxy):
+    class TracedPoolProxy(AsyncProxyObject):
         # pylint: disable=unused-argument
         def __init__(self, pool, *args, **kwargs):
-            wrapt.ObjectProxy.__init__(self, pool)
+            super().__init__(pool)
 
         def acquire(self):
             """Acquire free connection from the pool."""
@@ -185,11 +204,11 @@ def get_traced_cursor_proxy(cursor, db_api_integration, *args, **kwargs):
     _traced_cursor = AsyncTracedCursor(db_api_integration)
 
     # pylint: disable=abstract-method
-    class AsyncTracedCursorProxy(wrapt.ObjectProxy):
+    class AsyncTracedCursorProxy(AsyncProxyObject):
 
         # pylint: disable=unused-argument
         def __init__(self, cursor, *args, **kwargs):
-            wrapt.ObjectProxy.__init__(self, cursor)
+            super().__init__(cursor)
 
         @asyncio.coroutine
         def execute(self, *args, **kwargs):
@@ -209,26 +228,6 @@ def get_traced_cursor_proxy(cursor, db_api_integration, *args, **kwargs):
         def callproc(self, *args, **kwargs):
             result = yield from _traced_cursor.traced_execution(
                 self.__wrapped__.callproc, *args, **kwargs
-            )
-            return result
-
-        def __aiter__(self):
-            return self.__wrapped__.__aiter__()
-
-        @asyncio.coroutine
-        def __anext__(self):
-            result = yield from self.__wrapped__.__anext__()
-            return result
-
-        @asyncio.coroutine
-        def __aenter__(self):
-            result = yield from self.__wrapped__.__aenter__()
-            return result
-
-        @asyncio.coroutine
-        def __aexit__(self, exc_type, exc_val, exc_tb):
-            result = yield from self.__wrapped__.__aexit__(
-                exc_type, exc_val, exc_tb
             )
             return result
 
