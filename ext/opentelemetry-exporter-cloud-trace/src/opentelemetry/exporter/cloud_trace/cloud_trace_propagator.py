@@ -25,22 +25,16 @@ from opentelemetry.trace.span import (
     get_hexadecimal_trace_id,
 )
 
-_TRACE_ID_DELIMETER = "/"
-_SPAN_ID_DELIMETER = ";"
+_TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
+_TRACE_CONTEXT_HEADER_FORMAT = r"([0-9a-f]{32})(\/([\d]{0,20}))?(;o=(\d+))?"
+_TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 
 
-class GoogleCloudFormatPropagator(httptextformat.HTTPTextFormat):
-    """This class is for converting the trace header in google cloud format
-    and generate a SpanContext, or converting a SpanContext to a google cloud
-    format header. Later we will add implementation for supporting other
-    format like binary format and zipkin, opencensus format.
+class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
+    """This class is for injecting into a carrier the SpanContext in Google
+    Cloud format , or extracting the SpanContext from a carrier using Google
+    Cloud format.
     """
-
-    _TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
-    _TRACE_CONTEXT_HEADER_FORMAT = (
-        r"([0-9a-f]{32})(\/([\d]{0,20}))?(;o=(\d+))?"
-    )
-    _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 
     def extract(
         self,
@@ -50,17 +44,12 @@ class GoogleCloudFormatPropagator(httptextformat.HTTPTextFormat):
         carrier: httptextformat.HTTPTextFormatT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        """Extract CorrelationContext from the carrier.
-
-        See
-        `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
-        """
-        header = get_from_carrier(carrier, self._TRACE_CONTEXT_HEADER_NAME)
+        header = get_from_carrier(carrier, _TRACE_CONTEXT_HEADER_NAME)
 
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        match = re.search(self._TRACE_CONTEXT_HEADER_RE, header[0])
+        match = re.search(_TRACE_CONTEXT_HEADER_RE, header)
         if not match:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
@@ -102,5 +91,4 @@ class GoogleCloudFormatPropagator(httptextformat.HTTPTextFormat):
             span_context.span_id,
             int(span_context.trace_flags),
         )
-
-        set_in_carrier(carrier, self._TRACE_CONTEXT_HEADER_NAME, header)
+        set_in_carrier(carrier, _TRACE_CONTEXT_HEADER_NAME, header)
