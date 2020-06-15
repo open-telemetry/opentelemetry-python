@@ -289,13 +289,24 @@ class TestAiopgIntegration(TestBase):
         self.assertIsInstance(connection, mock.Mock)
 
     def test_wrap_create_pool(self):
+        async def check_connection(pool):
+            async with pool.acquire() as connection:
+                self.assertEqual(aiopg_mock.create_pool_call_count, 1)
+                self.assertIsInstance(
+                    connection.__wrapped__, AiopgConnectionMock
+                )
+
         wrappers.wrap_create_pool(self.tracer, AiopgMock, "create_pool", "-")
         aiopg_mock = AiopgMock()
-        connection = async_call(aiopg_mock.create_pool())
-        self.assertEqual(aiopg_mock.create_pool_call_count, 1)
-        self.assertIsInstance(connection.__wrapped__, mock.Mock)
+        pool = async_call(aiopg_mock.create_pool())
+        async_call(check_connection(pool))
 
     def test_unwrap_create_pool(self):
+        async def check_connection(pool):
+            async with pool.acquire() as connection:
+                self.assertEqual(aiopg_mock.create_pool_call_count, 2)
+                self.assertIsInstance(connection, AiopgConnectionMock)
+
         wrappers.wrap_create_pool(self.tracer, AiopgMock, "create_pool", "-")
         aiopg_mock = AiopgMock()
         pool = async_call(aiopg_mock.create_pool())
@@ -303,8 +314,7 @@ class TestAiopgIntegration(TestBase):
 
         wrappers.unwrap_create_pool(AiopgMock, "create_pool")
         pool = async_call(aiopg_mock.create_pool())
-        self.assertEqual(aiopg_mock.create_pool_call_count, 2)
-        self.assertIsInstance(pool, mock.Mock)
+        async_call(check_connection(pool))
 
     def test_instrument_connection(self):
         connection = mock.Mock()
@@ -334,8 +344,7 @@ class TestAiopgIntegration(TestBase):
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
-def mock_connect(*args, **kwargs):
+async def mock_connect(*args, **kwargs):
     database = kwargs.get("database")
     server_host = kwargs.get("server_host")
     server_port = kwargs.get("server_port")
@@ -343,8 +352,8 @@ def mock_connect(*args, **kwargs):
     return MockConnection(database, server_port, server_host, user)
 
 
-@asyncio.coroutine
-def mock_create_pool(*args, **kwargs):
+# pylint: disable=unused-argument
+async def mock_create_pool(*args, **kwargs):
     database = kwargs.get("database")
     server_host = kwargs.get("server_host")
     server_port = kwargs.get("server_port")
@@ -359,54 +368,84 @@ class MockPool:
         self.server_host = server_host
         self.user = user
 
+    async def release(self, conn):
+        return conn
+
     def acquire(self):
         """Acquire free connection from the pool."""
         coro = self._acquire()
         return _PoolAcquireContextManager(coro, self)
 
-    @asyncio.coroutine
-    def _acquire(self):
-        connect = yield from mock_connect(
+    async def _acquire(self):
+        connect = await mock_connect(
             self.database, self.server_port, self.server_host, self.user
         )
         return connect
 
 
-class MockConnection:
+class MockPsycopg2Connection:
     def __init__(self, database, server_port, server_host, user):
         self.database = database
         self.server_port = server_port
         self.server_host = server_host
         self.user = user
 
+
+class MockConnection:
+    def __init__(self, database, server_port, server_host, user):
+        self._conn = MockPsycopg2Connection(
+            database, server_port, server_host, user
+        )
+
     # pylint: disable=no-self-use
     def cursor(self):
         coro = self._cursor()
         return _ContextManager(coro)
 
-    @asyncio.coroutine
-    def _cursor(self):
+    async def _cursor(self):
         return MockCursor()
+
+    def close(self):
+        pass
 
 
 class MockCursor:
     # pylint: disable=unused-argument, no-self-use
-    @asyncio.coroutine
-    def execute(self, query, params=None, throw_exception=False):
+    async def execute(self, query, params=None, throw_exception=False):
         if throw_exception:
             raise Exception("Test Exception")
 
     # pylint: disable=unused-argument, no-self-use
-    @asyncio.coroutine
-    def executemany(self, query, params=None, throw_exception=False):
+    async def executemany(self, query, params=None, throw_exception=False):
         if throw_exception:
             raise Exception("Test Exception")
 
     # pylint: disable=unused-argument, no-self-use
-    @asyncio.coroutine
-    def callproc(self, query, params=None, throw_exception=False):
+    async def callproc(self, query, params=None, throw_exception=False):
         if throw_exception:
             raise Exception("Test Exception")
+
+
+class AiopgConnectionMock:
+    _conn = MagicMock()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def __aenter__(self):
+        return MagicMock()
+
+
+class AiopgPoolMock:
+    async def release(self, conn):
+        return conn
+
+    def acquire(self):
+        coro = self._acquire()
+        return _PoolAcquireContextManager(coro, self)
+
+    async def _acquire(self):
+        return AiopgConnectionMock()
 
 
 class AiopgMock:
@@ -414,12 +453,10 @@ class AiopgMock:
         self.connect_call_count = 0
         self.create_pool_call_count = 0
 
-    @asyncio.coroutine
-    def connect(self, *args, **kwargs):
+    async def connect(self, *args, **kwargs):
         self.connect_call_count += 1
         return MagicMock()
 
-    @asyncio.coroutine
-    def create_pool(self, *args, **kwargs):
+    async def create_pool(self, *args, **kwargs):
         self.create_pool_call_count += 1
-        return MagicMock()
+        return AiopgPoolMock()

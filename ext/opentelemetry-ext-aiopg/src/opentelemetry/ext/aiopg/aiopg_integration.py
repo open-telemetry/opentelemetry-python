@@ -1,4 +1,3 @@
-import asyncio
 import functools
 import typing
 
@@ -14,9 +13,8 @@ class AsyncProxyObject(wrapt.ObjectProxy):
     def __aiter__(self):
         return self.__wrapped__.__aiter__()
 
-    @asyncio.coroutine
-    def __anext__(self):
-        result = yield from self.__wrapped__.__anext__()
+    async def __anext__(self):
+        result = await self.__wrapped__.__anext__()
         return result
 
     async def __aenter__(self):
