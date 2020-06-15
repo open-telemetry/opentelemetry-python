@@ -25,7 +25,7 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 
 
 class UnsupportedAggregator:
@@ -114,7 +114,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         record = MetricRecord(
-            MockMetric(), (("label1", "value1"),), CounterAggregator(),
+            MockMetric(), (("label1", "value1"),), SumAggregator(),
         )
         metric_descriptor = exporter._get_metric_descriptor(record)
         client.create_metric_descriptor.assert_called_with(
@@ -149,7 +149,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     ("label3", 3),
                     ("label4", False),
                 ),
-                CounterAggregator(),
+                SumAggregator(),
             )
         )
         client.create_metric_descriptor.assert_called_with(
@@ -204,20 +204,20 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        counter_one = CounterAggregator()
-        counter_one.checkpoint = 1
-        counter_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
+        sum_agg_one = SumAggregator()
+        sum_agg_one.checkpoint = 1
+        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
         exporter.export(
             [
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value1"), ("label2", 1),),
-                    counter_one,
+                    sum_agg_one,
                 ),
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value2"), ("label2", 2),),
-                    counter_one,
+                    sum_agg_one,
                 ),
             ]
         )
@@ -245,33 +245,33 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         # Attempting to export too soon after another export with the exact
         # same labels leads to it being dropped
 
-        counter_two = CounterAggregator()
-        counter_two.checkpoint = 1
-        counter_two.last_update_timestamp = (WRITE_INTERVAL + 2) * 1e9
+        sum_agg_two = SumAggregator()
+        sum_agg_two.checkpoint = 1
+        sum_agg_two.last_update_timestamp = (WRITE_INTERVAL + 2) * 1e9
         exporter.export(
             [
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value1"), ("label2", 1),),
-                    counter_two,
+                    sum_agg_two,
                 ),
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value2"), ("label2", 2),),
-                    counter_two,
+                    sum_agg_two,
                 ),
             ]
         )
         self.assertEqual(client.create_time_series.call_count, 1)
 
         # But exporting with different labels is fine
-        counter_two.checkpoint = 2
+        sum_agg_two.checkpoint = 2
         exporter.export(
             [
                 MetricRecord(
                     MockMetric(),
                     (("label1", "changed_label"), ("label2", 2),),
-                    counter_two,
+                    sum_agg_two,
                 ),
             ]
         )
