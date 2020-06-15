@@ -49,7 +49,7 @@ Running basic_trace.py hangs:
 
 Getting error ``google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted``:
 ################################################################################################
-    * Check that you've enabled the `Cloud Trace (Stackdriver Trace) API <https://console.cloud.google.com/apis/library?q=cloud_trace>`_
+    * Check that you've enabled the `Cloud Trace (Stackdriver Trace) API <https://console.cloud.google.com/apis/library?q=cloud%20trace&filter=visibility:public>`_
 
 bash: pip: command not found:
 ##############################
