@@ -22,10 +22,10 @@ Usage
 .. code-block:: python
 
     import asyncpg
-    import opentelemetry.ext.asyncpg
+    from opentelemetry.ext.asyncpg import AsyncPGInstrumentor
 
     # You can optionally pass a custom TracerProvider to AsyncPGInstrumentor.instrument()
-    opentelemetry.ext.asyncpg.AsyncPGInstrumentor().instrument()
+    AsyncPGInstrumentor().instrument()
     conn = await asyncpg.connect(user='user', password='password',
                                  database='database', host='127.0.0.1')
     values = await conn.fetch('''SELECT 42;''')
@@ -34,72 +34,71 @@ API
 ---
 """
 
-import functools
-
-from asyncpg import Connection, exceptions
+import asyncpg
+import wrapt
+from asyncpg import exceptions
 
 from opentelemetry import trace
+from opentelemetry.ext.asyncpg.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-_APPLIED = "_opentelemetry_ext_asyncpg_applied"
+_APPLIED = "_opentelemetry_tracer"
 
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
-    if isinstance(exc, (exceptions.InterfaceError,),):
+    if isinstance(
+        exc, (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
+    ):
         return StatusCanonicalCode.INVALID_ARGUMENT
     if isinstance(exc, exceptions.IdleInTransactionSessionTimeoutError):
         return StatusCanonicalCode.DEADLINE_EXCEEDED
     return StatusCanonicalCode.UNKNOWN
 
 
-def _hydrate_span_from_args(span, *args, **__):
-    span.set_attribute("db.type", "sql")
+def _hydrate_span_from_args(connection, query, parameters) -> dict:
+    span_attributes = {"db.type": "sql"}
 
-    if len(args) <= 0:
-        return span
-
-    connection = args[0]
     if connection is not None:
         params = getattr(connection, "_params", None)
         if params is not None:
             database_name = getattr(params, "database", None)
             if database_name is not None:
-                span.set_attribute("db.instance", database_name)
+                span_attributes["db.instance"] = database_name
 
             database_user = getattr(params, "user", None)
             if database_user is not None:
-                span.set_attribute("db.user", database_user)
+                span_attributes["db.user"] = database_user
 
-    if len(args) > 1 and args[1] is not None:
-        span.set_attribute("db.statement", args[1])
+    if query is not None:
+        span_attributes["db.statement"] = query
 
-    if len(args) > 2 and args[2] is not None and len(args[2]) > 0:
-        span.set_attribute("db.statement.parameters", args[2])
+    if parameters is not None and len(parameters) > 0:
+        span_attributes["db.statement.parameters"] = str(parameters)
 
-    return span
+    return span_attributes
 
 
-def _execute(wrapped, tracer_provider):
-    tracer = trace.get_tracer(__name__, "0.8", tracer_provider)
+async def _do_execute(func, span_attributes, args, kwargs):
+    tracer = getattr(asyncpg, _APPLIED)
 
-    @functools.wraps(wrapped)
-    async def _method(*args, **kwargs):
+    exception = None
 
-        exception = None
+    with tracer.start_as_current_span(
+        "postgresql", kind=SpanKind.CLIENT
+    ) as span:
 
-        with tracer.start_as_current_span(
-            "postgresql", kind=SpanKind.CLIENT
-        ) as span:
+        for k, v in span_attributes.items():
+            span.set_attribute(k, v)
 
-            span = _hydrate_span_from_args(span, *args, **kwargs)
-
-            try:
-                result = await wrapped(*args, **kwargs)
-            except Exception as exc:  # pylint: disable=W0703
-                exception = exc
-
+        try:
+            result = await func(*args, **kwargs)
+        except Exception as exc:  # pylint: disable=W0703
+            exception = exc
+            raise
+        finally:
             if exception is not None:
                 span.set_status(
                     Status(_exception_to_canonical_code(exception))
@@ -107,40 +106,52 @@ def _execute(wrapped, tracer_provider):
             else:
                 span.set_status(Status(StatusCanonicalCode.OK))
 
-        if exception is not None:
-            raise exception.with_traceback(exception.__traceback__)
+    return result
 
-        return result
 
-    setattr(_method, _APPLIED, True)
-    return _method
+async def _execute(func, instance, args, kwargs):
+    span_attributes = _hydrate_span_from_args(instance, args[0], args[1:])
+    return await _do_execute(func, span_attributes, args, kwargs)
+
+
+async def _fetch(func, instance, args, kwargs):
+    span_attributes = _hydrate_span_from_args(instance, args[0], args[1:])
+    return await _do_execute(func, span_attributes, args, kwargs)
 
 
 class AsyncPGInstrumentor(BaseInstrumentor):
-    def instrument(self, **kwargs):
-        self._instrument(**kwargs)
+    def _instrument(self, **kwargs):
+        tracer_provider = kwargs.get(
+            "tracer_provider", trace.get_tracer_provider()
+        )
+        setattr(
+            asyncpg,
+            _APPLIED,
+            tracer_provider.get_tracer("asyncpg", __version__),
+        )
+        wrapt.wrap_function_wrapper(
+            "asyncpg.connection", "Connection.execute", _execute
+        )
+        wrapt.wrap_function_wrapper(
+            "asyncpg.connection", "Connection.executemany", _execute
+        )
+        wrapt.wrap_function_wrapper(
+            "asyncpg.connection", "Connection.fetch", _fetch
+        )
+        wrapt.wrap_function_wrapper(
+            "asyncpg.connection", "Connection.fetchval", _fetch
+        )
+        wrapt.wrap_function_wrapper(
+            "asyncpg.connection", "Connection.fetchrow", _fetch
+        )
 
-    def uninstrument(self, **kwargs):
-        self._uninstrument(**kwargs)
-
-    @staticmethod
-    def _instrument(**kwargs):
-        tracer_provider = kwargs.get("tracer_provider")
-
-        for method in ["_execute", "_executemany"]:
-            _original = getattr(Connection, method, None)
-            if hasattr(_original, _APPLIED) is False:
-                setattr(
-                    Connection, method, _execute(_original, tracer_provider)
-                )
-
-    @staticmethod
-    def _uninstrument(**__):
-        for method in ["_execute", "_executemany"]:
-            _connection_method = getattr(Connection, method, None)
-            if _connection_method is not None and getattr(
-                _connection_method, _APPLIED, False
-            ):
-                original = getattr(_connection_method, "__wrapped__", None)
-                if original is not None:
-                    setattr(Connection, method, original)
+    def _uninstrument(self, **__):
+        delattr(asyncpg, _APPLIED)
+        for method in [
+            "execute",
+            "executemany",
+            "fetch",
+            "fetchval",
+            "fetchrow",
+        ]:
+            unwrap(asyncpg.Connection, method)
