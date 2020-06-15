@@ -19,7 +19,6 @@ from opentelemetry.ext.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
-from opentelemetry.ext.datadog.propagator import DatadogFormat
 from opentelemetry.sdk.trace import TracerProvider
 
 trace.set_tracer_provider(TracerProvider())
