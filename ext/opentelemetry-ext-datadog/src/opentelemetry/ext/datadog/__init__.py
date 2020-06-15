@@ -16,13 +16,27 @@
 The **OpenTelemetry Datadog Exporter** provides a span exporter from
 `OpenTelemetry`_ traces to `Datadog`_ by using the Datadog Agent.
 
+Installation
+------------
+
+::
+
+    pip install opentelemetry-ext-datadog
+
+
 Usage
 -----
 
+The Datadog exporter provides a span processor that must be added along with the
+exporter. In addition, a formatter is provided to handle propagation of trace
+context between OpenTelemetry-instrumented and Datadog-instrumented services in
+a distributed trace.
+
 .. code:: python
 
-    from opentelemetry import trace
+    from opentelemetry import propagators, trace
     from opentelemetry.ext.datadog import DatadogExportSpanProcessor, DatadogSpanExporter
+    from opentelemetry.ext.datadog.propagator import DatadogFormat
     from opentelemetry.sdk.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
@@ -35,13 +49,24 @@ Usage
     span_processor = DatadogExportSpanProcessor(exporter)
     trace.get_tracer_provider().add_span_processor(span_processor)
 
+    # Optional: use Datadog format for propagation in distributed traces
+    propagators.set_global_httptextformat(DatadogFormat())
+
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
+
+
+Examples
+--------
+
+The `docs/examples/datadog_exporter`_ includes examples for using the Datadog
+exporter with OpenTelemetry instrumented applications.
 
 API
 ---
 .. _Datadog: https://www.datadoghq.com/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+.. _docs/examples/datadog_exporter: https://github.com/open-telemetry/opentelemetry-python/tree/master/docs/examples/datadog_exporter
 """
 # pylint: disable=import-error
 

@@ -24,7 +24,7 @@ from opentelemetry.ext.prometheus import (
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 
 
 class TestPrometheusMetricExporter(unittest.TestCase):
@@ -67,7 +67,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     def test_export(self):
         with self._registry_register_patch:
             record = MetricRecord(
-                CounterAggregator(), self._labels_key, self._test_metric
+                self._test_metric, self._labels_key, SumAggregator(),
             )
             exporter = PrometheusMetricsExporter()
             result = exporter.export([record])
@@ -87,10 +87,10 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         )
         labels = {"environment@": "staging", "os": "Windows"}
         key_labels = metrics.get_labels_as_key(labels)
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, key_labels, metric)
+        record = MetricRecord(metric, key_labels, aggregator)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
@@ -118,7 +118,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         )
         labels = {"environment": "staging"}
         key_labels = metrics.get_labels_as_key(labels)
-        record = MetricRecord(None, key_labels, metric)
+        record = MetricRecord(metric, key_labels, None)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
         collector.collect()

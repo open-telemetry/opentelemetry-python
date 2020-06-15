@@ -22,11 +22,13 @@ import operator
 import typing
 import urllib
 from functools import wraps
+from typing import Tuple
 
 from asgiref.compatibility import guarantee_single_callable
 
 from opentelemetry import context, propagators, trace
 from opentelemetry.ext.asgi.version import __version__  # noqa
+from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
@@ -42,37 +44,6 @@ def get_header_from_scope(scope: dict, header_name: str) -> typing.List[str]:
         for (key, value) in headers
         if key.decode("utf8") == header_name
     ]
-
-
-def http_status_to_canonical_code(code: int, allow_redirect: bool = True):
-    # pylint:disable=too-many-branches,too-many-return-statements
-    if code < 100:
-        return StatusCanonicalCode.UNKNOWN
-    if code <= 299:
-        return StatusCanonicalCode.OK
-    if code <= 399:
-        if allow_redirect:
-            return StatusCanonicalCode.OK
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
-    if code <= 499:
-        if code == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCanonicalCode.UNAUTHENTICATED
-        if code == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCanonicalCode.PERMISSION_DENIED
-        if code == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCanonicalCode.NOT_FOUND
-        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCanonicalCode.RESOURCE_EXHAUSTED
-        return StatusCanonicalCode.INVALID_ARGUMENT
-    if code <= 599:
-        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCanonicalCode.UNIMPLEMENTED
-        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCanonicalCode.UNAVAILABLE
-        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCanonicalCode.DEADLINE_EXCEEDED
-        return StatusCanonicalCode.INTERNAL
-    return StatusCanonicalCode.UNKNOWN
 
 
 def collect_request_attributes(scope):
@@ -134,11 +105,19 @@ def set_status_code(span, status_code):
         span.set_status(Status(http_status_to_canonical_code(status_code)))
 
 
-def get_default_span_name(scope):
-    """Default implementation for name_callback"""
+def get_default_span_details(scope: dict) -> Tuple[str, dict]:
+    """Default implementation for span_details_callback
+
+    Args:
+        scope: the asgi scope dictionary
+
+    Returns:
+        a tuple of the span, and any attributes to attach to the
+        span.
+    """
     method_or_path = scope.get("method") or scope.get("path")
 
-    return method_or_path
+    return method_or_path, {}
 
 
 class OpenTelemetryMiddleware:
@@ -149,15 +128,18 @@ class OpenTelemetryMiddleware:
 
     Args:
         app: The ASGI application callable to forward requests to.
-        name_callback: Callback which calculates a generic span name for an
-                       incoming HTTP request based on the ASGI scope.
-                       Optional: Defaults to get_default_span_name.
+        span_details_callback: Callback which should return a string
+            and a tuple, representing the desired span name and a
+            dictionary with any additional span attributes to set.
+            Optional: Defaults to get_default_span_details.
     """
 
-    def __init__(self, app, name_callback=None):
+    def __init__(self, app, span_details_callback=None):
         self.app = guarantee_single_callable(app)
         self.tracer = trace.get_tracer(__name__, __version__)
-        self.name_callback = name_callback or get_default_span_name
+        self.span_details_callback = (
+            span_details_callback or get_default_span_details
+        )
 
     async def __call__(self, scope, receive, send):
         """The ASGI application
@@ -173,13 +155,15 @@ class OpenTelemetryMiddleware:
         token = context.attach(
             propagators.extract(get_header_from_scope, scope)
         )
-        span_name = self.name_callback(scope)
+        span_name, additional_attributes = self.span_details_callback(scope)
+        attributes = collect_request_attributes(scope)
+        attributes.update(additional_attributes)
 
         try:
             with self.tracer.start_as_current_span(
                 span_name + " asgi",
                 kind=trace.SpanKind.SERVER,
-                attributes=collect_request_attributes(scope),
+                attributes=attributes,
             ):
 
                 @wraps(receive)

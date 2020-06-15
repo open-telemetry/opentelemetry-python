@@ -15,14 +15,26 @@
 
 import abc
 import atexit
+import concurrent.futures
 import json
 import logging
 import random
 import threading
+import traceback
 from collections import OrderedDict
 from contextlib import contextmanager
 from types import TracebackType
-from typing import Iterator, MutableSequence, Optional, Sequence, Tuple, Type
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
@@ -89,9 +101,12 @@ class SpanProcessor:
         """
 
 
-class MultiSpanProcessor(SpanProcessor):
-    """Implementation of :class:`SpanProcessor` that forwards all received
-    events to a list of `SpanProcessor`.
+class SynchronousMultiSpanProcessor(SpanProcessor):
+    """Implementation of class:`SpanProcessor` that forwards all received
+    events to a list of span processors sequentially.
+
+    The underlying span processors are called in sequential order as they were
+    added.
     """
 
     def __init__(self):
@@ -114,8 +129,112 @@ class MultiSpanProcessor(SpanProcessor):
             sp.on_end(span)
 
     def shutdown(self) -> None:
+        """Sequentially shuts down all underlying span processors.
+        """
         for sp in self._span_processors:
             sp.shutdown()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Sequentially calls force_flush on all underlying
+        :class:`SpanProcessor`
+
+        Args:
+            timeout_millis: The maximum amount of time over all span processors
+                to wait for spans to be exported. In case the first n span
+                processors exceeded the timeout followup span processors will be
+                skipped.
+
+        Returns:
+            True if all span processors flushed their spans within the
+            given timeout, False otherwise.
+        """
+        deadline_ns = time_ns() + timeout_millis * 1000000
+        for sp in self._span_processors:
+            current_time_ns = time_ns()
+            if current_time_ns >= deadline_ns:
+                return False
+
+            if not sp.force_flush((deadline_ns - current_time_ns) // 1000000):
+                return False
+
+        return True
+
+
+class ConcurrentMultiSpanProcessor(SpanProcessor):
+    """Implementation of :class:`SpanProcessor` that forwards all received
+    events to a list of span processors in parallel.
+
+    Calls to the underlying span processors are forwarded in parallel by
+    submitting them to a thread pool executor and waiting until each span
+    processor finished its work.
+
+    Args:
+        num_threads: The number of threads managed by the thread pool executor
+            and thus defining how many span processors can work in parallel.
+    """
+
+    def __init__(self, num_threads: int = 2):
+        # use a tuple to avoid race conditions when adding a new span and
+        # iterating through it on "on_start" and "on_end".
+        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
+        self._lock = threading.Lock()
+        self._executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=num_threads
+        )
+
+    def add_span_processor(self, span_processor: SpanProcessor) -> None:
+        """Adds a SpanProcessor to the list handled by this instance."""
+        with self._lock:
+            self._span_processors = self._span_processors + (span_processor,)
+
+    def _submit_and_await(
+        self, func: Callable[[SpanProcessor], Callable[..., None]], *args: Any
+    ):
+        futures = []
+        for sp in self._span_processors:
+            future = self._executor.submit(func(sp), *args)
+            futures.append(future)
+        for future in futures:
+            future.result()
+
+    def on_start(self, span: "Span") -> None:
+        self._submit_and_await(lambda sp: sp.on_start, span)
+
+    def on_end(self, span: "Span") -> None:
+        self._submit_and_await(lambda sp: sp.on_end, span)
+
+    def shutdown(self) -> None:
+        """Shuts down all underlying span processors in parallel."""
+        self._submit_and_await(lambda sp: sp.shutdown)
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Calls force_flush on all underlying span processors in parallel.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for spans to be
+                exported.
+
+        Returns:
+            True if all span processors flushed their spans within the given
+            timeout, False otherwise.
+        """
+        futures = []
+        for sp in self._span_processors:  # type: SpanProcessor
+            future = self._executor.submit(sp.force_flush, timeout_millis)
+            futures.append(future)
+
+        timeout_sec = timeout_millis / 1e3
+        done_futures, not_done_futures = concurrent.futures.wait(
+            futures, timeout_sec
+        )
+        if not_done_futures:
+            return False
+
+        for future in done_futures:
+            if not future.result():
+                return False
+
+        return True
 
 
 class EventBase(abc.ABC):
@@ -240,7 +359,7 @@ class Span(trace_api.Span):
     Args:
         name: The name of the operation this span represents
         context: The immutable span context
-        parent: This span's parent's `SpanContext`, or
+        parent: This span's parent's `opentelemetry.trace.SpanContext`, or
             null if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
@@ -563,6 +682,17 @@ class Span(trace_api.Span):
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
+    def record_error(self, err: Exception) -> None:
+        """Records an error as a span event."""
+        self.add_event(
+            name="error",
+            attributes={
+                "error.type": err.__class__.__name__,
+                "error.message": str(err),
+                "error.stack": traceback.format_exc(),
+            },
+        )
+
 
 def generate_span_id() -> int:
     """Get a new random span ID.
@@ -599,9 +729,6 @@ class Tracer(trace_api.Tracer):
         self.source = source
         self.instrumentation_info = instrumentation_info
 
-    def get_current_span(self):
-        return self.source.get_current_span()
-
     def start_as_current_span(
         self,
         name: str,
@@ -624,7 +751,7 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
         if parent is Tracer.CURRENT_SPAN:
-            parent = self.get_current_span()
+            parent = trace_api.get_current_span()
 
         parent_context = parent
         if isinstance(parent_context, trace_api.Span):
@@ -676,6 +803,7 @@ class Tracer(trace_api.Tracer):
                 # apply sampling decision attributes after initial attributes
                 span_attributes = attributes.copy()
                 span_attributes.update(sampling_decision.attributes)
+            # pylint:disable=protected-access
             span = Span(
                 name=name,
                 context=context,
@@ -683,7 +811,7 @@ class Tracer(trace_api.Tracer):
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=span_attributes,
-                span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
+                span_processor=self.source._active_span_processor,
                 kind=kind,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
@@ -733,8 +861,13 @@ class TracerProvider(trace_api.TracerProvider):
         sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
         resource: Resource = Resource.create_empty(),
         shutdown_on_exit: bool = True,
+        active_span_processor: Union[
+            SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
+        ] = None,
     ):
-        self._active_span_processor = MultiSpanProcessor()
+        self._active_span_processor = (
+            active_span_processor or SynchronousMultiSpanProcessor()
+        )
         self.resource = resource
         self.sampler = sampler
         self._atexit_handler = None
@@ -756,18 +889,14 @@ class TracerProvider(trace_api.TracerProvider):
             ),
         )
 
-    @staticmethod
-    def get_current_span() -> Span:
-        return context_api.get_value(SPAN_KEY)  # type: ignore
-
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
 
         The span processors are invoked in the same order they are registered.
         """
 
-        # no lock here because MultiSpanProcessor.add_span_processor is
-        # thread safe
+        # no lock here because add_span_processor is thread safe for both
+        # SynchronousMultiSpanProcessor and ConcurrentMultiSpanProcessor.
         self._active_span_processor.add_span_processor(span_processor)
 
     def shutdown(self):
@@ -776,3 +905,23 @@ class TracerProvider(trace_api.TracerProvider):
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)
             self._atexit_handler = None
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Requests the active span processor to process all spans that have not
+        yet been processed.
+
+        By default force flush is called sequentially on all added span
+        processors. This means that span processors further back in the list
+        have less time to flush their spans.
+        To have span processors flush their spans in parallel it is possible to
+        initialize the tracer provider with an instance of
+        `ConcurrentMultiSpanProcessor` at the cost of using multiple threads.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for spans to be
+                processed.
+
+        Returns:
+            False if the timeout is exceeded, True otherwise.
+        """
+        return self._active_span_processor.force_flush(timeout_millis)

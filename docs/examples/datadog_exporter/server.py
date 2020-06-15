@@ -14,11 +14,12 @@
 
 from flask import Flask, request
 
-from opentelemetry import trace
+from opentelemetry import propagators, trace
 from opentelemetry.ext.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
+from opentelemetry.ext.datadog.propagator import DatadogFormat
 from opentelemetry.sdk.trace import TracerProvider
 
 app = Flask(__name__)
@@ -32,6 +33,21 @@ trace.get_tracer_provider().add_span_processor(
         )
     )
 )
+
+# append Datadog format for propagation to and from Datadog instrumented services
+global_httptextformat = propagators.get_global_httptextformat()
+if isinstance(
+    global_httptextformat, propagators.composite.CompositeHTTPPropagator
+) and not any(
+    isinstance(p, DatadogFormat) for p in global_httptextformat._propagators
+):
+    propagators.set_global_httptextformat(
+        propagators.composite.CompositeHTTPPropagator(
+            global_httptextformat._propagators + [DatadogFormat()]
+        )
+    )
+else:
+    propagators.set_global_httptextformat(DatadogFormat())
 
 tracer = trace.get_tracer(__name__)
 

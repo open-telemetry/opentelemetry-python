@@ -29,7 +29,6 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
     from opentelemetry import metrics
     from opentelemetry.ext.prometheus import PrometheusMetricsExporter
     from opentelemetry.sdk.metrics import Counter, Meter
-    from opentelemetry.sdk.metrics.export.controller import PushController
     from prometheus_client import start_http_server
 
     # Start Prometheus client
@@ -37,13 +36,12 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
 
     # Meter is responsible for creating and recording metrics
     metrics.set_meter_provider(MeterProvider())
-    meter = metrics.meter()
+    meter = metrics.get_meter(__name__)
     # exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"
     exporter = PrometheusMetricsExporter(prefix)
-    # controller collects metrics created from meter and exports it via the
-    # exporter every interval
-    controller = PushController(meter, exporter, 5)
+    # Starts the collect/export pipeline for metrics
+    metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
     counter = meter.create_metric(
         "requests",
@@ -152,22 +150,22 @@ class CustomCollector:
         metric_name = ""
         if self._prefix != "":
             metric_name = self._prefix + "_"
-        metric_name += self._sanitize(metric_record.metric.name)
+        metric_name += self._sanitize(metric_record.instrument.name)
 
-        if isinstance(metric_record.metric, Counter):
+        if isinstance(metric_record.instrument, Counter):
             prometheus_metric = CounterMetricFamily(
                 name=metric_name,
-                documentation=metric_record.metric.description,
+                documentation=metric_record.instrument.description,
                 labels=label_keys,
             )
             prometheus_metric.add_metric(
                 labels=label_values, value=metric_record.aggregator.checkpoint
             )
         # TODO: Add support for histograms when supported in OT
-        elif isinstance(metric_record.metric, ValueRecorder):
+        elif isinstance(metric_record.instrument, ValueRecorder):
             prometheus_metric = UnknownMetricFamily(
                 name=metric_name,
-                documentation=metric_record.metric.description,
+                documentation=metric_record.instrument.description,
                 labels=label_keys,
             )
             prometheus_metric.add_metric(
@@ -176,7 +174,7 @@ class CustomCollector:
 
         else:
             logger.warning(
-                "Unsupported metric type. %s", type(metric_record.metric)
+                "Unsupported metric type. %s", type(metric_record.instrument)
             )
         return prometheus_metric
 
