@@ -19,21 +19,14 @@ class AsyncProxyObject(wrapt.ObjectProxy):
         result = yield from self.__wrapped__.__anext__()
         return result
 
-    @asyncio.coroutine
-    def __aenter__(self):
-        result = yield from self.__wrapped__.__aenter__()
-        return result
+    async def __aenter__(self):
+        return await self.__wrapped__.__aenter__()
 
-    @asyncio.coroutine
-    def __aexit__(self, exc_type, exc_val, exc_tb):
-        result = yield from self.__wrapped__.__aexit__(
-            exc_type, exc_val, exc_tb
-        )
-        return result
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return await self.__wrapped__.__aexit__(exc_type, exc_val, exc_tb)
 
     def __await__(self):
-        result = yield from self.__wrapped__.__await__()
-        return result
+        return self.__wrapped__.__await__()
 
 
 class AiopgIntegration:
@@ -60,8 +53,7 @@ class AiopgIntegration:
         self.name = ""
         self.database = ""
 
-    @asyncio.coroutine
-    def wrapped_connection(
+    async def wrapped_connection(
         self,
         connect_method: typing.Callable[..., typing.Any],
         args: typing.Tuple[typing.Any, typing.Any],
@@ -69,14 +61,16 @@ class AiopgIntegration:
     ):
         """Add object proxy to connection object.
         """
-        connection = yield from connect_method(*args, **kwargs)
-        self.get_connection_attributes(connection)
+        connection = await connect_method(*args, **kwargs)
+        # pylint: disable=protected-access
+        self.get_connection_attributes(connection._conn)
         return get_traced_connection_proxy(connection, self)
 
-    @asyncio.coroutine
-    def wrapped_pool(self, create_pool_method, args, kwargs):
-        pool = yield from create_pool_method(*args, **kwargs)
-        self.get_connection_attributes(pool)
+    async def wrapped_pool(self, create_pool_method, args, kwargs):
+        pool = await create_pool_method(*args, **kwargs)
+        async with pool.acquire() as connection:
+            # pylint: disable=protected-access
+            self.get_connection_attributes(connection._conn)
         return get_traced_pool_proxy(pool, self)
 
     def get_connection_attributes(self, connection):
@@ -123,10 +117,9 @@ def get_traced_connection_proxy(
             coro = self._cursor(*args, **kwargs)
             return _ContextManager(coro)
 
-        @asyncio.coroutine
-        def _cursor(self, *args, **kwargs):
+        async def _cursor(self, *args, **kwargs):
             # pylint: disable=protected-access
-            cursor = yield from self.__wrapped__._cursor(*args, **kwargs)
+            cursor = await self.__wrapped__._cursor(*args, **kwargs)
             return get_traced_cursor_proxy(cursor, db_api_integration)
 
     return TracedConnectionProxy(connection, *args, **kwargs)
@@ -144,10 +137,9 @@ def get_traced_pool_proxy(pool, db_api_integration, *args, **kwargs):
             coro = self._acquire()
             return _PoolAcquireContextManager(coro, self)
 
-        @asyncio.coroutine
-        def _acquire(self):
+        async def _acquire(self):
             # pylint: disable=protected-access
-            connection = yield from self.__wrapped__._acquire()
+            connection = await self.__wrapped__._acquire()
             return get_traced_connection_proxy(
                 connection, db_api_integration, *args, **kwargs
             )
@@ -159,8 +151,7 @@ class AsyncTracedCursor:
     def __init__(self, db_api_integration: AiopgIntegration):
         self._db_api_integration = db_api_integration
 
-    @asyncio.coroutine
-    def traced_execution(
+    async def traced_execution(
         self,
         query_method: typing.Callable[..., typing.Any],
         *args: typing.Tuple[typing.Any, typing.Any],
@@ -192,7 +183,7 @@ class AsyncTracedCursor:
                 span.set_attribute("db.statement.parameters", str(args[1]))
 
             try:
-                result = yield from query_method(*args, **kwargs)
+                result = await query_method(*args, **kwargs)
                 span.set_status(Status(StatusCanonicalCode.OK))
                 return result
             except Exception as ex:  # pylint: disable=broad-except
@@ -210,23 +201,20 @@ def get_traced_cursor_proxy(cursor, db_api_integration, *args, **kwargs):
         def __init__(self, cursor, *args, **kwargs):
             super().__init__(cursor)
 
-        @asyncio.coroutine
-        def execute(self, *args, **kwargs):
-            result = yield from _traced_cursor.traced_execution(
+        async def execute(self, *args, **kwargs):
+            result = await _traced_cursor.traced_execution(
                 self.__wrapped__.execute, *args, **kwargs
             )
             return result
 
-        @asyncio.coroutine
-        def executemany(self, *args, **kwargs):
-            result = yield from _traced_cursor.traced_execution(
+        async def executemany(self, *args, **kwargs):
+            result = await _traced_cursor.traced_execution(
                 self.__wrapped__.executemany, *args, **kwargs
             )
             return result
 
-        @asyncio.coroutine
-        def callproc(self, *args, **kwargs):
-            result = yield from _traced_cursor.traced_execution(
+        async def callproc(self, *args, **kwargs):
+            result = await _traced_cursor.traced_execution(
                 self.__wrapped__.callproc, *args, **kwargs
             )
             return result

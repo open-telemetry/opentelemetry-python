@@ -32,7 +32,6 @@ Usage
 API
 ---
 """
-import asyncio
 import logging
 import typing
 
@@ -105,8 +104,7 @@ def wrap_connect(
     """
 
     # pylint: disable=unused-argument
-    @asyncio.coroutine
-    def wrap_connect_(
+    async def wrap_connect_(
         wrapped: typing.Callable[..., typing.Any],
         instance: typing.Any,
         args: typing.Tuple[typing.Any, typing.Any],
@@ -118,10 +116,7 @@ def wrap_connect(
             database_type=database_type,
             connection_attributes=connection_attributes,
         )
-        connection = yield from db_integration.wrapped_connection(
-            wrapped, args, kwargs
-        )
-        return connection
+        return await db_integration.wrapped_connection(wrapped, args, kwargs)
 
     try:
         wrapt.wrap_function_wrapper(
@@ -199,8 +194,7 @@ def wrap_create_pool(
     connection_attributes: typing.Dict = None,
 ):
     # pylint: disable=unused-argument
-    @asyncio.coroutine
-    def wrap_create_pool_(
+    async def wrap_create_pool_(
         wrapped: typing.Callable[..., typing.Any],
         instance: typing.Any,
         args: typing.Tuple[typing.Any, typing.Any],
@@ -212,8 +206,7 @@ def wrap_create_pool(
             database_type=database_type,
             connection_attributes=connection_attributes,
         )
-        pool = yield from db_integration.wrapped_pool(wrapped, args, kwargs)
-        return pool
+        return await db_integration.wrapped_pool(wrapped, args, kwargs)
 
     try:
         wrapt.wrap_function_wrapper(
