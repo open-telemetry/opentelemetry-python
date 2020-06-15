@@ -15,7 +15,7 @@
 Instrument `celery`_ to report Celery APP operations.
 
 There are two options for instrumenting code. The first option is to use the
-``opentelemetry-auto-instrumentation`` executable which will automatically
+``opentelemetry-instrument`` executable which will automatically
 instrument your Celery APP. The second is to programmatically enable
 instrumentation as explained in the following section.
 

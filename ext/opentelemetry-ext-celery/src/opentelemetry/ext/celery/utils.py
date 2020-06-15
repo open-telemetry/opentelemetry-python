@@ -67,7 +67,7 @@ def set_attributes_from_context(span, context):
         if key == "delivery_info":
             # Get also destination from this
             routing_key = value.get("routing_key")
-            if routing_key:
+            if routing_key is not None:
                 span.set_attribute("messaging.destination", routing_key)
             value = str(value)
 
@@ -154,7 +154,7 @@ def retrieve_task_id(context):
     """
     headers = context.get("headers")
     body = context.get("body")
-    if headers:
+    if headers is not None:
         # Protocol Version 2 (default from Celery 4.0)
         return headers.get("id")
     # Protocol Version 1
