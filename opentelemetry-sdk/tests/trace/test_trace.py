@@ -117,6 +117,17 @@ tracer_provider.add_span_processor(mock_processor)
             with tracer.use_span(default_span):
                 raise TestUseSpanException()
 
+    def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
+        span_processor = trace.ConcurrentMultiSpanProcessor(2)
+        tracer_provider = trace.TracerProvider(
+            active_span_processor=span_processor
+        )
+
+        # pylint: disable=protected-access
+        self.assertEqual(
+            span_processor, tracer_provider._active_span_processor
+        )
+
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):
@@ -788,6 +799,20 @@ class TestSpan(unittest.TestCase):
             trace.TracerProvider()
             .get_tracer(__name__)
             .start_as_current_span("root")
+        )
+
+    def test_record_error(self):
+        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        try:
+            raise ValueError("invalid")
+        except ValueError as err:
+            span.record_error(err)
+        error_event = span.events[0]
+        self.assertEqual("error", error_event.name)
+        self.assertEqual("invalid", error_event.attributes["error.message"])
+        self.assertEqual("ValueError", error_event.attributes["error.type"])
+        self.assertIn(
+            "ValueError: invalid", error_event.attributes["error.stack"]
         )
 
 
