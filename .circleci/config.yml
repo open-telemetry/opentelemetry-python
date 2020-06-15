@@ -182,7 +182,6 @@ workflows:
   main:
     jobs:
       - docs
-      - docker-tests
       - lint
       - pypy3-core
       - pypy3-ext
