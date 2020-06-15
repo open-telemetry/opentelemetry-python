@@ -113,21 +113,16 @@ class AsyncPGInstrumentor(BaseInstrumentor):
             _APPLIED,
             tracer_provider.get_tracer("asyncpg", __version__),
         )
-        wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.execute", _do_execute
-        )
-        wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.executemany", _do_execute
-        )
-        wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.fetch", _do_execute
-        )
-        wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.fetchval", _do_execute
-        )
-        wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.fetchrow", _do_execute
-        )
+        for method in [
+            "Connection.execute",
+            "Connection.executemany",
+            "Connection.fetch",
+            "Connection.fetchval",
+            "Connection.fetchrow",
+        ]:
+            wrapt.wrap_function_wrapper(
+                "asyncpg.connection", method, _do_execute
+            )
 
     def _uninstrument(self, **__):
         delattr(asyncpg, _APPLIED)
