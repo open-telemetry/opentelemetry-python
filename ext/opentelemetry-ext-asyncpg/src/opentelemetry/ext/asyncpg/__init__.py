@@ -61,16 +61,9 @@ def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
 def _hydrate_span_from_args(connection, query, parameters) -> dict:
     span_attributes = {"db.type": "sql"}
 
-    if connection is not None:
-        params = getattr(connection, "_params", None)
-        if params is not None:
-            database_name = getattr(params, "database", None)
-            if database_name is not None:
-                span_attributes["db.instance"] = database_name
-
-            database_user = getattr(params, "user", None)
-            if database_user is not None:
-                span_attributes["db.user"] = database_user
+    params = getattr(connection, "_params", None)
+    span_attributes["db.instance"] = getattr(params, "database", None)
+    span_attributes["db.user"] = getattr(params, "user", None)
 
     if query is not None:
         span_attributes["db.statement"] = query
