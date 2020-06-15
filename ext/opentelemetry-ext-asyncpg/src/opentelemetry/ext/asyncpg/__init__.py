@@ -74,7 +74,8 @@ def _hydrate_span_from_args(connection, query, parameters) -> dict:
     return span_attributes
 
 
-async def _do_execute(func, span_attributes, args, kwargs):
+async def _do_execute(func, instance, args, kwargs):
+    span_attributes = _hydrate_span_from_args(instance, args[0], args[1:])
     tracer = getattr(asyncpg, _APPLIED)
 
     exception = None
@@ -83,8 +84,8 @@ async def _do_execute(func, span_attributes, args, kwargs):
         "postgresql", kind=SpanKind.CLIENT
     ) as span:
 
-        for k, v in span_attributes.items():
-            span.set_attribute(k, v)
+        for attribute, value in span_attributes.items():
+            span.set_attribute(attribute, value)
 
         try:
             result = await func(*args, **kwargs)
@@ -102,16 +103,6 @@ async def _do_execute(func, span_attributes, args, kwargs):
     return result
 
 
-async def _execute(func, instance, args, kwargs):
-    span_attributes = _hydrate_span_from_args(instance, args[0], args[1:])
-    return await _do_execute(func, span_attributes, args, kwargs)
-
-
-async def _fetch(func, instance, args, kwargs):
-    span_attributes = _hydrate_span_from_args(instance, args[0], args[1:])
-    return await _do_execute(func, span_attributes, args, kwargs)
-
-
 class AsyncPGInstrumentor(BaseInstrumentor):
     def _instrument(self, **kwargs):
         tracer_provider = kwargs.get(
@@ -123,19 +114,19 @@ class AsyncPGInstrumentor(BaseInstrumentor):
             tracer_provider.get_tracer("asyncpg", __version__),
         )
         wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.execute", _execute
+            "asyncpg.connection", "Connection.execute", _do_execute
         )
         wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.executemany", _execute
+            "asyncpg.connection", "Connection.executemany", _do_execute
         )
         wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.fetch", _fetch
+            "asyncpg.connection", "Connection.fetch", _do_execute
         )
         wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.fetchval", _fetch
+            "asyncpg.connection", "Connection.fetchval", _do_execute
         )
         wrapt.wrap_function_wrapper(
-            "asyncpg.connection", "Connection.fetchrow", _fetch
+            "asyncpg.connection", "Connection.fetchrow", _do_execute
         )
 
     def _uninstrument(self, **__):

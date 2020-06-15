@@ -112,7 +112,7 @@ class TestFunctionalPsycopg(TestBase):
 
     @pytest.mark.asyncpg
     def test_instrumented_executemany_method_with_arguments(self, *_, **__):
-        _await(self._connection.executemany("SELECT $1;", [["1",], ["2",]],))
+        _await(self._connection.executemany("SELECT $1;", [["1"], ["2"]]))
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         self.assertEqual(
