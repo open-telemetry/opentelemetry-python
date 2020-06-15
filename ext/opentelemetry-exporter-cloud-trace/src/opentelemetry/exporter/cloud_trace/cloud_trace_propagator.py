@@ -49,7 +49,7 @@ class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        match = re.search(_TRACE_CONTEXT_HEADER_RE, header)
+        match = re.search(_TRACE_CONTEXT_HEADER_RE, header[0])
         if not match:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 

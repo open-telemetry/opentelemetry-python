@@ -71,7 +71,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         header = "{}/{};o=".format(
             get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        new_span_context = self._extract(header)
+        new_span_context = self._extract([header])
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
         self.assertEqual(new_span_context.span_id, self.valid_span_id)
         self.assertEqual(new_span_context.trace_flags, TraceFlags(1))
