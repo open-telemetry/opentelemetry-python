@@ -22,9 +22,9 @@ To use this exporter you first need to:
 
 * Run example
 
-.. code-block:: sh
-
-    python basic_metrics.py
+.. literalinclude:: basic_metrics.py
+    :language: python
+    :lines: 1-
 
 Viewing Output
 --------------------------

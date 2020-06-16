@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_AGENT_URL = "http://localhost:8126"
 _INSTRUMENTATION_SPAN_TYPES = {
     "opentelemetry.ext.aiohttp-client": DatadogSpanTypes.HTTP,
+    "opentelemetry.ext.asgi": DatadogSpanTypes.WEB,
     "opentelemetry.ext.dbapi": DatadogSpanTypes.SQL,
     "opentelemetry.ext.django": DatadogSpanTypes.WEB,
     "opentelemetry.ext.flask": DatadogSpanTypes.WEB,
