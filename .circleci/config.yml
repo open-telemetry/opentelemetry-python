@@ -1,0 +1,57 @@
+version: 2.1
+
+executors:
+  python38:
+    docker:
+      - image: circleci/python:3.8
+
+commands:
+  setup_tox:
+    description: "Install tox"
+    steps:
+      - run: pip install -U tox-factor
+
+  restore_tox_cache:
+    description: "Restore .tox directory from previous runs for faster installs"
+    steps:
+      - restore_cache:
+          # In the cache key:
+          #   - .Environment.CIRCLE_JOB: We do separate tox environments by job name, so caching and restoring is
+          #                              much faster.
+          key: tox-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "tox.ini" }}-{{ checksum "dev-requirements.txt" }}
+
+  save_tox_cache:
+    description: "Save .tox directory into cache for faster installs next time"
+    steps:
+      - save_cache:
+          # In the cache key:
+          #   - .Environment.CIRCLE_JOB: We do separate tox environments by job name, so caching and restoring is
+          #                              much faster.
+          key: tox-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "tox.ini" }}-{{ checksum "dev-requirements.txt" }}
+          paths:
+            - ".tox"
+
+jobs:
+  docs:
+    executor: python38
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run: tox -e docs
+      - save_tox_cache
+
+  lint:
+    executor: python38
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run: tox -e lint
+      - save_tox_cache
+
+workflows:
+  main:
+    jobs:
+      - docs
+      - lint
