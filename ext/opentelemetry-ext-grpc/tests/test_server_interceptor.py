@@ -53,19 +53,9 @@ class UnaryUnaryRpcHandler(grpc.GenericRpcHandler):
 class TestOpenTelemetryServerInterceptor(TestBase):
 
     def test_instrumentor(self):
-        # Intercept gRPC calls...
-        #interceptor = server_interceptor()
 
         def handler(request, context):
             return b""
-
-        #server = grpc.server(
-        #    futures.ThreadPoolExecutor(max_workers=1),
-        #    options=(("grpc.so_reuseport", 0),),
-        #)
-        # FIXME: grpcext interceptor doesn't apply to handlers passed to server
-        # init, should use intercept_service API instead.
-        #server = intercept_server(server, interceptor)
 
         grpc_server_instrumentor = GrpcInstrumentorServer()
         grpc_server_instrumentor.instrument()
@@ -91,8 +81,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
 
         self.assertEqual(span.name, "")
         self.assertIs(span.kind, trace.SpanKind.SERVER)
-
-        # Check version and name in span's instrumentation info
         self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
 
 
