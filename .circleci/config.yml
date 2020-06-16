@@ -126,10 +126,10 @@ workflows:
           matrix:
             parameters:
               version: ["py38", "py37", "py36", "py35", "pypy3"]
-              package: ["core", "exporters", "instrumentations"]
+              package: ["core", "exporter", "instrumentation"]
       - build-py34:
           matrix:
             parameters:
-              package: ["core", "exporters", "instrumentations"]
+              package: ["core", "exporter", "instrumentation"]
       - docs
       - lint
