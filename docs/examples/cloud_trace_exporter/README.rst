@@ -21,13 +21,11 @@ To use this exporter you first need to:
     pip install opentelemetry-sdk
     pip install opentelemetry-exporter-cloud-trace
 
-* Run example locally
+* Run an example locally
 
-.. code-block:: sh
-
-    git clone https://github.com/open-telemetry/opentelemetry-python
-    cd opentelemetry-python/docs/examples/cloud_trace_exporter
-    python basic_trace.py
+.. literalinclude:: basic_trace.py
+    :language: python
+    :lines: 1-
 
 Checking Output
 --------------------------
