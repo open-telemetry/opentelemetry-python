@@ -76,8 +76,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: "Get pyenv list"
+          command: pyenv list
+      - run:
           name: "Set Python Version"
-          command: pyenv global 3.8.2
+          command: pyenv global 3.8.1
       - setup_tox
       - restore_tox_cache
       - run: tox -e docker-tests
