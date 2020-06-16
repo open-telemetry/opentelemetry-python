@@ -188,18 +188,21 @@ class CeleryInstrumentor(BaseInstrumentor):
         if span is None:
             return
 
+        status_kwargs = {"canonical_code": StatusCanonicalCode.UNKNOWN}
+
         ex = kwargs.get("einfo")
-        if ex is None:
-            return
-        if hasattr(task, "throws") and isinstance(ex.exception, task.throws):
+
+        if (
+            hasattr(task, "throws")
+            and ex is not None
+            and isinstance(ex.exception, task.throws)
+        ):
             return
 
-        span.set_status(
-            Status(
-                canonical_code=StatusCanonicalCode.UNKNOWN,
-                description=str(ex),
-            )
-        )
+        if ex is not None:
+            status_kwargs["description"] = str(ex)
+
+        span.set_status(Status(**status_kwargs))
 
     @staticmethod
     def _trace_retry(*args, **kwargs):
