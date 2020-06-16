@@ -54,7 +54,11 @@ import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import BoundedDict
+from opentelemetry.sdk.version import __version__ as core_version
 from opentelemetry.util import types
+
+# pylint: disable=import-error
+from .version import __version__ as cloud_trace_version
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +67,10 @@ MAX_NUM_EVENTS = 32
 MAX_EVENT_ATTRS = 4
 MAX_LINK_ATTRS = 32
 MAX_SPAN_ATTRS = 32
+AGENT_LABEL_KEY = "g.co/agent"
+AGENT_LABEL_VALUE = "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
+    core_version, cloud_trace_version
+)
 
 
 class CloudTraceSpanExporter(SpanExporter):
@@ -153,7 +161,7 @@ class CloudTraceSpanExporter(SpanExporter):
                     "end_time": end_time,
                     "parent_span_id": parent_id,
                     "attributes": _extract_attributes(
-                        span.attributes, MAX_SPAN_ATTRS
+                        span.attributes, MAX_SPAN_ATTRS, span_attributes=True
                     ),
                     "links": _extract_links(span.links),
                     "status": _extract_status(span.status),
@@ -292,7 +300,9 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 
 
 def _extract_attributes(
-    attrs: types.Attributes, num_attrs_limit: int
+    attrs: types.Attributes,
+    num_attrs_limit: int,
+    span_attributes: bool = False,
 ) -> ProtoSpan.Attributes:
     """Convert span.attributes to dict."""
     attributes_dict = BoundedDict(num_attrs_limit)
@@ -301,11 +311,16 @@ def _extract_attributes(
         key = _truncate_str(key, 128)[0]
         value = _format_attribute_value(value)
 
-        if value is not None:
+        if value:
             attributes_dict[key] = value
+    dropped_attributes_count = len(attrs) - len(attributes_dict)
+    if span_attributes:
+        attributes_dict[AGENT_LABEL_KEY] = _format_attribute_value(
+            AGENT_LABEL_VALUE
+        )
     return ProtoSpan.Attributes(
         attribute_map=attributes_dict,
-        dropped_attributes_count=len(attrs) - len(attributes_dict),
+        dropped_attributes_count=dropped_attributes_count,
     )
 
 

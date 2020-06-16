@@ -21,6 +21,8 @@ from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
 
 from opentelemetry.exporter.cloud_trace import (
+    AGENT_LABEL_KEY,
+    AGENT_LABEL_VALUE,
     MAX_EVENT_ATTRS,
     MAX_LINK_ATTRS,
     MAX_NUM_EVENTS,
@@ -108,7 +110,11 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "display_name": TruncatableString(
                 value="span_name", truncated_byte_count=0
             ),
-            "attributes": ProtoSpan.Attributes(attribute_map={}),
+            "attributes": ProtoSpan.Attributes(
+                attribute_map={
+                    AGENT_LABEL_KEY: _format_attribute_value(AGENT_LABEL_VALUE)
+                }
+            ),
             "links": None,
             "status": None,
             "time_events": None,
