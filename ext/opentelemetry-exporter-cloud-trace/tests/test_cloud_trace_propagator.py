@@ -98,6 +98,15 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
         self.assertTrue(new_span_context.is_remote)
 
+        header = "{}/{};o=0".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), 345
+        )
+        new_span_context = self._extract(header)
+        self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
+        self.assertEqual(new_span_context.span_id, 345)
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
+        self.assertTrue(new_span_context.is_remote)
+
     def test_invalid_header_format(self):
         header = "invalid_header"
         self.assertEqual(
@@ -133,6 +142,10 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_context()
         )
+        header = "{}/{};o={}".format("0" * 32, self.valid_span_id, 1)
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
 
         header = "0/{};o={}".format(self.valid_span_id, 1)
         self.assertEqual(
@@ -158,14 +171,14 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         )
 
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), "0", 1
+            get_hexadecimal_trace_id(self.valid_trace_id), "0" * 16, 1
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_context()
         )
 
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), "345", 1
+            get_hexadecimal_trace_id(self.valid_trace_id), "0", 1
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_context()
