@@ -24,8 +24,8 @@ from opentelemetry.sdk.metrics.export import (
     MetricRecord,
 )
 from opentelemetry.sdk.metrics.export.aggregate import (
-    CounterAggregator,
     MinMaxSumCountAggregator,
+    SumAggregator,
     ValueObserverAggregator,
 )
 from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
@@ -47,7 +47,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             ("environment",),
         )
         labels = {"environment": "staging"}
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         record = MetricRecord(metric, labels, aggregator)
         result = '{}(data="{}", labels="{}", value={})'.format(
             ConsoleMetricsExporter.__name__,
@@ -64,17 +64,14 @@ class TestBatcher(unittest.TestCase):
     def test_aggregator_for_counter(self):
         batcher = UngroupedBatcher(True)
         self.assertTrue(
-            isinstance(
-                batcher.aggregator_for(metrics.Counter), CounterAggregator
-            )
+            isinstance(batcher.aggregator_for(metrics.Counter), SumAggregator)
         )
 
     def test_aggregator_for_updowncounter(self):
         batcher = UngroupedBatcher(True)
         self.assertTrue(
             isinstance(
-                batcher.aggregator_for(metrics.UpDownCounter),
-                CounterAggregator,
+                batcher.aggregator_for(metrics.UpDownCounter), SumAggregator,
             )
         )
 
@@ -83,7 +80,7 @@ class TestBatcher(unittest.TestCase):
     def test_checkpoint_set(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory",
             "available memory",
@@ -111,7 +108,7 @@ class TestBatcher(unittest.TestCase):
     def test_finished_collection_stateless(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(False)
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory",
             "available memory",
@@ -131,7 +128,7 @@ class TestBatcher(unittest.TestCase):
     def test_finished_collection_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory",
             "available memory",
@@ -152,8 +149,8 @@ class TestBatcher(unittest.TestCase):
     def test_ungrouped_batcher_process_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
-        aggregator = CounterAggregator()
-        aggregator2 = CounterAggregator()
+        aggregator = SumAggregator()
+        aggregator2 = SumAggregator()
         metric = metrics.Counter(
             "available memory",
             "available memory",
@@ -179,7 +176,7 @@ class TestBatcher(unittest.TestCase):
     def test_ungrouped_batcher_process_not_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory",
             "available memory",
@@ -204,7 +201,7 @@ class TestBatcher(unittest.TestCase):
     def test_ungrouped_batcher_process_not_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = UngroupedBatcher(True)
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory",
             "available memory",
@@ -227,67 +224,67 @@ class TestBatcher(unittest.TestCase):
         )
 
 
-class TestCounterAggregator(unittest.TestCase):
+class TestSumAggregator(unittest.TestCase):
     @staticmethod
-    def call_update(counter):
+    def call_update(sum_agg):
         update_total = 0
         for _ in range(0, 100000):
             val = random.getrandbits(32)
-            counter.update(val)
+            sum_agg.update(val)
             update_total += val
         return update_total
 
     @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_update(self, time_mock):
         time_mock.return_value = 123
-        counter = CounterAggregator()
-        counter.update(1.0)
-        counter.update(2.0)
-        self.assertEqual(counter.current, 3.0)
-        self.assertEqual(counter.last_update_timestamp, 123)
+        sum_agg = SumAggregator()
+        sum_agg.update(1.0)
+        sum_agg.update(2.0)
+        self.assertEqual(sum_agg.current, 3.0)
+        self.assertEqual(sum_agg.last_update_timestamp, 123)
 
     def test_checkpoint(self):
-        counter = CounterAggregator()
-        counter.update(2.0)
-        counter.take_checkpoint()
-        self.assertEqual(counter.current, 0)
-        self.assertEqual(counter.checkpoint, 2.0)
+        sum_agg = SumAggregator()
+        sum_agg.update(2.0)
+        sum_agg.take_checkpoint()
+        self.assertEqual(sum_agg.current, 0)
+        self.assertEqual(sum_agg.checkpoint, 2.0)
 
     def test_merge(self):
-        counter = CounterAggregator()
-        counter2 = CounterAggregator()
-        counter.checkpoint = 1.0
-        counter2.checkpoint = 3.0
-        counter2.last_update_timestamp = 123
-        counter.merge(counter2)
-        self.assertEqual(counter.checkpoint, 4.0)
-        self.assertEqual(counter.last_update_timestamp, 123)
+        sum_agg = SumAggregator()
+        sum_agg2 = SumAggregator()
+        sum_agg.checkpoint = 1.0
+        sum_agg2.checkpoint = 3.0
+        sum_agg2.last_update_timestamp = 123
+        sum_agg.merge(sum_agg2)
+        self.assertEqual(sum_agg.checkpoint, 4.0)
+        self.assertEqual(sum_agg.last_update_timestamp, 123)
 
     def test_concurrent_update(self):
-        counter = CounterAggregator()
+        sum_agg = SumAggregator()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            fut1 = executor.submit(self.call_update, counter)
-            fut2 = executor.submit(self.call_update, counter)
+            fut1 = executor.submit(self.call_update, sum_agg)
+            fut2 = executor.submit(self.call_update, sum_agg)
 
             updapte_total = fut1.result() + fut2.result()
 
-        counter.take_checkpoint()
-        self.assertEqual(updapte_total, counter.checkpoint)
+        sum_agg.take_checkpoint()
+        self.assertEqual(updapte_total, sum_agg.checkpoint)
 
     def test_concurrent_update_and_checkpoint(self):
-        counter = CounterAggregator()
+        sum_agg = SumAggregator()
         checkpoint_total = 0
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            fut = executor.submit(self.call_update, counter)
+            fut = executor.submit(self.call_update, sum_agg)
 
             while not fut.done():
-                counter.take_checkpoint()
-                checkpoint_total += counter.checkpoint
+                sum_agg.take_checkpoint()
+                checkpoint_total += sum_agg.checkpoint
 
-        counter.take_checkpoint()
-        checkpoint_total += counter.checkpoint
+        sum_agg.take_checkpoint()
+        checkpoint_total += sum_agg.checkpoint
 
         self.assertEqual(fut.result(), checkpoint_total)
 
