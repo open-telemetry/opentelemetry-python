@@ -32,10 +32,15 @@ Basic Example
 
 .. code-block:: sh
 
-    python datadog_exporter.py
+    python basic_example.py
 
-Auto-Instrumention Example
---------------------------
+
+.. code-block:: sh
+
+    python basic_example.py
+
+Distributed Example
+-------------------
 
 * Installation
 
@@ -44,7 +49,7 @@ Auto-Instrumention Example
     pip install opentelemetry-api
     pip install opentelemetry-sdk
     pip install opentelemetry-ext-datadog
-    pip install opentelemetry-auto-instrumentation
+    pip install opentelemetry-instrumentation
     pip install opentelemetry-ext-flask
     pip install flask
     pip install requests
@@ -66,16 +71,25 @@ Auto-Instrumention Example
 
 .. code-block:: sh
 
-    opentelemetry-auto-instrumentation python server.py
+    opentelemetry-instrument python server.py
 
 * Run client
 
 .. code-block:: sh
 
-    opentelemetry-auto-instrumentation python client.py testing
+    opentelemetry-instrument python client.py testing
 
 * Run client with parameter to raise error
 
 .. code-block:: sh
 
-    opentelemetry-auto-instrumentation python client.py error
+    opentelemetry-instrument python client.py error
+
+* Run Datadog instrumented client
+
+The OpenTelemetry instrumented server is set up with propagation of Datadog trace context.
+
+.. code-block:: sh
+
+    pip install ddtrace
+    ddtrace-run python datadog_client.py testing

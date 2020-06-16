@@ -15,7 +15,7 @@
 Instrument `Boto`_ to trace service requests.
 
 There are two options for instrumenting code. The first option is to use the
-``opentelemetry-auto-instrumentation`` executable which will automatically
+``opentelemetry-instrument`` executable which will automatically
 instrument your Boto client. The second is to programmatically enable
 instrumentation via the following code:
 
@@ -50,8 +50,8 @@ from inspect import currentframe
 from boto.connection import AWSAuthConnection, AWSQueryConnection
 from wrapt import ObjectProxy, wrap_function_wrapper
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.boto.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
