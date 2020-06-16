@@ -30,7 +30,6 @@ Usage
 
 .. code:: python
 
-    from opentelemetry import trace
     from opentelemetry.ext.celery import CeleryInstrumentor
 
     CeleryInstrumentor().instrument()
@@ -141,9 +140,6 @@ class CeleryInstrumentor(BaseInstrumentor):
         utils.detach_span(task, task_id)
 
     def _trace_before_publish(self, *args, **kwargs):
-        # The `Task` instance **does not** include any information about the current
-        # execution, so it **must not** be used to retrieve `request` data.
-        # pylint: disable=no-member
         task = utils.retrieve_task_from_sender(kwargs)
         task_id = utils.retrieve_task_id_from_message(kwargs)
 

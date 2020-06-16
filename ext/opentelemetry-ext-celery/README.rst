@@ -29,7 +29,6 @@ Usage
 
 .. code-block:: python
 
-    from opentelemetry import trace
     from opentelemetry.ext.celery import CeleryInstrumentor
 
     CeleryInstrumentor().instrument()
