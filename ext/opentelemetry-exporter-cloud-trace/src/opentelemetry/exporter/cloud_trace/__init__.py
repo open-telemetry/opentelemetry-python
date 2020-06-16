@@ -315,6 +315,8 @@ def _extract_attributes(
             attributes_dict[key] = value
     dropped_attributes_count = len(attrs) - len(attributes_dict)
     if span_attributes:
+        if len(attributes_dict) == num_attrs_limit:
+            dropped_attributes_count += 1
         attributes_dict[AGENT_LABEL_KEY] = _format_attribute_value(
             AGENT_LABEL_VALUE
         )
