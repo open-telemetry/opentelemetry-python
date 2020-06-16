@@ -21,57 +21,6 @@ if [[ ! "${VERSION}" =~ ^([0-9])(\.*[0-9]{1,5}[a-b]*){1,3}$ ]]; then
     exit 1
 fi
 
-function update_version_file() {
-    errors=0
-    for f in `find . -name version.py`; do
-        # check if version is already in version.py
-        grep -q ${VERSION} $f;
-        rc=$?
-        if [ $rc == 0 ]; then
-            errors=1
-            echo "${f} already contains ${VERSION}"
-            continue
-        fi
-        # update version.py
-        perl -i -pe "s/__version__.*/__version__ = \"${VERSION}\"/g" ${f};
-        git add ${f};
-        echo "Updating ${f}"
-    done
-    if [ ${errors} != 0 ]; then
-        echo "::set-output name=version_updated::0"
-        exit 0
-    fi
-}
-
-function update_changelog() {
-    errors=0
-    RELEASE_DATE=`date +%F`
-    for f in `find . -name CHANGELOG.md`; do
-        # check if version is already in CHANGELOG
-        grep -q ${VERSION} $f;
-        rc=$?
-        if [ $rc == 0 ]; then
-            errors=1
-            echo "${f} already contains ${VERSION}"
-            continue
-        fi
-        # check if changelog contains any new details
-        changes=`sed -n '/## Unreleased/,/^##/p' ${f} | grep -v '^##'  | wc -w | awk '{$1=$1;print}'`
-        if [ ${changes} != "0" ]; then
-            # update CHANGELOG.md
-            perl -i -pe 's/## Unreleased.*/## Unreleased\n\n## '${VERSION}'\n\nReleased '${RELEASE_DATE}'/' ${f};
-            git add ${f};
-            echo "Updating ${f}"
-        else
-            echo "Skipping ${f}, no changes detected"
-        fi
-    done
-    if [ ${errors} != 0 ]; then
-        echo "::set-output name=version_updated::0"
-        exit 0
-    fi
-}
-
 # create the release branch
 git fetch origin master
 git checkout master
@@ -81,8 +30,15 @@ git push origin release/${VERSION}
 
 # create a temporary branch to create a PR for updated version and changelogs
 git checkout -b release/${VERSION}-auto
-update_version_file
-update_changelog
+./scripts/eachdist.py release --version ${VERSION}
+rc=$?
+if [ $rc != 0 ]; then
+    echo "::set-output name=version_updated::0"
+    exit 0
+fi
+
+git add **/version.py **/setup.cfg **/CHANGELOG.md
+
 git commit -m "updating changelogs and version to ${VERSION}"
 
 echo "Time to create a release, here's a sample title:"
