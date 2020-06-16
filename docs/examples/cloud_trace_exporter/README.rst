@@ -52,7 +52,7 @@ Getting error ``google.api_core.exceptions.ResourceExhausted: 429 Resource has b
     * Check that you've enabled the `Cloud Trace (Stackdriver Trace) API <https://console.cloud.google.com/apis/library?q=cloud%20trace&filter=visibility:public>`_
 
 bash: pip: command not found:
-##############################
+#############################
     * `Install pip <https://cloud.google.com/python/setup#installing_python>`_
     * If your machine uses python2 by default, pip will also be the python2 version. Try using ``pip3`` instead of ``pip``.
 
