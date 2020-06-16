@@ -32,7 +32,7 @@ _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 
 class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
     """This class is for injecting into a carrier the SpanContext in Google
-    Cloud format , or extracting the SpanContext from a carrier using Google
+    Cloud format, or extracting the SpanContext from a carrier using Google
     Cloud format.
     """
 
