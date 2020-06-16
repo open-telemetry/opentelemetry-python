@@ -20,13 +20,15 @@ import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
 from opentelemetry.trace.propagation import httptextformat
 from opentelemetry.trace.span import (
+    INVALID_SPAN_ID,
+    INVALID_TRACE_ID,
     SpanContext,
     TraceFlags,
     get_hexadecimal_trace_id,
 )
 
 _TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
-_TRACE_CONTEXT_HEADER_FORMAT = r"([0-9a-f]{32})(\/([\d]{0,20}))?(;o=(\d+))?"
+_TRACE_CONTEXT_HEADER_FORMAT = r"^(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{20});o=(?P<trace_flags>\d+)$"
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 
 
@@ -53,15 +55,14 @@ class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
         if not match:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        trace_id = match.group(1)
-        span_id = match.group(3)
-        trace_options = match.group(5)
+        trace_id = match.group("trace_id")
+        span_id = match.group("span_id")
+        trace_options = match.group("trace_flags")
 
-        if trace_id == "0" * 32 or span_id == "0" * 16:
+        if trace_id == str(INVALID_TRACE_ID) or span_id == str(
+            INVALID_SPAN_ID
+        ):
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
-
-        if trace_options is None:
-            trace_options = 1
 
         span_context = SpanContext(
             trace_id=int(trace_id, 16),
@@ -89,6 +90,6 @@ class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
         header = "{}/{};o={}".format(
             get_hexadecimal_trace_id(span_context.trace_id),
             span_context.span_id,
-            int(span_context.trace_flags),
+            int(span_context.trace_flags.sampled),
         )
         set_in_carrier(carrier, _TRACE_CONTEXT_HEADER_NAME, header)

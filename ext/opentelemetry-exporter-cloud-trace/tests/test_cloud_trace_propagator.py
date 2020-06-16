@@ -22,6 +22,8 @@ from opentelemetry.exporter.cloud_trace.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
 )
 from opentelemetry.trace.span import (
+    INVALID_SPAN_ID,
+    INVALID_TRACE_ID,
     SpanContext,
     TraceFlags,
     get_hexadecimal_trace_id,
@@ -37,10 +39,11 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.propagator = CloudTraceFormatPropagator()
         self.valid_trace_id = 281017822499060589596062859815111849546
         self.valid_span_id = 17725314949316355921
+        self.too_long_id = 111111111111111111111111111111111111111111111
 
     def _extract(self, header_value):
         """Test helper"""
-        header = {_TRACE_CONTEXT_HEADER_NAME: header_value}
+        header = {_TRACE_CONTEXT_HEADER_NAME: [header_value]}
         new_context = self.propagator.extract(get_dict_value, header)
         return trace.get_current_span(new_context).get_context()
 
@@ -68,31 +71,109 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         )
 
     def test_valid_header(self):
-        header = "{}/{};o=".format(
+        header = "{}/{};o=1".format(
             get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        new_span_context = self._extract([header])
+        new_span_context = self._extract(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
         self.assertEqual(new_span_context.span_id, self.valid_span_id)
         self.assertEqual(new_span_context.trace_flags, TraceFlags(1))
         self.assertTrue(new_span_context.is_remote)
 
-    def test_invalid_header(self):
+        header = "{}/{};o=10".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+        )
+        new_span_context = self._extract(header)
+        self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
+        self.assertEqual(new_span_context.span_id, self.valid_span_id)
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(10))
+        self.assertTrue(new_span_context.is_remote)
+
+        header = "{}/{};o=0".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+        )
+        new_span_context = self._extract(header)
+        self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
+        self.assertEqual(new_span_context.span_id, self.valid_span_id)
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
+        self.assertTrue(new_span_context.is_remote)
+
+    def test_invalid_header_format(self):
         header = "invalid_header"
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/{};o=".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+        )
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/;o=1".format(
+            get_hexadecimal_trace_id(self.valid_trace_id)
+        )
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "/{};o=1".format(self.valid_span_id)
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/{};o={}".format("123", "34", "4")
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+    def test_invalid_trace_id(self):
+        header = "{}/{};o={}".format(INVALID_TRACE_ID, self.valid_span_id, 1)
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "0/{};o={}".format(self.valid_span_id, 1)
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "234/{};o={}".format(self.valid_span_id, 1)
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/{};o={}".format(self.too_long_id, self.valid_span_id, 1)
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_context()
         )
 
     def test_invalid_span_id(self):
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), "0" * 16, 1
+            get_hexadecimal_trace_id(self.valid_trace_id), INVALID_SPAN_ID, 1
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_context()
         )
 
-    def test_invalid_header_format(self):
-        header = "{}/{};o={}".format("123", "34", "4")
+        header = "{}/{};o={}".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), "0", 1
+        )
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/{};o={}".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), "345", 1
+        )
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/{};o={}".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), self.too_long_id, 1
+        )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_context()
         )
