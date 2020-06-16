@@ -71,12 +71,12 @@ jobs:
       - save_tox_cache
 
   docker-tests:
-    executor: py38
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - checkout
       - setup_tox
       - restore_tox_cache
-      - setup_remote_docker
       - run: tox -e docker-tests
       - save_tox_cache
 
@@ -133,3 +133,4 @@ workflows:
               package: ["core", "exporter", "instrumentation"]
       - docs
       - lint
+      - docker-tests
