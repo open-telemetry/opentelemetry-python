@@ -15,35 +15,36 @@
 # Celery Context key
 CTX_KEY = "__otel_task_span"
 
+# Celery Context attributes
+CELERY_CONTEXT_ATTRIBUTES = (
+    "compression",
+    "correlation_id",
+    "countdown",
+    "delivery_info",
+    "declare",
+    "eta",
+    "exchange",
+    "expires",
+    "hostname",
+    "id",
+    "priority",
+    "queue",
+    "reply_to",
+    "retries",
+    "routing_key",
+    "serializer",
+    "timelimit",
+    "origin",
+    "state",
+)
+
 
 # pylint:disable=too-many-branches
 def set_attributes_from_context(span, context):
     """Helper to extract meta values from a Celery Context"""
-
-    attribute_keys = (
-        "compression",
-        "correlation_id",
-        "countdown",
-        "delivery_info",
-        "declare",
-        "eta",
-        "exchange",
-        "expires",
-        "hostname",
-        "id",
-        "priority",
-        "queue",
-        "reply_to",
-        "retries",
-        "routing_key",
-        "serializer",
-        "timelimit",
-        "origin",
-        "state",
-    )
-
-    for key in attribute_keys:
+    for key in CELERY_CONTEXT_ATTRIBUTES:
         value = context.get(key)
+        attribute_name = None
 
         # Skip this key if it is not set
         if value is None or value == "":
@@ -51,39 +52,36 @@ def set_attributes_from_context(span, context):
 
         # Skip `timelimit` if it is not set (it's default/unset value is a
         # tuple or a list of `None` values
-        if key == "timelimit" and value in [(None, None), [None, None]]:
+        elif key == "timelimit" and value in [(None, None), [None, None]]:
             continue
 
         # Skip `retries` if it's value is `0`
-        if key == "retries" and value == 0:
+        elif key == "retries" and value == 0:
             continue
 
         # Celery 4.0 uses `origin` instead of `hostname`; this change preserves
         # the same name for the tag despite Celery version
-        if key == "origin":
+        elif key == "origin":
             key = "hostname"
 
-        # TODO: hack to avoid bad attribute type
-        if key == "delivery_info":
+        elif key == "delivery_info":
             # Get also destination from this
             routing_key = value.get("routing_key")
             if routing_key is not None:
                 span.set_attribute("messaging.destination", routing_key)
             value = str(value)
 
-        attribute_name = "celery.{}".format(key)
-
-        if key == "id":
+        elif key == "id":
             attribute_name = "messaging.message_id"
 
-        if key == "correlation_id":
+        elif key == "correlation_id":
             attribute_name = "messaging.conversation_id"
 
-        if key == "routing_key":
+        elif key == "routing_key":
             attribute_name = "messaging.destination"
 
         # according to https://docs.celeryproject.org/en/stable/userguide/routing.html#exchange-types
-        if key == "declare":
+        elif key == "declare":
             attribute_name = "messaging.destination_kind"
             for declare in value:
                 if declare.exchange.type == "direct":
@@ -92,6 +90,10 @@ def set_attributes_from_context(span, context):
                 if declare.exchange.type == "topic":
                     value = "topic"
                     break
+
+        # set attribute name if not set specially for a key
+        if attribute_name is None:
+            attribute_name = "celery.{}".format(key)
 
         span.set_attribute(attribute_name, value)
 

@@ -2,10 +2,27 @@
 
 ## Unreleased
 
+- Rename CounterAggregator -> SumAggregator
+  ([#816](https://github.com/open-telemetry/opentelemetry-python/pull/816))
+
+## 0.9b0
+
+Released 2020-06-10
+
 - Move stateful & resource from Meter to MeterProvider
   ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
 - Rename Measure to ValueRecorder in metrics
   ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
+- Adding trace.get_current_span, Removing Tracer.get_current_span
+  ([#552](https://github.com/open-telemetry/opentelemetry-python/pull/552))
+- bugfix: byte type attributes are decoded before adding to attributes dict
+  ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
+- Rename Observer to ValueObserver
+  ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
+- Add SumObserver, UpDownSumObserver and LastValueAggregator in metrics
+  ([#789](https://github.com/open-telemetry/opentelemetry-python/pull/789))
+- Add start_pipeline to MeterProvider
+  ([#791](https://github.com/open-telemetry/opentelemetry-python/pull/791))
 
 ## 0.8b0
 

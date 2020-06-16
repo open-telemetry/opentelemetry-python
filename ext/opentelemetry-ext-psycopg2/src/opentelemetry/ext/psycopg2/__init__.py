@@ -47,9 +47,9 @@ import typing
 import psycopg2
 import wrapt
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext import dbapi
 from opentelemetry.ext.psycopg2.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import TracerProvider, get_tracer
 
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import typing
+from json import dumps
 
 LabelValue = typing.Union[str, bool, int, float]
 Labels = typing.Dict[str, LabelValue]
@@ -48,6 +49,9 @@ class Resource:
         if not isinstance(other, Resource):
             return False
         return self._labels == other._labels
+
+    def __hash__(self):
+        return hash(dumps(self._labels, sort_keys=True))
 
 
 _EMPTY_RESOURCE = Resource({})

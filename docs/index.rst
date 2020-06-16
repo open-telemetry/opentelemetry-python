@@ -68,7 +68,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
     api/api
     sdk/sdk
-    auto_instrumentation/auto_instrumentation
+    instrumentation/instrumentation
 
 .. toctree::
     :maxdepth: 2
