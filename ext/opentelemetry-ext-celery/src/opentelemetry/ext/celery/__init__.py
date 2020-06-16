@@ -54,17 +54,11 @@ API
 import logging
 import signal
 
-from celery import registry, signals  # pylint: disable=no-name-in-module
+from celery import signals  # pylint: disable=no-name-in-module
 
 from opentelemetry import trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.ext.celery.utils import (
-    attach_span,
-    detach_span,
-    retrieve_span,
-    retrieve_task_id,
-    set_attributes_from_context,
-)
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.ext.celery import utils
 from opentelemetry.ext.celery.version import __version__
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -110,58 +104,53 @@ class CeleryInstrumentor(BaseInstrumentor):
         signals.task_retry.disconnect(self._trace_retry)
 
     def _trace_prerun(self, *args, **kwargs):
-        task = kwargs.get("task")
-        task_id = kwargs.get("task_id")
-        logger.debug("prerun signal start task_id=%s", task_id)
+        task = utils.signal_retrieve_task(kwargs)
+        task_id = utils.signal_retrieve_task_id(kwargs)
+
         if task is None or task_id is None:
-            logger.debug(
-                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
-            )
             return
+
+        logger.debug("prerun signal start task_id=%s", task_id)
 
         span = self._tracer.start_span(task.name, kind=trace.SpanKind.CONSUMER)
 
         activation = self._tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
-        attach_span(task, task_id, (span, activation))
+        utils.attach_span(task, task_id, (span, activation))
 
     @staticmethod
     def _trace_postrun(*args, **kwargs):
-        task = kwargs.get("task")
-        task_id = kwargs.get("task_id")
-        logger.debug("postrun signal task_id=%s", task_id)
+        task = utils.signal_retrieve_task(kwargs)
+        task_id = utils.signal_retrieve_task_id(kwargs)
+
         if task is None or task_id is None:
-            logger.debug(
-                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
-            )
             return
 
+        logger.debug("postrun signal task_id=%s", task_id)
+
         # retrieve and finish the Span
-        span, activation = retrieve_span(task, task_id)
+        span, activation = utils.retrieve_span(task, task_id)
         if span is None:
             logger.warning("no existing span found for task_id=%s", task_id)
             return
 
         # request context tags
         span.set_attribute(_TASK_TAG_KEY, _TASK_RUN)
-        set_attributes_from_context(span, kwargs)
-        set_attributes_from_context(span, task.request)
+        utils.set_attributes_from_context(span, kwargs)
+        utils.set_attributes_from_context(span, task.request)
         span.set_attribute(_TASK_NAME_KEY, task.name)
 
         activation.__exit__(None, None, None)
-        detach_span(task, task_id)
+        utils.detach_span(task, task_id)
 
     def _trace_before_publish(self, *args, **kwargs):
         # The `Task` instance **does not** include any information about the current
         # execution, so it **must not** be used to retrieve `request` data.
         # pylint: disable=no-member
-        task = registry.tasks.get(kwargs.get("sender"))
-        task_id = retrieve_task_id(kwargs)
+        task = utils.signal_retrieve_task_from_sender(kwargs)
+        task_id = utils.signal_retrieve_task_id_from_message(kwargs)
 
         if task is None or task_id is None:
-            logger.debug(
-                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
-            )
             return
 
         span = self._tracer.start_span(task.name, kind=trace.SpanKind.PRODUCER)
@@ -170,44 +159,39 @@ class CeleryInstrumentor(BaseInstrumentor):
         span.set_attribute(_TASK_TAG_KEY, _TASK_APPLY_ASYNC)
         span.set_attribute(_MESSAGE_ID_ATTRIBUTE_NAME, task_id)
         span.set_attribute(_TASK_NAME_KEY, task.name)
-        set_attributes_from_context(span, kwargs)
+        utils.set_attributes_from_context(span, kwargs)
 
         activation = self._tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
-        attach_span(task, task_id, (span, activation), is_publish=True)
+        utils.attach_span(task, task_id, (span, activation), is_publish=True)
 
     @staticmethod
     def _trace_after_publish(*args, **kwargs):
-        # pylint: disable=no-member
-        task = registry.tasks.get(kwargs.get("sender"))
-        task_id = retrieve_task_id(kwargs)
+        task = utils.signal_retrieve_task_from_sender(kwargs)
+        task_id = utils.signal_retrieve_task_id_from_message(kwargs)
+
         if task is None or task_id is None:
-            logger.debug(
-                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
-            )
             return
 
         # retrieve and finish the Span
-        _, activation = retrieve_span(task, task_id, is_publish=True)
+        _, activation = utils.retrieve_span(task, task_id, is_publish=True)
         if activation is None:
             logger.warning("no existing span found for task_id=%s", task_id)
             return
 
         activation.__exit__(None, None, None)
-        detach_span(task, task_id, is_publish=True)
+        utils.detach_span(task, task_id, is_publish=True)
 
     @staticmethod
     def _trace_failure(*args, **kwargs):
-        task = kwargs.get("sender")
-        task_id = kwargs.get("task_id")
+        task = utils.signal_retrieve_task_from_sender(kwargs)
+        task_id = utils.signal_retrieve_task_id(kwargs)
+
         if task is None or task_id is None:
-            logger.debug(
-                "Unable to extract the Task and the task_id. This version of Celery may not be supported."
-            )
             return
 
         # retrieve and pass exception info to activation
-        span, _ = retrieve_span(task, task_id)
+        span, _ = utils.retrieve_span(task, task_id)
         if span is None:
             return
 
@@ -226,22 +210,14 @@ class CeleryInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def _trace_retry(*args, **kwargs):
-        task = kwargs.get("sender")
-        context = kwargs.get("request")
-        if task is None or context is None:
-            logger.debug(
-                "Unable to extract the Task or the Context. This version of Celery may not be supported."
-            )
+        task = utils.signal_retrieve_task_from_sender(kwargs)
+        task_id = utils.signal_retrieve_task_id_from_request(kwargs)
+        reason = utils.signal_retrieve_reason(kwargs)
+
+        if task is None or task_id is None or reason is None:
             return
 
-        reason = kwargs.get("reason")
-        if not reason:
-            logger.debug(
-                "Unable to extract the retry reason. This version of Celery may not be supported."
-            )
-            return
-
-        span, _ = retrieve_span(task, context.id)
+        span, _ = utils.retrieve_span(task, task_id)
         if span is None:
             return
 

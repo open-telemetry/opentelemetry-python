@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
+import celery
+
+logger = logging.getLogger(__name__)
+
 # Celery Context key
 CTX_KEY = "__otel_task_span"
 
@@ -148,16 +154,69 @@ def retrieve_span(task, task_id, is_publish=False):
     return span_dict.get((task_id, is_publish), (None, None))
 
 
-def retrieve_task_id(context):
+def signal_retrieve_task(kwargs):
+    task = kwargs.get("task")
+    if task is None:
+        logger.debug("Unable to retrieve task from signal arguments")
+    return task
+
+
+def signal_retrieve_task_from_sender(kwargs):
+    sender = kwargs.get("sender")
+    if sender is None:
+        logger.debug("Unable to retrieve the sender from signal arguments")
+        return
+
+    # before and after publish signals sender is the task name
+    # for retry and failure signals sender is the task object
+    if isinstance(sender, str):
+        sender = celery.registry.tasks.get(sender)
+        if sender is None:
+            logger.debug("Unable to retrieve the task from sender=%s", sender)
+            return
+
+    return sender
+
+
+def signal_retrieve_task_id(kwargs):
+    task_id = kwargs.get("task_id")
+    if task_id is None:
+        logger.debug("Unable to retrieve task_id from signal arguments")
+    return task_id
+
+
+def signal_retrieve_task_id_from_request(kwargs):
+    # retry signal does not include task_id as argument so use request argument
+    request = kwargs.get("request")
+    if request is None:
+        logger.debug("Unable to retrieve the request from signal arguments")
+
+    task_id = getattr(request, "id")
+    if task_id is None:
+        logger.debug("Unable to retrieve the task_id from the request")
+
+    return task_id
+
+
+def signal_retrieve_task_id_from_message(kwargs):
     """Helper to retrieve the `Task` identifier from the message `body`.
     This helper supports Protocol Version 1 and 2. The Protocol is well
     detailed in the official documentation:
     http://docs.celeryproject.org/en/latest/internals/protocol.html
     """
-    headers = context.get("headers")
-    body = context.get("body")
-    if headers is not None:
+    headers = kwargs.get("headers")
+    body = kwargs.get("body")
+    if headers is not None and len(headers) > 0:
         # Protocol Version 2 (default from Celery 4.0)
         return headers.get("id")
     # Protocol Version 1
     return body.get("id")
+
+
+
+
+def signal_retrieve_reason(kwargs):
+    reason = kwargs.get("reason")
+    if not reason:
+        logger.debug("Unable to retrieve the retry reason")
+    return reason
