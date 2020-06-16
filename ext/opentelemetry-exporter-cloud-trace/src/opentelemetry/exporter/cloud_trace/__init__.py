@@ -57,7 +57,6 @@ from opentelemetry.sdk.util import BoundedDict
 from opentelemetry.sdk.version import __version__ as core_version
 from opentelemetry.util import types
 
-# pylint: disable=import-error
 from .version import __version__ as cloud_trace_version
 
 logger = logging.getLogger(__name__)
