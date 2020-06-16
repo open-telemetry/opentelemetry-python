@@ -67,7 +67,7 @@ Try upgrading pip
 ``pip install grcpio`` has been known to hang when you aren't using an upgraded version.
 
 ImportError: No module named opentelemetry
-###########################################
+##########################################
 Make sure you are using python3. If
 
 .. code-block:: sh
