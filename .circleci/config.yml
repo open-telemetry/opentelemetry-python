@@ -1,22 +1,19 @@
 version: 2.1
 
-orbs:
-  python: circleci/python@0.2.1
-
 executors:
-  python38:
+  py38:
     docker:
       - image: circleci/python:3.8
-  python37:
+  py37:
     docker:
       - image: circleci/python:3.7
-  python36:
+  py36:
     docker:
       - image: circleci/python:3.6
-  python35:
+  py35:
     docker:
       - image: circleci/python:3.5
-  python34:
+  py34:
     docker:
       - image: circleci/python:3.4
   pypy3:
@@ -65,7 +62,7 @@ commands:
 
 jobs:
   docs:
-    executor: python38
+    executor: py38
     steps:
       - checkout
       - setup_tox
@@ -74,7 +71,7 @@ jobs:
       - save_tox_cache
 
   docker-tests:
-    executor: python38
+    executor: py38
     steps:
       - checkout
       - setup_tox
@@ -84,7 +81,7 @@ jobs:
       - save_tox_cache
 
   lint:
-    executor: python38
+    executor: py38
     steps:
       - checkout
       - setup_tox
@@ -92,8 +89,12 @@ jobs:
       - run: tox -e lint
       - save_tox_cache
 
-  py34-core:
-    executor: python34
+  build-py34:
+    parameters:
+      package:
+        type: string
+        default: "core"
+    executor: py34
     steps:
       - checkout
       - run:
@@ -102,96 +103,33 @@ jobs:
       - restore_tox_cache
       - run:
           name: "Run scripts/run-tox-scenario"
-          command: tox -f py34-core
+          command: tox -f py34-<< parameters.package >>
       - save_tox_cache
 
-  py34-ext:
-    executor: python34
-    steps:
-      - checkout
-      - run:
-          name: "Install tox"
-          command: sudo pip install -U tox virtualenv tox-factor
-      - restore_tox_cache
-      - run:
-          name: "Run scripts/run-tox-scenario"
-          command: tox -f py34-ext
-      - save_tox_cache
-
-  py35-core:
-    executor: python35
+  build:
+    parameters:
+      version:
+        type: string
+        default: "py38"
+      package:
+        type: string
+        default: "core"
+    executor: << parameters.version >>
     steps:
       - run_tox_scenario:
-          pattern: py35-core
-
-  py35-ext:
-    executor: python35
-    steps:
-      - run_tox_scenario:
-          pattern: py35-ext
-
-  py36-core:
-    executor: python36
-    steps:
-      - run_tox_scenario:
-          pattern: py36-core
-
-  py36-ext:
-    executor: python36
-    steps:
-      - run_tox_scenario:
-          pattern: py36-ext
-
-  py37-core:
-    executor: python37
-    steps:
-      - run_tox_scenario:
-          pattern: py37-core
-
-  py37-ext:
-    executor: python37
-    steps:
-      - run_tox_scenario:
-          pattern: py37-ext
-
-  py38-core:
-    executor: python38
-    steps:
-      - run_tox_scenario:
-          pattern: py38-core
-
-  py38-ext:
-    executor: python38
-    steps:
-      - run_tox_scenario:
-          pattern: py38-ext
-
-  pypy3-core:
-    executor: pypy3
-    steps:
-      - run_tox_scenario:
-          pattern: pypy3-core
-
-  pypy3-ext:
-    executor: pypy3
-    steps:
-      - run_tox_scenario:
-          pattern: pypy3-ext
+          pattern: << parameters.version >>-<< parameters.package >>
 
 workflows:
   main:
     jobs:
+      - build:
+          matrix:
+            parameters:
+              version: ["py38", "py37", "py36", "py35", "pypy3"]
+              package: ["core", "exporters", "instrumentations"]
+      - build-py34:
+          matrix:
+            parameters:
+              package: ["core", "exporters", "instrumentations"]
       - docs
       - lint
-      - pypy3-core
-      - pypy3-ext
-      - py38-core
-      - py38-ext
-      - py37-core
-      - py37-ext
-      - py36-core
-      - py36-ext
-      - py35-core
-      - py35-ext
-      - py34-core
-      - py34-ext
