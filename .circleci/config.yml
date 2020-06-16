@@ -80,7 +80,10 @@ jobs:
           command: pyenv versions
       - run:
           name: "Set Python Version"
-          command: pyenv global 3.8.1
+          command: pyenv global 3.7.0
+      - run:
+          name: "Update pip"
+          command: pip install -U pip
       - setup_tox
       - restore_tox_cache
       - run: tox -e docker-tests
