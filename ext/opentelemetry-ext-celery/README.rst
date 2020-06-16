@@ -16,6 +16,33 @@ Installation
 
     pip install opentelemetry-ext-celery
 
+Usage
+-----
+
+* Start broker backend
+
+::
+    docker run -p 5672:5672 rabbitmq
+
+
+* Run instrumented task
+
+.. code-block:: python
+
+    from opentelemetry import trace
+    from opentelemetry.ext.celery import CeleryInstrumentor
+
+    CeleryInstrumentor().instrument()
+
+    from celery import Celery
+
+    app = Celery("tasks", broker="amqp://localhost")
+
+    @app.task
+    def add(x, y):
+        return x + y
+
+    add.delay(42, 50)
 
 References
 ----------

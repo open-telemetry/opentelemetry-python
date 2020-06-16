@@ -161,7 +161,7 @@ class TestUtils(unittest.TestCase):
             "properties": {},
         }
 
-        task_id = utils.retrieve_task_id(context)
+        task_id = utils.retrieve_task_id_from_message(context)
         self.assertEqual(task_id, "dffcaec1-dd92-4a1a-b3ab-d6512f4beeb7")
 
     def test_task_id_from_protocol_v2(self):
@@ -204,5 +204,5 @@ class TestUtils(unittest.TestCase):
             },
         }
 
-        task_id = utils.retrieve_task_id(context)
+        task_id = utils.retrieve_task_id_from_message(context)
         self.assertEqual(task_id, "7e917b83-4018-431d-9832-73a28e1fb6c0")

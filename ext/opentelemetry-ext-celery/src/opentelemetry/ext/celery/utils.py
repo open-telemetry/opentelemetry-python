@@ -14,7 +14,7 @@
 
 import logging
 
-import celery
+from celery import registry  # pylint: disable=no-name-in-module
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,6 @@ def set_attributes_from_context(span, context):
     """Helper to extract meta values from a Celery Context"""
     for key in CELERY_CONTEXT_ATTRIBUTES:
         value = context.get(key)
-        attribute_name = None
 
         # Skip this key if it is not set
         if value is None or value == "":
@@ -58,16 +57,18 @@ def set_attributes_from_context(span, context):
 
         # Skip `timelimit` if it is not set (it's default/unset value is a
         # tuple or a list of `None` values
-        elif key == "timelimit" and value in [(None, None), [None, None]]:
+        if key == "timelimit" and value in [(None, None), [None, None]]:
             continue
 
         # Skip `retries` if it's value is `0`
-        elif key == "retries" and value == 0:
+        if key == "retries" and value == 0:
             continue
+
+        attribute_name = None
 
         # Celery 4.0 uses `origin` instead of `hostname`; this change preserves
         # the same name for the tag despite Celery version
-        elif key == "origin":
+        if key == "origin":
             key = "hostname"
 
         elif key == "delivery_info":
@@ -154,38 +155,36 @@ def retrieve_span(task, task_id, is_publish=False):
     return span_dict.get((task_id, is_publish), (None, None))
 
 
-def signal_retrieve_task(kwargs):
+def retrieve_task(kwargs):
     task = kwargs.get("task")
     if task is None:
         logger.debug("Unable to retrieve task from signal arguments")
     return task
 
 
-def signal_retrieve_task_from_sender(kwargs):
+def retrieve_task_from_sender(kwargs):
     sender = kwargs.get("sender")
     if sender is None:
         logger.debug("Unable to retrieve the sender from signal arguments")
-        return
 
     # before and after publish signals sender is the task name
     # for retry and failure signals sender is the task object
     if isinstance(sender, str):
-        sender = celery.registry.tasks.get(sender)
+        sender = registry.tasks.get(sender)
         if sender is None:
             logger.debug("Unable to retrieve the task from sender=%s", sender)
-            return
 
     return sender
 
 
-def signal_retrieve_task_id(kwargs):
+def retrieve_task_id(kwargs):
     task_id = kwargs.get("task_id")
     if task_id is None:
         logger.debug("Unable to retrieve task_id from signal arguments")
     return task_id
 
 
-def signal_retrieve_task_id_from_request(kwargs):
+def retrieve_task_id_from_request(kwargs):
     # retry signal does not include task_id as argument so use request argument
     request = kwargs.get("request")
     if request is None:
@@ -198,7 +197,7 @@ def signal_retrieve_task_id_from_request(kwargs):
     return task_id
 
 
-def signal_retrieve_task_id_from_message(kwargs):
+def retrieve_task_id_from_message(kwargs):
     """Helper to retrieve the `Task` identifier from the message `body`.
     This helper supports Protocol Version 1 and 2. The Protocol is well
     detailed in the official documentation:
@@ -213,9 +212,7 @@ def signal_retrieve_task_id_from_message(kwargs):
     return body.get("id")
 
 
-
-
-def signal_retrieve_reason(kwargs):
+def retrieve_reason(kwargs):
     reason = kwargs.get("reason")
     if not reason:
         logger.debug("Unable to retrieve the retry reason")

@@ -12,23 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Instrument `celery`_ to report Celery APP operations.
-
-There are two options for instrumenting code. The first option is to use the
-``opentelemetry-instrument`` executable which will automatically
-instrument your Celery APP. The second is to programmatically enable
-instrumentation as explained in the following section.
+Instrument `celery`_ to trace Celery applications.
 
 .. _celery: https://pypi.org/project/celery/
 
 Usage
 -----
 
-Be sure rabbitmq is running:
+* Start broker backend
 
 .. code::
 
     docker run -p 5672:5672 rabbitmq
+
+
+* Run instrumented task
 
 .. code:: python
 
@@ -57,9 +55,9 @@ import signal
 from celery import signals  # pylint: disable=no-name-in-module
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.celery import utils
 from opentelemetry.ext.celery.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
@@ -77,7 +75,6 @@ _MESSAGE_ID_ATTRIBUTE_NAME = "messaging.message_id"
 
 
 class CeleryInstrumentor(BaseInstrumentor):
-    # pylint: disable=unused-argument
     def _instrument(self, **kwargs):
         tracer_provider = kwargs.get("tracer_provider")
 
@@ -104,8 +101,8 @@ class CeleryInstrumentor(BaseInstrumentor):
         signals.task_retry.disconnect(self._trace_retry)
 
     def _trace_prerun(self, *args, **kwargs):
-        task = utils.signal_retrieve_task(kwargs)
-        task_id = utils.signal_retrieve_task_id(kwargs)
+        task = utils.retrieve_task(kwargs)
+        task_id = utils.retrieve_task_id(kwargs)
 
         if task is None or task_id is None:
             return
@@ -120,8 +117,8 @@ class CeleryInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def _trace_postrun(*args, **kwargs):
-        task = utils.signal_retrieve_task(kwargs)
-        task_id = utils.signal_retrieve_task_id(kwargs)
+        task = utils.retrieve_task(kwargs)
+        task_id = utils.retrieve_task_id(kwargs)
 
         if task is None or task_id is None:
             return
@@ -147,8 +144,8 @@ class CeleryInstrumentor(BaseInstrumentor):
         # The `Task` instance **does not** include any information about the current
         # execution, so it **must not** be used to retrieve `request` data.
         # pylint: disable=no-member
-        task = utils.signal_retrieve_task_from_sender(kwargs)
-        task_id = utils.signal_retrieve_task_id_from_message(kwargs)
+        task = utils.retrieve_task_from_sender(kwargs)
+        task_id = utils.retrieve_task_id_from_message(kwargs)
 
         if task is None or task_id is None:
             return
@@ -167,8 +164,8 @@ class CeleryInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def _trace_after_publish(*args, **kwargs):
-        task = utils.signal_retrieve_task_from_sender(kwargs)
-        task_id = utils.signal_retrieve_task_id_from_message(kwargs)
+        task = utils.retrieve_task_from_sender(kwargs)
+        task_id = utils.retrieve_task_id_from_message(kwargs)
 
         if task is None or task_id is None:
             return
@@ -184,8 +181,8 @@ class CeleryInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def _trace_failure(*args, **kwargs):
-        task = utils.signal_retrieve_task_from_sender(kwargs)
-        task_id = utils.signal_retrieve_task_id(kwargs)
+        task = utils.retrieve_task_from_sender(kwargs)
+        task_id = utils.retrieve_task_id(kwargs)
 
         if task is None or task_id is None:
             return
@@ -210,9 +207,9 @@ class CeleryInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def _trace_retry(*args, **kwargs):
-        task = utils.signal_retrieve_task_from_sender(kwargs)
-        task_id = utils.signal_retrieve_task_id_from_request(kwargs)
-        reason = utils.signal_retrieve_reason(kwargs)
+        task = utils.retrieve_task_from_sender(kwargs)
+        task_id = utils.retrieve_task_id_from_request(kwargs)
+        reason = utils.retrieve_reason(kwargs)
 
         if task is None or task_id is None or reason is None:
             return
