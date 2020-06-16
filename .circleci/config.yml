@@ -77,7 +77,7 @@ jobs:
       - checkout
       - run:
           name: "Get pyenv list"
-          command: pyenv list
+          command: pyenv versions
       - run:
           name: "Set Python Version"
           command: pyenv global 3.8.1
