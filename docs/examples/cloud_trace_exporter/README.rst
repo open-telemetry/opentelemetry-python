@@ -57,7 +57,7 @@ bash: pip: command not found:
     * If your machine uses python2 by default, pip will also be the python2 version. Try using ``pip3`` instead of ``pip``.
 
 pip install is hanging
-#######################
+######################
 Try upgrading pip
 
 .. code-block:: sh
