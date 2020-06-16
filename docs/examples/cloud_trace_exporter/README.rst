@@ -58,7 +58,7 @@ bash: pip: command not found:
 
 pip install is hanging
 #######################
-Try upgrading your pip
+Try upgrading pip
 
 .. code-block:: sh
 
