@@ -12,4 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.10.dev0"
+from sys import argv
+
+import requests
+
+requested = requests.get(
+    "http://localhost:8082/server_request", params={"param": argv[1]}
+)
+assert requested.status_code == 200
+print(requested.text)

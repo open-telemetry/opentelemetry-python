@@ -27,9 +27,9 @@ from opentelemetry.metrics import (
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
     Aggregator,
-    CounterAggregator,
     LastValueAggregator,
     MinMaxSumCountAggregator,
+    SumAggregator,
     ValueObserverAggregator,
 )
 
@@ -57,7 +57,7 @@ class Batcher(abc.ABC):
         """
         # pylint:disable=R0201
         if issubclass(instrument_type, (Counter, UpDownCounter)):
-            return CounterAggregator()
+            return SumAggregator()
         if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
             return LastValueAggregator()
         if issubclass(instrument_type, ValueRecorder):
@@ -65,7 +65,7 @@ class Batcher(abc.ABC):
         if issubclass(instrument_type, ValueObserver):
             return ValueObserverAggregator()
         # TODO: Add other aggregators
-        return CounterAggregator()
+        return SumAggregator()
 
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
