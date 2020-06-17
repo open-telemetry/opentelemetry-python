@@ -21,12 +21,12 @@ from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
 
 from opentelemetry.exporter.cloud_trace import (
-    _AGENT_LABEL_KEY,
-    _AGENT_LABEL_VALUE,
-    _MAX_EVENT_ATTRS,
-    _MAX_LINK_ATTRS,
-    _MAX_NUM_EVENTS,
-    _MAX_NUM_LINKS,
+    AGENT_LABEL_KEY,
+    AGENT_LABEL_VALUE,
+    MAX_EVENT_ATTRS,
+    MAX_LINK_ATTRS,
+    MAX_NUM_EVENTS,
+    MAX_NUM_LINKS,
     CloudTraceSpanExporter,
     _extract_attributes,
     _extract_events,
@@ -112,9 +112,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
             "attributes": ProtoSpan.Attributes(
                 attribute_map={
-                    _AGENT_LABEL_KEY: _format_attribute_value(
-                        _AGENT_LABEL_VALUE
-                    )
+                    AGENT_LABEL_KEY: _format_attribute_value(AGENT_LABEL_VALUE)
                 }
             ),
             "links": None,
@@ -339,7 +337,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
             attributes={},
         )
-        too_many_links = [link] * (_MAX_NUM_LINKS + 1)
+        too_many_links = [link] * (MAX_NUM_LINKS + 1)
         self.assertEqual(
             _extract_links(too_many_links),
             ProtoSpan.Links(
@@ -351,13 +349,13 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         "attributes": {},
                     }
                 ]
-                * _MAX_NUM_LINKS,
-                dropped_links_count=len(too_many_links) - _MAX_NUM_LINKS,
+                * MAX_NUM_LINKS,
+                dropped_links_count=len(too_many_links) - MAX_NUM_LINKS,
             ),
         )
 
         link_attrs = {}
-        for attr_key in range(_MAX_LINK_ATTRS + 1):
+        for attr_key in range(MAX_LINK_ATTRS + 1):
             link_attrs[str(attr_key)] = 0
         attr_link = Link(
             context=SpanContext(
@@ -370,10 +368,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
         proto_link = _extract_links([attr_link])
         self.assertEqual(
-            len(proto_link.link[0].attributes.attribute_map), _MAX_LINK_ATTRS
+            len(proto_link.link[0].attributes.attribute_map), MAX_LINK_ATTRS
         )
 
-        too_many_events = [event1] * (_MAX_NUM_EVENTS + 1)
+        too_many_events = [event1] * (MAX_NUM_EVENTS + 1)
         self.assertEqual(
             _extract_events(too_many_events),
             ProtoSpan.TimeEvents(
@@ -388,15 +386,15 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         },
                     },
                 ]
-                * _MAX_NUM_EVENTS,
+                * MAX_NUM_EVENTS,
                 dropped_annotations_count=len(too_many_events)
-                - _MAX_NUM_EVENTS,
+                - MAX_NUM_EVENTS,
             ),
         )
 
         time_in_ns1 = 1589919268850900051
         event_attrs = {}
-        for attr_key in range(_MAX_EVENT_ATTRS + 1):
+        for attr_key in range(MAX_EVENT_ATTRS + 1):
             event_attrs[str(attr_key)] = 0
         proto_events = _extract_events(
             [Event(name="a", attributes=event_attrs, timestamp=time_in_ns1)]
@@ -405,5 +403,5 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             len(
                 proto_events.time_event[0].annotation.attributes.attribute_map
             ),
-            _MAX_EVENT_ATTRS,
+            MAX_EVENT_ATTRS,
         )
