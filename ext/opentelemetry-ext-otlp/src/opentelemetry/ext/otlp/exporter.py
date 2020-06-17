@@ -56,11 +56,11 @@ def translate_key_values(key, value):
 
 # pylint: disable=no-member
 class OTLPExporterMixin(ABC):
-    """OTLP span exporter
+    """OTLP span/metric exporter
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
-        credentials: Credentials object for server authentication
+        credentials: ChannelCredentials object for server authentication
         metadata: Metadata to send when exporting
     """
 
