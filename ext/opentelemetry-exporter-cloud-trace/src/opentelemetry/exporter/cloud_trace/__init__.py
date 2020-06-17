@@ -54,6 +54,10 @@ import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import BoundedDict
+from opentelemetry.trace.span import (
+    get_hexadecimal_span_id,
+    get_hexadecimal_trace_id,
+)
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
@@ -123,15 +127,15 @@ class CloudTraceSpanExporter(SpanExporter):
 
         for span in spans:
             ctx = span.get_context()
-            trace_id = _get_hexadecimal_trace_id(ctx.trace_id)
-            span_id = _get_hexadecimal_span_id(ctx.span_id)
+            trace_id = get_hexadecimal_trace_id(ctx.trace_id)
+            span_id = get_hexadecimal_span_id(ctx.span_id)
             span_name = "projects/{}/traces/{}/spans/{}".format(
                 self.project_id, trace_id, span_id
             )
 
             parent_id = None
             if span.parent:
-                parent_id = _get_hexadecimal_span_id(span.parent.span_id)
+                parent_id = get_hexadecimal_span_id(span.parent.span_id)
 
             start_time = _get_time_from_ns(span.start_time)
             end_time = _get_time_from_ns(span.end_time)
@@ -167,14 +171,6 @@ class CloudTraceSpanExporter(SpanExporter):
 
     def shutdown(self):
         pass
-
-
-def _get_hexadecimal_trace_id(trace_id: int) -> str:
-    return "{:032x}".format(trace_id)
-
-
-def _get_hexadecimal_span_id(span_id: int) -> str:
-    return "{:016x}".format(span_id)
 
 
 def _get_time_from_ns(nanoseconds: int) -> Dict:
@@ -234,8 +230,8 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
                 "Link has more then %s attributes, some will be truncated",
                 MAX_LINK_ATTRS,
             )
-        trace_id = _get_hexadecimal_trace_id(link.context.trace_id)
-        span_id = _get_hexadecimal_span_id(link.context.span_id)
+        trace_id = get_hexadecimal_trace_id(link.context.trace_id)
+        span_id = get_hexadecimal_span_id(link.context.span_id)
         extracted_links.append(
             {
                 "trace_id": trace_id,
