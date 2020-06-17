@@ -67,13 +67,13 @@ from opentelemetry.util import types
 core_version = pkg_resources.get_distribution("opentelemetry-sdk").version
 logger = logging.getLogger(__name__)
 
-MAX_NUM_LINKS = 128
-MAX_NUM_EVENTS = 32
-MAX_EVENT_ATTRS = 4
-MAX_LINK_ATTRS = 32
-MAX_SPAN_ATTRS = 32
-AGENT_LABEL_KEY = "g.co/agent"
-AGENT_LABEL_VALUE = "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
+_MAX_NUM_LINKS = 128
+_MAX_NUM_EVENTS = 32
+_MAX_EVENT_ATTRS = 4
+_MAX_LINK_ATTRS = 32
+_MAX_SPAN_ATTRS = 32
+_AGENT_LABEL_KEY = "g.co/agent"
+_AGENT_LABEL_VALUE = "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
     core_version, cloud_trace_version
 )
 
@@ -149,10 +149,10 @@ class CloudTraceSpanExporter(SpanExporter):
             start_time = _get_time_from_ns(span.start_time)
             end_time = _get_time_from_ns(span.end_time)
 
-            if len(span.attributes) > MAX_SPAN_ATTRS:
+            if len(span.attributes) > _MAX_SPAN_ATTRS:
                 logger.warning(
                     "Span has more then %s attributes, some will be truncated",
-                    MAX_SPAN_ATTRS,
+                    _MAX_SPAN_ATTRS,
                 )
 
             cloud_trace_spans.append(
@@ -166,7 +166,7 @@ class CloudTraceSpanExporter(SpanExporter):
                     "end_time": end_time,
                     "parent_span_id": parent_id,
                     "attributes": _extract_attributes(
-                        span.attributes, MAX_SPAN_ATTRS, add_agent_attr=True
+                        span.attributes, _MAX_SPAN_ATTRS, add_agent_attr=True
                     ),
                     "links": _extract_links(span.links),
                     "status": _extract_status(span.status),
@@ -226,18 +226,18 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
         return None
     extracted_links = []
     dropped_links = 0
-    if len(links) > MAX_NUM_LINKS:
+    if len(links) > _MAX_NUM_LINKS:
         logger.warning(
             "Exporting more then %s links, some will be truncated",
-            MAX_NUM_LINKS,
+            _MAX_NUM_LINKS,
         )
-        dropped_links = len(links) - MAX_NUM_LINKS
-        links = links[:MAX_NUM_LINKS]
+        dropped_links = len(links) - _MAX_NUM_LINKS
+        links = links[:_MAX_NUM_LINKS]
     for link in links:
-        if len(link.attributes) > MAX_LINK_ATTRS:
+        if len(link.attributes) > _MAX_LINK_ATTRS:
             logger.warning(
                 "Link has more then %s attributes, some will be truncated",
-                MAX_LINK_ATTRS,
+                _MAX_LINK_ATTRS,
             )
         trace_id = get_hexadecimal_trace_id(link.context.trace_id)
         span_id = get_hexadecimal_span_id(link.context.span_id)
@@ -247,7 +247,7 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
                 "span_id": span_id,
                 "type": "TYPE_UNSPECIFIED",
                 "attributes": _extract_attributes(
-                    link.attributes, MAX_LINK_ATTRS
+                    link.attributes, _MAX_LINK_ATTRS
                 ),
             }
         )
@@ -262,19 +262,19 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
         return None
     logs = []
     dropped_annontations = 0
-    if len(events) > MAX_NUM_EVENTS:
+    if len(events) > _MAX_NUM_EVENTS:
         logger.warning(
             "Exporting more then %s annotations, some will be truncated",
-            MAX_NUM_EVENTS,
+            _MAX_NUM_EVENTS,
         )
-        dropped_annontations = len(events) - MAX_NUM_EVENTS
-        events = events[:MAX_NUM_EVENTS]
+        dropped_annontations = len(events) - _MAX_NUM_EVENTS
+        events = events[:_MAX_NUM_EVENTS]
     for event in events:
-        if len(event.attributes) > MAX_EVENT_ATTRS:
+        if len(event.attributes) > _MAX_EVENT_ATTRS:
             logger.warning(
                 "Event %s has more then %s attributes, some will be truncated",
                 event.name,
-                MAX_EVENT_ATTRS,
+                _MAX_EVENT_ATTRS,
             )
         logs.append(
             {
@@ -284,7 +284,7 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
                         event.name, 256
                     ),
                     "attributes": _extract_attributes(
-                        event.attributes, MAX_EVENT_ATTRS
+                        event.attributes, _MAX_EVENT_ATTRS
                     ),
                 },
             }
@@ -313,8 +313,8 @@ def _extract_attributes(
         else:
             invald_value_dropped_count += 1
     if add_agent_attr:
-        attributes_dict[AGENT_LABEL_KEY] = _format_attribute_value(
-            AGENT_LABEL_VALUE
+        attributes_dict[_AGENT_LABEL_KEY] = _format_attribute_value(
+            _AGENT_LABEL_VALUE
         )
     return ProtoSpan.Attributes(
         attribute_map=attributes_dict,
