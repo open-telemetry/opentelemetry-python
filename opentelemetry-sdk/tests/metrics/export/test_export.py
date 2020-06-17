@@ -630,7 +630,7 @@ class TestLastValueAggregator(unittest.TestCase):
     def test_checkpoint(self):
         observer = LastValueAggregator()
 
-        # take checkpoint wihtout any update
+        # take checkpoint without any update
         observer.take_checkpoint()
         self.assertEqual(observer.checkpoint, None)
 
