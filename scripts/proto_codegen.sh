@@ -14,14 +14,12 @@ if [ -z "$VIRTUAL_ENV" ]; then
     exit 1
 fi
 
-# TODO: should these live in dev-requirements.txt?
-python -m pip install grpcio-tools==1.29.0 mypy-protobuf==1.21 protobuf==3.12.2
-
 PROTO_REPO_DIR=${PROTO_REPO_DIR:-"/tmp/opentelemetry-proto"}
 PROTO_REPO_BRANCH=${PROTO_REPO_BRANCH:-master}
-
 # root of opentelemetry-python repo
 repo_root="$(git rev-parse --show-toplevel)"
+
+python -m pip install -r $repo_root/dev-requirements.txt
 
 # Clone the proto repo if it doesn't exist
 if [ ! -d "$PROTO_REPO_DIR" ]; then
