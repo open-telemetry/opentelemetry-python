@@ -50,7 +50,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
     def _inject(self, span=None):
         """Test helper"""
         ctx = get_current()
-        if span:
+        if span is not None:
             ctx = trace.set_span_in_context(span, ctx)
         output = {}
         self.propagator.inject(dict.__setitem__, output, context=ctx)
