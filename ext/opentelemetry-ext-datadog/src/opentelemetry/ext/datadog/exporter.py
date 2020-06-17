@@ -25,7 +25,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint:disable=relative-beyond-top-level
-from .constants import DD_ORIGIN, SAMPLE_RATE_METRIC_KEY
+from .constants import DD_ORIGIN, ENV_KEY, SAMPLE_RATE_METRIC_KEY, VERSION_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -56,16 +56,26 @@ class DatadogSpanExporter(SpanExporter):
 
     Args:
         agent_url: The url of the Datadog Agent or use ``DD_TRACE_AGENT_URL`` environment variable
-        service: The service to be used for the application or use ``DD_SERVICE`` environment variable
+        service: The service name to be used for the application or use ``DD_SERVICE`` environment variable
+        env: Set the application’s environment or use ``DD_ENV`` environment variable
+        version: Set the application’s version or use ``DD_VERSION`` environment variable
+        tags: A list of default tags to be added to every span or use ``DD_TAGS`` environment variable
     """
 
-    def __init__(self, agent_url=None, service=None):
+    def __init__(
+        self, agent_url=None, service=None, env=None, version=None, tags=None
+    ):
         self.agent_url = (
             agent_url
             if agent_url
             else os.environ.get("DD_TRACE_AGENT_URL", DEFAULT_AGENT_URL)
         )
         self.service = service if service else os.environ.get("DD_SERVICE")
+        self.env = env if env else os.environ.get("DD_ENV")
+        self.version = version if version else os.environ.get("DD_VERSION")
+        self.tags = _parse_tags_str(
+            tags if tags else os.environ.get("DD_TAGS")
+        )
         self._agent_writer = None
 
     @property
@@ -132,6 +142,17 @@ class DatadogSpanExporter(SpanExporter):
                     datadog_span.set_tag("error.type", exc_type)
 
             datadog_span.set_tags(span.attributes)
+
+            # add configured env tag
+            if self.env is not None:
+                datadog_span.set_tag(ENV_KEY, self.env)
+
+            # add configured application version tag to only root span
+            if self.version is not None and parent_id == 0:
+                datadog_span.set_tag(VERSION_KEY, self.version)
+
+            # add configured global tags
+            datadog_span.set_tags(self.tags)
 
             # add origin to root span
             origin = _get_origin(span)
@@ -232,3 +253,35 @@ def _get_sampling_rate(span):
         and isinstance(span.sampler, trace_api.sampling.ProbabilitySampler)
         else None
     )
+
+
+def _parse_tags_str(tags_str):
+    """Parse a string of tags typically provided via environment variables.
+
+    The expected string is of the form::
+        "key1:value1,key2:value2"
+
+    :param tags_str: A string of the above form to parse tags from.
+    :return: A dict containing the tags that were parsed.
+    """
+    parsed_tags = {}
+    if not tags_str:
+        return parsed_tags
+
+    for tag in tags_str.split(","):
+        try:
+            key, value = tag.split(":", 1)
+
+            # Validate the tag
+            if key == "" or value == "" or value.endswith(":"):
+                raise ValueError
+        except ValueError:
+            logger.error(
+                "Malformed tag in tag pair '%s' from tag string '%s'.",
+                tag,
+                tags_str,
+            )
+        else:
+            parsed_tags[key] = value
+
+    return parsed_tags
