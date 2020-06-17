@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_AGENT_URL = "http://localhost:8126"
 _INSTRUMENTATION_SPAN_TYPES = {
     "opentelemetry.ext.aiohttp-client": DatadogSpanTypes.HTTP,
+    "opentelemetry.ext.asgi": DatadogSpanTypes.WEB,
     "opentelemetry.ext.dbapi": DatadogSpanTypes.SQL,
     "opentelemetry.ext.django": DatadogSpanTypes.WEB,
     "opentelemetry.ext.flask": DatadogSpanTypes.WEB,
@@ -40,6 +41,7 @@ _INSTRUMENTATION_SPAN_TYPES = {
     "opentelemetry.ext.jinja2": DatadogSpanTypes.TEMPLATE,
     "opentelemetry.ext.mysql": DatadogSpanTypes.SQL,
     "opentelemetry.ext.psycopg2": DatadogSpanTypes.SQL,
+    "opentelemetry.ext.pymemcache": DatadogSpanTypes.CACHE,
     "opentelemetry.ext.pymongo": DatadogSpanTypes.MONGODB,
     "opentelemetry.ext.pymysql": DatadogSpanTypes.SQL,
     "opentelemetry.ext.redis": DatadogSpanTypes.REDIS,
@@ -189,9 +191,7 @@ def _get_span_name(span):
 def _get_resource(span):
     """Get resource name for span"""
     if "http.method" in span.attributes:
-        route = span.attributes.get(
-            "http.route", span.attributes.get("http.path")
-        )
+        route = span.attributes.get("http.route")
         return (
             span.attributes["http.method"] + " " + route
             if route

@@ -43,7 +43,7 @@ class Aggregator(abc.ABC):
         """Combines two aggregator values."""
 
 
-class CounterAggregator(Aggregator):
+class SumAggregator(Aggregator):
     """Aggregator for Counter metrics."""
 
     def __init__(self):
@@ -123,6 +123,34 @@ class MinMaxSumCountAggregator(Aggregator):
             self.last_update_timestamp = get_latest_timestamp(
                 self.last_update_timestamp, other.last_update_timestamp
             )
+
+
+class LastValueAggregator(Aggregator):
+    """Aggregator that stores last value results."""
+
+    def __init__(self):
+        super().__init__()
+        self._lock = threading.Lock()
+        self.last_update_timestamp = None
+
+    def update(self, value):
+        with self._lock:
+            self.current = value
+            self.last_update_timestamp = time_ns()
+
+    def take_checkpoint(self):
+        with self._lock:
+            self.checkpoint = self.current
+            self.current = None
+
+    def merge(self, other):
+        last = self.checkpoint
+        self.last_update_timestamp = get_latest_timestamp(
+            self.last_update_timestamp, other.last_update_timestamp
+        )
+        if self.last_update_timestamp == other.last_update_timestamp:
+            last = other.checkpoint
+        self.checkpoint = last
 
 
 class ValueObserverAggregator(Aggregator):
