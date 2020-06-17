@@ -24,16 +24,7 @@ from opentelemetry import trace
 from opentelemetry.ext.grpc.version import __version__
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.trace import get_tracer
-from wrapt import ObjectProxy
-from wrapt import wrap_function_wrapper as _wrap
 from opentelemetry.ext.grpc.grpcext import intercept_channel, intercept_server
-
-import pdb
-from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
-    SimpleExportSpanProcessor,
-)
 
 
 class GrpcInstrumentorServer(BaseInstrumentor):
@@ -65,7 +56,6 @@ class GrpcInstrumentorClient(BaseInstrumentor):
             self.channel = insecure_channel_wrapper(hostport)
 
     def _uninstrument(self, **kwargs):
-
         if hasattr(self.channel, 'close'):
             return self.channel.close()
 
