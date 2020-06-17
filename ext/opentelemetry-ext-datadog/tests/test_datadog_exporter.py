@@ -235,7 +235,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.assertEqual(len(datadog_spans), 3)
 
         actual = [span["resource"] for span in datadog_spans]
-        expected = ["0", "GET /foo/<int:id>", "GET /foo/200"]
+        expected = ["0", "GET /foo/<int:id>", "GET"]
 
         self.assertEqual(actual, expected)
 

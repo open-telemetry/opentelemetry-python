@@ -189,9 +189,7 @@ def _get_span_name(span):
 def _get_resource(span):
     """Get resource name for span"""
     if "http.method" in span.attributes:
-        route = span.attributes.get(
-            "http.route", span.attributes.get("http.target")
-        )
+        route = span.attributes.get("http.route")
         return (
             span.attributes["http.method"] + " " + route
             if route
