@@ -34,13 +34,9 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     DoubleDataPoint,
     InstrumentationLibraryMetrics,
     Int64DataPoint,
-)
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
-    Metric as CollectorMetric,
-)
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
+    Metric as CollectorMetric,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.metrics import (
@@ -57,6 +53,72 @@ from opentelemetry.sdk.metrics.export import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _get_data_points(sdk_metric, data_point_class):
+
+    data_points = []
+
+    for (
+        label,
+        bound_counter,
+    ) in sdk_metric.instrument.bound_instruments.items():
+
+        string_key_values = []
+
+        for label_key, label_value in label:
+            string_key_values.append(
+                StringKeyValue(key=label_key, value=label_value)
+            )
+        data_points.append(
+            data_point_class(
+                labels=string_key_values,
+                value=bound_counter.aggregator.current,
+            )
+        )
+
+    return data_points
+
+
+def _get_temporality(instrument):
+    if isinstance(instrument, (Counter, UpDownCounter)):
+        temporality = MetricDescriptor.Temporality.DELTA
+    elif isinstance(
+        instrument, (ValueRecorder, ValueObserver)
+    ):
+        temporality = MetricDescriptor.Temporality.INSTANTANEOUS
+    elif isinstance(
+        instrument, (SumObserver, UpDownSumObserver)
+    ):
+        temporality = MetricDescriptor.Temporality.CUMULATIVE
+    else:
+        raise Exception(
+            "No temporality defined for instrument type {}".format(
+                type(instrument)
+            )
+        )
+
+    return temporality
+
+
+def _get_type(value_type):
+    if value_type is int:
+        type_ = MetricDescriptor.Type.INT64
+
+    elif value_type is float:
+        type_ = MetricDescriptor.Type.DOUBLE
+
+    # FIXME What are the types that correspond with
+    # MetricDescriptor.Type.HISTOGRAM and
+    # MetricDescriptor.Type.SUMMARY?
+    else:
+        raise Exception(
+            "No type defined for valie type {}".format(
+                type(value_type)
+            )
+        )
+
+    return type_
 
 
 class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
@@ -90,64 +152,19 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
 
             self._metric_descriptor_kwargs = {}
 
-            if isinstance(sdk_metric.instrument, (Counter, UpDownCounter)):
-                temporality = MetricDescriptor.Temporality.DELTA
-            elif isinstance(
-                sdk_metric.instrument, (ValueRecorder, ValueObserver)
-            ):
-                temporality = MetricDescriptor.Temporality.INSTANTANEOUS
-            elif isinstance(
-                sdk_metric.instrument, (SumObserver, UpDownSumObserver)
-            ):
-                temporality = MetricDescriptor.Temporality.CUMULATIVE
-
-            if sdk_metric.instrument.value_type is int:
-                type_ = MetricDescriptor.Type.INT64
-
-            elif sdk_metric.instrument.value_type is float:
-                type_ = MetricDescriptor.Type.DOUBLE
-
-            # FIXME What are the types that correspond with
-            # MetricDescriptor.Type.HISTOGRAM and
-            # MetricDescriptor.Type.SUMMARY?
-
             metric_descriptor = MetricDescriptor(
                 name=sdk_metric.instrument.name,
                 description=sdk_metric.instrument.description,
                 unit=sdk_metric.instrument.unit,
-                type=type_,
-                temporality=temporality,
+                type=_get_type(sdk_metric.instrument.value_type),
+                temporality=_get_temporality(sdk_metric.instrument),
             )
-
-            def get_data_points(sdk_metric, data_point_class):
-
-                data_points = []
-
-                for (
-                    label,
-                    bound_counter,
-                ) in sdk_metric.instrument.bound_instruments.items():
-
-                    string_key_values = []
-
-                    for label_key, label_value in label:
-                        string_key_values.append(
-                            StringKeyValue(key=label_key, value=label_value)
-                        )
-                    data_points.append(
-                        data_point_class(
-                            labels=string_key_values,
-                            value=bound_counter.aggregator.current,
-                        )
-                    )
-
-                return data_points
 
             if metric_descriptor.type == MetricDescriptor.Type.INT64:
 
                 collector_metric = CollectorMetric(
                     metric_descriptor=metric_descriptor,
-                    int64_data_points=get_data_points(
+                    int64_data_points=_get_data_points(
                         sdk_metric, Int64DataPoint
                     ),
                 )
@@ -156,7 +173,7 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
 
                 collector_metric = CollectorMetric(
                     metric_descriptor=metric_descriptor,
-                    double_data_points=get_data_points(
+                    double_data_points=_get_data_points(
                         sdk_metric, DoubleDataPoint
                     ),
                 )
