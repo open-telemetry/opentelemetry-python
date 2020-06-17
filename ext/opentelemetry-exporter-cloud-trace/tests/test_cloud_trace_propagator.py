@@ -120,6 +120,27 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
             self._extract(header), trace.INVALID_SPAN.get_context()
         )
 
+        header = "extra_chars/{}/{};o=1".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+        )
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/{}extra_chars;o=1".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+        )
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
+        header = "{}/{};o=1extra_chars".format(
+            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+        )
+        self.assertEqual(
+            self._extract(header), trace.INVALID_SPAN.get_context()
+        )
+
         header = "{}/;o=1".format(
             get_hexadecimal_trace_id(self.valid_trace_id)
         )
@@ -193,11 +214,11 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
 
     def test_inject_with_no_context(self):
         output = self._inject()
-        self.assertEqual(output, None)
+        self.assertIsNone(output)
 
     def test_inject_with_invalid_context(self):
         output = self._inject(trace.INVALID_SPAN)
-        self.assertEqual(output, None)
+        self.assertIsNone(output)
 
     def test_inject_with_valid_context(self):
         span_context = SpanContext(

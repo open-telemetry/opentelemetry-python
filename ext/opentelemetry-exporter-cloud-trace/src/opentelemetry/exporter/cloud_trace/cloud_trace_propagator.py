@@ -26,7 +26,7 @@ from opentelemetry.trace.span import (
 )
 
 _TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
-_TRACE_CONTEXT_HEADER_FORMAT = r"^(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)$"
+_TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)"
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 
 
@@ -49,8 +49,8 @@ class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        match = re.search(_TRACE_CONTEXT_HEADER_RE, header[0])
-        if match is not None:
+        match = re.fullmatch(_TRACE_CONTEXT_HEADER_RE, header[0])
+        if match is None:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         trace_id = match.group("trace_id")
