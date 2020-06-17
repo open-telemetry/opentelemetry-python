@@ -50,7 +50,7 @@ class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         match = re.search(_TRACE_CONTEXT_HEADER_RE, header[0])
-        if not match:
+        if match is not None:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         trace_id = match.group("trace_id")
