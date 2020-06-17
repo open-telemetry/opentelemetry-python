@@ -37,8 +37,8 @@ class GrpcInstrumentorServer(BaseInstrumentor):
         self.server = intercept_server(self.server, server_interceptor())
 
     def _uninstrument(self, **kwargs):
-        if hasattr(self.server, 'stop'):
-            return self.server.stop(kwargs.get('grace'))
+        if hasattr(self.server, "stop"):
+            return self.server.stop(kwargs.get("grace"))
 
 
 class GrpcInstrumentorClient(BaseInstrumentor):
@@ -47,16 +47,18 @@ class GrpcInstrumentorClient(BaseInstrumentor):
     channel = None
 
     def _instrument(self, **kwargs):
-        hostport = kwargs.get('hostport')
+        hostport = kwargs.get("hostport")
 
-        if kwargs.get('channel_type') == 'secure':
-            self.channel = secure_channel_wrapper(hostport, kwargs.get("credentials"))
+        if kwargs.get("channel_type") == "secure":
+            self.channel = secure_channel_wrapper(
+                hostport, kwargs.get("credentials")
+            )
 
         else:
             self.channel = insecure_channel_wrapper(hostport)
 
     def _uninstrument(self, **kwargs):
-        if hasattr(self.channel, 'close'):
+        if hasattr(self.channel, "close"):
             return self.channel.close()
 
 

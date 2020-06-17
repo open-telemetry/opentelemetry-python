@@ -26,8 +26,10 @@ from opentelemetry.ext.grpc import server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.ext.grpc import GrpcInstrumentorServer, GrpcInstrumentorClient
-
+from opentelemetry.ext.grpc import (
+    GrpcInstrumentorServer,
+    GrpcInstrumentorClient,
+)
 
 
 class UnaryUnaryMethodHandler(grpc.RpcMethodHandler):
@@ -51,9 +53,7 @@ class UnaryUnaryRpcHandler(grpc.GenericRpcHandler):
 
 
 class TestOpenTelemetryServerInterceptor(TestBase):
-
     def test_instrumentor(self):
-
         def handler(request, context):
             return b""
 
@@ -82,7 +82,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         self.assertEqual(span.name, "")
         self.assertIs(span.kind, trace.SpanKind.SERVER)
         self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
-
 
     def test_create_span(self):
         """Check that the interceptor wraps calls with spans server-side."""
