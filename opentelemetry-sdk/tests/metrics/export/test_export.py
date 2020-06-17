@@ -24,6 +24,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricRecord,
 )
 from opentelemetry.sdk.metrics.export.aggregate import (
+    LastValueAggregator,
     MinMaxSumCountAggregator,
     SumAggregator,
     ValueObserverAggregator,
@@ -608,6 +609,95 @@ class TestValueObserverAggregator(unittest.TestCase):
         observer1.merge(observer2)
 
         self.assertEqual(observer1.checkpoint, checkpoint1)
+
+
+class TestLastValueAggregator(unittest.TestCase):
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def test_update(self, time_mock):
+        time_mock.return_value = 123
+        observer = LastValueAggregator()
+        # test current values without any update
+        self.assertIsNone(observer.current)
+
+        # call update with some values
+        values = (3, 50, 3, 97, 27)
+        for val in values:
+            observer.update(val)
+
+        self.assertEqual(observer.last_update_timestamp, 123)
+        self.assertEqual(observer.current, values[-1])
+
+    def test_checkpoint(self):
+        observer = LastValueAggregator()
+
+        # take checkpoint without any update
+        observer.take_checkpoint()
+        self.assertEqual(observer.checkpoint, None)
+
+        # call update with some values
+        values = (3, 50, 3, 97)
+        for val in values:
+            observer.update(val)
+
+        observer.take_checkpoint()
+        self.assertEqual(observer.checkpoint, 97)
+
+    def test_merge(self):
+        observer1 = LastValueAggregator()
+        observer2 = LastValueAggregator()
+
+        observer1.checkpoint = 23
+        observer2.checkpoint = 47
+
+        observer1.last_update_timestamp = 100
+        observer2.last_update_timestamp = 123
+
+        observer1.merge(observer2)
+
+        self.assertEqual(observer1.checkpoint, 47)
+        self.assertEqual(observer1.last_update_timestamp, 123)
+
+    def test_merge_last_updated(self):
+        observer1 = LastValueAggregator()
+        observer2 = LastValueAggregator()
+
+        observer1.checkpoint = 23
+        observer2.checkpoint = 47
+
+        observer1.last_update_timestamp = 123
+        observer2.last_update_timestamp = 100
+
+        observer1.merge(observer2)
+
+        self.assertEqual(observer1.checkpoint, 23)
+        self.assertEqual(observer1.last_update_timestamp, 123)
+
+    def test_merge_last_updated_none(self):
+        observer1 = LastValueAggregator()
+        observer2 = LastValueAggregator()
+
+        observer1.checkpoint = 23
+        observer2.checkpoint = 47
+
+        observer1.last_update_timestamp = None
+        observer2.last_update_timestamp = 100
+
+        observer1.merge(observer2)
+
+        self.assertEqual(observer1.checkpoint, 47)
+        self.assertEqual(observer1.last_update_timestamp, 100)
+
+    def test_merge_with_empty(self):
+        observer1 = LastValueAggregator()
+        observer2 = LastValueAggregator()
+
+        observer1.checkpoint = 23
+        observer1.last_update_timestamp = 100
+
+        observer1.merge(observer2)
+
+        self.assertEqual(observer1.checkpoint, 23)
+        self.assertEqual(observer1.last_update_timestamp, 100)
 
 
 class TestController(unittest.TestCase):
