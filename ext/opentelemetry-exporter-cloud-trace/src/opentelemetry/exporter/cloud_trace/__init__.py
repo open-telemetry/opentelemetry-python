@@ -57,6 +57,7 @@ from opentelemetry.sdk.util import BoundedDict
 from opentelemetry.sdk.version import __version__ as core_version
 from opentelemetry.util import types
 
+# pylint: disable=import-error
 from .version import __version__ as cloud_trace_version
 
 logger = logging.getLogger(__name__)
@@ -160,7 +161,7 @@ class CloudTraceSpanExporter(SpanExporter):
                     "end_time": end_time,
                     "parent_span_id": parent_id,
                     "attributes": _extract_attributes(
-                        span.attributes, MAX_SPAN_ATTRS, span_attributes=True
+                        span.attributes, MAX_SPAN_ATTRS, add_agent_attr=True
                     ),
                     "links": _extract_links(span.links),
                     "status": _extract_status(span.status),
@@ -301,27 +302,27 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 def _extract_attributes(
     attrs: types.Attributes,
     num_attrs_limit: int,
-    span_attributes: bool = False,
+    add_agent_attr: bool = False,
 ) -> ProtoSpan.Attributes:
     """Convert span.attributes to dict."""
     attributes_dict = BoundedDict(num_attrs_limit)
-
+    invald_value_dropped_count = 0
     for key, value in attrs.items():
         key = _truncate_str(key, 128)[0]
         value = _format_attribute_value(value)
 
         if value:
             attributes_dict[key] = value
-    dropped_attributes_count = len(attrs) - len(attributes_dict)
-    if span_attributes:
-        if len(attributes_dict) == num_attrs_limit:
-            dropped_attributes_count += 1
+        else:
+            invald_value_dropped_count += 1
+    if add_agent_attr:
         attributes_dict[AGENT_LABEL_KEY] = _format_attribute_value(
             AGENT_LABEL_VALUE
         )
     return ProtoSpan.Attributes(
         attribute_map=attributes_dict,
-        dropped_attributes_count=dropped_attributes_count,
+        dropped_attributes_count=attributes_dict.dropped
+        + invald_value_dropped_count,
     )
 
 
