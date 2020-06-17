@@ -144,12 +144,12 @@ class LastValueAggregator(Aggregator):
             self.current = None
 
     def merge(self, other):
-        last = self.checkpoint.last
+        last = self.checkpoint
         self.last_update_timestamp = get_latest_timestamp(
             self.last_update_timestamp, other.last_update_timestamp
         )
         if self.last_update_timestamp == other.last_update_timestamp:
-            last = other.checkpoint.last
+            last = other.checkpoint
         self.checkpoint = last
 
 
