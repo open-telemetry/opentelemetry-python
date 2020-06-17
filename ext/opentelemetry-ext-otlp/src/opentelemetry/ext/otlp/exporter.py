@@ -66,9 +66,9 @@ class OTLPExporterMixin(ABC):
 
     def __init__(
         self,
-        endpoint="localhost:55678",
+        endpoint: str = "localhost:55678",
         credentials: ChannelCredentials = None,
-        metadata=None,
+        metadata: tuple = None,
     ):
         super().__init__()
 
