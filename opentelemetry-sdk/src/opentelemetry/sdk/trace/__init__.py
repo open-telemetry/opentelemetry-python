@@ -20,6 +20,7 @@ import json
 import logging
 import random
 import threading
+import traceback
 from collections import OrderedDict
 from contextlib import contextmanager
 from types import TracebackType
@@ -681,6 +682,17 @@ class Span(trace_api.Span):
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
+    def record_error(self, err: Exception) -> None:
+        """Records an error as a span event."""
+        self.add_event(
+            name="error",
+            attributes={
+                "error.type": err.__class__.__name__,
+                "error.message": str(err),
+                "error.stack": traceback.format_exc(),
+            },
+        )
+
 
 def generate_span_id() -> int:
     """Get a new random span ID.
@@ -791,6 +803,7 @@ class Tracer(trace_api.Tracer):
                 # apply sampling decision attributes after initial attributes
                 span_attributes = attributes.copy()
                 span_attributes.update(sampling_decision.attributes)
+            # pylint:disable=protected-access
             span = Span(
                 name=name,
                 context=context,
@@ -798,7 +811,7 @@ class Tracer(trace_api.Tracer):
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=span_attributes,
-                span_processor=self.source._active_span_processor,  # pylint:disable=protected-access
+                span_processor=self.source._active_span_processor,
                 kind=kind,
                 links=links,
                 instrumentation_info=self.instrumentation_info,

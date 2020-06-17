@@ -1,6 +1,5 @@
 import botocore.session
 from botocore.exceptions import ParamValidationError
-
 from moto import (  # pylint: disable=import-error
     mock_ec2,
     mock_kinesis,
@@ -9,6 +8,7 @@ from moto import (  # pylint: disable=import-error
     mock_s3,
     mock_sqs,
 )
+
 from opentelemetry.ext.botocore import BotocoreInstrumentor
 from opentelemetry.test.test_base import TestBase
 
