@@ -28,10 +28,13 @@ from grpc import (
     secure_channel,
 )
 
+from opentelemetry.proto.common.v1.common_pb2 import AttributeKeyValue
+from opentelemetry.proto.resource.v1.resource_pb2 import Resource
+
 logger = logging.getLogger(__name__)
 
 
-def translate_key_values(key, value):
+def _translate_key_values(key, value):
     key_value = {"key": key}
 
     if isinstance(value, bool):
@@ -52,6 +55,42 @@ def translate_key_values(key, value):
         )
 
     return key_value
+
+
+def _get_resource_data(
+    sdk_resource_instrumentation_library_data, resource_class, name
+):
+
+    resource_data = []
+
+    for (
+        sdk_resource,
+        instrumentation_library_data,
+    ) in sdk_resource_instrumentation_library_data.items():
+
+        collector_resource = Resource()
+
+        for key, value in sdk_resource.labels.items():
+
+            try:
+                collector_resource.attributes.append(
+                    AttributeKeyValue(**_translate_key_values(key, value))
+                )
+            except Exception as error:  # pylint: disable=broad-except
+                logger.exception(error)
+
+        resource_data.append(
+            resource_class(
+                **{
+                    "resource": collector_resource,
+                    "instrumentation_library_{}".format(name): [
+                        instrumentation_library_data
+                    ],
+                }
+            )
+        )
+
+    return resource_data
 
 
 # pylint: disable=no-member

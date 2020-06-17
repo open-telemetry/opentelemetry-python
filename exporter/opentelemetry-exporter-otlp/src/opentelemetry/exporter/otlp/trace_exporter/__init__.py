@@ -20,7 +20,8 @@ from typing import Sequence as TypingSequence
 
 from opentelemetry.ext.otlp.exporter import (
     OTLPExporterMixin,
-    translate_key_values,
+    _get_resource_data,
+    _translate_key_values,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -271,8 +272,7 @@ class OTLPSpanExporter(SpanExporter, OTLPExporterMixin):
                     ],
                 )
             )
-
-        return ExportTraceServiceRequest(resource_spans=resource_spans)
+        )
 
     def export(self, spans: TypingSequence[SDKSpan]) -> SpanExportResult:
         # expo returns a generator that yields delay values which grow

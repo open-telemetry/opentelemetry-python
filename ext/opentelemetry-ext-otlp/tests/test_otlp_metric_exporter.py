@@ -38,7 +38,7 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.resources import Resource
 
 
@@ -58,11 +58,11 @@ class TestOTLPMetricExporter(TestCase):
                 ("d",),
             ),
             {"e": "f"},
-            CounterAggregator(),
+            SumAggregator(),
         )
 
     def test_translate_spans(self):
-        # pylint: disable=no-member,protected-access
+        # pylint: disable=no-member
 
         self.counter_metric_record.instrument.add(1, {"a": "b"})
 
@@ -106,6 +106,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
+        # pylint: disable=protected-access
         actual = self.exporter._translate_data([self.counter_metric_record])
 
         self.assertEqual(expected, actual)

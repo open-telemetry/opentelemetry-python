@@ -18,7 +18,7 @@ import logging
 
 from opentelemetry.ext.otlp.exporter import (
     OTLPExporterMixin,
-    translate_key_values,
+    _get_resource_data,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -26,10 +26,7 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (
-    AttributeKeyValue,
-    StringKeyValue,
-)
+from opentelemetry.proto.common.v1.common_pb2 import StringKeyValue
 from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     DoubleDataPoint,
     InstrumentationLibraryMetrics,
@@ -42,7 +39,6 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
 )
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.metrics import (
     Counter,
     SumObserver,
@@ -85,6 +81,7 @@ def _get_data_points(sdk_metric, data_point_class):
 
 
 def _get_temporality(instrument):
+    # pylint: disable=no-member
     if isinstance(instrument, (Counter, UpDownCounter)):
         temporality = MetricDescriptor.Temporality.DELTA
     elif isinstance(instrument, (ValueRecorder, ValueObserver)):
@@ -102,6 +99,7 @@ def _get_temporality(instrument):
 
 
 def _get_type(value_type):
+    # pylint: disable=no-member
     if value_type is int:
         type_ = MetricDescriptor.Type.INT64
 
@@ -134,8 +132,6 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
     def _translate_data(self, data):
         # pylint: disable=too-many-locals,no-member
         # pylint: disable=attribute-defined-outside-init
-
-        resource_metrics = []
 
         sdk_resource_instrumentation_library_metrics = {}
 
@@ -180,31 +176,10 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
                 sdk_metric.instrument.meter.resource
             ].metrics.append(collector_metric)
 
-        resource_metrics = []
-
-        for (
-            sdk_resource,
-            instrumentation_library_metrics,
-        ) in sdk_resource_instrumentation_library_metrics.items():
-
-            collector_resource = Resource()
-
-            for key, value in sdk_resource.labels.items():
-
-                try:
-                    collector_resource.attributes.append(
-                        AttributeKeyValue(**translate_key_values(key, value))
-                    )
-                except Exception as error:  # pylint: disable=broad-except
-                    logger.exception(error)
-
-            resource_metrics.append(
-                ResourceMetrics(
-                    resource=collector_resource,
-                    instrumentation_library_metrics=[
-                        instrumentation_library_metrics
-                    ],
-                )
+        return ExportMetricsServiceRequest(
+            resource_metrics=_get_resource_data(
+                sdk_resource_instrumentation_library_metrics,
+                ResourceMetrics,
+                "metrics",
             )
-
-        return ExportMetricsServiceRequest(resource_metrics=resource_metrics)
+        )
