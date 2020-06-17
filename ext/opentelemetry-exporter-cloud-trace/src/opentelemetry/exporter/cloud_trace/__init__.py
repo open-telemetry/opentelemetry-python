@@ -44,6 +44,7 @@ import logging
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
+import pkg_resources
 from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
@@ -51,15 +52,15 @@ from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
 
 import opentelemetry.trace as trace_api
+from opentelemetry.exporter.cloud_trace.version import (
+    __version__ as cloud_trace_version,
+)
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import BoundedDict
-from opentelemetry.sdk.version import __version__ as core_version
 from opentelemetry.util import types
 
-# pylint: disable=import-error
-from .version import __version__ as cloud_trace_version
-
+core_version = pkg_resources.get_distribution("opentelemetry-sdk").version
 logger = logging.getLogger(__name__)
 
 MAX_NUM_LINKS = 128
