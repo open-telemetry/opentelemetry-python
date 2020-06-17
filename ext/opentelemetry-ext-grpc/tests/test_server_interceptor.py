@@ -22,14 +22,14 @@ import grpc
 
 import opentelemetry.ext.grpc
 from opentelemetry import trace
-from opentelemetry.ext.grpc import server_interceptor
+from opentelemetry.ext.grpc import (
+    GrpcInstrumentorClient,
+    GrpcInstrumentorServer,
+    server_interceptor,
+)
 from opentelemetry.ext.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.ext.grpc import (
-    GrpcInstrumentorServer,
-    GrpcInstrumentorClient,
-)
 
 
 class UnaryUnaryMethodHandler(grpc.RpcMethodHandler):

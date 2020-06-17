@@ -14,17 +14,18 @@
 
 # pylint:disable=import-outside-toplevel
 # pylint:disable=import-self
+from concurrent import futures
 # pylint:disable=no-name-in-module
 # pylint:disable=relative-beyond-top-level
 from contextlib import contextmanager
 
 import grpc
-from concurrent import futures
+
 from opentelemetry import trace
-from opentelemetry.ext.grpc.version import __version__
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.grpc.grpcext import intercept_channel, intercept_server
+from opentelemetry.ext.grpc.version import __version__
+from opentelemetry.sdk.trace import TracerProvider
 
 
 class GrpcInstrumentorServer(BaseInstrumentor):
