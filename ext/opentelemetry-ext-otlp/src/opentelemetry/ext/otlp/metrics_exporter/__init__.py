@@ -34,9 +34,13 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     DoubleDataPoint,
     InstrumentationLibraryMetrics,
     Int64DataPoint,
+)
+from opentelemetry.proto.metrics.v1.metrics_pb2 import (
+    Metric as CollectorMetric,
+)
+from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
-    Metric as CollectorMetric,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.metrics import (
@@ -83,13 +87,9 @@ def _get_data_points(sdk_metric, data_point_class):
 def _get_temporality(instrument):
     if isinstance(instrument, (Counter, UpDownCounter)):
         temporality = MetricDescriptor.Temporality.DELTA
-    elif isinstance(
-        instrument, (ValueRecorder, ValueObserver)
-    ):
+    elif isinstance(instrument, (ValueRecorder, ValueObserver)):
         temporality = MetricDescriptor.Temporality.INSTANTANEOUS
-    elif isinstance(
-        instrument, (SumObserver, UpDownSumObserver)
-    ):
+    elif isinstance(instrument, (SumObserver, UpDownSumObserver)):
         temporality = MetricDescriptor.Temporality.CUMULATIVE
     else:
         raise Exception(
@@ -113,9 +113,7 @@ def _get_type(value_type):
     # MetricDescriptor.Type.SUMMARY?
     else:
         raise Exception(
-            "No type defined for valie type {}".format(
-                type(value_type)
-            )
+            "No type defined for valie type {}".format(type(value_type))
         )
 
     return type_

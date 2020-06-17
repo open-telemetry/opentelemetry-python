@@ -108,5 +108,4 @@ class TestOTLPMetricExporter(TestCase):
 
         actual = self.exporter._translate_data([self.counter_metric_record])
 
-        # pylint: disable=protected-access
         self.assertEqual(expected, actual)
