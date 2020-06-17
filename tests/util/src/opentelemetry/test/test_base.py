@@ -52,6 +52,11 @@ class TestBase(unittest.TestCase):
         self.assertEqual(span.instrumentation_info.name, module.__name__)
         self.assertEqual(span.instrumentation_info.version, module.__version__)
 
+    def assert_span_has_attributes(self, span, attributes):
+        for key, val in attributes.items():
+            self.assertIn(key, span.attributes)
+            self.assertEqual(val, span.attributes[key])
+
     @staticmethod
     def create_tracer_provider(**kwargs):
         """Helper to create a configured tracer provider.
