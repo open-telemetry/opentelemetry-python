@@ -29,7 +29,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self, project_id=None, client=None, add_unique_identifier=False
     ):
         """ You can manually pass in project_id and client, or else the
-        Exporter will take that informations from Application Default
+        Exporter will take that information from Application Default
         Credentials.
 
         :param project_id: project id of your Google Cloud project
