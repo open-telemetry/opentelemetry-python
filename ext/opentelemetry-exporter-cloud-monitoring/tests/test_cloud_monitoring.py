@@ -289,3 +289,43 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                 mock.call(self.project_name, [series3]),
             ]
         )
+
+    def test_unique_identifier(self):
+        client = mock.Mock()
+        exporter1 = CloudMonitoringMetricsExporter(
+            project_id=self.project_id,
+            client=client,
+            add_unique_identifier=True,
+        )
+        exporter2 = CloudMonitoringMetricsExporter(
+            project_id=self.project_id,
+            client=client,
+            add_unique_identifier=True,
+        )
+        exporter1.project_name = self.project_name
+        exporter2.project_name = self.project_name
+
+        client.create_metric_descriptor.return_value = MetricDescriptor(
+            **{
+                "name": None,
+                "type": "custom.googleapis.com/OpenTelemetry/name",
+                "display_name": "name",
+                "description": "description",
+                "labels": [],
+                "metric_kind": "GAUGE",
+                "value_type": "DOUBLE",
+            }
+        )
+
+        sum_agg_one = SumAggregator()
+        sum_agg_one.checkpoint = 1
+        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
+        metric_record = MetricRecord(MockMetric(), (), sum_agg_one,)
+        exporter1.export([metric_record])
+        exporter2.export([metric_record])
+
+        first_call, second_call = client.create_time_series.call_args_list
+        self.assertNotEqual(
+            first_call[0][1][0].metric.labels["opentelemetry_uuid"],
+            second_call[0][1][0].metric.labels["opentelemetry_uuid"],
+        )

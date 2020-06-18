@@ -33,3 +33,14 @@ After running the example:
     * Go to the `Cloud Monitoring Metrics Explorer page <https://console.cloud.google.com/monitoring/metrics-explorer>`_.
     * In "Find resource type and metric" enter "OpenTelemetry/request_counter".
     * You can filter by labels and change the graphical output here as well.
+
+Troubleshooting
+--------------------------
+
+``One or more points were written more frequently than the maximum sampling period configured for the metric``
+##############################################################################################################
+
+Currently, Cloud Monitoring allows one write per second for any unique tuple (metric_name, metric_label_value_1, metric_label_value_2, ...). The exporter should rate limit on its own but issues arise if:
+
+    * You are restarting the server more then once every 10 seconds. Either wait longer or ignore the errors.
+    * You have a multiple exporters (possibly on different threads) writing to the same tuple. You need to add ``add_unique_identifier=True`` to the CloudMonitoringMetricsExporter constructor. This adds a UUID label_value, making the tuple unique again.

@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Optional, Sequence
 
 import google.auth
@@ -6,6 +7,7 @@ from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -33,7 +35,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         :param project_id: project id of your Google Cloud project
         :param client: Client to upload metrics to Google Cloud Monitoring
         :param add_unique_identifier: Add an identifier to each exporter metric.
-        This must be used when there exist two (or more) exporters that may 
+        This must be used when there exist two (or more) exporters that may
         export to the same metric name within WRITE_INTERVAL seconds of each
         other
         """
@@ -45,6 +47,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self.project_name = self.client.project_path(self.project_id)
         self._metric_descriptors = {}
         self._last_updated = {}
+        self.add_unique_identifier = add_unique_identifier
 
     def _add_resource_info(self, series: TimeSeries) -> None:
         """Add Google resource specific information (e.g. instance id, region).
@@ -152,6 +155,11 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             series.metric.type = metric_descriptor.type
             for key, value in record.labels:
                 series.metric.labels[key] = str(value)
+
+            if self.add_unique_identifier:
+                series.metric.labels["opentelemetry_uuid"] = uuid.uuid4().hex[
+                    :8
+                ]
 
             point = series.points.add()
             if instrument.value_type == int:
