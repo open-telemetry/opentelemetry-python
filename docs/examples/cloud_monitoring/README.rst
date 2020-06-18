@@ -42,7 +42,7 @@ Troubleshooting
 
 Currently, Cloud Monitoring allows one write every 10 seconds for any unique tuple (metric_name, metric_label_value_1, metric_label_value_2, ...). The exporter should rate limit on its own but issues arise if:
 
-    * You are restarting the server more then once every 10 seconds.
+    * You are restarting the server more than once every 10 seconds.
     * You have a multiple exporters (possibly on different threads) writing to the same tuple.
 
-For both cases, you can pass ``add_unique_identifier=True`` to the CloudMonitoringMetricsExporter constructor. This adds a UUID label_value, making the tuple unique again. For the first case, you can also choose to just wait longer then 10 seconds between restarts.
+For both cases, you can pass ``add_unique_identifier=True`` to the CloudMonitoringMetricsExporter constructor. This adds a UUID label_value, making the tuple unique again. For the first case, you can also choose to just wait longer than 10 seconds between restarts.
