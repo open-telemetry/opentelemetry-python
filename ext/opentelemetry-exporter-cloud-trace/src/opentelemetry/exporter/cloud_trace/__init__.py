@@ -63,7 +63,6 @@ from opentelemetry.trace.span import (
     get_hexadecimal_trace_id,
 )
 from opentelemetry.util import types
-from opentelemetry.version import __version__ as core_version
 
 logger = logging.getLogger(__name__)
 
@@ -72,10 +71,6 @@ MAX_NUM_EVENTS = 32
 MAX_EVENT_ATTRS = 4
 MAX_LINK_ATTRS = 32
 MAX_SPAN_ATTRS = 32
-AGENT_LABEL_KEY = "g.co/agent"
-AGENT_LABEL_VALUE = "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
-    core_version, cloud_trace_version
-)
 
 
 class CloudTraceSpanExporter(SpanExporter):
@@ -313,8 +308,11 @@ def _extract_attributes(
         else:
             invald_value_dropped_count += 1
     if add_agent_attr:
-        attributes_dict[AGENT_LABEL_KEY] = _format_attribute_value(
-            AGENT_LABEL_VALUE
+        attributes_dict["g.co/agent"] = _format_attribute_value(
+            "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
+                pkg_resources.get_distribution("opentelemetry-sdk").version,
+                cloud_trace_version,
+            )
         )
     return ProtoSpan.Attributes(
         attribute_map=attributes_dict,
