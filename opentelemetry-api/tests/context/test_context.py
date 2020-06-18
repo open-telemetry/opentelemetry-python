@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ from opentelemetry.context.context import Context
 
 
 def do_work() -> None:
-    context.set_current(context.set_value("say", "bar"))
+    context.attach(context.set_value("say", "bar"))
 
 
 class TestContext(unittest.TestCase):
     def setUp(self):
-        context.set_current(Context())
+        context.attach(Context())
 
     def test_context(self):
         self.assertIsNone(context.get_value("say"))
@@ -55,11 +55,10 @@ class TestContext(unittest.TestCase):
             context.get_current()["test"] = "cant-change-immutable"
 
     def test_set_current(self):
-        context.set_current(context.set_value("a", "yyy"))
+        context.attach(context.set_value("a", "yyy"))
 
-        old_context = context.set_current(context.set_value("a", "zzz"))
-        self.assertEqual("yyy", context.get_value("a", context=old_context))
+        token = context.attach(context.set_value("a", "zzz"))
         self.assertEqual("zzz", context.get_value("a"))
 
-        context.set_current(old_context)
+        context.detach(token)
         self.assertEqual("yyy", context.get_value("a"))

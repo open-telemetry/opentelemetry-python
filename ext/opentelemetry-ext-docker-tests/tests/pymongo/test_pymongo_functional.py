@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +13,12 @@
 # limitations under the License.
 
 import os
-import typing
-import unittest
 
 from pymongo import MongoClient
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymongo import trace_integration
-from opentelemetry.sdk.trace import Span, Tracer, TracerSource
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
+from opentelemetry.ext.pymongo import PymongoInstrumentor
+from opentelemetry.test.test_base import TestBase
 
 MONGODB_HOST = os.getenv("MONGODB_HOST ", "localhost")
 MONGODB_PORT = int(os.getenv("MONGODB_PORT ", "27017"))
@@ -32,26 +26,20 @@ MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME ", "opentelemetry-tests")
 MONGODB_COLLECTION_NAME = "test"
 
 
-class TestFunctionalPymongo(unittest.TestCase):
+class TestFunctionalPymongo(TestBase):
     @classmethod
     def setUpClass(cls):
-        cls._tracer_source = TracerSource()
-        cls._tracer = Tracer(cls._tracer_source, None)
-        cls._span_exporter = InMemorySpanExporter()
-        cls._span_processor = SimpleExportSpanProcessor(cls._span_exporter)
-        cls._tracer_source.add_span_processor(cls._span_processor)
-        trace_integration(cls._tracer)
+        super().setUpClass()
+        cls._tracer = cls.tracer_provider.get_tracer(__name__)
+        PymongoInstrumentor().instrument()
         client = MongoClient(
             MONGODB_HOST, MONGODB_PORT, serverSelectionTimeoutMS=2000
         )
         db = client[MONGODB_DB_NAME]
         cls._collection = db[MONGODB_COLLECTION_NAME]
 
-    def setUp(self):
-        self._span_exporter.clear()
-
     def validate_spans(self):
-        spans = self._span_exporter.get_finished_spans()
+        spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 2)
         for span in spans:
             if span.name == "rootSpan":
@@ -63,7 +51,7 @@ class TestFunctionalPymongo(unittest.TestCase):
         self.assertIsNot(root_span, None)
         self.assertIsNot(pymongo_span, None)
         self.assertIsNotNone(pymongo_span.parent)
-        self.assertEqual(pymongo_span.parent.name, root_span.name)
+        self.assertIs(pymongo_span.parent, root_span.get_context())
         self.assertIs(pymongo_span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(
             pymongo_span.attributes["db.instance"], MONGODB_DB_NAME
@@ -106,3 +94,23 @@ class TestFunctionalPymongo(unittest.TestCase):
         with self._tracer.start_as_current_span("rootSpan"):
             self._collection.delete_one({"name": "testName"})
         self.validate_spans()
+
+    def test_uninstrument(self):
+        # check that integration is working
+        self._collection.find_one()
+        spans = self.memory_exporter.get_finished_spans()
+        self.memory_exporter.clear()
+        self.assertEqual(len(spans), 1)
+
+        # uninstrument and check not new spans are created
+        PymongoInstrumentor().uninstrument()
+        self._collection.find_one()
+        spans = self.memory_exporter.get_finished_spans()
+        self.memory_exporter.clear()
+        self.assertEqual(len(spans), 0)
+
+        # re-enable and check that it works again
+        PymongoInstrumentor().instrument()
+        self._collection.find_one()
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)

@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ class InMemorySpanExporter(SpanExporter):
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         """Stores a list of spans in memory."""
         if self._stopped:
-            return SpanExportResult.FAILED_NOT_RETRYABLE
+            return SpanExportResult.FAILURE
         with self._lock:
             self._finished_spans.extend(spans)
         return SpanExportResult.SUCCESS

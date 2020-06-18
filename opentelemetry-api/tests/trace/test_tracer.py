@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,10 +20,6 @@ from opentelemetry import trace
 class TestTracer(unittest.TestCase):
     def setUp(self):
         self.tracer = trace.DefaultTracer()
-
-    def test_get_current_span(self):
-        span = self.tracer.get_current_span()
-        self.assertIsInstance(span, trace.Span)
 
     def test_start_span(self):
         with self.tracer.start_span("") as span:

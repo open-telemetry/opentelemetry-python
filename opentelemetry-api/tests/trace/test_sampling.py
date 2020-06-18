@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@ import unittest
 from opentelemetry import trace
 from opentelemetry.trace import sampling
 
-TO_DEFAULT = trace.TraceOptions(trace.TraceOptions.DEFAULT)
-TO_SAMPLED = trace.TraceOptions(trace.TraceOptions.SAMPLED)
+TO_DEFAULT = trace.TraceFlags(trace.TraceFlags.DEFAULT)
+TO_SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
 
 
 class TestSampler(unittest.TestCase):
     def test_always_on(self):
         no_record_always_on = sampling.ALWAYS_ON.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_DEFAULT
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -37,7 +37,7 @@ class TestSampler(unittest.TestCase):
 
         sampled_always_on = sampling.ALWAYS_ON.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -49,7 +49,7 @@ class TestSampler(unittest.TestCase):
     def test_always_off(self):
         no_record_always_off = sampling.ALWAYS_OFF.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_DEFAULT
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -60,7 +60,7 @@ class TestSampler(unittest.TestCase):
 
         sampled_always_on = sampling.ALWAYS_OFF.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -72,7 +72,7 @@ class TestSampler(unittest.TestCase):
     def test_default_on(self):
         no_record_default_on = sampling.DEFAULT_ON.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_DEFAULT
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -83,7 +83,7 @@ class TestSampler(unittest.TestCase):
 
         sampled_default_on = sampling.DEFAULT_ON.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -95,7 +95,7 @@ class TestSampler(unittest.TestCase):
     def test_default_off(self):
         no_record_default_off = sampling.DEFAULT_OFF.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_DEFAULT
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -106,7 +106,7 @@ class TestSampler(unittest.TestCase):
 
         sampled_default_off = sampling.DEFAULT_OFF.should_sample(
             trace.SpanContext(
-                0xDEADBEEF, 0xDEADBEF0, trace_options=TO_SAMPLED
+                0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
             0xDEADBEF2,
@@ -136,7 +136,10 @@ class TestSampler(unittest.TestCase):
         self.assertFalse(
             sampler.should_sample(
                 trace.SpanContext(
-                    0xDEADBEF0, 0xDEADBEF1, trace_options=TO_DEFAULT
+                    0xDEADBEF0,
+                    0xDEADBEF1,
+                    is_remote=False,
+                    trace_flags=TO_DEFAULT,
                 ),
                 0x7FFFFFFFFFFFFFFF,
                 0xDEADBEEF,
@@ -146,7 +149,10 @@ class TestSampler(unittest.TestCase):
         self.assertTrue(
             sampler.should_sample(
                 trace.SpanContext(
-                    0xDEADBEF0, 0xDEADBEF1, trace_options=TO_SAMPLED
+                    0xDEADBEF0,
+                    0xDEADBEF1,
+                    is_remote=False,
+                    trace_flags=TO_SAMPLED,
                 ),
                 0x8000000000000000,
                 0xDEADBEEF,

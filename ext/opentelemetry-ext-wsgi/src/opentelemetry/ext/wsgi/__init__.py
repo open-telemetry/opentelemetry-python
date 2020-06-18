@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,17 +13,55 @@
 # limitations under the License.
 
 """
-The opentelemetry-ext-wsgi package provides a WSGI middleware that can be used
-on any WSGI framework (such as Django / Flask) to track requests timing through
-OpenTelemetry.
+This library provides a WSGI middleware that can be used on any WSGI framework
+(such as Django / Flask) to track requests timing through OpenTelemetry.
+
+Usage (Flask)
+-------------
+
+.. code-block:: python
+
+    from flask import Flask
+    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+
+    app = Flask(__name__)
+    app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
+
+    @app.route("/")
+    def hello():
+        return "Hello!"
+
+    if __name__ == "__main__":
+        app.run(debug=True)
+
+
+Usage (Django)
+--------------
+
+Modify the application's ``wsgi.py`` file as shown below.
+
+.. code-block:: python
+
+    import os
+    from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+    from django.core.wsgi import get_wsgi_application
+
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'application.settings')
+
+    application = get_wsgi_application()
+    application = OpenTelemetryMiddleware(application)
+
+API
+---
 """
 
 import functools
 import typing
 import wsgiref.util as wsgiref_util
 
-from opentelemetry import propagators, trace
+from opentelemetry import context, propagators, trace
 from opentelemetry.ext.wsgi.version import __version__
+from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -47,37 +85,6 @@ def get_header_from_environ(
 def setifnotnone(dic, key, value):
     if value is not None:
         dic[key] = value
-
-
-def http_status_to_canonical_code(code: int, allow_redirect: bool = True):
-    # pylint:disable=too-many-branches,too-many-return-statements
-    if code < 100:
-        return StatusCanonicalCode.UNKNOWN
-    if code <= 299:
-        return StatusCanonicalCode.OK
-    if code <= 399:
-        if allow_redirect:
-            return StatusCanonicalCode.OK
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
-    if code <= 499:
-        if code == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCanonicalCode.UNAUTHENTICATED
-        if code == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCanonicalCode.PERMISSION_DENIED
-        if code == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCanonicalCode.NOT_FOUND
-        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCanonicalCode.RESOURCE_EXHAUSTED
-        return StatusCanonicalCode.INVALID_ARGUMENT
-    if code <= 599:
-        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCanonicalCode.UNIMPLEMENTED
-        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCanonicalCode.UNAVAILABLE
-        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCanonicalCode.DEADLINE_EXCEEDED
-        return StatusCanonicalCode.INTERNAL
-    return StatusCanonicalCode.UNKNOWN
 
 
 def collect_request_attributes(environ):
@@ -181,12 +188,14 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        parent_span = propagators.extract(get_header_from_environ, environ)
+        token = context.attach(
+            propagators.extract(get_header_from_environ, environ)
+        )
+        span_name = get_default_span_name(environ)
         span_name = self.name_callback(environ)
 
         span = self.tracer.start_span(
             span_name,
-            parent_span,
             kind=trace.SpanKind.SERVER,
             attributes=collect_request_attributes(environ),
         )
@@ -197,17 +206,20 @@ class OpenTelemetryMiddleware:
                     span, start_response
                 )
                 iterable = self.wsgi(environ, start_response)
-                return _end_span_after_iterating(iterable, span, self.tracer)
+                return _end_span_after_iterating(
+                    iterable, span, self.tracer, token
+                )
         except:  # noqa
             # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
             span.end()
+            context.detach(token)
             raise
 
 
 # Put this in a subfunction to not delay the call to the wrapped
 # WSGI application (instrumentation should change the application
 # behavior as little as possible).
-def _end_span_after_iterating(iterable, span, tracer):
+def _end_span_after_iterating(iterable, span, tracer, token):
     try:
         with tracer.use_span(span):
             for yielded in iterable:
@@ -217,3 +229,4 @@ def _end_span_after_iterating(iterable, span, tracer):
         if close:
             close()
         span.end()
+        context.detach(token)

@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,22 @@
 import abc
 from typing import Sequence, Type
 
-from opentelemetry.metrics import Counter, Measure, MetricT
+from opentelemetry.metrics import (
+    Counter,
+    InstrumentT,
+    SumObserver,
+    UpDownCounter,
+    UpDownSumObserver,
+    ValueObserver,
+    ValueRecorder,
+)
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
     Aggregator,
-    CounterAggregator,
+    LastValueAggregator,
     MinMaxSumCountAggregator,
+    SumAggregator,
+    ValueObserverAggregator,
 )
 
 
@@ -40,18 +50,22 @@ class Batcher(abc.ABC):
         # (deltas)
         self.stateful = stateful
 
-    def aggregator_for(self, metric_type: Type[MetricT]) -> Aggregator:
-        """Returns an aggregator based on metric type.
+    def aggregator_for(self, instrument_type: Type[InstrumentT]) -> Aggregator:
+        """Returns an aggregator based on metric instrument type.
 
         Aggregators keep track of and updates values when metrics get updated.
         """
         # pylint:disable=R0201
-        if issubclass(metric_type, Counter):
-            return CounterAggregator()
-        if issubclass(metric_type, Measure):
+        if issubclass(instrument_type, (Counter, UpDownCounter)):
+            return SumAggregator()
+        if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
+            return LastValueAggregator()
+        if issubclass(instrument_type, ValueRecorder):
             return MinMaxSumCountAggregator()
+        if issubclass(instrument_type, ValueObserver):
+            return ValueObserverAggregator()
         # TODO: Add other aggregators
-        return CounterAggregator()
+        return SumAggregator()
 
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
@@ -60,8 +74,8 @@ class Batcher(abc.ABC):
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for (metric, label_set), aggregator in self._batch_map.items():
-            metric_records.append(MetricRecord(aggregator, label_set, metric))
+        for (instrument, labels), aggregator in self._batch_map.items():
+            metric_records.append(MetricRecord(instrument, labels, aggregator))
         return metric_records
 
     def finished_collection(self):
@@ -87,7 +101,7 @@ class UngroupedBatcher(Batcher):
     def process(self, record):
         # Checkpoints the current aggregator value to be collected for export
         record.aggregator.take_checkpoint()
-        batch_key = (record.metric, record.label_set)
+        batch_key = (record.instrument, record.labels)
         batch_value = self._batch_map.get(batch_key)
         aggregator = record.aggregator
         if batch_value:
@@ -98,6 +112,6 @@ class UngroupedBatcher(Batcher):
         if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage
-            aggregator = self.aggregator_for(record.metric.__class__)
+            aggregator = self.aggregator_for(record.instrument.__class__)
             aggregator.merge(record.aggregator)
         self._batch_map[batch_key] = aggregator

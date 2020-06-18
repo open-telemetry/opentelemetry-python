@@ -2,8 +2,14 @@
 line-length = 79
 exclude = '''
 (
-  /(
-    ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen     # generated files
+  /(  # generated files
+    docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/grpc/gen|
+    ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen|
+    opentelemetry-proto/src/opentelemetry/proto/collector|
+    opentelemetry-proto/src/opentelemetry/proto/common|
+    opentelemetry-proto/src/opentelemetry/proto/metrics|
+    opentelemetry-proto/src/opentelemetry/proto/resource|
+    opentelemetry-proto/src/opentelemetry/proto/trace
   )/
 )
 '''

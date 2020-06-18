@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Zipkin Span Exporter for OpenTelemetry."""
+"""
+This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
+
+Usage
+-----
+
+The **OpenTelemetry Zipkin Exporter** allows to export `OpenTelemetry`_ traces to `Zipkin`_.
+This exporter always send traces to the configured Zipkin collector using HTTP.
+
+
+.. _Zipkin: https://zipkin.io/
+.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.ext import zipkin
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+
+    trace.set_tracer_provider(TracerProvider())
+    tracer = trace.get_tracer(__name__)
+
+    # create a ZipkinSpanExporter
+    zipkin_exporter = zipkin.ZipkinSpanExporter(
+        service_name="my-helloworld-service",
+        # optional:
+        # host_name="localhost",
+        # port=9411,
+        # endpoint="/api/v2/spans",
+        # protocol="http",
+        # ipv4="",
+        # ipv6="",
+        # retry=False,
+    )
+
+    # Create a BatchExportSpanProcessor and add the exporter to it
+    span_processor = BatchExportSpanProcessor(zipkin_exporter)
+
+    # add to the tracer
+    trace.get_tracer_provider().add_span_processor(span_processor)
+
+    with tracer.start_as_current_span("foo"):
+        print("Hello world!")
+
+API
+---
+"""
 
 import json
 import logging
@@ -95,8 +142,8 @@ class ZipkinSpanExporter(SpanExporter):
             )
 
             if self.retry:
-                return SpanExportResult.FAILED_RETRYABLE
-            return SpanExportResult.FAILED_NOT_RETRYABLE
+                return SpanExportResult.FAILURE
+            return SpanExportResult.FAILURE
         return SpanExportResult.SUCCESS
 
     def _translate_to_zipkin(self, spans: Sequence[Span]):
@@ -128,12 +175,12 @@ class ZipkinSpanExporter(SpanExporter):
                 "duration": duration_mus,
                 "localEndpoint": local_endpoint,
                 "kind": SPAN_KIND_MAP[span.kind],
-                "tags": _extract_tags_from_span(span.attributes),
+                "tags": _extract_tags_from_span(span),
                 "annotations": _extract_annotations_from_events(span.events),
             }
 
-            if context.trace_options.sampled:
-                zipkin_span["debug"] = 1
+            if context.trace_flags.sampled:
+                zipkin_span["debug"] = True
 
             if isinstance(span.parent, Span):
                 zipkin_span["parentId"] = format(
@@ -149,11 +196,11 @@ class ZipkinSpanExporter(SpanExporter):
         pass
 
 
-def _extract_tags_from_span(attr):
-    if not attr:
-        return None
+def _extract_tags_from_dict(tags_dict):
     tags = {}
-    for attribute_key, attribute_value in attr.items():
+    if not tags_dict:
+        return tags
+    for attribute_key, attribute_value in tags_dict.items():
         if isinstance(attribute_value, (int, bool, float)):
             value = str(attribute_value)
         elif isinstance(attribute_value, str):
@@ -162,6 +209,13 @@ def _extract_tags_from_span(attr):
             logger.warning("Could not serialize tag %s", attribute_key)
             continue
         tags[attribute_key] = value
+    return tags
+
+
+def _extract_tags_from_span(span: Span):
+    tags = _extract_tags_from_dict(getattr(span, "attributes", None))
+    if span.resource:
+        tags.update(_extract_tags_from_dict(span.resource.labels))
     return tags
 
 

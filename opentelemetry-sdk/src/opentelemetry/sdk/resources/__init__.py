@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,28 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.resources as resources
+import typing
+from json import dumps
+
+LabelValue = typing.Union[str, bool, int, float]
+Labels = typing.Dict[str, LabelValue]
 
 
-class Resource(resources.Resource):
-    def __init__(self, labels):
-        self._labels = labels
+class Resource:
+    def __init__(self, labels: Labels):
+        self._labels = labels.copy()
 
     @staticmethod
-    def create(labels):
+    def create(labels: Labels) -> "Resource":
+        if not labels:
+            return _EMPTY_RESOURCE
         return Resource(labels)
 
-    @property
-    def labels(self):
-        return self._labels
+    @staticmethod
+    def create_empty() -> "Resource":
+        return _EMPTY_RESOURCE
 
-    def merge(self, other):
-        if other is None:
-            return self
-        if not self._labels:
-            return other
-        merged_labels = self.labels.copy()
-        for key, value in other.labels.items():
+    @property
+    def labels(self) -> Labels:
+        return self._labels.copy()
+
+    def merge(self, other: "Resource") -> "Resource":
+        merged_labels = self.labels
+        # pylint: disable=protected-access
+        for key, value in other._labels.items():
             if key not in merged_labels or merged_labels[key] == "":
                 merged_labels[key] = value
         return Resource(merged_labels)
@@ -41,4 +48,10 @@ class Resource(resources.Resource):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self.labels == other.labels
+        return self._labels == other._labels
+
+    def __hash__(self):
+        return hash(dumps(self._labels, sort_keys=True))
+
+
+_EMPTY_RESOURCE = Resource({})

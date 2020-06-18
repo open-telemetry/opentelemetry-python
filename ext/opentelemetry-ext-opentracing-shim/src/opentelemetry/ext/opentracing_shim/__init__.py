@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@ following example::
     import time
 
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerSource
+    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.ext.opentracing_shim import create_tracer
 
     # Tell OpenTelemetry which Tracer implementation to use.
-    trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
+    trace.set_tracer_provider(TracerProvider())
 
     # Create an OpenTelemetry Tracer.
     otel_tracer = trace.get_tracer(__name__)
@@ -76,6 +76,8 @@ Note:
     While testing this library, the aforementioned imprecisions were observed
     to be of *less than a microsecond*.
 
+API
+---
 .. _Floating Point Arithmetic\\: Issues and Limitations:
     https://docs.python.org/3/tutorial/floatingpoint.html
 """
@@ -92,20 +94,20 @@ import opentelemetry.trace as trace_api
 from opentelemetry import propagators
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
-from opentelemetry.trace import DefaultSpan
+from opentelemetry.trace import DefaultSpan, set_span_in_context
 
 logger = logging.getLogger(__name__)
 
 
-def create_tracer(otel_tracer_source):
+def create_tracer(otel_tracer_provider):
     """Creates a :class:`TracerShim` object from the provided OpenTelemetry
-    :class:`opentelemetry.trace.TracerSource`.
+    :class:`opentelemetry.trace.TracerProvider`.
 
     The returned :class:`TracerShim` is an implementation of
     :class:`opentracing.Tracer` using OpenTelemetry under the hood.
 
     Args:
-        otel_tracer_source: A :class:`opentelemetry.trace.TracerSource` to be
+        otel_tracer_provider: A :class:`opentelemetry.trace.TracerProvider` to be
             used for constructing the :class:`TracerShim`. A tracer from this
             source will be used to perform the actual tracing when user code is
             instrumented using the OpenTracing API.
@@ -114,7 +116,7 @@ def create_tracer(otel_tracer_source):
         The created :class:`TracerShim`.
     """
 
-    return TracerShim(otel_tracer_source.get_tracer(__name__, __version__))
+    return TracerShim(otel_tracer_provider.get_tracer(__name__, __version__))
 
 
 class SpanContextShim(opentracing.SpanContext):
@@ -235,8 +237,7 @@ class SpanShim(opentracing.Span):
     def log_kv(self, key_values, timestamp=None):
         """Implements the ``log_kv()`` method from the base class.
 
-        Logs an :class:`opentelemetry.trace.Event` for the wrapped
-        OpenTelemetry span.
+        Logs an event for the wrapped OpenTelemetry span.
 
         Note:
             The OpenTracing API defines the values of *key_values* to be of any
@@ -468,7 +469,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
             shim and is likely to be handled in future versions.
         """
 
-        span = self._tracer.unwrap().get_current_span()
+        span = trace_api.get_current_span()
         if span is None:
             return None
 
@@ -677,11 +678,8 @@ class TracerShim(opentracing.Tracer):
 
         propagator = propagators.get_global_httptextformat()
 
-        propagator.inject(
-            DefaultSpan(span_context.unwrap()),
-            type(carrier).__setitem__,
-            carrier,
-        )
+        ctx = set_span_in_context(DefaultSpan(span_context.unwrap()))
+        propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
 
     def extract(self, format, carrier):
         """Implements the ``extract`` method from the base class."""
@@ -700,6 +698,11 @@ class TracerShim(opentracing.Tracer):
             return [value] if value is not None else []
 
         propagator = propagators.get_global_httptextformat()
-        otel_context = propagator.extract(get_as_list, carrier)
+        ctx = propagator.extract(get_as_list, carrier)
+        span = trace_api.get_current_span(ctx)
+        if span is not None:
+            otel_context = span.get_context()
+        else:
+            otel_context = trace_api.INVALID_SPAN_CONTEXT
 
         return SpanContextShim(otel_context)

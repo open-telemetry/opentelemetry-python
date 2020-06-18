@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,14 +23,20 @@ class ThreadLocalRuntimeContext(RuntimeContext):
     implementation is available for usage with Python 3.4.
     """
 
+    class Token:
+        def __init__(self, context: Context) -> None:
+            self._context = context
+
     _CONTEXT_KEY = "current_context"
 
     def __init__(self) -> None:
         self._current_context = threading.local()
 
-    def set_current(self, context: Context) -> None:
-        """See `opentelemetry.context.RuntimeContext.set_current`."""
+    def attach(self, context: Context) -> object:
+        """See `opentelemetry.context.RuntimeContext.attach`."""
+        current = self.get_current()
         setattr(self._current_context, self._CONTEXT_KEY, context)
+        return self.Token(current)
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
@@ -42,6 +48,13 @@ class ThreadLocalRuntimeContext(RuntimeContext):
             self._current_context, self._CONTEXT_KEY
         )  # type: Context
         return context
+
+    def detach(self, token: object) -> None:
+        """See `opentelemetry.context.RuntimeContext.detach`."""
+        if not isinstance(token, self.Token):
+            raise ValueError("invalid token")
+        # pylint: disable=protected-access
+        setattr(self._current_context, self._CONTEXT_KEY, token._context)
 
 
 __all__ = ["ThreadLocalRuntimeContext"]

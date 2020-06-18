@@ -1,4 +1,4 @@
-# Copyright 2020, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,13 +35,17 @@ class ContextVarsRuntimeContext(RuntimeContext):
             self._CONTEXT_KEY, default=Context()
         )
 
-    def set_current(self, context: Context) -> None:
-        """See `opentelemetry.context.RuntimeContext.set_current`."""
-        self._current_context.set(context)
+    def attach(self, context: Context) -> object:
+        """See `opentelemetry.context.RuntimeContext.attach`."""
+        return self._current_context.set(context)
 
     def get_current(self) -> Context:
         """See `opentelemetry.context.RuntimeContext.get_current`."""
         return self._current_context.get()
+
+    def detach(self, token: object) -> None:
+        """See `opentelemetry.context.RuntimeContext.detach`."""
+        self._current_context.reset(token)  # type: ignore
 
 
 __all__ = ["ContextVarsRuntimeContext"]

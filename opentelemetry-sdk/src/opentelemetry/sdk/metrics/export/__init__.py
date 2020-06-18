@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,25 @@
 from enum import Enum
 from typing import Sequence, Tuple
 
+from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk.metrics.export.aggregate import Aggregator
+
 
 class MetricsExportResult(Enum):
     SUCCESS = 0
-    FAILED_RETRYABLE = 1
-    FAILED_NOT_RETRYABLE = 2
+    FAILURE = 1
 
 
 class MetricRecord:
-    def __init__(self, aggregator, label_set, metric):
+    def __init__(
+        self,
+        instrument: metrics_api.InstrumentT,
+        labels: Tuple[Tuple[str, str]],
+        aggregator: Aggregator,
+    ):
+        self.instrument = instrument
+        self.labels = labels
         self.aggregator = aggregator
-        self.label_set = label_set
-        self.metric = metric
 
 
 class MetricsExporter:
@@ -43,7 +50,7 @@ class MetricsExporter:
 
         Args:
             metric_records: A sequence of `MetricRecord` s. A `MetricRecord`
-                contains the metric to be exported, the label set associated
+                contains the metric to be exported, the labels associated
                 with that metric, as well as the aggregator used to export the
                 current checkpointed value.
 
@@ -70,10 +77,10 @@ class ConsoleMetricsExporter(MetricsExporter):
     ) -> "MetricsExportResult":
         for record in metric_records:
             print(
-                '{}(data="{}", label_set="{}", value={})'.format(
+                '{}(data="{}", labels="{}", value={})'.format(
                     type(self).__name__,
-                    record.metric,
-                    record.label_set.labels,
+                    record.instrument,
+                    record.labels,
                     record.aggregator.checkpoint,
                 )
             )

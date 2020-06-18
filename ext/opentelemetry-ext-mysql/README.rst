@@ -1,29 +1,25 @@
-OpenTelemetry MySQL integration
-=================================
+OpenTelemetry MySQL Integration
+===============================
 
-The integration with MySQL supports the `mysql-connector`_ library and is specified
-to ``trace_integration`` using ``'MySQL'``.
+|pypi|
 
-.. mysql-connector: https://pypi.org/project/mysql-connector/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-mysql.svg
+   :target: https://pypi.org/project/opentelemetry-ext-mysql/
 
-Usage
------
+Integration with MySQL that supports the mysql-connector library and is
+specified to trace_integration using 'MySQL'.
 
-.. code:: python
 
-    import mysql.connector
-    from opentelemetry.trace import tracer_source
-    from opentelemetry.ext.mysql import trace_integration
+Installation
+------------
 
-    trace_integration(tracer_source())
-    cnx = mysql.connector.connect(database='MySQL_Database')
-    cursor = cnx.cursor()
-    cursor.execute("INSERT INTO test (testField) VALUES (123)"
-    cursor.close()
-    cnx.close()
+::
+
+    pip install opentelemetry-ext-mysql
 
 
 References
 ----------
-
+* `OpenTelemetry MySQL Integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/mysql/mysql.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
+

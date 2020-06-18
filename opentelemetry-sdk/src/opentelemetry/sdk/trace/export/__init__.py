@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,13 @@
 
 import collections
 import logging
+import os
 import sys
 import threading
 import typing
 from enum import Enum
 
-from opentelemetry.context import get_current, set_current, set_value
+from opentelemetry.context import attach, detach, get_current, set_value
 from opentelemetry.trace import DefaultSpan
 from opentelemetry.util import time_ns
 
@@ -30,8 +31,7 @@ logger = logging.getLogger(__name__)
 
 class SpanExportResult(Enum):
     SUCCESS = 0
-    FAILED_RETRYABLE = 1
-    FAILED_NOT_RETRYABLE = 2
+    FAILURE = 1
 
 
 class SpanExporter:
@@ -75,14 +75,13 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
-        backup_context = get_current()
-        set_current(set_value("suppress_instrumentation", True))
+        token = attach(set_value("suppress_instrumentation", True))
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-except
         except Exception:
             logger.exception("Exception while exporting Span.")
-        set_current(backup_context)
+        detach(token)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -121,7 +120,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if max_export_batch_size > max_queue_size:
             raise ValueError(
-                "max_export_batch_size must be less than and equal to max_export_batch_size."
+                "max_export_batch_size must be less than and equal to max_queue_size."
             )
 
         self.span_exporter = span_exporter
@@ -202,8 +201,7 @@ class BatchExportSpanProcessor(SpanProcessor):
             else:
                 self.spans_list[idx] = span
                 idx += 1
-        backup_context = get_current()
-        set_current(set_value("suppress_instrumentation", True))
+        token = attach(set_value("suppress_instrumentation", True))
         try:
             # Ignore type b/c the Optional[None]+slicing is too "clever"
             # for mypy
@@ -211,7 +209,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         # pylint: disable=broad-except
         except Exception:
             logger.exception("Exception while exporting Span batch.")
-        set_current(backup_context)
+        detach(token)
 
         if notify_flush:
             with self.flush_condition:
@@ -272,7 +270,8 @@ class ConsoleSpanExporter(SpanExporter):
     def __init__(
         self,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[Span], str] = str,
+        formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
+        + os.linesep,
     ):
         self.out = out
         self.formatter = formatter
@@ -280,4 +279,5 @@ class ConsoleSpanExporter(SpanExporter):
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
+        self.out.flush()
         return SpanExportResult.SUCCESS

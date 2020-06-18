@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import time
 import unittest
 from logging import WARNING
@@ -52,14 +53,14 @@ class MySpanExporter(export.SpanExporter):
 
 class TestSimpleExportSpanProcessor(unittest.TestCase):
     def test_simple_span_processor(self):
-        tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer(__name__)
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
 
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor = export.SimpleExportSpanProcessor(my_exporter)
-        tracer_source.add_span_processor(span_processor)
+        tracer_provider.add_span_processor(span_processor)
 
         with tracer.start_as_current_span("foo"):
             with tracer.start_as_current_span("bar"):
@@ -77,14 +78,14 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         SpanProcessors should act on a span's start and end events whether or
         not it is ever the active span.
         """
-        tracer_source = trace.TracerSource()
-        tracer = tracer_source.get_tracer(__name__)
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
 
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor = export.SimpleExportSpanProcessor(my_exporter)
-        tracer_source.add_span_processor(span_processor)
+        tracer_provider.add_span_processor(span_processor)
 
         with tracer.start_span("foo"):
             with tracer.start_span("bar"):
@@ -285,11 +286,12 @@ class TestConsoleSpanExporter(unittest.TestCase):
 
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
-        span = trace.Span("span name", mock.Mock())
+        span = trace.Span("span name", trace_api.INVALID_SPAN_CONTEXT)
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
-        mock_stdout.write.assert_called_once_with(str(span))
+        mock_stdout.write.assert_called_once_with(span.to_json() + os.linesep)
         self.assertEqual(mock_stdout.write.call_count, 1)
+        self.assertEqual(mock_stdout.flush.call_count, 1)
 
     def test_export_custom(self):  # pylint: disable=no-self-use
         """Check that console exporter uses custom io, formatter."""

@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ tracing, and a concrete no-op :class:`.DefaultSpan` that allows applications
 to use the API package alone without a supporting implementation.
 
 To get a tracer, you need to provide the package name from which you are
-calling the tracer APIs to OpenTelemetry by calling `TracerSource.get_tracer`
+calling the tracer APIs to OpenTelemetry by calling `TracerProvider.get_tracer`
 with the calling module name and the version of your package.
 
 The tracer supports creating spans that are "attached" or "detached" from the
@@ -57,73 +57,138 @@ change, and the caller is responsible for managing the span's lifetime::
     finally:
         child.end()
 
-Applications should generally use a single global tracer source, and use either
-implicit or explicit context propagation consistently throughout.
+Applications should generally use a single global TracerProvider, and use
+either implicit or explicit context propagation consistently throughout.
 
 .. versionadded:: 0.1.0
 .. versionchanged:: 0.3.0
-    `TracerSource` was introduced and the global ``tracer`` getter was replaced
-    by `tracer_source`.
+    `TracerProvider` was introduced and the global ``tracer`` getter was
+    replaced by ``tracer_provider``.
+.. versionchanged:: 0.5.0
+    ``tracer_provider`` was replaced by `get_tracer_provider`,
+    ``set_preferred_tracer_provider_implementation`` was replaced by
+    `set_tracer_provider`.
 """
+
+__all__ = [
+    "DEFAULT_TRACE_OPTIONS",
+    "DEFAULT_TRACE_STATE",
+    "INVALID_SPAN",
+    "INVALID_SPAN_CONTEXT",
+    "INVALID_SPAN_ID",
+    "INVALID_TRACE_ID",
+    "DefaultSpan",
+    "DefaultTracer",
+    "DefaultTracerProvider",
+    "LazyLink",
+    "Link",
+    "LinkBase",
+    "ParentSpan",
+    "Span",
+    "SpanContext",
+    "SpanKind",
+    "TraceFlags",
+    "TraceState",
+    "TracerProvider",
+    "Tracer",
+    "format_span_id",
+    "format_trace_id",
+    "get_current_span",
+    "get_tracer",
+    "get_tracer_provider",
+    "set_tracer_provider",
+    "set_span_in_context",
+]
 
 import abc
 import enum
-import logging
 import types as python_types
 import typing
 from contextlib import contextmanager
+from logging import getLogger
 
+from opentelemetry.configuration import Configuration
+from opentelemetry.trace.propagation import (
+    get_current_span,
+    set_span_in_context,
+)
+from opentelemetry.trace.span import (
+    DEFAULT_TRACE_OPTIONS,
+    DEFAULT_TRACE_STATE,
+    INVALID_SPAN,
+    INVALID_SPAN_CONTEXT,
+    INVALID_SPAN_ID,
+    INVALID_TRACE_ID,
+    DefaultSpan,
+    Span,
+    SpanContext,
+    TraceFlags,
+    TraceState,
+    format_span_id,
+    format_trace_id,
+)
 from opentelemetry.trace.status import Status
-from opentelemetry.util import loader, types
+from opentelemetry.util import _load_trace_provider, types
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 # TODO: quarantine
 ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
-class Link:
-    """A link to a `Span`."""
-
-    def __init__(
-        self, context: "SpanContext", attributes: types.Attributes = None
-    ) -> None:
+class LinkBase(abc.ABC):
+    def __init__(self, context: "SpanContext") -> None:
         self._context = context
-        if attributes is None:
-            self._attributes = {}  # type: types.Attributes
-        else:
-            self._attributes = attributes
 
     @property
     def context(self) -> "SpanContext":
         return self._context
 
     @property
+    @abc.abstractmethod
     def attributes(self) -> types.Attributes:
-        return self._attributes
+        pass
 
 
-class Event:
-    """A text annotation with a set of attributes."""
+class Link(LinkBase):
+    """A link to a `Span`.
+
+    Args:
+        context: `SpanContext` of the `Span` to link to.
+        attributes: Link's attributes.
+    """
 
     def __init__(
-        self, name: str, attributes: types.Attributes, timestamp: int
+        self, context: "SpanContext", attributes: types.Attributes = None,
     ) -> None:
-        self._name = name
+        super().__init__(context)
         self._attributes = attributes
-        self._timestamp = timestamp
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+
+class LazyLink(LinkBase):
+    """A lazy link to a `Span`.
+
+    Args:
+        context: `SpanContext` of the `Span` to link to.
+        link_formatter: Callable object that returns the attributes of the
+            Link.
+    """
+
+    def __init__(
+        self,
+        context: "SpanContext",
+        link_formatter: types.AttributesFormatter,
+    ) -> None:
+        super().__init__(context)
+        self._link_formatter = link_formatter
+
     @property
-    def timestamp(self) -> int:
-        return self._timestamp
+    def attributes(self) -> types.Attributes:
+        return self._link_formatter()
 
 
 class SpanKind(enum.Enum):
@@ -155,257 +220,7 @@ class SpanKind(enum.Enum):
     CONSUMER = 4
 
 
-class Span(abc.ABC):
-    """A span represents a single operation within a trace."""
-
-    @abc.abstractmethod
-    def end(self, end_time: typing.Optional[int] = None) -> None:
-        """Sets the current time as the span's end time.
-
-        The span's end time is the wall time at which the operation finished.
-
-        Only the first call to `end` should modify the span, and
-        implementations are free to ignore or raise on further calls.
-        """
-
-    @abc.abstractmethod
-    def get_context(self) -> "SpanContext":
-        """Gets the span's SpanContext.
-
-        Get an immutable, serializable identifier for this span that can be
-        used to create new child spans.
-
-        Returns:
-            A :class:`.SpanContext` with a copy of this span's immutable state.
-        """
-
-    @abc.abstractmethod
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        """Sets an Attribute.
-
-        Sets a single Attribute with the key and value passed as arguments.
-        """
-
-    @abc.abstractmethod
-    def add_event(
-        self,
-        name: str,
-        attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
-    ) -> None:
-        """Adds an `Event`.
-
-        Adds a single `Event` with the name and, optionally, a timestamp and
-        attributes passed as arguments. Implementations should generate a
-        timestamp if the `timestamp` argument is omitted.
-        """
-
-    @abc.abstractmethod
-    def add_lazy_event(self, event: Event) -> None:
-        """Adds an `Event`.
-
-        Adds an `Event` that has previously been created.
-        """
-
-    @abc.abstractmethod
-    def update_name(self, name: str) -> None:
-        """Updates the `Span` name.
-
-        This will override the name provided via :func:`Tracer.start_span`.
-
-        Upon this update, any sampling behavior based on Span name will depend
-        on the implementation.
-        """
-
-    @abc.abstractmethod
-    def is_recording_events(self) -> bool:
-        """Returns whether this span will be recorded.
-
-        Returns true if this Span is active and recording information like
-        events with the add_event operation and attributes using set_attribute.
-        """
-
-    @abc.abstractmethod
-    def set_status(self, status: Status) -> None:
-        """Sets the Status of the Span. If used, this will override the default
-        Span status, which is OK.
-        """
-
-    def __enter__(self) -> "Span":
-        """Invoked when `Span` is used as a context manager.
-
-        Returns the `Span` itself.
-        """
-        return self
-
-    def __exit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[python_types.TracebackType],
-    ) -> None:
-        """Ends context manager and calls `end` on the `Span`."""
-
-        self.end()
-
-
-class TraceOptions(int):
-    """A bitmask that represents options specific to the trace.
-
-    The only supported option is the "sampled" flag (``0x01``). If set, this
-    flag indicates that the trace may have been sampled upstream.
-
-    See the `W3C Trace Context - Traceparent`_ spec for details.
-
-    .. _W3C Trace Context - Traceparent:
-        https://www.w3.org/TR/trace-context/#trace-flags
-    """
-
-    DEFAULT = 0x00
-    SAMPLED = 0x01
-
-    @classmethod
-    def get_default(cls) -> "TraceOptions":
-        return cls(cls.DEFAULT)
-
-    @property
-    def sampled(self) -> bool:
-        return bool(self & TraceOptions.SAMPLED)
-
-
-DEFAULT_TRACE_OPTIONS = TraceOptions.get_default()
-
-
-class TraceState(typing.Dict[str, str]):
-    """A list of key-value pairs representing vendor-specific trace info.
-
-    Keys and values are strings of up to 256 printable US-ASCII characters.
-    Implementations should conform to the `W3C Trace Context - Tracestate`_
-    spec, which describes additional restrictions on valid field values.
-
-    .. _W3C Trace Context - Tracestate:
-        https://www.w3.org/TR/trace-context/#tracestate-field
-    """
-
-    @classmethod
-    def get_default(cls) -> "TraceState":
-        return cls()
-
-
-DEFAULT_TRACE_STATE = TraceState.get_default()
-
-
-def format_trace_id(trace_id: int) -> str:
-    return "0x{:032x}".format(trace_id)
-
-
-def format_span_id(span_id: int) -> str:
-    return "0x{:016x}".format(span_id)
-
-
-class SpanContext:
-    """The state of a Span to propagate between processes.
-
-    This class includes the immutable attributes of a :class:`.Span` that must
-    be propagated to a span's children and across process boundaries.
-
-    Args:
-        trace_id: The ID of the trace that this span belongs to.
-        span_id: This span's ID.
-        trace_options: Trace options to propagate.
-        trace_state: Tracing-system-specific info to propagate.
-    """
-
-    def __init__(
-        self,
-        trace_id: int,
-        span_id: int,
-        trace_options: "TraceOptions" = DEFAULT_TRACE_OPTIONS,
-        trace_state: "TraceState" = DEFAULT_TRACE_STATE,
-    ) -> None:
-        if trace_options is None:
-            trace_options = DEFAULT_TRACE_OPTIONS
-        if trace_state is None:
-            trace_state = DEFAULT_TRACE_STATE
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_options = trace_options
-        self.trace_state = trace_state
-
-    def __repr__(self) -> str:
-        return "{}(trace_id={}, span_id={}, trace_state={!r})".format(
-            type(self).__name__,
-            format_trace_id(self.trace_id),
-            format_span_id(self.span_id),
-            self.trace_state,
-        )
-
-    def is_valid(self) -> bool:
-        """Get whether this `SpanContext` is valid.
-
-        A `SpanContext` is said to be invalid if its trace ID or span ID is
-        invalid (i.e. ``0``).
-
-        Returns:
-            True if the `SpanContext` is valid, false otherwise.
-        """
-        return (
-            self.trace_id != INVALID_TRACE_ID
-            and self.span_id != INVALID_SPAN_ID
-        )
-
-
-class DefaultSpan(Span):
-    """The default Span that is used when no Span implementation is available.
-
-    All operations are no-op except context propagation.
-    """
-
-    def __init__(self, context: "SpanContext") -> None:
-        self._context = context
-
-    def get_context(self) -> "SpanContext":
-        return self._context
-
-    def is_recording_events(self) -> bool:
-        return False
-
-    def end(self, end_time: typing.Optional[int] = None) -> None:
-        pass
-
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        pass
-
-    def add_event(
-        self,
-        name: str,
-        attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
-    ) -> None:
-        pass
-
-    def add_lazy_event(self, event: Event) -> None:
-        pass
-
-    def update_name(self, name: str) -> None:
-        pass
-
-    def set_status(self, status: Status) -> None:
-        pass
-
-
-INVALID_SPAN_ID = 0x0000000000000000
-INVALID_TRACE_ID = 0x00000000000000000000000000000000
-INVALID_SPAN_CONTEXT = SpanContext(
-    INVALID_TRACE_ID,
-    INVALID_SPAN_ID,
-    DEFAULT_TRACE_OPTIONS,
-    DEFAULT_TRACE_STATE,
-)
-INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
-
-
-class TracerSource(abc.ABC):
+class TracerProvider(abc.ABC):
     @abc.abstractmethod
     def get_tracer(
         self,
@@ -427,7 +242,7 @@ class TracerSource(abc.ABC):
                 This should *not* be the name of the module that is
                 instrumented but the name of the module doing the instrumentation.
                 E.g., instead of ``"requests"``, use
-                ``"opentelemetry.ext.http_requests"``.
+                ``"opentelemetry.ext.requests"``.
 
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
@@ -435,8 +250,8 @@ class TracerSource(abc.ABC):
         """
 
 
-class DefaultTracerSource(TracerSource):
-    """The default TracerSource, used when no implementation is available.
+class DefaultTracerProvider(TracerProvider):
+    """The default TracerProvider, used when no implementation is available.
 
     All operations are no-op.
     """
@@ -462,18 +277,6 @@ class Tracer(abc.ABC):
     CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
     @abc.abstractmethod
-    def get_current_span(self) -> "Span":
-        """Gets the currently active span from the context.
-
-        If there is no current span, return a placeholder span with an invalid
-        context.
-
-        Returns:
-            The currently active :class:`.Span`, or a placeholder span with an
-            invalid :class:`.SpanContext`.
-        """
-
-    @abc.abstractmethod
     def start_span(
         self,
         name: str,
@@ -490,7 +293,7 @@ class Tracer(abc.ABC):
         span in this tracer's context.
 
         By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a `Span` or a `SpanContext`. If
+        parent can also be specified, either a `Span` or a `opentelemetry.trace.SpanContext`. If
         the specified value is `None`, the created span will be a root span.
 
         The span can be used as context manager. On exiting, the span will be
@@ -498,7 +301,7 @@ class Tracer(abc.ABC):
 
         Example::
 
-            # tracer.get_current_span() will be used as the implicit parent.
+            # trace.get_current_span() will be used as the implicit parent.
             # If none is found, the created span will be a root instance.
             with tracer.start_span("one") as child:
                 child.add_event("child's event")
@@ -544,11 +347,11 @@ class Tracer(abc.ABC):
 
             with tracer.start_as_current_span("one") as parent:
                 parent.add_event("parent's event")
-                with tracer.start_as_current_span("two") as child:
+                with trace.start_as_current_span("two") as child:
                     child.add_event("child's event")
-                    tracer.get_current_span()  # returns child
-                tracer.get_current_span()      # returns parent
-            tracer.get_current_span()          # returns previously active span
+                    trace.get_current_span()  # returns child
+                trace.get_current_span()      # returns parent
+            trace.get_current_span()          # returns previously active span
 
         This is a convenience method for creating spans attached to the
         tracer's context. Applications that need more control over the span
@@ -602,10 +405,6 @@ class DefaultTracer(Tracer):
     All operations are no-op.
     """
 
-    def get_current_span(self) -> "Span":
-        # pylint: disable=no-self-use
-        return INVALID_SPAN
-
     def start_span(
         self,
         name: str,
@@ -639,72 +438,39 @@ class DefaultTracer(Tracer):
         yield
 
 
-# Once https://github.com/python/mypy/issues/7092 is resolved,
-# the following type definition should be replaced with
-# from opentelemetry.util.loader import ImplementationFactory
-ImplementationFactory = typing.Callable[
-    [typing.Type[TracerSource]], typing.Optional[TracerSource]
-]
-
-_TRACER_SOURCE = None  # type: typing.Optional[TracerSource]
-_TRACER_SOURCE_FACTORY = None  # type: typing.Optional[ImplementationFactory]
+_TRACER_PROVIDER = None
 
 
 def get_tracer(
-    instrumenting_module_name: str, instrumenting_library_version: str = ""
+    instrumenting_module_name: str,
+    instrumenting_library_version: str = "",
+    tracer_provider: typing.Optional[TracerProvider] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
     This function is a convenience wrapper for
-    opentelemetry.trace.tracer_source().get_tracer
+    opentelemetry.trace.TracerProvider.get_tracer.
+
+    If tracer_provider is ommited the current configured one is used.
     """
-    return tracer_source().get_tracer(
+    if tracer_provider is None:
+        tracer_provider = get_tracer_provider()
+    return tracer_provider.get_tracer(
         instrumenting_module_name, instrumenting_library_version
     )
 
 
-def tracer_source() -> TracerSource:
-    """Gets the current global :class:`~.TracerSource` object.
-
-    If there isn't one set yet, a default will be loaded.
-    """
-    global _TRACER_SOURCE, _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
-
-    if _TRACER_SOURCE is None:
-        # pylint:disable=protected-access
-        try:
-            _TRACER_SOURCE = loader._load_impl(
-                TracerSource, _TRACER_SOURCE_FACTORY  # type: ignore
-            )
-        except TypeError:
-            # if we raised an exception trying to instantiate an
-            # abstract class, default to no-op tracer impl
-            logger.warning(
-                "Unable to instantiate TracerSource from tracer source factory.",
-                exc_info=True,
-            )
-            _TRACER_SOURCE = DefaultTracerSource()
-        del _TRACER_SOURCE_FACTORY
-
-    return _TRACER_SOURCE
+def set_tracer_provider(tracer_provider: TracerProvider) -> None:
+    """Sets the current global :class:`~.TracerProvider` object."""
+    global _TRACER_PROVIDER  # pylint: disable=global-statement
+    _TRACER_PROVIDER = tracer_provider
 
 
-def set_preferred_tracer_source_implementation(
-    factory: ImplementationFactory,
-) -> None:
-    """Set the factory to be used to create the tracer source.
+def get_tracer_provider() -> TracerProvider:
+    """Gets the current global :class:`~.TracerProvider` object."""
+    global _TRACER_PROVIDER  # pylint: disable=global-statement
 
-    See :mod:`opentelemetry.util.loader` for details.
+    if _TRACER_PROVIDER is None:
+        _TRACER_PROVIDER = _load_trace_provider("tracer_provider")
 
-    This function may not be called after a tracer is already loaded.
-
-    Args:
-        factory: Callback that should create a new :class:`TracerSource`
-            instance.
-    """
-    global _TRACER_SOURCE_FACTORY  # pylint:disable=global-statement
-
-    if _TRACER_SOURCE:
-        raise RuntimeError("TracerSource already loaded.")
-
-    _TRACER_SOURCE_FACTORY = factory
+    return _TRACER_PROVIDER

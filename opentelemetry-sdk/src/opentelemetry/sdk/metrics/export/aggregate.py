@@ -1,4 +1,4 @@
-# Copyright 2019, OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import abc
+import threading
 from collections import namedtuple
+
+from opentelemetry.util import time_ns
 
 
 class Aggregator(abc.ABC):
@@ -40,69 +43,152 @@ class Aggregator(abc.ABC):
         """Combines two aggregator values."""
 
 
-class CounterAggregator(Aggregator):
+class SumAggregator(Aggregator):
     """Aggregator for Counter metrics."""
 
     def __init__(self):
         super().__init__()
         self.current = 0
         self.checkpoint = 0
+        self._lock = threading.Lock()
+        self.last_update_timestamp = None
 
     def update(self, value):
-        self.current += value
+        with self._lock:
+            self.current += value
+            self.last_update_timestamp = time_ns()
 
     def take_checkpoint(self):
-        self.checkpoint = self.current
-        self.current = 0
+        with self._lock:
+            self.checkpoint = self.current
+            self.current = 0
 
     def merge(self, other):
-        self.checkpoint += other.checkpoint
+        with self._lock:
+            self.checkpoint += other.checkpoint
+            self.last_update_timestamp = get_latest_timestamp(
+                self.last_update_timestamp, other.last_update_timestamp
+            )
 
 
 class MinMaxSumCountAggregator(Aggregator):
-    """Agregator for Measure metrics that keeps min, max, sum and count."""
+    """Aggregator for ValueRecorder metrics that keeps min, max, sum, count."""
 
     _TYPE = namedtuple("minmaxsumcount", "min max sum count")
+    _EMPTY = _TYPE(None, None, None, 0)
 
     @classmethod
-    def _min(cls, val1, val2):
-        if val1 is None and val2 is None:
-            return None
-        return min(val1 or val2, val2 or val1)
-
-    @classmethod
-    def _max(cls, val1, val2):
-        if val1 is None and val2 is None:
-            return None
-        return max(val1 or val2, val2 or val1)
-
-    @classmethod
-    def _sum(cls, val1, val2):
-        if val1 is None and val2 is None:
-            return None
-        return (val1 or 0) + (val2 or 0)
+    def _merge_checkpoint(cls, val1, val2):
+        if val1 is cls._EMPTY:
+            return val2
+        if val2 is cls._EMPTY:
+            return val1
+        return cls._TYPE(
+            min(val1.min, val2.min),
+            max(val1.max, val2.max),
+            val1.sum + val2.sum,
+            val1.count + val2.count,
+        )
 
     def __init__(self):
         super().__init__()
-        self.current = self._TYPE(None, None, None, 0)
-        self.checkpoint = self._TYPE(None, None, None, 0)
+        self.current = self._EMPTY
+        self.checkpoint = self._EMPTY
+        self._lock = threading.Lock()
+        self.last_update_timestamp = None
 
     def update(self, value):
-        self.current = self._TYPE(
-            self._min(self.current.min, value),
-            self._max(self.current.max, value),
-            self._sum(self.current.sum, value),
-            self.current.count + 1,
-        )
+        with self._lock:
+            if self.current is self._EMPTY:
+                self.current = self._TYPE(value, value, value, 1)
+            else:
+                self.current = self._TYPE(
+                    min(self.current.min, value),
+                    max(self.current.max, value),
+                    self.current.sum + value,
+                    self.current.count + 1,
+                )
+            self.last_update_timestamp = time_ns()
 
     def take_checkpoint(self):
-        self.checkpoint = self.current
-        self.current = self._TYPE(None, None, None, 0)
+        with self._lock:
+            self.checkpoint = self.current
+            self.current = self._EMPTY
 
     def merge(self, other):
-        self.checkpoint = self._TYPE(
-            self._min(self.checkpoint.min, other.checkpoint.min),
-            self._max(self.checkpoint.max, other.checkpoint.max),
-            self._sum(self.checkpoint.sum, other.checkpoint.sum),
-            self.checkpoint.count + other.checkpoint.count,
+        with self._lock:
+            self.checkpoint = self._merge_checkpoint(
+                self.checkpoint, other.checkpoint
+            )
+            self.last_update_timestamp = get_latest_timestamp(
+                self.last_update_timestamp, other.last_update_timestamp
+            )
+
+
+class LastValueAggregator(Aggregator):
+    """Aggregator that stores last value results."""
+
+    def __init__(self):
+        super().__init__()
+        self._lock = threading.Lock()
+        self.last_update_timestamp = None
+
+    def update(self, value):
+        with self._lock:
+            self.current = value
+            self.last_update_timestamp = time_ns()
+
+    def take_checkpoint(self):
+        with self._lock:
+            self.checkpoint = self.current
+            self.current = None
+
+    def merge(self, other):
+        last = self.checkpoint
+        self.last_update_timestamp = get_latest_timestamp(
+            self.last_update_timestamp, other.last_update_timestamp
         )
+        if self.last_update_timestamp == other.last_update_timestamp:
+            last = other.checkpoint
+        self.checkpoint = last
+
+
+class ValueObserverAggregator(Aggregator):
+    """Same as MinMaxSumCount but also with last value."""
+
+    _TYPE = namedtuple("minmaxsumcountlast", "min max sum count last")
+
+    def __init__(self):
+        super().__init__()
+        self.mmsc = MinMaxSumCountAggregator()
+        self.current = None
+        self.checkpoint = self._TYPE(None, None, None, 0, None)
+        self.last_update_timestamp = None
+
+    def update(self, value):
+        self.mmsc.update(value)
+        self.current = value
+        self.last_update_timestamp = time_ns()
+
+    def take_checkpoint(self):
+        self.mmsc.take_checkpoint()
+        self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (self.current,)))
+
+    def merge(self, other):
+        self.mmsc.merge(other.mmsc)
+        last = self.checkpoint.last
+        self.last_update_timestamp = get_latest_timestamp(
+            self.last_update_timestamp, other.last_update_timestamp
+        )
+        if self.last_update_timestamp == other.last_update_timestamp:
+            last = other.checkpoint.last
+        self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (last,)))
+
+
+def get_latest_timestamp(time_stamp, other_timestamp):
+    if time_stamp is None:
+        return other_timestamp
+    if other_timestamp is not None:
+        if time_stamp < other_timestamp:
+            return other_timestamp
+    return time_stamp
