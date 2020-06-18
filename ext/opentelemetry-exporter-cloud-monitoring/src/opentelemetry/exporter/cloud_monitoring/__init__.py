@@ -6,7 +6,6 @@ from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
-
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -24,7 +23,20 @@ WRITE_INTERVAL = 10
 class CloudMonitoringMetricsExporter(MetricsExporter):
     """ Implementation of Metrics Exporter to Google Cloud Monitoring"""
 
-    def __init__(self, project_id=None, client=None):
+    def __init__(
+        self, project_id=None, client=None, add_unique_identifier=False
+    ):
+        """ You can manually pass in project_id and client, or else the
+        Exporter will take that informations from Application Default
+        Credentials.
+
+        :param project_id: project id of your Google Cloud project
+        :param client: Client to upload metrics to Google Cloud Monitoring
+        :param add_unique_identifier: Add an identifier to each exporter metric.
+        This must be used when there exist two (or more) exporters that may 
+        export to the same metric name within WRITE_INTERVAL seconds of each
+        other
+        """
         self.client = client or MetricServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
