@@ -63,8 +63,8 @@ from opentelemetry.trace.span import (
     get_hexadecimal_trace_id,
 )
 from opentelemetry.util import types
+from opentelemetry.version import __version__ as core_version
 
-core_version = pkg_resources.get_distribution("opentelemetry-api").version
 logger = logging.getLogger(__name__)
 
 MAX_NUM_LINKS = 128
