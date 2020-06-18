@@ -72,26 +72,73 @@ class TestDatadogSpanExporter(unittest.TestCase):
         """Test the constructor passing all the options."""
         agent_url = "http://localhost:8126"
         exporter = datadog.DatadogSpanExporter(
-            agent_url=agent_url, service="explicit"
+            agent_url=agent_url, service="explicit",
         )
 
         self.assertEqual(exporter.agent_url, agent_url)
         self.assertEqual(exporter.service, "explicit")
-        self.assertIsNotNone(exporter.agent_writer)
+        self.assertIsNone(exporter.env)
+        self.assertIsNone(exporter.version)
+        self.assertEqual(exporter.tags, {})
+
+        exporter = datadog.DatadogSpanExporter(
+            agent_url=agent_url,
+            service="explicit",
+            env="test",
+            version="0.0.1",
+            tags="",
+        )
+
+        self.assertEqual(exporter.agent_url, agent_url)
+        self.assertEqual(exporter.service, "explicit")
+        self.assertEqual(exporter.env, "test")
+        self.assertEqual(exporter.version, "0.0.1")
+        self.assertEqual(exporter.tags, {})
+
+        exporter = datadog.DatadogSpanExporter(
+            agent_url=agent_url,
+            service="explicit",
+            env="test",
+            version="0.0.1",
+            tags="team:testers,layer:app",
+        )
+
+        self.assertEqual(exporter.agent_url, agent_url)
+        self.assertEqual(exporter.service, "explicit")
+        self.assertEqual(exporter.env, "test")
+        self.assertEqual(exporter.version, "0.0.1")
+        self.assertEqual(exporter.tags, {"team": "testers", "layer": "app"})
 
     @mock.patch.dict(
         "os.environ",
-        {"DD_TRACE_AGENT_URL": "http://agent:8126", "DD_SERVICE": "environ"},
+        {
+            "DD_TRACE_AGENT_URL": "http://agent:8126",
+            "DD_SERVICE": "test-service",
+            "DD_ENV": "test",
+            "DD_VERSION": "0.0.1",
+            "DD_TAGS": "team:testers",
+        },
     )
     def test_constructor_environ(self):
         exporter = datadog.DatadogSpanExporter()
 
         self.assertEqual(exporter.agent_url, "http://agent:8126")
-        self.assertEqual(exporter.service, "environ")
+        self.assertEqual(exporter.service, "test-service")
+        self.assertEqual(exporter.env, "test")
+        self.assertEqual(exporter.version, "0.0.1")
+        self.assertEqual(exporter.tags, {"team": "testers"})
         self.assertIsNotNone(exporter.agent_writer)
 
     # pylint: disable=too-many-locals
-    @mock.patch.dict("os.environ", {"DD_SERVICE": "test-service"})
+    @mock.patch.dict(
+        "os.environ",
+        {
+            "DD_SERVICE": "test-service",
+            "DD_ENV": "test",
+            "DD_VERSION": "0.0.1",
+            "DD_TAGS": "team:testers",
+        },
+    )
     def test_translate_to_datadog(self):
         # pylint: disable=invalid-name
         self.maxDiff = None
@@ -174,6 +221,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 duration=durations[0],
                 error=0,
                 service="test-service",
+                meta={"env": "test", "team": "testers"},
             ),
             dict(
                 trace_id=trace_id_low,
@@ -185,6 +233,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 duration=durations[1],
                 error=0,
                 service="test-service",
+                meta={"env": "test", "team": "testers", "version": "0.0.1"},
             ),
             dict(
                 trace_id=trace_id_low,
@@ -196,12 +245,12 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 duration=durations[2],
                 error=0,
                 service="test-service",
+                meta={"env": "test", "team": "testers", "version": "0.0.1"},
             ),
         ]
 
         self.assertEqual(datadog_spans, expected_spans)
 
-    @mock.patch.dict("os.environ", {"DD_SERVICE": "test-service"})
     def test_export(self):
         """Test that agent and/or collector are invoked"""
         # create and save span to be used in tests
