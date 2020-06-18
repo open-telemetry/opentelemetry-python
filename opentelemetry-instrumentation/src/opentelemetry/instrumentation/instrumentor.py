@@ -39,10 +39,10 @@ class BaseInstrumentor(ABC):
     _instance = None
     _is_instrumented = False
 
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
 
         if cls._instance is None:
-            cls._instance = object.__new__(cls)
+            cls._instance = object.__new__(cls, *args, **kwargs)
 
         return cls._instance
 
