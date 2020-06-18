@@ -100,14 +100,14 @@ class TestDatadogSpanExporter(unittest.TestCase):
             service="explicit",
             env="test",
             version="0.0.1",
-            tags="team:testers",
+            tags="team:testers,layer:app",
         )
 
         self.assertEqual(exporter.agent_url, agent_url)
         self.assertEqual(exporter.service, "explicit")
         self.assertEqual(exporter.env, "test")
         self.assertEqual(exporter.version, "0.0.1")
-        self.assertEqual(exporter.tags, {"team": "testers"})
+        self.assertEqual(exporter.tags, {"team": "testers", "layer": "app"})
 
     @mock.patch.dict(
         "os.environ",

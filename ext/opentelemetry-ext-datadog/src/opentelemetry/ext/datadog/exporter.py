@@ -70,12 +70,10 @@ class DatadogSpanExporter(SpanExporter):
             if agent_url
             else os.environ.get("DD_TRACE_AGENT_URL", DEFAULT_AGENT_URL)
         )
-        self.service = service if service else os.environ.get("DD_SERVICE")
-        self.env = env if env else os.environ.get("DD_ENV")
-        self.version = version if version else os.environ.get("DD_VERSION")
-        self.tags = _parse_tags_str(
-            tags if tags else os.environ.get("DD_TAGS")
-        )
+        self.service = service or os.environ.get("DD_SERVICE")
+        self.env = env or os.environ.get("DD_ENV")
+        self.version = version or os.environ.get("DD_VERSION")
+        self.tags = _parse_tags_str(tags or os.environ.get("DD_TAGS"))
         self._agent_writer = None
 
     @property
