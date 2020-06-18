@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import OrderedDict
 from unittest import TestCase
 
 from opentelemetry.ext.otlp.metrics_exporter import OTLPMetricsExporter
@@ -39,7 +40,7 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import Resource as SDKResource
 
 
 class TestOTLPMetricExporter(TestCase):
@@ -53,18 +54,18 @@ class TestOTLPMetricExporter(TestCase):
                 "c",
                 int,
                 MeterProvider(
-                    resource=Resource({"a": 1, "b": False})
+                    resource=SDKResource(OrderedDict([("a", 1), ("b", False)]))
                 ).get_meter(__name__),
                 ("d",),
             ),
-            {"e": "f"},
+            OrderedDict([("e", "f")]),
             SumAggregator(),
         )
 
     def test_translate_spans(self):
         # pylint: disable=no-member
 
-        self.counter_metric_record.instrument.add(1, {"a": "b"})
+        self.counter_metric_record.instrument.add(1, OrderedDict([("a", "b")]))
 
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
