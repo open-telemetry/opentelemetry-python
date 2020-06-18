@@ -32,12 +32,12 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         Exporter will take that information from Application Default
         Credentials.
 
-        :param project_id: project id of your Google Cloud project
-        :param client: Client to upload metrics to Google Cloud Monitoring
+        :param project_id: project id of your Google Cloud project.
+        :param client: Client to upload metrics to Google Cloud Monitoring.
         :param add_unique_identifier: Add an identifier to each exporter metric.
         This must be used when there exist two (or more) exporters that may
         export to the same metric name within WRITE_INTERVAL seconds of each
-        other
+        other.
         """
         self.client = client or MetricServiceClient()
         if not project_id:

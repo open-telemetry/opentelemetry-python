@@ -318,8 +318,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         sum_agg_one = SumAggregator()
-        sum_agg_one.checkpoint = 1
-        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
+        sum_agg_one.update(1)
         metric_record = MetricRecord(MockMetric(), (), sum_agg_one,)
         exporter1.export([metric_record])
         exporter2.export([metric_record])
