@@ -73,6 +73,7 @@ def _get_resource_data(
         for key, value in sdk_resource.labels.items():
 
             try:
+                # pylint: disable=no-member
                 collector_resource.attributes.append(
                     AttributeKeyValue(**_translate_key_values(key, value))
                 )
