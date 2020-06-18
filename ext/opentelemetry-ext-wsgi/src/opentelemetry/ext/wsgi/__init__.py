@@ -166,10 +166,10 @@ class OpenTelemetryMiddleware:
                        Optional: Defaults to get_default_span_name.
     """
 
-    def __init__(self, wsgi, name_callback=None):
+    def __init__(self, wsgi, name_callback=get_default_span_name):
         self.wsgi = wsgi
         self.tracer = trace.get_tracer(__name__, __version__)
-        self.name_callback = name_callback or get_default_span_name
+        self.name_callback = name_callback
 
     @staticmethod
     def _create_start_response(span, start_response):
