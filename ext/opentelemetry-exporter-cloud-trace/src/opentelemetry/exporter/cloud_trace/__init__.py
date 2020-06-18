@@ -306,7 +306,7 @@ def _extract_attributes(
         if value:
             attributes_dict[key] = value
         else:
-            invald_value_dropped_count += 1
+            invalid_value_dropped_count += 1
     if add_agent_attr:
         attributes_dict["g.co/agent"] = _format_attribute_value(
             "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
@@ -317,7 +317,7 @@ def _extract_attributes(
     return ProtoSpan.Attributes(
         attribute_map=attributes_dict,
         dropped_attributes_count=attributes_dict.dropped
-        + invald_value_dropped_count,
+        + invalid_value_dropped_count,
     )
 
 
