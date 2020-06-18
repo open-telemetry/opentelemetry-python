@@ -30,10 +30,13 @@ The **OTLP Span Exporter** allows to export `OpenTelemetry`_ traces to the
 
     from opentelemetry import trace
     from opentelemetry.ext.otlp.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-    trace.set_tracer_provider(TracerProvider())
+    trace.set_tracer_provider(TracerProvider(resource=Resource(labels={
+        "service.name": "service"
+    }))))
     tracer = trace.get_tracer(__name__)
 
     otlp_exporter = OTLPSpanExporter(endpoint="localhost:55678")
