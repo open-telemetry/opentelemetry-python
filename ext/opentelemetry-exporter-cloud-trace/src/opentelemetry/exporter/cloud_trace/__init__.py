@@ -298,7 +298,7 @@ def _extract_attributes(
 ) -> ProtoSpan.Attributes:
     """Convert span.attributes to dict."""
     attributes_dict = BoundedDict(num_attrs_limit)
-    invald_value_dropped_count = 0
+    invalid_value_dropped_count = 0
     for key, value in attrs.items():
         key = _truncate_str(key, 128)[0]
         value = _format_attribute_value(value)
