@@ -150,8 +150,11 @@ class TestWsgiApplication(WsgiTestBase):
     def test_override_span_name(self):
         """Test that span_names can be overwritten by our callback function."""
         span_name = "Dymaxion"
+
         def get_predefined_span_name(scope):
+            # pylint: disable=unused-argument
             return span_name
+
         app = otel_wsgi.OpenTelemetryMiddleware(
             simple_wsgi, name_callback=get_predefined_span_name
         )
