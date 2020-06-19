@@ -13,20 +13,19 @@
 # limitations under the License.
 
 
-
+# pylint:disable=import-outside-toplevel
+# pylint:disable=import-self
+from concurrent import futures
 # pylint:disable=no-name-in-module
 # pylint:disable=relative-beyond-top-level
 from contextlib import contextmanager
-
 from wrapt import wrap_function_wrapper as _wrap
-
-# pylint:disable=import-outside-toplevel
-# pylint:disable=import-self
 from opentelemetry import trace
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.grpc.grpcext import intercept_channel, intercept_server
 from opentelemetry.ext.grpc.version import __version__
 from opentelemetry.instrumentation.utils import unwrap
+
 
 
 class GrpcInstrumentorServer(BaseInstrumentor):
