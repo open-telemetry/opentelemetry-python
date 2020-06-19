@@ -7,7 +7,6 @@ from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
-
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -47,7 +46,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self.project_name = self.client.project_path(self.project_id)
         self._metric_descriptors = {}
         self._last_updated = {}
-        self.add_unique_identifier = add_unique_identifier
+        self.unique_identifier = None
+        if add_unique_identifier:
+            self.unique_identifier = uuid.uuid4().hex[:8]
 
     def _add_resource_info(self, series: TimeSeries) -> None:
         """Add Google resource specific information (e.g. instance id, region).
@@ -156,10 +157,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             for key, value in record.labels:
                 series.metric.labels[key] = str(value)
 
-            if self.add_unique_identifier:
-                series.metric.labels["opentelemetry_uuid"] = uuid.uuid4().hex[
-                    :8
-                ]
+            if self.unique_identifier:
+                series.metric.labels[
+                    "opentelemetry_uuid"
+                ] = self.unique_identifier
 
             point = series.points.add()
             if instrument.value_type == int:
