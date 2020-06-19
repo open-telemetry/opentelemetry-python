@@ -12,66 +12,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint:disable=import-outside-toplevel
-# pylint:disable=import-self
+
+
 # pylint:disable=no-name-in-module
 # pylint:disable=relative-beyond-top-level
 from contextlib import contextmanager
 
-import grpc
-from concurrent import futures
+from wrapt import wrap_function_wrapper as _wrap
+
+# pylint:disable=import-outside-toplevel
+# pylint:disable=import-self
 from opentelemetry import trace
-from opentelemetry.ext.grpc.version import __version__
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.grpc.grpcext import intercept_channel, intercept_server
+from opentelemetry.ext.grpc.version import __version__
+from opentelemetry.instrumentation.utils import unwrap
 
 
 class GrpcInstrumentorServer(BaseInstrumentor):
-    trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer_provider()
-    server = None
+    def __init__(self):
+        self.server = None
 
     def _instrument(self, **kwargs):
-        self.server = grpc.server(futures.ThreadPoolExecutor())
-        self.server = intercept_server(self.server, server_interceptor())
+        _wrap("grpc", "server", self.wrapper_fn)
 
     def _uninstrument(self, **kwargs):
-        if hasattr(self.server, "stop"):
-            return self.server.stop(kwargs.get("grace"))
+        unwrap("grpc", "server")
+
+    def wrapper_fn(self, original_func, instance, args, kwargs):
+        self.server = original_func(*args, **kwargs)
+        self.server = intercept_server(self.server, server_interceptor())
 
 
 class GrpcInstrumentorClient(BaseInstrumentor):
-    trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer_provider()
-    channel = None
+    def __init__(self):
+        self.channel = None
 
     def _instrument(self, **kwargs):
-        hostport = kwargs.get("hostport")
 
         if kwargs.get("channel_type") == "secure":
-            self.channel = secure_channel_wrapper(
-                hostport, kwargs.get("credentials")
-            )
+            _wrap("grpc", "secure_channel", self.wrapper_fn)
 
         else:
-            self.channel = insecure_channel_wrapper(hostport)
+            _wrap("grpc", "insecure_channel", self.wrapper_fn)
 
     def _uninstrument(self, **kwargs):
-        if hasattr(self.channel, "close"):
-            return self.channel.close()
+        if kwargs.get("channel_type") == "secure":
+            unwrap("grpc", "secure_channel")
 
+        else:
+            unwrap("grpc", "insecure_channel")
 
-@contextmanager
-def insecure_channel_wrapper(hostport):
-    with grpc.insecure_channel(hostport) as channel:
-        yield intercept_channel(channel, client_interceptor())
-
-
-@contextmanager
-def secure_channel_wrapper(hostport, credentials):
-    with grpc.secure_channel(hostport, credentials) as channel:
-        yield intercept_channel(channel, client_interceptor())
+    @contextmanager
+    def wrapper_fn(self, original_func, instance, args, kwargs):
+        with original_func(*args, **kwargs) as channel:
+            self.channel = intercept_channel(channel, client_interceptor())
+            yield self.channel
 
 
 def client_interceptor(tracer_provider=None):
