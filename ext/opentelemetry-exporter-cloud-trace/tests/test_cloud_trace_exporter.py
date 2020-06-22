@@ -15,6 +15,7 @@
 import unittest
 from unittest import mock
 
+import pkg_resources
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
@@ -33,7 +34,11 @@ from opentelemetry.exporter.cloud_trace import (
     _format_attribute_value,
     _truncate_str,
 )
-from opentelemetry.sdk.trace import Event, Span
+from opentelemetry.exporter.cloud_trace.version import (
+    __version__ as cloud_trace_version,
+)
+from opentelemetry.sdk.trace import Event
+from opentelemetry.sdk.trace.export import Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status as SpanStatus
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -108,7 +113,18 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "display_name": TruncatableString(
                 value="span_name", truncated_byte_count=0
             ),
-            "attributes": ProtoSpan.Attributes(attribute_map={}),
+            "attributes": ProtoSpan.Attributes(
+                attribute_map={
+                    "g.co/agent": _format_attribute_value(
+                        "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
+                            pkg_resources.get_distribution(
+                                "opentelemetry-sdk"
+                            ).version,
+                            cloud_trace_version,
+                        )
+                    )
+                }
+            ),
             "links": None,
             "status": None,
             "time_events": None,
