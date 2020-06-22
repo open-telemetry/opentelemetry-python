@@ -93,10 +93,10 @@ def collect_request_attributes(environ):
 
     result = {
         "component": "http",
-        "http.method": environ["REQUEST_METHOD"],
-        "http.server_name": environ["SERVER_NAME"],
-        "http.scheme": environ["wsgi.url_scheme"],
-        "host.port": int(environ["SERVER_PORT"]),
+        "http.method": environ.get("REQUEST_METHOD"),
+        "http.server_name": environ.get("SERVER_NAME"),
+        "http.scheme": environ.get("wsgi.url_scheme"),
+        "host.port": int(environ.get("SERVER_PORT")),
     }
 
     setifnotnone(result, "http.host", environ.get("HTTP_HOST"))
@@ -150,7 +150,12 @@ def add_response_attributes(
 
 def get_default_span_name(environ):
     """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
-    return "HTTP " + environ.get("REQUEST_METHOD")
+    request_method = environ.get("REQUEST_METHOD")
+    return "HTTP" + (
+        " " + request_method
+        if request_method is not None and request_method != ""
+        else ""
+    )
 
 
 class OpenTelemetryMiddleware:
@@ -191,7 +196,6 @@ class OpenTelemetryMiddleware:
         token = context.attach(
             propagators.extract(get_header_from_environ, environ)
         )
-        span_name = get_default_span_name(environ)
         span_name = self.name_callback(environ)
 
         span = self.tracer.start_span(
