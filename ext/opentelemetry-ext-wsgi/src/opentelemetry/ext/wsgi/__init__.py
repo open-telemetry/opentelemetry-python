@@ -96,9 +96,14 @@ def collect_request_attributes(environ):
         "http.method": environ.get("REQUEST_METHOD"),
         "http.server_name": environ.get("SERVER_NAME"),
         "http.scheme": environ.get("wsgi.url_scheme"),
-        "host.port": int(environ.get("SERVER_PORT")),
     }
 
+    host_port = environ.get("SERVER_PORT")
+    if host_port is not None:
+        if isinstance(host_port, str):
+            host_port = int(host_port)
+        result.update({"host.port": host_port})
+       
     setifnotnone(result, "http.host", environ.get("HTTP_HOST"))
     target = environ.get("RAW_URI")
     if target is None:  # Note: `"" or None is None`
@@ -151,7 +156,6 @@ def add_response_attributes(
 def get_default_span_name(environ):
     """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
     return "HTTP {}".format(environ.get("REQUEST_METHOD", "")).strip()
-    )
 
 
 class OpenTelemetryMiddleware:
