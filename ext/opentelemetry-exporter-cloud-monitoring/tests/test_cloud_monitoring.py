@@ -311,7 +311,11 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                 "type": "custom.googleapis.com/OpenTelemetry/name",
                 "display_name": "name",
                 "description": "description",
-                "labels": [],
+                "labels": [
+                    LabelDescriptor(
+                        key="opentelemetry_uuid", value_type="STRING"
+                    ),
+                ],
                 "metric_kind": "GAUGE",
                 "value_type": "DOUBLE",
             }
@@ -322,6 +326,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         metric_record = MetricRecord(MockMetric(), (), sum_agg_one,)
         exporter1.export([metric_record])
         exporter2.export([metric_record])
+
+        (
+            first_call,
+            second_call,
+        ) = client.create_metric_descriptor.call_args_list
+        self.assertEqual(first_call[0][1].labels[0].key, "opentelemetry_uuid")
+        self.assertEqual(second_call[0][1].labels[0].key, "opentelemetry_uuid")
 
         first_call, second_call = client.create_time_series.call_args_list
         self.assertNotEqual(

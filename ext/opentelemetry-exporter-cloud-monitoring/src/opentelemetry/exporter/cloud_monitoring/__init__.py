@@ -7,6 +7,7 @@ from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -113,6 +114,12 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 logger.warning(
                     "Label value %s is not a string, bool or integer", value
                 )
+
+        if self.unique_identifier:
+            descriptor["labels"].append(
+                LabelDescriptor(key="opentelemetry_uuid", value_type="STRING")
+            )
+
         if isinstance(record.aggregator, SumAggregator):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
         else:
