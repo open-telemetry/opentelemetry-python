@@ -150,11 +150,7 @@ def add_response_attributes(
 
 def get_default_span_name(environ):
     """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
-    request_method = environ.get("REQUEST_METHOD")
-    return "HTTP" + (
-        " " + request_method
-        if request_method is not None and request_method != ""
-        else ""
+    return "HTTP {}".format(environ.get("REQUEST_METHOD", "")).strip()
     )
 
 
