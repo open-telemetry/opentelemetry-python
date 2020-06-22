@@ -313,7 +313,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                 "description": "description",
                 "labels": [
                     LabelDescriptor(
-                        key="opentelemetry_uuid", value_type="STRING"
+                        key="opentelemetry_id", value_type="STRING"
                     ),
                 ],
                 "metric_kind": "GAUGE",
@@ -331,11 +331,11 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             first_call,
             second_call,
         ) = client.create_metric_descriptor.call_args_list
-        self.assertEqual(first_call[0][1].labels[0].key, "opentelemetry_uuid")
-        self.assertEqual(second_call[0][1].labels[0].key, "opentelemetry_uuid")
+        self.assertEqual(first_call[0][1].labels[0].key, "opentelemetry_id")
+        self.assertEqual(second_call[0][1].labels[0].key, "opentelemetry_id")
 
         first_call, second_call = client.create_time_series.call_args_list
         self.assertNotEqual(
-            first_call[0][1][0].metric.labels["opentelemetry_uuid"],
-            second_call[0][1][0].metric.labels["opentelemetry_uuid"],
+            first_call[0][1][0].metric.labels["opentelemetry_id"],
+            second_call[0][1][0].metric.labels["opentelemetry_id"],
         )

@@ -1,5 +1,5 @@
 import logging
-import uuid
+import random
 from typing import Optional, Sequence
 
 import google.auth
@@ -23,22 +23,24 @@ WRITE_INTERVAL = 10
 # pylint is unable to resolve members of protobuf objects
 # pylint: disable=no-member
 class CloudMonitoringMetricsExporter(MetricsExporter):
-    """ Implementation of Metrics Exporter to Google Cloud Monitoring"""
+    """ Implementation of Metrics Exporter to Google Cloud Monitoring
+
+        You can manually pass in project_id and client, or else the
+        Exporter will take that information from Application Default
+        Credentials.
+
+    Args:
+        project_id: project id of your Google Cloud project.
+        client: Client to upload metrics to Google Cloud Monitoring.
+        add_unique_identifier: Add an identifier to each exporter metric.
+        This must be used when there exist two (or more) exporters that may
+        export to the same metric name within WRITE_INTERVAL seconds of each
+        other.
+    """
 
     def __init__(
         self, project_id=None, client=None, add_unique_identifier=False
     ):
-        """ You can manually pass in project_id and client, or else the
-        Exporter will take that information from Application Default
-        Credentials.
-
-        :param project_id: project id of your Google Cloud project.
-        :param client: Client to upload metrics to Google Cloud Monitoring.
-        :param add_unique_identifier: Add an identifier to each exporter metric.
-        This must be used when there exist two (or more) exporters that may
-        export to the same metric name within WRITE_INTERVAL seconds of each
-        other.
-        """
         self.client = client or MetricServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
@@ -49,7 +51,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self._last_updated = {}
         self.unique_identifier = None
         if add_unique_identifier:
-            self.unique_identifier = uuid.uuid4().hex[:8]
+            self.unique_identifier = "{:08x}".format(
+                random.randint(0, 16 ** 8)
+            )
 
     def _add_resource_info(self, series: TimeSeries) -> None:
         """Add Google resource specific information (e.g. instance id, region).
@@ -117,7 +121,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
 
         if self.unique_identifier:
             descriptor["labels"].append(
-                LabelDescriptor(key="opentelemetry_uuid", value_type="STRING")
+                LabelDescriptor(key="opentelemetry_id", value_type="STRING")
             )
 
         if isinstance(record.aggregator, SumAggregator):
@@ -166,7 +170,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
 
             if self.unique_identifier:
                 series.metric.labels[
-                    "opentelemetry_uuid"
+                    "opentelemetry_id"
                 ] = self.unique_identifier
 
             point = series.points.add()
