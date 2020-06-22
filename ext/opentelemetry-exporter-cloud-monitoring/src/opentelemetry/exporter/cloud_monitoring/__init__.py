@@ -18,6 +18,7 @@ from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
+UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
 
 
 # pylint is unable to resolve members of protobuf objects
@@ -121,7 +122,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
 
         if self.unique_identifier:
             descriptor["labels"].append(
-                LabelDescriptor(key="opentelemetry_id", value_type="STRING")
+                LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
             )
 
         if isinstance(record.aggregator, SumAggregator):
@@ -170,7 +171,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
 
             if self.unique_identifier:
                 series.metric.labels[
-                    "opentelemetry_id"
+                    UNIQUE_IDENTIFIER_KEY
                 ] = self.unique_identifier
 
             point = series.points.add()

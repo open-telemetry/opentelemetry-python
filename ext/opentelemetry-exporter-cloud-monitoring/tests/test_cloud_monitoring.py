@@ -21,6 +21,7 @@ from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
+    UNIQUE_IDENTIFIER_KEY,
     WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
@@ -313,7 +314,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                 "description": "description",
                 "labels": [
                     LabelDescriptor(
-                        key="opentelemetry_id", value_type="STRING"
+                        key=UNIQUE_IDENTIFIER_KEY, value_type="STRING"
                     ),
                 ],
                 "metric_kind": "GAUGE",
@@ -331,11 +332,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             first_call,
             second_call,
         ) = client.create_metric_descriptor.call_args_list
-        self.assertEqual(first_call[0][1].labels[0].key, "opentelemetry_id")
-        self.assertEqual(second_call[0][1].labels[0].key, "opentelemetry_id")
+        self.assertEqual(first_call[0][1].labels[0].key, UNIQUE_IDENTIFIER_KEY)
+        self.assertEqual(
+            second_call[0][1].labels[0].key, UNIQUE_IDENTIFIER_KEY
+        )
 
         first_call, second_call = client.create_time_series.call_args_list
         self.assertNotEqual(
-            first_call[0][1][0].metric.labels["opentelemetry_id"],
-            second_call[0][1][0].metric.labels["opentelemetry_id"],
+            first_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
+            second_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
         )
