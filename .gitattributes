@@ -1,0 +1,2 @@
+# tells github that proto code is generated
+opentelemetry-proto/src/**/*_pb2*.py* linguist-generated=true
