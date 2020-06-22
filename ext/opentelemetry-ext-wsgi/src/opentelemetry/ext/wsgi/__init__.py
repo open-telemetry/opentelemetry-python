@@ -103,7 +103,7 @@ def collect_request_attributes(environ):
         if isinstance(host_port, str):
             host_port = int(host_port)
         result.update({"host.port": host_port})
-       
+
     setifnotnone(result, "http.host", environ.get("HTTP_HOST"))
     target = environ.get("RAW_URI")
     if target is None:  # Note: `"" or None is None`
