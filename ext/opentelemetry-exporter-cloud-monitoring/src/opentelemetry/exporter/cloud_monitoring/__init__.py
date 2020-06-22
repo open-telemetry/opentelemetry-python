@@ -33,10 +33,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
     Args:
         project_id: project id of your Google Cloud project.
         client: Client to upload metrics to Google Cloud Monitoring.
-        add_unique_identifier: Add an identifier to each exporter metric.
-        This must be used when there exist two (or more) exporters that may
-        export to the same metric name within WRITE_INTERVAL seconds of each
-        other.
+        add_unique_identifier: Add an identifier to each exporter metric. This
+            must be used when there exist two (or more) exporters that may
+            export to the same metric name within WRITE_INTERVAL seconds of
+            each other.
     """
 
     def __init__(
