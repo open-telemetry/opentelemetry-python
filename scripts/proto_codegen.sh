@@ -3,9 +3,16 @@
 # Regenerate python code from OTLP protos in
 # https://github.com/open-telemetry/opentelemetry-proto
 #
+# To use, update PROTO_REPO_BRANCH_OR_COMMIT variable below to a commit hash or
+# tag in opentelemtry-proto repo that you want to build off of. Then, just run
+# this script to update the proto files. Commit the changes as well as any
+# fixes needed in the OTLP exporter.
+#
 # Optional envars:
 #   PROTO_REPO_DIR - the path to an existing checkout of the opentelemetry-proto repo
-#   PROTO_REPO_BRANCH - the branch or commit to build from
+
+# Pinned commit/branch/tag for the current version used in opentelemetry-proto python package.
+PROTO_REPO_BRANCH_OR_COMMIT="b54688569186e0b862bf7462a983ccf2c50c0547"
 
 set -e
 
@@ -15,7 +22,6 @@ if [ -z "$VIRTUAL_ENV" ]; then
 fi
 
 PROTO_REPO_DIR=${PROTO_REPO_DIR:-"/tmp/opentelemetry-proto"}
-PROTO_REPO_BRANCH=${PROTO_REPO_BRANCH:-master}
 # root of opentelemetry-python repo
 repo_root="$(git rev-parse --show-toplevel)"
 
@@ -30,8 +36,9 @@ fi
 (
     cd $PROTO_REPO_DIR
     git fetch --all
-    git checkout $PROTO_REPO_BRANCH 
-    git pull --ff-only
+    git checkout $PROTO_REPO_BRANCH_OR_COMMIT
+    # pull if PROTO_REPO_BRANCH_OR_COMMIT is not a detached head
+    git symbolic-ref -q HEAD && git pull --ff-only || true
 )
 
 cd $repo_root/opentelemetry-proto/src
