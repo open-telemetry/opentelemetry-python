@@ -44,6 +44,7 @@ import logging
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
+import pkg_resources
 from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
@@ -51,6 +52,9 @@ from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
 
 import opentelemetry.trace as trace_api
+from opentelemetry.exporter.cloud_trace.version import (
+    __version__ as cloud_trace_version,
+)
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import BoundedDict
@@ -157,7 +161,7 @@ class CloudTraceSpanExporter(SpanExporter):
                     "end_time": end_time,
                     "parent_span_id": parent_id,
                     "attributes": _extract_attributes(
-                        span.attributes, MAX_SPAN_ATTRS
+                        span.attributes, MAX_SPAN_ATTRS, add_agent_attr=True
                     ),
                     "links": _extract_links(span.links),
                     "status": _extract_status(span.status),
@@ -288,20 +292,32 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 
 
 def _extract_attributes(
-    attrs: types.Attributes, num_attrs_limit: int
+    attrs: types.Attributes,
+    num_attrs_limit: int,
+    add_agent_attr: bool = False,
 ) -> ProtoSpan.Attributes:
     """Convert span.attributes to dict."""
     attributes_dict = BoundedDict(num_attrs_limit)
-
+    invalid_value_dropped_count = 0
     for key, value in attrs.items():
         key = _truncate_str(key, 128)[0]
         value = _format_attribute_value(value)
 
-        if value is not None:
+        if value:
             attributes_dict[key] = value
+        else:
+            invalid_value_dropped_count += 1
+    if add_agent_attr:
+        attributes_dict["g.co/agent"] = _format_attribute_value(
+            "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
+                pkg_resources.get_distribution("opentelemetry-sdk").version,
+                cloud_trace_version,
+            )
+        )
     return ProtoSpan.Attributes(
         attribute_map=attributes_dict,
-        dropped_attributes_count=len(attrs) - len(attributes_dict),
+        dropped_attributes_count=attributes_dict.dropped
+        + invalid_value_dropped_count,
     )
 
 
