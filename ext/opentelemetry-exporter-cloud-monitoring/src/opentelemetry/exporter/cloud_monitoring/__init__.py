@@ -1,4 +1,5 @@
 import logging
+import random
 from typing import Optional, Sequence
 
 import google.auth
@@ -17,14 +18,30 @@ from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
+UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
 
 
 # pylint is unable to resolve members of protobuf objects
 # pylint: disable=no-member
 class CloudMonitoringMetricsExporter(MetricsExporter):
-    """ Implementation of Metrics Exporter to Google Cloud Monitoring"""
+    """ Implementation of Metrics Exporter to Google Cloud Monitoring
 
-    def __init__(self, project_id=None, client=None):
+        You can manually pass in project_id and client, or else the
+        Exporter will take that information from Application Default
+        Credentials.
+
+    Args:
+        project_id: project id of your Google Cloud project.
+        client: Client to upload metrics to Google Cloud Monitoring.
+        add_unique_identifier: Add an identifier to each exporter metric. This
+            must be used when there exist two (or more) exporters that may
+            export to the same metric name within WRITE_INTERVAL seconds of
+            each other.
+    """
+
+    def __init__(
+        self, project_id=None, client=None, add_unique_identifier=False
+    ):
         self.client = client or MetricServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
@@ -33,6 +50,11 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self.project_name = self.client.project_path(self.project_id)
         self._metric_descriptors = {}
         self._last_updated = {}
+        self.unique_identifier = None
+        if add_unique_identifier:
+            self.unique_identifier = "{:08x}".format(
+                random.randint(0, 16 ** 8)
+            )
 
     def _add_resource_info(self, series: TimeSeries) -> None:
         """Add Google resource specific information (e.g. instance id, region).
@@ -97,6 +119,12 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 logger.warning(
                     "Label value %s is not a string, bool or integer", value
                 )
+
+        if self.unique_identifier:
+            descriptor["labels"].append(
+                LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
+            )
+
         if isinstance(record.aggregator, SumAggregator):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
         else:
@@ -140,6 +168,11 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             series.metric.type = metric_descriptor.type
             for key, value in record.labels:
                 series.metric.labels[key] = str(value)
+
+            if self.unique_identifier:
+                series.metric.labels[
+                    UNIQUE_IDENTIFIER_KEY
+                ] = self.unique_identifier
 
             point = series.points.add()
             if instrument.value_type == int:
