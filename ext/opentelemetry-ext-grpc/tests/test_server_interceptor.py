@@ -70,8 +70,8 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         server.add_generic_rpc_handlers((UnaryUnaryRpcHandler(handler),))
 
         port = server.add_insecure_port("[::]:0")
-        #grpc_client_instrumentor = GrpcInstrumentorClient()
-        #grpc_client_instrumentor.instrument(hostport=port)
+        # grpc_client_instrumentor = GrpcInstrumentorClient()
+        # grpc_client_instrumentor.instrument(hostport=port)
         channel = grpc.insecure_channel("localhost:{:d}".format(port))
 
         try:
@@ -88,7 +88,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         self.assertIs(span.kind, trace.SpanKind.SERVER)
         self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
         grpc_server_instrumentor.uninstrument()
-
 
     def test_create_span(self):
         """Check that the interceptor wraps calls with spans server-side."""
