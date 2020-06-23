@@ -74,7 +74,9 @@ def error_wsgi(environ, start_response):
 
 
 class TestWsgiApplication(WsgiTestBase):
-    def validate_response(self, response, error=None):
+    def validate_response(
+        self, response, error=None, span_name="HTTP GET", http_method="GET"
+    ):
         while True:
             try:
                 value = next(response)
@@ -95,23 +97,22 @@ class TestWsgiApplication(WsgiTestBase):
 
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "/")
+        self.assertEqual(span_list[0].name, span_name)
         self.assertEqual(span_list[0].kind, trace_api.SpanKind.SERVER)
-        self.assertEqual(
-            span_list[0].attributes,
-            {
-                "component": "http",
-                "http.method": "GET",
-                "http.server_name": "127.0.0.1",
-                "http.scheme": "http",
-                "host.port": 80,
-                "http.host": "127.0.0.1",
-                "http.flavor": "1.0",
-                "http.url": "http://127.0.0.1/",
-                "http.status_text": "OK",
-                "http.status_code": 200,
-            },
-        )
+        expected_attributes = {
+            "component": "http",
+            "http.server_name": "127.0.0.1",
+            "http.scheme": "http",
+            "host.port": 80,
+            "http.host": "127.0.0.1",
+            "http.flavor": "1.0",
+            "http.url": "http://127.0.0.1/",
+            "http.status_text": "OK",
+            "http.status_code": 200,
+        }
+        if http_method is not None:
+            expected_attributes["http.method"] = http_method
+        self.assertEqual(span_list[0].attributes, expected_attributes)
 
     def test_basic_wsgi_call(self):
         app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
@@ -146,6 +147,27 @@ class TestWsgiApplication(WsgiTestBase):
         app = otel_wsgi.OpenTelemetryMiddleware(error_wsgi)
         response = app(self.environ, self.start_response)
         self.validate_response(response, error=ValueError)
+
+    def test_override_span_name(self):
+        """Test that span_names can be overwritten by our callback function."""
+        span_name = "Dymaxion"
+
+        def get_predefined_span_name(scope):
+            # pylint: disable=unused-argument
+            return span_name
+
+        app = otel_wsgi.OpenTelemetryMiddleware(
+            simple_wsgi, name_callback=get_predefined_span_name
+        )
+        response = app(self.environ, self.start_response)
+        self.validate_response(response, span_name=span_name)
+
+    def test_default_span_name_missing_request_method(self):
+        """Test that default span_names with missing request method."""
+        self.environ.pop("REQUEST_METHOD")
+        app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
+        response = app(self.environ, self.start_response)
+        self.validate_response(response, span_name="HTTP", http_method=None)
 
 
 class TestWsgiAttributes(unittest.TestCase):
