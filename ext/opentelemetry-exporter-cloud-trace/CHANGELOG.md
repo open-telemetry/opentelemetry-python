@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-## 0.10b0
-
-Released 2020-06-23
-
 - Add g.co/agent label for Google internal metrics tracking
   ([#833](https://github.com/open-telemetry/opentelemetry-python/pull/833))
 - Adding trouble-shooting tips
