@@ -19,7 +19,7 @@ def _await(coro):
     return loop.run_until_complete(coro)
 
 
-class TestFunctionalPsycopg(TestBase):
+class TestFunctionalAsyncPG(TestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
