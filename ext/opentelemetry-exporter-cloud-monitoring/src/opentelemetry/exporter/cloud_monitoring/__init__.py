@@ -59,19 +59,19 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             )
 
     @staticmethod
-    def _get_series_with_resource_info(resource: Resource) -> TimeSeries:
+    def _get_monitored_resource(resource: Resource) -> TimeSeries:
         """Add Google resource specific information (e.g. instance id, region).
 
         See https://cloud.google.com/monitoring/custom-metrics/creating-metrics#custom-metric-resources for acceptable types
         Args:
             series: ProtoBuf TimeSeries
         """
-        monitored = None
+        resource_info = None
         if "gce_instance" in resource.labels:
-            monitored = MonitoredResource(
+            resource_info = MonitoredResource(
                 type="gce_instance", labels=resource.labels["gce_instance"]
             )
-        return TimeSeries(resource=monitored)
+        return resource_info
 
     def _batch_write(self, series: TimeSeries) -> None:
         """ Cloud Monitoring allows writing up to 200 time series at once
@@ -172,8 +172,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             if not metric_descriptor:
                 continue
 
-            series = self._get_series_with_resource_info(
-                record.instrument.meter.resource
+            series = TimeSeries(
+                resource=self._get_monitored_resource(
+                    record.instrument.meter.resource
+                )
             )
             series.metric.type = metric_descriptor.type
             for key, value in record.labels:
