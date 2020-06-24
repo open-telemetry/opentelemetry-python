@@ -24,7 +24,8 @@ Usage
     import requests
     import opentelemetry.ext.requests
 
-    # You can optionally pass a custom TracerProvider to RequestInstrumentor.instrument()
+    # You can optionally pass a custom TracerProvider to
+    RequestInstrumentor.instrument()
     opentelemetry.ext.requests.RequestsInstrumentor().instrument()
     response = requests.get(url="https://www.example.org/")
 
@@ -49,7 +50,7 @@ from requests import Timeout, URLRequired
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from requests.sessions import Session
 
-from opentelemetry import context, propagators, trace
+from opentelemetry import context, propagators
 from opentelemetry.ext.requests.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
@@ -72,8 +73,6 @@ def _instrument(tracer_provider=None, span_callback=None):
 
     wrapped = Session.request
 
-    tracer = trace.get_tracer(__name__, __version__, tracer_provider)
-
     @functools.wraps(wrapped)
     def instrumented_request(self, method, url, *args, **kwargs):
         if context.get_value("suppress_instrumentation"):
@@ -89,7 +88,9 @@ def _instrument(tracer_provider=None, span_callback=None):
 
         exception = None
 
-        with tracer.start_as_current_span(
+        with get_tracer(
+            __name__, __version__, tracer_provider
+        ).start_as_current_span(
             span_name, kind=SpanKind.CLIENT
         ) as span:
             span.set_attribute("component", "http")
