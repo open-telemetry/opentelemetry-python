@@ -15,6 +15,8 @@
 import typing
 from json import dumps
 
+from opentelemetry.context import attach, detach, set_value
+
 LabelValue = typing.Union[str, bool, int, float]
 Labels = typing.Dict[str, LabelValue]
 
@@ -55,3 +57,36 @@ class Resource:
 
 
 _EMPTY_RESOURCE = Resource({})
+
+
+class ResourceDetector:
+    def __init__(self, crash_on_error=False):
+        self.crash_on_error = crash_on_error
+
+    # pylint: disable=no-self-use
+    def detect(self) -> "Resource":
+        return _EMPTY_RESOURCE
+
+
+class OTELResourceDetector:
+    def detect(self) -> "Resource":
+        pass
+
+
+def get_aggregated_resources(
+    detectors: typing.List["ResourceDetector"], initial_resource=None
+) -> "Resource":
+    final_resource = initial_resource or _EMPTY_RESOURCE
+    token = attach(set_value("suppress_instrumentation", True))
+    for detector in detectors:
+        try:
+            detected_resources = detector.detect()
+        # pylint: disable=broad-except
+        except Exception as ex:
+            if detector.crash_on_error:
+                raise ex
+            detected_resources = _EMPTY_RESOURCE
+        finally:
+            final_resource = final_resource.merge(detected_resources)
+    detach(token)
+    return final_resource

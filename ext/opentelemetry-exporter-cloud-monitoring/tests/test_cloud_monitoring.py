@@ -27,10 +27,16 @@ from opentelemetry.exporter.cloud_monitoring import (
 )
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.resources import Resource
 
 
 class UnsupportedAggregator:
     pass
+
+
+class MockMeter:
+    def __init__(self):
+        self.resource = Resource.create_empty()
 
 
 class MockMetric:
@@ -38,6 +44,7 @@ class MockMetric:
         self.name = name
         self.description = description
         self.value_type = value_type
+        self.meter = MockMeter()
 
 
 # pylint: disable=protected-access
