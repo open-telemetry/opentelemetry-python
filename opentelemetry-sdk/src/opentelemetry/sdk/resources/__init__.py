@@ -72,12 +72,12 @@ class ResourceDetector:
 class OTELResourceDetector:
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-        env_resources_items = os.environ["OTEL_RESOURCE"]
+        env_resources_items = os.environ.get("OTEL_RESOURCE")
         env_resource_map = {}
         if env_resources_items:
             for item in env_resources_items.split(","):
                 key, value = item.split("=")
-                env_resource_map[key] = value
+                env_resource_map[key.strip()] = value.strip()
         return Resource(env_resource_map)
 
 
