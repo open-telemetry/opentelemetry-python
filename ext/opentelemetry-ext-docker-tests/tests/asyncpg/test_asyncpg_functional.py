@@ -166,6 +166,28 @@ class TestFunctionalAsyncPG(TestBase):
             StatusCanonicalCode.OK, spans[2].status.canonical_code
         )
 
+    @pytest.mark.asyncpg
+    def test_instrumented_method_doesnt_capture_parameters(self, *_, **__):
+        _await(self._connection.execute("SELECT $1;", "1"))
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(
+            StatusCanonicalCode.OK, spans[0].status.canonical_code
+        )
+        self.assertEqual(
+            spans[0].attributes,
+            {
+                "db.type": "sql",
+                "db.user": POSTGRES_USER,
+                # This shouldn't be set because we don't capture parameters by
+                # default
+                #
+                # "db.statement.parameters": "('1',)",
+                "db.instance": POSTGRES_DB_NAME,
+                "db.statement": "SELECT $1;",
+            },
+        )
+
 
 class TestFunctionalAsyncPG_CaptureParameters(TestBase):
     @classmethod
