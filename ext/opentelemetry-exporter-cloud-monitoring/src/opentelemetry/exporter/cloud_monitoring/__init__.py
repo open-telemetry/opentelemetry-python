@@ -67,9 +67,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             series: ProtoBuf TimeSeries
         """
         monitored = None
-        if "gcp_instance" in resource.labels:
+        if "gce_instance" in resource.labels:
             monitored = MonitoredResource(
-                type="gcp_instance", labels=resource.labels["gcp_instance"]
+                type="gce_instance", labels=resource.labels["gce_instance"]
             )
         return TimeSeries(resource=monitored)
 

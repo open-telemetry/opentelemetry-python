@@ -65,5 +65,5 @@ class GoogleCloudResourceDetector(ResourceDetector):
             self._scrape_attributes()
             self.scraped = True
         if _GCE_ATTRIBUTES:
-            return Resource({"gcp_instance": _GCP_METADATA_MAP})
+            return Resource({"gce_instance": _GCP_METADATA_MAP})
         return Resource.create_empty()
