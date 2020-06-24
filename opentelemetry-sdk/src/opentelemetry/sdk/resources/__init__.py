@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import typing
 from json import dumps
 
@@ -69,14 +70,25 @@ class ResourceDetector:
 
 
 class OTELResourceDetector:
+    # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-        pass
+        env_resources_items = os.environ["OTEL_RESOURCE"]
+        env_resource_map = {}
+        if env_resources_items:
+            for item in env_resources_items.split(","):
+                key, value = item.split("=")
+                env_resource_map[key] = value
+        return Resource(env_resource_map)
 
 
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"], initial_resource=None
+    detectors: typing.List["ResourceDetector"],
+    initial_resource=None,
+    detect_from_env=True,
 ) -> "Resource":
     final_resource = initial_resource or _EMPTY_RESOURCE
+    if detect_from_env:
+        final_resource = final_resource.merge(OTELResourceDetector().detect())
     token = attach(set_value("suppress_instrumentation", True))
     for detector in detectors:
         try:
