@@ -15,10 +15,12 @@
 
 # pylint:disable=import-outside-toplevel
 # pylint:disable=import-self
-from concurrent import futures
+from concurrent import futures  # isort:skip
 
 # pylint:disable=no-name-in-module
 # pylint:disable=relative-beyond-top-level
+# pylint:disable=import-error
+# pylint:disable=no-self-use
 from contextlib import contextmanager
 
 from wrapt import wrap_function_wrapper as _wrap
@@ -40,7 +42,7 @@ class GrpcInstrumentorServer(BaseInstrumentor):
     def _uninstrument(self, **kwargs):
         unwrap("grpc", "server")
 
-    def wrapper_fn(self, original_func, instance, args, kwargs):
+    def wrapper_fn(self, original_func, args, kwargs):
         self.server = original_func(*args, **kwargs)
         self.server = intercept_server(self.server, server_interceptor())
 
@@ -65,7 +67,7 @@ class GrpcInstrumentorClient(BaseInstrumentor):
             unwrap("grpc", "insecure_channel")
 
     @contextmanager
-    def wrapper_fn(self, original_func, instance, args, kwargs):
+    def wrapper_fn(self, original_func, args, kwargs):
         with original_func(*args, **kwargs) as channel:
             self.channel = intercept_channel(channel, client_interceptor())
             yield self.channel
