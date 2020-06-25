@@ -90,9 +90,7 @@ def _instrument(tracer_provider=None, span_callback=None):
 
         with get_tracer(
             __name__, __version__, tracer_provider
-        ).start_as_current_span(
-            span_name, kind=SpanKind.CLIENT
-        ) as span:
+        ).start_as_current_span(span_name, kind=SpanKind.CLIENT) as span:
             span.set_attribute("component", "http")
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)

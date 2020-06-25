@@ -67,8 +67,6 @@ class MySQLInstrumentor(BaseInstrumentor):
         """
         tracer_provider = kwargs.get("tracer_provider")
 
-        tracer = get_tracer(__name__, __version__, tracer_provider)
-
         dbapi.wrap_connect(
             __name__,
             mysql.connector,
