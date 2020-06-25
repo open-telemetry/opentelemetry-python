@@ -42,14 +42,12 @@ API
 ---
 """
 
-import typing
-
 import mysql.connector
 
 from opentelemetry.ext import dbapi
 from opentelemetry.ext.mysql.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.trace import TracerProvider, get_tracer
+from opentelemetry.trace import get_tracer
 
 
 class MySQLInstrumentor(BaseInstrumentor):
@@ -72,12 +70,14 @@ class MySQLInstrumentor(BaseInstrumentor):
         tracer = get_tracer(__name__, __version__, tracer_provider)
 
         dbapi.wrap_connect(
-            tracer,
+            __name__,
             mysql.connector,
             "connect",
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
             self._CONNECTION_ATTRIBUTES,
+            version=__version__,
+            tracer_provider=tracer_provider,
         )
 
     def _uninstrument(self, **kwargs):
