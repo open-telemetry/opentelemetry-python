@@ -316,6 +316,6 @@ Install the OpenTelemetry Collector exporter:
 
 And execute the following script:
 
-.. literalinclude:: getting_started/otcollector_example.py
+.. literalinclude:: getting_started/otlpcollector_example.py
     :language: python
     :lines: 15-
