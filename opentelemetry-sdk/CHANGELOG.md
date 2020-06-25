@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.10b0
+
+Released 2020-06-23
+
 - Rename CounterAggregator -> SumAggregator
   ([#816](https://github.com/open-telemetry/opentelemetry-python/pull/816))
 
