@@ -12,17 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# pylint:disable=import-outside-toplevel
-# pylint:disable=import-self
-from concurrent import futures  # isort:skip
-
 # pylint:disable=no-name-in-module
 # pylint:disable=relative-beyond-top-level
 # pylint:disable=import-error
 # pylint:disable=no-self-use
 from contextlib import contextmanager
 
+import grpc
 from wrapt import wrap_function_wrapper as _wrap
 
 from opentelemetry import trace
@@ -30,6 +26,10 @@ from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.grpc.grpcext import intercept_channel, intercept_server
 from opentelemetry.ext.grpc.version import __version__
 from opentelemetry.instrumentation.utils import unwrap
+
+# pylint:disable=import-outside-toplevel
+# pylint:disable=import-self
+from concurrent import futures  # isort:skip
 
 
 class GrpcInstrumentorServer(BaseInstrumentor):
@@ -40,7 +40,7 @@ class GrpcInstrumentorServer(BaseInstrumentor):
         _wrap("grpc", "server", self.wrapper_fn)
 
     def _uninstrument(self, **kwargs):
-        unwrap("grpc", "server")
+        unwrap(grpc, "server")
 
     def wrapper_fn(self, original_func, args, kwargs):
         self.server = original_func(*args, **kwargs)
@@ -61,10 +61,10 @@ class GrpcInstrumentorClient(BaseInstrumentor):
 
     def _uninstrument(self, **kwargs):
         if kwargs.get("channel_type") == "secure":
-            unwrap("grpc", "secure_channel")
+            unwrap(grpc, "secure_channel")
 
         else:
-            unwrap("grpc", "insecure_channel")
+            unwrap(grpc, "insecure_channel")
 
     @contextmanager
     def wrapper_fn(self, original_func, args, kwargs):
