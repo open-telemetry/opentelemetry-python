@@ -16,8 +16,8 @@
 import time
 
 from opentelemetry import metrics, trace
-from opentelemetry.ext.otcollector.trace_exporter import OTLPSpanExporter
 from opentelemetry.ext.otcollector.metrics_exporter import OTLPMetricsExporter
+from opentelemetry.ext.otcollector.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.trace import TracerProvider
