@@ -28,6 +28,10 @@ from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.trace.status import StatusCanonicalCode
 
 
+# set a high timeout for async executions due to issues in CI
+ASYNC_GET_TIMEOUT = 60
+
+
 class MyException(Exception):
     pass
 
@@ -144,7 +148,7 @@ def test_fn_task_apply_async(celery_app, memory_exporter):
     result = fn_task_parameters.apply_async(
         args=["user"], kwargs={"force_logout": True}
     )
-    assert result.get(timeout=10) == ["user", True]
+    assert result.get(timeout=ASYNC_GET_TIMEOUT) == ["user", True]
 
     spans = memory_exporter.get_finished_spans()
     assert len(spans) == 2
@@ -181,7 +185,7 @@ def test_concurrent_delays(celery_app, memory_exporter):
     results = [fn_task.delay() for _ in range(100)]
 
     for result in results:
-        assert result.get(timeout=1) == 42
+        assert result.get(timeout=ASYNC_GET_TIMEOUT) == 42
 
     spans = memory_exporter.get_finished_spans()
 
@@ -194,7 +198,7 @@ def test_fn_task_delay(celery_app, memory_exporter):
         return (user, force_logout)
 
     result = fn_task_parameters.delay("user", force_logout=True)
-    assert result.get(timeout=10) == ["user", True]
+    assert result.get(timeout=ASYNC_GET_TIMEOUT) == ["user", True]
 
     spans = memory_exporter.get_finished_spans()
     assert len(spans) == 2
@@ -448,7 +452,7 @@ def test_apply_async_previous_style_tasks(
                 # avoid call loop
                 return
             CelerySubClass.apply_async(args=[], kwargs={"stop": True}).get(
-                timeout=10
+                timeout=ASYNC_GET_TIMEOUT
             )
 
     class CelerySubClass(CelerySuperClass):
