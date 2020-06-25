@@ -28,7 +28,7 @@ from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.trace.status import StatusCanonicalCode
 
 # set a high timeout for async executions due to issues in CI
-ASYNC_GET_TIMEOUT = 60
+ASYNC_GET_TIMEOUT = 120
 
 
 class MyException(Exception):
