@@ -135,61 +135,11 @@ workflows:
           matrix:
             parameters:
               version: ["py38", "py37", "py36", "py35", "pypy3"]
-              package:
-                - core
-                - exporter
-                - test-instrumentation-grpc
-                - test-instrumentation-aiohttp-client
-                - test-instrumentation-requests
-                - test-instrumentation-jinja2
-                - test-instrumentation-dbapi
-                - test-instrumentation-django
-                - test-instrumentation-mysql
-                - test-instrumentation-pymemcache
-                - test-instrumentation-pymongo
-                - test-instrumentation-psycopg2
-                - test-instrumentation-pymysql
-                - test-instrumentation-pyramid
-                - test-instrumentation-asgi
-                - test-instrumentation-sqlite3
-                - test-instrumentation-wsgi
-                - test-instrumentation-boto
-                - test-instrumentation-botocore
-                - test-instrumentation-flask
-                - test-instrumentation-example-app
-                - test-instrumentation-sqlalchemy
-                - test-instrumentation-redis
-                - test-instrumentation-starlette
-                - test-instrumentation-system-metrics
+              package: ["core", "exporter", "instrumentation"]
       - build-py34:
           matrix:
             parameters:
-              package:
-                - core
-                - exporter
-                - test-instrumentation-grpc
-                - test-instrumentation-aiohttp-client
-                - test-instrumentation-requests
-                - test-instrumentation-jinja2
-                - test-instrumentation-dbapi
-                - test-instrumentation-django
-                - test-instrumentation-mysql
-                - test-instrumentation-pymemcache
-                - test-instrumentation-pymongo
-                - test-instrumentation-psycopg2
-                - test-instrumentation-pymysql
-                - test-instrumentation-pyramid
-                - test-instrumentation-asgi
-                - test-instrumentation-sqlite3
-                - test-instrumentation-wsgi
-                - test-instrumentation-boto
-                - test-instrumentation-botocore
-                - test-instrumentation-flask
-                - test-instrumentation-example-app
-                - test-instrumentation-sqlalchemy
-                - test-instrumentation-redis
-                - test-instrumentation-starlette
-                - test-instrumentation-system-metrics
+              package: ["core", "exporter", "instrumentation"]
       - docs
       - lint
       - docker-tests
