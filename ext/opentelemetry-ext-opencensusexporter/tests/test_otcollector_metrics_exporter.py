@@ -81,7 +81,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         self.assertIs(result, metrics_pb2.MetricDescriptor.UNSPECIFIED)
 
     def test_get_collector_point(self):
-        aggregator = aggregate.CounterAggregator()
+        aggregator = aggregate.SumAggregator()
         int_counter = self._meter.create_metric(
             "testName", "testDescription", "unit", int, Counter
         )
@@ -122,7 +122,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
         record = MetricRecord(
-            test_metric, self._key_labels, aggregate.CounterAggregator(),
+            test_metric, self._key_labels, aggregate.SumAggregator(),
         )
 
         result = collector_exporter.export([record])
@@ -144,7 +144,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         test_metric = self._meter.create_metric(
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
-        aggregator = aggregate.CounterAggregator()
+        aggregator = aggregate.SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(test_metric, self._key_labels, aggregator,)

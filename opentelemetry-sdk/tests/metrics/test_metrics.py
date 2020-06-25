@@ -568,27 +568,27 @@ class TestValueObserver(unittest.TestCase):
 
 class TestBoundCounter(unittest.TestCase):
     def test_add(self):
-        aggregator = export.aggregate.CounterAggregator()
+        aggregator = export.aggregate.SumAggregator()
         bound_metric = metrics.BoundCounter(int, True, aggregator)
         bound_metric.add(3)
         self.assertEqual(bound_metric.aggregator.current, 3)
 
     def test_add_disabled(self):
-        aggregator = export.aggregate.CounterAggregator()
+        aggregator = export.aggregate.SumAggregator()
         bound_counter = metrics.BoundCounter(int, False, aggregator)
         bound_counter.add(3)
         self.assertEqual(bound_counter.aggregator.current, 0)
 
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
-        aggregator = export.aggregate.CounterAggregator()
+        aggregator = export.aggregate.SumAggregator()
         bound_counter = metrics.BoundCounter(int, True, aggregator)
         bound_counter.add(3.0)
         self.assertEqual(bound_counter.aggregator.current, 0)
         self.assertTrue(logger_mock.warning.called)
 
     def test_update(self):
-        aggregator = export.aggregate.CounterAggregator()
+        aggregator = export.aggregate.SumAggregator()
         bound_counter = metrics.BoundCounter(int, True, aggregator)
         bound_counter.update(4.0)
         self.assertEqual(bound_counter.aggregator.current, 4.0)

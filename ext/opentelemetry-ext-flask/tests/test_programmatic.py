@@ -118,7 +118,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         resp.close()
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "/bye")
+        self.assertEqual(span_list[0].name, "HTTP POST")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 

@@ -21,11 +21,12 @@ from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
+    UNIQUE_IDENTIFIER_KEY,
     WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 
 
 class UnsupportedAggregator:
@@ -114,7 +115,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         record = MetricRecord(
-            MockMetric(), (("label1", "value1"),), CounterAggregator(),
+            MockMetric(), (("label1", "value1"),), SumAggregator(),
         )
         metric_descriptor = exporter._get_metric_descriptor(record)
         client.create_metric_descriptor.assert_called_with(
@@ -149,7 +150,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     ("label3", 3),
                     ("label4", False),
                 ),
-                CounterAggregator(),
+                SumAggregator(),
             )
         )
         client.create_metric_descriptor.assert_called_with(
@@ -204,20 +205,20 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        counter_one = CounterAggregator()
-        counter_one.checkpoint = 1
-        counter_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
+        sum_agg_one = SumAggregator()
+        sum_agg_one.checkpoint = 1
+        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
         exporter.export(
             [
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value1"), ("label2", 1),),
-                    counter_one,
+                    sum_agg_one,
                 ),
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value2"), ("label2", 2),),
-                    counter_one,
+                    sum_agg_one,
                 ),
             ]
         )
@@ -245,33 +246,33 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         # Attempting to export too soon after another export with the exact
         # same labels leads to it being dropped
 
-        counter_two = CounterAggregator()
-        counter_two.checkpoint = 1
-        counter_two.last_update_timestamp = (WRITE_INTERVAL + 2) * 1e9
+        sum_agg_two = SumAggregator()
+        sum_agg_two.checkpoint = 1
+        sum_agg_two.last_update_timestamp = (WRITE_INTERVAL + 2) * 1e9
         exporter.export(
             [
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value1"), ("label2", 1),),
-                    counter_two,
+                    sum_agg_two,
                 ),
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value2"), ("label2", 2),),
-                    counter_two,
+                    sum_agg_two,
                 ),
             ]
         )
         self.assertEqual(client.create_time_series.call_count, 1)
 
         # But exporting with different labels is fine
-        counter_two.checkpoint = 2
+        sum_agg_two.checkpoint = 2
         exporter.export(
             [
                 MetricRecord(
                     MockMetric(),
                     (("label1", "changed_label"), ("label2", 2),),
-                    counter_two,
+                    sum_agg_two,
                 ),
             ]
         )
@@ -288,4 +289,56 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                 mock.call(self.project_name, [series1, series2]),
                 mock.call(self.project_name, [series3]),
             ]
+        )
+
+    def test_unique_identifier(self):
+        client = mock.Mock()
+        exporter1 = CloudMonitoringMetricsExporter(
+            project_id=self.project_id,
+            client=client,
+            add_unique_identifier=True,
+        )
+        exporter2 = CloudMonitoringMetricsExporter(
+            project_id=self.project_id,
+            client=client,
+            add_unique_identifier=True,
+        )
+        exporter1.project_name = self.project_name
+        exporter2.project_name = self.project_name
+
+        client.create_metric_descriptor.return_value = MetricDescriptor(
+            **{
+                "name": None,
+                "type": "custom.googleapis.com/OpenTelemetry/name",
+                "display_name": "name",
+                "description": "description",
+                "labels": [
+                    LabelDescriptor(
+                        key=UNIQUE_IDENTIFIER_KEY, value_type="STRING"
+                    ),
+                ],
+                "metric_kind": "GAUGE",
+                "value_type": "DOUBLE",
+            }
+        )
+
+        sum_agg_one = SumAggregator()
+        sum_agg_one.update(1)
+        metric_record = MetricRecord(MockMetric(), (), sum_agg_one,)
+        exporter1.export([metric_record])
+        exporter2.export([metric_record])
+
+        (
+            first_call,
+            second_call,
+        ) = client.create_metric_descriptor.call_args_list
+        self.assertEqual(first_call[0][1].labels[0].key, UNIQUE_IDENTIFIER_KEY)
+        self.assertEqual(
+            second_call[0][1].labels[0].key, UNIQUE_IDENTIFIER_KEY
+        )
+
+        first_call, second_call = client.create_time_series.call_args_list
+        self.assertNotEqual(
+            first_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
+            second_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
         )
