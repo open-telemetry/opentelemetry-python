@@ -43,12 +43,11 @@ API
 """
 
 import sqlite3
-import typing
 
 from opentelemetry.ext import dbapi
 from opentelemetry.ext.sqlite3.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.trace import TracerProvider, get_tracer
+from opentelemetry.trace import get_tracer
 
 
 class SQLite3Instrumentor(BaseInstrumentor):
@@ -64,15 +63,15 @@ class SQLite3Instrumentor(BaseInstrumentor):
         """
         tracer_provider = kwargs.get("tracer_provider")
 
-        tracer = get_tracer(__name__, __version__, tracer_provider)
-
         dbapi.wrap_connect(
-            tracer,
+            __name__,
             sqlite3,
             "connect",
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
             self._CONNECTION_ATTRIBUTES,
+            version=__version__,
+            tracer_provider=tracer_provider,
         )
 
     def _uninstrument(self, **kwargs):
