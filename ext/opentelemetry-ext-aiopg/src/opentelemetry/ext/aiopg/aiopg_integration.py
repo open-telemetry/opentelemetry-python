@@ -1,10 +1,10 @@
-import functools
 import typing
 
 import wrapt
 from aiopg.utils import _ContextManager, _PoolAcquireContextManager
 
-from opentelemetry.trace import SpanKind, Tracer
+from opentelemetry.ext.dbapi import DatabaseApiIntegration, TracedCursor
+from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
@@ -27,30 +27,7 @@ class AsyncProxyObject(wrapt.ObjectProxy):
         return self.__wrapped__.__await__()
 
 
-class AiopgIntegration:
-    def __init__(
-        self,
-        tracer: Tracer,
-        database_component: str,
-        database_type: str = "sql",
-        connection_attributes=None,
-    ):
-        self.connection_attributes = connection_attributes
-        if self.connection_attributes is None:
-            self.connection_attributes = {
-                "database": "database",
-                "port": "port",
-                "host": "host",
-                "user": "user",
-            }
-        self.tracer = tracer
-        self.database_component = database_component
-        self.database_type = database_type
-        self.connection_props = {}
-        self.span_attributes = {}
-        self.name = ""
-        self.database = ""
-
+class AiopgIntegration(DatabaseApiIntegration):
     async def wrapped_connection(
         self,
         connect_method: typing.Callable[..., typing.Any],
@@ -70,36 +47,6 @@ class AiopgIntegration:
             # pylint: disable=protected-access
             self.get_connection_attributes(connection._conn)
         return get_traced_pool_proxy(pool, self)
-
-    def get_connection_attributes(self, connection):
-        # Populate span fields using connection
-        for key, value in self.connection_attributes.items():
-            # Allow attributes nested in connection object
-            attribute = functools.reduce(
-                lambda attribute, attribute_value: getattr(
-                    attribute, attribute_value, None
-                ),
-                value.split("."),
-                connection,
-            )
-            if attribute:
-                self.connection_props[key] = attribute
-        self.name = self.database_component
-        self.database = self.connection_props.get("database", "")
-        if self.database:
-            # PyMySQL encodes names with utf-8
-            if hasattr(self.database, "decode"):
-                self.database = self.database.decode(errors="ignore")
-            self.name += "." + self.database
-        user = self.connection_props.get("user")
-        if user is not None:
-            self.span_attributes["db.user"] = str(user)
-        host = self.connection_props.get("host")
-        if host is not None:
-            self.span_attributes["net.peer.name"] = host
-        port = self.connection_props.get("port")
-        if port is not None:
-            self.span_attributes["net.peer.port"] = port
 
 
 def get_traced_connection_proxy(
@@ -145,10 +92,7 @@ def get_traced_pool_proxy(pool, db_api_integration, *args, **kwargs):
     return TracedPoolProxy(pool, *args, **kwargs)
 
 
-class AsyncTracedCursor:
-    def __init__(self, db_api_integration: AiopgIntegration):
-        self._db_api_integration = db_api_integration
-
+class AsyncTracedCursor(TracedCursor):
     async def traced_execution(
         self,
         query_method: typing.Callable[..., typing.Any],
@@ -156,30 +100,10 @@ class AsyncTracedCursor:
         **kwargs: typing.Dict[typing.Any, typing.Any]
     ):
 
-        statement = args[0] if args else ""
         with self._db_api_integration.tracer.start_as_current_span(
             self._db_api_integration.name, kind=SpanKind.CLIENT
         ) as span:
-            span.set_attribute(
-                "component", self._db_api_integration.database_component
-            )
-            span.set_attribute(
-                "db.type", self._db_api_integration.database_type
-            )
-            span.set_attribute(
-                "db.instance", self._db_api_integration.database
-            )
-            span.set_attribute("db.statement", statement)
-
-            for (
-                attribute_key,
-                attribute_value,
-            ) in self._db_api_integration.span_attributes.items():
-                span.set_attribute(attribute_key, attribute_value)
-
-            if len(args) > 1:
-                span.set_attribute("db.statement.parameters", str(args[1]))
-
+            self._populate_span(span=span, *args)
             try:
                 result = await query_method(*args, **kwargs)
                 span.set_status(Status(StatusCanonicalCode.OK))
