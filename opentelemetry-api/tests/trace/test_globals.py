@@ -5,6 +5,7 @@ from unittest.mock import patch
 from opentelemetry import context, trace
 from opentelemetry.sdk.trace import TracerProvider  # type:ignore
 
+
 class TestGlobals(unittest.TestCase):
     def setUp(self):
         self._patcher = patch("opentelemetry.trace._TRACER_PROVIDER")
