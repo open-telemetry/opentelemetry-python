@@ -103,7 +103,7 @@ class AsyncTracedCursor(TracedCursor):
         with self._db_api_integration.tracer.start_as_current_span(
             self._db_api_integration.name, kind=SpanKind.CLIENT
         ) as span:
-            self._populate_span(span=span, *args)
+            self._populate_span(span, *args)
             try:
                 result = await query_method(*args, **kwargs)
                 span.set_status(Status(StatusCanonicalCode.OK))
