@@ -460,6 +460,10 @@ def get_meter(
 def set_meter_provider(meter_provider: MeterProvider) -> None:
     """Sets the current global :class:`~.MeterProvider` object."""
     global _METER_PROVIDER  # pylint: disable=global-statement
+
+    if _METER_PROVIDER is not None:
+        logger.warning("Overriding current MeterProvider")
+
     _METER_PROVIDER = meter_provider
 
 

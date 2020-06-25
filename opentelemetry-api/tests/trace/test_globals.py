@@ -1,7 +1,9 @@
 import unittest
+from logging import WARNING
 from unittest.mock import patch
 
 from opentelemetry import context, trace
+from opentelemetry.sdk.trace import TracerProvider
 
 
 class TestGlobals(unittest.TestCase):
@@ -19,6 +21,19 @@ class TestGlobals(unittest.TestCase):
         mock_provider = unittest.mock.Mock()
         trace.get_tracer("foo", "var", mock_provider)
         mock_provider.get_tracer.assert_called_with("foo", "var")
+
+    def test_tracer_provider_override_warning(self):
+        """trace.set_tracer_provider should throw a warning when overridden"""
+        trace.set_tracer_provider(TracerProvider())
+        with self.assertLogs(level=WARNING) as test:
+            trace.set_tracer_provider(TracerProvider())
+            self.assertEqual(
+                test.output,
+                [
+                    "WARNING:opentelemetry.trace:Overriding current "
+                    "TracerProvider"
+                ],
+            )
 
 
 class TestTracer(unittest.TestCase):
