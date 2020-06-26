@@ -84,11 +84,9 @@ class OTELResourceDetector:
 def get_aggregated_resources(
     detectors: typing.List["ResourceDetector"],
     initial_resource=None,
-    detect_from_env=True,
 ) -> "Resource":
     final_resource = initial_resource or _EMPTY_RESOURCE
-    if detect_from_env:
-        final_resource = final_resource.merge(OTELResourceDetector().detect())
+    final_resource = final_resource.merge(OTELResourceDetector().detect())
     token = attach(set_value("suppress_instrumentation", True))
     for detector in detectors:
         try:
