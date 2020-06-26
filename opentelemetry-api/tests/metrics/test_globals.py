@@ -15,7 +15,9 @@ class TestGlobals(unittest.TestCase):
             self.assertEqual(
                 test.output,
                 [
-                    "WARNING:opentelemetry.metrics:Overriding current "
-                    "MeterProvider"
+                    (
+                        "WARNING:opentelemetry.metrics:Overriding current "
+                        "MeterProvider"
+                    )
                 ],
             )

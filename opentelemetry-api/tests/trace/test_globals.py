@@ -30,8 +30,10 @@ class TestGlobals(unittest.TestCase):
             self.assertEqual(
                 test.output,
                 [
-                    "WARNING:opentelemetry.trace:Overriding current "
-                    "TracerProvider"
+                    (
+                        "WARNING:opentelemetry.trace:Overriding current "
+                        "TracerProvider"
+                    )
                 ],
             )
 
