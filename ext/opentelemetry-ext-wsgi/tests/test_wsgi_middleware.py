@@ -81,12 +81,7 @@ def error_wsgi_unhandled(environ, start_response):
 
 class TestWsgiApplication(WsgiTestBase):
     def validate_response(
-        self,
-        response,
-        error=None,
-        span_name="HTTP GET",
-        span_status=None,
-        http_method="GET",
+        self, response, error=None, span_name="HTTP GET", http_method="GET",
     ):
         while True:
             try:
@@ -124,8 +119,6 @@ class TestWsgiApplication(WsgiTestBase):
         if http_method is not None:
             expected_attributes["http.method"] = http_method
         self.assertEqual(span_list[0].attributes, expected_attributes)
-        if span_status is not None:
-            self.assertEqual(span_list[0].status.canonical_code, span_status)
 
     def test_basic_wsgi_call(self):
         app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
