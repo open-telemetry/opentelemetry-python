@@ -62,7 +62,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
     def _get_monitored_resource(resource: Resource) -> TimeSeries:
         """Add Google resource specific information (e.g. instance id, region).
 
-        See https://cloud.google.com/monitoring/custom-metrics/creating-metrics#custom-metric-resources for acceptable types
+        See
+        https://cloud.google.com/monitoring/custom-metrics/creating-metrics#custom-metric-resources
+        for acceptable types
         Args:
             series: ProtoBuf TimeSeries
         """
