@@ -21,6 +21,7 @@ from urllib.parse import urlsplit
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import trace as trace_api
 from opentelemetry.test.wsgitestutil import WsgiTestBase
+from opentelemetry.trace.status import StatusCanonicalCode
 
 
 class Response:
@@ -73,9 +74,19 @@ def error_wsgi(environ, start_response):
     return [b"*"]
 
 
+def error_wsgi_unhandled(environ, start_response):
+    assert isinstance(environ, dict)
+    raise ValueError
+
+
 class TestWsgiApplication(WsgiTestBase):
     def validate_response(
-        self, response, error=None, span_name="HTTP GET", http_method="GET"
+        self,
+        response,
+        error=None,
+        span_name="HTTP GET",
+        span_status=None,
+        http_method="GET",
     ):
         while True:
             try:
@@ -113,6 +124,8 @@ class TestWsgiApplication(WsgiTestBase):
         if http_method is not None:
             expected_attributes["http.method"] = http_method
         self.assertEqual(span_list[0].attributes, expected_attributes)
+        if span_status is not None:
+            self.assertEqual(span_list[0].status.canonical_code, span_status)
 
     def test_basic_wsgi_call(self):
         app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
@@ -147,6 +160,15 @@ class TestWsgiApplication(WsgiTestBase):
         app = otel_wsgi.OpenTelemetryMiddleware(error_wsgi)
         response = app(self.environ, self.start_response)
         self.validate_response(response, error=ValueError)
+
+    def test_wsgi_internal_error(self):
+        app = otel_wsgi.OpenTelemetryMiddleware(error_wsgi_unhandled)
+        self.assertRaises(ValueError, app, self.environ, self.start_response)
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+        self.assertEqual(
+            span_list[0].status.canonical_code, StatusCanonicalCode.INTERNAL,
+        )
 
     def test_override_span_name(self):
         """Test that span_names can be overwritten by our callback function."""
