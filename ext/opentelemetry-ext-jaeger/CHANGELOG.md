@@ -8,6 +8,8 @@ Released 2020-05-27
 
 - Transform resource to tags when exporting
   ([#645](https://github.com/open-telemetry/opentelemetry-python/pull/645))
+- ext/boto: Could not serialize attribute aws.region to tag when exporting via jaeger
+  ([#865](https://github.com/open-telemetry/opentelemetry-python/pull/865))
 
 ## 0.6b0
 
