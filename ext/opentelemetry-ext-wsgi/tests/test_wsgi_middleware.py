@@ -81,7 +81,7 @@ def error_wsgi_unhandled(environ, start_response):
 
 class TestWsgiApplication(WsgiTestBase):
     def validate_response(
-        self, response, error=None, span_name="HTTP GET", http_method="GET",
+        self, response, error=None, span_name="HTTP GET", http_method="GET"
     ):
         while True:
             try:
