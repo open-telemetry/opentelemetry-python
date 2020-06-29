@@ -13,8 +13,8 @@ class GoogleResourceFinder:
     def get_attribute(self, attribute_url: str) -> str:
         """Fetch the requested instance metadata entry.
 
-        :param attribute_url: attribute name relative to the computeMetadata/v1 prefix
-        :return:  The value read from the metadata service or None
+        :param attribute_url: suffix of the complete url
+        :return:  The value read from the metadata service
         """
         attribute_value = requests.get(
             self.base_url + attribute_url, headers=_GCP_METADATA_URL_HEADER
