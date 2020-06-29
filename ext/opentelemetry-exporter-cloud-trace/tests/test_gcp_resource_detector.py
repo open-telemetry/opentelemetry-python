@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import unittest
+from unittest import mock
 
-from mock import patch
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.tools.resource_detector import (
@@ -35,7 +35,7 @@ class TestGoogleResourceFinder(unittest.TestCase):
         self.base_url = "base_url/"
         self.attribute_url = "attribute_url"
 
-    @patch("opentelemetry.tools.resource_detector.requests.get")
+    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_get_attribute(self, getter):
         resource_finder = GoogleResourceFinder(self.base_url)
         getter.return_value = DummyRequest("resource_info")
@@ -71,13 +71,13 @@ def mock_return_resources(url, headers):
 
 
 class TestGCEResourceFinder(unittest.TestCase):
-    @patch("opentelemetry.tools.resource_detector.requests.get")
+    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_not_on_gce(self, getter):
         resource_finder = GCEResourceFinder()
         getter.side_effect = Exception()
         self.assertEqual(resource_finder.get_resources(), {})
 
-    @patch("opentelemetry.tools.resource_detector.requests.get")
+    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gce_resources(self, getter):
         resource_finder = GCEResourceFinder()
         getter.side_effect = mock_return_resources
@@ -106,7 +106,7 @@ class TestGCEResourceFinder(unittest.TestCase):
 
 
 class TestGoogleCloudResourceDetector(unittest.TestCase):
-    @patch("opentelemetry.tools.resource_detector.requests.get")
+    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_resources(self, getter):
         resource_finder = GoogleCloudResourceDetector()
         getter.side_effect = mock_return_resources
@@ -154,7 +154,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
             ),
         )
 
-    @patch("opentelemetry.tools.resource_detector.requests.get")
+    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_not_on_gcp(self, getter):
         resource_finder = GoogleCloudResourceDetector()
         getter.side_effect = Exception()
