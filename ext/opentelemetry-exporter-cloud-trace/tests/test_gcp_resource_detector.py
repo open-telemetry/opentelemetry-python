@@ -15,7 +15,6 @@
 import unittest
 from unittest import mock
 
-
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.tools.resource_detector import (
     _GCP_METADATA_URL_HEADER,
@@ -42,10 +41,10 @@ class TestGoogleResourceFinder(unittest.TestCase):
         found_resource = resource_finder.get_attribute(self.attribute_url)
         self.assertEqual(found_resource, "resource_info")
         self.assertEqual(
-            getter.call_args.args[0], self.base_url + self.attribute_url
+            getter.call_args[0][0], self.base_url + self.attribute_url
         )
         self.assertEqual(
-            getter.call_args.kwargs["headers"], _GCP_METADATA_URL_HEADER
+            getter.call_args[1]["headers"], _GCP_METADATA_URL_HEADER
         )
 
         resource_finder = GoogleResourceFinder(
@@ -82,17 +81,17 @@ class TestGCEResourceFinder(unittest.TestCase):
         resource_finder = GCEResourceFinder()
         getter.side_effect = mock_return_resources
         found_resources = resource_finder.get_resources()
+        called_urls = set()
+        for call in getter.call_args_list:
+            called_urls.add(call[0][0])
+
         self.assertEqual(
-            getter.call_args_list[0].args[0],
-            "http://metadata.google.internal/computeMetadata/v1/instance/id",
-        )
-        self.assertEqual(
-            getter.call_args_list[1].args[0],
-            "http://metadata.google.internal/computeMetadata/v1/project/project-id",
-        )
-        self.assertEqual(
-            getter.call_args_list[2].args[0],
-            "http://metadata.google.internal/computeMetadata/v1/instance/zone",
+            called_urls,
+            {
+                "http://metadata.google.internal/computeMetadata/v1/instance/id",
+                "http://metadata.google.internal/computeMetadata/v1/instance/zone",
+                "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+            },
         )
         self.assertEqual(
             found_resources,
@@ -111,17 +110,16 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         resource_finder = GoogleCloudResourceDetector()
         getter.side_effect = mock_return_resources
         found_resources = resource_finder.detect()
+        called_urls = set()
+        for call in getter.call_args_list:
+            called_urls.add(call[0][0])
         self.assertEqual(
-            getter.call_args_list[0].args[0],
-            "http://metadata.google.internal/computeMetadata/v1/instance/id",
-        )
-        self.assertEqual(
-            getter.call_args_list[1].args[0],
-            "http://metadata.google.internal/computeMetadata/v1/project/project-id",
-        )
-        self.assertEqual(
-            getter.call_args_list[2].args[0],
-            "http://metadata.google.internal/computeMetadata/v1/instance/zone",
+            called_urls,
+            {
+                "http://metadata.google.internal/computeMetadata/v1/instance/id",
+                "http://metadata.google.internal/computeMetadata/v1/instance/zone",
+                "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+            },
         )
         self.assertEqual(
             found_resources,
