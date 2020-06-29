@@ -64,7 +64,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
 
         See
         https://cloud.google.com/monitoring/custom-metrics/creating-metrics#custom-metric-resources
-        for acceptable types
+        for supported types
         Args:
             series: ProtoBuf TimeSeries
         """

@@ -151,9 +151,10 @@ class CloudTraceSpanExporter(SpanExporter):
                     MAX_SPAN_ATTRS,
                 )
 
-            # Span does not support a MonitoredResource object. We put in the information into the labels instead.
-            resources_dict = _extract_resources(span.resource)
-            span.attributes.update(resources_dict)
+            # Span does not support a MonitoredResource object. We put in the
+            # information into the labels instead.
+            resources_and_attrs = _extract_resources(span.resource)
+            resources_and_attrs.update(span.attributes)
 
             cloud_trace_spans.append(
                 {
@@ -166,7 +167,9 @@ class CloudTraceSpanExporter(SpanExporter):
                     "end_time": end_time,
                     "parent_span_id": parent_id,
                     "attributes": _extract_attributes(
-                        span.attributes, MAX_SPAN_ATTRS, add_agent_attr=True
+                        resources_and_attrs,
+                        MAX_SPAN_ATTRS,
+                        add_agent_attr=True,
                     ),
                     "links": _extract_links(span.links),
                     "status": _extract_status(span.status),
@@ -313,15 +316,12 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
     for resource_type, resource_labels in resource.labels.items():
         if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
             continue
-        for label_key, label_value in resource_labels.items():
-            if label_key == "cloud.provider":
-                continue
+        for ot_resource_key, gcp_resource_key in OT_RESOURCE_LABEL_TO_GCP[
+            resource_type
+        ].items():
             resources_dist[
-                "g.co/r/{}/{}".format(
-                    resource_type,
-                    OT_RESOURCE_LABEL_TO_GCP[resource_type][label_key],
-                )
-            ] = label_value
+                "g.co/r/{}/{}".format(resource_type, gcp_resource_key,)
+            ] = str(resource_labels[ot_resource_key])
     return resources_dist
 
 
