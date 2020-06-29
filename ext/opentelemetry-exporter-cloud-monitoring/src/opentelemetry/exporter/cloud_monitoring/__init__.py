@@ -171,7 +171,6 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             metric_descriptor = self._get_metric_descriptor(record)
             if not metric_descriptor:
                 continue
-
             series = TimeSeries(
                 resource=self._get_monitored_resource(
                     record.instrument.meter.resource

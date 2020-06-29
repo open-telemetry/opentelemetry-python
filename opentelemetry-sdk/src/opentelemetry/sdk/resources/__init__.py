@@ -61,8 +61,8 @@ _EMPTY_RESOURCE = Resource({})
 
 
 class ResourceDetector:
-    def __init__(self, crash_on_error=False):
-        self.crash_on_error = crash_on_error
+    def __init__(self, raise_on_error=False):
+        self.raise_on_error = raise_on_error
 
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
@@ -75,15 +75,17 @@ class OTELResourceDetector:
         env_resources_items = os.environ.get("OTEL_RESOURCE")
         env_resource_map = {}
         if env_resources_items:
-            for item in env_resources_items.split(","):
-                key, value = item.split("=")
-                env_resource_map[key.strip()] = value.strip()
+            env_resource_map = {
+                key.strip(): value.strip()
+                for key, value in (
+                    item.split("=") for item in env_resources_items.split(",")
+                )
+            }
         return Resource(env_resource_map)
 
 
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"],
-    initial_resource=None,
+    detectors: typing.List["ResourceDetector"], initial_resource=None,
 ) -> "Resource":
     final_resource = initial_resource or _EMPTY_RESOURCE
     final_resource = final_resource.merge(OTELResourceDetector().detect())
@@ -93,7 +95,7 @@ def get_aggregated_resources(
             detected_resources = detector.detect()
         # pylint: disable=broad-except
         except Exception as ex:
-            if detector.crash_on_error:
+            if detector.raise_on_error:
                 raise ex
             detected_resources = _EMPTY_RESOURCE
         finally:

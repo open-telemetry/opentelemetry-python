@@ -55,6 +55,7 @@ import opentelemetry.trace as trace_api
 from opentelemetry.exporter.cloud_trace.version import (
     __version__ as cloud_trace_version,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import BoundedDict
@@ -149,6 +150,10 @@ class CloudTraceSpanExporter(SpanExporter):
                     "Span has more then %s attributes, some will be truncated",
                     MAX_SPAN_ATTRS,
                 )
+
+            # Span does not support a MonitoredResource object. We put in the information into the labels instead.
+            resources_dict = _extract_resources(span.resource)
+            span.attributes.update(resources_dict)
 
             cloud_trace_spans.append(
                 {
@@ -293,6 +298,31 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 
 def _strip_characters(ot_version):
     return "".join(filter(lambda x: x.isdigit() or x == ".", ot_version))
+
+OT_RESOURCE_LABEL_TO_GCP = {
+    "gce_instance": {
+        "cloud.account.id": "project_id",
+        "host.id": "instance_id",
+        "cloud.zone": "zone",
+    }
+}
+
+
+def _extract_resources(resource: Resource) -> Dict[str, str]:
+    resources_dist = {}
+    for resource_type, resource_labels in resource.labels.items():
+        if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
+            continue
+        for label_key, label_value in resource_labels.items():
+            if label_key == "cloud.provider":
+                continue
+            resources_dist[
+                "g.co/r/{}/{}".format(
+                    resource_type,
+                    OT_RESOURCE_LABEL_TO_GCP[resource_type][label_key],
+                )
+            ] = label_value
+    return resources_dist
 
 
 def _extract_attributes(
