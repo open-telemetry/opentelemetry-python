@@ -46,12 +46,12 @@ class MockMetric:
         name="name",
         description="description",
         value_type=int,
-        meter=MockMeter(),
+        meter=None,
     ):
         self.name = name
         self.description = description
         self.value_type = value_type
-        self.meter = meter
+        self.meter = meter or MockMeter()
 
 
 # pylint: disable=protected-access
