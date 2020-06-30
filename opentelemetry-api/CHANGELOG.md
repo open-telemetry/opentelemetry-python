@@ -16,6 +16,8 @@ Released 2020-06-10
   ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
 - Add SumObserver and UpDownSumObserver in metrics
   ([#789](https://github.com/open-telemetry/opentelemetry-python/pull/789))
+- Log a warning when replacing the global Tracer/Meter provider
+  ([#856](https://github.com/open-telemetry/opentelemetry-python/pull/856))
 
 ## 0.8b0
 
