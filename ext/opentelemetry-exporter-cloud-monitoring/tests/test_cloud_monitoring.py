@@ -17,6 +17,7 @@ from unittest import mock
 
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
+from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 
 from opentelemetry.exporter.cloud_monitoring import (
@@ -35,16 +36,22 @@ class UnsupportedAggregator:
 
 
 class MockMeter:
-    def __init__(self):
-        self.resource = Resource.create_empty()
+    def __init__(self, resource=Resource.create_empty()):
+        self.resource = resource
 
 
 class MockMetric:
-    def __init__(self, name="name", description="description", value_type=int):
+    def __init__(
+        self,
+        name="name",
+        description="description",
+        value_type=int,
+        meter=MockMeter(),
+    ):
         self.name = name
         self.description = description
         self.value_type = value_type
-        self.meter = MockMeter()
+        self.meter = meter
 
 
 # pylint: disable=protected-access
@@ -212,24 +219,41 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
+        resource = Resource(
+            labels={
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "extra_info": "extra",
+                "gcp.resource_type": "gce_instance",
+                "not_gcp_resource": "value",
+            }
+        )
+
         sum_agg_one = SumAggregator()
         sum_agg_one.checkpoint = 1
         sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
         exporter.export(
             [
                 MetricRecord(
-                    MockMetric(),
+                    MockMetric(meter=MockMeter(resource=resource)),
                     (("label1", "value1"), ("label2", 1),),
                     sum_agg_one,
                 ),
                 MetricRecord(
-                    MockMetric(),
+                    MockMetric(meter=MockMeter(resource=resource)),
                     (("label1", "value2"), ("label2", 2),),
                     sum_agg_one,
                 ),
             ]
         )
-        series1 = TimeSeries()
+        expected_resource = MonitoredResource(
+            type="gce_instance",
+            labels={"project_id": "123", "instance_id": "host", "zone": "US"},
+        )
+
+        series1 = TimeSeries(resource=expected_resource)
         series1.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         series1.metric.labels["label1"] = "value1"
         series1.metric.labels["label2"] = "1"
@@ -238,7 +262,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.interval.end_time.seconds = WRITE_INTERVAL + 1
         point.interval.end_time.nanos = 0
 
-        series2 = TimeSeries()
+        series2 = TimeSeries(resource=expected_resource)
         series2.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         series2.metric.labels["label1"] = "value2"
         series2.metric.labels["label2"] = "2"
@@ -349,3 +373,64 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             first_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
             second_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
         )
+
+    def test_extract_resources(self):
+        exporter = CloudMonitoringMetricsExporter(project_id=self.project_id)
+
+        self.assertIsNone(
+            exporter._get_monitored_resource(Resource.create_empty())
+        )
+        resource = Resource(
+            labels={
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "extra_info": "extra",
+                "gcp.resource_type": "gce_instance",
+                "not_gcp_resource": "value",
+            }
+        )
+        expected_extract = MonitoredResource(
+            type="gce_instance",
+            labels={"project_id": "123", "instance_id": "host", "zone": "US"},
+        )
+        self.assertEqual(
+            exporter._get_monitored_resource(resource), expected_extract
+        )
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "gcp.resource_type": "gce_instance",
+                "cloud.provider": "gcp",
+            }
+        )
+        # Should throw when passed a malformed GCP resource dict
+        self.assertRaises(KeyError, exporter._get_monitored_resource, resource)
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "gcp.resource_type": "unsupported_gcp_resource",
+                "cloud.provider": "gcp",
+            }
+        )
+        self.assertIsNone(exporter._get_monitored_resource(resource))
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "cloud.provider": "aws",
+            }
+        )
+        self.assertIsNone(exporter._get_monitored_resource(resource))
