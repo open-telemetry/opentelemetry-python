@@ -10,6 +10,7 @@ from moto import (  # pylint: disable=import-error
 )
 
 from opentelemetry.ext.botocore import BotocoreInstrumentor
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.test_base import TestBase
 
 
@@ -49,7 +50,12 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertEqual(span.attributes["aws.region"], "us-west-2")
         self.assertEqual(span.attributes["aws.operation"], "DescribeInstances")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "ec2.describeinstances")
+        self.assertEqual(
+            span.resource,
+            Resource(
+                labels={"endpoint": "ec2", "operation": "describeinstances"}
+            ),
+        )
         self.assertEqual(span.name, "ec2.command")
 
     @mock_ec2
@@ -73,7 +79,10 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertEqual(len(spans), 2)
         self.assertEqual(span.attributes["aws.operation"], "ListBuckets")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "s3.listbuckets")
+        self.assertEqual(
+            span.resource,
+            Resource(labels={"endpoint": "s3", "operation": "listbuckets"}),
+        )
 
         # testing for span error
         self.memory_exporter.get_finished_spans()
@@ -82,7 +91,10 @@ class TestBotocoreInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
         span = spans[2]
-        self.assertEqual(span.resource, "s3.listobjects")
+        self.assertEqual(
+            span.resource,
+            Resource(labels={"endpoint": "s3", "operation": "listobjects"}),
+        )
 
     @mock_s3
     def test_s3_put(self):
@@ -97,9 +109,15 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertEqual(len(spans), 2)
         self.assertEqual(span.attributes["aws.operation"], "CreateBucket")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "s3.createbucket")
+        self.assertEqual(
+            span.resource,
+            Resource(labels={"endpoint": "s3", "operation": "createbucket"}),
+        )
         self.assertEqual(spans[1].attributes["aws.operation"], "PutObject")
-        self.assertEqual(spans[1].resource, "s3.putobject")
+        self.assertEqual(
+            spans[1].resource,
+            Resource(labels={"endpoint": "s3", "operation": "putobject"}),
+        )
         self.assertEqual(spans[1].attributes["params.Key"], str(params["Key"]))
         self.assertEqual(
             spans[1].attributes["params.Bucket"], str(params["Bucket"])
@@ -119,7 +137,10 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertEqual(span.attributes["aws.region"], "us-east-1")
         self.assertEqual(span.attributes["aws.operation"], "ListQueues")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "sqs.listqueues")
+        self.assertEqual(
+            span.resource,
+            Resource(labels={"endpoint": "sqs", "operation": "listqueues"}),
+        )
 
     @mock_kinesis
     def test_kinesis_client(self):
@@ -136,7 +157,12 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertEqual(span.attributes["aws.region"], "us-east-1")
         self.assertEqual(span.attributes["aws.operation"], "ListStreams")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "kinesis.liststreams")
+        self.assertEqual(
+            span.resource,
+            Resource(
+                labels={"endpoint": "kinesis", "operation": "liststreams"}
+            ),
+        )
 
     @mock_kinesis
     def test_unpatch(self):
@@ -176,7 +202,12 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertEqual(span.attributes["aws.region"], "us-east-1")
         self.assertEqual(span.attributes["aws.operation"], "ListFunctions")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "lambda.listfunctions")
+        self.assertEqual(
+            span.resource,
+            Resource(
+                labels={"endpoint": "lambda", "operation": "listfunctions"}
+            ),
+        )
 
     @mock_kms
     def test_kms_client(self):
@@ -191,7 +222,10 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertEqual(span.attributes["aws.region"], "us-east-1")
         self.assertEqual(span.attributes["aws.operation"], "ListKeys")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "kms.listkeys")
+        self.assertEqual(
+            span.resource,
+            Resource(labels={"endpoint": "kms", "operation": "listkeys"}),
+        )
 
         # checking for protection on sts against security leak
         self.assertTrue("params" not in span.attributes.keys())
