@@ -312,18 +312,19 @@ OT_RESOURCE_LABEL_TO_GCP = {
 
 
 def _extract_resources(resource: Resource) -> Dict[str, str]:
-    resources_dist = {}
-    if resource.labels.get("cloud.provider") == "gcp":
-        resource_type = resource.labels["gcp.resource_type"]
-        if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
-            return {}
+    if resource.labels.get("cloud.provider") != "gcp":
+        return {}
+    resource_type = resource.labels["gcp.resource_type"]
+    if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
+        return {}
+    return {
+        "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
+            resource.labels[ot_resource_key]
+        )
         for ot_resource_key, gcp_resource_key in OT_RESOURCE_LABEL_TO_GCP[
             resource_type
-        ].items():
-            resources_dist[
-                "g.co/r/{}/{}".format(resource_type, gcp_resource_key,)
-            ] = str(resource.labels[ot_resource_key])
-    return resources_dist
+        ].items()
+    }
 
 
 def _extract_attributes(

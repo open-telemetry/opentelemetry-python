@@ -81,13 +81,11 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
             found_resources,
             Resource(
                 labels={
-                    "gce_instance": {
-                        "host.id": "instance_id",
-                        "cloud.provider": "gcp",
-                        "cloud.account.id": "project_id",
-                        "cloud.zone": "zone",
-                        "gcp.resource_type": "gce_instance",
-                    }
+                    "host.id": "instance_id",
+                    "cloud.provider": "gcp",
+                    "cloud.account.id": "project_id",
+                    "cloud.zone": "zone",
+                    "gcp.resource_type": "gce_instance",
                 }
             ),
         )
@@ -99,13 +97,11 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
             found_resources,
             Resource(
                 labels={
-                    "gce_instance": {
-                        "host.id": "instance_id",
-                        "cloud.provider": "gcp",
-                        "cloud.account.id": "project_id",
-                        "cloud.zone": "zone",
-                        "gcp.resource_type": "gce_instance",
-                    }
+                    "host.id": "instance_id",
+                    "cloud.provider": "gcp",
+                    "cloud.account.id": "project_id",
+                    "cloud.zone": "zone",
+                    "gcp.resource_type": "gce_instance",
                 }
             ),
         )

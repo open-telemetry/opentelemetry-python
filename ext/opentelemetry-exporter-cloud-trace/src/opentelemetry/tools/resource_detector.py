@@ -31,7 +31,7 @@ def get_gce_resources():
     return gce_resources
 
 
-_RESOURCE_TYPE_TO_FINDER = {"gce_instance": get_gce_resources}
+_RESOURCE_FINDERS = {get_gce_resources}
 
 
 class GoogleCloudResourceDetector(ResourceDetector):
@@ -43,11 +43,7 @@ class GoogleCloudResourceDetector(ResourceDetector):
     def detect(self) -> "Resource":
         if not self.cached:
             self.cached = True
-            for (
-                resource_type,
-                resource_finder,
-            ) in _RESOURCE_TYPE_TO_FINDER.items():
+            for resource_finder in _RESOURCE_FINDERS:
                 found_resources = resource_finder()
-                if found_resources:
-                    self.gcp_resources[resource_type] = found_resources
+                self.gcp_resources.update(found_resources)
         return Resource(self.gcp_resources)

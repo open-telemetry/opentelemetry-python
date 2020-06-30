@@ -22,6 +22,14 @@ MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
 
+OT_RESOURCE_LABEL_TO_GCP = {
+    "gce_instance": {
+        "cloud.account.id": "project_id",
+        "host.id": "instance_id",
+        "cloud.zone": "zone",
+    }
+}
+
 
 # pylint is unable to resolve members of protobuf objects
 # pylint: disable=no-member
@@ -59,7 +67,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             )
 
     @staticmethod
-    def _get_monitored_resource(resource: Resource) -> TimeSeries:
+    def _get_monitored_resource(
+        resource: Resource,
+    ) -> Optional[MonitoredResource]:
         """Add Google resource specific information (e.g. instance id, region).
 
         See
@@ -68,12 +78,21 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         Args:
             series: ProtoBuf TimeSeries
         """
-        resource_info = None
-        if "gce_instance" in resource.labels:
-            resource_info = MonitoredResource(
-                type="gce_instance", labels=resource.labels["gce_instance"]
-            )
-        return resource_info
+
+        if resource.labels.get("cloud.provider") != "gcp":
+            return None
+        resource_type = resource.labels["gcp.resource_type"]
+        if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
+            return None
+        return MonitoredResource(
+            type=resource_type,
+            labels={
+                gcp_label: str(resource.labels[ot_label])
+                for ot_label, gcp_label in OT_RESOURCE_LABEL_TO_GCP[
+                    resource_type
+                ].items()
+            },
+        )
 
     def _batch_write(self, series: TimeSeries) -> None:
         """ Cloud Monitoring allows writing up to 200 time series at once
