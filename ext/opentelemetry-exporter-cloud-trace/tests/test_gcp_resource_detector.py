@@ -18,7 +18,7 @@ from unittest import mock
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.tools.resource_detector import (
-    _GCE_METADATA_URL,
+    _GCP_METADATA_URL,
     GoogleCloudResourceDetector,
     get_gce_resources,
 )
@@ -57,7 +57,7 @@ class TestGCEResourceFinder(unittest.TestCase):
     def test_finding_gce_resources(self, getter):
         getter.side_effect = mock_return_resources
         found_resources = get_gce_resources()
-        self.assertEqual(getter.call_args_list[0][0][0], _GCE_METADATA_URL)
+        self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
         self.assertEqual(
             found_resources,
             {
@@ -76,7 +76,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         resource_finder = GoogleCloudResourceDetector()
         getter.side_effect = mock_return_resources
         found_resources = resource_finder.detect()
-        self.assertEqual(getter.call_args_list[0][0][0], _GCE_METADATA_URL)
+        self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
         self.assertEqual(
             found_resources,
             Resource(

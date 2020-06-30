@@ -2,7 +2,7 @@ import requests
 
 from opentelemetry.sdk.resources import Resource, ResourceDetector
 
-_GCE_METADATA_URL = (
+_GCP_METADATA_URL = (
     "http://metadata.google.internal/computeMetadata/v1?recursive=true"
 )
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
@@ -16,7 +16,7 @@ def get_gce_resources():
     # This call will throw if we aren't currently in a GCE instance
     try:
         all_metadata = requests.get(
-            _GCE_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
+            _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
         ).json()
     # pylint: disable=broad-except
     except Exception:
