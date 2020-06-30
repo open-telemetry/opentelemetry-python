@@ -96,12 +96,11 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         span_id = "95bb5edabd45950f"
         resource_info = Resource(
             {
-                "gce_instance": {
-                    "cloud.account.id": 123,
-                    "host.id": "host",
-                    "cloud.zone": "US",
-                    "cloud.provider": "gcp",
-                }
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "gce_instance",
             }
         )
         span_datas = [
@@ -310,13 +309,12 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertEqual(_extract_resources(Resource.create_empty()), {})
         resource = Resource(
             labels={
-                "gce_instance": {
-                    "cloud.account.id": 123,
-                    "host.id": "host",
-                    "cloud.zone": "US",
-                    "cloud.provider": "gcp",
-                    "extra_info": "extra",
-                },
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "extra_info": "extra",
+                "gcp.resource_type": "gce_instance",
                 "not_gcp_resource": "value",
             }
         )
@@ -329,16 +327,39 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
         resource = Resource(
             labels={
-                "gce_instance": {
-                    "cloud.account.id": "123",
-                    "host.id": "host",
-                    "extra_info": "extra",
-                },
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
                 "not_gcp_resource": "value",
+                "gcp.resource_type": "gce_instance",
+                "cloud.provider": "gcp",
             }
         )
         # Should throw when passed a malformed GCP resource dict
         self.assertRaises(KeyError, _extract_resources, resource)
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "gcp.resource_type": "unsupported_gcp_resource",
+                "cloud.provider": "gcp",
+            }
+        )
+        self.assertEqual(_extract_resources(resource), {})
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "cloud.provider": "aws",
+            }
+        )
+        self.assertEqual(_extract_resources(resource), {})
 
     # pylint:disable=too-many-locals
     def test_truncate(self):

@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import unittest
 from unittest import mock
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.tools.resource_detector import (
-    _GCP_METADATA_URL_HEADER,
-    GCEResourceFinder,
+    _GCE_METADATA_URL,
     GoogleCloudResourceDetector,
-    GoogleResourceFinder,
+    get_gce_resources,
 )
 
 
@@ -28,71 +28,36 @@ class DummyRequest:
     def __init__(self, text):
         self.text = text
 
-
-class TestGoogleResourceFinder(unittest.TestCase):
-    def setUp(self):
-        self.base_url = "base_url/"
-        self.attribute_url = "attribute_url"
-
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
-    def test_get_attribute(self, getter):
-        resource_finder = GoogleResourceFinder(self.base_url)
-        getter.return_value = DummyRequest("resource_info")
-        found_resource = resource_finder.get_attribute(self.attribute_url)
-        self.assertEqual(found_resource, "resource_info")
-        self.assertEqual(
-            getter.call_args[0][0], self.base_url + self.attribute_url
-        )
-        self.assertEqual(
-            getter.call_args[1]["headers"], _GCP_METADATA_URL_HEADER
-        )
-
-        resource_finder = GoogleResourceFinder(
-            self.base_url, {self.attribute_url: lambda x: x + "_suffix"}
-        )
-        getter.return_value = DummyRequest("resource_info")
-        found_resource = resource_finder.get_attribute(self.attribute_url)
-        self.assertEqual(found_resource, "resource_info_suffix")
-
-        getter.return_value = DummyRequest("other_resource_info")
-        found_resource = resource_finder.get_attribute("other_url")
-        self.assertEqual(found_resource, "other_resource_info")
+    def json(self):
+        return json.loads(self.text)
 
 
-# pylint:disable=unused-argument
+# pylint: disable=unused-argument
 def mock_return_resources(url, headers):
-    url_to_resources = {
-        "http://metadata.google.internal/computeMetadata/v1/instance/id": "instance_id",
-        "http://metadata.google.internal/computeMetadata/v1/project/project-id": "project_id",
-        "http://metadata.google.internal/computeMetadata/v1/instance/zone": "zone",
-    }
-    return DummyRequest(url_to_resources[url])
+    return DummyRequest(
+        json.dumps(
+            {
+                "instance": {
+                    "id": "instance_id",
+                    "zone": "projects/123/zones/zone",
+                },
+                "project": {"projectId": "project_id"},
+            }
+        )
+    )
 
 
 class TestGCEResourceFinder(unittest.TestCase):
     @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_not_on_gce(self, getter):
-        resource_finder = GCEResourceFinder()
         getter.side_effect = Exception()
-        self.assertEqual(resource_finder.get_resources(), {})
+        self.assertEqual(get_gce_resources(), {})
 
     @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gce_resources(self, getter):
-        resource_finder = GCEResourceFinder()
         getter.side_effect = mock_return_resources
-        found_resources = resource_finder.get_resources()
-        called_urls = set()
-        for call in getter.call_args_list:
-            called_urls.add(call[0][0])
-
-        self.assertEqual(
-            called_urls,
-            {
-                "http://metadata.google.internal/computeMetadata/v1/instance/id",
-                "http://metadata.google.internal/computeMetadata/v1/instance/zone",
-                "http://metadata.google.internal/computeMetadata/v1/project/project-id",
-            },
-        )
+        found_resources = get_gce_resources()
+        self.assertEqual(getter.call_args_list[0][0][0], _GCE_METADATA_URL)
         self.assertEqual(
             found_resources,
             {
@@ -100,6 +65,7 @@ class TestGCEResourceFinder(unittest.TestCase):
                 "cloud.provider": "gcp",
                 "cloud.account.id": "project_id",
                 "cloud.zone": "zone",
+                "gcp.resource_type": "gce_instance",
             },
         )
 
@@ -110,17 +76,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         resource_finder = GoogleCloudResourceDetector()
         getter.side_effect = mock_return_resources
         found_resources = resource_finder.detect()
-        called_urls = set()
-        for call in getter.call_args_list:
-            called_urls.add(call[0][0])
-        self.assertEqual(
-            called_urls,
-            {
-                "http://metadata.google.internal/computeMetadata/v1/instance/id",
-                "http://metadata.google.internal/computeMetadata/v1/instance/zone",
-                "http://metadata.google.internal/computeMetadata/v1/project/project-id",
-            },
-        )
+        self.assertEqual(getter.call_args_list[0][0][0], _GCE_METADATA_URL)
         self.assertEqual(
             found_resources,
             Resource(
@@ -130,14 +86,15 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
                         "cloud.provider": "gcp",
                         "cloud.account.id": "project_id",
                         "cloud.zone": "zone",
+                        "gcp.resource_type": "gce_instance",
                     }
                 }
             ),
         )
-        self.assertEqual(getter.call_count, 3)
+        self.assertEqual(getter.call_count, 1)
 
         found_resources = resource_finder.detect()
-        self.assertEqual(getter.call_count, 3)
+        self.assertEqual(getter.call_count, 1)
         self.assertEqual(
             found_resources,
             Resource(
@@ -147,6 +104,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
                         "cloud.provider": "gcp",
                         "cloud.account.id": "project_id",
                         "cloud.zone": "zone",
+                        "gcp.resource_type": "gce_instance",
                     }
                 }
             ),

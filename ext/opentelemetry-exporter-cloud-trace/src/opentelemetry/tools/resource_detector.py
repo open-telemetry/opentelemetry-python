@@ -2,76 +2,36 @@ import requests
 
 from opentelemetry.sdk.resources import Resource, ResourceDetector
 
+_GCE_METADATA_URL = (
+    "http://metadata.google.internal/computeMetadata/v1?recursive=true"
+)
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
 
 
-class GoogleResourceFinder:
-    def __init__(self, base_url, url_post_process=None):
-        self.base_url = base_url
-        self.url_post_process = url_post_process or {}
-
-    def get_attribute(self, attribute_url: str) -> str:
-        """Fetch the requested instance metadata entry.
-
-        :param attribute_url: suffix of the complete url
-        :return:  The value read from the metadata service
-        """
-        attribute_value = requests.get(
-            self.base_url + attribute_url, headers=_GCP_METADATA_URL_HEADER
-        ).text
-
-        if attribute_url in self.url_post_process:
-            attribute_value = self.url_post_process[attribute_url](
-                attribute_value
-            )
-
-        return attribute_value
-
-    def get_resources(self):
-        pass
-
-
-class GCEResourceFinder(GoogleResourceFinder):
+def get_gce_resources():
     """ Resource finder for common GCE attributes
 
-    See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
+        See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
     """
-
-    def __init__(self):
-        super().__init__(
-            "http://metadata.google.internal/computeMetadata/v1/",
-            {
-                # e.g. 'projects/233510669893/zones/us-east1-d' -> 'us-east1-d'
-                "instance/zone": lambda v: v.split("/")[-1]
-                if "/" in v
-                else v
-            },
-        )
-        self.attribute_key_to_url = {
-            "cloud.account.id": "project/project-id",
-            "host.id": "instance/id",
-            "cloud.zone": "instance/zone",
-        }
-
-    def get_resources(self):
-        # If we are currently not in a GCE instance this call will throw
-        try:
-            instance_id = self.get_attribute("instance/id")
-        # pylint: disable=broad-except
-        except Exception:
-            instance_id = None
-        if instance_id is None:
-            return {}
-
-        gce_resources = {"host.id": instance_id, "cloud.provider": "gcp"}
-        for attribute_key, attribute_url in self.attribute_key_to_url.items():
-            if attribute_key in gce_resources:
-                continue
-            gce_resources[attribute_key] = self.get_attribute(attribute_url)
-        return gce_resources
+    # This call will throw if we aren't currently in a GCE instance
+    try:
+        all_metadata = requests.get(
+            _GCE_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
+        ).json()
+    # pylint: disable=broad-except
+    except Exception:
+        return {}
+    gce_resources = {
+        "host.id": all_metadata["instance"]["id"],
+        "cloud.account.id": all_metadata["project"]["projectId"],
+        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
+        "cloud.provider": "gcp",
+        "gcp.resource_type": "gce_instance",
+    }
+    return gce_resources
 
 
-_RESOURCE_TYPE_TO_FINDER = {"gce_instance": GCEResourceFinder}
+_RESOURCE_TYPE_TO_FINDER = {"gce_instance": get_gce_resources}
 
 
 class GoogleCloudResourceDetector(ResourceDetector):
@@ -87,7 +47,7 @@ class GoogleCloudResourceDetector(ResourceDetector):
                 resource_type,
                 resource_finder,
             ) in _RESOURCE_TYPE_TO_FINDER.items():
-                found_resources = resource_finder().get_resources()
+                found_resources = resource_finder()
                 if found_resources:
                     self.gcp_resources[resource_type] = found_resources
         return Resource(self.gcp_resources)
