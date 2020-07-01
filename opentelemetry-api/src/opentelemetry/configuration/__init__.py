@@ -142,19 +142,18 @@ class Configuration:
     def __getattr__(self, name: str) -> Optional[ConfigValue]:
         return self._config_map.get(name)
 
-    def __setattr__(self, key: str, val: ConfigValue) -> None:
-        if key == "_config_map":
-            super().__setattr__(key, val)
+    def __setattr__(self, name: str, value: ConfigValue) -> None:
+        if name not in self._config_map.keys():
+            self._config_map[name] = value
         else:
-            raise AttributeError(key)
+            raise AttributeError(name)
 
     def get(self, name: str, default: _T) -> _T:
         """Use this typed method for dynamic access instead of `getattr`
 
         :rtype: str or bool or int or float or None
         """
-        val = self._config_map.get(name, default)
-        return val
+        return self._config_map.get(name, default)
 
     @classmethod
     def _reset(cls) -> None:
