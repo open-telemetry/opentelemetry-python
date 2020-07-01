@@ -31,7 +31,7 @@ def get_gce_resources():
     return gce_resources
 
 
-_RESOURCE_FINDERS = {get_gce_resources}
+_RESOURCE_FINDERS = [get_gce_resources]
 
 
 class GoogleCloudResourceDetector(ResourceDetector):

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import typing
 from json import dumps
@@ -20,6 +21,7 @@ from opentelemetry.context import attach, detach, set_value
 
 LabelValue = typing.Union[str, bool, int, float]
 Labels = typing.Dict[str, LabelValue]
+logger = logging.getLogger(__name__)
 
 
 class Resource:
@@ -97,6 +99,7 @@ def get_aggregated_resources(
         except Exception as ex:
             if detector.raise_on_error:
                 raise ex
+            logger.warning("Exception in detector %s, ignoring", detector)
             detected_resources = _EMPTY_RESOURCE
         finally:
             final_resource = final_resource.merge(detected_resources)

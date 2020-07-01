@@ -32,19 +32,10 @@ class DummyRequest:
         return json.loads(self.text)
 
 
-# pylint: disable=unused-argument
-def mock_return_resources(url, headers):
-    return DummyRequest(
-        json.dumps(
-            {
-                "instance": {
-                    "id": "instance_id",
-                    "zone": "projects/123/zones/zone",
-                },
-                "project": {"projectId": "project_id"},
-            }
-        )
-    )
+RESOURCES_JSON_STRING = {
+    "instance": {"id": "instance_id", "zone": "projects/123/zones/zone"},
+    "project": {"projectId": "project_id"},
+}
 
 
 class TestGCEResourceFinder(unittest.TestCase):
@@ -55,7 +46,7 @@ class TestGCEResourceFinder(unittest.TestCase):
 
     @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gce_resources(self, getter):
-        getter.side_effect = mock_return_resources
+        getter.return_value.json.return_value = RESOURCES_JSON_STRING
         found_resources = get_gce_resources()
         self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
         self.assertEqual(
@@ -74,7 +65,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
     @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_resources(self, getter):
         resource_finder = GoogleCloudResourceDetector()
-        getter.side_effect = mock_return_resources
+        getter.return_value.json.return_value = RESOURCES_JSON_STRING
         found_resources = resource_finder.detect()
         self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
         self.assertEqual(
