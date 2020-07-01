@@ -26,7 +26,7 @@ Usage
     from pymongo import MongoClient
     from opentelemetry import trace
     from opentelemetry.trace import TracerProvider
-    from opentelemetry.trace.ext.pymongo import PymongoInstrumentor
+    from opentelemetry.ext.pymongo import PymongoInstrumentor
 
     trace.set_tracer_provider(TracerProvider())
 
@@ -43,8 +43,8 @@ API
 from pymongo import monitoring
 
 from opentelemetry import trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.pymongo.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 

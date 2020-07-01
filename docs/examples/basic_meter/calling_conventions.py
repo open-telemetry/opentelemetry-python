@@ -19,15 +19,13 @@ It shows the usage of the direct, bound and batch calling conventions.
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider, ValueRecorder
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.controller import PushController
 
 # Use the meter type provided by the SDK package
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-exporter = ConsoleMetricsExporter()
-controller = PushController(meter=meter, exporter=exporter, interval=5)
+metrics.get_meter_provider().start_pipeline(meter, ConsoleMetricsExporter(), 5)
 
 requests_counter = meter.create_metric(
     name="requests",
@@ -35,6 +33,14 @@ requests_counter = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Counter,
+)
+
+requests_size = meter.create_metric(
+    name="requests_size",
+    description="size of requests",
+    unit="1",
+    value_type=int,
+    metric_type=ValueRecorder,
 )
 
 clicks_counter = meter.create_metric(
@@ -51,7 +57,7 @@ print("Updating using direct calling convention...")
 # You can record metrics directly using the metric instrument. You pass in
 # labels that you would like to record for.
 requests_counter.add(25, labels)
-time.sleep(5)
+time.sleep(10)
 
 print("Updating using a bound instrument...")
 # You can record metrics with bound metric instruments. Bound metric

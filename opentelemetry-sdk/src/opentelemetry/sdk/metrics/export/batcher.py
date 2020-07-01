@@ -14,7 +14,23 @@
 
 from typing import Sequence
 
+from opentelemetry.metrics import (
+    Counter,
+    InstrumentT,
+    SumObserver,
+    UpDownCounter,
+    UpDownSumObserver,
+    ValueObserver,
+    ValueRecorder,
+)
 from opentelemetry.sdk.metrics.export import MetricRecord
+from opentelemetry.sdk.metrics.export.aggregate import (
+    Aggregator,
+    LastValueAggregator,
+    MinMaxSumCountAggregator,
+    SumAggregator,
+    ValueObserverAggregator,
+)
 
 
 class Batcher:
@@ -33,6 +49,23 @@ class Batcher:
         # (deltas)
         self.stateful = stateful
 
+    def aggregator_for(self, instrument_type: Type[InstrumentT]) -> Aggregator:
+        """Returns an aggregator based on metric instrument type.
+
+        Aggregators keep track of and updates values when metrics get updated.
+        """
+        # pylint:disable=R0201
+        if issubclass(instrument_type, (Counter, UpDownCounter)):
+            return SumAggregator()
+        if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
+            return LastValueAggregator()
+        if issubclass(instrument_type, ValueRecorder):
+            return MinMaxSumCountAggregator()
+        if issubclass(instrument_type, ValueObserver):
+            return ValueObserverAggregator()
+        # TODO: Add other aggregators
+        return SumAggregator()
+
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
 
@@ -40,8 +73,8 @@ class Batcher:
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for (metric, aggregator_type, labels), aggregator in self._batch_map.items():
-            metric_records.append(MetricRecord(aggregator, labels, metric))
+        for (instrument, aggregator_type, labels), aggregator in self._batch_map.items():
+            metric_records.append(MetricRecord(instrument, labels, aggregator))
         return metric_records
 
     def finished_collection(self):
@@ -60,7 +93,7 @@ class Batcher:
 
         # The uniqueness of a batch record is defined by a specific metric
         # using an aggregator type with a specific set of labels.
-        key = (record.metric, aggregator.__class__, record.labels)
+        key = (record.instrument, aggregator.__class__, record.labels)
         batch_value = self._batch_map.get(key)
         if batch_value:
             # Update the stored checkpointed value if exists. The call to merge

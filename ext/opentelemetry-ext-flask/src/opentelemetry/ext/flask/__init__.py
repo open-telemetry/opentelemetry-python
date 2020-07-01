@@ -53,13 +53,9 @@ import flask
 
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.flask.version import __version__
-from opentelemetry.util import (
-    disable_tracing_hostname,
-    disable_tracing_path,
-    time_ns,
-)
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.util import disable_trace, time_ns
 
 _logger = getLogger(__name__)
 
@@ -67,6 +63,24 @@ _ENVIRON_STARTTIME_KEY = "opentelemetry-flask.starttime_key"
 _ENVIRON_SPAN_KEY = "opentelemetry-flask.span_key"
 _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
 _ENVIRON_TOKEN = "opentelemetry-flask.token"
+
+
+def get_excluded_hosts():
+    hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS or []
+    if hosts:
+        hosts = str.split(hosts, ",")
+    return hosts
+
+
+def get_excluded_paths():
+    paths = configuration.Configuration().FLASK_EXCLUDED_PATHS or []
+    if paths:
+        paths = str.split(paths, ",")
+    return paths
+
+
+_excluded_hosts = get_excluded_hosts()
+_excluded_paths = get_excluded_paths()
 
 
 def _rewrapped_app(wsgi_app):
@@ -78,9 +92,9 @@ def _rewrapped_app(wsgi_app):
         environ[_ENVIRON_STARTTIME_KEY] = time_ns()
 
         def _start_response(status, response_headers, *args, **kwargs):
-
-            if not _disable_trace(flask.request.url):
-
+            if not disable_trace(
+                flask.request.url, _excluded_hosts, _excluded_paths
+            ):
                 span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
 
                 if span:
@@ -102,7 +116,7 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
-    if _disable_trace(flask.request.url):
+    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
         return
 
     environ = flask.request.environ
@@ -134,6 +148,9 @@ def _before_request():
 
 
 def _teardown_request(exc):
+    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
+        return
+
     activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)
     if not activation:
         _logger.warning(
@@ -161,21 +178,6 @@ class _InstrumentedFlask(flask.Flask):
 
         self.before_request(_before_request)
         self.teardown_request(_teardown_request)
-
-
-def _disable_trace(url):
-    excluded_hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS
-    excluded_paths = configuration.Configuration().FLASK_EXCLUDED_PATHS
-
-    if excluded_hosts:
-        excluded_hosts = str.split(excluded_hosts, ",")
-        if disable_tracing_hostname(url, excluded_hosts):
-            return True
-    if excluded_paths:
-        excluded_paths = str.split(excluded_paths, ",")
-        if disable_tracing_path(url, excluded_paths):
-            return True
-    return False
 
 
 class FlaskInstrumentor(BaseInstrumentor):

@@ -4,13 +4,20 @@ language: python
 
 cache: pip
 
-python:
-  - 'pypy3'
-  - '3.8'
-  - '3.4'
-  - '3.5'
-  - '3.6'
-  - '3.7'
+matrix:
+  include:
+    - python: 3.8
+      env: TOXENV=lint
+    - python: pypy3
+    - python: 3.8
+    - python: 3.4
+    - python: 3.5
+    - python: 3.6
+    - python: 3.7
+    - python: 3.8
+      env: TOXENV=docker-tests
+    - python: 3.8
+      env: TOXENV=docs
 
 #matrix:
 #  allow_failures:

@@ -25,7 +25,7 @@ Usage
     import opentelemetry.ext.requests
 
     # You can optionally pass a custom TracerProvider to RequestInstrumentor.instrument()
-    opentelemetry.ext.requests.RequestInstrumentor.instrument()
+    opentelemetry.ext.requests.RequestsInstrumentor().instrument()
     response = requests.get(url="https://www.example.org/")
 
 Limitations
@@ -45,17 +45,20 @@ import functools
 import types
 from urllib.parse import urlparse
 
+from requests import Timeout, URLRequired
+from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from requests.sessions import Session
 
 from opentelemetry import context, propagators, trace
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.requests.version import __version__
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
 # pylint: disable=unused-argument
-def _instrument(tracer_provider=None):
+def _instrument(tracer_provider=None, span_callback=None):
     """Enables tracing of all requests calls that go through
       :code:`requests.session.Session.request` (this includes
       :code:`requests.get`, etc.)."""
@@ -80,29 +83,50 @@ def _instrument(tracer_provider=None):
         # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#http-client
         try:
             parsed_url = urlparse(url)
+            span_name = parsed_url.path
         except ValueError as exc:  # Invalid URL
-            path = "<Unparsable URL: {}>".format(exc)
-        else:
-            if parsed_url is None:
-                path = "<URL parses to None>"
-            path = parsed_url.path
+            span_name = "<Unparsable URL: {}>".format(exc)
 
-        with tracer.start_as_current_span(path, kind=SpanKind.CLIENT) as span:
+        exception = None
+
+        with tracer.start_as_current_span(
+            span_name, kind=SpanKind.CLIENT
+        ) as span:
             span.set_attribute("component", "http")
             span.set_attribute("http.method", method.upper())
             span.set_attribute("http.url", url)
 
-            headers = kwargs.setdefault("headers", {})
+            headers = kwargs.get("headers", {}) or {}
             propagators.inject(type(headers).__setitem__, headers)
-            result = wrapped(self, method, url, *args, **kwargs)  # *** PROCEED
+            kwargs["headers"] = headers
 
-            span.set_attribute("http.status_code", result.status_code)
-            span.set_attribute("http.status_text", result.reason)
-            span.set_status(
-                Status(_http_status_to_canonical_code(result.status_code))
-            )
+            try:
+                result = wrapped(
+                    self, method, url, *args, **kwargs
+                )  # *** PROCEED
+            except Exception as exc:  # pylint: disable=W0703
+                exception = exc
+                result = getattr(exc, "response", None)
 
-            return result
+            if exception is not None:
+                span.set_status(
+                    Status(_exception_to_canonical_code(exception))
+                )
+
+            if result is not None:
+                span.set_attribute("http.status_code", result.status_code)
+                span.set_attribute("http.status_text", result.reason)
+                span.set_status(
+                    Status(http_status_to_canonical_code(result.status_code))
+                )
+
+            if span_callback is not None:
+                span_callback(span, result)
+
+        if exception is not None:
+            raise exception.with_traceback(exception.__traceback__)
+
+        return result
 
     instrumented_request.opentelemetry_ext_requests_applied = True
 
@@ -124,40 +148,34 @@ def _uninstrument():
         Session.request = original
 
 
-def _http_status_to_canonical_code(code: int, allow_redirect: bool = True):
-    # pylint:disable=too-many-branches,too-many-return-statements
-    if code < 100:
-        return StatusCanonicalCode.UNKNOWN
-    if code <= 299:
-        return StatusCanonicalCode.OK
-    if code <= 399:
-        if allow_redirect:
-            return StatusCanonicalCode.OK
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
-    if code <= 499:
-        if code == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCanonicalCode.UNAUTHENTICATED
-        if code == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCanonicalCode.PERMISSION_DENIED
-        if code == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCanonicalCode.NOT_FOUND
-        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCanonicalCode.RESOURCE_EXHAUSTED
+def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
+    if isinstance(
+        exc,
+        (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError),
+    ):
         return StatusCanonicalCode.INVALID_ARGUMENT
-    if code <= 599:
-        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCanonicalCode.UNIMPLEMENTED
-        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCanonicalCode.UNAVAILABLE
-        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCanonicalCode.DEADLINE_EXCEEDED
-        return StatusCanonicalCode.INTERNAL
+    if isinstance(exc, Timeout):
+        return StatusCanonicalCode.DEADLINE_EXCEEDED
     return StatusCanonicalCode.UNKNOWN
 
 
 class RequestsInstrumentor(BaseInstrumentor):
+    """An instrumentor for requests
+    See `BaseInstrumentor`
+    """
+
     def _instrument(self, **kwargs):
-        _instrument(tracer_provider=kwargs.get("tracer_provider"))
+        """Instruments requests module
+
+        Args:
+            **kwargs: Optional arguments
+                ``tracer_provider``: a TracerProvider, defaults to global
+                ``span_callback``: An optional callback invoked before returning the http response. Invoked with Span and requests.Response
+        """
+        _instrument(
+            tracer_provider=kwargs.get("tracer_provider"),
+            span_callback=kwargs.get("span_callback"),
+        )
 
     def _uninstrument(self, **kwargs):
         _uninstrument()

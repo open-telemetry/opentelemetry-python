@@ -117,6 +117,17 @@ tracer_provider.add_span_processor(mock_processor)
             with tracer.use_span(default_span):
                 raise TestUseSpanException()
 
+    def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
+        span_processor = trace.ConcurrentMultiSpanProcessor(2)
+        tracer_provider = trace.TracerProvider(
+            active_span_processor=span_processor
+        )
+
+        # pylint: disable=protected-access
+        self.assertEqual(
+            span_processor, tracer_provider._active_span_processor
+        )
+
 
 class TestTracerSampling(unittest.TestCase):
     def test_default_sampler(self):
@@ -211,26 +222,10 @@ class TestSpanCreation(unittest.TestCase):
             span2.span_processor, tracer_provider._active_span_processor
         )
 
-    def test_get_current_span_multiple_tracers(self):
-        """In the case where there are multiple tracers,
-        get_current_span will return the same active span
-        for both tracers.
-        """
-        tracer_1 = new_tracer()
-        tracer_2 = new_tracer()
-        root = tracer_1.start_span("root")
-        with tracer_1.use_span(root, True):
-            self.assertIs(tracer_1.get_current_span(), root)
-            self.assertIs(tracer_2.get_current_span(), root)
-
-        # outside of the loop, both should not reference a span.
-        self.assertIs(tracer_1.get_current_span(), None)
-        self.assertIs(tracer_2.get_current_span(), None)
-
     def test_start_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -238,7 +233,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
         with tracer.use_span(root, True):
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span(
                 "child", kind=trace_api.SpanKind.CLIENT
@@ -265,11 +260,11 @@ class TestSpanCreation(unittest.TestCase):
                 )
 
                 # Verify start_span() did not set the current span.
-                self.assertIs(tracer.get_current_span(), root)
+                self.assertIs(trace_api.get_current_span(), root)
 
             self.assertIsNotNone(child.end_time)
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
         self.assertIsNotNone(root.end_time)
 
     def test_start_span_explicit(self):
@@ -282,7 +277,7 @@ class TestSpanCreation(unittest.TestCase):
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -290,7 +285,7 @@ class TestSpanCreation(unittest.TestCase):
 
         # Test with the implicit root span
         with tracer.use_span(root, True):
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span("stepchild", other_parent) as child:
                 # The child's parent should be the one passed in,
@@ -316,30 +311,30 @@ class TestSpanCreation(unittest.TestCase):
                 )
 
                 # Verify start_span() did not set the current span.
-                self.assertIs(tracer.get_current_span(), root)
+                self.assertIs(trace_api.get_current_span(), root)
 
             # Verify ending the child did not set the current span.
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
     def test_start_as_current_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         with tracer.start_as_current_span("root") as root:
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_as_current_span("child") as child:
-                self.assertIs(tracer.get_current_span(), child)
+                self.assertIs(trace_api.get_current_span(), child)
                 self.assertIs(child.parent, root.get_context())
 
             # After exiting the child's scope the parent should become the
             # current span again.
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
         self.assertIsNotNone(root.end_time)
 
     def test_start_as_current_span_explicit(self):
@@ -351,11 +346,11 @@ class TestSpanCreation(unittest.TestCase):
             is_remote=False,
         )
 
-        self.assertIsNone(tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         # Test with the implicit root span
         with tracer.start_as_current_span("root") as root:
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertIs(trace_api.get_current_span(), root)
 
             self.assertIsNotNone(root.start_time)
             self.assertIsNone(root.end_time)
@@ -366,14 +361,14 @@ class TestSpanCreation(unittest.TestCase):
                 # The child should become the current span as usual, but its
                 # parent should be the one passed in, not the
                 # previously-current span.
-                self.assertIs(tracer.get_current_span(), child)
+                self.assertIs(trace_api.get_current_span(), child)
                 self.assertNotEqual(child.parent, root)
                 self.assertIs(child.parent, other_parent)
 
             # After exiting the child's scope the last span on the stack should
             # become current, not the child's parent.
-            self.assertNotEqual(tracer.get_current_span(), other_parent)
-            self.assertIs(tracer.get_current_span(), root)
+            self.assertNotEqual(trace_api.get_current_span(), other_parent)
+            self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
     def test_explicit_span_resource(self):
@@ -487,38 +482,42 @@ class TestSpan(unittest.TestCase):
 
             self.assertEqual(len(root.attributes), 0)
 
-    def test_check_sequence_helper(self):
+    def test_byte_type_attribute_value(self):
+        with self.tracer.start_as_current_span("root") as root:
+            with self.assertLogs(level=WARNING):
+                root.set_attribute(
+                    "invalid-byte-type-attribute",
+                    b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+                )
+                self.assertFalse(
+                    "invalid-byte-type-attribute" in root.attributes
+                )
+
+            root.set_attribute("valid-byte-type-attribute", b"valid byte")
+            self.assertTrue(
+                isinstance(root.attributes["valid-byte-type-attribute"], str)
+            )
+
+    def test_check_attribute_helper(self):
         # pylint: disable=protected-access
-        self.assertEqual(
-            trace.Span._check_attribute_value_sequence([1, 2, 3.4, "ss", 4]),
-            "different type",
+        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
+        self.assertFalse(
+            trace._is_valid_attribute_value([dict(), 1, 2, 3.4, 4])
         )
-        self.assertEqual(
-            trace.Span._check_attribute_value_sequence([dict(), 1, 2, 3.4, 4]),
-            "invalid type",
+        self.assertFalse(
+            trace._is_valid_attribute_value(["sw", "lf", 3.4, "ss"])
         )
-        self.assertEqual(
-            trace.Span._check_attribute_value_sequence(
-                ["sw", "lf", 3.4, "ss"]
-            ),
-            "different type",
-        )
-        self.assertEqual(
-            trace.Span._check_attribute_value_sequence([1, 2, 3.4, 5]),
-            "different type",
-        )
-        self.assertIsNone(
-            trace.Span._check_attribute_value_sequence([1, 2, 3, 5])
-        )
-        self.assertIsNone(
-            trace.Span._check_attribute_value_sequence([1.2, 2.3, 3.4, 4.5])
-        )
-        self.assertIsNone(
-            trace.Span._check_attribute_value_sequence([True, False])
-        )
-        self.assertIsNone(
-            trace.Span._check_attribute_value_sequence(["ss", "dw", "fw"])
-        )
+        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, 5]))
+        self.assertTrue(trace._is_valid_attribute_value([1, 2, 3, 5]))
+        self.assertTrue(trace._is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
+        self.assertTrue(trace._is_valid_attribute_value([True, False]))
+        self.assertTrue(trace._is_valid_attribute_value(["ss", "dw", "fw"]))
+        self.assertTrue(trace._is_valid_attribute_value([]))
+        self.assertFalse(trace._is_valid_attribute_value(dict()))
+        self.assertTrue(trace._is_valid_attribute_value(True))
+        self.assertTrue(trace._is_valid_attribute_value("hi"))
+        self.assertTrue(trace._is_valid_attribute_value(3.4))
+        self.assertTrue(trace._is_valid_attribute_value(15))
 
     def test_sampling_attributes(self):
         decision_attributes = {
@@ -553,7 +552,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
 
     def test_events(self):
-        self.assertIsNone(self.tracer.get_current_span())
+        self.assertIsNone(trace_api.get_current_span())
 
         with self.tracer.start_as_current_span("root") as root:
             # only event name
@@ -561,33 +560,67 @@ class TestSpan(unittest.TestCase):
 
             # event name and attributes
             now = time_ns()
-            root.add_event("event1", {"name": "pluto"})
+            root.add_event(
+                "event1", {"name": "pluto", "some_bools": [True, False]}
+            )
 
             # event name, attributes and timestamp
             now = time_ns()
-            root.add_event("event2", {"name": "birthday"}, now)
+            root.add_event("event2", {"name": ["birthday"]}, now)
+
+            mutable_list = ["original_contents"]
+            root.add_event("event3", {"name": mutable_list})
 
             def event_formatter():
                 return {"name": "hello"}
 
             # lazy event
-            root.add_lazy_event("event3", event_formatter, now)
+            root.add_lazy_event("event4", event_formatter, now)
 
-            self.assertEqual(len(root.events), 4)
+            self.assertEqual(len(root.events), 5)
 
             self.assertEqual(root.events[0].name, "event0")
             self.assertEqual(root.events[0].attributes, {})
 
             self.assertEqual(root.events[1].name, "event1")
-            self.assertEqual(root.events[1].attributes, {"name": "pluto"})
+            self.assertEqual(
+                root.events[1].attributes,
+                {"name": "pluto", "some_bools": (True, False)},
+            )
 
             self.assertEqual(root.events[2].name, "event2")
-            self.assertEqual(root.events[2].attributes, {"name": "birthday"})
+            self.assertEqual(
+                root.events[2].attributes, {"name": ("birthday",)}
+            )
             self.assertEqual(root.events[2].timestamp, now)
 
             self.assertEqual(root.events[3].name, "event3")
-            self.assertEqual(root.events[3].attributes, {"name": "hello"})
-            self.assertEqual(root.events[3].timestamp, now)
+            self.assertEqual(
+                root.events[3].attributes, {"name": ("original_contents",)}
+            )
+            mutable_list = ["new_contents"]
+            self.assertEqual(
+                root.events[3].attributes, {"name": ("original_contents",)}
+            )
+
+            self.assertEqual(root.events[4].name, "event4")
+            self.assertEqual(root.events[4].attributes, {"name": "hello"})
+            self.assertEqual(root.events[4].timestamp, now)
+
+    def test_invalid_event_attributes(self):
+        self.assertIsNone(trace_api.get_current_span())
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
+            root.add_event("event0", {"attr1": dict()})
+            root.add_event("event0", {"attr1": [[True]]})
+            root.add_event("event0", {"attr1": [dict()], "attr2": [1, 2]})
+
+            self.assertEqual(len(root.events), 4)
+            self.assertEqual(root.events[0].attributes, {"attr1": True})
+            self.assertEqual(root.events[1].attributes, {})
+            self.assertEqual(root.events[2].attributes, {})
+            self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
     def test_links(self):
         other_context1 = trace_api.SpanContext(
@@ -768,6 +801,20 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
+    def test_record_error(self):
+        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        try:
+            raise ValueError("invalid")
+        except ValueError as err:
+            span.record_error(err)
+        error_event = span.events[0]
+        self.assertEqual("error", error_event.name)
+        self.assertEqual("invalid", error_event.attributes["error.message"])
+        self.assertEqual("ValueError", error_event.attributes["error.type"])
+        self.assertIn(
+            "ValueError: invalid", error_event.attributes["error.stack"]
+        )
+
 
 def span_event_start_fmt(span_processor_name, span_name):
     return span_processor_name + ":" + span_name + ":start"
@@ -882,3 +929,35 @@ class TestSpanProcessor(unittest.TestCase):
         expected_list.append(span_event_end_fmt("SP1", "foo"))
 
         self.assertListEqual(spans_calls_list, expected_list)
+
+    def test_to_json(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+        )
+        span = trace.Span("span-name", context)
+
+        self.assertEqual(
+            span.to_json(),
+            """{
+    "name": "span-name",
+    "context": {
+        "trace_id": "0x000000000000000000000000deadbeef",
+        "span_id": "0x00000000deadbef0",
+        "trace_state": "{}"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": null,
+    "start_time": null,
+    "end_time": null,
+    "attributes": {},
+    "events": [],
+    "links": []
+}""",
+        )
+        self.assertEqual(
+            span.to_json(indent=None),
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": []}',
+        )

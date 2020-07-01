@@ -2,6 +2,70 @@
 
 ## Unreleased
 
+## Version 0.10b0
+
+Released 2020-06-23
+
+- Rename CounterAggregator -> SumAggregator
+  ([#816](https://github.com/open-telemetry/opentelemetry-python/pull/816))
+
+## 0.9b0
+
+Released 2020-06-10
+
+- Move stateful & resource from Meter to MeterProvider
+  ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+- Rename Measure to ValueRecorder in metrics
+  ([#761](https://github.com/open-telemetry/opentelemetry-python/pull/761))
+- Adding trace.get_current_span, Removing Tracer.get_current_span
+  ([#552](https://github.com/open-telemetry/opentelemetry-python/pull/552))
+- bugfix: byte type attributes are decoded before adding to attributes dict
+  ([#775](https://github.com/open-telemetry/opentelemetry-python/pull/775))
+- Rename Observer to ValueObserver
+  ([#764](https://github.com/open-telemetry/opentelemetry-python/pull/764))
+- Add SumObserver, UpDownSumObserver and LastValueAggregator in metrics
+  ([#789](https://github.com/open-telemetry/opentelemetry-python/pull/789))
+- Add start_pipeline to MeterProvider
+  ([#791](https://github.com/open-telemetry/opentelemetry-python/pull/791))
+
+## 0.8b0
+
+Released 2020-05-27
+
+- Validate span attribute types in SDK
+  ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
+- Specify to_json indent from arguments
+  ([#718](https://github.com/open-telemetry/opentelemetry-python/pull/718))
+- Span.resource will now default to an empty resource
+  ([#724](https://github.com/open-telemetry/opentelemetry-python/pull/724))
+- bugfix: Fix error message
+  ([#729](https://github.com/open-telemetry/opentelemetry-python/pull/729))
+- deep copy empty attributes
+  ([#714](https://github.com/open-telemetry/opentelemetry-python/pull/714))
+
+## 0.7b1
+
+Released 2020-05-12
+
+- Exporter API: span parents are now always spancontext
+  ([#548](https://github.com/open-telemetry/opentelemetry-python/pull/548))
+- tracer.get_tracer now optionally accepts a TracerProvider
+  ([#602](https://github.com/open-telemetry/opentelemetry-python/pull/602))
+- Console span exporter now prints prettier, more legible messages
+  ([#505](https://github.com/open-telemetry/opentelemetry-python/pull/505))
+- bugfix: B3 propagation now retrieves parentSpanId correctly
+  ([#621](https://github.com/open-telemetry/opentelemetry-python/pull/621))
+- bugfix: a DefaultSpan now longer causes an exception when used with tracer
+  ([#577](https://github.com/open-telemetry/opentelemetry-python/pull/577))
+- move last_updated_timestamp into aggregators instead of bound metric
+  instrument
+  ([#522](https://github.com/open-telemetry/opentelemetry-python/pull/522))
+- bugfix: suppressing instrumentation in metrics to eliminate an infinite loop
+  of telemetry
+  ([#529](https://github.com/open-telemetry/opentelemetry-python/pull/529))
+- bugfix: freezing span attribute sequences, reducing potential user errors
+  ([#529](https://github.com/open-telemetry/opentelemetry-python/pull/529))
+
 ## 0.6b0
 
 Released 2020-03-30
@@ -32,13 +96,13 @@ Released 2020-03-16
 - Implement observer instrument
   ([#425](https://github.com/open-telemetry/opentelemetry-python/pull/425))
 
-## 0.4a0 
+## 0.4a0
 
 Released 2020-02-21
 
 - Added named Tracers
   ([#301](https://github.com/open-telemetry/opentelemetry-python/pull/301))
-- Set status for ended spans 
+- Set status for ended spans
   ([#297](https://github.com/open-telemetry/opentelemetry-python/pull/297) and
   [#358](https://github.com/open-telemetry/opentelemetry-python/pull/358))
 - Use module loggers

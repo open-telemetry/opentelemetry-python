@@ -16,9 +16,9 @@ from logging import getLogger
 
 from django.conf import settings
 
-from opentelemetry.auto_instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.configuration import Configuration
 from opentelemetry.ext.django.middleware import _DjangoMiddleware
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 _logger = getLogger(__name__)
 
@@ -41,7 +41,7 @@ class DjangoInstrumentor(BaseInstrumentor):
         # built inside the Configuration class itself with the magic method
         # __bool__
 
-        if Configuration().DJANGO_INSTRUMENT != "True":
+        if not Configuration().DJANGO_INSTRUMENT:
             return
 
         # This can not be solved, but is an inherent problem of this approach:

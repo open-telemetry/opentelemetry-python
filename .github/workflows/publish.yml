@@ -14,10 +14,24 @@ jobs:
         python-version: '3.7'
     - name: Build wheels
       run: ./scripts/build.sh
+    - name: Install twine
+      run: |
+        pip install twine
+    # The step below publishes to testpypi in order to catch any issues
+    # with the package configuration that would cause a failure to upload
+    # to pypi. One example of such a failure is if a classifier is
+    # rejected by pypi (e.g "3 - Beta"). This would cause a failure during the
+    # middle of the package upload causing the action to fail, and certain packages
+    # might have already been updated, this would be bad.
+    - name: Publish to TestPyPI
+      env:
+        TWINE_USERNAME: '__token__'
+        TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+      run: |
+        twine upload --repository testpypi --skip-existing --verbose dist/*
     - name: Publish to PyPI
       env:
         TWINE_USERNAME: '__token__'
         TWINE_PASSWORD: ${{ secrets.pypi_password }}
       run: |
-        pip install twine
         twine upload --skip-existing --verbose dist/*

@@ -35,14 +35,24 @@ class TestMetrics(unittest.TestCase):
         counter = metrics.Counter()
         counter.add(1, {})
 
-    def test_measure(self):
-        measure = metrics.Measure()
-        bound_measure = measure.bind({})
-        self.assertIsInstance(bound_measure, metrics.BoundMeasure)
+    def test_updowncounter(self):
+        counter = metrics.UpDownCounter()
+        bound_counter = counter.bind({})
+        self.assertIsInstance(bound_counter, metrics.BoundUpDownCounter)
 
-    def test_measure_record(self):
-        measure = metrics.Measure()
-        measure.record(1, {})
+    def test_updowncounter_add(self):
+        counter = metrics.Counter()
+        counter.add(1, {})
+        counter.add(-1, {})
+
+    def test_valuerecorder(self):
+        valuerecorder = metrics.ValueRecorder()
+        bound_valuerecorder = valuerecorder.bind({})
+        self.assertIsInstance(bound_valuerecorder, metrics.BoundValueRecorder)
+
+    def test_valuerecorder_record(self):
+        valuerecorder = metrics.ValueRecorder()
+        valuerecorder.record(1, {})
 
     def test_default_bound_metric(self):
         bound_instrument = metrics.DefaultBoundInstrument()
@@ -52,10 +62,22 @@ class TestMetrics(unittest.TestCase):
         bound_counter = metrics.BoundCounter()
         bound_counter.add(1)
 
-    def test_bound_measure(self):
-        bound_measure = metrics.BoundMeasure()
-        bound_measure.record(1)
+    def test_bound_valuerecorder(self):
+        bound_valuerecorder = metrics.BoundValueRecorder()
+        bound_valuerecorder.record(1)
 
-    def test_observer(self):
+    def test_default_observer(self):
         observer = metrics.DefaultObserver()
+        observer.observe(1, {})
+
+    def test_sum_observer(self):
+        observer = metrics.SumObserver()
+        observer.observe(1, {})
+
+    def test_updown_sum_observer(self):
+        observer = metrics.UpDownSumObserver()
+        observer.observe(1, {})
+
+    def test_value_observer(self):
+        observer = metrics.ValueObserver()
         observer.observe(1, {})

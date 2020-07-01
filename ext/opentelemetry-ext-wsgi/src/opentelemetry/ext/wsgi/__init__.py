@@ -61,7 +61,7 @@ import wsgiref.util as wsgiref_util
 
 from opentelemetry import context, propagators, trace
 from opentelemetry.ext.wsgi.version import __version__
-from opentelemetry.trace.propagation import get_span_from_context
+from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -87,48 +87,20 @@ def setifnotnone(dic, key, value):
         dic[key] = value
 
 
-def http_status_to_canonical_code(code: int, allow_redirect: bool = True):
-    # pylint:disable=too-many-branches,too-many-return-statements
-    if code < 100:
-        return StatusCanonicalCode.UNKNOWN
-    if code <= 299:
-        return StatusCanonicalCode.OK
-    if code <= 399:
-        if allow_redirect:
-            return StatusCanonicalCode.OK
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
-    if code <= 499:
-        if code == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCanonicalCode.UNAUTHENTICATED
-        if code == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCanonicalCode.PERMISSION_DENIED
-        if code == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCanonicalCode.NOT_FOUND
-        if code == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCanonicalCode.RESOURCE_EXHAUSTED
-        return StatusCanonicalCode.INVALID_ARGUMENT
-    if code <= 599:
-        if code == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCanonicalCode.UNIMPLEMENTED
-        if code == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCanonicalCode.UNAVAILABLE
-        if code == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCanonicalCode.DEADLINE_EXCEEDED
-        return StatusCanonicalCode.INTERNAL
-    return StatusCanonicalCode.UNKNOWN
-
-
 def collect_request_attributes(environ):
     """Collects HTTP request attributes from the PEP3333-conforming
     WSGI environ and returns a dictionary to be used as span creation attributes."""
 
     result = {
         "component": "http",
-        "http.method": environ["REQUEST_METHOD"],
-        "http.server_name": environ["SERVER_NAME"],
-        "http.scheme": environ["wsgi.url_scheme"],
-        "host.port": int(environ["SERVER_PORT"]),
+        "http.method": environ.get("REQUEST_METHOD"),
+        "http.server_name": environ.get("SERVER_NAME"),
+        "http.scheme": environ.get("wsgi.url_scheme"),
     }
+
+    host_port = environ.get("SERVER_PORT")
+    if host_port is not None:
+        result.update({"host.port": int(host_port)})
 
     setifnotnone(result, "http.host", environ.get("HTTP_HOST"))
     target = environ.get("RAW_URI")
@@ -180,12 +152,8 @@ def add_response_attributes(
 
 
 def get_default_span_name(environ):
-    """Calculates a (generic) span name for an incoming HTTP request based on the PEP3333 conforming WSGI environ."""
-
-    # TODO: Update once
-    #  https://github.com/open-telemetry/opentelemetry-specification/issues/270
-    #  is resolved
-    return environ.get("PATH_INFO", "/")
+    """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
+    return "HTTP {}".format(environ.get("REQUEST_METHOD", "")).strip()
 
 
 class OpenTelemetryMiddleware:
@@ -196,11 +164,15 @@ class OpenTelemetryMiddleware:
 
     Args:
         wsgi: The WSGI application callable to forward requests to.
+        name_callback: Callback which calculates a generic span name for an
+                       incoming HTTP request based on the PEP3333 WSGI environ.
+                       Optional: Defaults to get_default_span_name.
     """
 
-    def __init__(self, wsgi):
+    def __init__(self, wsgi, name_callback=get_default_span_name):
         self.wsgi = wsgi
         self.tracer = trace.get_tracer(__name__, __version__)
+        self.name_callback = name_callback
 
     @staticmethod
     def _create_start_response(span, start_response):
@@ -222,7 +194,7 @@ class OpenTelemetryMiddleware:
         token = context.attach(
             propagators.extract(get_header_from_environ, environ)
         )
-        span_name = get_default_span_name(environ)
+        span_name = self.name_callback(environ)
 
         span = self.tracer.start_span(
             span_name,
