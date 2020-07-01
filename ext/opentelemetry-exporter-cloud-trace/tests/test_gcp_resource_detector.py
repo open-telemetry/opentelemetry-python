@@ -40,11 +40,6 @@ RESOURCES_JSON_STRING = {
 
 class TestGCEResourceFinder(unittest.TestCase):
     @mock.patch("opentelemetry.tools.resource_detector.requests.get")
-    def test_not_on_gce(self, getter):
-        getter.side_effect = Exception()
-        self.assertEqual(get_gce_resources(), {})
-
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gce_resources(self, getter):
         getter.return_value.json.return_value = RESOURCES_JSON_STRING
         found_resources = get_gce_resources()
@@ -96,10 +91,3 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
                 }
             ),
         )
-
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
-    def test_not_on_gcp(self, getter):
-        resource_finder = GoogleCloudResourceDetector()
-        getter.side_effect = Exception()
-        found_resources = resource_finder.detect()
-        self.assertEqual(found_resources, Resource.create_empty())

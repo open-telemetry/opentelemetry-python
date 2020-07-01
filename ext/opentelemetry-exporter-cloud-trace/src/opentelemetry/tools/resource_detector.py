@@ -13,14 +13,9 @@ def get_gce_resources():
 
         See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
     """
-    # This call will throw if we aren't currently in a GCE instance
-    try:
-        all_metadata = requests.get(
-            _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
-        ).json()
-    # pylint: disable=broad-except
-    except Exception:
-        return {}
+    all_metadata = requests.get(
+        _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
+    ).json()
     gce_resources = {
         "host.id": all_metadata["instance"]["id"],
         "cloud.account.id": all_metadata["project"]["projectId"],
