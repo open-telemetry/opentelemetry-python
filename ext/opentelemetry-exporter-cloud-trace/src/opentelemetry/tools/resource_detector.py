@@ -1,6 +1,6 @@
 import requests
 
-from opentelemetry.context import attach, set_value
+from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
 
 _GCP_METADATA_URL = (
@@ -14,10 +14,11 @@ def get_gce_resources():
 
         See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
     """
-    attach(set_value("suppress_instrumentation", True))
+    token = attach(set_value("suppress_instrumentation", True))
     all_metadata = requests.get(
         _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
     ).json()
+    detach(token)
     gce_resources = {
         "host.id": all_metadata["instance"]["id"],
         "cloud.account.id": all_metadata["project"]["projectId"],
