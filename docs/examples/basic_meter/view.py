@@ -22,7 +22,12 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
     ValueRecorder
 )
-from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    HistogramAggregator,
+    LastValueAggregator,
+    MinMaxSumCountAggregator,
+    SumAggregator,
+)
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.view import View, ViewConfig
 
@@ -55,13 +60,13 @@ requests_size = meter.create_metric(
 # dropped from the aggregation
 counter_view1 = View(
     requests_counter,
-    SumAggregator,
+    SumAggregator(),
     label_keys=["environment"],
     config=ViewConfig.LABEL_KEYS
 )
 counter_view2 = View(
     requests_counter,
-    SumAggregator,
+    MinMaxSumCountAggregator(),
     label_keys=["os_type"],
     config=ViewConfig.LABEL_KEYS
 )
@@ -69,7 +74,15 @@ counter_view2 = View(
 # the labels directly without and consideration for label_keys
 counter_view3 = View(
     requests_counter,
-    SumAggregator,
+    LastValueAggregator(),
+    label_keys=["environment"], # is not used due to ViewConfig.UNGROUPED
+    config=ViewConfig.UNGROUPED
+)
+# This view uses the HistogramAggregator which accepts an option config
+# parameter to specify the bucket ranges
+size_view = View(
+    requests_size,
+    HistogramAggregator(config=[20,40,60,80,100]),
     label_keys=["environment"], # is not used due to ViewConfig.UNGROUPED
     config=ViewConfig.UNGROUPED
 )
@@ -80,6 +93,7 @@ counter_view3 = View(
 meter.register_view(counter_view1)
 meter.register_view(counter_view2)
 meter.register_view(counter_view3)
+meter.register_view(size_view)
 
 # The views will evaluate the labels passed into the record and aggregate upon
 # the unique labels that are generated
@@ -88,8 +102,10 @@ meter.register_view(counter_view3)
 # view3 labels will evaluate to {"environment": "staging", "os_type": "linux"}
 requests_counter.add(100, {"environment": "staging", "os_type": "linux"})
 
-# Notice we did not create a view for requests_size, this will use the default
-# SummaryAggregation for Measure metrics with UNGROUPED keys
+# Since this is using the HistogramAggregator, the bucket counts will be reflected
+# with each record
 requests_size.record(25, {"test": "value"})
+requests_size.record(-3, {"test": "value"})
+requests_size.record(200, {"test": "value"})
 
 input("...\n")

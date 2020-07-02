@@ -68,7 +68,7 @@ class View:
 
     def __init__(self,
         metric: InstrumentT,
-        aggregator: Type[Aggregator],
+        aggregator: Aggregator,
         label_keys: Sequence[str] = None,
         config: ViewConfig = ViewConfig.UNGROUPED,
     ):
@@ -90,7 +90,7 @@ class View:
 
     def __eq__(self, other):
         return self.metric == other.metric and \
-            self.aggregator == other.aggregator and \
+            self.aggregator.__class__ == other.aggregator.__class__ and \
             self.label_keys == other.label_keys and \
             self.config == other.config
 
@@ -128,19 +128,19 @@ class ViewManager:
             view_datas.add(ViewData(tuple(labels), aggregator))
         else:
             for view in views:
+                updated_labels = []
                 if view.config == ViewConfig.LABEL_KEYS:
-                    updated_labels = []
                     label_key_set = set(view.label_keys)
                     for label in labels:
                         # Only keep labels that are in configured label_keys
                         if label[0] in label_key_set:
                             updated_labels.append(label)
-                    labels = tuple(updated_labels)
-                elif view.config == ViewConfig.DROP_ALL:
-                    labels = ()
+                    updated_labels = tuple(updated_labels)
+                elif view.config == ViewConfig.UNGROUPED:
+                    updated_labels = labels
                 # ViewData that is duplicate (same labels and aggregator) will be
                 # aggregated together as one
-                view_datas.add(ViewData(labels, view.aggregator()))
+                view_datas.add(ViewData(tuple(updated_labels), view.aggregator))
         return view_datas
 
 

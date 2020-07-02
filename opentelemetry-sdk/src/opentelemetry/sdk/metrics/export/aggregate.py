@@ -174,7 +174,7 @@ class HistogramAggregator(Aggregator):
             if self.current is None:
                 self.current = [0 for ii in range(len(self._boundaries) + 1)]
             # greater than max value
-            if value > self._boundaries[len(self._boundaries)-1]:
+            if value >= self._boundaries[len(self._boundaries)-1]:
                 self.current[">"] += 1
             else:
                 for bb in self._boundaries:
@@ -204,8 +204,8 @@ class HistogramAggregator(Aggregator):
 class LastValueAggregator(Aggregator):
     """Aggregator that stores last value results."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, config=None):
+        super().__init__(config=config)
         self._lock = threading.Lock()
         self.last_update_timestamp = None
 
