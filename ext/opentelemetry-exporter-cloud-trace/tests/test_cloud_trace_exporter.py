@@ -32,6 +32,7 @@ from opentelemetry.exporter.cloud_trace import (
     _extract_links,
     _extract_status,
     _format_attribute_value,
+    _strip_characters,
     _truncate_str,
 )
 from opentelemetry.exporter.cloud_trace.version import (
@@ -117,10 +118,12 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 attribute_map={
                     "g.co/agent": _format_attribute_value(
                         "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
-                            pkg_resources.get_distribution(
-                                "opentelemetry-sdk"
-                            ).version,
-                            cloud_trace_version,
+                            _strip_characters(
+                                pkg_resources.get_distribution(
+                                    "opentelemetry-sdk"
+                                ).version
+                            ),
+                            _strip_characters(cloud_trace_version),
                         )
                     )
                 }
