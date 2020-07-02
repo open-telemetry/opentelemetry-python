@@ -107,7 +107,6 @@ class CloudTraceSpanExporter(SpanExporter):
             # pylint: disable=broad-except
             except Exception as ex:
                 logger.error("Error when creating span %s", span, exc_info=ex)
-
         try:
             self.client.batch_write_spans(
                 "projects/{}".format(self.project_id), cloud_trace_spans,
@@ -151,8 +150,8 @@ class CloudTraceSpanExporter(SpanExporter):
                     MAX_SPAN_ATTRS,
                 )
 
-            # Span does not support a MonitoredResource object. We put in the
-            # information into the labels instead.
+            # Span does not support a MonitoredResource object. We put the
+            # information into labels instead.
             resources_and_attrs = _extract_resources(span.resource)
             resources_and_attrs.update(span.attributes)
 
