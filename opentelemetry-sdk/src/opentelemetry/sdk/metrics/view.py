@@ -14,10 +14,23 @@
 
 import logging
 import threading
-
+from typing import Sequence, Type, Tuple
+from opentelemetry.metrics import (
+    Counter,
+    InstrumentT,
+    SumObserver,
+    UpDownCounter,
+    UpDownSumObserver,
+    ValueObserver,
+    ValueRecorder,
+    ValueT,
+)
 from opentelemetry.sdk.metrics.export.aggregate import (
-    CountAggregation,
-    SummaryAggregation
+    Aggregator,
+    LastValueAggregator,
+    MinMaxSumCountAggregator,
+    SumAggregator,
+    ValueObserverAggregator,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,25 +38,23 @@ logger = logging.getLogger(__name__)
 
 class ViewData:
 
-    def __init__(self, view):
-        self.view = view
-        self.aggregators = {} # Label to aggregator
+    def __init__(self, labels: Tuple[Tuple[str, str]], aggregator: Aggregator):
+        self.labels = labels
+        self.aggregator = aggregator
 
-    def record(self, value, labels):
-        # Aggregate based on ViewConfig
-        if self.view.config == ViewConfig.LABEL_KEYS:
-            updated_labels = []
-            label_key_set = set(self.view.label_keys)
-            for label in labels:
-                if label[0] in label_key_set:
-                    updated_labels.append(label)
-            labels = tuple(updated_labels)
-        elif self.view.config == ViewConfig.DROP_ALL:
-            labels = ()
-        if self.aggregators.get(labels) is None:
-            self.aggregators[labels] = self.view.new_aggregator()
-        # Labels are already converted to tuples to be used as keys
-        self.aggregators[labels].update(value)
+    def record(self, value: ValueT):
+        self.aggregator.update(value)
+
+    # Uniqueness is based on labels and aggregator type
+    def __hash__(self):
+        return hash(
+            (self.labels,
+            self.aggregator.__class__)
+        )
+
+    def __eq__(self, other):
+        return self.labels == other.labels and \
+            self.aggregator.__class__ == other.aggregator.__class__
 
 
 class ViewConfig:
@@ -55,30 +66,32 @@ class ViewConfig:
 
 class View:
 
-    def __init__(self, metric, aggregation, label_keys=None, config=ViewConfig.UNGROUPED):
+    def __init__(self,
+        metric: InstrumentT,
+        aggregator: Type[Aggregator],
+        label_keys: Sequence[str] = None,
+        config: ViewConfig = ViewConfig.UNGROUPED,
+    ):
         self.metric = metric
-        self.aggregation = aggregation
+        self.aggregator = aggregator
         if label_keys is None:
             label_keys = []
         self.label_keys = sorted(label_keys)
         self.config = config
 
-    def new_aggregator(self):
-        return self.aggregation.new_aggregator()
-
-    # Uniqueness is based on metric, aggregation type, ordered label keys and ViewConfig
+    # Uniqueness is based on metric, aggregator type, ordered label keys and ViewConfig
     def __hash__(self):
         return hash(
             (self.metric,
-            self.aggregation.__class__,
+            self.aggregator,
             tuple(self.label_keys),
             self.config)
         )
 
     def __eq__(self, other):
         return self.metric == other.metric and \
-            self.aggregation.__class__ == other.aggregation.__class__ and \
-            self.label_keys.sort() == other.label_keys.sort() and \
+            self.aggregator == other.aggregator and \
+            self.label_keys == other.label_keys and \
             self.config == other.config
 
 
@@ -86,17 +99,14 @@ class ViewManager:
 
     def __init__(self):
         self.views = {} # metric to set of views
-        self.view_datas = {} # metric to set of view datas
         self._view_lock = threading.Lock()
 
     def register_view(self, view):
         with self._view_lock:
             if self.views.get(view.metric) is None:
                 self.views[view.metric] = {view}
-                self.view_datas[view.metric] = {ViewData(view)}
             elif view not in self.views.get(view.metric):
                 self.views[view.metric].add(view)
-                self.view_datas[view.metric].add(ViewData(view))
             else:
                 logger.warning("View already registered.")
                 return
@@ -108,16 +118,46 @@ class ViewManager:
             elif view in self.views.get(view.metric):
                 self.views.get(view.metric).remove(view)
 
-    def record(self, metric, labels, value):
-        view_datas = self.view_datas.get(metric)
-        # If no views registered for metric, use default aggregation
-        if view_datas is None:
-            aggregation = CountAggregation() \
-                if metric.__class__.__name__ == "Counter" else SummaryAggregation()
-            view = View(metric, aggregation)
-            self.register_view(view)
-        with self._view_lock:
-            view_datas = self.view_datas.get(metric, {})
-            for view_data in view_datas:
-                # Record the value with the given labels to the view data
-                view_data.record(value, labels)
+    def generate_view_datas(self, metric, labels):
+        view_datas = set()
+        views = self.views.get(metric)
+        # No views configured, use default aggregations
+        if views is None:
+            aggregator = get_default_aggregator(metric)
+            # Default config aggregates on all label keys
+            view_datas.add(ViewData(tuple(labels), aggregator))
+        else:
+            for view in views:
+                if view.config == ViewConfig.LABEL_KEYS:
+                    updated_labels = []
+                    label_key_set = set(view.label_keys)
+                    for label in labels:
+                        # Only keep labels that are in configured label_keys
+                        if label[0] in label_key_set:
+                            updated_labels.append(label)
+                    labels = tuple(updated_labels)
+                elif view.config == ViewConfig.DROP_ALL:
+                    labels = ()
+                # ViewData that is duplicate (same labels and aggregator) will be
+                # aggregated together as one
+                view_datas.add(ViewData(labels, view.aggregator()))
+        return view_datas
+
+
+def get_default_aggregator(instrument: InstrumentT) -> Aggregator:
+    """Returns an aggregator based on metric instrument's type.
+
+    Aggregators keep track of and updates values when metrics get updated.
+    """
+    # pylint:disable=R0201
+    instrument_type = instrument.__class__
+    if issubclass(instrument_type, (Counter, UpDownCounter)):
+        return SumAggregator()
+    if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
+        return LastValueAggregator()
+    if issubclass(instrument_type, ValueRecorder):
+        return MinMaxSumCountAggregator()
+    if issubclass(instrument_type, ValueObserver):
+        return ValueObserverAggregator()
+    logger.warning("No default aggregator configured for: %s", instrument_type)
+    return SumAggregator()

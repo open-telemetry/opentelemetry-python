@@ -411,7 +411,6 @@ class DefaultMeter(Meter):
         unit: str,
         value_type: Type[ValueT],
         metric_type: Type[MetricT],
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Metric":
         # pylint: disable=no-self-use

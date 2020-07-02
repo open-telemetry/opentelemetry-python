@@ -22,43 +22,6 @@ from opentelemetry.util import time_ns
 logger = logging.getLogger(__name__)
 
 
-class Aggregation:
-
-    def __init__(self, config=None):
-        self._config = config
-
-    @abc.abstractmethod
-    def new_aggregator(self):
-        """Get a new Aggregator for this aggregation."""
-
-
-class CountAggregation(Aggregation):
-    """Describes that the data collected and aggregated with this method will
-    be turned into a count value
-    """
-    def new_aggregator(self):
-        """Get a new Aggregator for this aggregation."""
-        return CounterAggregator()
-
-
-class SummaryAggregation(Aggregation):
-    """Describes that the data collected and aggregated with this method will
-    be turned into a summary
-    """
-    def new_aggregator(self):
-        """Get a new Aggregator for this aggregation."""
-        return MinMaxSumCountAggregator()
-
-
-class HistogramAggregation(Aggregation):
-    """Describes that the data collected and aggregated with this method will
-    be turned into a histogram
-    """
-    def new_aggregator(self):
-        """Get a new Aggregator for this aggregation."""
-        return HistogramAggregator(self._config)
-
-
 class Aggregator(abc.ABC):
     """Base class for aggregators.
 
@@ -85,7 +48,7 @@ class Aggregator(abc.ABC):
 
 
 class SumAggregator(Aggregator):
-    """Aggregator for Counter metrics."""
+    """Aggregator for counter metrics."""
 
     def __init__(self, config=None):
         super().__init__(config=config)
@@ -169,7 +132,7 @@ class MinMaxSumCountAggregator(Aggregator):
 
 
 class HistogramAggregator(Aggregator):
-    """Agregator for Measure metrics that keeps a histogram of values."""
+    """Agregator for ValueRecorder metrics that keeps a histogram of values."""
 
     def __init__(self, config=None):
         super().__init__(config=config)

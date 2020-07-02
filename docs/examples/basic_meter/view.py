@@ -16,27 +16,27 @@
 This example shows how to use the different modes to capture metrics.
 It shows the usage of the direct, bound and batch calling conventions.
 """
-import time
-
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
-from opentelemetry.sdk.metrics.export.aggregate import CountAggregation
+from opentelemetry.sdk.metrics import (
+    MeterProvider,
+    UpDownCounter,
+    ValueRecorder
+)
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
-from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.view import View, ViewConfig
 
 # Use the meter type provided by the SDK package
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
-exporter = ConsoleMetricsExporter()
-controller = PushController(meter=meter, exporter=exporter, interval=5)
+metrics.get_meter_provider().start_pipeline(meter, ConsoleMetricsExporter(), 5)
 
 requests_counter = meter.create_metric(
     name="requests",
     description="number of requests",
     unit="1",
     value_type=int,
-    metric_type=Counter,
+    metric_type=UpDownCounter,
 )
 
 requests_size = meter.create_metric(
@@ -44,7 +44,7 @@ requests_size = meter.create_metric(
     description="size of requests",
     unit="1",
     value_type=int,
-    metric_type=Measure,
+    metric_type=ValueRecorder,
 )
 
 # Views are used to define an aggregation type and label keys to aggregate by
@@ -55,13 +55,13 @@ requests_size = meter.create_metric(
 # dropped from the aggregation
 counter_view1 = View(
     requests_counter,
-    CountAggregation(),
+    SumAggregator,
     label_keys=["environment"],
     config=ViewConfig.LABEL_KEYS
 )
 counter_view2 = View(
     requests_counter,
-    CountAggregation(),
+    SumAggregator,
     label_keys=["os_type"],
     config=ViewConfig.LABEL_KEYS
 )
@@ -69,7 +69,7 @@ counter_view2 = View(
 # the labels directly without and consideration for label_keys
 counter_view3 = View(
     requests_counter,
-    CountAggregation(),
+    SumAggregator,
     label_keys=["environment"], # is not used due to ViewConfig.UNGROUPED
     config=ViewConfig.UNGROUPED
 )

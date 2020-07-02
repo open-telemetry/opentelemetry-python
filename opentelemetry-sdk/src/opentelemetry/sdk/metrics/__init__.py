@@ -51,6 +51,10 @@ class BaseBoundInstrument:
     ):
         self._labels = labels
         self._metric = metric
+        self.view_datas = metric.meter.view_manager.generate_view_datas(metric, labels)
+        self._view_datas_lock = threading.Lock()
+        self._ref_count = 0
+        self._ref_count_lock = threading.Lock()
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
         if not self._metric.enabled:
@@ -64,8 +68,26 @@ class BaseBoundInstrument:
         return True
 
     def update(self, value: metrics_api.ValueT):
-        # The view manager handles all updates to aggregators
-        self._metric.meter.view_manager.record(self._metric, self._labels, value)
+        with self._view_datas_lock:
+            # record the value for each view_data belonging to this aggregator
+            for view_data in self.view_datas:
+                view_data.record(value)
+
+    def release(self):
+        self.decrease_ref_count()
+
+    def decrease_ref_count(self):
+        with self._ref_count_lock:
+            self._ref_count -= 1
+
+    def increase_ref_count(self):
+        with self._ref_count_lock:
+            self._ref_count += 1
+
+    def ref_count(self):
+        with self._ref_count_lock:
+            return self._ref_count
+
 
 class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
     def add(self, value: metrics_api.ValueT) -> None:
@@ -144,6 +166,7 @@ class Metric(metrics_api.Metric):
                     self,
                 )
                 self.bound_instruments[key] = bound_instrument
+        bound_instrument.increase_ref_count()
         return bound_instrument
 
     def __repr__(self):
@@ -164,6 +187,7 @@ class Counter(Metric, metrics_api.Counter):
         """See `opentelemetry.metrics.Counter.add`."""
         bound_intrument = self.bind(labels)
         bound_intrument.add(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = add
 
@@ -194,6 +218,7 @@ class ValueRecorder(Metric, metrics_api.ValueRecorder):
         """See `opentelemetry.metrics.ValueRecorder.record`."""
         bound_intrument = self.bind(labels)
         bound_intrument.record(value)
+        bound_intrument.release()
 
     UPDATE_FUNCTION = record
 
@@ -326,11 +351,13 @@ class Meter(metrics_api.Meter):
         instrumentation_info: "InstrumentationInfo",
     ):
         self.instrumentation_info = instrumentation_info
-        self.batcher = Batcher(stateful)
+        self.batcher = Batcher(True)
         self.resource = source.resource
+        self.metrics = set()
         self.observers = set()
-        self.view_manager = ViewManager()
+        self.metrics_lock = threading.Lock()
         self.observers_lock = threading.Lock()
+        self.view_manager = ViewManager()
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -344,15 +371,22 @@ class Meter(metrics_api.Meter):
         self._collect_observers()
 
     def _collect_metrics(self) -> None:
-        # Iterate through metrics created by this meter that have been recorded
-        for (metric, view_datas) in self.view_manager.view_datas.items():
-            if not metric.enabled:
-                continue
-            for view_data in view_datas:
-                for (labels, aggregator) in view_data.aggregators.items():
-                    record = Record(metric, labels, aggregator)
-                    # Checkpoints the current aggregators
-                    self.batcher.process(record)
+            for metric in self.metrics:
+                if not metric.enabled:
+                    continue
+                to_remove = []
+                with metric.bound_instruments_lock:
+                    for labels, bound_instrument in metric.bound_instruments.items():
+                        for view_data in bound_instrument.view_datas:
+                            record = Record(metric, view_data.labels, view_data.aggregator)
+                            self.batcher.process(record)
+
+                        if bound_instrument.ref_count() == 0:
+                            to_remove.append(labels)
+
+                # Remove handles that were released
+                for labels in to_remove:
+                    del metric.bound_instruments[labels]
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
@@ -397,6 +431,8 @@ class Meter(metrics_api.Meter):
             self,
             enabled=enabled,
         )
+        with self.metrics_lock:
+            self.metrics.add(metric)
         return metric
 
     def register_observer(

@@ -14,23 +14,7 @@
 
 from typing import Sequence
 
-from opentelemetry.metrics import (
-    Counter,
-    InstrumentT,
-    SumObserver,
-    UpDownCounter,
-    UpDownSumObserver,
-    ValueObserver,
-    ValueRecorder,
-)
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics.export.aggregate import (
-    Aggregator,
-    LastValueAggregator,
-    MinMaxSumCountAggregator,
-    SumAggregator,
-    ValueObserverAggregator,
-)
 
 
 class Batcher:
@@ -48,23 +32,6 @@ class Batcher:
         # checkpoints which describe the updates of a single collection period
         # (deltas)
         self.stateful = stateful
-
-    def aggregator_for(self, instrument_type: Type[InstrumentT]) -> Aggregator:
-        """Returns an aggregator based on metric instrument type.
-
-        Aggregators keep track of and updates values when metrics get updated.
-        """
-        # pylint:disable=R0201
-        if issubclass(instrument_type, (Counter, UpDownCounter)):
-            return SumAggregator()
-        if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
-            return LastValueAggregator()
-        if issubclass(instrument_type, ValueRecorder):
-            return MinMaxSumCountAggregator()
-        if issubclass(instrument_type, ValueObserver):
-            return ValueObserverAggregator()
-        # TODO: Add other aggregators
-        return SumAggregator()
 
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
