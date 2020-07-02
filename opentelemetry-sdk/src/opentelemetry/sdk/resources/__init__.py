@@ -101,7 +101,7 @@ def get_aggregated_resources(
     final_resource = initial_resource or _EMPTY_RESOURCE
     detectors = [OTELResourceDetector()] + detectors
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(detector.detect) for detector in detectors]
         for detector_ind, future in enumerate(futures):
             detector = detectors[detector_ind]
