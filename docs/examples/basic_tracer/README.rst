@@ -1,11 +1,11 @@
 Basic Trace
 ===========
 
-These examples show how to use OpenTelemetry create and export Spans.
+These examples show how to use OpenTelemetry to create and export Spans.
 
 There are two different examples:
 
-* basic_trace: Shows to how to configure a SpanProcessor and Exporter, and how to create a tracer and span.
+* basic_trace: Shows how to configure a SpanProcessor and Exporter, and how to create a tracer and span.
 
 * resources: Shows how to add resource information to a Provider. Note that this must be run on a GCP instance.
 
