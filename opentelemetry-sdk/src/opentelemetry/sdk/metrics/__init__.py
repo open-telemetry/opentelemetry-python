@@ -25,7 +25,11 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.export.controller import PushController
-from opentelemetry.sdk.metrics.view import ViewData, ViewManager
+from opentelemetry.sdk.metrics.view import (
+    get_default_aggregator,
+    ViewData,
+    ViewManager,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -255,13 +259,13 @@ class Observer(metrics_api.Observer):
     def observe(
         self, value: metrics_api.ValueT, labels: Dict[str, str]
     ) -> None:
-        key = get_labels_as_key(labels)
+        key = get_dict_as_key(labels)
         if not self._validate_observe(value, key):
             return
 
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
-            self.aggregators[key] = ObserverAggregator()
+            self.aggregators[key] = get_default_aggregator(self)
         aggregator = self.aggregators[key]
         aggregator.update(value)
 
