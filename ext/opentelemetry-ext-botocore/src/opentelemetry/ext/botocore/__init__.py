@@ -58,6 +58,7 @@ from wrapt import ObjectProxy, wrap_function_wrapper
 
 from opentelemetry.ext.botocore.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
@@ -98,10 +99,15 @@ class BotocoreInstrumentor(BaseInstrumentor):
             operation = None
             if args:
                 operation = args[0]
-                span.resource = "%s.%s" % (endpoint_name, operation.lower())
+                span.resource = Resource(
+                    labels={
+                        "endpoint": endpoint_name,
+                        "operation": operation.lower(),
+                    }
+                )
 
             else:
-                span.resource = endpoint_name
+                span.resource = Resource(labels={"endpoint": endpoint_name})
 
             add_span_arg_tags(
                 span,
