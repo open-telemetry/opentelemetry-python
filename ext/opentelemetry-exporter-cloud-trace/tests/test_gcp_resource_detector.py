@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import unittest
 from unittest import mock
 
@@ -22,15 +21,6 @@ from opentelemetry.tools.resource_detector import (
     GoogleCloudResourceDetector,
     get_gce_resources,
 )
-
-
-class DummyRequest:
-    def __init__(self, text):
-        self.text = text
-
-    def json(self):
-        return json.loads(self.text)
-
 
 RESOURCES_JSON_STRING = {
     "instance": {"id": "instance_id", "zone": "projects/123/zones/zone"},

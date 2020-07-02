@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
+import concurrent.futures
 import logging
 import os
 import typing
 from json import dumps
-
-from opentelemetry.context import attach, detach, set_value
 
 LabelValue = typing.Union[str, bool, int, float]
 Labels = typing.Dict[str, LabelValue]
@@ -62,16 +62,16 @@ class Resource:
 _EMPTY_RESOURCE = Resource({})
 
 
-class ResourceDetector:
+class ResourceDetector(abc.ABC):
     def __init__(self, raise_on_error=False):
         self.raise_on_error = raise_on_error
 
-    # pylint: disable=no-self-use
+    @abc.abstractmethod
     def detect(self) -> "Resource":
-        return _EMPTY_RESOURCE
+        raise NotImplementedError()
 
 
-class OTELResourceDetector:
+class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
         env_resources_items = os.environ.get("OTEL_RESOURCE")
@@ -87,21 +87,34 @@ class OTELResourceDetector:
 
 
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"], initial_resource=None,
+    detectors: typing.List["ResourceDetector"],
+    initial_resource: typing.Optional[Resource] = None,
+    timeout=5,
 ) -> "Resource":
+    """ Retrieves resources from detectors in the order that they were passed
+
+    :param detectors: List of resources in order of priority
+    :param initial_resource: Static resource. This has highest priority
+    :param timeout: Number of seconds to wait for each detector to return
+    :return:
+    """
     final_resource = initial_resource or _EMPTY_RESOURCE
-    final_resource = final_resource.merge(OTELResourceDetector().detect())
-    token = attach(set_value("suppress_instrumentation", True))
-    for detector in detectors:
-        try:
-            detected_resources = detector.detect()
-        # pylint: disable=broad-except
-        except Exception as ex:
-            if detector.raise_on_error:
-                raise ex
-            logger.warning("Exception in detector %s, ignoring", detector)
-            detected_resources = _EMPTY_RESOURCE
-        finally:
-            final_resource = final_resource.merge(detected_resources)
-    detach(token)
+    detectors = [OTELResourceDetector()] + detectors
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(detector.detect) for detector in detectors]
+        for detector_ind, future in enumerate(futures):
+            detector = detectors[detector_ind]
+            try:
+                detected_resources = future.result(timeout=timeout)
+            # pylint: disable=broad-except
+            except Exception as ex:
+                if detector.raise_on_error:
+                    raise ex
+                logger.warning(
+                    "Exception %s in detector %s, ignoring", ex, detector
+                )
+                detected_resources = _EMPTY_RESOURCE
+            finally:
+                final_resource = final_resource.merge(detected_resources)
     return final_resource
