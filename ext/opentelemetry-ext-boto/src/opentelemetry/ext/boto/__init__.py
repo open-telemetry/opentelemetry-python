@@ -52,6 +52,7 @@ from wrapt import ObjectProxy, wrap_function_wrapper
 
 from opentelemetry.ext.boto.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.trace import SpanKind, get_tracer
 
 logger = logging.getLogger(__name__)
@@ -123,9 +124,14 @@ class BotoInstrumentor(BaseInstrumentor):
         ) as span:
             if args:
                 http_method = args[0]
-                span.resource = "%s.%s" % (endpoint_name, http_method.lower())
+                span.resource = Resource(
+                    labels={
+                        "endpoint": endpoint_name,
+                        "http_method": http_method.lower(),
+                    }
+                )
             else:
-                span.resource = endpoint_name
+                span.resource = Resource(labels={"endpoint": endpoint_name})
 
             add_span_arg_tags(
                 span, endpoint_name, args, args_name, traced_args,
