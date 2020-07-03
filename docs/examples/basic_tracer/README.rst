@@ -7,7 +7,7 @@ There are two different examples:
 
 * basic_trace: Shows how to configure a SpanProcessor and Exporter, and how to create a tracer and span.
 
-* resources: Shows how to add resource information to a Provider. Note that this must be run on a GCP instance.
+* resources: Shows how to add resource information to a Provider. Note that this must be run on a Google Compute Engine instance.
 
 The source files of these examples are available :scm_web:`here <docs/examples/basic_tracer/>`.
 
