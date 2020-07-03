@@ -421,5 +421,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_strip_characters(self):
         self.assertEqual("0.10.0", _strip_characters("0.10.0b"))
-        self.assertEqual("0.10.0", _strip_characters("0.10.0"))
-        self.assertEqual("0.10.0", _strip_characters("0.10.0beta"))
+        self.assertEqual("1.20.5", _strip_characters("1.20.5"))
+        self.assertEqual("3.1.0", _strip_characters("3.1.0beta"))
+        self.assertEqual("4.2.0", _strip_characters("4b.2rc.0a"))
+        self.assertEqual("6.20.15", _strip_characters("b6.20.15"))
