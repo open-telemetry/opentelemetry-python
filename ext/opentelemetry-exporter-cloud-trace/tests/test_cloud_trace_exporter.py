@@ -418,3 +418,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
             MAX_EVENT_ATTRS,
         )
+
+    def test_strip_characters(self):
+        self.assertEqual("0.10.0", _strip_characters("0.10.0b"))
+        self.assertEqual("0.10.0", _strip_characters("0.10.0"))
+        self.assertEqual("0.10.0", _strip_characters("0.10.0beta"))
