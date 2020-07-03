@@ -301,6 +301,7 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 def _strip_characters(ot_version):
     return "".join(filter(lambda x: x.isdigit() or x == ".", ot_version))
 
+
 OT_RESOURCE_LABEL_TO_GCP = {
     "gce_instance": {
         "cloud.account.id": "project_id",
