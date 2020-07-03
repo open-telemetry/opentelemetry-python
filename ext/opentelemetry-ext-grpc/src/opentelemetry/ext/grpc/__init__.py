@@ -21,7 +21,7 @@ from opentelemetry import trace
 from opentelemetry.ext.grpc.version import __version__
 
 
-def client_interceptor(tracer_provider=None):
+def client_interceptor(tracer_provider=None, meter=None):
     """Create a gRPC client channel interceptor.
 
     Args:
@@ -34,7 +34,7 @@ def client_interceptor(tracer_provider=None):
 
     tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
-    return _client.OpenTelemetryClientInterceptor(tracer)
+    return _client.OpenTelemetryClientInterceptor(tracer, meter)
 
 
 def server_interceptor(tracer_provider=None):

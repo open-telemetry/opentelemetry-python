@@ -164,7 +164,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
 
     def test_concurrent_server_spans(self):
         """Check that concurrent RPC calls don't interfere with each other.
-
         This is the same check as test_sequential_server_spans except that the
         RPCs are concurrent. Two handlers are invoked at the same time on two
         separate threads. Each one should see a different active span and
