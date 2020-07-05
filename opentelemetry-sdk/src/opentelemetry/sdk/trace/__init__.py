@@ -520,6 +520,7 @@ class Span(trace_api.Span):
         f_span["attributes"] = self._format_attributes(self.attributes)
         f_span["events"] = self._format_events(self.events)
         f_span["links"] = self._format_links(self.links)
+        f_span["resource"] = self.resource.labels
 
         return json.dumps(f_span, indent=indent)
 
