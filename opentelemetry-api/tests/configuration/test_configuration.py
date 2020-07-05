@@ -39,7 +39,7 @@ class TestConfiguration(TestCase):
             "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },
     )
-    def test_environment_variables(self):
+    def test_environment_variables(self) -> None:
         self.assertEqual(
             Configuration().METER_PROVIDER, "meter_provider"
         )  # pylint: disable=no-member
@@ -58,13 +58,16 @@ class TestConfiguration(TestCase):
         "os.environ",  # type: ignore
         {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
     )
-    def test_property(self):
+    def test_property(self) -> None:
         with self.assertRaises(AttributeError):
             Configuration().TRACER_PROVIDER = "new_tracer_provider"
 
-    def test_slots(self) -> None:
+    def test_set_once(self) -> None:
+
+        Configuration().XYZ = "xyz"
+
         with self.assertRaises(AttributeError):
-            Configuration().XYZ = "xyz"  # pylint: disable=assigning-non-slot
+            Configuration().XYZ = "abc"  # pylint: disable=assigning-non-slot
 
     def test_getattr(self) -> None:
         # literal access

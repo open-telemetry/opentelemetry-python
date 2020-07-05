@@ -291,6 +291,10 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
     )
 
 
+def _strip_characters(ot_version):
+    return "".join(filter(lambda x: x.isdigit() or x == ".", ot_version))
+
+
 def _extract_attributes(
     attrs: types.Attributes,
     num_attrs_limit: int,
@@ -310,8 +314,10 @@ def _extract_attributes(
     if add_agent_attr:
         attributes_dict["g.co/agent"] = _format_attribute_value(
             "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
-                pkg_resources.get_distribution("opentelemetry-sdk").version,
-                cloud_trace_version,
+                _strip_characters(
+                    pkg_resources.get_distribution("opentelemetry-sdk").version
+                ),
+                _strip_characters(cloud_trace_version),
             )
         )
     return ProtoSpan.Attributes(

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- bugfix: Fix auto-instrumentation entry point for mysql
+  ([#858](https://github.com/open-telemetry/opentelemetry-python/pull/858))
+
 ## 0.7b1
 
 Released 2020-05-12
