@@ -5,6 +5,7 @@ from typing import Optional, Sequence
 import google.auth
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
+from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 
@@ -14,11 +15,20 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExportResult,
 )
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.resources import Resource
 
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
+
+OT_RESOURCE_LABEL_TO_GCP = {
+    "gce_instance": {
+        "cloud.account.id": "project_id",
+        "host.id": "instance_id",
+        "cloud.zone": "zone",
+    }
+}
 
 
 # pylint is unable to resolve members of protobuf objects
@@ -56,13 +66,33 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 random.randint(0, 16 ** 8)
             )
 
-    def _add_resource_info(self, series: TimeSeries) -> None:
+    @staticmethod
+    def _get_monitored_resource(
+        resource: Resource,
+    ) -> Optional[MonitoredResource]:
         """Add Google resource specific information (e.g. instance id, region).
 
+        See
+        https://cloud.google.com/monitoring/custom-metrics/creating-metrics#custom-metric-resources
+        for supported types
         Args:
             series: ProtoBuf TimeSeries
         """
-        # TODO: Leverage this better
+
+        if resource.labels.get("cloud.provider") != "gcp":
+            return None
+        resource_type = resource.labels["gcp.resource_type"]
+        if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
+            return None
+        return MonitoredResource(
+            type=resource_type,
+            labels={
+                gcp_label: str(resource.labels[ot_label])
+                for ot_label, gcp_label in OT_RESOURCE_LABEL_TO_GCP[
+                    resource_type
+                ].items()
+            },
+        )
 
     def _batch_write(self, series: TimeSeries) -> None:
         """ Cloud Monitoring allows writing up to 200 time series at once
@@ -162,9 +192,11 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             metric_descriptor = self._get_metric_descriptor(record)
             if not metric_descriptor:
                 continue
-
-            series = TimeSeries()
-            self._add_resource_info(series)
+            series = TimeSeries(
+                resource=self._get_monitored_resource(
+                    record.instrument.meter.resource
+                )
+            )
             series.metric.type = metric_descriptor.type
             for key, value in record.labels:
                 series.metric.labels[key] = str(value)
