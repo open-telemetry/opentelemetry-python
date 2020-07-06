@@ -12,6 +12,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+For general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#sampling>`_.
+
+OpenTelemetry provides two types of samplers:
+
+- `StaticSampler`
+- `ProbabilitySampler`
+
+A `StaticSampler` always returns the same sampling decision regardless of the conditions. Both possible StaticSamplers are already created:
+
+- Always sample spans: `ALWAYS_ON`
+- Never sample spans: `ALWAYS_OFF`
+
+A `ProbabilitySampler` makes a random sampling decision based on the sampling probability given. If the span being sampled has a parent, `ProbabilitySampler` will respect the parent span's sampling decision.
+
+Currently, sampling decisions are always made during the creation of the span. However, this might not always be the case in the future (see `OTEP #115 <https://github.com/open-telemetry/oteps/pull/115>`_).
+
+Custom samplers can be created by subclassing `Sampler` and implementing `Sampler.should_sample`.
+
+To use a sampler, pass it into the tracer provider constructor. For example:
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.trace
+    from opentelemetry.trace.sampling import ProbabilitySampler
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        ConsoleSpanExporter,
+        SimpleExportSpanProcessor,
+    )
+
+    # sample 1 in every 1000 traces
+    sampler = ProbabilitySampler(1/1000)
+
+    # set the sampler onto the global tracer provider
+    trace.set_tracer_provider(TracerProvider(sampler=sampler))
+
+    # set up an exporter for sampled spans
+    trace.get_tracer_provider().add_span_processor(
+        SimpleExportSpanProcessor(ConsoleSpanExporter())
+    )
+
+    # created spans will now be sampled by the ProbabilitySampler
+    with trace.get_tracer().start_as_current_span("Test Span"):
+        ...
+"""
 import abc
 from typing import Dict, Mapping, Optional, Sequence
 
@@ -78,6 +125,14 @@ class StaticSampler(Sampler):
 
 
 class ProbabilitySampler(Sampler):
+    """
+    Sampler that makes sampling decisions probabalistically based on `rate`,
+    while also respecting the parent span sampling decision.
+
+    Args:
+        rate: Probability (between 0 and 1) that a span will be sampled
+    """
+
     def __init__(self, rate: float):
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
@@ -118,11 +173,15 @@ class ProbabilitySampler(Sampler):
         return Decision(trace_id & self.TRACE_ID_LIMIT < self.bound)
 
 
-# Samplers that ignore the parent sampling decision and never/always sample.
 ALWAYS_OFF = StaticSampler(Decision(False))
-ALWAYS_ON = StaticSampler(Decision(True))
+"""Sampler that never samples spans, regardless of the parent span's sampling decision."""
 
-# Samplers that respect the parent sampling decision, but otherwise
-# never/always sample.
+ALWAYS_ON = StaticSampler(Decision(True))
+"""Sampler that always samples spans, regardless of the parent span's sampling decision."""
+
+
 DEFAULT_OFF = ProbabilitySampler(0.0)
+"""Sampler that respects its parent span's sampling decision, but otherwise never samples."""
+
 DEFAULT_ON = ProbabilitySampler(1.0)
+"""Sampler that respects its parent span's sampling decision, but otherwise always samples."""
