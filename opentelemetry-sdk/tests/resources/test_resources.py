@@ -14,7 +14,9 @@
 
 # pylint: disable=protected-access
 
+import os
 import unittest
+from unittest import mock
 
 from opentelemetry.sdk import resources
 
@@ -83,3 +85,94 @@ class TestResources(unittest.TestCase):
 
         labels["cost"] = 999.91
         self.assertEqual(resource.labels, labels_copy)
+
+    def test_otel_resource_detector(self):
+        detector = resources.OTELResourceDetector()
+        self.assertEqual(detector.detect(), resources.Resource.create_empty())
+        os.environ["OTEL_RESOURCE"] = "k=v"
+        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
+        os.environ["OTEL_RESOURCE"] = "    k  = v   "
+        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
+        os.environ["OTEL_RESOURCE"] = "k=v,k2=v2"
+        self.assertEqual(
+            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
+        )
+        os.environ["OTEL_RESOURCE"] = "    k  = v  , k2   = v2 "
+        self.assertEqual(
+            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
+        )
+
+    def test_aggregated_resources(self):
+        aggregated_resources = resources.get_aggregated_resources([])
+        self.assertEqual(
+            aggregated_resources, resources.Resource.create_empty()
+        )
+
+        static_resource = resources.Resource({"static_key": "static_value"})
+
+        self.assertEqual(
+            resources.get_aggregated_resources(
+                [], initial_resource=static_resource
+            ),
+            static_resource,
+        )
+
+        resource_detector = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector.detect.return_value = resources.Resource(
+            {"static_key": "overwrite_existing_value", "key": "value"}
+        )
+        self.assertEqual(
+            resources.get_aggregated_resources(
+                [resource_detector], initial_resource=static_resource
+            ),
+            resources.Resource({"static_key": "static_value", "key": "value"}),
+        )
+
+        resource_detector1 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector1.detect.return_value = resources.Resource(
+            {"key1": "value1"}
+        )
+        resource_detector2 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector2.detect.return_value = resources.Resource(
+            {"key2": "value2", "key3": "value3"}
+        )
+        resource_detector3 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector3.detect.return_value = resources.Resource(
+            {
+                "key2": "overwrite_existing_value",
+                "key3": "overwrite_existing_value",
+                "key4": "value4",
+            }
+        )
+        self.assertEqual(
+            resources.get_aggregated_resources(
+                [resource_detector1, resource_detector2, resource_detector3]
+            ),
+            resources.Resource(
+                {
+                    "key1": "value1",
+                    "key2": "value2",
+                    "key3": "value3",
+                    "key4": "value4",
+                }
+            ),
+        )
+
+        resource_detector = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector.detect.side_effect = Exception()
+        resource_detector.raise_on_error = False
+        self.assertEqual(
+            resources.get_aggregated_resources(
+                [resource_detector, resource_detector1]
+            ),
+            resources.Resource({"key1": "value1"}),
+        )
+
+        resource_detector = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector.detect.side_effect = Exception()
+        resource_detector.raise_on_error = True
+        self.assertRaises(
+            Exception,
+            resources.get_aggregated_resources,
+            [resource_detector, resource_detector1],
+        )

@@ -20,8 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.metrics.v1',
   syntax='proto3',
   serialized_options=b'\n!io.opentelemetry.proto.metrics.v1B\014MetricsProtoP\001Z?github.com/open-telemetry/opentelemetry-proto/gen/go/metrics/v1',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n,opentelemetry/proto/metrics/v1/metrics.proto\x12\x1eopentelemetry.proto.metrics.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xb6\x01\n\x0fResourceMetrics\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12\x66\n\x1finstrumentation_library_metrics\x18\x02 \x03(\x0b\x32=.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics\"\xb0\x01\n\x1dInstrumentationLibraryMetrics\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x37\n\x07metrics\x18\x02 \x03(\x0b\x32&.opentelemetry.proto.metrics.v1.Metric\"\x8f\x03\n\x06Metric\x12K\n\x11metric_descriptor\x18\x01 \x01(\x0b\x32\x30.opentelemetry.proto.metrics.v1.MetricDescriptor\x12I\n\x11int64_data_points\x18\x02 \x03(\x0b\x32..opentelemetry.proto.metrics.v1.Int64DataPoint\x12K\n\x12\x64ouble_data_points\x18\x03 \x03(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleDataPoint\x12Q\n\x15histogram_data_points\x18\x04 \x03(\x0b\x32\x32.opentelemetry.proto.metrics.v1.HistogramDataPoint\x12M\n\x13summary_data_points\x18\x05 \x03(\x0b\x32\x30.opentelemetry.proto.metrics.v1.SummaryDataPoint\"\xfe\x02\n\x10MetricDescriptor\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x0c\n\x04unit\x18\x03 \x01(\t\x12\x43\n\x04type\x18\x04 \x01(\x0e\x32\x35.opentelemetry.proto.metrics.v1.MetricDescriptor.Type\x12Q\n\x0btemporality\x18\x05 \x01(\x0e\x32<.opentelemetry.proto.metrics.v1.MetricDescriptor.Temporality\"K\n\x04Type\x12\x10\n\x0cINVALID_TYPE\x10\x00\x12\t\n\x05INT64\x10\x01\x12\n\n\x06\x44OUBLE\x10\x02\x12\r\n\tHISTOGRAM\x10\x03\x12\x0b\n\x07SUMMARY\x10\x04\"T\n\x0bTemporality\x12\x17\n\x13INVALID_TEMPORALITY\x10\x00\x12\x11\n\rINSTANTANEOUS\x10\x01\x12\t\n\x05\x44\x45LTA\x10\x02\x12\x0e\n\nCUMULATIVE\x10\x03\"\x94\x01\n\x0eInt64DataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x03\"\x95\x01\n\x0f\x44oubleDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x01\"\xf1\x03\n\x12HistogramDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x04\x12\x0b\n\x03sum\x18\x05 \x01(\x01\x12J\n\x07\x62uckets\x18\x06 \x03(\x0b\x32\x39.opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket\x12\x17\n\x0f\x65xplicit_bounds\x18\x07 \x03(\x01\x1a\xe4\x01\n\x06\x42ucket\x12\r\n\x05\x63ount\x18\x01 \x01(\x04\x12T\n\x08\x65xemplar\x18\x02 \x01(\x0b\x32\x42.opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket.Exemplar\x1au\n\x08\x45xemplar\x12\r\n\x05value\x18\x01 \x01(\x01\x12\x16\n\x0etime_unix_nano\x18\x02 \x01(\x06\x12\x42\n\x0b\x61ttachments\x18\x03 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\"\xba\x02\n\x10SummaryDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x04\x12\x0b\n\x03sum\x18\x05 \x01(\x01\x12]\n\x11percentile_values\x18\x06 \x03(\x0b\x32\x42.opentelemetry.proto.metrics.v1.SummaryDataPoint.ValueAtPercentile\x1a\x36\n\x11ValueAtPercentile\x12\x12\n\npercentile\x18\x01 \x01(\x01\x12\r\n\x05value\x18\x02 \x01(\x01\x42t\n!io.opentelemetry.proto.metrics.v1B\x0cMetricsProtoP\x01Z?github.com/open-telemetry/opentelemetry-proto/gen/go/metrics/v1b\x06proto3'
+  serialized_pb=b'\n,opentelemetry/proto/metrics/v1/metrics.proto\x12\x1eopentelemetry.proto.metrics.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xb6\x01\n\x0fResourceMetrics\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12\x66\n\x1finstrumentation_library_metrics\x18\x02 \x03(\x0b\x32=.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics\"\xb0\x01\n\x1dInstrumentationLibraryMetrics\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x37\n\x07metrics\x18\x02 \x03(\x0b\x32&.opentelemetry.proto.metrics.v1.Metric\"\x8f\x03\n\x06Metric\x12K\n\x11metric_descriptor\x18\x01 \x01(\x0b\x32\x30.opentelemetry.proto.metrics.v1.MetricDescriptor\x12I\n\x11int64_data_points\x18\x02 \x03(\x0b\x32..opentelemetry.proto.metrics.v1.Int64DataPoint\x12K\n\x12\x64ouble_data_points\x18\x03 \x03(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleDataPoint\x12Q\n\x15histogram_data_points\x18\x04 \x03(\x0b\x32\x32.opentelemetry.proto.metrics.v1.HistogramDataPoint\x12M\n\x13summary_data_points\x18\x05 \x03(\x0b\x32\x30.opentelemetry.proto.metrics.v1.SummaryDataPoint\"\xa9\x03\n\x10MetricDescriptor\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x0c\n\x04unit\x18\x03 \x01(\t\x12\x43\n\x04type\x18\x04 \x01(\x0e\x32\x35.opentelemetry.proto.metrics.v1.MetricDescriptor.Type\x12Q\n\x0btemporality\x18\x05 \x01(\x0e\x32<.opentelemetry.proto.metrics.v1.MetricDescriptor.Temporality\"v\n\x04Type\x12\x10\n\x0cINVALID_TYPE\x10\x00\x12\t\n\x05INT64\x10\x01\x12\x13\n\x0fMONOTONIC_INT64\x10\x02\x12\n\n\x06\x44OUBLE\x10\x03\x12\x14\n\x10MONOTONIC_DOUBLE\x10\x04\x12\r\n\tHISTOGRAM\x10\x05\x12\x0b\n\x07SUMMARY\x10\x06\"T\n\x0bTemporality\x12\x17\n\x13INVALID_TEMPORALITY\x10\x00\x12\x11\n\rINSTANTANEOUS\x10\x01\x12\t\n\x05\x44\x45LTA\x10\x02\x12\x0e\n\nCUMULATIVE\x10\x03\"\x94\x01\n\x0eInt64DataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x03\"\x95\x01\n\x0f\x44oubleDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x01\"\xf1\x03\n\x12HistogramDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x04\x12\x0b\n\x03sum\x18\x05 \x01(\x01\x12J\n\x07\x62uckets\x18\x06 \x03(\x0b\x32\x39.opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket\x12\x17\n\x0f\x65xplicit_bounds\x18\x07 \x03(\x01\x1a\xe4\x01\n\x06\x42ucket\x12\r\n\x05\x63ount\x18\x01 \x01(\x04\x12T\n\x08\x65xemplar\x18\x02 \x01(\x0b\x32\x42.opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket.Exemplar\x1au\n\x08\x45xemplar\x12\r\n\x05value\x18\x01 \x01(\x01\x12\x16\n\x0etime_unix_nano\x18\x02 \x01(\x06\x12\x42\n\x0b\x61ttachments\x18\x03 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\"\xba\x02\n\x10SummaryDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x04\x12\x0b\n\x03sum\x18\x05 \x01(\x01\x12]\n\x11percentile_values\x18\x06 \x03(\x0b\x32\x42.opentelemetry.proto.metrics.v1.SummaryDataPoint.ValueAtPercentile\x1a\x36\n\x11ValueAtPercentile\x12\x12\n\npercentile\x18\x01 \x01(\x01\x12\r\n\x05value\x18\x02 \x01(\x01\x42t\n!io.opentelemetry.proto.metrics.v1B\x0cMetricsProtoP\x01Z?github.com/open-telemetry/opentelemetry-proto/gen/go/metrics/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2.DESCRIPTOR,opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2.DESCRIPTOR,])
 
@@ -32,38 +31,40 @@ _METRICDESCRIPTOR_TYPE = _descriptor.EnumDescriptor(
   full_name='opentelemetry.proto.metrics.v1.MetricDescriptor.Type',
   filename=None,
   file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
   values=[
     _descriptor.EnumValueDescriptor(
       name='INVALID_TYPE', index=0, number=0,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
       name='INT64', index=1, number=1,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
-      name='DOUBLE', index=2, number=2,
+      name='MONOTONIC_INT64', index=2, number=2,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
-      name='HISTOGRAM', index=3, number=3,
+      name='DOUBLE', index=3, number=3,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
-      name='SUMMARY', index=4, number=4,
+      name='MONOTONIC_DOUBLE', index=4, number=4,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='HISTOGRAM', index=5, number=5,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='SUMMARY', index=6, number=6,
+      serialized_options=None,
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=1160,
-  serialized_end=1235,
+  serialized_end=1278,
 )
 _sym_db.RegisterEnumDescriptor(_METRICDESCRIPTOR_TYPE)
 
@@ -72,33 +73,28 @@ _METRICDESCRIPTOR_TEMPORALITY = _descriptor.EnumDescriptor(
   full_name='opentelemetry.proto.metrics.v1.MetricDescriptor.Temporality',
   filename=None,
   file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
   values=[
     _descriptor.EnumValueDescriptor(
       name='INVALID_TEMPORALITY', index=0, number=0,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
       name='INSTANTANEOUS', index=1, number=1,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
       name='DELTA', index=2, number=2,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
       name='CUMULATIVE', index=3, number=3,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1237,
-  serialized_end=1321,
+  serialized_start=1280,
+  serialized_end=1364,
 )
 _sym_db.RegisterEnumDescriptor(_METRICDESCRIPTOR_TEMPORALITY)
 
@@ -109,7 +105,6 @@ _RESOURCEMETRICS = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='resource', full_name='opentelemetry.proto.metrics.v1.ResourceMetrics.resource', index=0,
@@ -117,14 +112,14 @@ _RESOURCEMETRICS = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='instrumentation_library_metrics', full_name='opentelemetry.proto.metrics.v1.ResourceMetrics.instrumentation_library_metrics', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -148,7 +143,6 @@ _INSTRUMENTATIONLIBRARYMETRICS = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='instrumentation_library', full_name='opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics.instrumentation_library', index=0,
@@ -156,14 +150,14 @@ _INSTRUMENTATIONLIBRARYMETRICS = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='metrics', full_name='opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics.metrics', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -187,7 +181,6 @@ _METRIC = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='metric_descriptor', full_name='opentelemetry.proto.metrics.v1.Metric.metric_descriptor', index=0,
@@ -195,35 +188,35 @@ _METRIC = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='int64_data_points', full_name='opentelemetry.proto.metrics.v1.Metric.int64_data_points', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='double_data_points', full_name='opentelemetry.proto.metrics.v1.Metric.double_data_points', index=2,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='histogram_data_points', full_name='opentelemetry.proto.metrics.v1.Metric.histogram_data_points', index=3,
       number=4, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='summary_data_points', full_name='opentelemetry.proto.metrics.v1.Metric.summary_data_points', index=4,
       number=5, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -247,7 +240,6 @@ _METRICDESCRIPTOR = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='name', full_name='opentelemetry.proto.metrics.v1.MetricDescriptor.name', index=0,
@@ -255,35 +247,35 @@ _METRICDESCRIPTOR = _descriptor.Descriptor(
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='description', full_name='opentelemetry.proto.metrics.v1.MetricDescriptor.description', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='unit', full_name='opentelemetry.proto.metrics.v1.MetricDescriptor.unit', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='type', full_name='opentelemetry.proto.metrics.v1.MetricDescriptor.type', index=3,
       number=4, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='temporality', full_name='opentelemetry.proto.metrics.v1.MetricDescriptor.temporality', index=4,
       number=5, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -299,7 +291,7 @@ _METRICDESCRIPTOR = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=939,
-  serialized_end=1321,
+  serialized_end=1364,
 )
 
 
@@ -309,7 +301,6 @@ _INT64DATAPOINT = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='labels', full_name='opentelemetry.proto.metrics.v1.Int64DataPoint.labels', index=0,
@@ -317,28 +308,28 @@ _INT64DATAPOINT = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='start_time_unix_nano', full_name='opentelemetry.proto.metrics.v1.Int64DataPoint.start_time_unix_nano', index=1,
       number=2, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='time_unix_nano', full_name='opentelemetry.proto.metrics.v1.Int64DataPoint.time_unix_nano', index=2,
       number=3, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='opentelemetry.proto.metrics.v1.Int64DataPoint.value', index=3,
       number=4, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -351,8 +342,8 @@ _INT64DATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1324,
-  serialized_end=1472,
+  serialized_start=1367,
+  serialized_end=1515,
 )
 
 
@@ -362,7 +353,6 @@ _DOUBLEDATAPOINT = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='labels', full_name='opentelemetry.proto.metrics.v1.DoubleDataPoint.labels', index=0,
@@ -370,28 +360,28 @@ _DOUBLEDATAPOINT = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='start_time_unix_nano', full_name='opentelemetry.proto.metrics.v1.DoubleDataPoint.start_time_unix_nano', index=1,
       number=2, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='time_unix_nano', full_name='opentelemetry.proto.metrics.v1.DoubleDataPoint.time_unix_nano', index=2,
       number=3, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='opentelemetry.proto.metrics.v1.DoubleDataPoint.value', index=3,
       number=4, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -404,8 +394,8 @@ _DOUBLEDATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1475,
-  serialized_end=1624,
+  serialized_start=1518,
+  serialized_end=1667,
 )
 
 
@@ -415,7 +405,6 @@ _HISTOGRAMDATAPOINT_BUCKET_EXEMPLAR = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='value', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket.Exemplar.value', index=0,
@@ -423,21 +412,21 @@ _HISTOGRAMDATAPOINT_BUCKET_EXEMPLAR = _descriptor.Descriptor(
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='time_unix_nano', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket.Exemplar.time_unix_nano', index=1,
       number=2, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='attachments', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket.Exemplar.attachments', index=2,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -450,8 +439,8 @@ _HISTOGRAMDATAPOINT_BUCKET_EXEMPLAR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2007,
-  serialized_end=2124,
+  serialized_start=2050,
+  serialized_end=2167,
 )
 
 _HISTOGRAMDATAPOINT_BUCKET = _descriptor.Descriptor(
@@ -460,7 +449,6 @@ _HISTOGRAMDATAPOINT_BUCKET = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='count', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket.count', index=0,
@@ -468,14 +456,14 @@ _HISTOGRAMDATAPOINT_BUCKET = _descriptor.Descriptor(
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='exemplar', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.Bucket.exemplar', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -488,8 +476,8 @@ _HISTOGRAMDATAPOINT_BUCKET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1896,
-  serialized_end=2124,
+  serialized_start=1939,
+  serialized_end=2167,
 )
 
 _HISTOGRAMDATAPOINT = _descriptor.Descriptor(
@@ -498,7 +486,6 @@ _HISTOGRAMDATAPOINT = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='labels', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.labels', index=0,
@@ -506,49 +493,49 @@ _HISTOGRAMDATAPOINT = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='start_time_unix_nano', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.start_time_unix_nano', index=1,
       number=2, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='time_unix_nano', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.time_unix_nano', index=2,
       number=3, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='count', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.count', index=3,
       number=4, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='sum', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.sum', index=4,
       number=5, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='buckets', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.buckets', index=5,
       number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='explicit_bounds', full_name='opentelemetry.proto.metrics.v1.HistogramDataPoint.explicit_bounds', index=6,
       number=7, type=1, cpp_type=5, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -561,8 +548,8 @@ _HISTOGRAMDATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1627,
-  serialized_end=2124,
+  serialized_start=1670,
+  serialized_end=2167,
 )
 
 
@@ -572,7 +559,6 @@ _SUMMARYDATAPOINT_VALUEATPERCENTILE = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='percentile', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.ValueAtPercentile.percentile', index=0,
@@ -580,14 +566,14 @@ _SUMMARYDATAPOINT_VALUEATPERCENTILE = _descriptor.Descriptor(
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.ValueAtPercentile.value', index=1,
       number=2, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -600,8 +586,8 @@ _SUMMARYDATAPOINT_VALUEATPERCENTILE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2387,
-  serialized_end=2441,
+  serialized_start=2430,
+  serialized_end=2484,
 )
 
 _SUMMARYDATAPOINT = _descriptor.Descriptor(
@@ -610,7 +596,6 @@ _SUMMARYDATAPOINT = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='labels', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.labels', index=0,
@@ -618,42 +603,42 @@ _SUMMARYDATAPOINT = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='start_time_unix_nano', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.start_time_unix_nano', index=1,
       number=2, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='time_unix_nano', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.time_unix_nano', index=2,
       number=3, type=6, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='count', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.count', index=3,
       number=4, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='sum', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.sum', index=4,
       number=5, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='percentile_values', full_name='opentelemetry.proto.metrics.v1.SummaryDataPoint.percentile_values', index=5,
       number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -666,8 +651,8 @@ _SUMMARYDATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2127,
-  serialized_end=2441,
+  serialized_start=2170,
+  serialized_end=2484,
 )
 
 _RESOURCEMETRICS.fields_by_name['resource'].message_type = opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2._RESOURCE
