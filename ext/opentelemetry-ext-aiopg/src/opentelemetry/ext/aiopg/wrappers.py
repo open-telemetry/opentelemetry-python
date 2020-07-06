@@ -35,6 +35,7 @@ API
 import logging
 import typing
 
+import aiopg
 import wrapt
 
 from opentelemetry.ext.aiopg.aiopg_integration import (
@@ -49,8 +50,6 @@ logger = logging.getLogger(__name__)
 
 
 def trace_integration(
-    connect_module: typing.Callable[..., typing.Any],
-    connect_method_name: str,
     database_component: str,
     database_type: str = "",
     connection_attributes: typing.Dict = None,
@@ -60,8 +59,6 @@ def trace_integration(
         based on dbapi integration, where replaced sync wrap methods to async
 
         Args:
-            connect_module: Module name where connect method is available.
-            connect_method_name: The connect method name.
             database_component: Database driver name or
                 database name "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
@@ -72,19 +69,12 @@ def trace_integration(
     """
     tracer = get_tracer(__name__, __version__, tracer_provider)
     wrap_connect(
-        tracer,
-        connect_module,
-        connect_method_name,
-        database_component,
-        database_type,
-        connection_attributes,
+        tracer, database_component, database_type, connection_attributes,
     )
 
 
 def wrap_connect(
     tracer: Tracer,
-    connect_module: typing.Callable[..., typing.Any],
-    connect_method_name: str,
     database_component: str,
     database_type: str = "",
     connection_attributes: typing.Dict = None,
@@ -94,8 +84,6 @@ def wrap_connect(
 
         Args:
             tracer: The :class:`opentelemetry.trace.Tracer` to use.
-            connect_module: Module name where connect method is available.
-            connect_method_name: The connect method name.
             database_component: Database driver name
                 or database name "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
@@ -119,16 +107,12 @@ def wrap_connect(
         return await db_integration.wrapped_connection(wrapped, args, kwargs)
 
     try:
-        wrapt.wrap_function_wrapper(
-            connect_module, connect_method_name, wrap_connect_
-        )
+        wrapt.wrap_function_wrapper(aiopg, "connect", wrap_connect_)
     except Exception as ex:  # pylint: disable=broad-except
         logger.warning("Failed to integrate with aiopg. %s", str(ex))
 
 
-def unwrap_connect(
-    connect_module: typing.Callable[..., typing.Any], connect_method_name: str,
-):
+def unwrap_connect():
     """"Disable integration with aiopg library.
         https://github.com/aio-libs/aiopg
 
@@ -136,7 +120,7 @@ def unwrap_connect(
             connect_module: Module name where the connect method is available.
             connect_method_name: The connect method name.
     """
-    unwrap(connect_module, connect_method_name)
+    unwrap(aiopg, "connect")
 
 
 def instrument_connection(
@@ -187,8 +171,6 @@ def uninstrument_connection(connection):
 
 def wrap_create_pool(
     tracer: Tracer,
-    create_pool_module: typing.Callable[..., typing.Any],
-    create_pool_method_name: str,
     database_component: str,
     database_type: str = "",
     connection_attributes: typing.Dict = None,
@@ -209,23 +191,13 @@ def wrap_create_pool(
         return await db_integration.wrapped_pool(wrapped, args, kwargs)
 
     try:
-        wrapt.wrap_function_wrapper(
-            create_pool_module, create_pool_method_name, wrap_create_pool_
-        )
+        wrapt.wrap_function_wrapper(aiopg, "create_pool", wrap_create_pool_)
     except Exception as ex:  # pylint: disable=broad-except
         logger.warning("Failed to integrate with DB API. %s", str(ex))
 
 
-def unwrap_create_pool(
-    create_pool_module: typing.Callable[..., typing.Any],
-    create_pool_method_name: str,
-):
+def unwrap_create_pool():
     """"Disable integration with aiopg library.
         https://github.com/aio-libs/aiopg
-
-        Args:
-            create_pool_module: Module name where the create_pool method
-                is available.
-            create_pool_method_name: The connect method name.
     """
-    unwrap(create_pool_module, create_pool_method_name)
+    unwrap(aiopg, "create_pool")

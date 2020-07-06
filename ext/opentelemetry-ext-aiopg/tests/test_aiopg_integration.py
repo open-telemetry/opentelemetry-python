@@ -271,22 +271,23 @@ class TestAiopgIntegration(TestBase):
         )
 
     def test_wrap_connect(self):
-        wrappers.wrap_connect(self.tracer, AiopgMock, "connect", "-")
         aiopg_mock = AiopgMock()
-        connection = async_call(aiopg_mock.connect())
-        self.assertEqual(aiopg_mock.connect_call_count, 1)
-        self.assertIsInstance(connection.__wrapped__, mock.Mock)
+        with mock.patch("aiopg.connect", aiopg_mock.connect):
+            wrappers.wrap_connect(self.tracer, "-")
+            connection = async_call(aiopg.connect())
+            self.assertEqual(aiopg_mock.connect_call_count, 1)
+            self.assertIsInstance(connection.__wrapped__, mock.Mock)
 
     def test_unwrap_connect(self):
-        wrappers.wrap_connect(self.tracer, AiopgMock, "connect", "-")
+        wrappers.wrap_connect(self.tracer, "-")
         aiopg_mock = AiopgMock()
-        connection = async_call(aiopg_mock.connect())
-        self.assertEqual(aiopg_mock.connect_call_count, 1)
-
-        wrappers.unwrap_connect(AiopgMock, "connect")
-        connection = async_call(aiopg_mock.connect())
-        self.assertEqual(aiopg_mock.connect_call_count, 2)
-        self.assertIsInstance(connection, mock.Mock)
+        with mock.patch("aiopg.connect", aiopg_mock.connect):
+            connection = async_call(aiopg.connect())
+            self.assertEqual(aiopg_mock.connect_call_count, 1)
+            wrappers.unwrap_connect()
+            connection = async_call(aiopg.connect())
+            self.assertEqual(aiopg_mock.connect_call_count, 2)
+            self.assertIsInstance(connection, mock.Mock)
 
     def test_wrap_create_pool(self):
         async def check_connection(pool):
@@ -296,10 +297,11 @@ class TestAiopgIntegration(TestBase):
                     connection.__wrapped__, AiopgConnectionMock
                 )
 
-        wrappers.wrap_create_pool(self.tracer, AiopgMock, "create_pool", "-")
         aiopg_mock = AiopgMock()
-        pool = async_call(aiopg_mock.create_pool())
-        async_call(check_connection(pool))
+        with mock.patch("aiopg.create_pool", aiopg_mock.create_pool):
+            wrappers.wrap_create_pool(self.tracer, "-")
+            pool = async_call(aiopg.create_pool())
+            async_call(check_connection(pool))
 
     def test_unwrap_create_pool(self):
         async def check_connection(pool):
@@ -307,14 +309,15 @@ class TestAiopgIntegration(TestBase):
                 self.assertEqual(aiopg_mock.create_pool_call_count, 2)
                 self.assertIsInstance(connection, AiopgConnectionMock)
 
-        wrappers.wrap_create_pool(self.tracer, AiopgMock, "create_pool", "-")
         aiopg_mock = AiopgMock()
-        pool = async_call(aiopg_mock.create_pool())
-        self.assertEqual(aiopg_mock.create_pool_call_count, 1)
+        with mock.patch("aiopg.create_pool", aiopg_mock.create_pool):
+            wrappers.wrap_create_pool(self.tracer, "-")
+            pool = async_call(aiopg.create_pool())
+            self.assertEqual(aiopg_mock.create_pool_call_count, 1)
 
-        wrappers.unwrap_create_pool(AiopgMock, "create_pool")
-        pool = async_call(aiopg_mock.create_pool())
-        async_call(check_connection(pool))
+            wrappers.unwrap_create_pool()
+            pool = async_call(aiopg.create_pool())
+            async_call(check_connection(pool))
 
     def test_instrument_connection(self):
         connection = mock.Mock()

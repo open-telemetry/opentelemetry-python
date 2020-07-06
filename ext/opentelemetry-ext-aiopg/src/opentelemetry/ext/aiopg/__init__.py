@@ -24,11 +24,8 @@ Usage
 .. code-block:: python
 
     import aiopg
-    from opentelemetry import trace
     from opentelemetry.ext.aiopg import AiopgInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
-
-    trace.set_tracer_provider(TracerProvider())
 
     AiopgInstrumentor().instrument()
 
@@ -48,8 +45,6 @@ Usage
 API
 ---
 """
-
-import aiopg
 
 from opentelemetry.ext.aiopg import wrappers
 from opentelemetry.ext.aiopg.version import __version__
@@ -79,8 +74,6 @@ class AiopgInstrumentor(BaseInstrumentor):
 
         wrappers.wrap_connect(
             tracer,
-            aiopg,
-            "connect",
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
             self._CONNECTION_ATTRIBUTES,
@@ -88,8 +81,6 @@ class AiopgInstrumentor(BaseInstrumentor):
 
         wrappers.wrap_create_pool(
             tracer,
-            aiopg,
-            "create_pool",
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
             self._CONNECTION_ATTRIBUTES,
@@ -97,8 +88,8 @@ class AiopgInstrumentor(BaseInstrumentor):
 
     def _uninstrument(self, **kwargs):
         """"Disable aiopg instrumentation"""
-        wrappers.unwrap_connect(aiopg, "connect")
-        wrappers.unwrap_create_pool(aiopg, "create_pool")
+        wrappers.unwrap_connect()
+        wrappers.unwrap_create_pool()
 
     # pylint:disable=no-self-use
     def instrument_connection(self, connection):
