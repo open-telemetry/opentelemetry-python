@@ -96,7 +96,7 @@ class View:
 
 class ViewManager:
     def __init__(self):
-        self.views = defaultdict(set)  #  Map[Metric, Set]
+        self.views = defaultdict(set)  # Map[Metric, Set]
         self._view_lock = threading.Lock()
 
     def register_view(self, view):

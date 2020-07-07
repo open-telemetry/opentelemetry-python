@@ -243,7 +243,6 @@ class TestCounter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", int, meter)
         labels = {"key": "value"}
-        key_labels = metrics.get_dict_as_key(labels)
         counter_v = View(metric, SumAggregator())
         meter.register_view(counter_v)
         bound_mock = metric.bind(labels)
@@ -384,7 +383,6 @@ class TestUpDownSumObserver(unittest.TestCase):
             None, "name", "desc", "unit", int, ("key",), True
         )
         labels = {"key": "value"}
-        key_labels = metrics.get_dict_as_key(labels)
         values = (37, 42, 14, 30)
         for val in values:
             observer.observe(val, labels)
@@ -495,7 +493,6 @@ class TestBoundCounter(unittest.TestCase):
         metric_mock.enabled = True
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
-        aggregator = export.aggregate.SumAggregator()
         bound_metric = metrics.BoundCounter((), metric_mock)
         view_datas_mock = mock.Mock()
         bound_metric.view_datas = [view_datas_mock]
@@ -508,7 +505,6 @@ class TestBoundCounter(unittest.TestCase):
         metric_mock.enabled = False
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
-        aggregator = export.aggregate.SumAggregator()
         bound_metric = metrics.BoundCounter((), metric_mock)
         view_datas_mock = mock.Mock()
         bound_metric.view_datas = [view_datas_mock]
@@ -524,7 +520,6 @@ class TestBoundCounter(unittest.TestCase):
         metric_mock.enabled = True
         metric_mock.value_type = float
         metric_mock.meter = meter_mock
-        aggregator = export.aggregate.SumAggregator()
         bound_metric = metrics.BoundCounter((), metric_mock)
         view_datas_mock = mock.Mock()
         bound_metric.view_datas = [view_datas_mock]
@@ -540,7 +535,6 @@ class TestBoundValueRecorder(unittest.TestCase):
         metric_mock.enabled = True
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
-        aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_valuerecorder = metrics.BoundValueRecorder((), metric_mock)
         view_datas_mock = mock.Mock()
         bound_valuerecorder.view_datas = [view_datas_mock]
@@ -553,7 +547,6 @@ class TestBoundValueRecorder(unittest.TestCase):
         metric_mock.enabled = False
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
-        aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_valuerecorder = metrics.BoundValueRecorder((), metric_mock)
         view_datas_mock = mock.Mock()
         bound_valuerecorder.view_datas = [view_datas_mock]
@@ -567,7 +560,6 @@ class TestBoundValueRecorder(unittest.TestCase):
         metric_mock.enabled = True
         metric_mock.value_type = float
         metric_mock.meter = meter_mock
-        aggregator = export.aggregate.MinMaxSumCountAggregator()
         bound_valuerecorder = metrics.BoundValueRecorder((), metric_mock)
         view_datas_mock = mock.Mock()
         bound_valuerecorder.view_datas = [view_datas_mock]
