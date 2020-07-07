@@ -90,12 +90,20 @@ the ``Configuration`` object is to implement a mechanism that allows the user
 to override this value instead of changing it.
 """
 
-from os import environ
+from os import environ, getcwd
+from os.path import exists, join
 from re import fullmatch
 from typing import ClassVar, Dict, Optional, TypeVar, Union
+from logging import getLogger
+
+from yaml import load, FullLoader
+from environs import Env, EnvValidationError
 
 ConfigValue = Union[str, bool, int, float]
 _T = TypeVar("_T", ConfigValue, Optional[ConfigValue])
+
+
+_logger = getLogger()
 
 
 class Configuration:
@@ -106,9 +114,22 @@ class Configuration:
         if cls._instance is not None:
             instance = cls._instance
         else:
-
             instance = super().__new__(cls)
-            for key, value_str in environ.items():
+
+            configuration_file_path = join(
+                getcwd(), "opentelemetry-python.yaml"
+            )
+
+            if exists(configuration_file_path):
+                with open(configuration_file_path, "r") as configuration_file:
+                    instance._config_map.update(
+                        load(configuration_file, Loader=FullLoader)
+                    )
+
+            env = Env()
+            env.read_env()
+
+            for key, value in environ.items():
 
                 match = fullmatch(
                     r"OPENTELEMETRY_PYTHON_([A-Za-z_][\w_]*)", key
@@ -117,23 +138,28 @@ class Configuration:
                 if match is not None:
 
                     key = match.group(1)
-                    value = value_str  # type: ConfigValue
 
-                    if value_str == "True":
-                        value = True
-                    elif value_str == "False":
-                        value = False
+                    for method in [
+                        "bool",
+                        "json",
+                        "dict",
+                        "list",
+                        "int",
+                        "float",
+                        "datetime",
+                        "str",
+                    ]:
+                        try:
+                            instance._config_map[key] = getattr(
+                                env, method
+                            )(key)
+                            break
+                        except EnvValidationError:
+                            continue
                     else:
-                        try:
-                            value = int(value_str)
-                        except ValueError:
-                            pass
-                        try:
-                            value = float(value_str)
-                        except ValueError:
-                            pass
-
-                    instance._config_map[key] = value
+                        _logger.warning(
+                            "Unable to parse environment variable %s", key
+                        )
 
             cls._instance = instance
 
