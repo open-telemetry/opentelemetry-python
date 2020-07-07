@@ -13,6 +13,17 @@ Installation
 
     pip install opentelemetry-ext-pyramid
 
+Exclude lists
+*************
+To exclude certain URLs from being tracked, set the environment variable ``OPENTELEMETRY_PYTHON_PYRAMID_EXCLUDED_URLS`` with comma delimited regexes representing which URLs to exclude.
+
+For example, 
+
+::
+
+    export OPENTELEMETRY_PYTHON_PYRAMID_EXCLUDED_URLS="client/.*/info,healthcheck"
+
+will exclude requests such as ``https://site/client/123/info`` and ``https://site/xyz/healthcheck``.
 
 References
 ----------
