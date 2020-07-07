@@ -20,7 +20,7 @@ from opentelemetry.sdk import metrics, resources
 from opentelemetry.sdk.metrics import export
 from opentelemetry.sdk.metrics.export.aggregate import (
     SumAggregator,
-    MinMaxSumCountAggregator
+    MinMaxSumCountAggregator,
 )
 from opentelemetry.sdk.metrics.view import View
 
@@ -98,9 +98,7 @@ class TestMeter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
         meter.batcher = batcher_mock
-        counter = metrics.Counter(
-            "name", "desc", "unit", float, meter
-        )
+        counter = metrics.Counter("name", "desc", "unit", float, meter)
         labels = {"key1": "value1"}
         counter.add(1.0, labels)
         meter.collect()
@@ -110,9 +108,7 @@ class TestMeter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
         meter.batcher = batcher_mock
-        counter = metrics.Counter(
-            "name", "desc", "unit", float, meter, False
-        )
+        counter = metrics.Counter("name", "desc", "unit", float, meter, False)
         labels = {"key1": "value1"}
         meter.register_view(View(counter, SumAggregator()))
         counter.add(1.0, labels)
@@ -139,9 +135,7 @@ class TestMeter(unittest.TestCase):
     def test_record_batch(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         labels = {"key1": "value1", "key2": "value2", "key3": "value3"}
-        counter = metrics.Counter(
-            "name", "desc", "unit", float, meter
-        )
+        counter = metrics.Counter("name", "desc", "unit", float, meter)
         valuerecorder = metrics.ValueRecorder(
             "name", "desc", "unit", float, meter
         )
@@ -153,12 +147,16 @@ class TestMeter(unittest.TestCase):
         meter.record_batch(labels, record_tuples)
         labels_key = metrics.get_dict_as_key(labels)
         self.assertEqual(
-            counter.bound_instruments[labels_key].view_datas.pop().aggregator.current,
-            1.0
+            counter.bound_instruments[labels_key]
+            .view_datas.pop()
+            .aggregator.current,
+            1.0,
         )
         self.assertEqual(
-            valuerecorder.bound_instruments[labels_key].view_datas.pop().aggregator.current,
-            (3.0, 3.0, 3.0, 1)
+            valuerecorder.bound_instruments[labels_key]
+            .view_datas.pop()
+            .aggregator.current,
+            (3.0, 3.0, 3.0, 1),
         )
 
     def test_create_metric(self):
@@ -270,9 +268,7 @@ class TestCounter(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_non_decreasing_float_error(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.Counter(
-            "name", "desc", "unit", float, meter,
-        )
+        metric = metrics.Counter("name", "desc", "unit", float, meter,)
         labels = {"key": "value"}
         counter_v = View(metric, SumAggregator())
         meter.register_view(counter_v)
@@ -282,16 +278,15 @@ class TestCounter(unittest.TestCase):
         metric.add(0.1, labels)
         metric.add(-0.1, labels)
         self.assertEqual(
-            bound_counter.view_datas.pop().aggregator.current, 3.4)
+            bound_counter.view_datas.pop().aggregator.current, 3.4
+        )
         self.assertEqual(logger_mock.warning.call_count, 1)
 
 
 class TestUpDownCounter(unittest.TestCase):
     def test_add(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.UpDownCounter(
-            "name", "desc", "unit", int, meter,
-        )
+        metric = metrics.UpDownCounter("name", "desc", "unit", int, meter,)
         labels = {"key": "value"}
         bound_counter = metric.bind(labels)
         counter_v = View(metric, SumAggregator())
@@ -304,9 +299,7 @@ class TestUpDownCounter(unittest.TestCase):
 class TestValueRecorder(unittest.TestCase):
     def test_record(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.ValueRecorder(
-            "name", "desc", "unit", int, meter,
-        )
+        metric = metrics.ValueRecorder("name", "desc", "unit", int, meter,)
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
         measure_v = View(metric, MinMaxSumCountAggregator())
@@ -553,7 +546,6 @@ class TestBoundValueRecorder(unittest.TestCase):
         bound_valuerecorder.view_datas = [view_datas_mock]
         bound_valuerecorder.record(3)
         view_datas_mock.record.assert_called_once_with(3)
-
 
     def test_record_disabled(self):
         meter_mock = mock.Mock()

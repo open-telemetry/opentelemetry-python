@@ -67,11 +67,7 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory",
-            "available memory",
-            "bytes",
-            int,
-            meter,
+            "available memory", "available memory", "bytes", int, meter,
         )
         aggregator.update(1.0)
         labels = ()
@@ -94,11 +90,7 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(False)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory",
-            "available memory",
-            "bytes",
-            int,
-            meter,
+            "available memory", "available memory", "bytes", int, meter,
         )
         aggregator.update(1.0)
         labels = ()
@@ -113,11 +105,7 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory",
-            "available memory",
-            "bytes",
-            int,
-            meter,
+            "available memory", "available memory", "bytes", int, meter,
         )
         aggregator.update(1.0)
         labels = ()
@@ -133,11 +121,7 @@ class TestBatcher(unittest.TestCase):
         aggregator = SumAggregator()
         aggregator2 = SumAggregator()
         metric = metrics.Counter(
-            "available memory",
-            "available memory",
-            "bytes",
-            int,
-            meter,
+            "available memory", "available memory", "bytes", int, meter,
         )
         labels = ()
         _batch_map = {}
@@ -150,20 +134,14 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher._batch_map), 1)
         self.assertIsNotNone(batcher._batch_map.get(batch_key))
         self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(
-            batcher._batch_map.get(batch_key).checkpoint, 1.0
-        )
+        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
 
     def test_batcher_process_not_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory",
-            "available memory",
-            "bytes",
-            int,
-            meter,
+            "available memory", "available memory", "bytes", int, meter,
         )
         labels = ()
         _batch_map = {}
@@ -175,20 +153,14 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher._batch_map), 1)
         self.assertIsNotNone(batcher._batch_map.get(batch_key))
         self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(
-            batcher._batch_map.get(batch_key).checkpoint, 1.0
-        )
+        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
 
     def test_batcher_process_not_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory",
-            "available memory",
-            "bytes",
-            int,
-            meter,
+            "available memory", "available memory", "bytes", int, meter,
         )
         labels = ()
         _batch_map = {}
@@ -200,9 +172,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(len(batcher._batch_map), 1)
         self.assertIsNotNone(batcher._batch_map.get(batch_key))
         self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(
-            batcher._batch_map.get(batch_key).checkpoint, 1.0
-        )
+        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
 
 
 class TestSumAggregator(unittest.TestCase):

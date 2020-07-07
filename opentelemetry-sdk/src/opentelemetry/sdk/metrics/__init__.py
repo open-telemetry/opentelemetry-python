@@ -49,13 +49,13 @@ class BaseBoundInstrument:
     """
 
     def __init__(
-        self,
-        labels: Tuple[Tuple[str, str]],
-        metric: metrics_api.MetricT,
+        self, labels: Tuple[Tuple[str, str]], metric: metrics_api.MetricT,
     ):
         self._labels = labels
         self._metric = metric
-        self.view_datas = metric.meter.view_manager.generate_view_datas(metric, labels)
+        self.view_datas = metric.meter.view_manager.generate_view_datas(
+            metric, labels
+        )
         self._view_datas_lock = threading.Lock()
         self._ref_count = 0
         self._ref_count_lock = threading.Lock()
@@ -66,7 +66,7 @@ class BaseBoundInstrument:
         if not isinstance(value, self._metric.value_type):
             logger.warning(
                 "Invalid value passed for %s.",
-                self._metric.value_type.__name__
+                self._metric.value_type.__name__,
             )
             return False
         return True
@@ -165,10 +165,7 @@ class Metric(metrics_api.Metric):
         with self.bound_instruments_lock:
             bound_instrument = self.bound_instruments.get(key)
             if bound_instrument is None:
-                bound_instrument = self.BOUND_INSTR_TYPE(
-                    key,
-                    self,
-                )
+                bound_instrument = self.BOUND_INSTR_TYPE(key, self,)
                 self.bound_instruments[key] = bound_instrument
         bound_instrument.increase_ref_count()
         return bound_instrument
@@ -380,9 +377,14 @@ class Meter(metrics_api.Meter):
                 continue
             to_remove = []
             with metric.bound_instruments_lock:
-                for labels, bound_instrument in metric.bound_instruments.items():
+                for (
+                    labels,
+                    bound_instrument,
+                ) in metric.bound_instruments.items():
                     for view_data in bound_instrument.view_datas:
-                        record = Record(metric, view_data.labels, view_data.aggregator)
+                        record = Record(
+                            metric, view_data.labels, view_data.aggregator
+                        )
                         self.batcher.process(record)
 
                     if bound_instrument.ref_count() == 0:
@@ -428,12 +430,7 @@ class Meter(metrics_api.Meter):
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
         metric = metric_type(  # type: ignore
-            name,
-            description,
-            unit,
-            value_type,
-            self,
-            enabled=enabled,
+            name, description, unit, value_type, self, enabled=enabled,
         )
         with self.metrics_lock:
             self.metrics.add(metric)
@@ -451,13 +448,7 @@ class Meter(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.Observer:
         ob = observer_type(
-            callback,
-            name,
-            description,
-            unit,
-            value_type,
-            label_keys,
-            enabled,
+            callback, name, description, unit, value_type, label_keys, enabled,
         )
         with self.observers_lock:
             self.observers.add(ob)

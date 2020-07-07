@@ -21,63 +21,59 @@ from opentelemetry.sdk.metrics import view
 
 
 class TestUtil(unittest.TestCase):
-
     @mock.patch("opentelemetry.sdk.metrics.view.logger")
     def test_default_aggregator(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
-        counter = metrics.Counter("","","1",int, meter)
+        counter = metrics.Counter("", "", "1", int, meter)
         self.assertTrue(
             isinstance(
-                view.get_default_aggregator(counter),
-                aggregate.SumAggregator
+                view.get_default_aggregator(counter), aggregate.SumAggregator
             )
         )
-        ud_counter = metrics.UpDownCounter("","","1",int, meter)
+        ud_counter = metrics.UpDownCounter("", "", "1", int, meter)
         self.assertTrue(
             isinstance(
                 view.get_default_aggregator(ud_counter),
-                aggregate.SumAggregator
+                aggregate.SumAggregator,
             )
         )
-        observer = metrics.SumObserver(lambda:None,"","","1",int)
+        observer = metrics.SumObserver(lambda: None, "", "", "1", int)
         self.assertTrue(
             isinstance(
                 view.get_default_aggregator(observer),
-                aggregate.LastValueAggregator
+                aggregate.LastValueAggregator,
             )
         )
-        ud_observer = metrics.SumObserver(lambda:None,"","","1",int)
+        ud_observer = metrics.SumObserver(lambda: None, "", "", "1", int)
         self.assertTrue(
             isinstance(
                 view.get_default_aggregator(ud_observer),
-                aggregate.LastValueAggregator
+                aggregate.LastValueAggregator,
             )
         )
-        recorder = metrics.ValueRecorder("","","1",int, meter)
+        recorder = metrics.ValueRecorder("", "", "1", int, meter)
         self.assertTrue(
             isinstance(
                 view.get_default_aggregator(recorder),
-                aggregate.MinMaxSumCountAggregator
+                aggregate.MinMaxSumCountAggregator,
             )
         )
-        v_observer = metrics.ValueObserver(lambda:None,"","","1",int)
+        v_observer = metrics.ValueObserver(lambda: None, "", "", "1", int)
         self.assertTrue(
             isinstance(
                 view.get_default_aggregator(v_observer),
-                aggregate.ValueObserverAggregator
+                aggregate.ValueObserverAggregator,
             )
         )
         self.assertTrue(
             isinstance(
                 view.get_default_aggregator(DummyMetric()),
-                aggregate.SumAggregator
+                aggregate.SumAggregator,
             )
         )
         self.assertEqual(logger_mock.warning.call_count, 1)
 
 
 class DummyMetric(metrics.Metric):
-    
     def __init__(self):
         pass
-

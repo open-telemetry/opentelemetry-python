@@ -32,11 +32,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         set_meter_provider(metrics.MeterProvider())
         self._meter = get_meter_provider().get_meter(__name__)
         self._test_metric = self._meter.create_metric(
-            "testname",
-            "testdesc",
-            "unit",
-            int,
-            metrics.Counter,
+            "testname", "testdesc", "unit", int, metrics.Counter,
         )
         labels = {"environment": "staging"}
         self._labels_key = metrics.get_dict_as_key(labels)
@@ -77,11 +73,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     def test_counter_to_prometheus(self):
         meter = get_meter_provider().get_meter(__name__)
         metric = meter.create_metric(
-            "test@name",
-            "testdesc",
-            "unit",
-            int,
-            metrics.Counter,
+            "test@name", "testdesc", "unit", int, metrics.Counter,
         )
         labels = {"environment@": "staging", "os": "Windows"}
         key_labels = metrics.get_dict_as_key(labels)
@@ -144,10 +136,5 @@ class StubMetric(metrics.Metric):
         enabled: bool = True,
     ):
         super().__init__(
-            name,
-            description,
-            unit,
-            value_type,
-            meter,
-            enabled=enabled,
+            name, description, unit, value_type, meter, enabled=enabled,
         )

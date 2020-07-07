@@ -142,7 +142,7 @@ class HistogramAggregator(Aggregator):
         if boundaries and self._validate_boundaries(boundaries):
             self._boundaries = boundaries
         else:
-            self._boundaries = (10,20,30,40,50,60,70,80,90,100)
+            self._boundaries = (10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
         self.current = OrderedDict([(bb, 0) for bb in self._boundaries])
         self.checkpoint = OrderedDict([(bb, 0) for bb in self._boundaries])
         self.current[">"] = 0
@@ -152,8 +152,10 @@ class HistogramAggregator(Aggregator):
         if not boundaries:
             logger.warning("Bounds is empty. Using default.")
             return False
-        if not all(boundaries[ii] < boundaries[ii + 1]
-                   for ii in range(len(boundaries) - 1)):
+        if not all(
+            boundaries[ii] < boundaries[ii + 1]
+            for ii in range(len(boundaries) - 1)
+        ):
             logger.warning(
                 "Bounds must be sorted in increasing order. Using default."
             )
@@ -174,7 +176,7 @@ class HistogramAggregator(Aggregator):
             if self.current is None:
                 self.current = [0 for ii in range(len(self._boundaries) + 1)]
             # greater than max value
-            if value >= self._boundaries[len(self._boundaries)-1]:
+            if value >= self._boundaries[len(self._boundaries) - 1]:
                 self.current[">"] += 1
             else:
                 for bb in self._boundaries:
@@ -278,6 +280,6 @@ def verify_type(this, other):
         logger.warning(
             "Error in merging %s with %s.",
             this.__class__.__name__,
-            other.__class__.__name__
+            other.__class__.__name__,
         )
         return False

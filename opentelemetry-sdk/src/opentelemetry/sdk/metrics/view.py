@@ -38,7 +38,6 @@ logger = logging.getLogger(__name__)
 
 
 class ViewData:
-
     def __init__(self, labels: Tuple[Tuple[str, str]], aggregator: Aggregator):
         self.labels = labels
         self.aggregator = aggregator
@@ -48,14 +47,13 @@ class ViewData:
 
     # Uniqueness is based on labels and aggregator type
     def __hash__(self):
-        return hash(
-            (self.labels,
-            self.aggregator.__class__)
-        )
+        return hash((self.labels, self.aggregator.__class__))
 
     def __eq__(self, other):
-        return self.labels == other.labels and \
-            self.aggregator.__class__ == other.aggregator.__class__
+        return (
+            self.labels == other.labels
+            and self.aggregator.__class__ == other.aggregator.__class__
+        )
 
 
 class ViewConfig:
@@ -66,8 +64,8 @@ class ViewConfig:
 
 
 class View:
-
-    def __init__(self,
+    def __init__(
+        self,
         metric: InstrumentT,
         aggregator: Aggregator,
         label_keys: Sequence[str] = None,
@@ -83,23 +81,21 @@ class View:
     # Uniqueness is based on metric, aggregator type, ordered label keys and ViewConfig
     def __hash__(self):
         return hash(
-            (self.metric,
-            self.aggregator,
-            tuple(self.label_keys),
-            self.config)
+            (self.metric, self.aggregator, tuple(self.label_keys), self.config)
         )
 
     def __eq__(self, other):
-        return self.metric == other.metric and \
-            self.aggregator.__class__ == other.aggregator.__class__ and \
-            self.label_keys == other.label_keys and \
-            self.config == other.config
+        return (
+            self.metric == other.metric
+            and self.aggregator.__class__ == other.aggregator.__class__
+            and self.label_keys == other.label_keys
+            and self.config == other.config
+        )
 
 
 class ViewManager:
-
     def __init__(self):
-        self.views = defaultdict(set) #  Map[Metric, Set]
+        self.views = defaultdict(set)  #  Map[Metric, Set]
         self._view_lock = threading.Lock()
 
     def register_view(self, view):
@@ -139,7 +135,9 @@ class ViewManager:
                     updated_labels = labels
                 # ViewData that is duplicate (same labels and aggregator) will be
                 # aggregated together as one
-                view_datas.add(ViewData(tuple(updated_labels), view.aggregator))
+                view_datas.add(
+                    ViewData(tuple(updated_labels), view.aggregator)
+                )
         return view_datas
 
 

@@ -40,7 +40,10 @@ class Batcher:
         data in all of the aggregators in this batcher.
         """
         metric_records = []
-        for (instrument, aggregator_type, labels), aggregator in self._batch_map.items():
+        for (
+            (instrument, aggregator_type, labels),
+            aggregator,
+        ) in self._batch_map.items():
             metric_records.append(MetricRecord(instrument, labels, aggregator))
         return metric_records
 
@@ -70,6 +73,8 @@ class Batcher:
         if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage
-            aggregator = record.aggregator.__class__(config=record.aggregator.config)
+            aggregator = record.aggregator.__class__(
+                config=record.aggregator.config
+            )
             aggregator.merge(record.aggregator)
         self._batch_map[key] = aggregator
