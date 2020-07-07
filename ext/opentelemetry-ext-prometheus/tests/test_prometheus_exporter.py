@@ -37,10 +37,9 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "unit",
             int,
             metrics.Counter,
-            ["environment"],
         )
         labels = {"environment": "staging"}
-        self._labels_key = metrics.get_labels_as_key(labels)
+        self._labels_key = metrics.get_dict_as_key(labels)
 
         self._mock_registry_register = mock.Mock()
         self._registry_register_patch = mock.patch(
@@ -83,10 +82,9 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "unit",
             int,
             metrics.Counter,
-            ["environment@", "os"],
         )
         labels = {"environment@": "staging", "os": "Windows"}
-        key_labels = metrics.get_labels_as_key(labels)
+        key_labels = metrics.get_dict_as_key(labels)
         aggregator = SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
@@ -117,7 +115,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "tesname", "testdesc", "unit", int, StubMetric
         )
         labels = {"environment": "staging"}
-        key_labels = metrics.get_labels_as_key(labels)
+        key_labels = metrics.get_dict_as_key(labels)
         record = MetricRecord(metric, key_labels, None)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])

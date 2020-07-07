@@ -14,6 +14,7 @@
 
 import logging
 import threading
+from collections import defaultdict
 from typing import Sequence, Type, Tuple
 from opentelemetry.metrics import (
     Counter,
@@ -98,14 +99,12 @@ class View:
 class ViewManager:
 
     def __init__(self):
-        self.views = {} # metric to set of views
+        self.views = defaultdict(set) #  Map[Metric, Set]
         self._view_lock = threading.Lock()
 
     def register_view(self, view):
         with self._view_lock:
-            if self.views.get(view.metric) is None:
-                self.views[view.metric] = {view}
-            elif view not in self.views.get(view.metric):
+            if view not in self.views.get(view.metric):
                 self.views[view.metric].add(view)
             else:
                 logger.warning("View already registered.")

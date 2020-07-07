@@ -62,22 +62,6 @@ class TestConsoleMetricsExporter(unittest.TestCase):
 
 
 class TestBatcher(unittest.TestCase):
-    def test_aggregator_for_counter(self):
-        batcher = UngroupedBatcher(True)
-        self.assertTrue(
-            isinstance(batcher.aggregator_for(metrics.Counter), SumAggregator)
-        )
-
-    def test_aggregator_for_updowncounter(self):
-        batcher = UngroupedBatcher(True)
-        self.assertTrue(
-            isinstance(
-                batcher.aggregator_for(metrics.UpDownCounter), SumAggregator,
-            )
-        )
-
-    # TODO: Add other aggregator tests
-
     def test_checkpoint_set(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher = Batcher(True)
@@ -92,7 +76,7 @@ class TestBatcher(unittest.TestCase):
         aggregator.update(1.0)
         labels = ()
         _batch_map = {}
-        _batch_map[(metric, CounterAggregator, labels)] = aggregator
+        _batch_map[(metric, SumAggregator, labels)] = aggregator
         batcher._batch_map = _batch_map
         records = batcher.checkpoint_set()
         self.assertEqual(len(records), 1)
@@ -119,7 +103,7 @@ class TestBatcher(unittest.TestCase):
         aggregator.update(1.0)
         labels = ()
         _batch_map = {}
-        _batch_map[(metric, CounterAggregator, labels)] = aggregator
+        _batch_map[(metric, SumAggregator, labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 0)
@@ -138,7 +122,7 @@ class TestBatcher(unittest.TestCase):
         aggregator.update(1.0)
         labels = ()
         _batch_map = {}
-        _batch_map[(metric, CounterAggregator, labels)] = aggregator
+        _batch_map[(metric, SumAggregator, labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 1)
@@ -157,7 +141,7 @@ class TestBatcher(unittest.TestCase):
         )
         labels = ()
         _batch_map = {}
-        batch_key = (metric, CounterAggregator, labels)
+        batch_key = (metric, SumAggregator, labels)
         _batch_map[batch_key] = aggregator
         aggregator2.update(1.0)
         batcher._batch_map = _batch_map
@@ -183,7 +167,7 @@ class TestBatcher(unittest.TestCase):
         )
         labels = ()
         _batch_map = {}
-        batch_key = (metric, CounterAggregator, labels)
+        batch_key = (metric, SumAggregator, labels)
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)
@@ -208,7 +192,7 @@ class TestBatcher(unittest.TestCase):
         )
         labels = ()
         _batch_map = {}
-        batch_key = (metric, CounterAggregator, labels)
+        batch_key = (metric, SumAggregator, labels)
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)
