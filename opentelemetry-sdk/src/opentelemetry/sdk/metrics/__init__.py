@@ -375,22 +375,22 @@ class Meter(metrics_api.Meter):
         self._collect_observers()
 
     def _collect_metrics(self) -> None:
-            for metric in self.metrics:
-                if not metric.enabled:
-                    continue
-                to_remove = []
-                with metric.bound_instruments_lock:
-                    for labels, bound_instrument in metric.bound_instruments.items():
-                        for view_data in bound_instrument.view_datas:
-                            record = Record(metric, view_data.labels, view_data.aggregator)
-                            self.batcher.process(record)
+        for metric in self.metrics:
+            if not metric.enabled:
+                continue
+            to_remove = []
+            with metric.bound_instruments_lock:
+                for labels, bound_instrument in metric.bound_instruments.items():
+                    for view_data in bound_instrument.view_datas:
+                        record = Record(metric, view_data.labels, view_data.aggregator)
+                        self.batcher.process(record)
 
-                        if bound_instrument.ref_count() == 0:
-                            to_remove.append(labels)
+                    if bound_instrument.ref_count() == 0:
+                        to_remove.append(labels)
 
-                # Remove handles that were released
-                for labels in to_remove:
-                    del metric.bound_instruments[labels]
+            # Remove handles that were released
+            for labels in to_remove:
+                del metric.bound_instruments[labels]
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
