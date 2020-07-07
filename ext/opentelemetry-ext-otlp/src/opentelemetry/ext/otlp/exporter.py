@@ -171,7 +171,10 @@ class OTLPExporterMixin(ABC):
                             + retry_info.retry_delay.nanos / 1.0e9
                         )
 
-                    logger.debug("Waiting %ss before retrying export of span")
+                    logger.debug(
+                        "Waiting %ss before retrying export of span",
+                        delay
+                    )
                     sleep(delay)
                     continue
 
