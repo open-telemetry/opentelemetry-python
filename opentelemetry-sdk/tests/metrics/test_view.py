@@ -16,8 +16,8 @@ import unittest
 from unittest import mock
 
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics.export import aggregate
 from opentelemetry.sdk.metrics import view
+from opentelemetry.sdk.metrics.export import aggregate
 
 
 class TestUtil(unittest.TestCase):

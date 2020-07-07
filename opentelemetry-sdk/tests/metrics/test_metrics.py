@@ -19,8 +19,8 @@ from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk import metrics, resources
 from opentelemetry.sdk.metrics import export
 from opentelemetry.sdk.metrics.export.aggregate import (
-    SumAggregator,
     MinMaxSumCountAggregator,
+    SumAggregator,
 )
 from opentelemetry.sdk.metrics.view import View
 

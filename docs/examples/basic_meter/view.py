@@ -22,13 +22,13 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
     ValueRecorder,
 )
+from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.aggregate import (
     HistogramAggregator,
     LastValueAggregator,
     MinMaxSumCountAggregator,
     SumAggregator,
 )
-from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.view import View, ViewConfig
 
 # Use the meter type provided by the SDK package

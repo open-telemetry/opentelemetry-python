@@ -15,7 +15,7 @@
 import abc
 import logging
 import threading
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 
 from opentelemetry.util import time_ns
 

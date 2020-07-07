@@ -26,9 +26,9 @@ from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.view import (
-    get_default_aggregator,
     ViewData,
     ViewManager,
+    get_default_aggregator,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import get_dict_as_key
