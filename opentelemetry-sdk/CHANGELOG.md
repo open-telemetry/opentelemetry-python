@@ -4,6 +4,8 @@
 
 - Add support for resources and resource detector
   ([#853](https://github.com/open-telemetry/opentelemetry-python/pull/853))
+- Implement Views in metrics SDK
+  ([#596](https://github.com/open-telemetry/opentelemetry-python/pull/596))
 
 ## Version 0.10b0
 
