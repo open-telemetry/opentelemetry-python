@@ -40,6 +40,7 @@ class Batcher:
         data in all of the aggregators in this batcher.
         """
         metric_records = []
+        # pylint: disable=W0612
         for (
             (instrument, aggregator_type, labels),
             aggregator,

@@ -486,6 +486,7 @@ class TestValueObserver(unittest.TestCase):
         self.assertTrue(logger_mock.warning.called)
 
 
+# pylint: disable=no-self-use
 class TestBoundCounter(unittest.TestCase):
     def test_add(self):
         meter_mock = mock.Mock()

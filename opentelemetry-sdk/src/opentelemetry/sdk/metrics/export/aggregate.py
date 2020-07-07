@@ -148,6 +148,7 @@ class HistogramAggregator(Aggregator):
         self.current[">"] = 0
         self.checkpoint[">"] = 0
 
+    # pylint: disable=R0201
     def _validate_boundaries(self, boundaries):
         if not boundaries:
             logger.warning("Bounds is empty. Using default.")
@@ -273,6 +274,7 @@ def get_latest_timestamp(time_stamp, other_timestamp):
     return time_stamp
 
 
+# pylint: disable=R1705
 def verify_type(this, other):
     if isinstance(other, this.__class__):
         return True

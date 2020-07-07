@@ -75,5 +75,6 @@ class TestUtil(unittest.TestCase):
 
 
 class DummyMetric(metrics.Metric):
+    # pylint: disable=W0231
     def __init__(self):
         pass
