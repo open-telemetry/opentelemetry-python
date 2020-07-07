@@ -20,6 +20,7 @@ from opentelemetry import trace
 from opentelemetry.ext.pyramid import PyramidInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
+from opentelemetry.util import ExcludeList
 
 # pylint: disable=import-error
 from .pyramid_base_test import InstrumentationTest
@@ -169,12 +170,8 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(mock_logger.warning.called, True)
 
     @patch(
-        "opentelemetry.ext.pyramid.callbacks._excluded_hosts",
-        ["http://localhost/excluded_arg/123"],
-    )
-    @patch(
-        "opentelemetry.ext.pyramid.callbacks._excluded_paths",
-        ["excluded_noarg"],
+        "opentelemetry.ext.pyramid.callbacks._excluded_urls",
+        ExcludeList(["http://localhost/excluded_arg/123", "excluded_noarg"]),
     )
     def test_exclude_lists(self):
         self.client.get("/excluded_arg/123")
