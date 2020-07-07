@@ -141,7 +141,6 @@ class StubMetric(metrics.Metric):
         unit: str,
         value_type,
         meter,
-        label_keys,
         enabled: bool = True,
     ):
         super().__init__(
@@ -150,6 +149,5 @@ class StubMetric(metrics.Metric):
             unit,
             value_type,
             meter,
-            label_keys=label_keys,
             enabled=enabled,
         )

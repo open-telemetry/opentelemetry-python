@@ -104,7 +104,7 @@ class ViewManager:
 
     def register_view(self, view):
         with self._view_lock:
-            if view not in self.views.get(view.metric):
+            if view not in self.views[view.metric]:
                 self.views[view.metric].add(view)
             else:
                 logger.warning("View already registered.")
