@@ -300,7 +300,6 @@ class TestValueRecorder(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.ValueRecorder("name", "desc", "unit", int, meter,)
         labels = {"key": "value"}
-        key_labels = metrics.get_dict_as_key(labels)
         measure_v = View(metric, MinMaxSumCountAggregator())
         bound_valuerecorder = metric.bind(labels)
         meter.register_view(measure_v)
@@ -383,6 +382,7 @@ class TestUpDownSumObserver(unittest.TestCase):
             None, "name", "desc", "unit", int, ("key",), True
         )
         labels = {"key": "value"}
+        key_labels = metrics.get_dict_as_key(labels)
         values = (37, 42, 14, 30)
         for val in values:
             observer.observe(val, labels)
