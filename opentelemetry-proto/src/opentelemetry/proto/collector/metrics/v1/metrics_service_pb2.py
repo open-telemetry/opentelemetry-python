@@ -19,6 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.collector.metrics.v1',
   syntax='proto3',
   serialized_options=b'\n+io.opentelemetry.proto.collector.metrics.v1B\023MetricsServiceProtoP\001ZIgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/metrics/v1',
+  create_key=_descriptor._internal_create_key,
   serialized_pb=b'\n>opentelemetry/proto/collector/metrics/v1/metrics_service.proto\x12(opentelemetry.proto.collector.metrics.v1\x1a,opentelemetry/proto/metrics/v1/metrics.proto\"h\n\x1b\x45xportMetricsServiceRequest\x12I\n\x10resource_metrics\x18\x01 \x03(\x0b\x32/.opentelemetry.proto.metrics.v1.ResourceMetrics\"\x1e\n\x1c\x45xportMetricsServiceResponse2\xac\x01\n\x0eMetricsService\x12\x99\x01\n\x06\x45xport\x12\x45.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest\x1a\x46.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse\"\x00\x42\x8f\x01\n+io.opentelemetry.proto.collector.metrics.v1B\x13MetricsServiceProtoP\x01ZIgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/metrics/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_metrics_dot_v1_dot_metrics__pb2.DESCRIPTOR,])
@@ -32,6 +33,7 @@ _EXPORTMETRICSSERVICEREQUEST = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
+  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='resource_metrics', full_name='opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest.resource_metrics', index=0,
@@ -39,7 +41,7 @@ _EXPORTMETRICSSERVICEREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -63,6 +65,7 @@ _EXPORTMETRICSSERVICERESPONSE = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
+  create_key=_descriptor._internal_create_key,
   fields=[
   ],
   extensions=[
@@ -108,6 +111,7 @@ _METRICSSERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
+  create_key=_descriptor._internal_create_key,
   serialized_start=293,
   serialized_end=465,
   methods=[
@@ -119,6 +123,7 @@ _METRICSSERVICE = _descriptor.ServiceDescriptor(
     input_type=_EXPORTMETRICSSERVICEREQUEST,
     output_type=_EXPORTMETRICSSERVICERESPONSE,
     serialized_options=None,
+    create_key=_descriptor._internal_create_key,
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_METRICSSERVICE)
