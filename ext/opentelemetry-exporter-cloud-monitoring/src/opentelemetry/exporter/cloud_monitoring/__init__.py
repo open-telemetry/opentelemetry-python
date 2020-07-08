@@ -3,12 +3,12 @@ import random
 from typing import Optional, Sequence
 
 import google.auth
+from google.api.distribution_pb2 import Distribution
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
-
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -50,8 +50,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
     """
 
     def __init__(
-        self, project_id=None, client=None, add_unique_identifier=False
+        self, project_id=None, client=None, add_unique_identifier=False, dist=False
     ):
+        self.dist = dist
         self.client = client or MetricServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
@@ -167,6 +168,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             descriptor["value_type"] = MetricDescriptor.ValueType.INT64
         elif instrument.value_type == float:
             descriptor["value_type"] = MetricDescriptor.ValueType.DOUBLE
+        if self.dist:
+            descriptor["value_type"] = MetricDescriptor.ValueType.DISTRIBUTION
+
         proto_descriptor = MetricDescriptor(**descriptor)
         try:
             descriptor = self.client.create_metric_descriptor(
@@ -206,11 +210,31 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                     UNIQUE_IDENTIFIER_KEY
                 ] = self.unique_identifier
 
-            point = series.points.add()
+            point_dict = {'interval': {}}
+
             if instrument.value_type == int:
-                point.value.int64_value = record.aggregator.checkpoint
+                point_dict["value"] = {
+                    "int64_value": record.aggregator.checkpoint
+                }
             elif instrument.value_type == float:
-                point.value.double_value = record.aggregator.checkpoint
+                point_dict["value"] = {
+                    "double_value": record.aggregator.checkpoint
+                }
+            if self.dist:
+                point_dict["value"] = {
+                    "distribution_value": Distribution(
+                        count=2,
+                        mean=4,
+                        bucket_counts=[1, 1],
+                        bucket_options={
+                            'linear_buckets':{
+                                'num_finite_buckets': 2,
+                                'width': 3,
+                                'offset': 5
+                            }
+                        }
+                    )
+                }
             seconds, nanos = divmod(
                 record.aggregator.last_update_timestamp, 1e9
             )
@@ -222,8 +246,11 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             if seconds <= last_updated_seconds + WRITE_INTERVAL:
                 continue
             self._last_updated[updated_key] = seconds
-            point.interval.end_time.seconds = int(seconds)
-            point.interval.end_time.nanos = int(nanos)
+            point_dict["interval"]["end_time"] = {
+                "seconds": int(seconds),
+                "nanos": int(nanos),
+            }
+            series.points.add(**point_dict)
             all_series.append(series)
         try:
             self._batch_write(all_series)

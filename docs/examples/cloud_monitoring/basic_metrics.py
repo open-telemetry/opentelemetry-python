@@ -24,11 +24,11 @@ from opentelemetry.sdk.metrics import Counter, MeterProvider
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 metrics.get_meter_provider().start_pipeline(
-    meter, CloudMonitoringMetricsExporter(), 5
+    meter, CloudMonitoringMetricsExporter(dist=True), 5
 )
 
 requests_counter = meter.create_metric(
-    name="request_counter",
+    name="request_counter_dist",
     description="number of requests",
     unit="1",
     value_type=int,
