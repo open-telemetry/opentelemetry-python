@@ -213,11 +213,11 @@ class TestOTLPSpanExporter(TestCase):
                                     attributes=[
                                         KeyValue(
                                             key="a",
-                                            value=AnyValue(int_value=1)
+                                            value=AnyValue(int_value=1),
                                         ),
                                         KeyValue(
                                             key="b",
-                                            value=AnyValue(int_value=1)
+                                            value=AnyValue(int_value=1),
                                         ),
                                     ],
                                     events=[
@@ -227,11 +227,15 @@ class TestOTLPSpanExporter(TestCase):
                                             attributes=[
                                                 KeyValue(
                                                     key="a",
-                                                    value=AnyValue(int_value=1)
+                                                    value=AnyValue(
+                                                        int_value=1
+                                                    ),
                                                 ),
                                                 KeyValue(
                                                     key="b",
-                                                    value=AnyValue(int_value=0)
+                                                    value=AnyValue(
+                                                        int_value=0
+                                                    ),
                                                 ),
                                             ],
                                         )
@@ -246,11 +250,15 @@ class TestOTLPSpanExporter(TestCase):
                                             attributes=[
                                                 KeyValue(
                                                     key="a",
-                                                    value=AnyValue(int_value=1)
+                                                    value=AnyValue(
+                                                        int_value=1
+                                                    ),
                                                 ),
                                                 KeyValue(
                                                     key="b",
-                                                    value=AnyValue(int_value=0)
+                                                    value=AnyValue(
+                                                        int_value=0
+                                                    ),
                                                 ),
                                             ],
                                         )
