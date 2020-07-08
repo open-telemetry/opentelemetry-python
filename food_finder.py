@@ -48,7 +48,10 @@ trace.get_tracer_provider().add_span_processor(
 port = 5010
 talk_to = None
 
-
+_GCP_METADATA_URL = (
+    "http://metadata.google.internal/computeMetadata/v1/?recursive=true"
+)
+_GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
 @app.route("/opentelemetry_server_flask_" + str(port), methods=["GET"])
 def opentelemetry_server_flask():
     tracer = trace.get_tracer(__name__)
@@ -57,7 +60,9 @@ def opentelemetry_server_flask():
         time.sleep(0.5)
         if talk_to:
             requests.get(talk_to)
-        return "GOOD"
+        return requests.get(
+        _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
+    ).json()
 
 
 if __name__ == "__main__":
