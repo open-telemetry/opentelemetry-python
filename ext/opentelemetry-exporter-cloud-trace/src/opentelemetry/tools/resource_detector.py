@@ -2,23 +2,27 @@ import requests
 
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
+import os
 
 _GCP_METADATA_URL = (
     "http://metadata.google.internal/computeMetadata/v1/?recursive=true"
 )
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
 
+def _get_all_google_metadata():
+    token = attach(set_value("suppress_instrumentation", True))
+    all_metadata = requests.get(
+        _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
+    ).json()
+    detach(token)
+    return all_metadata
 
 def get_gce_resources():
     """ Resource finder for common GCE attributes
 
         See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
     """
-    token = attach(set_value("suppress_instrumentation", True))
-    all_metadata = requests.get(
-        _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
-    ).json()
-    detach(token)
+    all_metadata = _get_all_google_metadata()
     gce_resources = {
         "host.id": all_metadata["instance"]["id"],
         "cloud.account.id": all_metadata["project"]["projectId"],
@@ -28,8 +32,33 @@ def get_gce_resources():
     }
     return gce_resources
 
+def get_gke_resources():
+    """ Resource finder for GKE attributes
 
-_RESOURCE_FINDERS = [get_gce_resources]
+    """
+    # The user must specify this environment variable via the Downward API
+    container_name = os.getenv('CONTAINER_NAME')
+    if not container_name:
+        return {}
+    all_metadata = _get_all_google_metadata()
+    pod_namespace = os.getenv('NAMESPACE', '')
+    pod_name = os.getenv('HOSTNAME', '')
+    gke_resources = {
+        "cloud.account.id": all_metadata["project"]["projectId"],
+        'k8s.cluster.name': all_metadata['instance']['attributes']['cluster-name'],
+        'k8s.namespace.name': pod_namespace,
+        "host.id": all_metadata["instance"]["id"],
+        'k8s.pod.name': pod_name,
+        'container.name': container_name,
+        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
+        "cloud.provider": "gcp",
+        "gcp.resource_type": "gke_container",
+    }
+    return gke_resources
+
+
+
+_RESOURCE_FINDERS = [get_gke_resources, get_gce_resources]
 
 
 class GoogleCloudResourceDetector(ResourceDetector):
@@ -43,5 +72,7 @@ class GoogleCloudResourceDetector(ResourceDetector):
             self.cached = True
             for resource_finder in _RESOURCE_FINDERS:
                 found_resources = resource_finder()
-                self.gcp_resources.update(found_resources)
+                if found_resources:
+                    self.gcp_resources = found_resources
+                    break
         return Resource(self.gcp_resources)
