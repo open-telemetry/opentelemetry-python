@@ -11,11 +11,14 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
+from opentelemetry.sdk.resources import get_aggregated_resources
 import opentelemetry.ext.requests
 import requests
 
 app = Flask(__name__)
-trace.set_tracer_provider(TracerProvider())
+resources = get_aggregated_resources([GoogleCloudResourceDetector()])
+trace.set_tracer_provider(TracerProvider(resource=resources))
 opentelemetry.ext.requests.RequestsInstrumentor().instrument()
 
 FlaskInstrumentor().instrument_app(app)
