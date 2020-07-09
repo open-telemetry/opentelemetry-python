@@ -328,7 +328,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertEqual(_extract_resources(resource), expected_extract)
 
     def test_extract_malformed_resources(self):
-        # This resources doesn't have all the fields required for a gce_instance
+        # This resource doesn't have all the fields required for a gce_instance
         resource = Resource(
             labels={
                 "gcp.resource_type": "gce_instance",

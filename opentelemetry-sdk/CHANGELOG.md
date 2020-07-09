@@ -4,6 +4,8 @@
 
 - Add support for resources and resource detector
   ([#853](https://github.com/open-telemetry/opentelemetry-python/pull/853))
+- Improve resource and resource detector tests
+  ([#893](https://github.com/open-telemetry/opentelemetry-python/pull/893))
 
 ## Version 0.10b0
 
