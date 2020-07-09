@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from sys import modules
+from unittest.mock import patch
 
 from django.conf import settings
 from django.conf.urls import url
@@ -24,15 +25,17 @@ from opentelemetry.ext.django import DjangoInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.util import ExcludeList
 
 # pylint: disable=import-error
-from .views import error, excluded, excluded2, traced
+from .views import error, excluded, excluded_noarg, excluded_noarg2, traced
 
 urlpatterns = [
     url(r"^traced/", traced),
     url(r"^error/", error),
-    url(r"^excluded/", excluded),
-    url(r"^excluded2/", excluded2),
+    url(r"^excluded_arg/", excluded),
+    url(r"^excluded_noarg/", excluded_noarg),
+    url(r"^excluded_noarg2/", excluded_noarg2),
 ]
 _django_instrumentor = DjangoInstrumentor()
 
@@ -111,3 +114,25 @@ class TestMiddleware(WsgiTestBase):
             span.attributes["http.url"], "http://testserver/error/"
         )
         self.assertEqual(span.attributes["http.scheme"], "http")
+
+    @patch(
+        "opentelemetry.ext.django.middleware._DjangoMiddleware._excluded_urls",
+        ExcludeList(["http://testserver/excluded_arg/123", "excluded_noarg"]),
+    )
+    def test_exclude_lists(self):
+        client = Client()
+        client.get("/excluded_arg/123")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 0)
+
+        client.get("/excluded_arg/125")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+
+        client.get("/excluded_noarg/")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+
+        client.get("/excluded_noarg2/")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)

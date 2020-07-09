@@ -24,7 +24,7 @@ from opentelemetry.ext.wsgi import (
 )
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
-from opentelemetry.util import disable_trace
+from opentelemetry.util import ExcludeList
 
 try:
     from django.utils.deprecation import MiddlewareMixin
@@ -44,12 +44,11 @@ class _DjangoMiddleware(MiddlewareMixin):
     _environ_token = "opentelemetry-instrumentor-django.token"
     _environ_span_key = "opentelemetry-instrumentor-django.span_key"
 
-    _excluded_hosts = Configuration().DJANGO_EXCLUDED_HOSTS or []
-    _excluded_paths = Configuration().DJANGO_EXCLUDED_PATHS or []
-    if _excluded_hosts:
-        _excluded_hosts = str.split(_excluded_hosts, ",")
-    if _excluded_paths:
-        _excluded_paths = str.split(_excluded_paths, ",")
+    _excluded_urls = Configuration().DJANGO_EXCLUDED_URLS or []
+    if _excluded_urls:
+        _excluded_urls = ExcludeList(str.split(_excluded_urls, ","))
+    else:
+        _excluded_urls = ExcludeList(_excluded_urls)
 
     def process_view(
         self, request, view_func, view_args, view_kwargs
@@ -62,11 +61,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         #     key.lower().replace('_', '-').replace("http-", "", 1): value
         #     for key, value in request.META.items()
         # }
-        if disable_trace(
-            request.build_absolute_uri("?"),
-            self._excluded_hosts,
-            self._excluded_paths,
-        ):
+        if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
             return
 
         environ = request.META
@@ -97,11 +92,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         # Django can call this method and process_response later. In order
         # to avoid __exit__ and detach from being called twice then, the
         # respective keys are being removed here.
-        if disable_trace(
-            request.build_absolute_uri("?"),
-            self._excluded_hosts,
-            self._excluded_paths,
-        ):
+        if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
             return
 
         if self._environ_activation_key in request.META.keys():
@@ -116,11 +107,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             request.META.pop(self._environ_token, None)
 
     def process_response(self, request, response):
-        if disable_trace(
-            request.build_absolute_uri("?"),
-            self._excluded_hosts,
-            self._excluded_paths,
-        ):
+        if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
             return response
 
         if (
