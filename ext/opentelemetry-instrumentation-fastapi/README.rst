@@ -25,17 +25,15 @@ Usage
 
 .. code-block:: python
 
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     import fastapi
-    from fastapi.responses import PlainTextResponse
-    from fastapi.routing import Route
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-    def home(request):
-        return PlainTextResponse("hi")
+    app = fastapi.FastAPI()
 
-    app = fastapi.FastAPI(
-        routes=[Route("/foobar", home)]
-    )
+    @app.get("/foobar")
+    async def foobar():
+        return {"message": "hello world"}
+
     FastAPIInstrumentor.instrument_app(app)
 
 
