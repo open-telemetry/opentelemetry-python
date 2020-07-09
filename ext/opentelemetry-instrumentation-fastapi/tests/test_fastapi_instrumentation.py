@@ -15,8 +15,6 @@
 import unittest
 
 import fastapi
-from fastapi.responses import PlainTextResponse
-from fastapi.routing import Route
 from fastapi.testclient import TestClient
 
 import opentelemetry.instrumentation.fastapi as otel_fastapi
@@ -58,12 +56,7 @@ class TestFastAPIManualInstrumentation(TestBase):
 
     @staticmethod
     def _create_fastapi_app():
-        def home(_):
-            return PlainTextResponse("hi")
-
-        app = fastapi.FastAPI(
-            routes=[Route("/foobar", home), Route("/user/{username}", home)]
-        )
+        app = fastapi.FastAPI()
 
         @app.get("/foobar")
         async def foobar():
@@ -72,6 +65,8 @@ class TestFastAPIManualInstrumentation(TestBase):
         @app.get("/user/{username}")
         async def user(username: str):
             return {"message": username}
+
+        return app
 
 
 class TestAutoInstrumentation(TestFastAPIManualInstrumentation):
