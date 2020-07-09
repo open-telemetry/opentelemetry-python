@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import patch
+
 from flask import Flask, request
 
 from opentelemetry import trace
 from opentelemetry.ext.flask import FlaskInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
+from opentelemetry.util import ExcludeList
 
 # pylint: disable=import-error
 from .base_test import InstrumentationTest
@@ -118,7 +121,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         resp.close()
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
-        self.assertEqual(span_list[0].name, "/bye")
+        self.assertEqual(span_list[0].name, "HTTP POST")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
@@ -139,3 +142,24 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(span_list[0].name, "_hello_endpoint")
         self.assertEqual(span_list[0].kind, trace.SpanKind.SERVER)
         self.assertEqual(span_list[0].attributes, expected_attrs)
+
+    @patch(
+        "opentelemetry.ext.flask._excluded_urls",
+        ExcludeList(["http://localhost/excluded_arg/123", "excluded_noarg"]),
+    )
+    def test_exclude_lists(self):
+        self.client.get("/excluded_arg/123")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 0)
+
+        self.client.get("/excluded_arg/125")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+
+        self.client.get("/excluded_noarg")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)
+
+        self.client.get("/excluded_noarg2")
+        span_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 1)

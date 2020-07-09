@@ -279,3 +279,11 @@ def format_trace_id(trace_id: int) -> str:
 
 def format_span_id(span_id: int) -> str:
     return "0x{:016x}".format(span_id)
+
+
+def get_hexadecimal_trace_id(trace_id: int) -> str:
+    return "{:032x}".format(trace_id)
+
+
+def get_hexadecimal_span_id(span_id: int) -> str:
+    return "{:016x}".format(span_id)

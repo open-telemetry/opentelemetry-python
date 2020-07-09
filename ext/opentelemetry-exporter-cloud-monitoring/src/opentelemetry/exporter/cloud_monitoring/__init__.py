@@ -1,9 +1,11 @@
 import logging
+import random
 from typing import Optional, Sequence
 
 import google.auth
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
+from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 
@@ -12,19 +14,44 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
     MetricsExportResult,
 )
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.resources import Resource
 
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
+UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
+
+OT_RESOURCE_LABEL_TO_GCP = {
+    "gce_instance": {
+        "cloud.account.id": "project_id",
+        "host.id": "instance_id",
+        "cloud.zone": "zone",
+    }
+}
 
 
 # pylint is unable to resolve members of protobuf objects
 # pylint: disable=no-member
 class CloudMonitoringMetricsExporter(MetricsExporter):
-    """ Implementation of Metrics Exporter to Google Cloud Monitoring"""
+    """ Implementation of Metrics Exporter to Google Cloud Monitoring
 
-    def __init__(self, project_id=None, client=None):
+        You can manually pass in project_id and client, or else the
+        Exporter will take that information from Application Default
+        Credentials.
+
+    Args:
+        project_id: project id of your Google Cloud project.
+        client: Client to upload metrics to Google Cloud Monitoring.
+        add_unique_identifier: Add an identifier to each exporter metric. This
+            must be used when there exist two (or more) exporters that may
+            export to the same metric name within WRITE_INTERVAL seconds of
+            each other.
+    """
+
+    def __init__(
+        self, project_id=None, client=None, add_unique_identifier=False
+    ):
         self.client = client or MetricServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
@@ -33,14 +60,39 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self.project_name = self.client.project_path(self.project_id)
         self._metric_descriptors = {}
         self._last_updated = {}
+        self.unique_identifier = None
+        if add_unique_identifier:
+            self.unique_identifier = "{:08x}".format(
+                random.randint(0, 16 ** 8)
+            )
 
-    def _add_resource_info(self, series: TimeSeries) -> None:
+    @staticmethod
+    def _get_monitored_resource(
+        resource: Resource,
+    ) -> Optional[MonitoredResource]:
         """Add Google resource specific information (e.g. instance id, region).
 
+        See
+        https://cloud.google.com/monitoring/custom-metrics/creating-metrics#custom-metric-resources
+        for supported types
         Args:
             series: ProtoBuf TimeSeries
         """
-        # TODO: Leverage this better
+
+        if resource.labels.get("cloud.provider") != "gcp":
+            return None
+        resource_type = resource.labels["gcp.resource_type"]
+        if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
+            return None
+        return MonitoredResource(
+            type=resource_type,
+            labels={
+                gcp_label: str(resource.labels[ot_label])
+                for ot_label, gcp_label in OT_RESOURCE_LABEL_TO_GCP[
+                    resource_type
+                ].items()
+            },
+        )
 
     def _batch_write(self, series: TimeSeries) -> None:
         """ Cloud Monitoring allows writing up to 200 time series at once
@@ -97,7 +149,13 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 logger.warning(
                     "Label value %s is not a string, bool or integer", value
                 )
-        if isinstance(record.aggregator, CounterAggregator):
+
+        if self.unique_identifier:
+            descriptor["labels"].append(
+                LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
+            )
+
+        if isinstance(record.aggregator, SumAggregator):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
         else:
             logger.warning(
@@ -134,12 +192,19 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             metric_descriptor = self._get_metric_descriptor(record)
             if not metric_descriptor:
                 continue
-
-            series = TimeSeries()
-            self._add_resource_info(series)
+            series = TimeSeries(
+                resource=self._get_monitored_resource(
+                    record.instrument.meter.resource
+                )
+            )
             series.metric.type = metric_descriptor.type
             for key, value in record.labels:
                 series.metric.labels[key] = str(value)
+
+            if self.unique_identifier:
+                series.metric.labels[
+                    UNIQUE_IDENTIFIER_KEY
+                ] = self.unique_identifier
 
             point = series.points.add()
             if instrument.value_type == int:

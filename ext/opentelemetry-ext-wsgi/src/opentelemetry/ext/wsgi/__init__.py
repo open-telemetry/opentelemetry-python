@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 This library provides a WSGI middleware that can be used on any WSGI framework
 (such as Django / Flask) to track requests timing through OpenTelemetry.
@@ -93,11 +92,14 @@ def collect_request_attributes(environ):
 
     result = {
         "component": "http",
-        "http.method": environ["REQUEST_METHOD"],
-        "http.server_name": environ["SERVER_NAME"],
-        "http.scheme": environ["wsgi.url_scheme"],
-        "host.port": int(environ["SERVER_PORT"]),
+        "http.method": environ.get("REQUEST_METHOD"),
+        "http.server_name": environ.get("SERVER_NAME"),
+        "http.scheme": environ.get("wsgi.url_scheme"),
     }
+
+    host_port = environ.get("SERVER_PORT")
+    if host_port is not None:
+        result.update({"host.port": int(host_port)})
 
     setifnotnone(result, "http.host", environ.get("HTTP_HOST"))
     target = environ.get("RAW_URI")
@@ -149,12 +151,8 @@ def add_response_attributes(
 
 
 def get_default_span_name(environ):
-    """Calculates a (generic) span name for an incoming HTTP request based on the PEP3333 conforming WSGI environ."""
-
-    # TODO: Update once
-    #  https://github.com/open-telemetry/opentelemetry-specification/issues/270
-    #  is resolved
-    return environ.get("PATH_INFO", "/")
+    """Default implementation for name_callback, returns HTTP {METHOD_NAME}."""
+    return "HTTP {}".format(environ.get("REQUEST_METHOD", "")).strip()
 
 
 class OpenTelemetryMiddleware:
@@ -165,11 +163,15 @@ class OpenTelemetryMiddleware:
 
     Args:
         wsgi: The WSGI application callable to forward requests to.
+        name_callback: Callback which calculates a generic span name for an
+                       incoming HTTP request based on the PEP3333 WSGI environ.
+                       Optional: Defaults to get_default_span_name.
     """
 
-    def __init__(self, wsgi):
+    def __init__(self, wsgi, name_callback=get_default_span_name):
         self.wsgi = wsgi
         self.tracer = trace.get_tracer(__name__, __version__)
+        self.name_callback = name_callback
 
     @staticmethod
     def _create_start_response(span, start_response):
@@ -191,7 +193,7 @@ class OpenTelemetryMiddleware:
         token = context.attach(
             propagators.extract(get_header_from_environ, environ)
         )
-        span_name = get_default_span_name(environ)
+        span_name = self.name_callback(environ)
 
         span = self.tracer.start_span(
             span_name,
@@ -208,8 +210,8 @@ class OpenTelemetryMiddleware:
                 return _end_span_after_iterating(
                     iterable, span, self.tracer, token
                 )
-        except:  # noqa
-            # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
+        except Exception as ex:
+            span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
             span.end()
             context.detach(token)
             raise

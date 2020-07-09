@@ -20,16 +20,17 @@ using ``PyramidInstrumentor``.
 
 Usage
 -----
-    There are two methods to instrument Pyramid:
+There are two methods to instrument Pyramid:
 
 Method 1 (Instrument all Configurators):
 ----------------------------------------
+
 .. code:: python
 
     from pyramid.config import Configurator
     from opentelemetry.ext.pyramid import PyramidInstrumentor
 
-    PyramidInstrumentor.instrument()
+    PyramidInstrumentor().instrument()
 
     config = Configurator()
 
@@ -38,6 +39,7 @@ Method 1 (Instrument all Configurators):
 
 Method 2 (Instrument one Configurator):
 ---------------------------------------
+
 .. code:: python
 
     from pyramid.config import Configurator
@@ -49,22 +51,30 @@ Method 2 (Instrument one Configurator):
     # use your config as normal
     config.add_route('index', '/')
 
-Using ``pyramid.tweens`` settings:
-----------------------------------
-    If you use Method 2 and then set tweens for your application with the ``pyramid.tweens`` setting,
-    you need to add ``opentelemetry.ext.pyramid.trace_tween_factory`` explicity to the list,
-    *as well as* instrumenting the config with `PyramidInstrumentor().instrument_config(config)`.
+Using ``pyramid.tweens`` setting:
+---------------------------------
 
-    For example:
+If you use Method 2 and then set tweens for your application with the ``pyramid.tweens`` setting,
+you need to add ``opentelemetry.ext.pyramid.trace_tween_factory`` explicity to the list,
+*as well as* instrumenting the config as shown above.
+
+For example:
+
 .. code:: python
+
+    from pyramid.config import Configurator
+    from opentelemetry.ext.pyramid import PyramidInstrumentor
+
     settings = {
         'pyramid.tweens', 'opentelemetry.ext.pyramid.trace_tween_factory\\nyour_tween_no_1\\nyour_tween_no_2',
     }
     config = Configurator(settings=settings)
-    PyramidInstrumentor.instrument_config(config)
+    PyramidInstrumentor().instrument_config(config)
 
     # use your config as normal.
     config.add_route('index', '/')
+
+API
 ---
 """
 
@@ -87,7 +97,7 @@ from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import TracerProvider, get_tracer
 
 
-def traced_init(wrapped, instance, args, kwargs):
+def _traced_init(wrapped, instance, args, kwargs):
     settings = kwargs.get("settings", {})
     tweens = aslist(settings.get("pyramid.tweens", []))
 
@@ -119,7 +129,7 @@ class PyramidInstrumentor(BaseInstrumentor):
         """Integrate with Pyramid Python library.
         https://docs.pylonsproject.org/projects/pyramid/en/latest/
         """
-        _wrap("pyramid.config", "Configurator.__init__", traced_init)
+        _wrap("pyramid.config", "Configurator.__init__", _traced_init)
 
     def _uninstrument(self, **kwargs):
         """"Disable Pyramid instrumentation"""
@@ -131,9 +141,6 @@ class PyramidInstrumentor(BaseInstrumentor):
 
         Args:
             config: The Configurator to instrument.
-
-        Returns:
-            An instrumented Configurator.
         """
         config.include("opentelemetry.ext.pyramid.callbacks")
 

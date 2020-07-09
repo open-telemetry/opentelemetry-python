@@ -1,4 +1,4 @@
-# Copyright OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 import unittest
 from unittest import mock
 
+import pkg_resources
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
@@ -29,11 +30,18 @@ from opentelemetry.exporter.cloud_trace import (
     _extract_attributes,
     _extract_events,
     _extract_links,
+    _extract_resources,
     _extract_status,
     _format_attribute_value,
+    _strip_characters,
     _truncate_str,
 )
-from opentelemetry.sdk.trace import Event, Span
+from opentelemetry.exporter.cloud_trace.version import (
+    __version__ as cloud_trace_version,
+)
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import Event
+from opentelemetry.sdk.trace.export import Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status as SpanStatus
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -86,6 +94,15 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_export(self):
         trace_id = "6e0c63257de34c92bf9efcd03927272e"
         span_id = "95bb5edabd45950f"
+        resource_info = Resource(
+            {
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "gce_instance",
+            }
+        )
         span_datas = [
             Span(
                 name="span_name",
@@ -96,6 +113,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 ),
                 parent=None,
                 kind=SpanKind.INTERNAL,
+                resource=resource_info,
+                attributes={"attr_key": "attr_value"},
             )
         ]
 
@@ -108,7 +127,28 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "display_name": TruncatableString(
                 value="span_name", truncated_byte_count=0
             ),
-            "attributes": ProtoSpan.Attributes(attribute_map={}),
+            "attributes": ProtoSpan.Attributes(
+                attribute_map={
+                    "g.co/r/gce_instance/zone": _format_attribute_value("US"),
+                    "g.co/r/gce_instance/instance_id": _format_attribute_value(
+                        "host"
+                    ),
+                    "g.co/r/gce_instance/project_id": _format_attribute_value(
+                        "123"
+                    ),
+                    "g.co/agent": _format_attribute_value(
+                        "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
+                            _strip_characters(
+                                pkg_resources.get_distribution(
+                                    "opentelemetry-sdk"
+                                ).version
+                            ),
+                            _strip_characters(cloud_trace_version),
+                        )
+                    ),
+                    "attr_key": _format_attribute_value("attr_value"),
+                }
+            ),
             "links": None,
             "status": None,
             "time_events": None,
@@ -265,6 +305,62 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
+    def test_extract_resources(self):
+        self.assertEqual(_extract_resources(Resource.create_empty()), {})
+        resource = Resource(
+            labels={
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "extra_info": "extra",
+                "gcp.resource_type": "gce_instance",
+                "not_gcp_resource": "value",
+            }
+        )
+        expected_extract = {
+            "g.co/r/gce_instance/project_id": "123",
+            "g.co/r/gce_instance/instance_id": "host",
+            "g.co/r/gce_instance/zone": "US",
+        }
+        self.assertEqual(_extract_resources(resource), expected_extract)
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "gcp.resource_type": "gce_instance",
+                "cloud.provider": "gcp",
+            }
+        )
+        # Should throw when passed a malformed GCP resource dict
+        self.assertRaises(KeyError, _extract_resources, resource)
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "gcp.resource_type": "unsupported_gcp_resource",
+                "cloud.provider": "gcp",
+            }
+        )
+        self.assertEqual(_extract_resources(resource), {})
+
+        resource = Resource(
+            labels={
+                "cloud.account.id": "123",
+                "host.id": "host",
+                "extra_info": "extra",
+                "not_gcp_resource": "value",
+                "cloud.provider": "aws",
+            }
+        )
+        self.assertEqual(_extract_resources(resource), {})
+
     # pylint:disable=too-many-locals
     def test_truncate(self):
         """Cloud Trace API imposes limits on the length of many things,
@@ -399,3 +495,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
             MAX_EVENT_ATTRS,
         )
+
+    def test_strip_characters(self):
+        self.assertEqual("0.10.0", _strip_characters("0.10.0b"))
+        self.assertEqual("1.20.5", _strip_characters("1.20.5"))
+        self.assertEqual("3.1.0", _strip_characters("3.1.0beta"))
+        self.assertEqual("4.2.0", _strip_characters("4b.2rc.0a"))
+        self.assertEqual("6.20.15", _strip_characters("b6.20.15"))

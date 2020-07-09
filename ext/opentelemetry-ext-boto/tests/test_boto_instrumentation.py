@@ -19,14 +19,15 @@ import boto.ec2
 import boto.elasticache
 import boto.s3
 import boto.sts
-
 from moto import (  # pylint: disable=import-error
     mock_ec2_deprecated,
     mock_lambda_deprecated,
     mock_s3_deprecated,
     mock_sts_deprecated,
 )
+
 from opentelemetry.ext.boto import BotoInstrumentor
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.test_base import TestBase
 
 
@@ -69,7 +70,12 @@ class TestBotoInstrumentor(TestBase):
         span = spans[1]
         self.assertEqual(span.attributes["aws.operation"], "RunInstances")
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "ec2.runinstances")
+        self.assertEqual(
+            span.resource,
+            Resource(
+                labels={"endpoint": "ec2", "http_method": "runinstances"}
+            ),
+        )
         self.assertEqual(span.attributes["http.method"], "POST")
         self.assertEqual(span.attributes["aws.region"], "us-west-2")
         self.assertEqual(span.name, "ec2.command")
@@ -123,7 +129,10 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 3)
         span = spans[2]
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "s3.head")
+        self.assertEqual(
+            span.resource,
+            Resource(labels={"endpoint": "s3", "http_method": "head"}),
+        )
         self.assertEqual(span.attributes["http.method"], "HEAD")
         self.assertEqual(span.attributes["aws.operation"], "head_bucket")
         self.assertEqual(span.name, "s3.command")
@@ -135,7 +144,10 @@ class TestBotoInstrumentor(TestBase):
             spans = self.memory_exporter.get_finished_spans()
             assert spans
             span = spans[2]
-            self.assertEqual(span.resource, "s3.head")
+            self.assertEqual(
+                span.resource,
+                Resource(labels={"endpoint": "s3", "http_method": "head"}),
+            )
 
     @mock_s3_deprecated
     def test_s3_put(self):
@@ -152,15 +164,24 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 3)
         self.assertEqual(spans[0].attributes["aws.operation"], "create_bucket")
         assert_span_http_status_code(spans[0], 200)
-        self.assertEqual(spans[0].resource, "s3.put")
+        self.assertEqual(
+            spans[0].resource,
+            Resource(labels={"endpoint": "s3", "http_method": "put"}),
+        )
         # get bucket
         self.assertEqual(spans[1].attributes["aws.operation"], "head_bucket")
-        self.assertEqual(spans[1].resource, "s3.head")
+        self.assertEqual(
+            spans[1].resource,
+            Resource(labels={"endpoint": "s3", "http_method": "head"}),
+        )
         # put object
         self.assertEqual(
             spans[2].attributes["aws.operation"], "_send_file_internal"
         )
-        self.assertEqual(spans[2].resource, "s3.put")
+        self.assertEqual(
+            spans[2].resource,
+            Resource(labels={"endpoint": "s3", "http_method": "put"}),
+        )
 
     @mock_lambda_deprecated
     def test_unpatch(self):
@@ -200,7 +221,10 @@ class TestBotoInstrumentor(TestBase):
         self.assertEqual(len(spans), 2)
         span = spans[0]
         assert_span_http_status_code(span, 200)
-        self.assertEqual(span.resource, "lambda.get")
+        self.assertEqual(
+            span.resource,
+            Resource(labels={"endpoint": "lambda", "http_method": "get"}),
+        )
         self.assertEqual(span.attributes["http.method"], "GET")
         self.assertEqual(span.attributes["aws.region"], "us-east-2")
         self.assertEqual(span.attributes["aws.operation"], "list_functions")
@@ -214,7 +238,12 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
         span = spans[0]
-        self.assertEqual(span.resource, "sts.getfederationtoken")
+        self.assertEqual(
+            span.resource,
+            Resource(
+                labels={"endpoint": "sts", "http_method": "getfederationtoken"}
+            ),
+        )
         self.assertEqual(span.attributes["aws.region"], "us-west-2")
         self.assertEqual(
             span.attributes["aws.operation"], "GetFederationToken"
@@ -238,5 +267,7 @@ class TestBotoInstrumentor(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         assert spans
         span = spans[0]
-        self.assertEqual(span.resource, "elasticache")
+        self.assertEqual(
+            span.resource, Resource(labels={"endpoint": "elasticcache"})
+        )
         self.assertEqual(span.attributes["aws.region"], "us-west-2")

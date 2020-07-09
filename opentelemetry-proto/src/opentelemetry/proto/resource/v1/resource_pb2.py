@@ -19,7 +19,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.resource.v1',
   syntax='proto3',
   serialized_options=b'\n\"io.opentelemetry.proto.resource.v1B\rResourceProtoP\001Z@github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1',
-  create_key=_descriptor._internal_create_key,
   serialized_pb=b'\n.opentelemetry/proto/resource/v1/resource.proto\x12\x1fopentelemetry.proto.resource.v1\x1a*opentelemetry/proto/common/v1/common.proto\"r\n\x08Resource\x12\x44\n\nattributes\x18\x01 \x03(\x0b\x32\x30.opentelemetry.proto.common.v1.AttributeKeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x02 \x01(\rBw\n\"io.opentelemetry.proto.resource.v1B\rResourceProtoP\x01Z@github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2.DESCRIPTOR,])
@@ -33,7 +32,6 @@ _RESOURCE = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='attributes', full_name='opentelemetry.proto.resource.v1.Resource.attributes', index=0,
@@ -41,14 +39,14 @@ _RESOURCE = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='dropped_attributes_count', full_name='opentelemetry.proto.resource.v1.Resource.dropped_attributes_count', index=1,
       number=2, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
