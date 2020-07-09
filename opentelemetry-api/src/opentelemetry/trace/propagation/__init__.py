@@ -34,7 +34,7 @@ def set_span_in_context(
     return ctx
 
 
-def get_current_span(context: Optional[Context] = None) -> Optional[Span]:
+def get_current_span(context: Optional[Context] = None) -> Span:
     """Retrieve the current span.
 
     Args:
