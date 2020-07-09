@@ -120,9 +120,6 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
         See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
         """
         span = trace.get_current_span(context)
-        if span is None:
-            return
-        span_context = span.get_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
