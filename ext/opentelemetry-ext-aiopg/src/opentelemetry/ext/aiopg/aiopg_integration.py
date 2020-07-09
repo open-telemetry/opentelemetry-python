@@ -100,10 +100,30 @@ class AsyncTracedCursor(TracedCursor):
         **kwargs: typing.Dict[typing.Any, typing.Any]
     ):
 
-        with self._db_api_integration.tracer.start_as_current_span(
+        statement = args[0] if args else ""
+        with self._db_api_integration.get_tracer().start_as_current_span(
             self._db_api_integration.name, kind=SpanKind.CLIENT
         ) as span:
-            self._populate_span(span, *args)
+            span.set_attribute(
+                "component", self._db_api_integration.database_component
+            )
+            span.set_attribute(
+                "db.type", self._db_api_integration.database_type
+            )
+            span.set_attribute(
+                "db.instance", self._db_api_integration.database
+            )
+            span.set_attribute("db.statement", statement)
+
+            for (
+                attribute_key,
+                attribute_value,
+            ) in self._db_api_integration.span_attributes.items():
+                span.set_attribute(attribute_key, attribute_value)
+
+            if len(args) > 1:
+                span.set_attribute("db.statement.parameters", str(args[1]))
+
             try:
                 result = await query_method(*args, **kwargs)
                 span.set_status(Status(StatusCanonicalCode.OK))

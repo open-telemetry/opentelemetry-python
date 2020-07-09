@@ -46,7 +46,6 @@ import typing
 
 import wrapt
 
-from opentelemetry import trace as trace_api
 from opentelemetry.ext.dbapi.version import __version__
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind, TracerProvider, get_tracer
@@ -301,37 +300,37 @@ class TracedCursor:
     def __init__(self, db_api_integration: DatabaseApiIntegration):
         self._db_api_integration = db_api_integration
 
-    def _populate_span(
-        self, span: trace_api.Span, *args: typing.Tuple[typing.Any, typing.Any]
-    ):
-        statement = args[0] if args else ""
-        span.set_attribute(
-            "component", self._db_api_integration.database_component
-        )
-        span.set_attribute("db.type", self._db_api_integration.database_type)
-        span.set_attribute("db.instance", self._db_api_integration.database)
-        span.set_attribute("db.statement", statement)
-
-        for (
-            attribute_key,
-            attribute_value,
-        ) in self._db_api_integration.span_attributes.items():
-            span.set_attribute(attribute_key, attribute_value)
-
-        if len(args) > 1:
-            span.set_attribute("db.statement.parameters", str(args[1]))
-
     def traced_execution(
         self,
         query_method: typing.Callable[..., typing.Any],
         *args: typing.Tuple[typing.Any, typing.Any],
         **kwargs: typing.Dict[typing.Any, typing.Any]
     ):
+
         statement = args[0] if args else ""
         with self._db_api_integration.get_tracer().start_as_current_span(
             self._db_api_integration.name, kind=SpanKind.CLIENT
         ) as span:
-            self._populate_span(span, *args)
+            span.set_attribute(
+                "component", self._db_api_integration.database_component
+            )
+            span.set_attribute(
+                "db.type", self._db_api_integration.database_type
+            )
+            span.set_attribute(
+                "db.instance", self._db_api_integration.database
+            )
+            span.set_attribute("db.statement", statement)
+
+            for (
+                attribute_key,
+                attribute_value,
+            ) in self._db_api_integration.span_attributes.items():
+                span.set_attribute(attribute_key, attribute_value)
+
+            if len(args) > 1:
+                span.set_attribute("db.statement.parameters", str(args[1]))
+
             try:
                 result = query_method(*args, **kwargs)
                 span.set_status(Status(StatusCanonicalCode.OK))
