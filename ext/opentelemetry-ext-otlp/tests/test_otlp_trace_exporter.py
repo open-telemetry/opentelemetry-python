@@ -186,7 +186,9 @@ class TestOTLPSpanExporter(TestCase):
                     resource=CollectorResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(key="b", value=AnyValue(int_value=0)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
                         ]
                     ),
                     instrumentation_library_spans=[
@@ -217,7 +219,7 @@ class TestOTLPSpanExporter(TestCase):
                                         ),
                                         KeyValue(
                                             key="b",
-                                            value=AnyValue(int_value=1),
+                                            value=AnyValue(bool_value=True),
                                         ),
                                     ],
                                     events=[
@@ -234,7 +236,7 @@ class TestOTLPSpanExporter(TestCase):
                                                 KeyValue(
                                                     key="b",
                                                     value=AnyValue(
-                                                        int_value=0
+                                                        bool_value=False
                                                     ),
                                                 ),
                                             ],
@@ -257,7 +259,7 @@ class TestOTLPSpanExporter(TestCase):
                                                 KeyValue(
                                                     key="b",
                                                     value=AnyValue(
-                                                        int_value=0
+                                                        bool_value=False
                                                     ),
                                                 ),
                                             ],

@@ -16,8 +16,9 @@
 
 import logging
 from time import sleep
-from typing import Sequence
+from typing import Sequence as TypingSequence
 
+from collections.abc import Sequence, Mapping
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
@@ -51,7 +52,7 @@ logger = logging.getLogger(__name__)
 def _translate_key_values(key, value):
 
     if isinstance(value, bool):
-        any_value = AnyValue(int_value=value)
+        any_value = AnyValue(bool_value=value)
 
     elif isinstance(value, str):
         any_value = AnyValue(string_value=value)
@@ -61,6 +62,12 @@ def _translate_key_values(key, value):
 
     elif isinstance(value, float):
         any_value = AnyValue(double_value=value)
+
+    elif isinstance(value, Sequence):
+        any_value = AnyValue(array_value=value)
+
+    elif isinstance(value, Mapping):
+        any_value = AnyValue(kvlist_value=value)
 
     else:
         raise Exception(
@@ -206,7 +213,7 @@ class OTLPSpanExporter(SpanExporter):
             )
 
     def _translate_spans(
-        self, sdk_spans: Sequence[SDKSpan],
+        self, sdk_spans: TypingSequence[SDKSpan],
     ) -> ExportTraceServiceRequest:
 
         sdk_resource_instrumentation_library_spans = {}
@@ -271,7 +278,7 @@ class OTLPSpanExporter(SpanExporter):
 
         return ExportTraceServiceRequest(resource_spans=resource_spans)
 
-    def export(self, spans: Sequence[SDKSpan]) -> SpanExportResult:
+    def export(self, spans: TypingSequence[SDKSpan]) -> SpanExportResult:
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
