@@ -21,12 +21,15 @@ Configuration
 
 Exclude lists
 *************
-Excludes certain hosts and paths from being tracked. Pass in comma delimited string into environment variables.
-Host refers to the entire url and path refers to the part of the url after the domain. Host matches the exact string that is given, where as path matches if the url starts with the given excluded path.
+To exclude certain URLs from being tracked, set the environment variable ``OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_URLS`` with comma delimited regexes representing which URLs to exclude.
 
-Excluded hosts: OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_HOSTS
-Excluded paths: OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_PATHS
+For example,
 
+::
+
+    export OPENTELEMETRY_PYTHON_FLASK_EXCLUDED_URLS="client/.*/info,healthcheck"
+
+will exclude requests such as ``https://site/client/123/info`` and ``https://site/xyz/healthcheck``.
 
 References
 ----------
