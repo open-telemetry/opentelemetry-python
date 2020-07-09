@@ -15,10 +15,10 @@
 """OTLP Span Exporter"""
 
 import logging
+from collections.abc import Mapping, Sequence
 from time import sleep
 from typing import Sequence as TypingSequence
 
-from collections.abc import Sequence, Mapping
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
