@@ -252,6 +252,7 @@ class TestAiopgIntegration(TestBase):
         cursor = async_call(mock_connection.cursor())
         async_call(cursor.executemany("Test query"))
         spans_list = self.memory_exporter.get_finished_spans()
+
         self.assertEqual(len(spans_list), 1)
         span = spans_list[0]
         self.assertEqual(span.attributes["db.statement"], "Test query")
@@ -264,6 +265,7 @@ class TestAiopgIntegration(TestBase):
         cursor = async_call(mock_connection.cursor())
         async_call(cursor.callproc("Test stored procedure"))
         spans_list = self.memory_exporter.get_finished_spans()
+
         self.assertEqual(len(spans_list), 1)
         span = spans_list[0]
         self.assertEqual(
