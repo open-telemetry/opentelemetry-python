@@ -16,6 +16,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
@@ -65,6 +66,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             self.unique_identifier = "{:08x}".format(
                 random.randint(0, 16 ** 8)
             )
+
+        self._exporter_start_time_seconds, self._exporter_start_time_nanos = divmod(time_ns(), 1e9)
 
     @staticmethod
     def _get_monitored_resource(
@@ -156,7 +159,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             )
 
         if isinstance(record.aggregator, SumAggregator):
-            descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
+            descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
         else:
             logger.warning(
                 "Unsupported aggregation type %s, ignoring it",
@@ -218,12 +221,25 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             # Cloud Monitoring API allows, for any combination of labels and
             # metric name, one update per WRITE_INTERVAL seconds
             updated_key = (metric_descriptor.type, record.labels)
-            last_updated_seconds = self._last_updated.get(updated_key, 0)
-            if seconds <= last_updated_seconds + WRITE_INTERVAL:
+            last_updated_time, _ = self._last_updated.get(updated_key, (0, 0))
+            if seconds <= last_updated_time + WRITE_INTERVAL:
                 continue
-            self._last_updated[updated_key] = seconds
+
+            if metric_descriptor.metric_kind == MetricDescriptor.MetricKind.CUMULATIVE:
+                if instrument.meter.stateful or updated_key not in self._last_updated:
+                    # The aggregation has not reset since the exporter has started up, so that is the start time
+                    point.interval.start_time.seconds = int(self._exporter_start_time_seconds)
+                    point.interval.start_time.nanos = int(self._exporter_start_time_nanos)
+                else:
+                    # The aggregation reset the last time it was exported
+                    point.interval.start_time.seconds = int(self._last_updated[updated_key][0])
+                    point.interval.start_time.nanos = int(self._last_updated[updated_key][1]+1e6)
+
+            self._last_updated[updated_key] = (seconds, nanos)
+
             point.interval.end_time.seconds = int(seconds)
             point.interval.end_time.nanos = int(nanos)
+
             all_series.append(series)
         try:
             self._batch_write(all_series)

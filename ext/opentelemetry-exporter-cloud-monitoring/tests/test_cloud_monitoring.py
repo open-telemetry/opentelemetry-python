@@ -36,8 +36,9 @@ class UnsupportedAggregator:
 
 
 class MockMeter:
-    def __init__(self, resource=Resource.create_empty()):
+    def __init__(self, resource=Resource.create_empty(), stateful=True):
         self.resource = resource
+        self.stateful = stateful
 
 
 class MockMetric:
@@ -47,11 +48,12 @@ class MockMetric:
         description="description",
         value_type=int,
         meter=None,
+        stateful=True
     ):
         self.name = name
         self.description = description
         self.value_type = value_type
-        self.meter = meter or MockMeter()
+        self.meter = meter or MockMeter(stateful=stateful)
 
 
 # pylint: disable=protected-access
@@ -143,7 +145,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     "labels": [
                         LabelDescriptor(key="label1", value_type="STRING")
                     ],
-                    "metric_kind": "GAUGE",
+                    "metric_kind": "CUMULATIVE",
                     "value_type": "INT64",
                 }
             ),
@@ -180,7 +182,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                         LabelDescriptor(key="label3", value_type="INT64"),
                         LabelDescriptor(key="label4", value_type="BOOL"),
                     ],
-                    "metric_kind": "GAUGE",
+                    "metric_kind": "CUMULATIVE",
                     "value_type": "DOUBLE",
                 }
             ),
@@ -188,9 +190,12 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_export(self):
         client = mock.Mock()
-        exporter = CloudMonitoringMetricsExporter(
-            project_id=self.project_id, client=client
-        )
+
+        with mock.patch("opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9):
+            exporter = CloudMonitoringMetricsExporter(
+                project_id=self.project_id, client=client
+            )
+
         exporter.project_name = self.project_name
 
         exporter.export(
@@ -214,7 +219,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     LabelDescriptor(key="label1", value_type="STRING"),
                     LabelDescriptor(key="label2", value_type="INT64"),
                 ],
-                "metric_kind": "GAUGE",
+                "metric_kind": "CUMULATIVE",
                 "value_type": "DOUBLE",
             }
         )
@@ -261,6 +266,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.value.int64_value = 1
         point.interval.end_time.seconds = WRITE_INTERVAL + 1
         point.interval.end_time.nanos = 0
+        point.interval.start_time.seconds = 1
 
         series2 = TimeSeries(resource=expected_resource)
         series2.metric.type = "custom.googleapis.com/OpenTelemetry/name"
@@ -270,6 +276,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.value.int64_value = 1
         point.interval.end_time.seconds = WRITE_INTERVAL + 1
         point.interval.end_time.nanos = 0
+        point.interval.start_time.seconds = 1
+
         client.create_time_series.assert_has_calls(
             [mock.call(self.project_name, [series1, series2])]
         )
@@ -315,12 +323,67 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.value.int64_value = 2
         point.interval.end_time.seconds = WRITE_INTERVAL + 2
         point.interval.end_time.nanos = 0
+        point.interval.start_time.seconds = 1
         client.create_time_series.assert_has_calls(
             [
                 mock.call(self.project_name, [series1, series2]),
                 mock.call(self.project_name, [series3]),
             ]
         )
+
+    def test_stateless_times(self):
+        client = mock.Mock()
+        with mock.patch("opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9):
+            exporter = CloudMonitoringMetricsExporter(
+                project_id=self.project_id,
+                client=client,
+            )
+
+        client.create_metric_descriptor.return_value = MetricDescriptor(
+            **{
+                "name": None,
+                "type": "custom.googleapis.com/OpenTelemetry/name",
+                "display_name": "name",
+                "description": "description",
+                "labels": [
+                    LabelDescriptor(
+                        key=UNIQUE_IDENTIFIER_KEY, value_type="STRING"
+                    ),
+                ],
+                "metric_kind": "CUMULATIVE",
+                "value_type": "DOUBLE",
+            }
+        )
+
+        agg = SumAggregator()
+        agg.checkpoint = 1
+        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
+
+        metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
+
+        exporter.export([metric_record])
+
+        exports_1 = client.create_time_series.call_args_list[0]
+
+        # verify the first metric started at exporter start time
+        self.assertEqual(exports_1[0][1][0].points[0].interval.start_time.seconds, 1)
+        self.assertEqual(exports_1[0][1][0].points[0].interval.start_time.nanos, 0)
+
+        self.assertEqual(exports_1[0][1][0].points[0].interval.end_time.seconds, WRITE_INTERVAL + 1)
+
+        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * 1e9
+
+        metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
+
+        exporter.export([metric_record])
+
+        exports_2 = client.create_time_series.call_args_list[1]
+
+        # 1ms ahead of end time of last export
+        self.assertEqual(exports_2[0][1][0].points[0].interval.start_time.seconds, WRITE_INTERVAL + 1)
+        self.assertEqual(exports_2[0][1][0].points[0].interval.start_time.nanos, 1e6)
+
+        self.assertEqual(exports_2[0][1][0].points[0].interval.end_time.seconds, WRITE_INTERVAL * 2 + 2)
 
     def test_unique_identifier(self):
         client = mock.Mock()
@@ -348,7 +411,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                         key=UNIQUE_IDENTIFIER_KEY, value_type="STRING"
                     ),
                 ],
-                "metric_kind": "GAUGE",
+                "metric_kind": "CUMULATIVE",
                 "value_type": "DOUBLE",
             }
         )
