@@ -48,7 +48,7 @@ class MockMetric:
         description="description",
         value_type=int,
         meter=None,
-        stateful=True
+        stateful=True,
     ):
         self.name = name
         self.description = description
@@ -191,7 +191,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
     def test_export(self):
         client = mock.Mock()
 
-        with mock.patch("opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9):
+        with mock.patch(
+            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9
+        ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client
             )
@@ -333,10 +335,11 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
     def test_stateless_times(self):
         client = mock.Mock()
-        with mock.patch("opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9):
+        with mock.patch(
+            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9
+        ):
             exporter = CloudMonitoringMetricsExporter(
-                project_id=self.project_id,
-                client=client,
+                project_id=self.project_id, client=client,
             )
 
         client.create_metric_descriptor.return_value = MetricDescriptor(
@@ -366,10 +369,17 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exports_1 = client.create_time_series.call_args_list[0]
 
         # verify the first metric started at exporter start time
-        self.assertEqual(exports_1[0][1][0].points[0].interval.start_time.seconds, 1)
-        self.assertEqual(exports_1[0][1][0].points[0].interval.start_time.nanos, 0)
+        self.assertEqual(
+            exports_1[0][1][0].points[0].interval.start_time.seconds, 1
+        )
+        self.assertEqual(
+            exports_1[0][1][0].points[0].interval.start_time.nanos, 0
+        )
 
-        self.assertEqual(exports_1[0][1][0].points[0].interval.end_time.seconds, WRITE_INTERVAL + 1)
+        self.assertEqual(
+            exports_1[0][1][0].points[0].interval.end_time.seconds,
+            WRITE_INTERVAL + 1,
+        )
 
         agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * 1e9
 
@@ -380,10 +390,18 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exports_2 = client.create_time_series.call_args_list[1]
 
         # 1ms ahead of end time of last export
-        self.assertEqual(exports_2[0][1][0].points[0].interval.start_time.seconds, WRITE_INTERVAL + 1)
-        self.assertEqual(exports_2[0][1][0].points[0].interval.start_time.nanos, 1e6)
+        self.assertEqual(
+            exports_2[0][1][0].points[0].interval.start_time.seconds,
+            WRITE_INTERVAL + 1,
+        )
+        self.assertEqual(
+            exports_2[0][1][0].points[0].interval.start_time.nanos, 1e6
+        )
 
-        self.assertEqual(exports_2[0][1][0].points[0].interval.end_time.seconds, WRITE_INTERVAL * 2 + 2)
+        self.assertEqual(
+            exports_2[0][1][0].points[0].interval.end_time.seconds,
+            WRITE_INTERVAL * 2 + 2,
+        )
 
     def test_unique_identifier(self):
         client = mock.Mock()

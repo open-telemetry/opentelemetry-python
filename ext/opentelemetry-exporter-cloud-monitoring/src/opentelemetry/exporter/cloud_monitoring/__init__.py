@@ -1,3 +1,5 @@
+# pylint: disable=too-many-locals
+
 import logging
 import random
 from typing import Optional, Sequence
@@ -67,7 +69,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 random.randint(0, 16 ** 8)
             )
 
-        self._exporter_start_time_seconds, self._exporter_start_time_nanos = divmod(time_ns(), 1e9)
+        (
+            self._exporter_start_time_seconds,
+            self._exporter_start_time_nanos,
+        ) = divmod(time_ns(), 1e9)
 
     @staticmethod
     def _get_monitored_resource(
@@ -225,15 +230,29 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             if seconds <= last_updated_time + WRITE_INTERVAL:
                 continue
 
-            if metric_descriptor.metric_kind == MetricDescriptor.MetricKind.CUMULATIVE:
-                if instrument.meter.stateful or updated_key not in self._last_updated:
+            if (
+                metric_descriptor.metric_kind
+                == MetricDescriptor.MetricKind.CUMULATIVE
+            ):
+                if (
+                    instrument.meter.stateful
+                    or updated_key not in self._last_updated
+                ):
                     # The aggregation has not reset since the exporter has started up, so that is the start time
-                    point.interval.start_time.seconds = int(self._exporter_start_time_seconds)
-                    point.interval.start_time.nanos = int(self._exporter_start_time_nanos)
+                    point.interval.start_time.seconds = int(
+                        self._exporter_start_time_seconds
+                    )
+                    point.interval.start_time.nanos = int(
+                        self._exporter_start_time_nanos
+                    )
                 else:
                     # The aggregation reset the last time it was exported
-                    point.interval.start_time.seconds = int(self._last_updated[updated_key][0])
-                    point.interval.start_time.nanos = int(self._last_updated[updated_key][1]+1e6)
+                    point.interval.start_time.seconds = int(
+                        self._last_updated[updated_key][0]
+                    )
+                    point.interval.start_time.nanos = int(
+                        self._last_updated[updated_key][1] + 1e6
+                    )
 
             self._last_updated[updated_key] = (seconds, nanos)
 
