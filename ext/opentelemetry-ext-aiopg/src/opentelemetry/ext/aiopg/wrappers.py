@@ -44,7 +44,7 @@ from opentelemetry.ext.aiopg.aiopg_integration import (
 )
 from opentelemetry.ext.aiopg.version import __version__
 from opentelemetry.instrumentation.utils import unwrap
-from opentelemetry.trace import Tracer, TracerProvider, get_tracer
+from opentelemetry.trace import TracerProvider
 
 logger = logging.getLogger(__name__)
 
@@ -67,28 +67,38 @@ def trace_integration(
             tracer_provider: The :class:`opentelemetry.trace.TracerProvider` to
                 use. If ommited the current configured one is used.
     """
-    tracer = get_tracer(__name__, __version__, tracer_provider)
+
     wrap_connect(
-        tracer, database_component, database_type, connection_attributes,
+        __name__,
+        database_component,
+        database_type,
+        connection_attributes,
+        __version__,
+        tracer_provider,
     )
 
 
 def wrap_connect(
-    tracer: Tracer,
+    name: str,
     database_component: str,
     database_type: str = "",
     connection_attributes: typing.Dict = None,
+    version: str = "",
+    tracer_provider: typing.Optional[TracerProvider] = None,
 ):
     """Integrate with aiopg library.
         https://github.com/aio-libs/aiopg
 
         Args:
-            tracer: The :class:`opentelemetry.trace.Tracer` to use.
+            name: Name of opentelemetry extension for aiopg.
             database_component: Database driver name
                 or database name "postgreSQL".
             database_type: The Database type. For any SQL database, "sql".
             connection_attributes: Attribute names for database, port, host and
                 user in Connection object.
+            version: Version of opentelemetry extension for aiopg.
+            tracer_provider: The :class:`opentelemetry.trace.TracerProvider` to
+                use. If ommited the current configured one is used.
     """
 
     # pylint: disable=unused-argument
@@ -99,10 +109,12 @@ def wrap_connect(
         kwargs: typing.Dict[typing.Any, typing.Any],
     ):
         db_integration = AiopgIntegration(
-            tracer,
+            name,
             database_component,
             database_type=database_type,
             connection_attributes=connection_attributes,
+            version=version,
+            tracer_provider=tracer_provider,
         )
         return await db_integration.wrapped_connection(wrapped, args, kwargs)
 
@@ -115,39 +127,43 @@ def wrap_connect(
 def unwrap_connect():
     """"Disable integration with aiopg library.
         https://github.com/aio-libs/aiopg
-
-        Args:
-            connect_module: Module name where the connect method is available.
-            connect_method_name: The connect method name.
     """
+
     unwrap(aiopg, "connect")
 
 
 def instrument_connection(
-    tracer,
+    name: str,
     connection,
     database_component: str,
     database_type: str = "",
     connection_attributes: typing.Dict = None,
+    version: str = "",
+    tracer_provider: typing.Optional[TracerProvider] = None,
 ):
     """Enable instrumentation in a database connection.
 
     Args:
-        tracer: The :class:`opentelemetry.trace.Tracer` to use.
+        name: Name of opentelemetry extension for aiopg.
         connection: The connection to instrument.
         database_component: Database driver name or database name "postgreSQL".
         database_type: The Database type. For any SQL database, "sql".
         connection_attributes: Attribute names for database, port, host and
             user in a connection object.
+        version: Version of opentelemetry extension for aiopg.
+        tracer_provider: The :class:`opentelemetry.trace.TracerProvider` to
+            use. If ommited the current configured one is used.
 
     Returns:
         An instrumented connection.
     """
     db_integration = AiopgIntegration(
-        tracer,
+        name,
         database_component,
         database_type,
         connection_attributes=connection_attributes,
+        version=version,
+        tracer_provider=tracer_provider,
     )
     db_integration.get_connection_attributes(connection)
     return get_traced_connection_proxy(connection, db_integration)
@@ -170,10 +186,12 @@ def uninstrument_connection(connection):
 
 
 def wrap_create_pool(
-    tracer: Tracer,
+    name: str,
     database_component: str,
     database_type: str = "",
     connection_attributes: typing.Dict = None,
+    version: str = "",
+    tracer_provider: typing.Optional[TracerProvider] = None,
 ):
     # pylint: disable=unused-argument
     async def wrap_create_pool_(
@@ -183,10 +201,12 @@ def wrap_create_pool(
         kwargs: typing.Dict[typing.Any, typing.Any],
     ):
         db_integration = AiopgIntegration(
-            tracer,
+            name,
             database_component,
-            database_type=database_type,
+            database_type,
             connection_attributes=connection_attributes,
+            version=version,
+            tracer_provider=tracer_provider,
         )
         return await db_integration.wrapped_pool(wrapped, args, kwargs)
 

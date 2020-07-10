@@ -49,7 +49,6 @@ API
 from opentelemetry.ext.aiopg import wrappers
 from opentelemetry.ext.aiopg.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.trace import get_tracer
 
 
 class AiopgInstrumentor(BaseInstrumentor):
@@ -70,20 +69,22 @@ class AiopgInstrumentor(BaseInstrumentor):
 
         tracer_provider = kwargs.get("tracer_provider")
 
-        tracer = get_tracer(__name__, __version__, tracer_provider)
-
         wrappers.wrap_connect(
-            tracer,
+            __name__,
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
             self._CONNECTION_ATTRIBUTES,
+            version=__version__,
+            tracer_provider=tracer_provider,
         )
 
         wrappers.wrap_create_pool(
-            tracer,
+            __name__,
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
             self._CONNECTION_ATTRIBUTES,
+            version=__version__,
+            tracer_provider=tracer_provider,
         )
 
     def _uninstrument(self, **kwargs):
@@ -101,10 +102,8 @@ class AiopgInstrumentor(BaseInstrumentor):
         Returns:
             An instrumented connection.
         """
-        tracer = get_tracer(__name__, __version__)
-
         return wrappers.instrument_connection(
-            tracer,
+            __name__,
             connection,
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
