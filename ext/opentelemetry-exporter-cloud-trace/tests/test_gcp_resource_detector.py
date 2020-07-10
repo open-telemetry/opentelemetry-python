@@ -67,6 +67,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         )
         self.assertEqual(getter.call_count, 1)
 
+        # Found resources should be cached and not require another network call
         found_resources = resource_finder.detect()
         self.assertEqual(getter.call_count, 1)
         self.assertEqual(
