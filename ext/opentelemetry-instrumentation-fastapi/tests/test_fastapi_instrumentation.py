@@ -59,11 +59,11 @@ class TestFastAPIManualInstrumentation(TestBase):
         app = fastapi.FastAPI()
 
         @app.get("/foobar")
-        async def foobar():
+        async def _():
             return {"message": "hello world"}
 
         @app.get("/user/{username}")
-        async def user(username: str):
+        async def _(username: str):
             return {"message": username}
 
         return app

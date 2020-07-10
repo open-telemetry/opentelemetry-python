@@ -31,7 +31,7 @@ class StarletteInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def instrument_app(app: applications.Starlette):
-        """Instrument a previously instrumented Starlette application.
+        """Instrument an uninstrumented Starlette application.
         """
         if not getattr(app, "is_instrumented_by_opentelemetry", False):
             app.add_middleware(

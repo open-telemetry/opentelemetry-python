@@ -17,8 +17,8 @@ import fastapi
 from starlette.routing import Match
 
 from opentelemetry.ext.asgi import OpenTelemetryMiddleware
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.fastapi.version import __version__  # noqa
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 
 class FastAPIInstrumentor(BaseInstrumentor):
@@ -31,7 +31,7 @@ class FastAPIInstrumentor(BaseInstrumentor):
 
     @staticmethod
     def instrument_app(app: fastapi.FastAPI):
-        """Instrument a previously instrumented FastAPI application.
+        """Instrument an uninstrumented FastAPI application.
         """
         if not getattr(app, "is_instrumented_by_opentelemetry", False):
             app.add_middleware(
