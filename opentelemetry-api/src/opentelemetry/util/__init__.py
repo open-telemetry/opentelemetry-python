@@ -48,7 +48,7 @@ def _load_provider(provider: str) -> Provider:
                 name=cast(
                     str,
                     Configuration().get(
-                        provider, "default_{}".format(provider),
+                        provider.upper(), "default_{}".format(provider),
                     ),
                 ),
             )
