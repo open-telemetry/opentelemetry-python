@@ -36,13 +36,18 @@ def get_gke_resources():
 
     """
     all_metadata = _get_all_google_metadata()
+    with open(
+            '/var/run/secrets/kubernetes.io/serviceaccount/namespace') as namespace_file:
+        pod_namespace = namespace_file.read()
+    with open('/etc/hostname', 'r') as name_file:
+        pod_name = name_file.read()
     gke_resources = {
 
         "cloud.account.id": all_metadata["project"]["projectId"],
         'k8s.cluster.name': all_metadata['instance']['attributes']['cluster-name'],
-        'k8s.namespace.name': '',
+        'k8s.namespace.name': pod_namespace,
         "host.id": all_metadata["instance"]["id"],
-        'k8s.pod.name': '',
+        'k8s.pod.name': pod_name,
         'container.name': '',
         "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
         "cloud.provider": "gcp",

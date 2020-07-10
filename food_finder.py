@@ -60,9 +60,10 @@ def opentelemetry_server_flask():
         time.sleep(0.5)
         if talk_to:
             requests.get(talk_to)
-        return requests.get(
-        _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
-    ).json()
+
+        return 'existing {}\n\n\n metadta {}'.format(resources.labels, requests.get(
+            _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
+        ).json())
 
 
 if __name__ == "__main__":
