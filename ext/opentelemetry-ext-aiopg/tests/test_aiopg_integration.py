@@ -119,7 +119,6 @@ class TestAiopgInstrumentor(TestBase):
         spans_list = exporter.get_finished_spans()
         self.assertEqual(len(spans_list), 1)
         span = spans_list[0]
-
         self.assertIs(span.resource, resource)
 
     def test_custom_tracer_provider_create_pool(self):
