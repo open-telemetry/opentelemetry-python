@@ -172,29 +172,29 @@ class TestOTELResourceDetector(unittest.TestCase):
     def tearDown(self) -> None:
         os.environ.pop("OTEL_RESOURCE")
 
-    def test_otel_resource_detector_empty(self):
+    def test_empty(self):
         detector = resources.OTELResourceDetector()
         os.environ["OTEL_RESOURCE"] = ""
         self.assertEqual(detector.detect(), resources.Resource.create_empty())
 
-    def test_otel_resource_detector_one(self):
+    def test_one(self):
         detector = resources.OTELResourceDetector()
         os.environ["OTEL_RESOURCE"] = "k=v"
         self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
-    def test_otel_resource_detector_one_with_whitespace(self):
+    def test_one_with_whitespace(self):
         detector = resources.OTELResourceDetector()
         os.environ["OTEL_RESOURCE"] = "    k  = v   "
         self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
-    def test_otel_resource_detector_multiple(self):
+    def test_multiple(self):
         detector = resources.OTELResourceDetector()
         os.environ["OTEL_RESOURCE"] = "k=v,k2=v2"
         self.assertEqual(
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
 
-    def test_otel_resource_detector_multiple_with_whitespace(self):
+    def test_multiple_with_whitespace(self):
         detector = resources.OTELResourceDetector()
         os.environ["OTEL_RESOURCE"] = "    k  = v  , k2   = v2 "
         self.assertEqual(

@@ -329,6 +329,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_extract_malformed_resources(self):
         # This resource doesn't have all the fields required for a gce_instance
+        # Specifically its missing "host.id", "cloud.zone", "cloud.account.id"
         resource = Resource(
             labels={
                 "gcp.resource_type": "gce_instance",
