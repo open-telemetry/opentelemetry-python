@@ -28,8 +28,7 @@ class TestMeterProvider(unittest.TestCase):
     def test_stateful(self):
         meter_provider = metrics.MeterProvider(stateful=False)
         meter = meter_provider.get_meter(__name__)
-        # TODO: Move stateful to meter
-        self.assertIs(meter.batcher.stateful, True)
+        self.assertIs(meter.batcher.stateful, False)
 
     def test_resource(self):
         resource = resources.Resource.create({})
