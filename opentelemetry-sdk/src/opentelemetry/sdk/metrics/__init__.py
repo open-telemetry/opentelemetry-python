@@ -352,7 +352,7 @@ class Meter(metrics_api.Meter):
         instrumentation_info: "InstrumentationInfo",
     ):
         self.instrumentation_info = instrumentation_info
-        self.batcher = Batcher(True)
+        self.batcher = Batcher(source.stateful)
         self.resource = source.resource
         self.metrics = set()
         self.observers = set()
