@@ -19,7 +19,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.collector.trace.v1',
   syntax='proto3',
   serialized_options=b'\n)io.opentelemetry.proto.collector.trace.v1B\021TraceServiceProtoP\001ZGgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1',
-  create_key=_descriptor._internal_create_key,
   serialized_pb=b'\n:opentelemetry/proto/collector/trace/v1/trace_service.proto\x12&opentelemetry.proto.collector.trace.v1\x1a(opentelemetry/proto/trace/v1/trace.proto\"`\n\x19\x45xportTraceServiceRequest\x12\x43\n\x0eresource_spans\x18\x01 \x03(\x0b\x32+.opentelemetry.proto.trace.v1.ResourceSpans\"\x1c\n\x1a\x45xportTraceServiceResponse2\xa2\x01\n\x0cTraceService\x12\x91\x01\n\x06\x45xport\x12\x41.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest\x1a\x42.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse\"\x00\x42\x89\x01\n)io.opentelemetry.proto.collector.trace.v1B\x11TraceServiceProtoP\x01ZGgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_trace_dot_v1_dot_trace__pb2.DESCRIPTOR,])
@@ -33,7 +32,6 @@ _EXPORTTRACESERVICEREQUEST = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='resource_spans', full_name='opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest.resource_spans', index=0,
@@ -41,7 +39,7 @@ _EXPORTTRACESERVICEREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -65,7 +63,6 @@ _EXPORTTRACESERVICERESPONSE = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
   ],
   extensions=[
@@ -111,7 +108,6 @@ _TRACESERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  create_key=_descriptor._internal_create_key,
   serialized_start=273,
   serialized_end=435,
   methods=[
@@ -123,7 +119,6 @@ _TRACESERVICE = _descriptor.ServiceDescriptor(
     input_type=_EXPORTTRACESERVICEREQUEST,
     output_type=_EXPORTTRACESERVICERESPONSE,
     serialized_options=None,
-    create_key=_descriptor._internal_create_key,
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_TRACESERVICE)

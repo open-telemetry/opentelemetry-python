@@ -15,8 +15,8 @@ from google.protobuf.message import (
 )
 
 from opentelemetry.proto.common.v1.common_pb2 import (
-    AttributeKeyValue as opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue,
     InstrumentationLibrary as opentelemetry___proto___common___v1___common_pb2___InstrumentationLibrary,
+    KeyValue as opentelemetry___proto___common___v1___common_pb2___KeyValue,
 )
 
 from opentelemetry.proto.resource.v1.resource_pb2 import (
@@ -136,13 +136,13 @@ class Span(google___protobuf___message___Message):
         dropped_attributes_count: builtin___int = ...
 
         @property
-        def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]: ...
+        def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___KeyValue]: ...
 
         def __init__(self,
             *,
             time_unix_nano : typing___Optional[builtin___int] = None,
             name : typing___Optional[typing___Text] = None,
-            attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]] = None,
+            attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
             dropped_attributes_count : typing___Optional[builtin___int] = None,
             ) -> None: ...
         if sys.version_info >= (3,):
@@ -162,14 +162,14 @@ class Span(google___protobuf___message___Message):
         dropped_attributes_count: builtin___int = ...
 
         @property
-        def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]: ...
+        def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___KeyValue]: ...
 
         def __init__(self,
             *,
             trace_id : typing___Optional[builtin___bytes] = None,
             span_id : typing___Optional[builtin___bytes] = None,
             trace_state : typing___Optional[typing___Text] = None,
-            attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]] = None,
+            attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
             dropped_attributes_count : typing___Optional[builtin___int] = None,
             ) -> None: ...
         if sys.version_info >= (3,):
@@ -194,7 +194,7 @@ class Span(google___protobuf___message___Message):
     dropped_links_count: builtin___int = ...
 
     @property
-    def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]: ...
+    def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___KeyValue]: ...
 
     @property
     def events(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[type___Span.Event]: ...
@@ -215,7 +215,7 @@ class Span(google___protobuf___message___Message):
         kind : typing___Optional[type___Span.SpanKindValue] = None,
         start_time_unix_nano : typing___Optional[builtin___int] = None,
         end_time_unix_nano : typing___Optional[builtin___int] = None,
-        attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]] = None,
+        attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
         dropped_attributes_count : typing___Optional[builtin___int] = None,
         events : typing___Optional[typing___Iterable[type___Span.Event]] = None,
         dropped_events_count : typing___Optional[builtin___int] = None,
