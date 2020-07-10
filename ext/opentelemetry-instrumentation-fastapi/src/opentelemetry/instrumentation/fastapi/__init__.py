@@ -57,7 +57,7 @@ class _InstrumentedFastAPI(fastapi.FastAPI):
 
 
 def _get_route_details(scope):
-    """Callback to retrieve the starlette route being served.
+    """Callback to retrieve the fastapi route being served.
 
     TODO: there is currently no way to retrieve http.route from
     a starlette application from scope.
