@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add status code to gRPC client, gRPC client testing
+  ([896](https://github.com/open-telemetry/opentelemetry-python/pull/896))
+
 ## 0.8b0
 
 Released 2020-05-27
