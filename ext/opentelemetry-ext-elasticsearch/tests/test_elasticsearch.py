@@ -95,7 +95,7 @@ class TestElasticsearchIntegration(TestBase):
 
     def test_prefix_env(self, request_mock):
         prefix = "prefix-from-args"
-        env_var = "OPENTELEMETRY_PYTHON_ELASTICSEARCH_NAME_PREFIX"
+        env_var = "OTEL_ELASTICSEARCH_NAME_PREFIX"
         os.environ[env_var] = prefix
         ElasticsearchInstrumentor().uninstrument()
         ElasticsearchInstrumentor().instrument()

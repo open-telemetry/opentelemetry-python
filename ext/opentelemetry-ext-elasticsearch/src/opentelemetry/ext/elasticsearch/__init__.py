@@ -40,7 +40,7 @@ API
 ---
 
 Elasticsearch instrumentation prefixes operation names with the string "Elasticsearch". This
-can be changed to a different string by either setting the `OPENTELEMETRY_PYTHON_ELASTICSEARCH_NAME_PREFIX`
+can be changed to a different string by either setting the `OTEL_ELASTICSEARCH_NAME_PREFIX`
 environment variable or by passing the prefix as an argument to the instrumentor. For example,
 
 
@@ -88,7 +88,7 @@ class ElasticsearchInstrumentor(BaseInstrumentor):
     def __init__(self, span_name_prefix=None):
         if not span_name_prefix:
             span_name_prefix = environ.get(
-                "OPENTELEMETRY_PYTHON_ELASTICSEARCH_NAME_PREFIX",
+                "OTEL_ELASTICSEARCH_NAME_PREFIX",
                 "Elasticsearch",
             )
         self._span_name_prefix = span_name_prefix.strip()
