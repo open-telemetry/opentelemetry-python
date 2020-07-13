@@ -36,7 +36,6 @@ To use a sampler, pass it into the tracer provider constructor. For example:
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.trace
     from opentelemetry.trace.sampling import ProbabilitySampler
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
@@ -56,7 +55,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
     )
 
     # created spans will now be sampled by the ProbabilitySampler
-    with trace.get_tracer().start_as_current_span("Test Span"):
+    with trace.get_tracer(__name__).start_as_current_span("Test Span"):
         ...
 """
 import abc
