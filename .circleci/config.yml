@@ -129,7 +129,7 @@ jobs:
           pattern: << parameters.version >>-<< parameters.package >>
 
 workflows:
-  main:
+  circleci-build:
     jobs:
       - build:
           matrix:
