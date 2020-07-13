@@ -226,8 +226,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             # Cloud Monitoring API allows, for any combination of labels and
             # metric name, one update per WRITE_INTERVAL seconds
             updated_key = (metric_descriptor.type, record.labels)
-            last_updated_time, _ = self._last_updated.get(updated_key, (0, 0))
-            if seconds <= last_updated_time + WRITE_INTERVAL:
+            last_updated_time_seconds, _ = self._last_updated.get(
+                updated_key, (0, 0)
+            )
+            if seconds <= last_updated_time_seconds + WRITE_INTERVAL:
                 continue
 
             if (
@@ -250,6 +252,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                     point.interval.start_time.seconds = int(
                         self._last_updated[updated_key][0]
                     )
+
+                    # need +1ms to avoid losing data due to overlap, +1ns not enough
                     point.interval.start_time.nanos = int(
                         self._last_updated[updated_key][1] + 1e6
                     )

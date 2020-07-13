@@ -269,6 +269,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.interval.end_time.seconds = WRITE_INTERVAL + 1
         point.interval.end_time.nanos = 0
         point.interval.start_time.seconds = 1
+        point.interval.start_time.nanos = 0
 
         series2 = TimeSeries(resource=expected_resource)
         series2.metric.type = "custom.googleapis.com/OpenTelemetry/name"
@@ -279,6 +280,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.interval.end_time.seconds = WRITE_INTERVAL + 1
         point.interval.end_time.nanos = 0
         point.interval.start_time.seconds = 1
+        point.interval.start_time.nanos = 0
 
         client.create_time_series.assert_has_calls(
             [mock.call(self.project_name, [series1, series2])]
@@ -326,6 +328,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.interval.end_time.seconds = WRITE_INTERVAL + 2
         point.interval.end_time.nanos = 0
         point.interval.start_time.seconds = 1
+        point.interval.start_time.nanos = 0
+
         client.create_time_series.assert_has_calls(
             [
                 mock.call(self.project_name, [series1, series2]),
