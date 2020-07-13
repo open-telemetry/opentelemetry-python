@@ -16,16 +16,24 @@ PROTO_REPO_BRANCH_OR_COMMIT="b54688569186e0b862bf7462a983ccf2c50c0547"
 
 set -e
 
-if [ -z "$VIRTUAL_ENV" ]; then
-    echo '$VIRTUAL_ENV is not set, you probably forgot to source it. Exiting...'
-    exit 1
-fi
-
 PROTO_REPO_DIR=${PROTO_REPO_DIR:-"/tmp/opentelemetry-proto"}
 # root of opentelemetry-python repo
 repo_root="$(git rev-parse --show-toplevel)"
+venv_dir="/tmp/proto_codegen_venv"
 
-python -m pip install -r $repo_root/dev-requirements.txt
+# run on exit even if crash
+cleanup() {
+    echo "Deleting $venv_dir"
+    rm -rf $venv_dir
+}
+trap cleanup EXIT
+
+echo "Creating temporary virtualenv at $venv_dir using $(python3 --version)"
+python3 -m venv $venv_dir
+source $venv_dir/bin/activate
+python -m pip install \
+    -c $repo_root/dev-requirements.txt \
+    grpcio-tools mypy-protobuf
 
 # Clone the proto repo if it doesn't exist
 if [ ! -d "$PROTO_REPO_DIR" ]; then
