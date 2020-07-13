@@ -1,9 +1,24 @@
 version: 2.1
 
 executors:
-  python38:
+  py38:
     docker:
       - image: circleci/python:3.8
+  py37:
+    docker:
+      - image: circleci/python:3.7
+  py36:
+    docker:
+      - image: circleci/python:3.6
+  py35:
+    docker:
+      - image: circleci/python:3.5
+  py34:
+    docker:
+      - image: circleci/python:3.4
+  pypy3:
+    docker:
+      - image: pypy:3
 
 commands:
   setup_tox:
@@ -31,9 +46,23 @@ commands:
           paths:
             - ".tox"
 
+  run_tox_scenario:
+    description: "Run scripts/run-tox-scenario with setup, caching and persistence"
+    parameters:
+      pattern:
+        type: string
+    steps:
+      - checkout
+      - setup_tox
+      - restore_tox_cache
+      - run:
+          name: "Run scripts/run-tox-scenario"
+          command: tox -f '<< parameters.pattern >>'
+      - save_tox_cache
+
 jobs:
   docs:
-    executor: python38
+    executor: py38
     steps:
       - checkout
       - setup_tox
@@ -41,8 +70,27 @@ jobs:
       - run: tox -e docs
       - save_tox_cache
 
+  docker-tests:
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          name: "Get pyenv list"
+          command: pyenv versions
+      - run:
+          name: "Set Python Version"
+          command: pyenv global 3.7.0
+      - run:
+          name: "Update pip"
+          command: pip install -U pip
+      - setup_tox
+      - restore_tox_cache
+      - run: tox -e docker-tests
+      - save_tox_cache
+
   lint:
-    executor: python38
+    executor: py38
     steps:
       - checkout
       - setup_tox
@@ -50,8 +98,48 @@ jobs:
       - run: tox -e lint
       - save_tox_cache
 
+  build-py34:
+    parameters:
+      package:
+        type: string
+        default: "core"
+    executor: py34
+    steps:
+      - checkout
+      - run:
+          name: "Install tox"
+          command: sudo pip install -U tox virtualenv tox-factor
+      - restore_tox_cache
+      - run:
+          name: "Run scripts/run-tox-scenario"
+          command: tox -f py34-<< parameters.package >>
+      - save_tox_cache
+
+  build:
+    parameters:
+      version:
+        type: string
+        default: "py38"
+      package:
+        type: string
+        default: "core"
+    executor: << parameters.version >>
+    steps:
+      - run_tox_scenario:
+          pattern: << parameters.version >>-<< parameters.package >>
+
 workflows:
   main:
     jobs:
+      - build:
+          matrix:
+            parameters:
+              version: ["py38", "py37", "py36", "py35", "pypy3"]
+              package: ["core", "exporter", "instrumentation"]
+      - build-py34:
+          matrix:
+            parameters:
+              package: ["core", "exporter", "instrumentation"]
       - docs
       - lint
+      - docker-tests

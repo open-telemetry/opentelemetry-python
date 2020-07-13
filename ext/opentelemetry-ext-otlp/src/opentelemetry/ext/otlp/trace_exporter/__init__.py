@@ -15,8 +15,9 @@
 """OTLP Span Exporter"""
 
 import logging
+from collections.abc import Mapping, Sequence
 from time import sleep
-from typing import Sequence
+from typing import Sequence as TypingSequence
 
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
@@ -34,7 +35,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AttributeKeyValue
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.proto.trace.v1.trace_pb2 import (
     InstrumentationLibrarySpans,
@@ -49,26 +50,31 @@ logger = logging.getLogger(__name__)
 
 
 def _translate_key_values(key, value):
-    key_value = {"key": key}
 
     if isinstance(value, bool):
-        key_value["bool_value"] = value
+        any_value = AnyValue(bool_value=value)
 
     elif isinstance(value, str):
-        key_value["string_value"] = value
+        any_value = AnyValue(string_value=value)
 
     elif isinstance(value, int):
-        key_value["int_value"] = value
+        any_value = AnyValue(int_value=value)
 
     elif isinstance(value, float):
-        key_value["double_value"] = value
+        any_value = AnyValue(double_value=value)
+
+    elif isinstance(value, Sequence):
+        any_value = AnyValue(array_value=value)
+
+    elif isinstance(value, Mapping):
+        any_value = AnyValue(kvlist_value=value)
 
     else:
         raise Exception(
             "Invalid type {} of value {}".format(type(value), value)
         )
 
-    return key_value
+    return KeyValue(key=key, value=any_value)
 
 
 # pylint: disable=no-member
@@ -144,7 +150,7 @@ class OTLPSpanExporter(SpanExporter):
 
                 try:
                     self._collector_span_kwargs["attributes"].append(
-                        AttributeKeyValue(**_translate_key_values(key, value))
+                        _translate_key_values(key, value)
                     )
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
@@ -163,9 +169,7 @@ class OTLPSpanExporter(SpanExporter):
                 for key, value in sdk_span_event.attributes.items():
                     try:
                         collector_span_event.attributes.append(
-                            AttributeKeyValue(
-                                **_translate_key_values(key, value)
-                            )
+                            _translate_key_values(key, value)
                         )
                     # pylint: disable=broad-except
                     except Exception as error:
@@ -191,9 +195,7 @@ class OTLPSpanExporter(SpanExporter):
                 for key, value in sdk_span_link.attributes.items():
                     try:
                         collector_span_link.attributes.append(
-                            AttributeKeyValue(
-                                **_translate_key_values(key, value)
-                            )
+                            _translate_key_values(key, value)
                         )
                     # pylint: disable=broad-except
                     except Exception as error:
@@ -211,7 +213,7 @@ class OTLPSpanExporter(SpanExporter):
             )
 
     def _translate_spans(
-        self, sdk_spans: Sequence[SDKSpan],
+        self, sdk_spans: TypingSequence[SDKSpan],
     ) -> ExportTraceServiceRequest:
 
         sdk_resource_instrumentation_library_spans = {}
@@ -260,7 +262,7 @@ class OTLPSpanExporter(SpanExporter):
 
                 try:
                     collector_resource.attributes.append(
-                        AttributeKeyValue(**_translate_key_values(key, value))
+                        _translate_key_values(key, value)
                     )
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
@@ -276,7 +278,7 @@ class OTLPSpanExporter(SpanExporter):
 
         return ExportTraceServiceRequest(resource_spans=resource_spans)
 
-    def export(self, spans: Sequence[SDKSpan]) -> SpanExportResult:
+    def export(self, spans: TypingSequence[SDKSpan]) -> SpanExportResult:
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
