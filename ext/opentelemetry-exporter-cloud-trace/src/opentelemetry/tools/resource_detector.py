@@ -2,6 +2,7 @@ import requests
 
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
+import os
 
 _GCP_METADATA_URL = (
     "http://metadata.google.internal/computeMetadata/v1/?recursive=true"
@@ -38,11 +39,10 @@ def get_gke_resources():
     all_metadata = _get_all_google_metadata()
     with open(
             '/var/run/secrets/kubernetes.io/serviceaccount/namespace') as namespace_file:
-        pod_namespace = namespace_file.read()
+        pod_namespace = namespace_file.read().strip()
     with open('/etc/hostname', 'r') as name_file:
-        pod_name = name_file.read()
+        pod_name = name_file.read().strip()
     gke_resources = {
-
         "cloud.account.id": all_metadata["project"]["projectId"],
         'k8s.cluster.name': all_metadata['instance']['attributes']['cluster-name'],
         'k8s.namespace.name': pod_namespace,
@@ -71,5 +71,7 @@ class GoogleCloudResourceDetector(ResourceDetector):
             self.cached = True
             for resource_finder in _RESOURCE_FINDERS:
                 found_resources = resource_finder()
-                self.gcp_resources.update(found_resources)
+                if found_resources:
+                    self.gcp_resources = found_resources
+                    break
         return Resource(self.gcp_resources)
