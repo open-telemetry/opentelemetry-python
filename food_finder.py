@@ -65,6 +65,9 @@ def opentelemetry_server_flask():
             _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
         ).json())
 
+@app.route('/')
+def hello_world():
+    return 'you probably want {}'.format("opentelemetry_server_flask_" + str(port))
 
 if __name__ == "__main__":
     port = os.getenv('PORT') or port
