@@ -470,7 +470,7 @@ class ScopeManagerShim(opentracing.ScopeManager):
         """
 
         span = trace_api.get_current_span()
-        if span is None:
+        if span.get_context() == trace_api.INVALID_SPAN_CONTEXT:
             return None
 
         span_context = SpanContextShim(span.get_context())

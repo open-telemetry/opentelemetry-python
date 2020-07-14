@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.trace.v1',
   syntax='proto3',
   serialized_options=b'\n\037io.opentelemetry.proto.trace.v1B\nTraceProtoP\001Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1',
-  serialized_pb=b'\n(opentelemetry/proto/trace/v1/trace.proto\x12\x1copentelemetry.proto.trace.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xae\x01\n\rResourceSpans\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12`\n\x1dinstrumentation_library_spans\x18\x02 \x03(\x0b\x32\x39.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans\"\xa8\x01\n\x1bInstrumentationLibrarySpans\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x31\n\x05spans\x18\x02 \x03(\x0b\x32\".opentelemetry.proto.trace.v1.Span\"\xce\x07\n\x04Span\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12\x16\n\x0eparent_span_id\x18\x04 \x01(\x0c\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x39\n\x04kind\x18\x06 \x01(\x0e\x32+.opentelemetry.proto.trace.v1.Span.SpanKind\x12\x1c\n\x14start_time_unix_nano\x18\x07 \x01(\x06\x12\x1a\n\x12\x65nd_time_unix_nano\x18\x08 \x01(\x06\x12\x44\n\nattributes\x18\t \x03(\x0b\x32\x30.opentelemetry.proto.common.v1.AttributeKeyValue\x12 \n\x18\x64ropped_attributes_count\x18\n \x01(\r\x12\x38\n\x06\x65vents\x18\x0b \x03(\x0b\x32(.opentelemetry.proto.trace.v1.Span.Event\x12\x1c\n\x14\x64ropped_events_count\x18\x0c \x01(\r\x12\x36\n\x05links\x18\r \x03(\x0b\x32\'.opentelemetry.proto.trace.v1.Span.Link\x12\x1b\n\x13\x64ropped_links_count\x18\x0e \x01(\r\x12\x34\n\x06status\x18\x0f \x01(\x0b\x32$.opentelemetry.proto.trace.v1.Status\x1a\x95\x01\n\x05\x45vent\x12\x16\n\x0etime_unix_nano\x18\x01 \x01(\x06\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x44\n\nattributes\x18\x03 \x03(\x0b\x32\x30.opentelemetry.proto.common.v1.AttributeKeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x04 \x01(\r\x1a\xa6\x01\n\x04Link\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12\x44\n\nattributes\x18\x04 \x03(\x0b\x32\x30.opentelemetry.proto.common.v1.AttributeKeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x05 \x01(\r\"g\n\x08SpanKind\x12\x19\n\x15SPAN_KIND_UNSPECIFIED\x10\x00\x12\x0c\n\x08INTERNAL\x10\x01\x12\n\n\x06SERVER\x10\x02\x12\n\n\x06\x43LIENT\x10\x03\x12\x0c\n\x08PRODUCER\x10\x04\x12\x0c\n\x08\x43ONSUMER\x10\x05\"\x98\x03\n\x06Status\x12=\n\x04\x63ode\x18\x01 \x01(\x0e\x32/.opentelemetry.proto.trace.v1.Status.StatusCode\x12\x0f\n\x07message\x18\x02 \x01(\t\"\xbd\x02\n\nStatusCode\x12\x06\n\x02Ok\x10\x00\x12\r\n\tCancelled\x10\x01\x12\x10\n\x0cUnknownError\x10\x02\x12\x13\n\x0fInvalidArgument\x10\x03\x12\x14\n\x10\x44\x65\x61\x64lineExceeded\x10\x04\x12\x0c\n\x08NotFound\x10\x05\x12\x11\n\rAlreadyExists\x10\x06\x12\x14\n\x10PermissionDenied\x10\x07\x12\x15\n\x11ResourceExhausted\x10\x08\x12\x16\n\x12\x46\x61iledPrecondition\x10\t\x12\x0b\n\x07\x41\x62orted\x10\n\x12\x0e\n\nOutOfRange\x10\x0b\x12\x11\n\rUnimplemented\x10\x0c\x12\x11\n\rInternalError\x10\r\x12\x0f\n\x0bUnavailable\x10\x0e\x12\x0c\n\x08\x44\x61taLoss\x10\x0f\x12\x13\n\x0fUnauthenticated\x10\x10\x42n\n\x1fio.opentelemetry.proto.trace.v1B\nTraceProtoP\x01Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1b\x06proto3'
+  serialized_pb=b'\n(opentelemetry/proto/trace/v1/trace.proto\x12\x1copentelemetry.proto.trace.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xae\x01\n\rResourceSpans\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12`\n\x1dinstrumentation_library_spans\x18\x02 \x03(\x0b\x32\x39.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans\"\xa8\x01\n\x1bInstrumentationLibrarySpans\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x31\n\x05spans\x18\x02 \x03(\x0b\x32\".opentelemetry.proto.trace.v1.Span\"\xb3\x07\n\x04Span\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12\x16\n\x0eparent_span_id\x18\x04 \x01(\x0c\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x39\n\x04kind\x18\x06 \x01(\x0e\x32+.opentelemetry.proto.trace.v1.Span.SpanKind\x12\x1c\n\x14start_time_unix_nano\x18\x07 \x01(\x06\x12\x1a\n\x12\x65nd_time_unix_nano\x18\x08 \x01(\x06\x12;\n\nattributes\x18\t \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\n \x01(\r\x12\x38\n\x06\x65vents\x18\x0b \x03(\x0b\x32(.opentelemetry.proto.trace.v1.Span.Event\x12\x1c\n\x14\x64ropped_events_count\x18\x0c \x01(\r\x12\x36\n\x05links\x18\r \x03(\x0b\x32\'.opentelemetry.proto.trace.v1.Span.Link\x12\x1b\n\x13\x64ropped_links_count\x18\x0e \x01(\r\x12\x34\n\x06status\x18\x0f \x01(\x0b\x32$.opentelemetry.proto.trace.v1.Status\x1a\x8c\x01\n\x05\x45vent\x12\x16\n\x0etime_unix_nano\x18\x01 \x01(\x06\x12\x0c\n\x04name\x18\x02 \x01(\t\x12;\n\nattributes\x18\x03 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x04 \x01(\r\x1a\x9d\x01\n\x04Link\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12;\n\nattributes\x18\x04 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x05 \x01(\r\"g\n\x08SpanKind\x12\x19\n\x15SPAN_KIND_UNSPECIFIED\x10\x00\x12\x0c\n\x08INTERNAL\x10\x01\x12\n\n\x06SERVER\x10\x02\x12\n\n\x06\x43LIENT\x10\x03\x12\x0c\n\x08PRODUCER\x10\x04\x12\x0c\n\x08\x43ONSUMER\x10\x05\"\x98\x03\n\x06Status\x12=\n\x04\x63ode\x18\x01 \x01(\x0e\x32/.opentelemetry.proto.trace.v1.Status.StatusCode\x12\x0f\n\x07message\x18\x02 \x01(\t\"\xbd\x02\n\nStatusCode\x12\x06\n\x02Ok\x10\x00\x12\r\n\tCancelled\x10\x01\x12\x10\n\x0cUnknownError\x10\x02\x12\x13\n\x0fInvalidArgument\x10\x03\x12\x14\n\x10\x44\x65\x61\x64lineExceeded\x10\x04\x12\x0c\n\x08NotFound\x10\x05\x12\x11\n\rAlreadyExists\x10\x06\x12\x14\n\x10PermissionDenied\x10\x07\x12\x15\n\x11ResourceExhausted\x10\x08\x12\x16\n\x12\x46\x61iledPrecondition\x10\t\x12\x0b\n\x07\x41\x62orted\x10\n\x12\x0e\n\nOutOfRange\x10\x0b\x12\x11\n\rUnimplemented\x10\x0c\x12\x11\n\rInternalError\x10\r\x12\x0f\n\x0bUnavailable\x10\x0e\x12\x0c\n\x08\x44\x61taLoss\x10\x0f\x12\x13\n\x0fUnauthenticated\x10\x10\x42n\n\x1fio.opentelemetry.proto.trace.v1B\nTraceProtoP\x01Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2.DESCRIPTOR,opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2.DESCRIPTOR,])
 
@@ -59,8 +59,8 @@ _SPAN_SPANKIND = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1386,
-  serialized_end=1489,
+  serialized_start=1359,
+  serialized_end=1462,
 )
 _sym_db.RegisterEnumDescriptor(_SPAN_SPANKIND)
 
@@ -141,8 +141,8 @@ _STATUS_STATUSCODE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1583,
-  serialized_end=1900,
+  serialized_start=1556,
+  serialized_end=1873,
 )
 _sym_db.RegisterEnumDescriptor(_STATUS_STATUSCODE)
 
@@ -270,8 +270,8 @@ _SPAN_EVENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1066,
-  serialized_end=1215,
+  serialized_start=1057,
+  serialized_end=1197,
 )
 
 _SPAN_LINK = _descriptor.Descriptor(
@@ -328,8 +328,8 @@ _SPAN_LINK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1218,
-  serialized_end=1384,
+  serialized_start=1200,
+  serialized_end=1357,
 )
 
 _SPAN = _descriptor.Descriptor(
@@ -458,7 +458,7 @@ _SPAN = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=515,
-  serialized_end=1489,
+  serialized_end=1462,
 )
 
 
@@ -496,20 +496,20 @@ _STATUS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1492,
-  serialized_end=1900,
+  serialized_start=1465,
+  serialized_end=1873,
 )
 
 _RESOURCESPANS.fields_by_name['resource'].message_type = opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2._RESOURCE
 _RESOURCESPANS.fields_by_name['instrumentation_library_spans'].message_type = _INSTRUMENTATIONLIBRARYSPANS
 _INSTRUMENTATIONLIBRARYSPANS.fields_by_name['instrumentation_library'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._INSTRUMENTATIONLIBRARY
 _INSTRUMENTATIONLIBRARYSPANS.fields_by_name['spans'].message_type = _SPAN
-_SPAN_EVENT.fields_by_name['attributes'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._ATTRIBUTEKEYVALUE
+_SPAN_EVENT.fields_by_name['attributes'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._KEYVALUE
 _SPAN_EVENT.containing_type = _SPAN
-_SPAN_LINK.fields_by_name['attributes'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._ATTRIBUTEKEYVALUE
+_SPAN_LINK.fields_by_name['attributes'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._KEYVALUE
 _SPAN_LINK.containing_type = _SPAN
 _SPAN.fields_by_name['kind'].enum_type = _SPAN_SPANKIND
-_SPAN.fields_by_name['attributes'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._ATTRIBUTEKEYVALUE
+_SPAN.fields_by_name['attributes'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._KEYVALUE
 _SPAN.fields_by_name['events'].message_type = _SPAN_EVENT
 _SPAN.fields_by_name['links'].message_type = _SPAN_LINK
 _SPAN.fields_by_name['status'].message_type = _STATUS
