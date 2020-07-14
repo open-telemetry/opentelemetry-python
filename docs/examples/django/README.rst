@@ -56,7 +56,7 @@ Open up a new console and activate the previous virtual environment there too:
 
 ``source django_auto_instrumentation/bin/activate``
 
-Go to ``opentelemetry-python/ext/opentelemetry-ext-django/example``, once there
+Go to ``opentelemetry-python/docs/examples/django``, once there
 run the client with:
 
 ``python client.py hello``
