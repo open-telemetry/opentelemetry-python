@@ -1,13 +1,15 @@
+import os
+
 import requests
 
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
-import os
 
 _GCP_METADATA_URL = (
     "http://metadata.google.internal/computeMetadata/v1/?recursive=true"
 )
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
+
 
 def _get_all_google_metadata():
     token = attach(set_value("suppress_instrumentation", True))
@@ -16,6 +18,7 @@ def _get_all_google_metadata():
     ).json()
     detach(token)
     return all_metadata
+
 
 def get_gce_resources():
     """ Resource finder for common GCE attributes
@@ -32,30 +35,32 @@ def get_gce_resources():
     }
     return gce_resources
 
+
 def get_gke_resources():
     """ Resource finder for GKE attributes
 
     """
-    # The user must specify this environment variable via the Downward API
-    container_name = os.getenv('CONTAINER_NAME')
+    # The user must specify these environment variables via the Downward API
+    container_name = os.getenv("CONTAINER_NAME")
+    pod_namespace = os.getenv("NAMESPACE", "")
     if not container_name:
         return {}
     all_metadata = _get_all_google_metadata()
-    pod_namespace = os.getenv('NAMESPACE', '')
-    pod_name = os.getenv('HOSTNAME', '')
+    pod_name = os.getenv("HOSTNAME", "")
     gke_resources = {
         "cloud.account.id": all_metadata["project"]["projectId"],
-        'k8s.cluster.name': all_metadata['instance']['attributes']['cluster-name'],
-        'k8s.namespace.name': pod_namespace,
+        "k8s.cluster.name": all_metadata["instance"]["attributes"][
+            "cluster-name"
+        ],
+        "k8s.namespace.name": pod_namespace,
         "host.id": all_metadata["instance"]["id"],
-        'k8s.pod.name': pod_name,
-        'container.name': container_name,
+        "k8s.pod.name": pod_name,
+        "container.name": container_name,
         "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
         "cloud.provider": "gcp",
         "gcp.resource_type": "gke_container",
     }
     return gke_resources
-
 
 
 _RESOURCE_FINDERS = [get_gke_resources, get_gce_resources]
