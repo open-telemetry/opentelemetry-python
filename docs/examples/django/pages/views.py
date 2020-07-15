@@ -19,6 +19,7 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+
 trace.set_tracer_provider(TracerProvider())
 
 trace.get_tracer_provider().add_span_processor(
