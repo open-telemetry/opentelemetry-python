@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add status code to gRPC client, gRPC client testing
+- Add status code to gRPC client spans
   ([896](https://github.com/open-telemetry/opentelemetry-python/pull/896))
 
 ## 0.8b0
