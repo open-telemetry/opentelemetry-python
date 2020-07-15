@@ -13,25 +13,25 @@
 # limitations under the License.
 from typing import Optional
 
-from starlette import applications
+import fastapi
 from starlette.routing import Match
 
 from opentelemetry.ext.asgi import OpenTelemetryMiddleware
+from opentelemetry.instrumentation.fastapi.version import __version__  # noqa
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.instrumentation.starlette.version import __version__  # noqa
 
 
-class StarletteInstrumentor(BaseInstrumentor):
-    """An instrumentor for starlette
+class FastAPIInstrumentor(BaseInstrumentor):
+    """An instrumentor for FastAPI
 
     See `BaseInstrumentor`
     """
 
-    _original_starlette = None
+    _original_fastapi = None
 
     @staticmethod
-    def instrument_app(app: applications.Starlette):
-        """Instrument an uninstrumented Starlette application.
+    def instrument_app(app: fastapi.FastAPI):
+        """Instrument an uninstrumented FastAPI application.
         """
         if not getattr(app, "is_instrumented_by_opentelemetry", False):
             app.add_middleware(
@@ -41,14 +41,14 @@ class StarletteInstrumentor(BaseInstrumentor):
             app.is_instrumented_by_opentelemetry = True
 
     def _instrument(self, **kwargs):
-        self._original_starlette = applications.Starlette
-        applications.Starlette = _InstrumentedStarlette
+        self._original_fastapi = fastapi.FastAPI
+        fastapi.FastAPI = _InstrumentedFastAPI
 
     def _uninstrument(self, **kwargs):
-        applications.Starlette = self._original_starlette
+        fastapi.FastAPI = self._original_fastapi
 
 
-class _InstrumentedStarlette(applications.Starlette):
+class _InstrumentedFastAPI(fastapi.FastAPI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_middleware(
@@ -57,7 +57,7 @@ class _InstrumentedStarlette(applications.Starlette):
 
 
 def _get_route_details(scope):
-    """Callback to retrieve the starlette route being served.
+    """Callback to retrieve the fastapi route being served.
 
     TODO: there is currently no way to retrieve http.route from
     a starlette application from scope.
