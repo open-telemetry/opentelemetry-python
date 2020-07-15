@@ -29,3 +29,4 @@ google-cloud-trace >=0.23.0
 google-cloud-monitoring>=0.36.0
 botocore~=1.0
 starlette~=0.13
+fastapi~=0.58.1
