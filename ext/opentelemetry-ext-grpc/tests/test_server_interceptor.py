@@ -118,8 +118,8 @@ class TestOpenTelemetryServerInterceptor(TestBase):
             server.stop(None)
         active_span_after_call = trace.get_current_span()
 
-        self.assertIsNone(active_span_before_call)
-        self.assertIsNone(active_span_after_call)
+        self.assertEqual(active_span_before_call, trace.INVALID_SPAN)
+        self.assertEqual(active_span_after_call, trace.INVALID_SPAN)
         self.assertIsInstance(active_span_in_handler, trace_sdk.Span)
         self.assertIsNone(active_span_in_handler.parent)
 

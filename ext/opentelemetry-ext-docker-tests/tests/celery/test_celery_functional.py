@@ -35,6 +35,7 @@ class MyException(Exception):
     pass
 
 
+@pytest.mark.skip(reason="inconsistent test results")
 def test_instrumentation_info(celery_app, memory_exporter):
     @celery_app.task
     def fn_task():
@@ -139,6 +140,7 @@ def test_fn_task_apply_bind(celery_app, memory_exporter):
     assert span.attributes.get("celery.state") == "SUCCESS"
 
 
+@pytest.mark.skip(reason="inconsistent test results")
 def test_fn_task_apply_async(celery_app, memory_exporter):
     @celery_app.task
     def fn_task_parameters(user, force_logout=False):
@@ -191,6 +193,7 @@ def test_concurrent_delays(celery_app, memory_exporter):
     assert len(spans) == 200
 
 
+@pytest.mark.skip(reason="inconsistent test results")
 def test_fn_task_delay(celery_app, memory_exporter):
     @celery_app.task
     def fn_task_parameters(user, force_logout=False):
@@ -430,6 +433,7 @@ def test_shared_task(celery_app, memory_exporter):
     assert span.attributes.get("messaging.message_id") == result.task_id
 
 
+@pytest.mark.skip(reason="inconsistent test results")
 def test_apply_async_previous_style_tasks(
     celery_app, celery_worker, memory_exporter
 ):

@@ -305,8 +305,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
-    def test_extract_resources(self):
+    def test_extract_empty_resources(self):
         self.assertEqual(_extract_resources(Resource.create_empty()), {})
+
+    def test_extract_well_formed_resources(self):
         resource = Resource(
             labels={
                 "cloud.account.id": 123,
@@ -325,12 +327,11 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         }
         self.assertEqual(_extract_resources(resource), expected_extract)
 
+    def test_extract_malformed_resources(self):
+        # This resource doesn't have all the fields required for a gce_instance
+        # Specifically its missing "host.id", "cloud.zone", "cloud.account.id"
         resource = Resource(
             labels={
-                "cloud.account.id": "123",
-                "host.id": "host",
-                "extra_info": "extra",
-                "not_gcp_resource": "value",
                 "gcp.resource_type": "gce_instance",
                 "cloud.provider": "gcp",
             }
@@ -338,6 +339,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         # Should throw when passed a malformed GCP resource dict
         self.assertRaises(KeyError, _extract_resources, resource)
 
+    def test_extract_unsupported_gcp_resources(self):
         resource = Resource(
             labels={
                 "cloud.account.id": "123",
@@ -350,6 +352,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
         self.assertEqual(_extract_resources(resource), {})
 
+    def test_extract_unsupported_provider_resources(self):
+        # Resources with currently unsupported providers will be ignored
         resource = Resource(
             labels={
                 "cloud.account.id": "123",

@@ -1,5 +1,5 @@
-opentelemetry.trace.sampling
-============================
+Sampling Traces
+===============
 
 .. automodule:: opentelemetry.trace.sampling
     :members:
