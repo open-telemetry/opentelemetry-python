@@ -64,11 +64,8 @@ jobs:
   docs:
     executor: py38
     steps:
-      - checkout
-      - setup_tox
-      - restore_tox_cache
-      - run: tox -e docs
-      - save_tox_cache
+      - run_tox_scenario:
+          pattern: docs
 
   docker-tests:
     machine:
@@ -92,11 +89,17 @@ jobs:
   lint:
     executor: py38
     steps:
-      - checkout
-      - setup_tox
-      - restore_tox_cache
-      - run: tox -e lint
-      - save_tox_cache
+      - run_tox_scenario:
+          pattern: lint
+
+  build-py38:
+    parameters:
+      package:
+        type: string
+    executor: py38
+    steps:
+      - run_tox_scenario:
+          pattern: py38-<< parameters.package >>
 
   build-py34:
     parameters:
@@ -131,6 +134,10 @@ jobs:
 workflows:
   circleci-build:
     jobs:
+      - build-py38:
+          matrix:
+            parameters:
+              package: ["core", "exporter", "instrumentation", "tracecontext", "mypy", "mypyinstalled"]
       - build:
           matrix:
             parameters:
