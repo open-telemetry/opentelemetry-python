@@ -32,8 +32,8 @@ class TestConfiguration(TestCase):
     @patch.dict(
         "os.environ",  # type: ignore
         {
-            "OTEL_METER_PROVIDER": "meter_provider",
-            "OTEL_TRACER_PROVIDER": "tracer_provider",
+            "OTEL_PYTHON_METER_PROVIDER": "meter_provider",
+            "OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider",
             "OTEL_OThER": "other",
             "OTEL_OTHER_7": "other_7",
             "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
@@ -56,7 +56,7 @@ class TestConfiguration(TestCase):
 
     @patch.dict(
         "os.environ",  # type: ignore
-        {"OTEL_TRACER_PROVIDER": "tracer_provider"},
+        {"OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider"},
     )
     def test_property(self) -> None:
         with self.assertRaises(AttributeError):
@@ -79,8 +79,7 @@ class TestConfiguration(TestCase):
 
     def test_reset(self) -> None:
         environ_patcher = patch.dict(
-            "os.environ",
-            {"OTEL_TRACER_PROVIDER": "tracer_provider"},
+            "os.environ", {"OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider"},
         )
 
         environ_patcher.start()
@@ -99,10 +98,7 @@ class TestConfiguration(TestCase):
 
     @patch.dict(
         "os.environ",  # type: ignore
-        {
-            "OTEL_TRUE": "True",
-            "OTEL_FALSE": "False",
-        },
+        {"OTEL_TRUE": "True", "OTEL_FALSE": "False"},
     )
     def test_boolean(self) -> None:
         self.assertIsInstance(

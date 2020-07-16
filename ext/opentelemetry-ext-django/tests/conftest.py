@@ -16,4 +16,4 @@ from os import environ
 
 
 def pytest_sessionstart(session):  # pylint: disable=unused-argument
-    environ.setdefault("OTEL_DJANGO_INSTRUMENT", "True")
+    environ.setdefault("OTEL_PYTHON_DJANGO_INSTRUMENT", "True")

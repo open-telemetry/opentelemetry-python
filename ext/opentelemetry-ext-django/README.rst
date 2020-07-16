@@ -20,13 +20,13 @@ Configuration
 
 Exclude lists
 *************
-To exclude certain URLs from being tracked, set the environment variable ``OTEL_DJANGO_EXCLUDED_URLS`` with comma delimited regexes representing which URLs to exclude.
+To exclude certain URLs from being tracked, set the environment variable ``OTEL_PYTHON_DJANGO_EXCLUDED_URLS`` with comma delimited regexes representing which URLs to exclude.
 
 For example,
 
 ::
 
-    export OTEL_DJANGO_EXCLUDED_URLS="client/.*/info,healthcheck"
+    export OTEL_PYTHON_DJANGO_EXCLUDED_URLS="client/.*/info,healthcheck"
 
 will exclude requests such as ``https://site/client/123/info`` and ``https://site/xyz/healthcheck``.
 
