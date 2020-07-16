@@ -25,6 +25,7 @@ from typing import MutableMapping
 import grpc
 
 from opentelemetry import propagators, trace
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 from . import grpcext
 from ._utilities import RpcInfo
@@ -33,14 +34,16 @@ from ._utilities import RpcInfo
 class _GuardedSpan:
     def __init__(self, span):
         self.span = span
+        self.generated_span = None
         self._engaged = True
 
     def __enter__(self):
-        self.span.__enter__()
+        self.generated_span = self.span.__enter__()
         return self
 
     def __exit__(self, *args, **kwargs):
         if self._engaged:
+            self.generated_span = None
             return self.span.__exit__(*args, **kwargs)
         return False
 
@@ -122,7 +125,15 @@ class OpenTelemetryClientInterceptor(
                 timeout=client_info.timeout,
                 request=request,
             )
-            result = invoker(request, metadata)
+
+            try:
+                result = invoker(request, metadata)
+            except grpc.RpcError as exc:
+                guarded_span.generated_span.set_status(
+                    Status(StatusCanonicalCode(exc.code().value[0]))
+                )
+                raise
+
             return self._trace_result(guarded_span, rpc_info, result)
 
     # For RPCs that stream responses, the result can be a generator. To record
@@ -136,7 +147,7 @@ class OpenTelemetryClientInterceptor(
         else:
             mutable_metadata = OrderedDict(metadata)
 
-        with self._start_span(client_info.full_method):
+        with self._start_span(client_info.full_method) as span:
             _inject_span_context(mutable_metadata)
             metadata = tuple(mutable_metadata.items())
             rpc_info = RpcInfo(
@@ -146,9 +157,16 @@ class OpenTelemetryClientInterceptor(
             )
             if client_info.is_client_stream:
                 rpc_info.request = request_or_iterator
-            result = invoker(request_or_iterator, metadata)
-            for response in result:
-                yield response
+
+            try:
+                result = invoker(request_or_iterator, metadata)
+                for response in result:
+                    yield response
+            except grpc.RpcError as exc:
+                span.set_status(
+                    Status(StatusCanonicalCode(exc.code().value[0]))
+                )
+                raise
 
     def intercept_stream(
         self, request_or_iterator, metadata, client_info, invoker
@@ -172,5 +190,13 @@ class OpenTelemetryClientInterceptor(
                 timeout=client_info.timeout,
                 request=request_or_iterator,
             )
-            result = invoker(request_or_iterator, metadata)
+
+            try:
+                result = invoker(request_or_iterator, metadata)
+            except grpc.RpcError as exc:
+                guarded_span.generated_span.set_status(
+                    Status(StatusCanonicalCode(exc.code().value[0]))
+                )
+                raise
+
             return self._trace_result(guarded_span, rpc_info, result)
