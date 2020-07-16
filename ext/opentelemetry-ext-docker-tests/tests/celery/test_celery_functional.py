@@ -178,6 +178,7 @@ def test_fn_task_apply_async(celery_app, memory_exporter):
     )
 
 
+@pytest.mark.skip(reason="inconsistent test results")
 def test_concurrent_delays(celery_app, memory_exporter):
     @celery_app.task
     def fn_task():
