@@ -166,7 +166,6 @@ class TestFunctionalAsyncPG(TestBase):
             StatusCanonicalCode.OK, spans[2].status.canonical_code
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_method_doesnt_capture_parameters(self, *_, **__):
         _await(self._connection.execute("SELECT $1;", "1"))
         spans = self.memory_exporter.get_finished_spans()
