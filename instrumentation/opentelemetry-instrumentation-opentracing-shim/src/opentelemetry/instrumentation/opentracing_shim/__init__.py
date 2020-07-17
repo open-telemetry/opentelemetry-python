@@ -395,6 +395,8 @@ class ScopeShim(opentracing.Scope):
         else:
             self._span.unwrap().end()
 
+        detach(self._token)
+
 
 class ScopeManagerShim(opentracing.ScopeManager):
     """Implements :class:`opentracing.ScopeManager` by setting and getting the
