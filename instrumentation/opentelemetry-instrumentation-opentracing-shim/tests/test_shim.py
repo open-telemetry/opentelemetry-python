@@ -532,8 +532,6 @@ class TestShim(TestCase):
         try:
             carrier = {}
 
-            from ipdb import set_trace
-            set_trace()
             ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
             self.assertEqual(ctx.unwrap(), trace.INVALID_SPAN_CONTEXT)
         finally:
