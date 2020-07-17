@@ -567,9 +567,6 @@ class TestShim(TestCase):
         with self.assertRaises(ValueError):
             baggage[1] = 3
 
-        with self.assertRaises(ValueError):
-            baggage[2] = 3
-
         span_shim = SpanShim(Mock(), span_context_shim, Mock())
 
         span_shim.set_baggage_item(1, 2)
