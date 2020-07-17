@@ -553,10 +553,6 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
-    def get_attribute(self, key: str) -> types.AttributeValue:
-
-        return self.attributes[key]
-
     @staticmethod
     def _filter_attribute_values(attributes: types.Attributes):
         if attributes:

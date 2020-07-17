@@ -38,13 +38,6 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_attribute(self, key: str) -> types.AttributeValue:
-        """Gets an Attribute.
-
-        Gets a single Attribute with the key passed as argument.
-        """
-
-    @abc.abstractmethod
     def add_event(
         self,
         name: str,
@@ -240,9 +233,6 @@ class DefaultSpan(Span):
         pass
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        pass
-
-    def get_attribute(self, key: str) -> types.AttributeValue:
         pass
 
     def add_event(

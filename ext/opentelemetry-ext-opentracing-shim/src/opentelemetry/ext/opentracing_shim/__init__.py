@@ -270,13 +270,31 @@ class SpanShim(opentracing.Span):
     def log_event(self, event, payload=None):
         super().log_event(event, payload=payload)
 
-    def set_baggage_item(self, key, value):
+    def set_baggage_item(self, key, value):  # pylint:disable=unused-argument
+        """Implements the ``set_baggage_item()`` method from the base class.
 
-        return self._otel_span.set_attribute(key, value)
+        Warning:
+            Not implemented yet.
+        """
 
-    def get_baggage_item(self, key):
+        logger.warning(
+            "Calling unimplemented method set_baggage_item() on class %s",
+            self.__class__.__name__,
+        )
+        # TODO: Implement.
 
-        return self._otel_span.get_attribute(key)
+    def get_baggage_item(self, key):  # pylint:disable=unused-argument
+        """Implements the ``get_baggage_item()`` method from the base class.
+
+        Warning:
+            Not implemented yet.
+        """
+
+        logger.warning(
+            "Calling unimplemented method get_baggage_item() on class %s",
+            self.__class__.__name__,
+        )
+        # TODO: Implement.
 
 
 class ScopeShim(opentracing.Scope):
