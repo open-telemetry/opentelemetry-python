@@ -152,6 +152,7 @@ class SpanContextShim(opentracing.SpanContext):
 
     @property
     def baggage(self):
+        """Implements the ``baggage`` property from the base class."""
 
         return self._baggage
 
@@ -270,6 +271,7 @@ class SpanShim(opentracing.Span):
         super().log_event(event, payload=payload)
 
     def set_baggage_item(self, key, value):
+        """Implements the ``set_baggage_item`` method from the base class."""
         # pylint: disable=protected-access
         copy = self._context._baggage.copy()
         copy.update({key: value})
@@ -277,6 +279,7 @@ class SpanShim(opentracing.Span):
         self._context._baggage = Context(copy)
 
     def get_baggage_item(self, key):
+        """Implements the ``get_baggage_item`` method from the base class."""
         # pylint: disable=protected-access
         return self._context._baggage[key]
 
