@@ -557,7 +557,6 @@ class TestShim(TestCase):
             self.shim.extract(opentracing.Format.BINARY, bytearray())
 
     def test_baggage(self):
-        """Test SpanShim baggage being set and being immutable"""
 
         span_context_shim = SpanContextShim(
             trace.SpanContext(1234, 5678, is_remote=False)
