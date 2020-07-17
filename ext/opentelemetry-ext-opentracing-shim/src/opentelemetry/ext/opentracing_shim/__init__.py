@@ -91,6 +91,7 @@ import opentracing
 from deprecated import deprecated
 
 from opentelemetry import propagators
+from opentelemetry.correlationcontext import set_correlation, get_correlation
 from opentelemetry.context import Context
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
@@ -273,15 +274,14 @@ class SpanShim(opentracing.Span):
     def set_baggage_item(self, key, value):
         """Implements the ``set_baggage_item`` method from the base class."""
         # pylint: disable=protected-access
-        copy = self._context._baggage.copy()
-        copy.update({key: value})
-
-        self._context._baggage = Context(copy)
+        self._context._baggage = set_correlation(
+            key, value, context=self._context._baggage
+        )
 
     def get_baggage_item(self, key):
         """Implements the ``get_baggage_item`` method from the base class."""
         # pylint: disable=protected-access
-        return self._context._baggage[key]
+        return get_correlation(key, context=self._context._baggage)
 
 
 class ScopeShim(opentracing.Scope):
