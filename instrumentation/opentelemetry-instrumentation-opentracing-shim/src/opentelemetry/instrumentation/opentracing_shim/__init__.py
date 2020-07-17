@@ -93,8 +93,9 @@ from deprecated import deprecated
 from opentelemetry import propagators
 from opentelemetry.context import Context
 from opentelemetry.correlationcontext import get_correlation, set_correlation
-from opentelemetry.instrumentation.opentracing_shim import util
-from opentelemetry.instrumentation.opentracing_shim.version import __version__
+from opentelemetry.context import attach, detach, get_value, set_value
+from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.ext.opentracing_shim.version import __version__
 from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
     DefaultSpan,
@@ -327,6 +328,7 @@ class ScopeShim(opentracing.Scope):
     def __init__(self, manager, span, span_cm=None):
         super().__init__(manager, span)
         self._span_cm = span_cm
+        self._token = attach(set_value("scope_shim", self))
 
     # TODO: Change type of `manager` argument to `opentracing.ScopeManager`? We
     # need to get rid of `manager.tracer` for this.
@@ -391,6 +393,8 @@ class ScopeShim(opentracing.Scope):
             self._span_cm.__exit__(None, None, None)
         else:
             self._span.unwrap().end()
+
+        detach(self._token)
 
 
 class ScopeManagerShim(opentracing.ScopeManager):
@@ -460,14 +464,12 @@ class ScopeManagerShim(opentracing.ScopeManager):
         if span.get_context() == INVALID_SPAN_CONTEXT:
             return None
 
-        span_context = SpanContextShim(span.get_context())
-        wrapped_span = SpanShim(self._tracer, span_context, span)
-        return ScopeShim(self, span=wrapped_span)
-        # TODO: The returned `ScopeShim` instance here always ends the
-        # corresponding span, regardless of the `finish_on_close` value used
-        # when activating the span. This is because here we return a *new*
-        # `ScopeShim` rather than returning a saved instance of `ScopeShim`.
-        # https://github.com/open-telemetry/opentelemetry-python/pull/211/files#r335398792
+        try:
+            return get_value("scope_shim")
+        except KeyError:
+            span_context = SpanContextShim(span.get_context())
+            wrapped_span = SpanShim(self._tracer, span_context, span)
+            return ScopeShim(self, span=wrapped_span)
 
     @property
     def tracer(self):

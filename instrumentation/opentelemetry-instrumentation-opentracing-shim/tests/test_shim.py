@@ -63,7 +63,7 @@ class TestShim(TestCase):
     def test_start_active_span(self):
         """Test span creation and activation using `start_active_span()`."""
 
-        with self.shim.start_active_span("TestSpan") as scope:
+        with self.shim.start_active_span("TestSpxn") as scope:
             # Verify correct type of Scope and Span objects.
             self.assertIsInstance(scope, opentracing.Scope)
             self.assertIsInstance(scope.span, opentracing.Span)
@@ -91,7 +91,7 @@ class TestShim(TestCase):
     def test_start_span(self):
         """Test span creation using `start_span()`."""
 
-        with self.shim.start_span("TestSpan") as span:
+        with self.shim.start_span("TestSpzn") as span:
             # Verify correct type of Span object.
             self.assertIsInstance(span, opentracing.Span)
 
@@ -107,7 +107,7 @@ class TestShim(TestCase):
     def test_start_span_no_contextmanager(self):
         """Test `start_span()` without a `with` statement."""
 
-        span = self.shim.start_span("TestSpan")
+        span = self.shim.start_span("TestSpTn")
 
         # Verify span is started.
         self.assertIsNotNone(span.unwrap().start_time)
@@ -120,7 +120,7 @@ class TestShim(TestCase):
     def test_explicit_span_finish(self):
         """Test `finish()` method on `Span` objects."""
 
-        span = self.shim.start_span("TestSpan")
+        span = self.shim.start_span("TestSpcn")
 
         # Verify span hasn't ended.
         self.assertIsNone(span.unwrap().end_time)
@@ -134,7 +134,9 @@ class TestShim(TestCase):
         """Test `start_time` argument."""
 
         now = time.time()
-        with self.shim.start_active_span("TestSpan", start_time=now) as scope:
+        from ipdb import set_trace
+        set_trace()
+        with self.shim.start_active_span("TestSp5n", start_time=now) as scope:
             result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
             # Tolerate inaccuracies of less than a microsecond. See Note:
             # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.instrumentation.opentracing_shim.html
@@ -145,7 +147,7 @@ class TestShim(TestCase):
     def test_explicit_end_time(self):
         """Test `end_time` argument of `finish()` method."""
 
-        span = self.shim.start_span("TestSpan")
+        span = self.shim.start_span("TestSpmn")
         now = time.time()
         span.finish(now)
 
@@ -159,7 +161,7 @@ class TestShim(TestCase):
     def test_explicit_span_activation(self):
         """Test manual activation and deactivation of a span."""
 
-        span = self.shim.start_span("TestSpan")
+        span = self.shim.start_span("TestSp99n")
 
         # Verify no span is currently active.
         self.assertIsNone(self.shim.active_span)
@@ -180,7 +182,7 @@ class TestShim(TestCase):
         """Test `finish_on_close` argument of `start_active_span()`."""
 
         with self.shim.start_active_span(
-            "TestSpan", finish_on_close=True
+            "TestSp88n", finish_on_close=True
         ) as scope:
             # Verify span hasn't ended.
             self.assertIsNone(scope.span.unwrap().end_time)
@@ -189,7 +191,7 @@ class TestShim(TestCase):
         self.assertIsNotNone(scope.span.unwrap().end_time)
 
         with self.shim.start_active_span(
-            "TestSpan", finish_on_close=False
+            "TestSp23n", finish_on_close=False
         ) as scope:
             # Verify span hasn't ended.
             self.assertIsNone(scope.span.unwrap().end_time)
@@ -202,7 +204,7 @@ class TestShim(TestCase):
     def test_activate_finish_on_close(self):
         """Test `finish_on_close` argument of `activate()`."""
 
-        span = self.shim.start_span("TestSpan")
+        span = self.shim.start_span("TestSp533n")
 
         with self.shim.scope_manager.activate(
             span, finish_on_close=True
@@ -216,7 +218,7 @@ class TestShim(TestCase):
         # Verify span has ended.
         self.assertIsNotNone(span.unwrap().end_time)
 
-        span = self.shim.start_span("TestSpan")
+        span = self.shim.start_span("TestSp009n")
 
         with self.shim.scope_manager.activate(
             span, finish_on_close=False
@@ -402,13 +404,13 @@ class TestShim(TestCase):
     def test_span_tracer(self):
         """Test the `tracer` property on `Span` objects."""
 
-        with self.shim.start_active_span("TestSpan") as scope:
+        with self.shim.start_active_span("TestSp423n") as scope:
             self.assertEqual(scope.span.tracer, self.shim)
 
     def test_log_kv(self):
         """Test the `log_kv()` method on `Span` objects."""
 
-        with self.shim.start_span("TestSpan") as span:
+        with self.shim.start_span("TestSp44444n") as span:
             span.log_kv({"foo": "bar"})
             self.assertEqual(span.unwrap().events[0].attributes["foo"], "bar")
             # Verify timestamp was generated automatically.
@@ -430,7 +432,7 @@ class TestShim(TestCase):
     def test_log(self):
         """Test the deprecated `log` method on `Span` objects."""
 
-        with self.shim.start_span("TestSpan") as span:
+        with self.shim.start_span("TestSp3232n") as span:
             with self.assertWarns(DeprecationWarning):
                 span.log(event="foo", payload="bar")
 
@@ -441,7 +443,7 @@ class TestShim(TestCase):
     def test_log_event(self):
         """Test the deprecated `log_event` method on `Span` objects."""
 
-        with self.shim.start_span("TestSpan") as span:
+        with self.shim.start_span("TestSpun") as span:
             with self.assertWarns(DeprecationWarning):
                 span.log_event("foo", "bar")
 
@@ -532,6 +534,8 @@ class TestShim(TestCase):
         try:
             carrier = {}
 
+            from ipdb import set_trace
+            set_trace()
             ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
             self.assertEqual(ctx.unwrap(), trace.INVALID_SPAN_CONTEXT)
         finally:
