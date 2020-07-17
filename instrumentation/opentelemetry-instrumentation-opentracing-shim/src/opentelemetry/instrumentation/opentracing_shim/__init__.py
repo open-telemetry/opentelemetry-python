@@ -327,7 +327,7 @@ class ScopeShim(opentracing.Scope):
     def __init__(self, manager, span, span_cm=None):
         super().__init__(manager, span)
         self._span_cm = span_cm
-        self._token = attach(set_value("scope_shim", self))
+        attach(set_value("scope_shim", self))
 
     # TODO: Change type of `manager` argument to `opentracing.ScopeManager`? We
     # need to get rid of `manager.tracer` for this.
@@ -394,8 +394,6 @@ class ScopeShim(opentracing.Scope):
             self._span_cm.__exit__(None, None, None)
         else:
             self._span.unwrap().end()
-
-        detach(self._token)
 
 
 class ScopeManagerShim(opentracing.ScopeManager):
