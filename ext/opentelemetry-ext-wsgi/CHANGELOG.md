@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Set span status on wsgi errors
+  ([#864](https://github.com/open-telemetry/opentelemetry-python/pull/864))
+
 ## 0.4a0
 
 Released 2020-02-21

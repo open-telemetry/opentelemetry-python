@@ -8,7 +8,7 @@ from pyramid.tweens import EXCVIEW
 import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.ext.pyramid.version import __version__
-from opentelemetry.util import disable_trace, time_ns
+from opentelemetry.util import ExcludeList, time_ns
 
 TWEEN_NAME = "opentelemetry.ext.pyramid.trace_tween_factory"
 SETTING_TRACE_ENABLED = "opentelemetry-pyramid.trace_enabled"
@@ -22,22 +22,14 @@ _ENVIRON_TOKEN = "opentelemetry-pyramid.token"
 _logger = getLogger(__name__)
 
 
-def get_excluded_hosts():
-    hosts = configuration.Configuration().PYRAMID_EXCLUDED_HOSTS or []
-    if hosts:
-        hosts = str.split(hosts, ",")
-    return hosts
+def get_excluded_urls():
+    urls = configuration.Configuration().PYRAMID_EXCLUDED_URLS or []
+    if urls:
+        urls = str.split(urls, ",")
+    return ExcludeList(urls)
 
 
-def get_excluded_paths():
-    paths = configuration.Configuration().PYRAMID_EXCLUDED_PATHS or []
-    if paths:
-        paths = str.split(paths, ",")
-    return paths
-
-
-_excluded_hosts = get_excluded_hosts()
-_excluded_paths = get_excluded_paths()
+_excluded_urls = get_excluded_urls()
 
 
 def includeme(config):
@@ -119,7 +111,7 @@ def trace_tween_factory(handler, registry):
 
     # make a request tracing function
     def trace_tween(request):
-        if disable_trace(request.url, _excluded_hosts, _excluded_paths):
+        if _excluded_urls.url_disabled(request.url):
             request.environ[_ENVIRON_ENABLED_KEY] = False
             # short-circuit when we don't want to trace anything
             return handler(request)

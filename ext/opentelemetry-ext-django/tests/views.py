@@ -13,5 +13,9 @@ def excluded(request):  # pylint: disable=unused-argument
     return HttpResponse()
 
 
-def excluded2(request):  # pylint: disable=unused-argument
+def excluded_noarg(request):  # pylint: disable=unused-argument
+    return HttpResponse()
+
+
+def excluded_noarg2(request):  # pylint: disable=unused-argument
     return HttpResponse()

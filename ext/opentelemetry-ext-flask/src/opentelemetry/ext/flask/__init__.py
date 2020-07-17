@@ -55,7 +55,7 @@ import opentelemetry.ext.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.ext.flask.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.util import disable_trace, time_ns
+from opentelemetry.util import ExcludeList, time_ns
 
 _logger = getLogger(__name__)
 
@@ -65,22 +65,14 @@ _ENVIRON_ACTIVATION_KEY = "opentelemetry-flask.activation_key"
 _ENVIRON_TOKEN = "opentelemetry-flask.token"
 
 
-def get_excluded_hosts():
-    hosts = configuration.Configuration().FLASK_EXCLUDED_HOSTS or []
-    if hosts:
-        hosts = str.split(hosts, ",")
-    return hosts
+def get_excluded_urls():
+    urls = configuration.Configuration().FLASK_EXCLUDED_URLS or []
+    if urls:
+        urls = str.split(urls, ",")
+    return ExcludeList(urls)
 
 
-def get_excluded_paths():
-    paths = configuration.Configuration().FLASK_EXCLUDED_PATHS or []
-    if paths:
-        paths = str.split(paths, ",")
-    return paths
-
-
-_excluded_hosts = get_excluded_hosts()
-_excluded_paths = get_excluded_paths()
+_excluded_urls = get_excluded_urls()
 
 
 def _rewrapped_app(wsgi_app):
@@ -92,9 +84,7 @@ def _rewrapped_app(wsgi_app):
         environ[_ENVIRON_STARTTIME_KEY] = time_ns()
 
         def _start_response(status, response_headers, *args, **kwargs):
-            if not disable_trace(
-                flask.request.url, _excluded_hosts, _excluded_paths
-            ):
+            if not _excluded_urls.url_disabled(flask.request.url):
                 span = flask.request.environ.get(_ENVIRON_SPAN_KEY)
 
                 if span:
@@ -116,7 +106,7 @@ def _rewrapped_app(wsgi_app):
 
 
 def _before_request():
-    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
+    if _excluded_urls.url_disabled(flask.request.url):
         return
 
     environ = flask.request.environ
@@ -148,7 +138,7 @@ def _before_request():
 
 
 def _teardown_request(exc):
-    if disable_trace(flask.request.url, _excluded_hosts, _excluded_paths):
+    if _excluded_urls.url_disabled(flask.request.url):
         return
 
     activation = flask.request.environ.get(_ENVIRON_ACTIVATION_KEY)

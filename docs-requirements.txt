@@ -25,7 +25,8 @@ wrapt>=1.0.0,<2.0.0
 celery>=4.0
 psutil~=5.7.0
 boto~=2.0
-google-cloud-trace >=0.23.0
-google-cloud-monitoring>=0.36.0
 botocore~=1.0
 starlette~=0.13
+fastapi~=0.58.1
+opentelemetry-exporter-cloud-trace==0.10b0
+opentelemetry-exporter-cloud-monitoring==0.10b0

@@ -2,7 +2,6 @@ import asyncio
 import os
 
 import asyncpg
-import pytest
 
 from opentelemetry.ext.asyncpg import AsyncPGInstrumentor
 from opentelemetry.test.test_base import TestBase
@@ -42,7 +41,6 @@ class TestFunctionalPsycopg(TestBase):
     def tearDownClass(cls):
         AsyncPGInstrumentor().uninstrument()
 
-    @pytest.mark.asyncpg
     def test_instrumented_execute_method_without_arguments(self, *_, **__):
         _await(self._connection.execute("SELECT 42;"))
         spans = self.memory_exporter.get_finished_spans()
@@ -60,7 +58,6 @@ class TestFunctionalPsycopg(TestBase):
             },
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_execute_method_with_arguments(self, *_, **__):
         _await(self._connection.execute("SELECT $1;", "1"))
         spans = self.memory_exporter.get_finished_spans()
@@ -79,7 +76,6 @@ class TestFunctionalPsycopg(TestBase):
             },
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_fetch_method_without_arguments(self, *_, **__):
         _await(self._connection.fetch("SELECT 42;"))
         spans = self.memory_exporter.get_finished_spans()
@@ -94,7 +90,6 @@ class TestFunctionalPsycopg(TestBase):
             },
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_fetch_method_with_arguments(self, *_, **__):
         _await(self._connection.fetch("SELECT $1;", "1"))
         spans = self.memory_exporter.get_finished_spans()
@@ -110,7 +105,6 @@ class TestFunctionalPsycopg(TestBase):
             },
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_executemany_method_with_arguments(self, *_, **__):
         _await(self._connection.executemany("SELECT $1;", [["1"], ["2"]]))
         spans = self.memory_exporter.get_finished_spans()
@@ -126,7 +120,6 @@ class TestFunctionalPsycopg(TestBase):
             spans[0].attributes,
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_execute_interface_error_method(self, *_, **__):
         with self.assertRaises(asyncpg.InterfaceError):
             _await(self._connection.execute("SELECT 42;", 1, 2, 3))
@@ -143,7 +136,6 @@ class TestFunctionalPsycopg(TestBase):
             },
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_transaction_method(self, *_, **__):
         async def _transaction_execute():
             async with self._connection.transaction():
@@ -190,7 +182,6 @@ class TestFunctionalPsycopg(TestBase):
             StatusCanonicalCode.OK, spans[2].status.canonical_code
         )
 
-    @pytest.mark.asyncpg
     def test_instrumented_failed_transaction_method(self, *_, **__):
         async def _transaction_execute():
             async with self._connection.transaction():

@@ -14,7 +14,7 @@ from google.protobuf.message import (
 )
 
 from opentelemetry.proto.common.v1.common_pb2 import (
-    AttributeKeyValue as opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue,
+    KeyValue as opentelemetry___proto___common___v1___common_pb2___KeyValue,
 )
 
 from typing import (
@@ -44,11 +44,11 @@ class Resource(google___protobuf___message___Message):
     dropped_attributes_count: builtin___int = ...
 
     @property
-    def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]: ...
+    def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___KeyValue]: ...
 
     def __init__(self,
         *,
-        attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___AttributeKeyValue]] = None,
+        attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
         dropped_attributes_count : typing___Optional[builtin___int] = None,
         ) -> None: ...
     if sys.version_info >= (3,):

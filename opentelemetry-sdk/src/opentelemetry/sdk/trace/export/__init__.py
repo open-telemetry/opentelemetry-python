@@ -120,7 +120,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if max_export_batch_size > max_queue_size:
             raise ValueError(
-                "max_export_batch_size must be less than and equal to max_queue_size."
+                "max_export_batch_size must be less than or equal to max_queue_size."
             )
 
         self.span_exporter = span_exporter

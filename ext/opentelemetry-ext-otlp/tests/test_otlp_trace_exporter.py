@@ -30,7 +30,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
     add_TraceServiceServicer_to_server,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AttributeKeyValue
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as CollectorResource,
 )
@@ -185,8 +185,10 @@ class TestOTLPSpanExporter(TestCase):
                 ResourceSpans(
                     resource=CollectorResource(
                         attributes=[
-                            AttributeKeyValue(key="a", int_value=1),
-                            AttributeKeyValue(key="b", bool_value=False),
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
                         ]
                     ),
                     instrumentation_library_spans=[
@@ -211,11 +213,13 @@ class TestOTLPSpanExporter(TestCase):
                                     ),
                                     kind=CollectorSpan.SpanKind.INTERNAL,
                                     attributes=[
-                                        AttributeKeyValue(
-                                            key="a", int_value=1
+                                        KeyValue(
+                                            key="a",
+                                            value=AnyValue(int_value=1),
                                         ),
-                                        AttributeKeyValue(
-                                            key="b", bool_value=True
+                                        KeyValue(
+                                            key="b",
+                                            value=AnyValue(bool_value=True),
                                         ),
                                     ],
                                     events=[
@@ -223,11 +227,17 @@ class TestOTLPSpanExporter(TestCase):
                                             name="a",
                                             time_unix_nano=1591240820506462784,
                                             attributes=[
-                                                AttributeKeyValue(
-                                                    key="a", int_value=1
+                                                KeyValue(
+                                                    key="a",
+                                                    value=AnyValue(
+                                                        int_value=1
+                                                    ),
                                                 ),
-                                                AttributeKeyValue(
-                                                    key="b", int_value=False
+                                                KeyValue(
+                                                    key="b",
+                                                    value=AnyValue(
+                                                        bool_value=False
+                                                    ),
                                                 ),
                                             ],
                                         )
@@ -240,11 +250,17 @@ class TestOTLPSpanExporter(TestCase):
                                             ),
                                             span_id=int.to_bytes(2, 8, "big"),
                                             attributes=[
-                                                AttributeKeyValue(
-                                                    key="a", int_value=1
+                                                KeyValue(
+                                                    key="a",
+                                                    value=AnyValue(
+                                                        int_value=1
+                                                    ),
                                                 ),
-                                                AttributeKeyValue(
-                                                    key="b", bool_value=False
+                                                KeyValue(
+                                                    key="b",
+                                                    value=AnyValue(
+                                                        bool_value=False
+                                                    ),
                                                 ),
                                             ],
                                         )

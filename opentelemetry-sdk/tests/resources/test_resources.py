@@ -86,28 +86,13 @@ class TestResources(unittest.TestCase):
         labels["cost"] = 999.91
         self.assertEqual(resource.labels, labels_copy)
 
-    def test_otel_resource_detector(self):
-        detector = resources.OTELResourceDetector()
-        self.assertEqual(detector.detect(), resources.Resource.create_empty())
-        os.environ["OTEL_RESOURCE"] = "k=v"
-        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
-        os.environ["OTEL_RESOURCE"] = "    k  = v   "
-        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
-        os.environ["OTEL_RESOURCE"] = "k=v,k2=v2"
-        self.assertEqual(
-            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
-        )
-        os.environ["OTEL_RESOURCE"] = "    k  = v  , k2   = v2 "
-        self.assertEqual(
-            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
-        )
-
-    def test_aggregated_resources(self):
+    def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])
         self.assertEqual(
             aggregated_resources, resources.Resource.create_empty()
         )
 
+    def test_aggregated_resources_with_static_resource(self):
         static_resource = resources.Resource({"static_key": "static_value"})
 
         self.assertEqual(
@@ -117,9 +102,10 @@ class TestResources(unittest.TestCase):
             static_resource,
         )
 
+        # Static resource values should never be overwritten
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
         resource_detector.detect.return_value = resources.Resource(
-            {"static_key": "overwrite_existing_value", "key": "value"}
+            {"static_key": "try_to_overwrite_existing_value", "key": "value"}
         )
         self.assertEqual(
             resources.get_aggregated_resources(
@@ -128,6 +114,7 @@ class TestResources(unittest.TestCase):
             resources.Resource({"static_key": "static_value", "key": "value"}),
         )
 
+    def test_aggregated_resources_multiple_detectors(self):
         resource_detector1 = mock.Mock(spec=resources.ResourceDetector)
         resource_detector1.detect.return_value = resources.Resource(
             {"key1": "value1"}
@@ -139,11 +126,13 @@ class TestResources(unittest.TestCase):
         resource_detector3 = mock.Mock(spec=resources.ResourceDetector)
         resource_detector3.detect.return_value = resources.Resource(
             {
-                "key2": "overwrite_existing_value",
-                "key3": "overwrite_existing_value",
+                "key2": "try_to_overwrite_existing_value",
+                "key3": "try_to_overwrite_existing_value",
                 "key4": "value4",
             }
         )
+
+        # New values should not overwrite existing values
         self.assertEqual(
             resources.get_aggregated_resources(
                 [resource_detector1, resource_detector2, resource_detector3]
@@ -158,21 +147,56 @@ class TestResources(unittest.TestCase):
             ),
         )
 
+    def test_resource_detector_ignore_error(self):
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
         resource_detector.detect.side_effect = Exception()
         resource_detector.raise_on_error = False
         self.assertEqual(
-            resources.get_aggregated_resources(
-                [resource_detector, resource_detector1]
-            ),
-            resources.Resource({"key1": "value1"}),
+            resources.get_aggregated_resources([resource_detector]),
+            resources.Resource.create_empty(),
         )
 
+    def test_resource_detector_raise_error(self):
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
         resource_detector.detect.side_effect = Exception()
         resource_detector.raise_on_error = True
         self.assertRaises(
-            Exception,
-            resources.get_aggregated_resources,
-            [resource_detector, resource_detector1],
+            Exception, resources.get_aggregated_resources, [resource_detector],
+        )
+
+
+class TestOTELResourceDetector(unittest.TestCase):
+    def setUp(self) -> None:
+        os.environ["OTEL_RESOURCE"] = ""
+
+    def tearDown(self) -> None:
+        os.environ.pop("OTEL_RESOURCE")
+
+    def test_empty(self):
+        detector = resources.OTELResourceDetector()
+        os.environ["OTEL_RESOURCE"] = ""
+        self.assertEqual(detector.detect(), resources.Resource.create_empty())
+
+    def test_one(self):
+        detector = resources.OTELResourceDetector()
+        os.environ["OTEL_RESOURCE"] = "k=v"
+        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
+
+    def test_one_with_whitespace(self):
+        detector = resources.OTELResourceDetector()
+        os.environ["OTEL_RESOURCE"] = "    k  = v   "
+        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
+
+    def test_multiple(self):
+        detector = resources.OTELResourceDetector()
+        os.environ["OTEL_RESOURCE"] = "k=v,k2=v2"
+        self.assertEqual(
+            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
+        )
+
+    def test_multiple_with_whitespace(self):
+        detector = resources.OTELResourceDetector()
+        os.environ["OTEL_RESOURCE"] = "    k  = v  , k2   = v2 "
+        self.assertEqual(
+            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )

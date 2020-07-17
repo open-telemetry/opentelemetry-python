@@ -86,6 +86,9 @@ class DatadogFormat(HTTPTextFormat):
         context: typing.Optional[Context] = None,
     ) -> None:
         span = get_current_span(context)
+        span_context = span.get_context()
+        if span_context == trace.INVALID_SPAN_CONTEXT:
+            return
         sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
         set_in_carrier(
             carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),

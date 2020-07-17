@@ -314,6 +314,8 @@ def _convert_attribute_to_tag(key, attr):
         return jaeger.Tag(key=key, vLong=attr, vType=jaeger.TagType.LONG)
     if isinstance(attr, float):
         return jaeger.Tag(key=key, vDouble=attr, vType=jaeger.TagType.DOUBLE)
+    if isinstance(attr, tuple):
+        return jaeger.Tag(key=key, vStr=str(attr), vType=jaeger.TagType.STRING)
     logger.warning("Could not serialize attribute %s:%r to tag", key, attr)
     return None
 

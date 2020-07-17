@@ -200,6 +200,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
+        otel_spans[0].set_attribute("key_tuple", ("tuple_element",))
         otel_spans[0].resource = Resource(
             labels={"key_resource": "some_resource"}
         )
@@ -240,6 +241,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         key="key_float",
                         vType=jaeger.TagType.DOUBLE,
                         vDouble=111.22,
+                    ),
+                    jaeger.Tag(
+                        key="key_tuple",
+                        vType=jaeger.TagType.STRING,
+                        vStr="('tuple_element',)",
                     ),
                     jaeger.Tag(
                         key="key_resource",

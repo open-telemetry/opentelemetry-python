@@ -42,15 +42,12 @@ API
 ---
 """
 
-import typing
-
 import psycopg2
-import wrapt
 
 from opentelemetry.ext import dbapi
 from opentelemetry.ext.psycopg2.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.trace import TracerProvider, get_tracer
+from opentelemetry.trace import get_tracer
 
 
 class Psycopg2Instrumentor(BaseInstrumentor):
@@ -71,15 +68,15 @@ class Psycopg2Instrumentor(BaseInstrumentor):
 
         tracer_provider = kwargs.get("tracer_provider")
 
-        tracer = get_tracer(__name__, __version__, tracer_provider)
-
         dbapi.wrap_connect(
-            tracer,
+            __name__,
             psycopg2,
             "connect",
             self._DATABASE_COMPONENT,
             self._DATABASE_TYPE,
             self._CONNECTION_ATTRIBUTES,
+            version=__version__,
+            tracer_provider=tracer_provider,
         )
 
     def _uninstrument(self, **kwargs):

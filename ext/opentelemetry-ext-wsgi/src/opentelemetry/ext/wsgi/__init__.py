@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 This library provides a WSGI middleware that can be used on any WSGI framework
 (such as Django / Flask) to track requests timing through OpenTelemetry.
@@ -211,8 +210,8 @@ class OpenTelemetryMiddleware:
                 return _end_span_after_iterating(
                     iterable, span, self.tracer, token
                 )
-        except:  # noqa
-            # TODO Set span status (cf. https://github.com/open-telemetry/opentelemetry-python/issues/292)
+        except Exception as ex:
+            span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
             span.end()
             context.detach(token)
             raise

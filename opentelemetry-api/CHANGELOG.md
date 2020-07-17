@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Return INVALID_SPAN if no TracerProvider set for get_current_span
+  ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+
 ## 0.9b0
 
 Released 2020-06-10
