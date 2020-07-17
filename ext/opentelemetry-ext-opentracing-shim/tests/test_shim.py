@@ -21,11 +21,13 @@ from unittest.mock import Mock
 
 import opentracing
 
-from opentelemetry.ext.opentracing_shim import (
-    create_tracer, SpanContextShim, SpanShim
-)
 from opentelemetry import propagators, trace
-from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.ext.opentracing_shim import (
+    SpanContextShim,
+    SpanShim,
+    create_tracer,
+    util,
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.test.mock_httptextformat import (
     MockHTTPTextFormat,

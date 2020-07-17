@@ -90,12 +90,17 @@ import logging
 import opentracing
 from deprecated import deprecated
 
-from opentelemetry.trace import get_current_span, INVALID_SPAN_CONTEXT, Link
 from opentelemetry import propagators
 from opentelemetry.context import Context
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
-from opentelemetry.trace import DefaultSpan, set_span_in_context
+from opentelemetry.trace import (
+    INVALID_SPAN_CONTEXT,
+    DefaultSpan,
+    Link,
+    get_current_span,
+    set_span_in_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -265,12 +270,14 @@ class SpanShim(opentracing.Span):
         super().log_event(event, payload=payload)
 
     def set_baggage_item(self, key, value):
-        copy = {key_: value_ for key_, value_ in self._context._baggage.items()}
+        # pylint: disable=protected-access
+        copy = self._context._baggage.copy()
         copy.update({key: value})
 
         self._context._baggage = Context(copy)
 
     def get_baggage_item(self, key):
+        # pylint: disable=protected-access
         return self._context._baggage[key]
 
 
