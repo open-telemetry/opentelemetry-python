@@ -79,7 +79,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         spans_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans_list), 1)
         span = spans_list[0]
-
         self.assertEqual(span.name, "")
         self.assertIs(span.kind, trace.SpanKind.SERVER)
         self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)

@@ -30,7 +30,7 @@ from opentelemetry.instrumentation.utils import unwrap
 # pylint:disable=import-outside-toplevel
 # pylint:disable=import-self
 # pylint:disable=unused-argument
-from concurrent import futures  # isort:skip
+# isort:skip
 
 
 class GrpcInstrumentorServer(BaseInstrumentor):
