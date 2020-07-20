@@ -91,7 +91,6 @@ import opentracing
 from deprecated import deprecated
 
 from opentelemetry import propagators
-from opentelemetry.correlationcontext import set_correlation, get_correlation
 from opentelemetry.context import Context
 from opentelemetry.correlationcontext import get_correlation, set_correlation
 from opentelemetry.instrumentation.opentracing_shim import util
