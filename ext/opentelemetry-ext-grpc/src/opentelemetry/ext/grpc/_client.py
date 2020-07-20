@@ -63,7 +63,7 @@ def _inject_span_context(metadata: MutableMapping[str, str]) -> None:
     propagators.inject(append_metadata, metadata)
 
 
-def _make_future_done_callback(span, rpc_info):
+def _make_future_done_callback(span, rpc_info, client_info, metrics_recorder):
     def callback(response_future):
         with span:
             code = response_future.code()
@@ -72,6 +72,10 @@ def _make_future_done_callback(span, rpc_info):
                 return
             response = response_future.result()
             rpc_info.response = response
+            if "ByteSize" in dir(response):
+                metrics_recorder.record_bytes_in(
+                    response.ByteSize(), client_info.full_method
+                )
 
     return callback
 
@@ -90,12 +94,17 @@ class OpenTelemetryClientInterceptor(
         )
 
     # pylint:disable=no-self-use
-    def _trace_result(self, guarded_span, rpc_info, result):
+    def _trace_result(self, guarded_span, rpc_info, result, client_info):
         # If the RPC is called asynchronously, release the guard and add a
         # callback so that the span can be finished once the future is done.
         if isinstance(result, grpc.Future):
             result.add_done_callback(
-                _make_future_done_callback(guarded_span.release(), rpc_info)
+                _make_future_done_callback(
+                    guarded_span.release(),
+                    rpc_info,
+                    client_info,
+                    self._metrics_recorder,
+                )
             )
             return result
         response = result
@@ -106,6 +115,11 @@ class OpenTelemetryClientInterceptor(
         if isinstance(result, tuple):
             response = result[0]
         rpc_info.response = response
+
+        if "ByteSize" in dir(response):
+            self._metrics_recorder.record_bytes_in(
+                response.ByteSize(), client_info.full_method
+            )
         return result
 
     def _start_guarded_span(self, *args, **kwargs):
@@ -154,13 +168,9 @@ class OpenTelemetryClientInterceptor(
                     )
                     raise
 
-                ret = self._trace_result(guarded_span, rpc_info, result)
-
-                if "ByteSize" in dir(rpc_info.response):
-                    self._metrics_recorder.record_bytes_in(
-                        rpc_info.response.ByteSize(), client_info.full_method
-                    )
-                return ret
+                return self._trace_result(
+                    guarded_span, rpc_info, result, client_info
+                )
 
     # For RPCs that stream responses, the result can be a generator. To record
     # the span across the generated responses and detect any errors, we wrap
@@ -253,10 +263,6 @@ class OpenTelemetryClientInterceptor(
                     )
                     raise
 
-                ret = self._trace_result(guarded_span, rpc_info, result)
-
-                self._metrics_recorder.record_bytes_in(
-                    rpc_info.response.ByteSize(), client_info.full_method
+                return self._trace_result(
+                    guarded_span, rpc_info, result, client_info
                 )
-
-                return ret
