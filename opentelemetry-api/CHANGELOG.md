@@ -5,6 +5,7 @@
 - Return INVALID_SPAN if no TracerProvider set for get_current_span
   ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
 - Rename record_error to record_exception
+  ([#927](https://github.com/open-telemetry/opentelemetry-python/pull/927))
 
 ## 0.9b0
 
