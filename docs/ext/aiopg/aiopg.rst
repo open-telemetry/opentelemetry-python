@@ -1,5 +1,5 @@
-OpenTelemetry aiopg Integration
-===============================
+OpenTelemetry aiopg instrumentation
+===================================
 
 .. automodule:: opentelemetry.instrumentation.aiopg
     :members:

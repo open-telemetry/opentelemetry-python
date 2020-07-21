@@ -1,5 +1,5 @@
 OpenTelemetry aiopg instrumentation
-================================
+===================================
 
 |pypi|
 
