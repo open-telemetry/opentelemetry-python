@@ -15,14 +15,13 @@
 import grpc
 
 import opentelemetry.ext.grpc
-from opentelemetry import metrics, trace
+from opentelemetry import trace
 from opentelemetry.ext.grpc import client_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_channel
 from opentelemetry.sdk.metrics.export.aggregate import (
     MinMaxSumCountAggregator,
     SumAggregator,
 )
-from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.test.test_base import TestBase
 from tests.protobuf import test_server_pb2_grpc
 
@@ -40,16 +39,13 @@ class TestClientProto(TestBase):
         super().setUp()
         self.server = create_test_server(25565)
         self.server.start()
-        meter = metrics.get_meter(__name__)
-        interceptor = client_interceptor(meter=meter)
+        self.interceptor = client_interceptor(
+            exporter=self.memory_metrics_exporter
+        )
         self.channel = intercept_channel(
-            grpc.insecure_channel("localhost:25565"), interceptor
+            grpc.insecure_channel("localhost:25565"), self.interceptor
         )
         self._stub = test_server_pb2_grpc.GRPCTestServerStub(self.channel)
-
-        self._controller = PushController(
-            meter, self.memory_metrics_exporter, 30
-        )
 
     def tearDown(self):
         super().tearDown()
@@ -57,7 +53,7 @@ class TestClientProto(TestBase):
         self.server.stop(None)
 
     def _verify_success_records(self, num_bytes_out, num_bytes_in, method):
-        self._controller.tick()
+        self.interceptor.controller.tick()
         records = self.memory_metrics_exporter.get_exported_metrics()
         self.assertEqual(len(records), 3)
 
@@ -167,7 +163,7 @@ class TestClientProto(TestBase):
         )
 
     def _verify_error_records(self, method):
-        self._controller.tick()
+        self.interceptor.controller.tick()
         records = self.memory_metrics_exporter.get_exported_metrics()
         self.assertEqual(len(records), 3)
 

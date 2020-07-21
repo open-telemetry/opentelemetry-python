@@ -24,7 +24,8 @@ from typing import MutableMapping
 
 import grpc
 
-from opentelemetry import propagators, trace
+from opentelemetry import metrics, propagators, trace
+from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 from . import grpcext
@@ -83,9 +84,12 @@ def _make_future_done_callback(span, rpc_info, client_info, metrics_recorder):
 class OpenTelemetryClientInterceptor(
     grpcext.UnaryClientInterceptor, grpcext.StreamClientInterceptor
 ):
-    def __init__(self, tracer, meter):
+    def __init__(self, tracer, exporter, interval):
         self._tracer = tracer
-        self._meter = meter
+        self._meter = metrics.get_meter(__name__)
+        self.controller = PushController(
+            meter=self._meter, exporter=exporter, interval=interval
+        )
         self._metrics_recorder = TimedMetricRecorder(self._meter, "client")
 
     def _start_span(self, method):

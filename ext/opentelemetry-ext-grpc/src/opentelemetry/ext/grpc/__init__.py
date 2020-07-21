@@ -158,11 +158,13 @@ class GrpcInstrumentorClient(BaseInstrumentor):
             yield intercept_channel(channel, client_interceptor())
 
 
-def client_interceptor(tracer_provider=None, meter=None):
+def client_interceptor(tracer_provider=None, exporter=None, interval=30):
     """Create a gRPC client channel interceptor.
 
     Args:
         tracer: The tracer to use to create client-side spans.
+        exporter: The exporter that will receive client metrics
+        interval: Time between every export call
 
     Returns:
         An invocation-side interceptor object.
@@ -171,7 +173,7 @@ def client_interceptor(tracer_provider=None, meter=None):
 
     tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
-    return _client.OpenTelemetryClientInterceptor(tracer, meter)
+    return _client.OpenTelemetryClientInterceptor(tracer, exporter, interval)
 
 
 def server_interceptor(tracer_provider=None):
