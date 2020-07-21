@@ -16,6 +16,98 @@
 # pylint:disable=relative-beyond-top-level
 # pylint:disable=import-error
 # pylint:disable=no-self-use
+"""
+Usage Client
+-----
+.. code-block:: python
+
+    import logging
+
+    import grpc
+
+    from opentelemetry import trace
+    from opentelemetry.ext.grpc import GrpcInstrumentorClient, client_interceptor
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        ConsoleSpanExporter,
+        SimpleExportSpanProcessor,
+    )
+
+    try:
+        from .gen import helloworld_pb2, helloworld_pb2_grpc
+    except ImportError:
+        from gen import helloworld_pb2, helloworld_pb2_grpc
+
+    trace.set_tracer_provider(TracerProvider())
+    trace.get_tracer_provider().add_span_processor(
+        SimpleExportSpanProcessor(ConsoleSpanExporter())
+    )
+    instrumentor = GrpcInstrumentorClient()
+    instrumentor.instrument()
+
+    def run():
+        with grpc.insecure_channel("localhost:50051") as channel:
+
+            stub = helloworld_pb2_grpc.GreeterStub(channel)
+            response = stub.SayHello(helloworld_pb2.HelloRequest(name="YOU"))
+
+        print("Greeter client received: " + response.message)
+
+
+    if __name__ == "__main__":
+        logging.basicConfig()
+        run()
+
+Usage Server
+-----
+.. code-block:: python
+
+    import logging
+    from concurrent import futures
+
+    import grpc
+
+    from opentelemetry import trace
+    from opentelemetry.ext.grpc import GrpcInstrumentorServer, server_interceptor
+    from opentelemetry.ext.grpc.grpcext import intercept_server
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        ConsoleSpanExporter,
+        SimpleExportSpanProcessor,
+    )
+
+    try:
+        from .gen import helloworld_pb2, helloworld_pb2_grpc
+    except ImportError:
+        from gen import helloworld_pb2, helloworld_pb2_grpc
+
+    trace.set_tracer_provider(TracerProvider())
+    trace.get_tracer_provider().add_span_processor(
+        SimpleExportSpanProcessor(ConsoleSpanExporter())
+    )
+    grpc_server_instrumentor = GrpcInstrumentorServer()
+    grpc_server_instrumentor.instrument()
+
+
+    class Greeter(helloworld_pb2_grpc.GreeterServicer):
+        def SayHello(self, request, context):
+            return helloworld_pb2.HelloReply(message="Hello, %s!" % request.name)
+
+
+    def serve():
+
+        server = grpc.server(futures.ThreadPoolExecutor())
+
+        helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
+        server.add_insecure_port("[::]:50051")
+        server.start()
+        server.wait_for_termination()
+
+
+    if __name__ == "__main__":
+        logging.basicConfig()
+        serve()
+"""
 from contextlib import contextmanager
 
 import grpc
@@ -34,9 +126,6 @@ from opentelemetry.instrumentation.utils import unwrap
 
 
 class GrpcInstrumentorServer(BaseInstrumentor):
-    def __init__(self):
-        self.server = None
-
     def _instrument(self, **kwargs):
         _wrap("grpc", "server", self.wrapper_fn)
 
@@ -44,16 +133,12 @@ class GrpcInstrumentorServer(BaseInstrumentor):
         unwrap(grpc, "server")
 
     def wrapper_fn(self, original_func, instance, args, kwargs):
-        self.server = original_func(*args, **kwargs)
-        self.server = intercept_server(self.server, server_interceptor())
+        server = original_func(*args, **kwargs)
+        return intercept_server(server, server_interceptor())
 
 
 class GrpcInstrumentorClient(BaseInstrumentor):
-    def __init__(self):
-        self.channel = None
-
     def _instrument(self, **kwargs):
-
         if kwargs.get("channel_type") == "secure":
             _wrap("grpc", "secure_channel", self.wrapper_fn)
 
@@ -70,8 +155,7 @@ class GrpcInstrumentorClient(BaseInstrumentor):
     @contextmanager
     def wrapper_fn(self, original_func, instance, args, kwargs):
         with original_func(*args, **kwargs) as channel:
-            self.channel = intercept_channel(channel, client_interceptor())
-            yield self.channel
+            yield intercept_channel(channel, client_interceptor())
 
 
 def client_interceptor(tracer_provider=None):

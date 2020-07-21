@@ -55,13 +55,10 @@ class TestOpenTelemetryServerInterceptor(TestBase):
 
         grpc_server_instrumentor = GrpcInstrumentorServer()
         grpc_server_instrumentor.instrument()
-
         server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=1),
             options=(("grpc.so_reuseport", 0),),
         )
-
-        server = grpc_server_instrumentor.server
 
         server.add_generic_rpc_handlers((UnaryUnaryRpcHandler(handler),))
 
@@ -72,14 +69,14 @@ class TestOpenTelemetryServerInterceptor(TestBase):
 
         try:
             server.start()
-            channel.unary_unary("")(b"")
+            channel.unary_unary("test")(b"test")
         finally:
             server.stop(None)
 
         spans_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans_list), 1)
         span = spans_list[0]
-        self.assertEqual(span.name, "")
+        self.assertEqual(span.name, "test")
         self.assertIs(span.kind, trace.SpanKind.SERVER)
         self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
         grpc_server_instrumentor.uninstrument()
