@@ -25,7 +25,6 @@ Usage
 
     import aiopg
     from opentelemetry.ext.aiopg import AiopgInstrumentor
-    from opentelemetry.sdk.trace import TracerProvider
 
     AiopgInstrumentor().instrument()
 
