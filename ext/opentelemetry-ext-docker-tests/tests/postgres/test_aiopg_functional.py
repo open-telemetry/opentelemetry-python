@@ -20,7 +20,7 @@ import psycopg2
 import pytest
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.aiopg import AiopgInstrumentor
+from opentelemetry.instrumentation.aiopg import AiopgInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")

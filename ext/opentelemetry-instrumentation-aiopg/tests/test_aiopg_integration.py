@@ -19,10 +19,12 @@ from unittest.mock import MagicMock
 import aiopg
 from aiopg.utils import _ContextManager, _PoolAcquireContextManager
 
-import opentelemetry.ext.aiopg
+import opentelemetry.instrumentation.aiopg
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.aiopg import AiopgInstrumentor, wrappers
-from opentelemetry.ext.aiopg.aiopg_integration import AiopgIntegration
+from opentelemetry.instrumentation.aiopg import AiopgInstrumentor, wrappers
+from opentelemetry.instrumentation.aiopg.aiopg_integration import (
+    AiopgIntegration,
+)
 from opentelemetry.sdk import resources
 from opentelemetry.test.test_base import TestBase
 
@@ -62,7 +64,9 @@ class TestAiopgInstrumentor(TestBase):
         span = spans_list[0]
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.ext.aiopg)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.aiopg
+        )
 
         # check that no spans are generated after uninstrument
         AiopgInstrumentor().uninstrument()
@@ -90,7 +94,9 @@ class TestAiopgInstrumentor(TestBase):
         span = spans_list[0]
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.ext.aiopg)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.aiopg
+        )
 
         # check that no spans are generated after uninstrument
         AiopgInstrumentor().uninstrument()

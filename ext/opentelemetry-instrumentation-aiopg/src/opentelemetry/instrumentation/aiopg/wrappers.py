@@ -22,7 +22,7 @@ Usage
 .. code-block:: python
 
     from opentelemetry import trace
-    from opentelemetry.ext.aiopg import trace_integration
+    from opentelemetry.instrumentation.aiopg import trace_integration
     from opentelemetry.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
@@ -38,11 +38,11 @@ import typing
 import aiopg
 import wrapt
 
-from opentelemetry.ext.aiopg.aiopg_integration import (
+from opentelemetry.instrumentation.aiopg.aiopg_integration import (
     AiopgIntegration,
     get_traced_connection_proxy,
 )
-from opentelemetry.ext.aiopg.version import __version__
+from opentelemetry.instrumentation.aiopg.version import __version__
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import TracerProvider
 

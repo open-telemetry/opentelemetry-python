@@ -24,7 +24,7 @@ Usage
 .. code-block:: python
 
     import aiopg
-    from opentelemetry.ext.aiopg import AiopgInstrumentor
+    from opentelemetry.instrumentation.aiopg import AiopgInstrumentor
 
     AiopgInstrumentor().instrument()
 
@@ -45,8 +45,8 @@ API
 ---
 """
 
-from opentelemetry.ext.aiopg import wrappers
-from opentelemetry.ext.aiopg.version import __version__
+from opentelemetry.instrumentation.aiopg import wrappers
+from opentelemetry.instrumentation.aiopg.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 

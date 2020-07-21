@@ -1,7 +1,7 @@
 OpenTelemetry aiopg Integration
 ===============================
 
-.. automodule:: opentelemetry.ext.aiopg
+.. automodule:: opentelemetry.instrumentation.aiopg
     :members:
     :undoc-members:
     :show-inheritance:
