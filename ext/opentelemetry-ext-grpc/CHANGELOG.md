@@ -4,6 +4,8 @@
 
 - Add status code to gRPC client spans
   ([896](https://github.com/open-telemetry/opentelemetry-python/pull/896))
+- Add gRPC client and server instrumentors
+  ([788](https://github.com/open-telemetry/opentelemetry-python/pull/788))
 
 ## 0.8b0
 
