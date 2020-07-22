@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-## Version 0.11b0
+- Update environment variable names
+  ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
 
-Released 2020-07-28
+## Version 0.11b0
 
 - Return INVALID_SPAN if no TracerProvider set for get_current_span
   ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
