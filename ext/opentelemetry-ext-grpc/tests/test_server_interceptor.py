@@ -22,7 +22,7 @@ import grpc
 
 import opentelemetry.ext.grpc
 from opentelemetry import trace
-from opentelemetry.ext.grpc import server_interceptor
+from opentelemetry.ext.grpc import GrpcInstrumentorServer, server_interceptor
 from opentelemetry.ext.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.test.test_base import TestBase
@@ -49,6 +49,62 @@ class UnaryUnaryRpcHandler(grpc.GenericRpcHandler):
 
 
 class TestOpenTelemetryServerInterceptor(TestBase):
+    def test_instrumentor(self):
+        def handler(request, context):
+            return b""
+
+        grpc_server_instrumentor = GrpcInstrumentorServer()
+        grpc_server_instrumentor.instrument()
+        server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=1),
+            options=(("grpc.so_reuseport", 0),),
+        )
+
+        server.add_generic_rpc_handlers((UnaryUnaryRpcHandler(handler),))
+
+        port = server.add_insecure_port("[::]:0")
+        channel = grpc.insecure_channel("localhost:{:d}".format(port))
+
+        try:
+            server.start()
+            channel.unary_unary("test")(b"test")
+        finally:
+            server.stop(None)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+        self.assertEqual(span.name, "test")
+        self.assertIs(span.kind, trace.SpanKind.SERVER)
+        self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
+        grpc_server_instrumentor.uninstrument()
+
+    def test_uninstrument(self):
+        def handler(request, context):
+            return b""
+
+        grpc_server_instrumentor = GrpcInstrumentorServer()
+        grpc_server_instrumentor.instrument()
+        grpc_server_instrumentor.uninstrument()
+        server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=1),
+            options=(("grpc.so_reuseport", 0),),
+        )
+
+        server.add_generic_rpc_handlers((UnaryUnaryRpcHandler(handler),))
+
+        port = server.add_insecure_port("[::]:0")
+        channel = grpc.insecure_channel("localhost:{:d}".format(port))
+
+        try:
+            server.start()
+            channel.unary_unary("test")(b"test")
+        finally:
+            server.stop(None)
+
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 0)
+
     def test_create_span(self):
         """Check that the interceptor wraps calls with spans server-side."""
 
