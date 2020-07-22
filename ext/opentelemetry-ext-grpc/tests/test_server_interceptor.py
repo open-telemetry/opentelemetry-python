@@ -80,7 +80,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         grpc_server_instrumentor.uninstrument()
 
     def test_uninstrument(self):
-
         def handler(request, context):
             return b""
 
@@ -105,8 +104,6 @@ class TestOpenTelemetryServerInterceptor(TestBase):
 
         spans_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans_list), 0)
-
-
 
     def test_create_span(self):
         """Check that the interceptor wraps calls with spans server-side."""
