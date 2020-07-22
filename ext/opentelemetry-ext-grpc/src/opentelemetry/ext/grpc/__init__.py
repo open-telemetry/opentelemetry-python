@@ -18,7 +18,7 @@
 # pylint:disable=no-self-use
 """
 Usage Client
------
+------------
 .. code-block:: python
 
     import logging
@@ -59,7 +59,7 @@ Usage Client
         run()
 
 Usage Server
------
+------------
 .. code-block:: python
 
     import logging
