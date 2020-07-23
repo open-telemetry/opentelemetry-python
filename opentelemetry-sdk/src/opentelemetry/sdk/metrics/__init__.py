@@ -75,7 +75,7 @@ class BaseBoundInstrument:
         with self._view_datas_lock:
             # record the value for each view_data belonging to this aggregator
             for view_data in self.view_datas:
-                view_data.record(value)
+                view_data.record(value, self._labels)
 
     def release(self):
         self.decrease_ref_count()

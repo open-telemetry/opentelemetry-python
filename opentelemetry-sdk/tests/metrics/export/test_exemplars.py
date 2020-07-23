@@ -13,31 +13,32 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch
 from time import time
+from unittest.mock import patch
 
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider, ValueRecorder
 from opentelemetry.sdk.metrics.export.aggregate import (
-    SumAggregator,
-    MinMaxSumCountAggregator,
     HistogramAggregator,
-    Exemplar,
-    RandomExemplarSampler,
     MinMaxExemplarSampler,
+    MinMaxSumCountAggregator,
+    SumAggregator,
+    ValueObserverAggregator,
+)
+from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.export.exemplars import (
     BucketedExemplarSampler,
+    Exemplar,
     ExemplarManager,
-    ValueObserverAggregator
+    RandomExemplarSampler,
 )
-from opentelemetry.sdk.metrics import (
-    MeterProvider,
-    ValueRecorder,
+from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import (
+    InMemoryMetricsExporter,
 )
-from opentelemetry import trace, metrics
+from opentelemetry.sdk.metrics.view import View, ViewConfig
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace.sampling import ALWAYS_OFF, ALWAYS_ON
 
-from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import InMemoryMetricsExporter
-from opentelemetry.sdk.metrics.view import View, ViewConfig
-from opentelemetry.sdk.metrics.export.controller import PushController
 
 class TestRandomExemplarSampler(unittest.TestCase):
     def test_sample(self):
@@ -57,8 +58,9 @@ class TestRandomExemplarSampler(unittest.TestCase):
         self.assertEqual(exemplar1.sample_count, 1)
         self.assertEqual(exemplar2.sample_count, 1)
 
-        def _patched_randint(mn, mx):
-            return mn
+        def _patched_randint(minimum, maximum):
+            # pylint: disable=unused-argument
+            return minimum
 
         with patch("random.randint", _patched_randint):
             sampler.sample(exemplar3)
@@ -66,8 +68,9 @@ class TestRandomExemplarSampler(unittest.TestCase):
             self.assertEqual(sampler.sample_set[0], exemplar3)
             self.assertEqual(exemplar3.sample_count, 1.5)
             self.assertEqual(exemplar2.sample_count, 1.5)
-        
-        def _patched_randint(mn, mx):
+
+        def _patched_randint(minimum, maximum):
+            # pylint: disable=unused-argument
             return 1
 
         with patch("random.randint", _patched_randint):
@@ -94,9 +97,9 @@ class TestRandomExemplarSampler(unittest.TestCase):
         set1 = [1, 2, 3]
         set2 = [4, 5, 6]
         sampler = RandomExemplarSampler(6)
-        self.assertEqual(set1+set2, sampler.merge(set1, set2))
+        self.assertEqual(set1 + set2, sampler.merge(set1, set2))
         sampler = RandomExemplarSampler(8)
-        self.assertEqual(set1+set2, sampler.merge(set1, set2))
+        self.assertEqual(set1 + set2, sampler.merge(set1, set2))
         sampler = RandomExemplarSampler(4)
         self.assertEqual(4, len(sampler.merge(set1, set2)))
 
@@ -145,7 +148,9 @@ class TestMinMaxExemplarSampler(unittest.TestCase):
 
 class TestBucketedExemplarSampler(unittest.TestCase):
     def test_exemplars(self):
-        sampler = BucketedExemplarSampler(1, boundaries=[2, 4, 7], statistical=True)
+        sampler = BucketedExemplarSampler(
+            1, boundaries=[2, 4, 7], statistical=True
+        )
         sampler.sample(Exemplar(3, time()), bucket_index=1)
         self.assertEqual(len(sampler.sample_set), 1)
         self.assertEqual(sampler.sample_set[0].value, 3)
@@ -156,7 +161,8 @@ class TestBucketedExemplarSampler(unittest.TestCase):
         self.assertEqual(sampler.sample_set[1].value, 5)
         self.assertEqual(sampler.sample_set[1].sample_count, 1)
 
-        def _patched_randint(mn, mx):
+        def _patched_randint(minimum, maximum):
+            # pylint: disable=unused-argument
             return 0
 
         with patch("random.randint", _patched_randint):
@@ -178,20 +184,35 @@ class TestBucketedExemplarSampler(unittest.TestCase):
     def test_merge(self):
         sampler = BucketedExemplarSampler(1, boundaries=[3, 4, 6])
 
-        self.assertEqual(len(sampler.merge([Exemplar(1, time())], [Exemplar(2, time())])), 1)
+        self.assertEqual(
+            len(sampler.merge([Exemplar(1, time())], [Exemplar(2, time())])), 1
+        )
 
-        self.assertEqual(len(sampler.merge([Exemplar(1, time()), Exemplar(5, time())], [Exemplar(2, time())])), 2)
+        self.assertEqual(
+            len(
+                sampler.merge(
+                    [Exemplar(1, time()), Exemplar(5, time())],
+                    [Exemplar(2, time())],
+                )
+            ),
+            2,
+        )
 
 
 class TestExemplarManager(unittest.TestCase):
     def test_statistical(self):
         config = {"statistical_exemplars": True, "num_exemplars": 1}
-        manager = ExemplarManager(config, MinMaxExemplarSampler, RandomExemplarSampler)
+        manager = ExemplarManager(
+            config, MinMaxExemplarSampler, RandomExemplarSampler
+        )
         self.assertIsInstance(manager.exemplar_sampler, RandomExemplarSampler)
         manager.sample(5, {"dropped_label": "value"})
         self.assertEqual(len(manager.exemplar_sampler.sample_set), 1)
         self.assertEqual(manager.exemplar_sampler.sample_set[0].value, 5)
-        self.assertEqual(manager.exemplar_sampler.sample_set[0].dropped_labels, {"dropped_label": "value"})
+        self.assertEqual(
+            manager.exemplar_sampler.sample_set[0].dropped_labels,
+            {"dropped_label": "value"},
+        )
 
         checkpoint = manager.take_checkpoint()
         self.assertEqual(len(checkpoint), 1)
@@ -204,7 +225,9 @@ class TestExemplarManager(unittest.TestCase):
 
     def test_semantic(self):
         config = {"statistical_exemplars": True, "num_exemplars": 1}
-        manager = ExemplarManager(config, MinMaxExemplarSampler, RandomExemplarSampler)
+        manager = ExemplarManager(
+            config, MinMaxExemplarSampler, RandomExemplarSampler
+        )
         self.assertIsInstance(manager.exemplar_sampler, RandomExemplarSampler)
         manager.sample(5, {})
         self.assertEqual(len(manager.exemplar_sampler.sample_set), 1)
@@ -229,7 +252,9 @@ class TestStandardExemplars(unittest.TestCase):
         agg.take_checkpoint()
         self.assertEqual(agg.checkpoint_exemplars, [])
 
-        other_agg = aggregator(config={"num_exemplars": 2, "statistical_exemplars": True})
+        other_agg = aggregator(
+            config={"num_exemplars": 2, "statistical_exemplars": True}
+        )
         other_agg.update(2)
         other_agg.update(4)
         other_agg.take_checkpoint()
@@ -244,7 +269,10 @@ class TestStandardExemplars(unittest.TestCase):
         agg.take_checkpoint()
         self.assertEqual(len(agg.checkpoint_exemplars), 1)
         self.assertEqual(agg.checkpoint_exemplars[0].value, 2)
-        self.assertEqual(agg.checkpoint_exemplars[0].dropped_labels, {"dropped_label": "value"})
+        self.assertEqual(
+            agg.checkpoint_exemplars[0].dropped_labels,
+            {"dropped_label": "value"},
+        )
 
         agg.update(2)
         agg.update(5)
@@ -255,8 +283,10 @@ class TestStandardExemplars(unittest.TestCase):
         agg.update(2)
         agg.update(5)
 
-        def _patched_randint(mn, mx):
+        def _patched_randint(minimum, maximum):
+            # pylint: disable=unused-argument
             return 1
+
         with patch("random.randint", _patched_randint):
             agg.update(7)
 
@@ -282,11 +312,13 @@ class TestStandardExemplars(unittest.TestCase):
             agg.update(5)
             agg.update(7)
             agg.update(6)
-        
+
         agg.take_checkpoint()
         self.assertEqual(len(agg.checkpoint_exemplars), 2)
 
-        self.assertEqual(agg.checkpoint_exemplars[0].span_id, span.context.span_id)
+        self.assertEqual(
+            agg.checkpoint_exemplars[0].span_id, span.context.span_id
+        )
         self.assertEqual(agg.checkpoint_exemplars[0].value, 5)
         self.assertEqual(agg.checkpoint_exemplars[1].value, 7)
 
@@ -346,7 +378,11 @@ class TestHistogramExemplars(unittest.TestCase):
         agg.take_checkpoint()
         self.assertEqual(agg.checkpoint_exemplars, [])
 
-        other_agg = HistogramAggregator(config=dict(config, **{"num_exemplars": 1, "statistical_exemplars": True}))
+        other_agg = HistogramAggregator(
+            config=dict(
+                config, **{"num_exemplars": 1, "statistical_exemplars": True}
+            )
+        )
 
         other_agg.update(3)
         other_agg.update(5)
@@ -357,13 +393,20 @@ class TestHistogramExemplars(unittest.TestCase):
         self.assertEqual(agg.checkpoint_exemplars, [])
 
     def test_simple_exemplars(self):
-        config = {"bounds": [2, 4, 7], "num_exemplars": 1, "statistical_exemplars": True}
+        config = {
+            "bounds": [2, 4, 7],
+            "num_exemplars": 1,
+            "statistical_exemplars": True,
+        }
         agg = HistogramAggregator(config=config)
         agg.update(2, dropped_labels={"dropped_label": "value"})
         agg.take_checkpoint()
         self.assertEqual(len(agg.checkpoint_exemplars), 1)
         self.assertEqual(agg.checkpoint_exemplars[0].value, 2)
-        self.assertEqual(agg.checkpoint_exemplars[0].dropped_labels, {"dropped_label": "value"})
+        self.assertEqual(
+            agg.checkpoint_exemplars[0].dropped_labels,
+            {"dropped_label": "value"},
+        )
 
         agg.update(2)
         agg.update(5)
@@ -373,7 +416,8 @@ class TestHistogramExemplars(unittest.TestCase):
 
         agg.update(5)
 
-        def _patched_randint(mn, mx):
+        def _patched_randint(minimum, maximum):
+            # pylint: disable=unused-argument
             return 0
 
         with patch("random.randint", _patched_randint):
@@ -391,7 +435,11 @@ class TestHistogramExemplars(unittest.TestCase):
         self.assertEqual(len(agg.checkpoint_exemplars), 4)
 
     def test_record_traces_only(self):
-        config = {"bounds": [2, 4, 6], "num_exemplars": 2, "statistical_exemplars": False}
+        config = {
+            "bounds": [2, 4, 6],
+            "num_exemplars": 2,
+            "statistical_exemplars": False,
+        }
         agg = HistogramAggregator(config=config)
 
         agg.update(2)
@@ -409,7 +457,9 @@ class TestHistogramExemplars(unittest.TestCase):
         agg.take_checkpoint()
         self.assertEqual(len(agg.checkpoint_exemplars), 1)
 
-        self.assertEqual(agg.checkpoint_exemplars[0].span_id, span.context.span_id)
+        self.assertEqual(
+            agg.checkpoint_exemplars[0].span_id, span.context.span_id
+        )
 
         tp = TracerProvider(sampler=ALWAYS_OFF)
         tracer = tp.get_tracer(__name__)
@@ -419,6 +469,7 @@ class TestHistogramExemplars(unittest.TestCase):
 
         agg.take_checkpoint()
         self.assertEqual(len(agg.checkpoint_exemplars), 0)
+
 
 class TestFullPipelineExemplars(unittest.TestCase):
     def test_histogram(self):
@@ -438,9 +489,14 @@ class TestFullPipelineExemplars(unittest.TestCase):
 
         size_view = View(
             requests_size,
-            HistogramAggregator(config={"bounds": [20, 40, 60, 80, 100], "num_exemplars": 1, "statistical_exemplars": True}),
+            HistogramAggregator,
+            aggregator_config={
+                "bounds": (20, 40, 60, 80, 100),
+                "num_exemplars": 1,
+                "statistical_exemplars": True,
+            },
             label_keys=["environment"],
-            config=ViewConfig.LABEL_KEYS,
+            view_config=ViewConfig.LABEL_KEYS,
         )
 
         meter.register_view(size_view)
@@ -456,5 +512,14 @@ class TestFullPipelineExemplars(unittest.TestCase):
         self.assertEqual(len(metrics_list), 1)
         exemplars = metrics_list[0].aggregator.checkpoint_exemplars
         self.assertEqual(len(exemplars), 3)
-        self.assertEqual([(exemplar.value, exemplar.dropped_labels) for exemplar in exemplars],
-            [(1, (("test", "value2"),)), (25, (("test", "value"),)), (200, (("test", "value3"),))])
+        self.assertEqual(
+            [
+                (exemplar.value, exemplar.dropped_labels)
+                for exemplar in exemplars
+            ],
+            [
+                (1, (("test", "value2"),)),
+                (25, (("test", "value"),)),
+                (200, (("test", "value3"),)),
+            ],
+        )

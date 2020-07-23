@@ -496,7 +496,7 @@ class TestBoundCounter(unittest.TestCase):
         view_datas_mock = mock.Mock()
         bound_metric.view_datas = [view_datas_mock]
         bound_metric.add(3)
-        view_datas_mock.record.assert_called_once_with(3)
+        view_datas_mock.record.assert_called_once_with(3, ())
 
     def test_add_disabled(self):
         meter_mock = mock.Mock()
@@ -538,7 +538,7 @@ class TestBoundValueRecorder(unittest.TestCase):
         view_datas_mock = mock.Mock()
         bound_valuerecorder.view_datas = [view_datas_mock]
         bound_valuerecorder.record(3)
-        view_datas_mock.record.assert_called_once_with(3)
+        view_datas_mock.record.assert_called_once_with(3, ())
 
     def test_record_disabled(self):
         meter_mock = mock.Mock()

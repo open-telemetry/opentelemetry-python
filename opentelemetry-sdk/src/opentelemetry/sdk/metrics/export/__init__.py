@@ -82,7 +82,7 @@ class ConsoleMetricsExporter(MetricsExporter):
                     record.instrument,
                     record.labels,
                     record.aggregator.checkpoint,
-                    record.aggregator.checkpoint_exemplars
+                    record.aggregator.checkpoint_exemplars,
                 )
             )
         return MetricsExportResult.SUCCESS

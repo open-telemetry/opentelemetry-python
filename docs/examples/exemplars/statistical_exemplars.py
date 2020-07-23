@@ -1,17 +1,18 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import random
-
 from collections import defaultdict
 
+import matplotlib.pyplot as plt
+import numpy as np
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.metrics.export.controller import PushController
-from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import InMemoryMetricsExporter
+from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import (
+    InMemoryMetricsExporter,
+)
 from opentelemetry.sdk.metrics.view import View, ViewConfig
 
-## set up opentelemetry
+# set up opentelemetry
 
 # Sets the global MeterProvider instance
 metrics.set_meter_provider(MeterProvider())
@@ -47,7 +48,8 @@ counter_view = View(
 
 meter.register_view(counter_view)
 
-## generate the random metric data
+# generate the random metric data
+
 
 def unknown_customer_calls():
     """Generate customer call data to our application"""
@@ -58,23 +60,49 @@ def unknown_customer_calls():
     random.seed(1)
 
     # customer 123 is a big user, and made 1000 requests in this timeframe
-    requests = np.random.normal(1000, 250, 1000) # 1000 requests with average 1000 bytes, covariance 100
+    requests = np.random.normal(
+        1000, 250, 1000
+    )  # 1000 requests with average 1000 bytes, covariance 100
 
     for request in requests:
-        bytes_counter.add(int(request), {"environment": "production", "method": "REST", "customer_id": 123})
+        bytes_counter.add(
+            int(request),
+            {
+                "environment": "production",
+                "method": "REST",
+                "customer_id": 123,
+            },
+        )
 
     # customer 247 is another big user, making fewer, but bigger requests
-    requests = np.random.normal(5000, 1250, 200) # 200 requests with average size of 5k bytes
+    requests = np.random.normal(
+        5000, 1250, 200
+    )  # 200 requests with average size of 5k bytes
 
     for request in requests:
-        bytes_counter.add(int(request), {"environment": "production", "method": "REST", "customer_id": 247})
+        bytes_counter.add(
+            int(request),
+            {
+                "environment": "production",
+                "method": "REST",
+                "customer_id": 247,
+            },
+        )
 
     # There are many other smaller customers
     for customer_id in range(250):
         requests = np.random.normal(1000, 250, np.random.randint(1, 10))
         method = "REST" if np.random.randint(2) else "gRPC"
         for request in requests:
-            bytes_counter.add(int(request), {"environment": "production", "method": method, "customer_id": customer_id})
+            bytes_counter.add(
+                int(request),
+                {
+                    "environment": "production",
+                    "method": method,
+                    "customer_id": customer_id,
+                },
+            )
+
 
 unknown_customer_calls()
 
@@ -94,10 +122,15 @@ for exemplar in exemplars:
     customer_bytes_map[exemplar.dropped_labels] += exemplar.value
 
 
-customer_bytes_list = sorted(list(customer_bytes_map.items()), key=lambda t: t[1], reverse=True)
+customer_bytes_list = sorted(
+    list(customer_bytes_map.items()), key=lambda t: t[1], reverse=True
+)
 
 # Save our top 5 customers and sum all of the rest into "Others".
-top_5_customers = [("Customer {}".format(dict(val[0])["customer_id"]), val[1]) for val in customer_bytes_list[:5]] + [("Other Customers", sum([val[1] for val in customer_bytes_list[5:]]))]
+top_5_customers = [
+    ("Customer {}".format(dict(val[0])["customer_id"]), val[1])
+    for val in customer_bytes_list[:5]
+] + [("Other Customers", sum([val[1] for val in customer_bytes_list[5:]]))]
 
 # unzip the data into X (sizes of each customer's contribution) and labels
 labels, X = zip(*top_5_customers)
@@ -107,7 +140,9 @@ plt.pie(X, labels=labels)
 plt.show()
 
 # Estimate how many bytes customer 123 sent
-customer_123_bytes = customer_bytes_map[(("customer_id", 123), ("method", "REST"))]
+customer_123_bytes = customer_bytes_map[
+    (("customer_id", 123), ("method", "REST"))
+]
 
 # Since the exemplars were randomly sampled, all sample_counts will be the same
 sample_count = exemplars[0].sample_count
@@ -115,18 +150,35 @@ print("sample count", sample_count, "custmer", customer_123_bytes)
 full_customer_123_bytes = sample_count * customer_123_bytes
 
 # With seed == 1 we get 1008612 - quite close to the statistical mean of 1000000! (more exemplars would make this estimation even more accurate)
-print("Customer 123 sent about {} bytes this interval".format(int(full_customer_123_bytes)))
+print(
+    "Customer 123 sent about {} bytes this interval".format(
+        int(full_customer_123_bytes)
+    )
+)
 
 # Determine the top 25 customers by how many bytes they sent in exemplars
 top_25_customers = customer_bytes_list[:25]
 
 # out of those 25 customers, determine how many used grpc, and come up with a ratio
-percent_grpc = len(list(filter(lambda customer_value: customer_value[0][1][1] == "gRPC", top_25_customers))) / len(top_25_customers)
+percent_grpc = len(
+    list(
+        filter(
+            lambda customer_value: customer_value[0][1][1] == "gRPC",
+            top_25_customers,
+        )
+    )
+) / len(top_25_customers)
 
-print("~{}% of the top 25 customers (by bytes in) used gRPC this interval".format(int(percent_grpc*100)))
+print(
+    "~{}% of the top 25 customers (by bytes in) used gRPC this interval".format(
+        int(percent_grpc * 100)
+    )
+)
 
 # Determine the 50th, 90th, and 99th percentile of byte size sent in
-quantiles = np.quantile([exemplar.value for exemplar in exemplars], [0.5, 0.9, 0.99])
+quantiles = np.quantile(
+    [exemplar.value for exemplar in exemplars], [0.5, 0.9, 0.99]
+)
 print("50th Percentile Bytes In:", int(quantiles[0]))
 print("90th Percentile Bytes In:", int(quantiles[1]))
 print("99th Percentile Bytes In:", int(quantiles[2]))
