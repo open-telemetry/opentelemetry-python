@@ -77,11 +77,12 @@ class ConsoleMetricsExporter(MetricsExporter):
     ) -> "MetricsExportResult":
         for record in metric_records:
             print(
-                '{}(data="{}", labels="{}", value={})'.format(
+                '{}(data="{}", labels="{}", value={}, exemplars={})'.format(
                     type(self).__name__,
                     record.instrument,
                     record.labels,
                     record.aggregator.checkpoint,
+                    record.aggregator.checkpoint_exemplars
                 )
             )
         return MetricsExportResult.SUCCESS

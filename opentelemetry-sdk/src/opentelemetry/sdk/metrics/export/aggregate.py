@@ -16,8 +16,17 @@ import abc
 import logging
 import threading
 from collections import OrderedDict, namedtuple
+import itertools
 
+from collections import namedtuple, OrderedDict
 from opentelemetry.util import time_ns
+from opentelemetry.sdk.metrics.export.exemplars import (
+    Exemplar,
+    RandomExemplarSampler,
+    MinMaxExemplarSampler,
+    BucketedExemplarSampler,
+    ExemplarManager
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +45,10 @@ class Aggregator(abc.ABC):
             self.config = config
         else:
             self.config = {}
+        self.checkpoint_exemplars = list()
 
     @abc.abstractmethod
-    def update(self, value):
+    def update(self, value, dropped_labels=None):
         """Updates the current with the new value."""
 
     @abc.abstractmethod
@@ -59,15 +69,19 @@ class SumAggregator(Aggregator):
         self.checkpoint = 0
         self._lock = threading.Lock()
         self.last_update_timestamp = None
+        self.exemplar_manager = ExemplarManager(config, MinMaxExemplarSampler, RandomExemplarSampler)
 
-    def update(self, value):
+    def update(self, value, dropped_labels=None):
         with self._lock:
             self.current += value
             self.last_update_timestamp = time_ns()
 
+            self.exemplar_manager.sample(value, dropped_labels)
+
     def take_checkpoint(self):
         with self._lock:
             self.checkpoint = self.current
+            self.checkpoint_exemplars = self.exemplar_manager.take_checkpoint()
             self.current = 0
 
     def merge(self, other):
@@ -77,6 +91,7 @@ class SumAggregator(Aggregator):
                 self.last_update_timestamp = get_latest_timestamp(
                     self.last_update_timestamp, other.last_update_timestamp
                 )
+                self.checkpoint_exemplars = self.exemplar_manager.merge(self.checkpoint_exemplars, other.checkpoint_exemplars)
 
 
 class MinMaxSumCountAggregator(Aggregator):
@@ -105,8 +120,11 @@ class MinMaxSumCountAggregator(Aggregator):
         self._lock = threading.Lock()
         self.last_update_timestamp = None
 
-    def update(self, value):
+        self.exemplar_manager = ExemplarManager(config, MinMaxExemplarSampler, RandomExemplarSampler)
+
+    def update(self, value, dropped_labels=None):
         with self._lock:
+
             if self.current is self._EMPTY:
                 self.current = self._TYPE(value, value, value, 1)
             else:
@@ -118,9 +136,12 @@ class MinMaxSumCountAggregator(Aggregator):
                 )
             self.last_update_timestamp = time_ns()
 
+            self.exemplar_manager.sample(value, dropped_labels)
+
     def take_checkpoint(self):
         with self._lock:
             self.checkpoint = self.current
+            self.checkpoint_exemplars = self.exemplar_manager.take_checkpoint()
             self.current = self._EMPTY
 
     def merge(self, other):
@@ -132,6 +153,7 @@ class MinMaxSumCountAggregator(Aggregator):
                 self.last_update_timestamp = get_latest_timestamp(
                     self.last_update_timestamp, other.last_update_timestamp
                 )
+                self.checkpoint_exemplars = self.exemplar_manager.merge(self.checkpoint_exemplars, other.checkpoint_exemplars)
 
 
 class HistogramAggregator(Aggregator):
@@ -150,6 +172,8 @@ class HistogramAggregator(Aggregator):
 
         self.current = OrderedDict([(bb, 0) for bb in self._boundaries])
         self.checkpoint = OrderedDict([(bb, 0) for bb in self._boundaries])
+
+        self.exemplar_manager = ExemplarManager(config, BucketedExemplarSampler, BucketedExemplarSampler, boundaries=self._boundaries)
 
         self.current[">"] = 0
         self.checkpoint[">"] = 0
@@ -178,18 +202,21 @@ class HistogramAggregator(Aggregator):
             logger.warning("Cannot merge histograms with different buckets.")
         return val1
 
-    def update(self, value):
+    def update(self, value, dropped_labels=None):
         with self._lock:
             if self.current is None:
                 self.current = [0 for ii in range(len(self._boundaries) + 1)]
             # greater than max value
             if value >= self._boundaries[len(self._boundaries) - 1]:
                 self.current[">"] += 1
+                self.exemplar_manager.sample(value, dropped_labels, bucket_index=len(self._boundaries))
             else:
-                for bb in self._boundaries:
+                for index, bb in enumerate(self._boundaries):
                     # find first bucket that value is less than
                     if value < bb:
                         self.current[bb] += 1
+
+                        self.exemplar_manager.sample(value, dropped_labels, bucket_index=index)
                         break
             self.last_update_timestamp = time_ns()
 
@@ -197,6 +224,9 @@ class HistogramAggregator(Aggregator):
         with self._lock:
             self.checkpoint = self.current
             self.current = OrderedDict([(bb, 0) for bb in self._boundaries])
+
+            self.checkpoint_exemplars = self.exemplar_manager.take_checkpoint()
+
             self.current[">"] = 0
 
     def merge(self, other):
@@ -205,6 +235,9 @@ class HistogramAggregator(Aggregator):
                 self.checkpoint = self._merge_checkpoint(
                     self.checkpoint, other.checkpoint
                 )
+
+                self.checkpoint_exemplars = self.exemplar_manager.merge(self.checkpoint_exemplars, other.checkpoint_exemplars)
+
                 self.last_update_timestamp = get_latest_timestamp(
                     self.last_update_timestamp, other.last_update_timestamp
                 )
@@ -218,7 +251,7 @@ class LastValueAggregator(Aggregator):
         self._lock = threading.Lock()
         self.last_update_timestamp = None
 
-    def update(self, value):
+    def update(self, value, dropped_labels=None):
         with self._lock:
             self.current = value
             self.last_update_timestamp = time_ns()
@@ -245,19 +278,20 @@ class ValueObserverAggregator(Aggregator):
 
     def __init__(self, config=None):
         super().__init__(config=config)
-        self.mmsc = MinMaxSumCountAggregator()
+        self.mmsc = MinMaxSumCountAggregator(config=config)
         self.current = None
         self.checkpoint = self._TYPE(None, None, None, 0, None)
         self.last_update_timestamp = None
 
-    def update(self, value):
-        self.mmsc.update(value)
+    def update(self, value, dropped_labels=None):
+        self.mmsc.update(value, dropped_labels=dropped_labels)
         self.current = value
         self.last_update_timestamp = time_ns()
 
     def take_checkpoint(self):
         self.mmsc.take_checkpoint()
         self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (self.current,)))
+        self.checkpoint_exemplars = self.mmsc.checkpoint_exemplars
 
     def merge(self, other):
         if verify_type(self, other):
@@ -269,6 +303,7 @@ class ValueObserverAggregator(Aggregator):
             if self.last_update_timestamp == other.last_update_timestamp:
                 last = other.checkpoint.last
             self.checkpoint = self._TYPE(*(self.mmsc.checkpoint + (last,)))
+            self.checkpoint_exemplars = self.mmsc.checkpoint_exemplars
 
 
 def get_latest_timestamp(time_stamp, other_timestamp):

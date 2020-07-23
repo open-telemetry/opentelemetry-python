@@ -39,12 +39,13 @@ logger = logging.getLogger(__name__)
 
 
 class ViewData:
-    def __init__(self, labels: Tuple[Tuple[str, str]], aggregator: Aggregator):
+    def __init__(self, labels: Tuple[Tuple[str, str]], aggregator: Aggregator, dropped_labels: Tuple[Tuple[str, str]] = None):
         self.labels = labels
         self.aggregator = aggregator
+        self.dropped_labels = dropped_labels
 
     def record(self, value: ValueT):
-        self.aggregator.update(value)
+        self.aggregator.update(value, dropped_labels=self.dropped_labels)
 
     # Uniqueness is based on labels and aggregator type
     def __hash__(self):
