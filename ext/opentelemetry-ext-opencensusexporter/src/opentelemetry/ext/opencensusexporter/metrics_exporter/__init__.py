@@ -18,6 +18,7 @@ import logging
 from typing import Sequence
 
 import grpc
+from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.agent.metrics.v1 import (
     metrics_service_pb2,
     metrics_service_pb2_grpc,
@@ -65,6 +66,8 @@ class OpenCensusMetricsExporter(MetricsExporter):
             self.client = client
 
         self.node = utils.get_node(service_name, host_name)
+        self.exporter_start_timestamp = Timestamp()
+        self.exporter_start_timestamp.GetCurrentTime()
 
     def export(
         self, metric_records: Sequence[MetricRecord]
@@ -89,7 +92,9 @@ class OpenCensusMetricsExporter(MetricsExporter):
     def generate_metrics_requests(
         self, metrics: Sequence[MetricRecord]
     ) -> metrics_service_pb2.ExportMetricsServiceRequest:
-        collector_metrics = translate_to_collector(metrics)
+        collector_metrics = translate_to_collector(
+            metrics, self.exporter_start_timestamp
+        )
         service_request = metrics_service_pb2.ExportMetricsServiceRequest(
             node=self.node, metrics=collector_metrics
         )
@@ -99,6 +104,7 @@ class OpenCensusMetricsExporter(MetricsExporter):
 # pylint: disable=too-many-branches
 def translate_to_collector(
     metric_records: Sequence[MetricRecord],
+    exporter_start_timestamp: Timestamp,
 ) -> Sequence[metrics_pb2.Metric]:
     collector_metrics = []
     for metric_record in metric_records:
@@ -109,7 +115,8 @@ def translate_to_collector(
             label_keys.append(metrics_pb2.LabelKey(key=label_tuple[0]))
             label_values.append(
                 metrics_pb2.LabelValue(
-                    has_value=label_tuple[1] is not None, value=label_tuple[1]
+                    has_value=label_tuple[1] is not None,
+                    value=str(label_tuple[1]),
                 )
             )
 
@@ -121,9 +128,17 @@ def translate_to_collector(
             label_keys=label_keys,
         )
 
+        # If cumulative and stateful, explicitly set the start_timestamp to
+        # exporter start time.
+        if metric_record.instrument.meter.batcher.stateful:
+            start_timestamp = exporter_start_timestamp
+        else:
+            start_timestamp = None
+
         timeseries = metrics_pb2.TimeSeries(
             label_values=label_values,
             points=[get_collector_point(metric_record)],
+            start_timestamp=start_timestamp,
         )
         collector_metrics.append(
             metrics_pb2.Metric(

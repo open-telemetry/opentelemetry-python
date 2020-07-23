@@ -41,7 +41,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         # pylint: disable=protected-access
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
-        cls._labels = {"environment": "staging"}
+        cls._labels = {"environment": "staging", "number": 321}
         cls._key_labels = get_labels_as_key(cls._labels)
 
     def test_constructor(self):
@@ -119,7 +119,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             client=mock_client, host_name=host_name
         )
         test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, ["environment"]
+            "testname", "testdesc", "unit", int, Counter, self._labels.keys(),
         )
         record = MetricRecord(
             test_metric, self._key_labels, aggregate.SumAggregator(),
@@ -142,13 +142,16 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     def test_translate_to_collector(self):
         test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, ["environment"]
+            "testname", "testdesc", "unit", int, Counter, self._labels.keys()
         )
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(test_metric, self._key_labels, aggregator,)
-        output_metrics = metrics_exporter.translate_to_collector([record])
+        start_timestamp = Timestamp()
+        output_metrics = metrics_exporter.translate_to_collector(
+            [record], start_timestamp,
+        )
         self.assertEqual(len(output_metrics), 1)
         self.assertIsInstance(output_metrics[0], metrics_pb2.Metric)
         self.assertEqual(output_metrics[0].metric_descriptor.name, "testname")
@@ -161,14 +164,20 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             metrics_pb2.MetricDescriptor.CUMULATIVE_INT64,
         )
         self.assertEqual(
-            len(output_metrics[0].metric_descriptor.label_keys), 1
+            len(output_metrics[0].metric_descriptor.label_keys), 2
         )
         self.assertEqual(
             output_metrics[0].metric_descriptor.label_keys[0].key,
             "environment",
         )
+        self.assertEqual(
+            output_metrics[0].metric_descriptor.label_keys[1].key, "number",
+        )
         self.assertEqual(len(output_metrics[0].timeseries), 1)
-        self.assertEqual(len(output_metrics[0].timeseries[0].label_values), 1)
+        self.assertEqual(len(output_metrics[0].timeseries[0].label_values), 2)
+        self.assertEqual(
+            output_metrics[0].timeseries[0].start_timestamp, start_timestamp
+        )
         self.assertEqual(
             output_metrics[0].timeseries[0].label_values[0].has_value, True
         )

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Send start_timestamp and convert labels to strings
+  ([#937](https://github.com/open-telemetry/opentelemetry-python/pull/937))
+
 ## 0.8b0
 
 Released 2020-05-27
