@@ -103,6 +103,7 @@ class B3Format(HTTPTextFormat):
         ):
             trace_id = generate_trace_id()
             span_id = generate_span_id()
+            sampled = "0"
 
         options = 0
         # The b3 spec provides no defined behavior for both sample and

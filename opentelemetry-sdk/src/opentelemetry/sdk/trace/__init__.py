@@ -796,7 +796,11 @@ class Tracer(trace_api.Tracer):
         )
 
         if sampling_decision.sampled:
-            options = context.trace_flags | trace_api.TraceFlags.SAMPLED
+            # FIXME investigate this to make sure that this is the right
+            # approach. There seems to be an issue here currently because if
+            # context.trace_flags is 0, then options will be always set to 1.
+            # options = context.trace_flags | trace_api.TraceFlags.SAMPLED
+            options = context.trace_flags
             context.trace_flags = trace_api.TraceFlags(options)
             if attributes is None:
                 span_attributes = sampling_decision.attributes
