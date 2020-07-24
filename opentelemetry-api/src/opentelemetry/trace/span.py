@@ -233,6 +233,7 @@ class DefaultSpan(Span):
     """
 
     def __init__(self, context: "SpanContext") -> None:
+        # pylint: disable=super-init-not-called
         self._context = context
 
     def get_context(self) -> "SpanContext":

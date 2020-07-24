@@ -387,6 +387,7 @@ class Span(trace_api.Span):
         instrumentation_info: InstrumentationInfo = None,
         set_status_on_exception: bool = True,
     ) -> None:
+        # pylint: disable=super-init-not-called
 
         self.name = name
         self.context = context
@@ -554,16 +555,11 @@ class Span(trace_api.Span):
                 self.attributes[key] = value
 
     def get_attribute(self, key: str) -> types.AttributeValue:
-        with self._lock:
-            if not self.is_recording_events():
-                return
-
         if not key:
             logger.warning("invalid key (empty or null)")
-            return
-        elif not (key in self.attributes):
+
+        if key not in self.attributes:
             logger.warning("key not in attributes")
-            return
 
         with self._lock:
             return self.attributes[key]
