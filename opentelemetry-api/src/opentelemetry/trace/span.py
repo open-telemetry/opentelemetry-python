@@ -7,6 +7,7 @@ from opentelemetry.util import types
 
 MAX_NUM_ATTRIBUTES = 32
 
+
 class Span(abc.ABC):
     """A span represents a single operation within a trace."""
 
