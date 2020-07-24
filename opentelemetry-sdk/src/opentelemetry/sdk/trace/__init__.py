@@ -553,6 +553,18 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
+    def get_attribute(self, key: str) -> types.AttributeValue:
+        with self._lock:
+            if not self.is_recording_events():
+                return
+
+        if not key:
+            logger.warning("invalid key (empty or null)")
+            return
+
+        with self._lock:
+            return self.attributes[key]
+
     @staticmethod
     def _filter_attribute_values(attributes: types.Attributes):
         if attributes:
