@@ -387,6 +387,9 @@ class Span(trace_api.Span):
         instrumentation_info: InstrumentationInfo = None,
         set_status_on_exception: bool = True,
     ) -> None:
+        # The only thing the ``__init__()`` method on the base class does is
+        # initialize self.attributes to attributes
+        # Therefore, it doesn't seem useful to call it.
         # pylint: disable=super-init-not-called
 
         self.name = name
