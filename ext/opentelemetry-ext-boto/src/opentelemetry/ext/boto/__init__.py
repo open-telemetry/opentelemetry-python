@@ -199,17 +199,16 @@ class BotoInstrumentor(BaseInstrumentor):
         )
 
 
-def truncate_arg_value(value, max_len=1024):
-    """Truncate values which are bytes and greater than ``max_len``.
-    Useful for parameters like "Body" in ``put_object`` operations.
-    """
-    if isinstance(value, bytes) and len(value) > max_len:
-        return b"..."
-
-    return value
-
-
 def add_span_arg_tags(span, endpoint_name, args, args_names, args_traced):
+    def truncate_arg_value(value, max_len=1024):
+        """Truncate values which are bytes and greater than ``max_len``.
+        Useful for parameters like "Body" in ``put_object`` operations.
+        """
+        if isinstance(value, bytes) and len(value) > max_len:
+            return b"..."
+
+        return value
+
     if endpoint_name not in ["kms", "sts"]:
         tags = dict(
             (name, value)

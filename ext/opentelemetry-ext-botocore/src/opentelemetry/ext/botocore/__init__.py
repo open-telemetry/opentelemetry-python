@@ -54,8 +54,9 @@ API
 import logging
 
 from botocore.client import BaseClient
-from wrapt import ObjectProxy, wrap_function_wrapper
+from wrapt import wrap_function_wrapper
 
+from opentelemetry.ext.boto import add_span_arg_tags, unwrap
 from opentelemetry.ext.botocore.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.sdk.trace import Resource
@@ -138,57 +139,6 @@ class BotocoreInstrumentor(BaseInstrumentor):
             )
 
             return result
-
-
-def unwrap(obj, attr):
-    function = getattr(obj, attr, None)
-    if (
-        function
-        and isinstance(function, ObjectProxy)
-        and hasattr(function, "__wrapped__")
-    ):
-        setattr(obj, attr, function.__wrapped__)
-
-
-def add_span_arg_tags(span, endpoint_name, args, args_names, args_traced):
-    def truncate_arg_value(value, max_len=1024):
-        """Truncate values which are bytes and greater than `max_len`.
-        Useful for parameters like "Body" in `put_object` operations.
-        """
-        if isinstance(value, bytes) and len(value) > max_len:
-            return b"..."
-
-        return value
-
-    if endpoint_name not in {"kms", "sts"}:
-        tags = dict(
-            (name, value)
-            for (name, value) in zip(args_names, args)
-            if name in args_traced
-        )
-        tags = flatten_dict(tags)
-        for key, value in {
-            k: truncate_arg_value(v)
-            for k, v in tags.items()
-            if k not in {"s3": ["params.Body"]}.get(endpoint_name, [])
-        }.items():
-            span.set_attribute(key, value)
-
-
-def flatten_dict(dict_, sep=".", prefix=""):
-    """
-    Returns a normalized dict of depth 1 with keys in order of embedding
-    """
-    # adapted from https://stackoverflow.com/a/19647596
-    return (
-        {
-            prefix + sep + k if prefix else k: v
-            for kk, vv in dict_.items()
-            for k, v in flatten_dict(vv, sep, kk).items()
-        }
-        if isinstance(dict_, dict)
-        else {prefix: dict_}
-    )
 
 
 def deep_getattr(obj, attr_string, default=None):
