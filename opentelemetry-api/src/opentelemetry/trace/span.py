@@ -233,10 +233,7 @@ class DefaultSpan(Span):
     """
 
     def __init__(self, context: "SpanContext") -> None:
-        # The only thing the ``__init__()`` method on the base class does is
-        # initialize self.attributes to attributes
-        # Therefore, it doesn't seem useful to call it.
-        # pylint: disable=super-init-not-called
+        super().__init__()
         self._context = context
 
     def get_context(self) -> "SpanContext":

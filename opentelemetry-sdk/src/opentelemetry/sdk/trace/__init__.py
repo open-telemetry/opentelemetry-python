@@ -562,7 +562,7 @@ class Span(trace_api.Span):
             logger.warning("invalid key (empty or null)")
 
         if key not in self.attributes:
-            logger.warning("key not in attributes")
+            logger.warning("no attributes for key:%s", str(key))
 
         with self._lock:
             return self.attributes[key]
