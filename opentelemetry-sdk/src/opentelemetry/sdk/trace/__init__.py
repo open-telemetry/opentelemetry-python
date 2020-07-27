@@ -864,7 +864,7 @@ class TracerProvider(trace_api.TracerProvider):
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
-        ]=None,
+        ] = None,
     ):
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()

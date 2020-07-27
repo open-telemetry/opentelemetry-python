@@ -16,8 +16,8 @@ import typing
 from re import fullmatch
 
 import opentelemetry.trace as trace
-from opentelemetry.sdk.trace import generate_trace_id, generate_span_id
 from opentelemetry.context import Context
+from opentelemetry.sdk.trace import generate_span_id, generate_trace_id
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
@@ -98,8 +98,8 @@ class B3Format(HTTPTextFormat):
             )
 
         if (
-            fullmatch(r"[\da-fA-F]{16}|[\da-fA-F]{32}", trace_id) is None or
-            fullmatch(r"[\da-fA-F]{16}", span_id) is None
+            fullmatch(r"[\da-fA-F]{16}|[\da-fA-F]{32}", trace_id) is None
+            or fullmatch(r"[\da-fA-F]{16}", span_id) is None
         ):
             trace_id = generate_trace_id()
             span_id = generate_span_id()
