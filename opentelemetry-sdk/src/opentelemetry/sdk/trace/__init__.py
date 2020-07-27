@@ -796,11 +796,7 @@ class Tracer(trace_api.Tracer):
         )
 
         if sampling_decision.sampled:
-            # FIXME investigate this to make sure that this is the right
-            # approach. There seems to be an issue here currently because if
-            # context.trace_flags is 0, then options will be always set to 1.
-            # options = context.trace_flags | trace_api.TraceFlags.SAMPLED
-            options = context.trace_flags
+            options = context.trace_flags | trace_api.TraceFlags.SAMPLED
             context.trace_flags = trace_api.TraceFlags(options)
             if attributes is None:
                 span_attributes = sampling_decision.attributes
@@ -868,7 +864,7 @@ class TracerProvider(trace_api.TracerProvider):
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
-        ] = None,
+        ]=None,
     ):
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
