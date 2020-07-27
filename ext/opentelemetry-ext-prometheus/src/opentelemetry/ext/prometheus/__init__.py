@@ -69,6 +69,13 @@ import logging
 import re
 from typing import Iterable, Optional, Sequence, Union
 
+from prometheus_client.core import (
+    REGISTRY,
+    CounterMetricFamily,
+    SummaryMetricFamily,
+    UnknownMetricFamily,
+)
+
 from opentelemetry.metrics import Counter, ValueRecorder
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
@@ -76,12 +83,6 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExportResult,
 )
 from opentelemetry.sdk.metrics.export.aggregate import MinMaxSumCountAggregator
-from prometheus_client.core import (
-    REGISTRY,
-    CounterMetricFamily,
-    SummaryMetricFamily,
-    UnknownMetricFamily,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -123,11 +124,7 @@ class CustomCollector:
     def add_metrics_data(self, metric_records: Sequence[MetricRecord]) -> None:
         self._metrics_to_export.append(metric_records)
 
-    def collect(
-        self,
-    ) -> Iterable[
-        Union[CounterMetricFamily, SummaryMetricFamily, UnknownMetricFamily]
-    ]:
+    def collect(self):
         """Collect fetches the metrics from OpenTelemetry
         and delivers them as Prometheus Metrics.
         Collect is invoked every time a prometheus.Gatherer is run
@@ -142,11 +139,7 @@ class CustomCollector:
                 if prometheus_metric is not None:
                     yield prometheus_metric
 
-    def _translate_to_prometheus(
-        self, metric_record: MetricRecord
-    ) -> Optional[
-        Union[CounterMetricFamily, SummaryMetricFamily, UnknownMetricFamily]
-    ]:
+    def _translate_to_prometheus(self, metric_record: MetricRecord):
         prometheus_metric = None
         label_values = []
         label_keys = []
@@ -170,7 +163,9 @@ class CustomCollector:
         # TODO: Add support for histograms when supported in OT
         elif isinstance(metric_record.instrument, ValueRecorder):
             value = metric_record.aggregator.checkpoint
-            if isinstance(value, MinMaxSumCountAggregator._TYPE):
+            if isinstance(
+                value, MinMaxSumCountAggregator._TYPE  # pylint: disable=W0212
+            ):
                 value = metric_record.aggregator.checkpoint
                 prometheus_metric = SummaryMetricFamily(
                     name=metric_name,

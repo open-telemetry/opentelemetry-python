@@ -16,7 +16,7 @@ import unittest
 from unittest import mock
 
 from prometheus_client import generate_latest
-from prometheus_client.core import CounterMetricFamily, SummaryMetricFamily
+from prometheus_client.core import CounterMetricFamily
 
 from opentelemetry.ext.prometheus import (
     CustomCollector,
@@ -26,8 +26,8 @@ from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
-    SumAggregator,
     MinMaxSumCountAggregator,
+    SumAggregator,
 )
 
 
