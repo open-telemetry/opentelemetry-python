@@ -163,8 +163,7 @@ class CustomCollector:
         # TODO: Add support for histograms when supported in OT
         elif isinstance(metric_record.instrument, ValueRecorder):
             value = metric_record.aggregator.checkpoint
-            isinstance(metric_record.aggregator, MinMaxSumCountAggregator):
-                value = metric_record.aggregator.checkpoint
+            if isinstance(metric_record.aggregator, MinMaxSumCountAggregator):
                 prometheus_metric = SummaryMetricFamily(
                     name=metric_name,
                     documentation=description,
