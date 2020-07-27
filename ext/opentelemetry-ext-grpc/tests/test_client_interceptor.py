@@ -16,8 +16,7 @@ import grpc
 
 import opentelemetry.ext.grpc
 from opentelemetry import trace
-from opentelemetry.ext.grpc import client_interceptor
-from opentelemetry.ext.grpc.grpcext import intercept_channel
+from opentelemetry.ext.grpc import GrpcInstrumentorClient
 from opentelemetry.sdk.metrics.export.aggregate import (
     MinMaxSumCountAggregator,
     SumAggregator,
@@ -37,23 +36,23 @@ from ._server import create_test_server
 class TestClientProto(TestBase):
     def setUp(self):
         super().setUp()
-        self.server = create_test_server(25565)
-        self.server.start()
-        self.interceptor = client_interceptor(
+        GrpcInstrumentorClient().instrument(
             exporter=self.memory_metrics_exporter
         )
-        self.channel = intercept_channel(
-            grpc.insecure_channel("localhost:25565"), self.interceptor
-        )
+        self.server = create_test_server(25565)
+        self.server.start()
+        self.channel = grpc.insecure_channel("localhost:25565")
         self._stub = test_server_pb2_grpc.GRPCTestServerStub(self.channel)
 
     def tearDown(self):
         super().tearDown()
+        GrpcInstrumentorClient().uninstrument()
         self.memory_metrics_exporter.clear()
         self.server.stop(None)
 
     def _verify_success_records(self, num_bytes_out, num_bytes_in, method):
-        self.interceptor.controller.tick()
+        # pylint: disable=protected-access,no-member
+        self.channel._interceptor.controller.tick()
         records = self.memory_metrics_exporter.get_exported_metrics()
         self.assertEqual(len(records), 3)
 
@@ -163,7 +162,8 @@ class TestClientProto(TestBase):
         )
 
     def _verify_error_records(self, method):
-        self.interceptor.controller.tick()
+        # pylint: disable=protected-access,no-member
+        self.channel._interceptor.controller.tick()
         records = self.memory_metrics_exporter.get_exported_metrics()
         self.assertEqual(len(records), 3)
 

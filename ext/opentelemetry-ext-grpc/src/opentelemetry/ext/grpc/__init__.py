@@ -33,6 +33,8 @@ Usage Client
         SimpleExportSpanProcessor,
     )
 
+    from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
+
     try:
         from .gen import helloworld_pb2, helloworld_pb2_grpc
     except ImportError:
@@ -42,7 +44,9 @@ Usage Client
     trace.get_tracer_provider().add_span_processor(
         SimpleExportSpanProcessor(ConsoleSpanExporter())
     )
-    instrumentor = GrpcInstrumentorClient()
+
+    # Optional - export GRPC specific metrics (latency, bytes in/out, errors) by passing an exporter
+    instrumentor = GrpcInstrumentorClient(exporter=ConsoleMetricsExporter(), interval=10)
     instrumentor.instrument()
 
     def run():
@@ -109,6 +113,7 @@ Usage Server
         serve()
 """
 from contextlib import contextmanager
+from functools import partial
 
 import grpc
 from wrapt import wrap_function_wrapper as _wrap
@@ -139,11 +144,21 @@ class GrpcInstrumentorServer(BaseInstrumentor):
 
 class GrpcInstrumentorClient(BaseInstrumentor):
     def _instrument(self, **kwargs):
+        exporter = kwargs.get("exporter", None)
+        interval = kwargs.get("interval", 30)
         if kwargs.get("channel_type") == "secure":
-            _wrap("grpc", "secure_channel", self.wrapper_fn)
+            _wrap(
+                "grpc",
+                "secure_channel",
+                partial(self.wrapper_fn, exporter, interval),
+            )
 
         else:
-            _wrap("grpc", "insecure_channel", self.wrapper_fn)
+            _wrap(
+                "grpc",
+                "insecure_channel",
+                partial(self.wrapper_fn, exporter, interval),
+            )
 
     def _uninstrument(self, **kwargs):
         if kwargs.get("channel_type") == "secure":
@@ -152,10 +167,19 @@ class GrpcInstrumentorClient(BaseInstrumentor):
         else:
             unwrap(grpc, "insecure_channel")
 
-    @contextmanager
-    def wrapper_fn(self, original_func, instance, args, kwargs):
-        with original_func(*args, **kwargs) as channel:
-            yield intercept_channel(channel, client_interceptor())
+    def wrapper_fn(
+        self, exporter, interval, original_func, instance, args, kwargs
+    ):
+        channel = original_func(*args, **kwargs)
+        tracer_provider = kwargs.get("tracer_provider")
+        return intercept_channel(
+            channel,
+            client_interceptor(
+                tracer_provider=tracer_provider,
+                exporter=exporter,
+                interval=interval,
+            ),
+        )
 
 
 def client_interceptor(tracer_provider=None, exporter=None, interval=30):
