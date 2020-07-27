@@ -258,3 +258,31 @@ class TestClientProto(TestBase):
             span.status.canonical_code.value,
             grpc.StatusCode.INVALID_ARGUMENT.value[0],
         )
+
+
+class TestClienttNoMetrics(TestBase):
+    def setUp(self):
+        super().setUp()
+        GrpcInstrumentorClient().instrument()
+        self.server = create_test_server(25565)
+        self.server.start()
+        self.channel = grpc.insecure_channel("localhost:25565")
+        self._stub = test_server_pb2_grpc.GRPCTestServerStub(self.channel)
+
+    def tearDown(self):
+        super().tearDown()
+        GrpcInstrumentorClient().uninstrument()
+        self.memory_metrics_exporter.clear()
+        self.server.stop(None)
+
+    def test_unary_unary(self):
+        simple_method(self._stub)
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+        span = spans[0]
+
+        self.assertEqual(span.name, "/GRPCTestServer/SimpleMethod")
+        self.assertIs(span.kind, trace.SpanKind.CLIENT)
+
+        # Check version and name in span's instrumentation info
+        self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
