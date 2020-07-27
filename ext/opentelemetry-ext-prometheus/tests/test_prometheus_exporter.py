@@ -15,7 +15,8 @@
 import unittest
 from unittest import mock
 
-from prometheus_client.core import CounterMetricFamily
+from prometheus_client import generate_latest
+from prometheus_client.core import CounterMetricFamily, SummaryMetricFamily
 
 from opentelemetry.ext.prometheus import (
     CustomCollector,
@@ -24,7 +25,10 @@ from opentelemetry.ext.prometheus import (
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
-from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    SumAggregator,
+    MinMaxSumCountAggregator,
+)
 
 
 class TestPrometheusMetricExporter(unittest.TestCase):
@@ -74,6 +78,25 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             # pylint: disable=protected-access
             self.assertEqual(len(exporter._collector._metrics_to_export), 1)
             self.assertIs(result, MetricsExportResult.SUCCESS)
+
+    def test_min_max_sum_aggregator_to_prometheus(self):
+        meter = get_meter_provider().get_meter(__name__)
+        metric = meter.create_metric(
+            "test@name", "testdesc", "unit", int, metrics.ValueRecorder, []
+        )
+        labels = {}
+        key_labels = metrics.get_labels_as_key(labels)
+        aggregator = MinMaxSumCountAggregator()
+        aggregator.update(123)
+        aggregator.update(456)
+        aggregator.take_checkpoint()
+        record = MetricRecord(metric, key_labels, aggregator)
+        collector = CustomCollector("testprefix")
+        collector.add_metrics_data([record])
+        result_bytes = generate_latest(collector)
+        result = result_bytes.decode("utf-8")
+        self.assertIn("testprefix_test_name_count 2.0", result)
+        self.assertIn("testprefix_test_name_sum 579.0", result)
 
     def test_counter_to_prometheus(self):
         meter = get_meter_provider().get_meter(__name__)
