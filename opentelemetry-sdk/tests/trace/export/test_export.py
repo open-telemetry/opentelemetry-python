@@ -148,6 +148,31 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         span_processor.shutdown()
 
+    def test_multithreading(self):
+        # Should test that shutdown and force_flush can be called concurrently without
+        # causing racing conditions
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor_to_flush = export.BatchExportSpanProcessor(my_exporter)
+        span_processor_to_shutdown = export.BatchExportSpanProcessor(my_exporter)
+
+        span_names0 = ["xxx", "bar", "foo"]
+        span_names1 = ["yyy", "baz", "fox"]
+
+        for name in span_names0:
+            _create_start_and_end_span(name,span_processor_to_flush)
+
+        for name in span_names1:
+            _create_start_and_end_span(name,span_processor_to_shutdown)
+
+        # test consecutive calls to force_flush() and shutdown() on separate threads
+        span_processor_to_shutdown.shutdown()
+        self.assertTrue(span_processor_to_flush.force_flush())
+        self.assertTrue(my_exporter.is_shutdown)
+        self.assertListEqual(span_names1 + span_names0, spans_names_list)
+
     def test_flush_timeout(self):
         spans_names_list = []
 
