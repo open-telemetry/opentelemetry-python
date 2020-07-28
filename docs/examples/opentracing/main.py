@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from opentelemetry import trace
-from opentelemetry.ext import opentracing_shim
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
+from opentelemetry.ext import opentracing_shim
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from rediscache import RedisCache

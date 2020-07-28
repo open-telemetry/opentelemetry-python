@@ -28,7 +28,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.ext import zipkin
+    from opentelemetry.exporter import zipkin
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 

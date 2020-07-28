@@ -1,7 +1,7 @@
 import time
 
 from opentelemetry import trace
-from opentelemetry.ext import jaeger
+from opentelemetry.exporter import jaeger
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
