@@ -103,12 +103,12 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
+- [Aaron Abbott](https://github.com/aabmass), Google
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
 - [Tahir H. Butt](https://github.com/majorgreys) DataDog
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Diego Hurtado](https://github.com/ocelotl)
 - [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
-- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Reiley Yang](https://github.com/reyang), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
