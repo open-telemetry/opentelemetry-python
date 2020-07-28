@@ -33,6 +33,8 @@ Usage Client
         SimpleExportSpanProcessor,
     )
 
+    from opentelemetry import metrics
+    from opentelemetry.sdk.metrics import MeterProvider
     from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
     try:
@@ -44,6 +46,9 @@ Usage Client
     trace.get_tracer_provider().add_span_processor(
         SimpleExportSpanProcessor(ConsoleSpanExporter())
     )
+
+    # Set meter provider to opentelemetry-sdk's MeterProvider
+    metrics.set_meter_provider(MeterProvider())
 
     # Optional - export GRPC specific metrics (latency, bytes in/out, errors) by passing an exporter
     instrumentor = GrpcInstrumentorClient(exporter=ConsoleMetricsExporter(), interval=10)
