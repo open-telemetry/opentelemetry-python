@@ -35,8 +35,8 @@ a distributed trace.
 .. code:: python
 
     from opentelemetry import propagators, trace
-    from opentelemetry.ext.datadog import DatadogExportSpanProcessor, DatadogSpanExporter
-    from opentelemetry.ext.datadog.propagator import DatadogFormat
+    from opentelemetry.exporter.datadog import DatadogExportSpanProcessor, DatadogSpanExporter
+    from opentelemetry.exporter.datadog.propagator import DatadogFormat
     from opentelemetry.sdk.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())

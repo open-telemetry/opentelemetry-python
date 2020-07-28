@@ -15,11 +15,11 @@
 from flask import Flask, request
 
 from opentelemetry import propagators, trace
-from opentelemetry.ext.datadog import (
+from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
-from opentelemetry.ext.datadog.propagator import DatadogFormat
+from opentelemetry.exporter.datadog.propagator import DatadogFormat
 from opentelemetry.sdk.trace import TracerProvider
 
 app = Flask(__name__)
