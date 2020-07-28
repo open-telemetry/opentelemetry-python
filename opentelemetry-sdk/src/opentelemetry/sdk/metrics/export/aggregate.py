@@ -138,7 +138,7 @@ class HistogramAggregator(Aggregator):
         super().__init__(config=config)
         self._lock = threading.Lock()
         self.last_update_timestamp = None
-        boundaries = self.config
+        boundaries = self.config.get("bounds")
         if boundaries and self._validate_boundaries(boundaries):
             self._boundaries = boundaries
         else:

@@ -18,6 +18,13 @@ from unittest import mock
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics import view
 from opentelemetry.sdk.metrics.export import aggregate
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import (
+    InMemoryMetricsExporter,
+)
+from opentelemetry.sdk.metrics.view import View, ViewConfig
 
 
 class TestUtil(unittest.TestCase):
@@ -72,6 +79,44 @@ class TestUtil(unittest.TestCase):
             )
         )
         self.assertEqual(logger_mock.warning.call_count, 1)
+
+
+class TestPipeline(unittest.TestCase):
+    def setUp(self):
+        self.meter = metrics.MeterProvider(stateful=False).get_meter(__name__)
+        self.exporter = InMemoryMetricsExporter()
+        self.controller = PushController(self.meter, self.exporter, 30)
+
+    def tearDown(self):
+        self.controller.shutdown()
+
+    def test_stateless_label_keys(self):
+        test_counter = self.meter.create_metric(
+            name="test_counter",
+            description="description",
+            unit="By",
+            value_type=int,
+            metric_type=Counter,
+        )
+        counter_view = View(
+            test_counter,
+            SumAggregator,
+            label_keys=["environment"],
+            view_config=ViewConfig.LABEL_KEYS,
+        )
+
+        self.meter.register_view(counter_view)
+        test_counter.add(6, {"environment": "production", "customer_id": 123})
+        test_counter.add(5, {"environment": "production", "customer_id": 247})
+
+        self.controller.tick()
+
+        metric_data = self.exporter.get_exported_metrics()
+        self.assertEqual(len(metric_data), 1)
+        self.assertEqual(
+            metric_data[0].labels, (("environment", "production"),)
+        )
+        self.assertEqual(metric_data[0].aggregator.checkpoint, 11)
 
 
 class DummyMetric(metrics.Metric):

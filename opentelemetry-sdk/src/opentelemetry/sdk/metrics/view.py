@@ -68,21 +68,31 @@ class View:
     def __init__(
         self,
         metric: InstrumentT,
-        aggregator: Aggregator,
+        aggregator: type,
+        aggregator_config: dict = None,
         label_keys: Sequence[str] = None,
-        config: ViewConfig = ViewConfig.UNGROUPED,
+        view_config: ViewConfig = ViewConfig.UNGROUPED,
     ):
         self.metric = metric
         self.aggregator = aggregator
+        if aggregator_config is None:
+            aggregator_config = {}
+        self.aggregator_config = aggregator_config
         if label_keys is None:
             label_keys = []
         self.label_keys = sorted(label_keys)
-        self.config = config
+        self.view_config = view_config
 
     # Uniqueness is based on metric, aggregator type, ordered label keys and ViewConfig
     def __hash__(self):
         return hash(
-            (self.metric, self.aggregator, tuple(self.label_keys), self.config)
+            (
+                self.metric,
+                self.aggregator,
+                tuple(self.label_keys),
+                tuple(self.aggregator_config),
+                self.view_config,
+            )
         )
 
     def __eq__(self, other):
@@ -90,7 +100,8 @@ class View:
             self.metric == other.metric
             and self.aggregator.__class__ == other.aggregator.__class__
             and self.label_keys == other.label_keys
-            and self.config == other.config
+            and self.aggregator_config == other.aggregator_config
+            and self.view_config == other.view_config
         )
 
 
@@ -125,19 +136,22 @@ class ViewManager:
         else:
             for view in views:
                 updated_labels = []
-                if view.config == ViewConfig.LABEL_KEYS:
+                if view.view_config == ViewConfig.LABEL_KEYS:
                     label_key_set = set(view.label_keys)
                     for label in labels:
                         # Only keep labels that are in configured label_keys
                         if label[0] in label_key_set:
                             updated_labels.append(label)
                     updated_labels = tuple(updated_labels)
-                elif view.config == ViewConfig.UNGROUPED:
+                elif view.view_config == ViewConfig.UNGROUPED:
                     updated_labels = labels
                 # ViewData that is duplicate (same labels and aggregator) will be
                 # aggregated together as one
                 view_datas.add(
-                    ViewData(tuple(updated_labels), view.aggregator)
+                    ViewData(
+                        tuple(updated_labels),
+                        view.aggregator(view.aggregator_config),
+                    )
                 )
         return view_datas
 
