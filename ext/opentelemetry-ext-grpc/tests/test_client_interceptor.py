@@ -260,7 +260,7 @@ class TestClientProto(TestBase):
         )
 
 
-class TestClienttNoMetrics(TestBase):
+class TestClientNoMetrics(TestBase):
     def setUp(self):
         super().setUp()
         GrpcInstrumentorClient().instrument()

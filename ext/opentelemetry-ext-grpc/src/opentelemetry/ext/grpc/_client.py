@@ -88,7 +88,7 @@ class OpenTelemetryClientInterceptor(
         self._tracer = tracer
 
         self._meter = None
-        if exporter:
+        if exporter and interval:
             self._meter = metrics.get_meter(__name__)
             self.controller = PushController(
                 meter=self._meter, exporter=exporter, interval=interval
