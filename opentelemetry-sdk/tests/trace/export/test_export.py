@@ -156,16 +156,18 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor_to_flush = export.BatchExportSpanProcessor(my_exporter)
-        span_processor_to_shutdown = export.BatchExportSpanProcessor(my_exporter)
+        span_processor_to_shutdown = export.BatchExportSpanProcessor(
+            my_exporter
+        )
 
         span_names0 = ["xxx", "bar", "foo"]
         span_names1 = ["yyy", "baz", "fox"]
 
         for name in span_names0:
-            _create_start_and_end_span(name,span_processor_to_flush)
+            _create_start_and_end_span(name, span_processor_to_flush)
 
         for name in span_names1:
-            _create_start_and_end_span(name,span_processor_to_shutdown)
+            _create_start_and_end_span(name, span_processor_to_shutdown)
 
         # test consecutive calls to force_flush() and shutdown() on separate threads
         span_processor_to_shutdown.shutdown()
