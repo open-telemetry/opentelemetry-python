@@ -1,7 +1,7 @@
 OpenTelemetry Prometheus Exporter
 =================================
 
-.. automodule:: opentelemetry.ext.prometheus
+.. automodule:: opentelemetry.exporter.prometheus
     :members:
     :undoc-members:
     :show-inheritance:

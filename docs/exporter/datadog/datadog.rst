@@ -1,7 +1,7 @@
 OpenTelemetry Datadog Exporter
 ==============================
 
-.. automodule:: opentelemetry.ext.datadog
+.. automodule:: opentelemetry.exporter.datadog
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
 OpenCensus Exporter
 ===================
 
-.. automodule:: opentelemetry.ext.opencensusexporter
+.. automodule:: opentelemetry.exporter.opencensus
     :members:
     :undoc-members:
     :show-inheritance:

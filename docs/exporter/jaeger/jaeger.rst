@@ -1,7 +1,7 @@
 Opentelemetry Jaeger Exporter
 =============================
 
-.. automodule:: opentelemetry.ext.jaeger
+.. automodule:: opentelemetry.exporter.jaeger
     :members:
     :undoc-members:
     :show-inheritance:
@@ -10,7 +10,7 @@ Opentelemetry Jaeger Exporter
 Submodules
 ----------
 
-.. automodule:: opentelemetry.ext.jaeger.gen.jaeger.ttypes
+.. automodule:: opentelemetry.exporter.jaeger.gen.jaeger.ttypes
     :members:
     :undoc-members:
     :show-inheritance:
