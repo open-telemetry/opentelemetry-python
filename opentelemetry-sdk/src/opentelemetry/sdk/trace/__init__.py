@@ -683,14 +683,14 @@ class Span(trace_api.Span):
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
-    def record_error(self, err: Exception) -> None:
-        """Records an error as a span event."""
+    def record_exception(self, exception: Exception) -> None:
+        """Records an exception as a span event."""
         self.add_event(
-            name="error",
+            name="exception",
             attributes={
-                "error.type": err.__class__.__name__,
-                "error.message": str(err),
-                "error.stack": traceback.format_exc(),
+                "exception.type": exception.__class__.__name__,
+                "exception.message": str(exception),
+                "exception.stacktrace": traceback.format_exc(),
             },
         )
 
