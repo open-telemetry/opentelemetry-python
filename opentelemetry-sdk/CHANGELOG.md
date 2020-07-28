@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.11b0
+
+Released 2020-07-28
+
 - Add support for resources and resource detector
   ([#853](https://github.com/open-telemetry/opentelemetry-python/pull/853))
 - Rename record_error to record_exception
