@@ -24,6 +24,7 @@ from opencensus.proto.agent.metrics.v1 import (
     metrics_service_pb2_grpc,
 )
 from opencensus.proto.metrics.v1 import metrics_pb2
+from opencensus.proto.resource.v1 import resource_pb2
 
 import opentelemetry.ext.opencensusexporter.util as utils
 from opentelemetry.sdk.metrics import Counter, Metric
@@ -142,7 +143,9 @@ def translate_to_collector(
         )
         collector_metrics.append(
             metrics_pb2.Metric(
-                metric_descriptor=metric_descriptor, timeseries=[timeseries]
+                metric_descriptor=metric_descriptor,
+                timeseries=[timeseries],
+                resource=get_resource(metric_record),
             )
         )
     return collector_metrics
@@ -177,3 +180,11 @@ def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
             )
         )
     return point
+
+
+def get_resource(metric_record: MetricRecord) -> resource_pb2.Resource:
+    resource_labels = metric_record.instrument.meter.resource.labels
+    return resource_pb2.Resource(
+        type=resource_labels.get("service.name"),
+        labels={k: str(v) for k, v in resource_labels.items()},
+    )
