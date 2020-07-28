@@ -24,3 +24,4 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] Followed the style guidelines of this project
 - [ ] Changelogs have been updated
 - [ ] Unit tests have been added
+- [ ] Documentation has been updated
