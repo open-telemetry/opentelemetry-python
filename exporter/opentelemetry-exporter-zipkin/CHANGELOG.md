@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Change package name to opentelemetry-exporter-zipkin
-  ([#999](https://github.com/open-telemetry/opentelemetry-python/pull/999))
+  ([#953](https://github.com/open-telemetry/opentelemetry-python/pull/953))
 
 ## 0.8b0
 
