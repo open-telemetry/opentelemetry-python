@@ -29,7 +29,7 @@ The **OTLP Span Exporter** allows to export `OpenTelemetry`_ traces to the
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.ext.otlp.trace_exporter import OTLPSpanExporter
+    from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor

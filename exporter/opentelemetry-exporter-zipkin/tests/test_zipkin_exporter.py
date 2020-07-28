@@ -17,7 +17,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.zipkin import ZipkinSpanExporter
+from opentelemetry.exporter.zipkin import ZipkinSpanExporter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult

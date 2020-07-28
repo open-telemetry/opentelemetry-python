@@ -24,7 +24,7 @@ from opencensus.proto.agent.trace.v1 import (
 )
 from opencensus.proto.trace.v1 import trace_pb2
 
-import opentelemetry.ext.opencensusexporter.util as utils
+import opentelemetry.exporter.opencensus.util as utils
 from opentelemetry.sdk.trace import Span
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 

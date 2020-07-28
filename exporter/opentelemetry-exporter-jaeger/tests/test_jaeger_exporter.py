@@ -18,9 +18,9 @@ from unittest import mock
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
-import opentelemetry.ext.jaeger as jaeger_exporter
+import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.jaeger.gen.jaeger import ttypes as jaeger
+from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.trace.status import Status, StatusCanonicalCode

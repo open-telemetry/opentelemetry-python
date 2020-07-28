@@ -27,7 +27,7 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
 .. code:: python
 
     from opentelemetry import metrics
-    from opentelemetry.ext.prometheus import PrometheusMetricsExporter
+    from opentelemetry.exporter.prometheus import PrometheusMetricsExporter
     from opentelemetry.sdk.metrics import Counter, Meter
     from prometheus_client import start_http_server
 

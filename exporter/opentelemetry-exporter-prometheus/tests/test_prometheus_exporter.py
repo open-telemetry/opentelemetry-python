@@ -17,7 +17,7 @@ from unittest import mock
 
 from prometheus_client.core import CounterMetricFamily
 
-from opentelemetry.ext.prometheus import (
+from opentelemetry.exporter.prometheus import (
     CustomCollector,
     PrometheusMetricsExporter,
 )
@@ -122,7 +122,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
         collector.collect()
-        self.assertLogs("opentelemetry.ext.prometheus", level="WARNING")
+        self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING")
 
     def test_sanitize(self):
         collector = CustomCollector("testprefix")
