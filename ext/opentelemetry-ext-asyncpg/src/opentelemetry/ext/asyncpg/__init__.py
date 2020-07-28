@@ -74,36 +74,11 @@ def _hydrate_span_from_args(connection, query, parameters) -> dict:
     return span_attributes
 
 
-async def _do_execute(func, instance, args, kwargs):
-    span_attributes = _hydrate_span_from_args(instance, args[0], args[1:])
-    tracer = getattr(asyncpg, _APPLIED)
-
-    exception = None
-
-    with tracer.start_as_current_span(
-        "postgresql", kind=SpanKind.CLIENT
-    ) as span:
-
-        for attribute, value in span_attributes.items():
-            span.set_attribute(attribute, value)
-
-        try:
-            result = await func(*args, **kwargs)
-        except Exception as exc:  # pylint: disable=W0703
-            exception = exc
-            raise
-        finally:
-            if exception is not None:
-                span.set_status(
-                    Status(_exception_to_canonical_code(exception))
-                )
-            else:
-                span.set_status(Status(StatusCanonicalCode.OK))
-
-    return result
-
-
 class AsyncPGInstrumentor(BaseInstrumentor):
+    def __init__(self, capture_parameters=False):
+        super().__init__()
+        self.capture_parameters = capture_parameters
+
     def _instrument(self, **kwargs):
         tracer_provider = kwargs.get(
             "tracer_provider", trace.get_tracer_provider()
@@ -113,6 +88,7 @@ class AsyncPGInstrumentor(BaseInstrumentor):
             _APPLIED,
             tracer_provider.get_tracer("asyncpg", __version__),
         )
+
         for method in [
             "Connection.execute",
             "Connection.executemany",
@@ -121,7 +97,7 @@ class AsyncPGInstrumentor(BaseInstrumentor):
             "Connection.fetchrow",
         ]:
             wrapt.wrap_function_wrapper(
-                "asyncpg.connection", method, _do_execute
+                "asyncpg.connection", method, self._do_execute
             )
 
     def _uninstrument(self, **__):
@@ -134,3 +110,33 @@ class AsyncPGInstrumentor(BaseInstrumentor):
             "fetchrow",
         ]:
             unwrap(asyncpg.Connection, method)
+
+    async def _do_execute(self, func, instance, args, kwargs):
+        span_attributes = _hydrate_span_from_args(
+            instance, args[0], args[1:] if self.capture_parameters else None,
+        )
+        tracer = getattr(asyncpg, _APPLIED)
+
+        exception = None
+
+        with tracer.start_as_current_span(
+            "postgresql", kind=SpanKind.CLIENT
+        ) as span:
+
+            for attribute, value in span_attributes.items():
+                span.set_attribute(attribute, value)
+
+            try:
+                result = await func(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=W0703
+                exception = exc
+                raise
+            finally:
+                if exception is not None:
+                    span.set_status(
+                        Status(_exception_to_canonical_code(exception))
+                    )
+                else:
+                    span.set_status(Status(StatusCanonicalCode.OK))
+
+        return result
