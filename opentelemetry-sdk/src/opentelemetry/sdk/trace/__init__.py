@@ -556,12 +556,12 @@ class Span(trace_api.Span):
     def get_attribute(self, key: str) -> types.AttributeValue:
         if key is None:
             logger.warning("invalid key (empty or null)")
-            return
+            return None
 
         with self._lock:
             if key not in self.attributes:
                 logger.warning("no attributes for key:%s", str(key))
-                return
+                return None
 
         with self._lock:
             return self.attributes[key]
