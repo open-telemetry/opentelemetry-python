@@ -11,6 +11,8 @@ Released 2020-07-28
 - Add gRPC client and server instrumentors
   ([788](https://github.com/open-telemetry/opentelemetry-python/pull/788))
 
+- Add metric recording (bytes in/out, errors, latency) to gRPC client
+
 ## 0.8b0
 
 Released 2020-05-27
