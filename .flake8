@@ -17,7 +17,7 @@ exclude =
   target
   __pycache__
   exporter/opentelemetry-exporter-jaeger/src/opentelemetry/exporter/jaeger/gen/
-  exporter/opentelemetry-ext-jaeger/build/*
+  exporter/opentelemetry-exporter-jaeger/build/*
   docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/grpc/gen/
   docs/examples/opentelemetry-example-app/build/*
   opentelemetry-proto/build/*
