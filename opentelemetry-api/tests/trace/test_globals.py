@@ -31,8 +31,8 @@ class TestGlobals(unittest.TestCase):
                 test.output,
                 [
                     (
-                        "WARNING:opentelemetry.trace:Overriding current "
-                        "TracerProvider"
+                        "WARNING:opentelemetry.trace:Overriding of current "
+                        "TracerProvider is not allowed"
                     )
                 ],
             )
