@@ -25,6 +25,7 @@ class TestGlobals(unittest.TestCase):
     def test_tracer_provider_override_warning(self):
         """trace.set_tracer_provider should throw a warning when overridden"""
         trace.set_tracer_provider(TracerProvider())
+        tracer_provider = trace.get_tracer_provider()
         with self.assertLogs(level=WARNING) as test:
             trace.set_tracer_provider(TracerProvider())
             self.assertEqual(
@@ -36,6 +37,7 @@ class TestGlobals(unittest.TestCase):
                     )
                 ],
             )
+        self.assertIs(tracer_provider, trace.get_tracer_provider())
 
 
 class TestTracer(unittest.TestCase):
