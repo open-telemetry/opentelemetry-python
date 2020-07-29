@@ -13,7 +13,7 @@ Installation
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-ext-opencensusexporter
+    pip install opentelemetry-exporter-opencensus
 
 Run the Example
 ---------------
@@ -46,7 +46,7 @@ Useful links
 - OpenTelemetry_
 - `OpenTelemetry Collector`_
 - :doc:`../../api/trace`
-- :doc:`../../ext/opencensusexporter/opencensusexporter`
+- :doc:`../../exporter/opencensus/opencensus`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 .. _OpenTelemetry Collector: https://github.com/open-telemetry/opentelemetry-collector
