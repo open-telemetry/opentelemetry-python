@@ -13,13 +13,21 @@
 # limitations under the License.
 
 import logging
+import typing
 
 from celery import registry  # pylint: disable=no-name-in-module
+
+from opentelemetry import trace
 
 logger = logging.getLogger(__name__)
 
 # Celery Context key
 CTX_KEY = "__otel_task_span"
+
+# Parent context key
+CTX_TRACE_ID = "__otel_trace_id"
+CTX_PUBLISHER_SPAN_ID = "__otel_publisher_span_id"
+CTX_PARENT_SPAN_ID = "__otel_parent_span_id"
 
 # Celery Context attributes
 CELERY_CONTEXT_ATTRIBUTES = (
@@ -141,6 +149,54 @@ def detach_span(task, task_id, is_publish=False):
 
     # See note in `attach_span` for key info
     span_dict.pop((task_id, is_publish), (None, None))
+
+
+def attach_span_context(
+    headers, span: trace.Span, parent_span: trace.Span
+) -> None:
+    if headers is None:
+        return
+
+    parent_ctx = parent_span.get_context()
+    ctx = span.get_context()
+
+    # We need to send objects as streams, as the amqp serializer appears to be unhappy
+    # when trying to serialize big numbers, like an uuid in integer form
+    headers[CTX_TRACE_ID] = str(parent_ctx.trace_id)
+    headers[CTX_PARENT_SPAN_ID] = str(parent_ctx.span_id)
+    headers[CTX_PUBLISHER_SPAN_ID] = str(ctx.span_id)
+
+
+def retrieve_span_context(
+    task,
+) -> typing.Tuple[
+    typing.Optional[trace.span.SpanContext],
+    typing.Optional[trace.span.SpanContext],
+]:
+    """
+    Return the parent `SpanContext` and the publisher `SpanContext`.
+    The parent is the span that called onto the publisher, and publisher
+    is the span of `apply_async` task itself.
+    """
+    trace_id = getattr(task.request, CTX_TRACE_ID, None)
+    parent_span_id = getattr(task.request, CTX_PARENT_SPAN_ID, None)
+
+    if parent_span_id is None or trace_id is None:
+        return (None, None)
+
+    parent = trace.span.SpanContext(
+        int(trace_id), int(parent_span_id), is_remote=1,
+    )
+
+    span_id = getattr(task.request, CTX_PUBLISHER_SPAN_ID, "0")
+
+    publisher = None
+    if span_id != "0":
+        publisher = trace.span.SpanContext(
+            int(trace_id), int(span_id), is_remote=1,
+        )
+
+    return (parent, publisher)
 
 
 def retrieve_span(task, task_id, is_publish=False):

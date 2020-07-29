@@ -108,7 +108,23 @@ class CeleryInstrumentor(BaseInstrumentor):
 
         logger.debug("prerun signal start task_id=%s", task_id)
 
-        span = self._tracer.start_span(task.name, kind=trace.SpanKind.CONSUMER)
+        (parent, publisher) = utils.retrieve_span_context(task)
+
+        links = []
+        if publisher is not None:
+            links.append(trace.Link(publisher))
+
+        if parent is not None:
+            span = self._tracer.start_span(
+                task.name,
+                parent=parent,
+                links=links,
+                kind=trace.SpanKind.CONSUMER,
+            )
+        else:
+            span = self._tracer.start_span(
+                task.name, links=links, kind=trace.SpanKind.CONSUMER,
+            )
 
         activation = self._tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
@@ -154,9 +170,12 @@ class CeleryInstrumentor(BaseInstrumentor):
         span.set_attribute(_TASK_NAME_KEY, task.name)
         utils.set_attributes_from_context(span, kwargs)
 
+        parent_span = trace.get_current_span()
+
         activation = self._tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
         utils.attach_span(task, task_id, (span, activation), is_publish=True)
+        utils.attach_span_context(kwargs.get("headers"), span, parent_span)
 
     @staticmethod
     def _trace_after_publish(*args, **kwargs):
