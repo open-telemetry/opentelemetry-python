@@ -17,7 +17,7 @@ from sys import argv
 from requests import get
 
 from opentelemetry import propagators, trace
-from opentelemetry.ext.datadog import (
+from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
