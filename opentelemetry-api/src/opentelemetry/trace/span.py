@@ -5,14 +5,9 @@ import typing
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
 
-MAX_NUM_ATTRIBUTES = 32
-
 
 class Span(abc.ABC):
     """A span represents a single operation within a trace."""
-
-    def __init__(self, attributes: types.Attributes = None) -> None:
-        self.attributes = attributes
 
     @abc.abstractmethod
     def end(self, end_time: typing.Optional[int] = None) -> None:

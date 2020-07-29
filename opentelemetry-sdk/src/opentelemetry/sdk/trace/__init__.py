@@ -387,10 +387,6 @@ class Span(trace_api.Span):
         instrumentation_info: InstrumentationInfo = None,
         set_status_on_exception: bool = True,
     ) -> None:
-        # The only thing the ``__init__()`` method on the base class does is
-        # initialize self.attributes to attributes
-        # Therefore, it doesn't seem useful to call it.
-        # pylint: disable=super-init-not-called
 
         self.name = name
         self.context = context
@@ -558,11 +554,14 @@ class Span(trace_api.Span):
                 self.attributes[key] = value
 
     def get_attribute(self, key: str) -> types.AttributeValue:
-        if not key:
+        if key is None:
             logger.warning("invalid key (empty or null)")
+            return
 
-        if key not in self.attributes:
-            logger.warning("no attributes for key:%s", str(key))
+        with self._lock:
+            if key not in self.attributes:
+                logger.warning("no attributes for key:%s", str(key))
+                return
 
         with self._lock:
             return self.attributes[key]
