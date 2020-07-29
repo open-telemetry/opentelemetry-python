@@ -18,6 +18,7 @@ import typing
 from celery import registry  # pylint: disable=no-name-in-module
 
 from opentelemetry import trace
+from opentelemetry.trace.span import DEFAULT_TRACE_OPTIONS, TraceFlags
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ CTX_KEY = "__otel_task_span"
 CTX_TRACE_ID = "__otel_trace_id"
 CTX_PUBLISHER_SPAN_ID = "__otel_publisher_span_id"
 CTX_PARENT_SPAN_ID = "__otel_parent_span_id"
+CTX_PARENT_TRACE_FLAGS_SAMPLED = "__otel_parent_trace_flags_sampled"
 
 # Celery Context attributes
 CELERY_CONTEXT_ATTRIBUTES = (
@@ -165,6 +167,9 @@ def attach_span_context(
     headers[CTX_TRACE_ID] = str(parent_ctx.trace_id)
     headers[CTX_PARENT_SPAN_ID] = str(parent_ctx.span_id)
     headers[CTX_PUBLISHER_SPAN_ID] = str(ctx.span_id)
+    headers[CTX_PARENT_TRACE_FLAGS_SAMPLED] = getattr(
+        parent_ctx.trace_flags, "sampled", False,
+    )
 
 
 def retrieve_span_context(
@@ -184,8 +189,15 @@ def retrieve_span_context(
     if parent_span_id is None or trace_id is None:
         return (None, None)
 
+    trace_flags = DEFAULT_TRACE_OPTIONS
+    if getattr(task.request, CTX_PARENT_TRACE_FLAGS_SAMPLED, False):
+        trace_flags |= TraceFlags.SAMPLED
+
     parent = trace.span.SpanContext(
-        int(trace_id), int(parent_span_id), is_remote=1,
+        int(trace_id),
+        int(parent_span_id),
+        is_remote=1,
+        trace_flags=TraceFlags(trace_flags),
     )
 
     span_id = getattr(task.request, CTX_PUBLISHER_SPAN_ID, "0")
