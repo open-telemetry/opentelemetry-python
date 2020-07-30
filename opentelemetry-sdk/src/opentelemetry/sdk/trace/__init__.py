@@ -563,7 +563,6 @@ class Span(trace_api.Span):
                 logger.warning("no attributes for key:%s", str(key))
                 return None
 
-        with self._lock:
             return self.attributes[key]
 
     @staticmethod
