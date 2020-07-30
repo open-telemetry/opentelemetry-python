@@ -87,7 +87,7 @@ def _install_package(library, instrumentation):
 
 
     OpenTelemetry auto-instrumentation packages often have traced libraries
-    as instrumentation dependency (e.g. flask for 
+    as instrumentation dependency (e.g. flask for
     opentelemetry-instrumentation-flask), so using -I on library could cause
     likely undesired Flask upgrade.Using --no-dependencies alone would leave
     potential for nonfunctional installations.
