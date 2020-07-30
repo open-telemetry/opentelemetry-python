@@ -17,7 +17,7 @@
 
 """
 This library builds on the OpenTelemetry WSGI middleware to track web requests
-in Flask applications. In addition to opentelemetry-ext-wsgi, it supports
+in Flask applications. In addition to opentelemetry-instrumentation-wsgi, it supports
 flask-specific features such as:
 
 * The Flask endpoint name is used as the Span name.
@@ -30,7 +30,7 @@ Usage
 .. code-block:: python
 
     from flask import Flask
-    from opentelemetry.ext.flask import FlaskInstrumentor
+    from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
     app = Flask(__name__)
 
@@ -51,9 +51,9 @@ from logging import getLogger
 
 import flask
 
-import opentelemetry.ext.wsgi as otel_wsgi
+import opentelemetry.instrumentation.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
-from opentelemetry.ext.flask.version import __version__
+from opentelemetry.instrumentation.flask.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.util import ExcludeList, time_ns
 

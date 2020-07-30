@@ -26,7 +26,7 @@ Usage Client
     import grpc
 
     from opentelemetry import trace
-    from opentelemetry.ext.grpc import GrpcInstrumentorClient, client_interceptor
+    from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient, client_interceptor
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
@@ -77,8 +77,8 @@ Usage Server
     import grpc
 
     from opentelemetry import trace
-    from opentelemetry.ext.grpc import GrpcInstrumentorServer, server_interceptor
-    from opentelemetry.ext.grpc.grpcext import intercept_server
+    from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer, server_interceptor
+    from opentelemetry.instrumentation.grpc.grpcext import intercept_server
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
@@ -124,8 +124,8 @@ import grpc
 from wrapt import wrap_function_wrapper as _wrap
 
 from opentelemetry import trace
-from opentelemetry.ext.grpc.grpcext import intercept_channel, intercept_server
-from opentelemetry.ext.grpc.version import __version__
+from opentelemetry.instrumentation.grpc.grpcext import intercept_channel, intercept_server
+from opentelemetry.instrumentation.grpc.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
 

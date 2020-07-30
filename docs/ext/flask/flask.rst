@@ -1,7 +1,7 @@
 OpenTelemetry Flask Integration
 ===============================
 
-.. automodule:: opentelemetry.ext.flask
+.. automodule:: opentelemetry.instrumentation.flask
     :members:
     :undoc-members:
     :show-inheritance:

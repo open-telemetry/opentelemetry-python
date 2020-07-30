@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-The opentelemetry-ext-aiohttp-client package allows tracing HTTP requests
-made by the aiohttp client library.
+The opentelemetry-instrumentation-aiohttp-client package allows tracing HTTP
+requests made by the aiohttp client library.
 
 Usage
 -----
@@ -22,7 +22,7 @@ Usage
     .. code:: python
 
         import aiohttp
-        from opentelemetry.ext.aiohttp_client import (
+        from opentelemetry.instrumentation.aiohttp_client import (
             create_trace_config,
             url_path_span_name
         )
@@ -51,7 +51,7 @@ import aiohttp
 
 from opentelemetry import context as context_api
 from opentelemetry import propagators, trace
-from opentelemetry.ext.aiohttp_client.version import __version__
+from opentelemetry.instrumentation.aiohttp_client.version import __version__
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
@@ -92,7 +92,7 @@ def create_trace_config(
     .. code:: python
 
         import aiohttp
-        from opentelemetry.ext.aiohttp_client import create_trace_config
+        from opentelemetry.instrumentation.aiohttp_client import create_trace_config
 
         async with aiohttp.ClientSession(trace_configs=[create_trace_config()]) as session:
             async with session.get(url) as response:

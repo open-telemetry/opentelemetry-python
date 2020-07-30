@@ -18,7 +18,7 @@ import unittest.mock as mock
 import wsgiref.util as wsgiref_util
 from urllib.parse import urlsplit
 
-import opentelemetry.ext.wsgi as otel_wsgi
+import opentelemetry.instrumentation.wsgi as otel_wsgi
 from opentelemetry import trace as trace_api
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.trace.status import StatusCanonicalCode

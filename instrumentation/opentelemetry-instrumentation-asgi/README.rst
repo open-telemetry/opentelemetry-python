@@ -3,8 +3,8 @@ OpenTelemetry ASGI Middleware
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-asgi.svg
-   :target: https://pypi.org/project/opentelemetry-ext-asgi/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-instrumentation-asgi.svg
+   :target: https://pypi.org/project/opentelemetry-instrumentation-asgi/
 
 
 This library provides a ASGI middleware that can be used on any ASGI framework
@@ -15,7 +15,7 @@ Installation
 
 ::
 
-    pip install opentelemetry-ext-asgi
+    pip install opentelemetry-instrumentation-asgi
 
 
 Usage (Quart)
@@ -24,7 +24,7 @@ Usage (Quart)
 .. code-block:: python
 
     from quart import Quart
-    from opentelemetry.ext.asgi import OpenTelemetryMiddleware
+    from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 
     app = Quart(__name__)
     app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
@@ -46,7 +46,7 @@ Modify the application's ``asgi.py`` file as shown below.
 
     import os
     from django.core.asgi import get_asgi_application
-    from opentelemetry.ext.asgi import OpenTelemetryMiddleware
+    from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'asgi_example.settings')
 

@@ -3,8 +3,8 @@ OpenTelemetry Flask Tracing
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-flask.svg
-   :target: https://pypi.org/project/opentelemetry-ext-flask/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-instrumentation-flask.svg
+   :target: https://pypi.org/project/opentelemetry-instrumentation-flask/
 
 This library builds on the OpenTelemetry WSGI middleware to track web requests
 in Flask applications.
@@ -14,7 +14,7 @@ Installation
 
 ::
 
-    pip install opentelemetry-ext-flask
+    pip install opentelemetry-instrumentation-flask
 
 Configuration
 -------------

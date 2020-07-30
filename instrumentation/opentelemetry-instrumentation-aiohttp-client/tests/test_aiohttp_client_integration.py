@@ -22,7 +22,7 @@ import aiohttp
 import aiohttp.test_utils
 import yarl
 
-import opentelemetry.ext.aiohttp_client
+import opentelemetry.instrumentation.aiohttp_client
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 
@@ -53,7 +53,7 @@ class TestAioHttpIntegration(TestBase):
         ):
             with self.subTest(url=url):
                 params = aiohttp.TraceRequestStartParams("METHOD", url, {})
-                actual = opentelemetry.ext.aiohttp_client.url_path_span_name(
+                actual = opentelemetry.instrumentation.aiohttp_client.url_path_span_name(
                     params
                 )
                 self.assertEqual(actual, expected)
@@ -110,7 +110,7 @@ class TestAioHttpIntegration(TestBase):
         ):
             with self.subTest(status_code=status_code):
                 host, port = self._http_request(
-                    trace_config=opentelemetry.ext.aiohttp_client.create_trace_config(),
+                    trace_config=opentelemetry.instrumentation.aiohttp_client.create_trace_config(),
                     url="/test-path?query=param#foobar",
                     status_code=status_code,
                 )
@@ -149,7 +149,7 @@ class TestAioHttpIntegration(TestBase):
         ):
             with self.subTest(span_name=span_name, method=method, path=path):
                 host, port = self._http_request(
-                    trace_config=opentelemetry.ext.aiohttp_client.create_trace_config(
+                    trace_config=opentelemetry.instrumentation.aiohttp_client.create_trace_config(
                         span_name=span_name
                     ),
                     method=method,
@@ -182,7 +182,7 @@ class TestAioHttpIntegration(TestBase):
             return str(url.with_query(None))
 
         host, port = self._http_request(
-            trace_config=opentelemetry.ext.aiohttp_client.create_trace_config(
+            trace_config=opentelemetry.instrumentation.aiohttp_client.create_trace_config(
                 url_filter=strip_query_params
             ),
             url="/some/path?query=param&other=param2",
@@ -209,7 +209,7 @@ class TestAioHttpIntegration(TestBase):
 
     def test_connection_errors(self):
         trace_configs = [
-            opentelemetry.ext.aiohttp_client.create_trace_config()
+            opentelemetry.instrumentation.aiohttp_client.create_trace_config()
         ]
 
         for url, expected_status in (
@@ -251,7 +251,7 @@ class TestAioHttpIntegration(TestBase):
             return aiohttp.web.Response()
 
         host, port = self._http_request(
-            trace_config=opentelemetry.ext.aiohttp_client.create_trace_config(),
+            trace_config=opentelemetry.instrumentation.aiohttp_client.create_trace_config(),
             url="/test_timeout",
             request_handler=request_handler,
             timeout=aiohttp.ClientTimeout(sock_read=0.01),
@@ -281,7 +281,7 @@ class TestAioHttpIntegration(TestBase):
             raise aiohttp.web.HTTPFound(location=location)
 
         host, port = self._http_request(
-            trace_config=opentelemetry.ext.aiohttp_client.create_trace_config(),
+            trace_config=opentelemetry.instrumentation.aiohttp_client.create_trace_config(),
             url="/test_too_many_redirects",
             request_handler=request_handler,
             max_redirects=2,

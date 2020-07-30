@@ -5,12 +5,12 @@ from pyramid.httpexceptions import HTTPException
 from pyramid.settings import asbool
 from pyramid.tweens import EXCVIEW
 
-import opentelemetry.ext.wsgi as otel_wsgi
+import opentelemetry.instrumentation.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
-from opentelemetry.ext.pyramid.version import __version__
+from opentelemetry.instrumentation.pyramid.version import __version__
 from opentelemetry.util import ExcludeList, time_ns
 
-TWEEN_NAME = "opentelemetry.ext.pyramid.trace_tween_factory"
+TWEEN_NAME = "opentelemetry.instrumentation.pyramid.trace_tween_factory"
 SETTING_TRACE_ENABLED = "opentelemetry-pyramid.trace_enabled"
 
 _ENVIRON_STARTTIME_KEY = "opentelemetry-pyramid.starttime_key"
@@ -57,7 +57,7 @@ def _before_traversal(event):
     enabled = environ.get(_ENVIRON_ENABLED_KEY)
     if enabled is None:
         _logger.warning(
-            "Opentelemetry pyramid tween 'opentelemetry.ext.pyramid.trace_tween_factory'"
+            "Opentelemetry pyramid tween 'opentelemetry.instrumentation.pyramid.trace_tween_factory'"
             "was not called. Make sure that the tween is included in 'pyramid.tweens' if"
             "the tween list was created manually"
         )

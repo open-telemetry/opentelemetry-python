@@ -17,7 +17,7 @@ from unittest.mock import patch
 from pyramid.config import Configurator
 
 from opentelemetry import trace
-from opentelemetry.ext.pyramid import PyramidInstrumentor
+from opentelemetry.instrumentation.pyramid import PyramidInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.util import ExcludeList
@@ -125,7 +125,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_tween_list(self):
-        tween_list = "opentelemetry.ext.pyramid.trace_tween_factory\npyramid.tweens.excview_tween_factory"
+        tween_list = "opentelemetry.instrumentation.pyramid.trace_tween_factory\npyramid.tweens.excview_tween_factory"
         config = Configurator(settings={"pyramid.tweens": tween_list})
         PyramidInstrumentor().instrument_config(config)
         self._common_initialization(config)
@@ -146,7 +146,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
 
-    @patch("opentelemetry.ext.pyramid.callbacks._logger")
+    @patch("opentelemetry.instrumentation.pyramid.callbacks._logger")
     def test_warnings(self, mock_logger):
         tween_list = "pyramid.tweens.excview_tween_factory"
         config = Configurator(settings={"pyramid.tweens": tween_list})
@@ -160,7 +160,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
 
         mock_logger.warning.called = False
 
-        tween_list = "opentelemetry.ext.pyramid.trace_tween_factory"
+        tween_list = "opentelemetry.instrumentation.pyramid.trace_tween_factory"
         config = Configurator(settings={"pyramid.tweens": tween_list})
         self._common_initialization(config)
 
@@ -170,7 +170,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(mock_logger.warning.called, True)
 
     @patch(
-        "opentelemetry.ext.pyramid.callbacks._excluded_urls",
+        "opentelemetry.instrumentation.pyramid.callbacks._excluded_urls",
         ExcludeList(["http://localhost/excluded_arg/123", "excluded_noarg"]),
     )
     def test_exclude_lists(self):

@@ -22,11 +22,11 @@ Usage
 .. code-block:: python
 
     import requests
-    import opentelemetry.ext.requests
+    import opentelemetry.instrumentation.requests
 
     # You can optionally pass a custom TracerProvider to
     RequestInstrumentor.instrument()
-    opentelemetry.ext.requests.RequestsInstrumentor().instrument()
+    opentelemetry.instrumentation.requests.RequestsInstrumentor().instrument()
     response = requests.get(url="https://www.example.org/")
 
 Limitations
@@ -51,7 +51,7 @@ from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from requests.sessions import Session
 
 from opentelemetry import context, propagators
-from opentelemetry.ext.requests.version import __version__
+from opentelemetry.instrumentation.requests.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind, get_tracer

@@ -16,8 +16,8 @@ from logging import getLogger
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import attach, detach
-from opentelemetry.ext.django.version import __version__
-from opentelemetry.ext.wsgi import (
+from opentelemetry.instrumentation.django.version import __version__
+from opentelemetry.instrumentation.wsgi import (
     add_response_attributes,
     collect_request_attributes,
     get_header_from_environ,

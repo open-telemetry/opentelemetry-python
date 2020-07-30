@@ -1,7 +1,7 @@
 OpenTelemetry requests Integration
 ==================================
 
-.. automodule:: opentelemetry.ext.requests
+.. automodule:: opentelemetry.instrumentation.requests
     :members:
     :undoc-members:
     :show-inheritance:

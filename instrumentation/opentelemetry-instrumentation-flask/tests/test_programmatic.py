@@ -17,7 +17,7 @@ from unittest.mock import patch
 from flask import Flask, request
 
 from opentelemetry import trace
-from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.util import ExcludeList
@@ -144,7 +144,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     @patch(
-        "opentelemetry.ext.flask._excluded_urls",
+        "opentelemetry.instrumentation.flask._excluded_urls",
         ExcludeList(["http://localhost/excluded_arg/123", "excluded_noarg"]),
     )
     def test_exclude_lists(self):

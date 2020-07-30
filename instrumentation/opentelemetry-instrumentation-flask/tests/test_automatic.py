@@ -16,7 +16,7 @@ import flask
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
-from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 

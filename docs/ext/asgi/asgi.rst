@@ -1,10 +1,10 @@
-opentelemetry.ext.asgi package
+opentelemetry.instrumentation.asgi package
 ==============================
 
 Module contents
 ---------------
 
-.. automodule:: opentelemetry.ext.asgi
+.. automodule:: opentelemetry.instrumentation.asgi
     :members:
     :undoc-members:
     :show-inheritance:

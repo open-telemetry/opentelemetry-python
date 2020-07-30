@@ -21,7 +21,7 @@ from django.test import Client
 from django.test.utils import setup_test_environment, teardown_test_environment
 
 from opentelemetry.configuration import Configuration
-from opentelemetry.ext.django import DjangoInstrumentor
+from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -116,7 +116,7 @@ class TestMiddleware(WsgiTestBase):
         self.assertEqual(span.attributes["http.scheme"], "http")
 
     @patch(
-        "opentelemetry.ext.django.middleware._DjangoMiddleware._excluded_urls",
+        "opentelemetry.instrumentation.django.middleware._DjangoMiddleware._excluded_urls",
         ExcludeList(["http://testserver/excluded_arg/123", "excluded_noarg"]),
     )
     def test_exclude_lists(self):

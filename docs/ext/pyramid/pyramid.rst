@@ -1,7 +1,7 @@
 OpenTelemetry Pyramid Integration
 =================================
 
-.. automodule:: opentelemetry.ext.pyramid
+.. automodule:: opentelemetry.instrumentation.pyramid
     :members:
     :undoc-members:
     :show-inheritance:

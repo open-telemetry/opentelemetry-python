@@ -242,7 +242,7 @@ class TracerProvider(abc.ABC):
                 This should *not* be the name of the module that is
                 instrumented but the name of the module doing the instrumentation.
                 E.g., instead of ``"requests"``, use
-                ``"opentelemetry.ext.requests"``.
+                ``"opentelemetry.instrumentation.requests"``.
 
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as

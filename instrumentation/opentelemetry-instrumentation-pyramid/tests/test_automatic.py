@@ -14,7 +14,7 @@
 
 from pyramid.config import Configurator
 
-from opentelemetry.ext.pyramid import PyramidInstrumentor
+from opentelemetry.instrumentation.pyramid import PyramidInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 

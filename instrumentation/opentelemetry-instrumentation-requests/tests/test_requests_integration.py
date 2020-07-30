@@ -17,9 +17,9 @@ from unittest import mock
 import httpretty
 import requests
 
-import opentelemetry.ext.requests
+import opentelemetry.instrumentation.requests
 from opentelemetry import context, propagators, trace
-from opentelemetry.ext.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
 from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
 from opentelemetry.test.test_base import TestBase
@@ -68,7 +68,7 @@ class TestRequestsIntegration(TestBase):
             span.status.canonical_code, trace.status.StatusCanonicalCode.OK
         )
 
-        self.check_span_instrumentation_info(span, opentelemetry.ext.requests)
+        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.requests)
 
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"

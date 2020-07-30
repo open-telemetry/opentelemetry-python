@@ -3,8 +3,8 @@ OpenTelemetry gRPC Integration
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-grpc.svg
-   :target: https://pypi.org/project/opentelemetry-ext-grpc/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-instrumentation-grpc.svg
+   :target: https://pypi.org/project/opentelemetry-instrumentation-grpc/
 
 Client and server interceptors for `gRPC Python`_.
 
@@ -15,4 +15,4 @@ Installation
 
 ::
 
-     pip install opentelemetry-ext-grpc
+     pip install opentelemetry-instrumentation-grpc

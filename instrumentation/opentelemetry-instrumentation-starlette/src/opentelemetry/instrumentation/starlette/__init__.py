@@ -16,7 +16,7 @@ from typing import Optional
 from starlette import applications
 from starlette.routing import Match
 
-from opentelemetry.ext.asgi import OpenTelemetryMiddleware
+from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.starlette.version import __version__  # noqa
 

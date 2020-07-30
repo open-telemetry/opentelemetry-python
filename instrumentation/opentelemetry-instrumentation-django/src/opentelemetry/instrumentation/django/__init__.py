@@ -17,7 +17,7 @@ from logging import getLogger
 from django.conf import settings
 
 from opentelemetry.configuration import Configuration
-from opentelemetry.ext.django.middleware import _DjangoMiddleware
+from opentelemetry.instrumentation.django.middleware import _DjangoMiddleware
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 _logger = getLogger(__name__)

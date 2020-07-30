@@ -3,15 +3,15 @@ OpenTelemetry Pyramid Integration
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-ext-pyramid.svg
-   :target: https://pypi.org/project/opentelemetry-ext-pyramid/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-instrumentation-pyramid.svg
+   :target: https://pypi.org/project/opentelemetry-instrumentation-pyramid/
 
 Installation
 ------------
 
 ::
 
-    pip install opentelemetry-ext-pyramid
+    pip install opentelemetry-instrumentation-pyramid
 
 Exclude lists
 *************
