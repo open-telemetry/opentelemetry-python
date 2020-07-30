@@ -294,7 +294,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
             "opentelemetry.ext.dbapi",
             "opentelemetry.instrumentation.django",
             "opentelemetry.instrumentation.flask",
-            "opentelemetry.instrumentation.grpc",
+            "opentelemetry.ext.grpc",
             "opentelemetry.ext.jinja2",
             "opentelemetry.ext.mysql",
             "opentelemetry.ext.psycopg2",
