@@ -124,12 +124,9 @@ import grpc
 from wrapt import wrap_function_wrapper as _wrap
 
 from opentelemetry import trace
-from opentelemetry.ext.grpc.grpcext import (
-    intercept_channel,
-    intercept_server,
-)
+from opentelemetry.ext.grpc.grpcext import intercept_channel, intercept_server
 from opentelemetry.ext.grpc.version import __version__
-from opentelemetry.ext.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.ext.utils import unwrap
 
 # pylint:disable=import-outside-toplevel
