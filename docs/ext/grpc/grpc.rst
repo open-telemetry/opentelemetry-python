@@ -4,7 +4,7 @@ OpenTelemetry gRPC Instrumentation
 Module contents
 ---------------
 
-.. automodule:: opentelemetry.instrumentation.grpc
+.. automodule:: opentelemetry.ext.grpc
    :members:
    :undoc-members:
    :show-inheritance:
