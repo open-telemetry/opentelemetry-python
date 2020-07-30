@@ -34,5 +34,5 @@ will exclude requests such as ``https://site/client/123/info`` and ``https://sit
 References
 ----------
 
-* `OpenTelemetry Flask Tracing <https://opentelemetry-python.readthedocs.io/en/latest/ext/flask/flask.html>`_
+* `OpenTelemetry Flask Tracing <https://opentelemetry-python.readthedocs.io/en/latest/instrumentation/flask/flask.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_

@@ -27,6 +27,6 @@ will exclude requests such as ``https://site/client/123/info`` and ``https://sit
 
 References
 ----------
-* `OpenTelemetry Pyramid Integration <https://opentelemetry-python.readthedocs.io/en/latest/ext/pyramid/pyramid.html>`_
+* `OpenTelemetry Pyramid Integration <https://opentelemetry-python.readthedocs.io/en/latest/instrumentation/pyramid/pyramid.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
 

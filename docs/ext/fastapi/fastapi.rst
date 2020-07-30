@@ -1,4 +1,4 @@
-.. include:: ../../../ext/opentelemetry-instrumentation-fastapi/README.rst
+.. include:: ../../../instrumentation/opentelemetry-instrumentation-fastapi/README.rst
 
 API
 ---

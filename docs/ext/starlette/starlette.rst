@@ -1,4 +1,4 @@
-.. include:: ../../../ext/opentelemetry-instrumentation-starlette/README.rst
+.. include:: ../../../instrumentation/opentelemetry-instrumentation-starlette/README.rst
 
 API
 ---
