@@ -15,7 +15,7 @@
 from typing import Sequence
 
 from opentelemetry.sdk.metrics.export import MetricRecord
-
+from opentelemetry.sdk.util import get_dict_as_key
 
 class Batcher:
     """Base class for all batcher types.
@@ -42,7 +42,7 @@ class Batcher:
         metric_records = []
         # pylint: disable=W0612
         for (
-            (instrument, aggregator_type, labels),
+            (instrument, aggregator_type, _, labels),
             aggregator,
         ) in self._batch_map.items():
             metric_records.append(MetricRecord(instrument, labels, aggregator))
@@ -60,17 +60,15 @@ class Batcher:
         """Stores record information to be ready for exporting."""
         # Checkpoints the current aggregator value to be collected for export
         aggregator = record.aggregator
-        aggregator.take_checkpoint()
 
         # The uniqueness of a batch record is defined by a specific metric
         # using an aggregator type with a specific set of labels.
-        key = (record.instrument, aggregator.__class__, record.labels)
+        key = (record.instrument, aggregator.__class__, get_dict_as_key(aggregator.config), record.labels)
         batch_value = self._batch_map.get(key)
         if batch_value:
-            # Update the stored checkpointed value if exists. The call to merge
-            # here combines only identical records (same key).
-            batch_value.merge(aggregator)
+            # Already have a reference to the aggregator, don't take another checkpoint
             return
+        aggregator.take_checkpoint()
         if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage

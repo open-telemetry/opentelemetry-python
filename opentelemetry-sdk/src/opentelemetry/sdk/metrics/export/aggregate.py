@@ -32,7 +32,10 @@ class Aggregator(abc.ABC):
     def __init__(self, config=None):
         self.current = None
         self.checkpoint = None
-        self.config = config
+        if config:
+            self.config = config
+        else:
+            self.config = {}
 
     @abc.abstractmethod
     def update(self, value):

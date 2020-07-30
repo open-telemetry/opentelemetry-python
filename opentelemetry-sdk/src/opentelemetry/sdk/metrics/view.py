@@ -82,6 +82,22 @@ class View:
             label_keys = []
         self.label_keys = sorted(label_keys)
         self.view_config = view_config
+        self.view_datas = set()
+
+    def get_view_data(self, labels):
+        active_labels = []
+        if self.view_config == ViewConfig.LABEL_KEYS:
+            active_labels = {(lk, lv) for lk, lv in labels if lk in set(self.label_keys)}
+            active_labels = tuple(active_labels)
+        elif self.view_config == ViewConfig.UNGROUPED:
+            active_labels = labels
+
+        for view_data in self.view_datas:
+            if view_data.labels == active_labels:
+                return view_data
+        new_view_data = ViewData(active_labels, self.aggregator(self.aggregator_config))
+        self.view_datas.add(new_view_data)
+        return new_view_data
 
     # Uniqueness is based on metric, aggregator type, ordered label keys and ViewConfig
     def __hash__(self):
@@ -109,6 +125,7 @@ class ViewManager:
     def __init__(self):
         self.views = defaultdict(set)  # Map[Metric, Set]
         self._view_lock = threading.Lock()
+        self.view_datas = set()
 
     def register_view(self, view):
         with self._view_lock:
@@ -125,34 +142,19 @@ class ViewManager:
             elif view in self.views.get(view.metric):
                 self.views.get(view.metric).remove(view)
 
-    def generate_view_datas(self, metric, labels):
+    def get_view_datas(self, metric, labels):
         view_datas = set()
         views = self.views.get(metric)
         # No views configured, use default aggregations
         if views is None:
-            aggregator = get_default_aggregator(metric)
-            # Default config aggregates on all label keys
-            view_datas.add(ViewData(tuple(labels), aggregator))
-        else:
-            for view in views:
-                updated_labels = []
-                if view.view_config == ViewConfig.LABEL_KEYS:
-                    label_key_set = set(view.label_keys)
-                    for label in labels:
-                        # Only keep labels that are in configured label_keys
-                        if label[0] in label_key_set:
-                            updated_labels.append(label)
-                    updated_labels = tuple(updated_labels)
-                elif view.view_config == ViewConfig.UNGROUPED:
-                    updated_labels = labels
-                # ViewData that is duplicate (same labels and aggregator) will be
-                # aggregated together as one
-                view_datas.add(
-                    ViewData(
-                        tuple(updated_labels),
-                        view.aggregator(view.aggregator_config),
-                    )
-                )
+            # make a default view for the metric
+            default_view = View(metric, get_default_aggregator(metric))
+            self.register_view(default_view)
+            views = [default_view]
+
+        for view in views:
+            view_datas.add(view.get_view_data(labels))
+
         return view_datas
 
 
@@ -164,12 +166,12 @@ def get_default_aggregator(instrument: InstrumentT) -> Aggregator:
     # pylint:disable=R0201
     instrument_type = instrument.__class__
     if issubclass(instrument_type, (Counter, UpDownCounter)):
-        return SumAggregator()
+        return SumAggregator
     if issubclass(instrument_type, (SumObserver, UpDownSumObserver)):
-        return LastValueAggregator()
+        return LastValueAggregator
     if issubclass(instrument_type, ValueRecorder):
-        return MinMaxSumCountAggregator()
+        return MinMaxSumCountAggregator
     if issubclass(instrument_type, ValueObserver):
-        return ValueObserverAggregator()
+        return ValueObserverAggregator
     logger.warning("No default aggregator configured for: %s", instrument_type)
-    return SumAggregator()
+    return SumAggregator
