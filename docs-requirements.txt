@@ -8,6 +8,7 @@ asyncpg>=0.12.0
 ddtrace>=0.34.0
 aiohttp~= 3.0
 aiopg>=0.13.0
+grpcio~=1.27
 Deprecated>=1.2.6
 django>=2.2
 PyMySQL~=0.9.3
