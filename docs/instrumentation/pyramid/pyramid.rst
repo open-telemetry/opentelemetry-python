@@ -1,5 +1,5 @@
-OpenTelemetry Pyramid Integration
-=================================
+OpenTelemetry Pyramid Instrumentation
+=====================================
 
 .. automodule:: opentelemetry.instrumentation.pyramid
     :members:

@@ -1,5 +1,5 @@
-OpenTelemetry Flask Integration
-===============================
+OpenTelemetry Flask Instrumentation
+===================================
 
 .. automodule:: opentelemetry.instrumentation.flask
     :members:

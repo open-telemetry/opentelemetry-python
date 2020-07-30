@@ -1,5 +1,5 @@
-OpenTelemetry WSGI Middleware
-=============================
+OpenTelemetry WSGI Instrumentation
+==================================
 
 .. automodule:: opentelemetry.instrumentation.wsgi
     :members:

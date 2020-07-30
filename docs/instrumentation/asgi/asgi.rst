@@ -1,5 +1,5 @@
-opentelemetry.instrumentation.asgi package
-==============================
+OpenTelemetry asgi Instrumentation
+===================================
 
 Module contents
 ---------------

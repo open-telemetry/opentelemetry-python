@@ -1,5 +1,5 @@
-OpenTelemetry gRPC Integration
-==============================
+OpenTelemetry gRPC Instrumentation
+==================================
 
 Module contents
 ---------------

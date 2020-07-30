@@ -1,4 +1,4 @@
-OpenTelemetry aiopg instrumentation
+OpenTelemetry aiopg Instrumentation
 ===================================
 
 .. automodule:: opentelemetry.instrumentation.aiopg

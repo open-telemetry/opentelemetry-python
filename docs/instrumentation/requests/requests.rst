@@ -1,5 +1,5 @@
-OpenTelemetry requests Integration
-==================================
+OpenTelemetry requests Instrumentation
+======================================
 
 .. automodule:: opentelemetry.instrumentation.requests
     :members:
