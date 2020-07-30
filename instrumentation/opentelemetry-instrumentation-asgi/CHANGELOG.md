@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Change package name to opentelemetry-instrumentation-asgi
-  ([#999](https://github.com/open-telemetry/opentelemetry-python/pull/999))
+  ([#961](https://github.com/open-telemetry/opentelemetry-python/pull/961))
 
 ## 0.8b0
 
