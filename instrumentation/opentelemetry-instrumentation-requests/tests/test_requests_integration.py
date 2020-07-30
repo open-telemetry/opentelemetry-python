@@ -68,7 +68,9 @@ class TestRequestsIntegration(TestBase):
             span.status.canonical_code, trace.status.StatusCanonicalCode.OK
         )
 
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.requests)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.requests
+        )
 
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"

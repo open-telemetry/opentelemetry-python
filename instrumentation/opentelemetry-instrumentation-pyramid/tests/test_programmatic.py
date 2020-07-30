@@ -160,7 +160,9 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
 
         mock_logger.warning.called = False
 
-        tween_list = "opentelemetry.instrumentation.pyramid.trace_tween_factory"
+        tween_list = (
+            "opentelemetry.instrumentation.pyramid.trace_tween_factory"
+        )
         config = Configurator(settings={"pyramid.tweens": tween_list})
         self._common_initialization(config)
 

@@ -124,7 +124,10 @@ import grpc
 from wrapt import wrap_function_wrapper as _wrap
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.grpc.grpcext import intercept_channel, intercept_server
+from opentelemetry.instrumentation.grpc.grpcext import (
+    intercept_channel,
+    intercept_server,
+)
 from opentelemetry.instrumentation.grpc.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap

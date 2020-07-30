@@ -22,7 +22,10 @@ import grpc
 
 import opentelemetry.instrumentation.grpc
 from opentelemetry import trace
-from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer, server_interceptor
+from opentelemetry.instrumentation.grpc import (
+    GrpcInstrumentorServer,
+    server_interceptor,
+)
 from opentelemetry.instrumentation.grpc.grpcext import intercept_server
 from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.test.test_base import TestBase
@@ -76,7 +79,9 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         span = spans_list[0]
         self.assertEqual(span.name, "test")
         self.assertIs(span.kind, trace.SpanKind.SERVER)
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.grpc)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.grpc
+        )
         grpc_server_instrumentor.uninstrument()
 
     def test_uninstrument(self):
@@ -141,7 +146,9 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         self.assertIs(span.kind, trace.SpanKind.SERVER)
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.grpc)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.grpc
+        )
 
     def test_span_lifetime(self):
         """Check that the span is active for the duration of the call."""
