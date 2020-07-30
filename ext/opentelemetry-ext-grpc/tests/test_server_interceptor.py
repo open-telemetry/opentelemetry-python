@@ -79,9 +79,7 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         span = spans_list[0]
         self.assertEqual(span.name, "test")
         self.assertIs(span.kind, trace.SpanKind.SERVER)
-        self.check_span_instrumentation_info(
-            span, opentelemetry.ext.grpc
-        )
+        self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
         grpc_server_instrumentor.uninstrument()
 
     def test_uninstrument(self):
@@ -146,9 +144,7 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         self.assertIs(span.kind, trace.SpanKind.SERVER)
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(
-            span, opentelemetry.ext.grpc
-        )
+        self.check_span_instrumentation_info(span, opentelemetry.ext.grpc)
 
     def test_span_lifetime(self):
         """Check that the span is active for the duration of the call."""
