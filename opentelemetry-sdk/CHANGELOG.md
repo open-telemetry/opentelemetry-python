@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed default Sampler to `ParentOrElse(AlwaysOn)`
+
 ## Version 0.11b0
 
 Released 2020-07-28
