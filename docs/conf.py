@@ -43,7 +43,15 @@ ext_dirs = [
     for f in listdir(ext)
     if isdir(join(ext, f))
 ]
-sys.path[:0] = source_dirs + exp_dirs + ext_dirs
+
+instr = "../instrumentation"
+instr_dirs = [
+    os.path.abspath("/".join(["../instrumentation", f, "src"]))
+    for f in listdir(ext)
+    if isdir(join(ext, f))
+]
+
+sys.path[:0] = source_dirs + exp_dirs + ext_dirs + instr_dirs
 
 # -- Project information -----------------------------------------------------
 
