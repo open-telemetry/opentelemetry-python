@@ -4,10 +4,9 @@
 
 - Change package name to opentelemetry-instrumentation-flask
   ([#999](https://github.com/open-telemetry/opentelemetry-python/pull/999))
+- Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL` ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
 
 ## Version 0.11b0
-
-Released 2020-07-28
 
 - Use one general exclude list instead of two ([#872](https://github.com/open-telemetry/opentelemetry-python/pull/872))
 
