@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL`
+  ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
+
+## Version 0.11b0
+
 - Add support for resources and resource detector
   ([#853](https://github.com/open-telemetry/opentelemetry-python/pull/853))
 - Rename record_error to record_exception

@@ -14,7 +14,7 @@
 
 from opentelemetry import trace
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.ext.opencensusexporter.trace_exporter import (
+from opentelemetry.exporter.opencensus.trace_exporter import (
     OpenCensusSpanExporter,
 )
 from opentelemetry.sdk.trace import TracerProvider

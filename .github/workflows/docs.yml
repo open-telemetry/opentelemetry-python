@@ -6,6 +6,7 @@ on:
     - master
     paths:
     - 'docs/**'
+    - 'exporter/**'
     - 'ext/**'
     - 'opentelemetry-python/opentelemetry-api/src/opentelemetry/**'
     - 'opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/**'

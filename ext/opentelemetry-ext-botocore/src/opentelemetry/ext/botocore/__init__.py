@@ -160,6 +160,21 @@ def add_span_arg_tags(span, endpoint_name, args, args_names, args_traced):
 
         return value
 
+    def flatten_dict(dict_, sep=".", prefix=""):
+        """
+        Returns a normalized dict of depth 1 with keys in order of embedding
+        """
+        # adapted from https://stackoverflow.com/a/19647596
+        return (
+            {
+                prefix + sep + k if prefix else k: v
+                for kk, vv in dict_.items()
+                for k, v in flatten_dict(vv, sep, kk).items()
+            }
+            if isinstance(dict_, dict)
+            else {prefix: dict_}
+        )
+
     if endpoint_name not in {"kms", "sts"}:
         tags = dict(
             (name, value)
@@ -173,22 +188,6 @@ def add_span_arg_tags(span, endpoint_name, args, args_names, args_traced):
             if k not in {"s3": ["params.Body"]}.get(endpoint_name, [])
         }.items():
             span.set_attribute(key, value)
-
-
-def flatten_dict(dict_, sep=".", prefix=""):
-    """
-    Returns a normalized dict of depth 1 with keys in order of embedding
-    """
-    # adapted from https://stackoverflow.com/a/19647596
-    return (
-        {
-            prefix + sep + k if prefix else k: v
-            for kk, vv in dict_.items()
-            for k, v in flatten_dict(vv, sep, kk).items()
-        }
-        if isinstance(dict_, dict)
-        else {prefix: dict_}
-    )
 
 
 def deep_getattr(obj, attr_string, default=None):
