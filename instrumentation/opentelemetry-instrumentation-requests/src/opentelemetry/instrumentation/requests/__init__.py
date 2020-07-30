@@ -51,8 +51,8 @@ from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from requests.sessions import Session
 
 from opentelemetry import context, propagators
-from opentelemetry.instrumentation.requests.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.requests.version import __version__
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import Status, StatusCanonicalCode

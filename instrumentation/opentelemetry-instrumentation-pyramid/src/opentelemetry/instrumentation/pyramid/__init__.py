@@ -86,13 +86,13 @@ from pyramid.settings import aslist
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.pyramid.callbacks import (
     SETTING_TRACE_ENABLED,
     TWEEN_NAME,
     trace_tween_factory,
 )
 from opentelemetry.instrumentation.pyramid.version import __version__
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import TracerProvider, get_tracer
 
