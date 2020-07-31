@@ -91,7 +91,7 @@ import opentracing
 from deprecated import deprecated
 
 from opentelemetry import propagators
-from opentelemetry.context import Context, attach, get_value, set_value
+from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.correlationcontext import get_correlation, set_correlation
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
@@ -327,7 +327,7 @@ class ScopeShim(opentracing.Scope):
     def __init__(self, manager, span, span_cm=None):
         super().__init__(manager, span)
         self._span_cm = span_cm
-        attach(set_value("scope_shim", self))
+        self._token = attach(set_value("scope_shim", self))
 
     # TODO: Change type of `manager` argument to `opentracing.ScopeManager`? We
     # need to get rid of `manager.tracer` for this.
@@ -382,6 +382,8 @@ class ScopeShim(opentracing.Scope):
             ends the associated span**, regardless of the value passed in
             *finish_on_close* when activating the span.
         """
+
+        detach(self._token)
 
         if self._span_cm is not None:
             # We don't have error information to pass to `__exit__()` so we
