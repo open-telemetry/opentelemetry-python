@@ -74,9 +74,12 @@ class Batcher:
         )
         batch_value = self._batch_map.get(key)
         if batch_value:
-            # Already have a reference to the aggregator, don't take another checkpoint
-            return
-        aggregator.take_checkpoint()
+            if batch_value != aggregator:
+                aggregator.take_checkpoint()
+                batch_value.merge(aggregator)
+        else:
+            aggregator.take_checkpoint()
+
         if self.stateful:
             # if stateful batcher, create a copy of the aggregator and update
             # it with the current checkpointed value for long-term storage

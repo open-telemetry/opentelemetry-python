@@ -15,7 +15,7 @@
 import logging
 import threading
 from collections import defaultdict
-from typing import Sequence, Tuple, Optional
+from typing import Optional, Sequence, Tuple
 
 from opentelemetry.metrics import (
     Counter,

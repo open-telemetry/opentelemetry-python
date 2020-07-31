@@ -16,12 +16,11 @@ import unittest
 from unittest import mock
 
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics import view
+from opentelemetry.sdk.metrics import Counter, view
 from opentelemetry.sdk.metrics.export import aggregate
-from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics.export.aggregate import (
-    SumAggregator,
     MinMaxSumCountAggregator,
+    SumAggregator,
 )
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import (
