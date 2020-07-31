@@ -77,7 +77,6 @@ import typing
 from contextlib import contextmanager
 from logging import getLogger
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -483,4 +482,5 @@ __all__ = [
     "get_tracer_provider",
     "set_tracer_provider",
     "set_span_in_context",
+    "Status",
 ]
