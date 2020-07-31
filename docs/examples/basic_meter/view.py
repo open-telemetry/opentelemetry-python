@@ -60,31 +60,32 @@ requests_size = meter.create_metric(
 # dropped from the aggregation
 counter_view1 = View(
     requests_counter,
-    SumAggregator(),
+    SumAggregator,
     label_keys=["environment"],
-    config=ViewConfig.LABEL_KEYS,
+    view_config=ViewConfig.LABEL_KEYS,
 )
 counter_view2 = View(
     requests_counter,
-    MinMaxSumCountAggregator(),
+    MinMaxSumCountAggregator,
     label_keys=["os_type"],
-    config=ViewConfig.LABEL_KEYS,
+    view_config=ViewConfig.LABEL_KEYS,
 )
 # This view has ViewConfig set to UNGROUPED, meaning all recorded metrics take
 # the labels directly without and consideration for label_keys
 counter_view3 = View(
     requests_counter,
-    LastValueAggregator(),
+    LastValueAggregator,
     label_keys=["environment"],  # is not used due to ViewConfig.UNGROUPED
-    config=ViewConfig.UNGROUPED,
+    view_config=ViewConfig.UNGROUPED,
 )
 # This view uses the HistogramAggregator which accepts an option config
 # parameter to specify the bucket ranges
 size_view = View(
     requests_size,
-    HistogramAggregator(config=[20, 40, 60, 80, 100]),
+    HistogramAggregator,
     label_keys=["environment"],  # is not used due to ViewConfig.UNGROUPED
-    config=ViewConfig.UNGROUPED,
+    aggregator_config={"bounds": [20, 40, 60, 80, 100]},
+    view_config=ViewConfig.UNGROUPED,
 )
 
 # Register the views to the view manager to use the views. Views MUST be

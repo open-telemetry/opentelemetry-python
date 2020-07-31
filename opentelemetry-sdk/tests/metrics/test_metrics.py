@@ -80,7 +80,7 @@ class TestMeter(unittest.TestCase):
             "name", "desc", "unit", float, metrics.Counter
         )
         labels = {"key1": "value1"}
-        meter.register_view(View(counter, SumAggregator()))
+        meter.register_view(View(counter, SumAggregator))
         counter.add(1.0, labels)
         meter.collect()
         self.assertTrue(batcher_mock.process.called)
@@ -108,7 +108,7 @@ class TestMeter(unittest.TestCase):
         meter.batcher = batcher_mock
         counter = metrics.Counter("name", "desc", "unit", float, meter, False)
         labels = {"key1": "value1"}
-        meter.register_view(View(counter, SumAggregator()))
+        meter.register_view(View(counter, SumAggregator))
         counter.add(1.0, labels)
         meter.collect()
         self.assertFalse(batcher_mock.process.called)
@@ -137,8 +137,8 @@ class TestMeter(unittest.TestCase):
         valuerecorder = metrics.ValueRecorder(
             "name", "desc", "unit", float, meter
         )
-        counter_v = View(counter, SumAggregator())
-        measure_v = View(valuerecorder, MinMaxSumCountAggregator())
+        counter_v = View(counter, SumAggregator)
+        measure_v = View(valuerecorder, MinMaxSumCountAggregator)
         meter.register_view(counter_v)
         meter.register_view(measure_v)
         record_tuples = [(counter, 1.0), (valuerecorder, 3.0)]
@@ -241,7 +241,7 @@ class TestCounter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", int, meter)
         labels = {"key": "value"}
-        counter_v = View(metric, SumAggregator())
+        counter_v = View(metric, SumAggregator)
         meter.register_view(counter_v)
         bound_mock = metric.bind(labels)
         metric.add(3, labels)
@@ -253,7 +253,7 @@ class TestCounter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", int, meter)
         labels = {"key": "value"}
-        counter_v = View(metric, SumAggregator())
+        counter_v = View(metric, SumAggregator)
         meter.register_view(counter_v)
         bound_counter = metric.bind(labels)
         metric.add(3, labels)
@@ -267,7 +267,7 @@ class TestCounter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", float, meter,)
         labels = {"key": "value"}
-        counter_v = View(metric, SumAggregator())
+        counter_v = View(metric, SumAggregator)
         meter.register_view(counter_v)
         bound_counter = metric.bind(labels)
         metric.add(3.3, labels)
@@ -286,7 +286,7 @@ class TestUpDownCounter(unittest.TestCase):
         metric = metrics.UpDownCounter("name", "desc", "unit", int, meter,)
         labels = {"key": "value"}
         bound_counter = metric.bind(labels)
-        counter_v = View(metric, SumAggregator())
+        counter_v = View(metric, SumAggregator)
         meter.register_view(counter_v)
         metric.add(3, labels)
         metric.add(2, labels)
@@ -298,7 +298,7 @@ class TestValueRecorder(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.ValueRecorder("name", "desc", "unit", int, meter,)
         labels = {"key": "value"}
-        measure_v = View(metric, MinMaxSumCountAggregator())
+        measure_v = View(metric, MinMaxSumCountAggregator)
         bound_valuerecorder = metric.bind(labels)
         meter.register_view(measure_v)
         values = (37, 42, 7)

@@ -32,7 +32,10 @@ class Aggregator(abc.ABC):
     def __init__(self, config=None):
         self.current = None
         self.checkpoint = None
-        self.config = config
+        if config:
+            self.config = config
+        else:
+            self.config = {}
 
     @abc.abstractmethod
     def update(self, value):
@@ -138,13 +141,16 @@ class HistogramAggregator(Aggregator):
         super().__init__(config=config)
         self._lock = threading.Lock()
         self.last_update_timestamp = None
-        boundaries = self.config
+        boundaries = self.config.get("bounds")
         if boundaries and self._validate_boundaries(boundaries):
             self._boundaries = boundaries
         else:
-            self._boundaries = (10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+            # no buckets except < 0 and >
+            self._boundaries = (0,)
+
         self.current = OrderedDict([(bb, 0) for bb in self._boundaries])
         self.checkpoint = OrderedDict([(bb, 0) for bb in self._boundaries])
+
         self.current[">"] = 0
         self.checkpoint[">"] = 0
 

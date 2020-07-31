@@ -53,7 +53,7 @@ class BaseBoundInstrument:
     ):
         self._labels = labels
         self._metric = metric
-        self.view_datas = metric.meter.view_manager.generate_view_datas(
+        self.view_datas = metric.meter.view_manager.get_view_datas(
             metric, labels
         )
         self._view_datas_lock = threading.Lock()
@@ -262,7 +262,7 @@ class Observer(metrics_api.Observer):
 
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
-            self.aggregators[key] = get_default_aggregator(self)
+            self.aggregators[key] = get_default_aggregator(self)()
         aggregator = self.aggregators[key]
         aggregator.update(value)
 
