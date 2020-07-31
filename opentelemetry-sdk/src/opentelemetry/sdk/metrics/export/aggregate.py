@@ -150,7 +150,7 @@ class HistogramAggregator(Aggregator):
 
         self.current = OrderedDict([(bb, 0) for bb in self._boundaries])
         self.checkpoint = OrderedDict([(bb, 0) for bb in self._boundaries])
-        
+
         self.current[">"] = 0
         self.checkpoint[">"] = 0
 

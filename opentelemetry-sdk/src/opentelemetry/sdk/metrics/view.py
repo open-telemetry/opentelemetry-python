@@ -15,7 +15,7 @@
 import logging
 import threading
 from collections import defaultdict
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, Optional
 
 from opentelemetry.metrics import (
     Counter,
@@ -69,8 +69,8 @@ class View:
         self,
         metric: InstrumentT,
         aggregator: type,
-        aggregator_config: dict = None,
-        label_keys: Sequence[str] = None,
+        aggregator_config: Optional[dict] = None,
+        label_keys: Optional[Sequence[str]] = None,
         view_config: ViewConfig = ViewConfig.UNGROUPED,
     ):
         self.metric = metric
@@ -85,9 +85,15 @@ class View:
         self.view_datas = set()
 
     def get_view_data(self, labels):
+        """Find an existing ViewData for this set of labels. If that ViewData
+            does not exist, create a new one to represent the labels
+        """
         active_labels = []
         if self.view_config == ViewConfig.LABEL_KEYS:
-            active_labels = {(lk, lv) for lk, lv in labels if lk in set(self.label_keys)}
+            # reduce the set of labels to only labels specified in label_keys
+            active_labels = {
+                (lk, lv) for lk, lv in labels if lk in set(self.label_keys)
+            }
             active_labels = tuple(active_labels)
         elif self.view_config == ViewConfig.UNGROUPED:
             active_labels = labels
@@ -95,11 +101,13 @@ class View:
         for view_data in self.view_datas:
             if view_data.labels == active_labels:
                 return view_data
-        new_view_data = ViewData(active_labels, self.aggregator(self.aggregator_config))
+        new_view_data = ViewData(
+            active_labels, self.aggregator(self.aggregator_config)
+        )
         self.view_datas.add(new_view_data)
         return new_view_data
 
-    # Uniqueness is based on metric, aggregator type, ordered label keys and ViewConfig
+    # Uniqueness is based on metric, aggregator type, aggregator config, ordered label keys and ViewConfig
     def __hash__(self):
         return hash(
             (

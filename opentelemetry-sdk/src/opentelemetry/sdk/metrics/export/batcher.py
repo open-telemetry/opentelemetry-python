@@ -17,6 +17,7 @@ from typing import Sequence
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.util import get_dict_as_key
 
+
 class Batcher:
     """Base class for all batcher types.
 
@@ -63,7 +64,14 @@ class Batcher:
 
         # The uniqueness of a batch record is defined by a specific metric
         # using an aggregator type with a specific set of labels.
-        key = (record.instrument, aggregator.__class__, get_dict_as_key(aggregator.config), record.labels)
+        # If two aggregators are the same but with different configs, they are still two valid unique records
+        # (for example, two histogram views with different buckets)
+        key = (
+            record.instrument,
+            aggregator.__class__,
+            get_dict_as_key(aggregator.config),
+            record.labels,
+        )
         batch_value = self._batch_map.get(key)
         if batch_value:
             # Already have a reference to the aggregator, don't take another checkpoint
