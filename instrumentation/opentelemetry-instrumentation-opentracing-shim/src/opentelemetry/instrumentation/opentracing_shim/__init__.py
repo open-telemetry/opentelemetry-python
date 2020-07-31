@@ -572,7 +572,7 @@ class TracerShim(opentracing.Tracer):
 
         current_span = get_current_span()
 
-        if child_of is None and current_span is not None:
+        if child_of is None and current_span is not INVALID_SPAN_CONTEXT:
             child_of = SpanShim(None, None, current_span)
 
         span = self.start_span(
