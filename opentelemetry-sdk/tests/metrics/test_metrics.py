@@ -182,7 +182,7 @@ class TestMeter(unittest.TestCase):
     def test_create_valuerecorder(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         valuerecorder = meter.create_metric(
-            "name", "desc", "unit", float, metrics.ValueRecorder,
+            "name", "desc", "unit", float, metrics.ValueRecorder
         )
         self.assertIsInstance(valuerecorder, metrics.ValueRecorder)
         self.assertEqual(valuerecorder.value_type, float)
@@ -265,7 +265,7 @@ class TestCounter(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_add_non_decreasing_float_error(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.Counter("name", "desc", "unit", float, meter,)
+        metric = metrics.Counter("name", "desc", "unit", float, meter)
         labels = {"key": "value"}
         counter_v = View(metric, SumAggregator)
         meter.register_view(counter_v)
@@ -283,7 +283,7 @@ class TestCounter(unittest.TestCase):
 class TestUpDownCounter(unittest.TestCase):
     def test_add(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.UpDownCounter("name", "desc", "unit", int, meter,)
+        metric = metrics.UpDownCounter("name", "desc", "unit", int, meter)
         labels = {"key": "value"}
         bound_counter = metric.bind(labels)
         counter_v = View(metric, SumAggregator)
@@ -296,7 +296,7 @@ class TestUpDownCounter(unittest.TestCase):
 class TestValueRecorder(unittest.TestCase):
     def test_record(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = metrics.ValueRecorder("name", "desc", "unit", int, meter,)
+        metric = metrics.ValueRecorder("name", "desc", "unit", int, meter)
         labels = {"key": "value"}
         measure_v = View(metric, MinMaxSumCountAggregator)
         bound_valuerecorder = metric.bind(labels)

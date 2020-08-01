@@ -35,11 +35,11 @@ class TestUtil(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         counter = metrics.Counter("", "", "1", int, meter)
         self.assertEqual(
-            view.get_default_aggregator(counter), aggregate.SumAggregator,
+            view.get_default_aggregator(counter), aggregate.SumAggregator
         )
         ud_counter = metrics.UpDownCounter("", "", "1", int, meter)
         self.assertEqual(
-            view.get_default_aggregator(ud_counter), aggregate.SumAggregator,
+            view.get_default_aggregator(ud_counter), aggregate.SumAggregator
         )
         observer = metrics.SumObserver(lambda: None, "", "", "1", int)
         self.assertEqual(
@@ -62,8 +62,7 @@ class TestUtil(unittest.TestCase):
             aggregate.ValueObserverAggregator,
         )
         self.assertEqual(
-            view.get_default_aggregator(DummyMetric()),
-            aggregate.SumAggregator,
+            view.get_default_aggregator(DummyMetric()), aggregate.SumAggregator
         )
         self.assertEqual(logger_mock.warning.call_count, 1)
 

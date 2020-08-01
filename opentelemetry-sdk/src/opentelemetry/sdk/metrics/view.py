@@ -107,7 +107,8 @@ class View:
         self.view_datas.add(new_view_data)
         return new_view_data
 
-    # Uniqueness is based on metric, aggregator type, aggregator config, ordered label keys and ViewConfig
+    # Uniqueness is based on metric, aggregator type, aggregator config,
+    # ordered label keys and ViewConfig
     def __hash__(self):
         return hash(
             (
