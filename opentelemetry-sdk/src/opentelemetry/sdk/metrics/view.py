@@ -112,7 +112,7 @@ class View:
         return hash(
             (
                 self.metric,
-                self.aggregator,
+                self.aggregator.__class__,
                 tuple(self.label_keys),
                 tuple(self.aggregator_config),
                 self.view_config,
