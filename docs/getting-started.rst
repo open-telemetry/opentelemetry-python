@@ -178,7 +178,7 @@ Configure Your HTTP Propagator (b3, CorrelationContext)
 -------------------------------------------------------
 
 A major feature of distributed tracing is the ability to correlate a trace across
-multipler services. However, those services need to propagate information about a
+multiple services. However, those services need to propagate information about a
 trace from one service to the other.
 
 To enable this, OpenTelemetry has the concept of `propagators <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md>`_,
