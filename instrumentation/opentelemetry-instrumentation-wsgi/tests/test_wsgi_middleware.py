@@ -315,7 +315,7 @@ class TestWsgiAttributes(unittest.TestCase):
 
     def test_http_user_agent_attribute(self):
         self.environ["HTTP_USER_AGENT"] = "test-useragent"
-        expected = { "http.user_agent": "test-useragent" }
+        expected = {"http.user_agent": "test-useragent"}
         self.assertGreaterEqual(
             otel_wsgi.collect_request_attributes(self.environ).items(),
             expected.items(),
