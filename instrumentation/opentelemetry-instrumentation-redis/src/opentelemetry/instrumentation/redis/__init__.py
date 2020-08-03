@@ -49,12 +49,12 @@ import redis
 from wrapt import ObjectProxy, wrap_function_wrapper
 
 from opentelemetry import trace
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.redis.util import (
     _extract_conn_attributes,
     _format_command_args,
 )
 from opentelemetry.instrumentation.redis.version import __version__
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
 
 _DEFAULT_SERVICE = "redis"

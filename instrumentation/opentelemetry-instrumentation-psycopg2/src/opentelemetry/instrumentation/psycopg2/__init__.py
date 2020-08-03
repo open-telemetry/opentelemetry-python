@@ -45,8 +45,8 @@ API
 import psycopg2
 
 from opentelemetry.instrumentation import dbapi
-from opentelemetry.instrumentation.psycopg2.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.psycopg2.version import __version__
 from opentelemetry.trace import get_tracer
 
 

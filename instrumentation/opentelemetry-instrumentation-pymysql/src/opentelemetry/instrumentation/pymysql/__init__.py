@@ -46,8 +46,8 @@ API
 import pymysql
 
 from opentelemetry.instrumentation import dbapi
-from opentelemetry.instrumentation.pymysql.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.pymysql.version import __version__
 
 
 class PyMySQLInstrumentor(BaseInstrumentor):

@@ -47,12 +47,12 @@ import sqlalchemy
 import wrapt
 from wrapt import wrap_function_wrapper as _w
 
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.sqlalchemy.engine import (
     EngineTracer,
     _get_tracer,
     _wrap_create_engine,
 )
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
 
 
