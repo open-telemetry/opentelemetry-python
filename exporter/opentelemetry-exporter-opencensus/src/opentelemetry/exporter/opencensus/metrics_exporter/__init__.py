@@ -15,7 +15,7 @@
 """OpenCensus Collector Metrics Exporter."""
 
 import logging
-from typing import Sequence
+from typing import Dict, Sequence
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -35,6 +35,14 @@ from opentelemetry.sdk.metrics.export import (
 )
 
 DEFAULT_ENDPOINT = "localhost:55678"
+
+# In priority order. See collector impl https://bit.ly/2DvJW6y
+OT_LABEL_PRESENCE_TO_RESOURCE_TYPE = [
+    ("container.name", "container"),
+    ("k8s.pod.name", "k8s"),
+    ("host.name", "host"),
+    ("cloud.provider", "cloud"),
+]
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +193,17 @@ def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
 def get_resource(metric_record: MetricRecord) -> resource_pb2.Resource:
     resource_labels = metric_record.instrument.meter.resource.labels
     return resource_pb2.Resource(
-        type=resource_labels.get("service.name"),
+        type=infer_oc_resource_type(resource_labels),
         labels={k: str(v) for k, v in resource_labels.items()},
     )
+
+
+def infer_oc_resource_type(resource_labels: Dict[str, str]) -> str:
+    """Convert from OT resource labels to OC resource type"""
+    for (
+        ot_resource_key,
+        oc_resource_type,
+    ) in OT_LABEL_PRESENCE_TO_RESOURCE_TYPE:
+        if ot_resource_key in resource_labels:
+            return oc_resource_type
+    return ""

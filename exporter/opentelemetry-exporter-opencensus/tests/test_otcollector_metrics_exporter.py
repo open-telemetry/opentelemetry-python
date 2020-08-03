@@ -41,7 +41,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
     def setUpClass(cls):
         # pylint: disable=protected-access
         cls._resource_labels = {
-            "service.name": "some_application",
+            "key_with_str_value": "some string",
             "key_with_int_val": 321,
             "key_with_true": True,
         }
@@ -50,7 +50,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         )
         cls._meter = metrics.get_meter(__name__)
         cls._labels = {"environment": "staging", "number": 321}
-        cls._key_labels = get_labels_as_key(cls._labels)
+        cls._key_labels = get_dict_as_key(cls._labels)
 
     def test_constructor(self):
         mock_get_node = mock.Mock()
@@ -184,12 +184,11 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
         self.assertIsNotNone(output_metrics[0].resource)
         self.assertEqual(
-            output_metrics[0].resource.type,
-            self._resource_labels["service.name"],
+            output_metrics[0].resource.type, "",
         )
         self.assertEqual(
-            output_metrics[0].resource.labels["service.name"],
-            self._resource_labels["service.name"],
+            output_metrics[0].resource.labels["key_with_str_value"],
+            self._resource_labels["key_with_str_value"],
         )
         self.assertIsInstance(
             output_metrics[0].resource.labels["key_with_int_val"], str,
@@ -228,4 +227,60 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         )
         self.assertEqual(
             output_metrics[0].timeseries[0].points[0].int64_value, 123
+        )
+
+    def test_infer_ot_resource_type(self):
+        # empty resource
+        self.assertEqual(metrics_exporter.infer_oc_resource_type({}), "")
+
+        # container
+        self.assertEqual(
+            metrics_exporter.infer_oc_resource_type(
+                {
+                    "k8s.cluster.name": "cluster1",
+                    "k8s.pod.name": "pod1",
+                    "k8s.namespace.name": "namespace1",
+                    "container.name": "container-name1",
+                    "cloud.account.id": "proj1",
+                    "cloud.zone": "zone1",
+                }
+            ),
+            "container",
+        )
+
+        # k8s pod
+        self.assertEqual(
+            metrics_exporter.infer_oc_resource_type(
+                {
+                    "k8s.cluster.name": "cluster1",
+                    "k8s.pod.name": "pod1",
+                    "k8s.namespace.name": "namespace1",
+                    "cloud.zone": "zone1",
+                }
+            ),
+            "k8s",
+        )
+
+        # host
+        self.assertEqual(
+            metrics_exporter.infer_oc_resource_type(
+                {
+                    "k8s.cluster.name": "cluster1",
+                    "cloud.zone": "zone1",
+                    "host.name": "node1",
+                }
+            ),
+            "host",
+        )
+
+        # cloud
+        self.assertEqual(
+            metrics_exporter.infer_oc_resource_type(
+                {
+                    "cloud.provider": "gcp",
+                    "host.id": "inst1",
+                    "cloud.zone": "zone1",
+                }
+            ),
+            "cloud",
         )
