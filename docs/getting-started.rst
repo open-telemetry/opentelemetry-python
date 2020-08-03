@@ -156,8 +156,8 @@ We will now instrument a basic Flask application that uses the requests library 
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-flask
-    pip install opentelemetry-ext-requests
+    pip install opentelemetry-instrumentation-flask
+    pip install opentelemetry-instrumentation-requests
 
 
 And let's write a small Flask application that sends an HTTP request, activating each instrumentation during the initialization:
