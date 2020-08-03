@@ -17,7 +17,7 @@ import logging
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext import dbapi
+from opentelemetry.instrumentation import dbapi
 from opentelemetry.test.test_base import TestBase
 
 

@@ -22,7 +22,7 @@ from pymemcache.exceptions import (
 )
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymemcache import PymemcacheInstrumentor
+from opentelemetry.instrumentation.pymemcache import PymemcacheInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace import get_tracer
 from opentelemetry.trace.status import StatusCanonicalCode

@@ -26,7 +26,7 @@ Usage
 
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.ext.pymemcache import PymemcacheInstrumentor
+    from opentelemetry.instrumentation.pymemcache import PymemcacheInstrumentor
     trace.set_tracer_provider(TracerProvider())
     PymemcacheInstrumentor().instrument()
     from pymemcache.client.base import Client
@@ -44,7 +44,7 @@ import pymemcache
 from wrapt import ObjectProxy
 from wrapt import wrap_function_wrapper as _wrap
 
-from opentelemetry.ext.pymemcache.version import __version__
+from opentelemetry.instrumentation.pymemcache.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind, get_tracer

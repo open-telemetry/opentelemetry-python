@@ -25,7 +25,7 @@ Usage
 
     import pymysql
     from opentelemetry import trace
-    from opentelemetry.ext.pymysql import PyMySQLInstrumentor
+    from opentelemetry.instrumentation.pymysql import PyMySQLInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
 
     trace.set_tracer_provider(TracerProvider())
@@ -45,8 +45,8 @@ API
 
 import pymysql
 
-from opentelemetry.ext import dbapi
-from opentelemetry.ext.pymysql.version import __version__
+from opentelemetry.instrumentation import dbapi
+from opentelemetry.instrumentation.pymysql.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
 

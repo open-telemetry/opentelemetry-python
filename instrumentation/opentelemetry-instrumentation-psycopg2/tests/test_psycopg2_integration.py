@@ -16,8 +16,8 @@ from unittest import mock
 
 import psycopg2
 
-import opentelemetry.ext.psycopg2
-from opentelemetry.ext.psycopg2 import Psycopg2Instrumentor
+import opentelemetry.instrumentation.psycopg2
+from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
 from opentelemetry.sdk import resources
 from opentelemetry.test.test_base import TestBase
 
@@ -45,7 +45,7 @@ class TestPostgresqlIntegration(TestBase):
         span = spans_list[0]
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.ext.psycopg2)
+        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.psycopg2)
 
         # check that no spans are generated after uninstrument
         Psycopg2Instrumentor().uninstrument()

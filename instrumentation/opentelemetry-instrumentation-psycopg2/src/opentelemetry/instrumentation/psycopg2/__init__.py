@@ -26,7 +26,7 @@ Usage
     import psycopg2
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.ext.psycopg2 import Psycopg2Instrumentor
+    from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
 
     trace.set_tracer_provider(TracerProvider())
 
@@ -44,8 +44,8 @@ API
 
 import psycopg2
 
-from opentelemetry.ext import dbapi
-from opentelemetry.ext.psycopg2.version import __version__
+from opentelemetry.instrumentation import dbapi
+from opentelemetry.instrumentation.psycopg2.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import get_tracer
 

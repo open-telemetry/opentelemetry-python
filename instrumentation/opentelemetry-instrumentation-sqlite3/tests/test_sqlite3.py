@@ -15,7 +15,7 @@
 import sqlite3
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.sqlite3 import SQLite3Instrumentor
+from opentelemetry.instrumentation.sqlite3 import SQLite3Instrumentor
 from opentelemetry.test.test_base import TestBase
 
 
