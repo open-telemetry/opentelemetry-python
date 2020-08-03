@@ -29,7 +29,7 @@ Usage
     from sqlalchemy import create_engine
 
     from opentelemetry import trace
-    from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
+    from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
     import sqlalchemy
 
@@ -47,7 +47,7 @@ import sqlalchemy
 import wrapt
 from wrapt import wrap_function_wrapper as _w
 
-from opentelemetry.ext.sqlalchemy.engine import (
+from opentelemetry.instrumentation.sqlalchemy.engine import (
     EngineTracer,
     _get_tracer,
     _wrap_create_engine,

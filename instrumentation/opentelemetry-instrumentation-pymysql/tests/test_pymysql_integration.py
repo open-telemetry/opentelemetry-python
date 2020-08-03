@@ -43,7 +43,9 @@ class TestPyMysqlIntegration(TestBase):
         span = spans_list[0]
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.pymysql)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.pymysql
+        )
 
         # check that no spans are generated after uninstrument
         PyMySQLInstrumentor().uninstrument()

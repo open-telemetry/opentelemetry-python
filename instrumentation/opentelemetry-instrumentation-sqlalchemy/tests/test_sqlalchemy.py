@@ -14,7 +14,7 @@
 
 from sqlalchemy import create_engine
 
-from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 

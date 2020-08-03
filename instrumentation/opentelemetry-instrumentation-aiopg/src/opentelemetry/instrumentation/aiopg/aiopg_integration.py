@@ -3,7 +3,10 @@ import typing
 import wrapt
 from aiopg.utils import _ContextManager, _PoolAcquireContextManager
 
-from opentelemetry.instrumentation.dbapi import DatabaseApiIntegration, TracedCursor
+from opentelemetry.instrumentation.dbapi import (
+    DatabaseApiIntegration,
+    TracedCursor,
+)
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
