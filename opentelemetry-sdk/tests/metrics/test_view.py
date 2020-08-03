@@ -126,17 +126,14 @@ class TestStateless(unittest.TestCase):
         self.controller.tick()
 
         metric_data = self.exporter.get_exported_metrics()
+        data_set = set()
+        for data in metric_data:
+            data_set.add((data.labels, data.aggregator.checkpoint))
         self.assertEqual(len(metric_data), 2)
-        self.assertEqual(
-            metric_data[0].labels,
-            (("customer_id", 123), ("environment", "production")),
-        )
-        self.assertEqual(
-            metric_data[1].labels,
-            (("customer_id", 247), ("environment", "production")),
-        )
-        self.assertEqual(metric_data[0].aggregator.checkpoint, 6)
-        self.assertEqual(metric_data[1].aggregator.checkpoint, 5)
+        label1 = (("customer_id", 123), ("environment", "production"))
+        label2 = (("customer_id", 247), ("environment", "production"))
+        self.assertTrue((label1, 6) in data_set)
+        self.assertTrue((label2, 5) in data_set)
 
     def test_multiple_views(self):
         test_counter = self.meter.create_metric(
@@ -177,9 +174,7 @@ class TestStateless(unittest.TestCase):
                 sum_set.add(tup)
             elif isinstance(data.aggregator, MinMaxSumCountAggregator):
                 mmsc_set.add(data)
-                self.assertEqual(
-                    data.labels, (("environment", "production"),)
-                )
+                self.assertEqual(data.labels, (("environment", "production"),))
                 self.assertEqual(data.aggregator.checkpoint.sum, 11)
         # we have to assert this way because order is unknown
         self.assertEqual(len(sum_set), 2)
