@@ -54,7 +54,6 @@ class TimedMetricRecorder:
                 unit="ms",
                 value_type=float,
                 metric_type=ValueRecorder,
-                label_keys=base_attributes + ["error", "status_code"],
             )
             self._error_count = self._meter.create_metric(
                 name="{}/{}/errors".format(service_name, span_kind),
@@ -62,7 +61,6 @@ class TimedMetricRecorder:
                 unit="1",
                 value_type=int,
                 metric_type=Counter,
-                label_keys=base_attributes + ["status_code"],
             )
             self._bytes_in = self._meter.create_metric(
                 name="{}/{}/bytes_in".format(service_name, span_kind),
@@ -70,7 +68,6 @@ class TimedMetricRecorder:
                 unit="by",
                 value_type=int,
                 metric_type=Counter,
-                label_keys=base_attributes,
             )
             self._bytes_out = self._meter.create_metric(
                 name="{}/{}/bytes_out".format(service_name, span_kind),
@@ -78,7 +75,6 @@ class TimedMetricRecorder:
                 unit="by",
                 value_type=int,
                 metric_type=Counter,
-                label_keys=base_attributes,
             )
 
     def record_bytes_in(self, bytes_in, method):
