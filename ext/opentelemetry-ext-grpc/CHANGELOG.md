@@ -2,9 +2,6 @@
 
 ## Unreleased
 
-- Change package name to opentelemetry-ext-grpc
-  ([#961](https://github.com/open-telemetry/opentelemetry-python/pull/961))
-
 ## Version 0.11b0
 
 Released 2020-07-28

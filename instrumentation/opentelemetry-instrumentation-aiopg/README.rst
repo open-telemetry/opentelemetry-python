@@ -17,5 +17,5 @@ Installation
 References
 ----------
 
-* `OpenTelemetry aiopg instrumentation <https://opentelemetry-python.readthedocs.io/en/latest/instrumentation/aiopg/aiopg.html>`_
+* `OpenTelemetry aiopg Instrumentation <https://opentelemetry-python.readthedocs.io/en/latest/instrumentation/aiopg/aiopg.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_

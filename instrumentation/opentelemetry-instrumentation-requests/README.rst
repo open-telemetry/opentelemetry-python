@@ -1,5 +1,5 @@
-OpenTelemetry requests Integration
-==================================
+OpenTelemetry Requests Instrumentation
+======================================
 
 |pypi|
 
@@ -19,5 +19,5 @@ Installation
 References
 ----------
 
-* `OpenTelemetry requests Integration <https://opentelemetry-python.readthedocs.io/en/latest/instrumentation/requests/requests.html>`_
+* `OpenTelemetry requests Instrumentation <https://opentelemetry-python.readthedocs.io/en/latest/instrumentation/requests/requests.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
