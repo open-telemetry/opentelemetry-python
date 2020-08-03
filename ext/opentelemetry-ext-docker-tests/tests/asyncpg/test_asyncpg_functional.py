@@ -3,7 +3,7 @@ import os
 
 import asyncpg
 
-from opentelemetry.ext.asyncpg import AsyncPGInstrumentor
+from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 
