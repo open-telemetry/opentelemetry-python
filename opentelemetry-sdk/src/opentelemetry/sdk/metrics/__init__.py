@@ -23,17 +23,18 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
 )
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
-from opentelemetry.sdk.metrics.export.batcher import UngroupedBatcher
+from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.view import (
+    ViewData,
+    ViewManager,
+    get_default_aggregator,
+)
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 logger = logging.getLogger(__name__)
-
-
-def get_labels_as_key(labels: Dict[str, str]) -> Tuple[Tuple[str, str]]:
-    """Gets a list of labels that can be used as a key in a dictionary."""
-    return tuple(sorted(labels.items()))
 
 
 class BaseBoundInstrument:
@@ -43,37 +44,38 @@ class BaseBoundInstrument:
     instruments for a specific set of labels.
 
     Args:
-        value_type: The type of values for this bound instrument (int, float).
-        enabled: True if the originating instrument is enabled.
-        aggregator: The aggregator for this bound metric instrument. Will
-            handle aggregation upon updates and checkpointing of values for
-            exporting.
+        labels: A set of labels as keys that bind this metric instrument.
+        metric: The metric that created this bound instrument.
     """
 
     def __init__(
-        self,
-        value_type: Type[metrics_api.ValueT],
-        enabled: bool,
-        aggregator: Aggregator,
+        self, labels: Tuple[Tuple[str, str]], metric: metrics_api.MetricT
     ):
-        self.value_type = value_type
-        self.enabled = enabled
-        self.aggregator = aggregator
+        self._labels = labels
+        self._metric = metric
+        self.view_datas = metric.meter.view_manager.get_view_datas(
+            metric, labels
+        )
+        self._view_datas_lock = threading.Lock()
         self._ref_count = 0
         self._ref_count_lock = threading.Lock()
 
     def _validate_update(self, value: metrics_api.ValueT) -> bool:
-        if not self.enabled:
+        if not self._metric.enabled:
             return False
-        if not isinstance(value, self.value_type):
+        if not isinstance(value, self._metric.value_type):
             logger.warning(
-                "Invalid value passed for %s.", self.value_type.__name__
+                "Invalid value passed for %s.",
+                self._metric.value_type.__name__,
             )
             return False
         return True
 
     def update(self, value: metrics_api.ValueT):
-        self.aggregator.update(value)
+        with self._view_datas_lock:
+            # record the value for each view_data belonging to this aggregator
+            for view_data in self.view_datas:
+                view_data.record(value)
 
     def release(self):
         self.decrease_ref_count()
@@ -89,11 +91,6 @@ class BaseBoundInstrument:
     def ref_count(self):
         with self._ref_count_lock:
             return self._ref_count
-
-    def __repr__(self):
-        return '{}(data="{}")'.format(
-            type(self).__name__, self.aggregator.current
-        )
 
 
 class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
@@ -151,7 +148,6 @@ class Metric(metrics_api.Metric):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         meter: "Meter",
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
         self.name = name
@@ -159,23 +155,17 @@ class Metric(metrics_api.Metric):
         self.unit = unit
         self.value_type = value_type
         self.meter = meter
-        self.label_keys = label_keys
         self.enabled = enabled
         self.bound_instruments = {}
         self.bound_instruments_lock = threading.Lock()
 
     def bind(self, labels: Dict[str, str]) -> BaseBoundInstrument:
         """See `opentelemetry.metrics.Metric.bind`."""
-        key = get_labels_as_key(labels)
+        key = get_dict_as_key(labels)
         with self.bound_instruments_lock:
             bound_instrument = self.bound_instruments.get(key)
             if bound_instrument is None:
-                bound_instrument = self.BOUND_INSTR_TYPE(
-                    self.value_type,
-                    self.enabled,
-                    # Aggregator will be created based off type of metric
-                    self.meter.batcher.aggregator_for(self.__class__),
-                )
+                bound_instrument = self.BOUND_INSTR_TYPE(key, self)
                 self.bound_instruments[key] = bound_instrument
         bound_instrument.increase_ref_count()
         return bound_instrument
@@ -250,7 +240,6 @@ class Observer(metrics_api.Observer):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
@@ -259,7 +248,6 @@ class Observer(metrics_api.Observer):
         self.description = description
         self.unit = unit
         self.value_type = value_type
-        self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
 
@@ -268,21 +256,19 @@ class Observer(metrics_api.Observer):
     def observe(
         self, value: metrics_api.ValueT, labels: Dict[str, str]
     ) -> None:
-        key = get_labels_as_key(labels)
+        key = get_dict_as_key(labels)
         if not self._validate_observe(value, key):
             return
 
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
-            self.aggregators[key] = self.meter.batcher.aggregator_for(
-                self.__class__
-            )
+            self.aggregators[key] = get_default_aggregator(self)()
         aggregator = self.aggregators[key]
         aggregator.update(value)
 
     # pylint: disable=W0613
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]]
     ) -> bool:
         if not self.enabled:
             return False
@@ -315,7 +301,7 @@ class SumObserver(Observer, metrics_api.SumObserver):
     """See `opentelemetry.metrics.SumObserver`."""
 
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]]
     ) -> bool:
         if not super()._validate_observe(value, key):
             return False
@@ -344,7 +330,7 @@ class Record:
     def __init__(
         self,
         instrument: metrics_api.InstrumentT,
-        labels: Dict[str, str],
+        labels: Tuple[Tuple[str, str]],
         aggregator: Aggregator,
     ):
         self.instrument = instrument
@@ -366,11 +352,13 @@ class Meter(metrics_api.Meter):
         instrumentation_info: "InstrumentationInfo",
     ):
         self.instrumentation_info = instrumentation_info
-        self.batcher = UngroupedBatcher(source.stateful)
+        self.batcher = Batcher(source.stateful)
         self.resource = source.resource
         self.metrics = set()
         self.observers = set()
+        self.metrics_lock = threading.Lock()
         self.observers_lock = threading.Lock()
+        self.view_manager = ViewManager()
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -387,23 +375,24 @@ class Meter(metrics_api.Meter):
         for metric in self.metrics:
             if not metric.enabled:
                 continue
-
             to_remove = []
-
             with metric.bound_instruments_lock:
-                for labels, bound_instr in metric.bound_instruments.items():
-                    # TODO: Consider storing records in memory?
-                    record = Record(metric, labels, bound_instr.aggregator)
-                    # Checkpoints the current aggregators
-                    # Applies different batching logic based on type of batcher
-                    self.batcher.process(record)
+                for (
+                    labels,
+                    bound_instrument,
+                ) in metric.bound_instruments.items():
+                    for view_data in bound_instrument.view_datas:
+                        record = Record(
+                            metric, view_data.labels, view_data.aggregator
+                        )
+                        self.batcher.process(record)
 
-                    if bound_instr.ref_count() == 0:
+                    if bound_instrument.ref_count() == 0:
                         to_remove.append(labels)
 
-                # Remove handles that were released
-                for labels in to_remove:
-                    del metric.bound_instruments[labels]
+            # Remove handles that were released
+            for labels in to_remove:
+                del metric.bound_instruments[labels]
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
@@ -436,21 +425,15 @@ class Meter(metrics_api.Meter):
         unit: str,
         value_type: Type[metrics_api.ValueT],
         metric_type: Type[metrics_api.MetricT],
-        label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.MetricT:
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
         metric = metric_type(  # type: ignore
-            name,
-            description,
-            unit,
-            value_type,
-            self,
-            label_keys=label_keys,
-            enabled=enabled,
+            name, description, unit, value_type, self, enabled=enabled
         )
-        self.metrics.add(metric)
+        with self.metrics_lock:
+            self.metrics.add(metric)
         return metric
 
     def register_observer(
@@ -465,14 +448,7 @@ class Meter(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.Observer:
         ob = observer_type(
-            callback,
-            name,
-            description,
-            unit,
-            value_type,
-            self,
-            label_keys,
-            enabled,
+            callback, name, description, unit, value_type, label_keys, enabled
         )
         with self.observers_lock:
             self.observers.add(ob)
@@ -481,6 +457,12 @@ class Meter(metrics_api.Meter):
     def unregister_observer(self, observer: metrics_api.Observer) -> None:
         with self.observers_lock:
             self.observers.remove(observer)
+
+    def register_view(self, view):
+        self.view_manager.register_view(view)
+
+    def unregister_view(self, view):
+        self.view_manager.unregister_view(view)
 
 
 class MeterProvider(metrics_api.MeterProvider):
@@ -519,7 +501,7 @@ class MeterProvider(metrics_api.MeterProvider):
         return Meter(
             self,
             InstrumentationInfo(
-                instrumenting_module_name, instrumenting_library_version,
+                instrumenting_module_name, instrumenting_library_version
             ),
         )
 

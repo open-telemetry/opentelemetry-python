@@ -41,7 +41,6 @@ meter.register_observer(
     unit="1",
     value_type=float,
     observer_type=ValueObserver,
-    label_keys=("cpu_number",),
 )
 
 
@@ -58,7 +57,6 @@ meter.register_observer(
     unit="1",
     value_type=float,
     observer_type=ValueObserver,
-    label_keys=(),
 )
 
 input("Metrics will be printed soon. Press a key to finish...\n")
