@@ -45,7 +45,6 @@ class TimedMetricRecorder:
         self._meter = meter
         service_name = "grpcio"
         self._span_kind = span_kind
-        base_attributes = ["method"]
 
         if self._meter:
             self._duration = self._meter.create_metric(
