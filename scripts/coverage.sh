@@ -31,21 +31,21 @@ coverage erase
 
 cov opentelemetry-api
 cov opentelemetry-sdk
-cov ext/opentelemetry-ext-datadog
-cov ext/opentelemetry-ext-flask
-cov ext/opentelemetry-ext-requests
-cov ext/opentelemetry-ext-jaeger
+cov exporter/opentelemetry-exporter-datadog
+cov instrumentation/opentelemetry-instrumentation-flask
+cov instrumentation/opentelemetry-instrumentation-requests
+cov exporter/opentelemetry-exporter-jaeger
 cov ext/opentelemetry-ext-opentracing-shim
-cov ext/opentelemetry-ext-wsgi
-cov ext/opentelemetry-ext-zipkin
+cov instrumentation/opentelemetry-instrumentation-wsgi
+cov exporter/opentelemetry-exporter-zipkin
 cov docs/examples/opentelemetry-example-app
 
 # aiohttp is only supported on Python 3.5+.
 if [ ${PYTHON_VERSION_INFO[1]} -gt 4 ]; then
-    cov ext/opentelemetry-ext-aiohttp-client
+    cov instrumentation/opentelemetry-instrumentation-aiohttp-client
 # ext-asgi is only supported on Python 3.5+.
 if [ ${PYTHON_VERSION_INFO[1]} -gt 4 ]; then
-    cov ext/opentelemetry-ext-asgi
+    cov instrumentation/opentelemetry-instrumentation-asgi
 fi
 
 coverage report --show-missing

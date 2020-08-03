@@ -19,7 +19,7 @@ import time
 from prometheus_client import start_http_server
 
 from opentelemetry import metrics
-from opentelemetry.ext.prometheus import PrometheusMetricsExporter
+from opentelemetry.exporter.prometheus import PrometheusMetricsExporter
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController

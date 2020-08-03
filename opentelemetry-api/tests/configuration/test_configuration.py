@@ -32,10 +32,10 @@ class TestConfiguration(TestCase):
     @patch.dict(
         "os.environ",  # type: ignore
         {
-            "OPENTELEMETRY_PYTHON_METER_PROVIDER": "meter_provider",
-            "OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider",
-            "OPENTELEMETRY_PYTHON_OThER": "other",
-            "OPENTELEMETRY_PYTHON_OTHER_7": "other_7",
+            "OTEL_PYTHON_METER_PROVIDER": "meter_provider",
+            "OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider",
+            "OTEL_OThER": "other",
+            "OTEL_OTHER_7": "other_7",
             "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },
     )
@@ -56,7 +56,7 @@ class TestConfiguration(TestCase):
 
     @patch.dict(
         "os.environ",  # type: ignore
-        {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
+        {"OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider"},
     )
     def test_property(self) -> None:
         with self.assertRaises(AttributeError):
@@ -79,8 +79,7 @@ class TestConfiguration(TestCase):
 
     def test_reset(self) -> None:
         environ_patcher = patch.dict(
-            "os.environ",
-            {"OPENTELEMETRY_PYTHON_TRACER_PROVIDER": "tracer_provider"},
+            "os.environ", {"OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider"},
         )
 
         environ_patcher.start()
@@ -99,10 +98,7 @@ class TestConfiguration(TestCase):
 
     @patch.dict(
         "os.environ",  # type: ignore
-        {
-            "OPENTELEMETRY_PYTHON_TRUE": "True",
-            "OPENTELEMETRY_PYTHON_FALSE": "False",
-        },
+        {"OTEL_TRUE": "True", "OTEL_FALSE": "False"},
     )
     def test_boolean(self) -> None:
         self.assertIsInstance(
@@ -117,9 +113,9 @@ class TestConfiguration(TestCase):
     @patch.dict(
         "os.environ",  # type: ignore
         {
-            "OPENTELEMETRY_PYTHON_POSITIVE_INTEGER": "123",
-            "OPENTELEMETRY_PYTHON_NEGATIVE_INTEGER": "-123",
-            "OPENTELEMETRY_PYTHON_NON_INTEGER": "-12z3",
+            "OTEL_POSITIVE_INTEGER": "123",
+            "OTEL_NEGATIVE_INTEGER": "-123",
+            "OTEL_NON_INTEGER": "-12z3",
         },
     )
     def test_integer(self) -> None:
@@ -136,9 +132,9 @@ class TestConfiguration(TestCase):
     @patch.dict(
         "os.environ",  # type: ignore
         {
-            "OPENTELEMETRY_PYTHON_POSITIVE_FLOAT": "123.123",
-            "OPENTELEMETRY_PYTHON_NEGATIVE_FLOAT": "-123.123",
-            "OPENTELEMETRY_PYTHON_NON_FLOAT": "-12z3.123",
+            "OTEL_POSITIVE_FLOAT": "123.123",
+            "OTEL_NEGATIVE_FLOAT": "-123.123",
+            "OTEL_NON_FLOAT": "-12z3.123",
         },
     )
     def test_float(self) -> None:

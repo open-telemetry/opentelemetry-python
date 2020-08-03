@@ -4,7 +4,7 @@ exclude = '''
 (
   /(  # generated files
     docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/grpc/gen|
-    ext/opentelemetry-ext-jaeger/src/opentelemetry/ext/jaeger/gen|
+    exporter/opentelemetry-exporter-jaeger/src/opentelemetry/exporter/jaeger/gen|
     opentelemetry-proto/src/opentelemetry/proto/collector|
     opentelemetry-proto/src/opentelemetry/proto/common|
     opentelemetry-proto/src/opentelemetry/proto/metrics|

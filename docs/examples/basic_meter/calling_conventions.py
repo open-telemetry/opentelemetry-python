@@ -33,7 +33,6 @@ requests_counter = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Counter,
-    label_keys=("environment",),
 )
 
 requests_size = meter.create_metric(
@@ -42,7 +41,6 @@ requests_size = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=ValueRecorder,
-    label_keys=("environment",),
 )
 
 clicks_counter = meter.create_metric(
@@ -51,7 +49,6 @@ clicks_counter = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Counter,
-    label_keys=("environment",),
 )
 
 labels = {"environment": "staging"}
@@ -78,3 +75,5 @@ print("Updating using batch calling convention...")
 # specified labels for each.
 meter.record_batch(labels, ((requests_counter, 50), (clicks_counter, 70)))
 time.sleep(5)
+
+input("...\n")
