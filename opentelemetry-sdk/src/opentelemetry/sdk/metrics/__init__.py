@@ -49,7 +49,7 @@ class BaseBoundInstrument:
     """
 
     def __init__(
-        self, labels: Tuple[Tuple[str, str]], metric: metrics_api.MetricT,
+        self, labels: Tuple[Tuple[str, str]], metric: metrics_api.MetricT
     ):
         self._labels = labels
         self._metric = metric
@@ -165,7 +165,7 @@ class Metric(metrics_api.Metric):
         with self.bound_instruments_lock:
             bound_instrument = self.bound_instruments.get(key)
             if bound_instrument is None:
-                bound_instrument = self.BOUND_INSTR_TYPE(key, self,)
+                bound_instrument = self.BOUND_INSTR_TYPE(key, self)
                 self.bound_instruments[key] = bound_instrument
         bound_instrument.increase_ref_count()
         return bound_instrument
@@ -262,13 +262,13 @@ class Observer(metrics_api.Observer):
 
         if key not in self.aggregators:
             # TODO: how to cleanup aggregators?
-            self.aggregators[key] = get_default_aggregator(self)
+            self.aggregators[key] = get_default_aggregator(self)()
         aggregator = self.aggregators[key]
         aggregator.update(value)
 
     # pylint: disable=W0613
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]]
     ) -> bool:
         if not self.enabled:
             return False
@@ -301,7 +301,7 @@ class SumObserver(Observer, metrics_api.SumObserver):
     """See `opentelemetry.metrics.SumObserver`."""
 
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]],
+        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]]
     ) -> bool:
         if not super()._validate_observe(value, key):
             return False
@@ -430,7 +430,7 @@ class Meter(metrics_api.Meter):
         """See `opentelemetry.metrics.Meter.create_metric`."""
         # Ignore type b/c of mypy bug in addition to missing annotations
         metric = metric_type(  # type: ignore
-            name, description, unit, value_type, self, enabled=enabled,
+            name, description, unit, value_type, self, enabled=enabled
         )
         with self.metrics_lock:
             self.metrics.add(metric)
@@ -448,7 +448,7 @@ class Meter(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.Observer:
         ob = observer_type(
-            callback, name, description, unit, value_type, label_keys, enabled,
+            callback, name, description, unit, value_type, label_keys, enabled
         )
         with self.observers_lock:
             self.observers.add(ob)
@@ -501,7 +501,7 @@ class MeterProvider(metrics_api.MeterProvider):
         return Meter(
             self,
             InstrumentationInfo(
-                instrumenting_module_name, instrumenting_library_version,
+                instrumenting_module_name, instrumenting_library_version
             ),
         )
 

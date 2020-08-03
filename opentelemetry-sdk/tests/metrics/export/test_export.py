@@ -67,12 +67,12 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter,
+            "available memory", "available memory", "bytes", int, meter
         )
         aggregator.update(1.0)
         labels = ()
         _batch_map = {}
-        _batch_map[(metric, SumAggregator, labels)] = aggregator
+        _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
         batcher._batch_map = _batch_map
         records = batcher.checkpoint_set()
         self.assertEqual(len(records), 1)
@@ -90,12 +90,12 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(False)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter,
+            "available memory", "available memory", "bytes", int, meter
         )
         aggregator.update(1.0)
         labels = ()
         _batch_map = {}
-        _batch_map[(metric, SumAggregator, labels)] = aggregator
+        _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 0)
@@ -105,12 +105,12 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter,
+            "available memory", "available memory", "bytes", int, meter
         )
         aggregator.update(1.0)
         labels = ()
         _batch_map = {}
-        _batch_map[(metric, SumAggregator, labels)] = aggregator
+        _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
         batcher._batch_map = _batch_map
         batcher.finished_collection()
         self.assertEqual(len(batcher._batch_map), 1)
@@ -121,11 +121,11 @@ class TestBatcher(unittest.TestCase):
         aggregator = SumAggregator()
         aggregator2 = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter,
+            "available memory", "available memory", "bytes", int, meter
         )
         labels = ()
         _batch_map = {}
-        batch_key = (metric, SumAggregator, labels)
+        batch_key = (metric, SumAggregator, tuple(), labels)
         _batch_map[batch_key] = aggregator
         aggregator2.update(1.0)
         batcher._batch_map = _batch_map
@@ -141,11 +141,11 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter,
+            "available memory", "available memory", "bytes", int, meter
         )
         labels = ()
         _batch_map = {}
-        batch_key = (metric, SumAggregator, labels)
+        batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)
@@ -160,11 +160,11 @@ class TestBatcher(unittest.TestCase):
         batcher = Batcher(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter,
+            "available memory", "available memory", "bytes", int, meter
         )
         labels = ()
         _batch_map = {}
-        batch_key = (metric, SumAggregator, labels)
+        batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
         batcher._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)

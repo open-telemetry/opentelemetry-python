@@ -16,10 +16,12 @@ import unittest
 from unittest import mock
 
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics import view
+from opentelemetry.sdk.metrics import Counter, view
 from opentelemetry.sdk.metrics.export import aggregate
-from opentelemetry.sdk.metrics import Counter
-from opentelemetry.sdk.metrics.export.aggregate import SumAggregator, MinMaxSumCountAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    MinMaxSumCountAggregator,
+    SumAggregator,
+)
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.export.in_memory_metrics_exporter import (
     InMemoryMetricsExporter,
@@ -33,13 +35,11 @@ class TestUtil(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         counter = metrics.Counter("", "", "1", int, meter)
         self.assertEqual(
-            view.get_default_aggregator(counter), 
-            aggregate.SumAggregator,
+            view.get_default_aggregator(counter), aggregate.SumAggregator
         )
         ud_counter = metrics.UpDownCounter("", "", "1", int, meter)
         self.assertEqual(
-            view.get_default_aggregator(ud_counter),
-            aggregate.SumAggregator,
+            view.get_default_aggregator(ud_counter), aggregate.SumAggregator
         )
         observer = metrics.SumObserver(lambda: None, "", "", "1", int)
         self.assertEqual(
@@ -62,8 +62,7 @@ class TestUtil(unittest.TestCase):
             aggregate.ValueObserverAggregator,
         )
         self.assertEqual(
-            view.get_default_aggregator(DummyMetric()),
-            aggregate.SumAggregator,
+            view.get_default_aggregator(DummyMetric()), aggregate.SumAggregator
         )
         self.assertEqual(logger_mock.warning.call_count, 1)
 
@@ -129,14 +128,16 @@ class TestStateless(unittest.TestCase):
         metric_data = self.exporter.get_exported_metrics()
         self.assertEqual(len(metric_data), 2)
         self.assertEqual(
-            metric_data[0].labels, (("customer_id", 123), ("environment", "production"))
+            metric_data[0].labels,
+            (("customer_id", 123), ("environment", "production")),
         )
         self.assertEqual(
-            metric_data[1].labels, (("customer_id", 247), ("environment", "production"))
+            metric_data[1].labels,
+            (("customer_id", 247), ("environment", "production")),
         )
         self.assertEqual(metric_data[0].aggregator.checkpoint, 6)
         self.assertEqual(metric_data[1].aggregator.checkpoint, 5)
-    
+
     def test_multiple_views(self):
         test_counter = self.meter.create_metric(
             name="test_counter",
@@ -173,16 +174,17 @@ class TestStateless(unittest.TestCase):
             metric_data[0].labels, (("environment", "production"),)
         )
         self.assertEqual(
-            metric_data[1].labels, (("customer_id", 123), ("environment", "production"))
+            metric_data[1].labels,
+            (("customer_id", 123), ("environment", "production")),
         )
         self.assertEqual(
-            metric_data[2].labels, (("customer_id", 247), ("environment", "production"))
+            metric_data[2].labels,
+            (("customer_id", 247), ("environment", "production")),
         )
 
         self.assertEqual(metric_data[0].aggregator.checkpoint.sum, 11)
         self.assertEqual(metric_data[1].aggregator.checkpoint, 6)
         self.assertEqual(metric_data[2].aggregator.checkpoint, 5)
-        
 
 
 class DummyMetric(metrics.Metric):
