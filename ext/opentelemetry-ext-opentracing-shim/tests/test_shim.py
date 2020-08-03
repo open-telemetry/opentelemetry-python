@@ -17,12 +17,17 @@
 
 import time
 from unittest import TestCase
+from unittest.mock import Mock
 
 import opentracing
 
-import opentelemetry.ext.opentracing_shim as opentracingshim
 from opentelemetry import propagators, trace
-from opentelemetry.ext.opentracing_shim import util
+from opentelemetry.ext.opentracing_shim import (
+    SpanContextShim,
+    SpanShim,
+    create_tracer,
+    util,
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.test.mock_httptextformat import (
     MockHTTPTextFormat,
@@ -36,7 +41,7 @@ class TestShim(TestCase):
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
         trace.set_tracer_provider(TracerProvider())
-        self.shim = opentracingshim.create_tracer(trace.get_tracer_provider())
+        self.shim = create_tracer(trace.get_tracer_provider())
 
     @classmethod
     def setUpClass(cls):
@@ -448,7 +453,7 @@ class TestShim(TestCase):
         """Test construction of `SpanContextShim` objects."""
 
         otel_context = trace.SpanContext(1234, 5678, is_remote=False)
-        context = opentracingshim.SpanContextShim(otel_context)
+        context = SpanContextShim(otel_context)
 
         self.assertIsInstance(context, opentracing.SpanContext)
         self.assertEqual(context.unwrap().trace_id, 1234)
@@ -473,7 +478,7 @@ class TestShim(TestCase):
         otel_context = trace.SpanContext(
             trace_id=1220, span_id=7478, is_remote=False
         )
-        context = opentracingshim.SpanContextShim(otel_context)
+        context = SpanContextShim(otel_context)
 
         headers = {}
         self.shim.inject(context, opentracing.Format.HTTP_HEADERS, headers)
@@ -486,7 +491,7 @@ class TestShim(TestCase):
         otel_context = trace.SpanContext(
             trace_id=1220, span_id=7478, is_remote=False
         )
-        context = opentracingshim.SpanContextShim(otel_context)
+        context = SpanContextShim(otel_context)
 
         # Verify Format.TEXT_MAP
         text_map = {}
@@ -500,7 +505,7 @@ class TestShim(TestCase):
         otel_context = trace.SpanContext(
             trace_id=1220, span_id=7478, is_remote=False
         )
-        context = opentracingshim.SpanContextShim(otel_context)
+        context = SpanContextShim(otel_context)
 
         # Verify exception for non supported binary format.
         with self.assertRaises(opentracing.UnsupportedFormatException):
@@ -550,3 +555,20 @@ class TestShim(TestCase):
         # Verify exception for non supported binary format.
         with self.assertRaises(opentracing.UnsupportedFormatException):
             self.shim.extract(opentracing.Format.BINARY, bytearray())
+
+    def test_baggage(self):
+
+        span_context_shim = SpanContextShim(
+            trace.SpanContext(1234, 5678, is_remote=False)
+        )
+
+        baggage = span_context_shim.baggage
+
+        with self.assertRaises(ValueError):
+            baggage[1] = 3
+
+        span_shim = SpanShim(Mock(), span_context_shim, Mock())
+
+        span_shim.set_baggage_item(1, 2)
+
+        self.assertTrue(span_shim.get_baggage_item(1), 2)

@@ -36,7 +36,7 @@ Execution of the Django app
 
 Set these environment variables first:
 
-#. ``export OPENTELEMETRY_PYTHON_DJANGO_INSTRUMENT=True``
+#. ``export OTEL_PYTHON_DJANGO_INSTRUMENT=True``
 #. ``export DJANGO_SETTINGS_MODULE=instrumentation_example.settings``
 
 The way to achieve OpenTelemetry instrumentation for your Django app is to use
@@ -56,7 +56,7 @@ Open up a new console and activate the previous virtual environment there too:
 
 ``source django_auto_instrumentation/bin/activate``
 
-Go to ``opentelemetry-python/ext/opentelemetry-ext-django/example``, once there
+Go to ``opentelemetry-python/docs/examples/django``, once there
 run the client with:
 
 ``python client.py hello``

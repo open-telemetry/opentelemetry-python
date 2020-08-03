@@ -90,11 +90,18 @@ import logging
 import opentracing
 from deprecated import deprecated
 
-import opentelemetry.trace as trace_api
 from opentelemetry import propagators
+from opentelemetry.context import Context
+from opentelemetry.correlationcontext import get_correlation, set_correlation
 from opentelemetry.ext.opentracing_shim import util
 from opentelemetry.ext.opentracing_shim.version import __version__
-from opentelemetry.trace import DefaultSpan, set_span_in_context
+from opentelemetry.trace import (
+    INVALID_SPAN_CONTEXT,
+    DefaultSpan,
+    Link,
+    get_current_span,
+    set_span_in_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +137,8 @@ class SpanContextShim(opentracing.SpanContext):
 
     def __init__(self, otel_context):
         self._otel_context = otel_context
+        # Context is being used here since it must be immutable.
+        self._baggage = Context()
 
     def unwrap(self):
         """Returns the wrapped :class:`opentelemetry.trace.SpanContext`
@@ -144,17 +153,9 @@ class SpanContextShim(opentracing.SpanContext):
 
     @property
     def baggage(self):
-        """Implements the ``baggage`` property from the base class.
+        """Implements the ``baggage`` property from the base class."""
 
-        Warning:
-            Not implemented yet.
-        """
-
-        logger.warning(
-            "Using unimplemented property baggage on class %s.",
-            self.__class__.__name__,
-        )
-        # TODO: Implement.
+        return self._baggage
 
 
 class SpanShim(opentracing.Span):
@@ -270,31 +271,17 @@ class SpanShim(opentracing.Span):
     def log_event(self, event, payload=None):
         super().log_event(event, payload=payload)
 
-    def set_baggage_item(self, key, value):  # pylint:disable=unused-argument
-        """Implements the ``set_baggage_item()`` method from the base class.
-
-        Warning:
-            Not implemented yet.
-        """
-
-        logger.warning(
-            "Calling unimplemented method set_baggage_item() on class %s",
-            self.__class__.__name__,
+    def set_baggage_item(self, key, value):
+        """Implements the ``set_baggage_item`` method from the base class."""
+        # pylint: disable=protected-access
+        self._context._baggage = set_correlation(
+            key, value, context=self._context._baggage
         )
-        # TODO: Implement.
 
-    def get_baggage_item(self, key):  # pylint:disable=unused-argument
-        """Implements the ``get_baggage_item()`` method from the base class.
-
-        Warning:
-            Not implemented yet.
-        """
-
-        logger.warning(
-            "Calling unimplemented method get_baggage_item() on class %s",
-            self.__class__.__name__,
-        )
-        # TODO: Implement.
+    def get_baggage_item(self, key):
+        """Implements the ``get_baggage_item`` method from the base class."""
+        # pylint: disable=protected-access
+        return get_correlation(key, context=self._context._baggage)
 
 
 class ScopeShim(opentracing.Scope):
@@ -469,8 +456,8 @@ class ScopeManagerShim(opentracing.ScopeManager):
             shim and is likely to be handled in future versions.
         """
 
-        span = trace_api.get_current_span()
-        if span is None:
+        span = get_current_span()
+        if span.get_context() == INVALID_SPAN_CONTEXT:
             return None
 
         span_context = SpanContextShim(span.get_context())
@@ -643,7 +630,7 @@ class TracerShim(opentracing.Tracer):
         links = []
         if references:
             for ref in references:
-                links.append(trace_api.Link(ref.referenced_context.unwrap()))
+                links.append(Link(ref.referenced_context.unwrap()))
 
         # The OpenTracing API expects time values to be `float` values which
         # represent the number of seconds since the epoch. OpenTelemetry
@@ -699,10 +686,10 @@ class TracerShim(opentracing.Tracer):
 
         propagator = propagators.get_global_httptextformat()
         ctx = propagator.extract(get_as_list, carrier)
-        span = trace_api.get_current_span(ctx)
+        span = get_current_span(ctx)
         if span is not None:
             otel_context = span.get_context()
         else:
-            otel_context = trace_api.INVALID_SPAN_CONTEXT
+            otel_context = INVALID_SPAN_CONTEXT
 
         return SpanContextShim(otel_context)

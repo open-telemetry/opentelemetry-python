@@ -46,7 +46,7 @@ class TestTracer(unittest.TestCase):
         """DefaultTracer's start_span will also
         be retrievable via get_current_span
         """
-        self.assertIs(trace.get_current_span(), None)
+        self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
         span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
         ctx = trace.set_span_in_context(span)
         token = context.attach(ctx)
@@ -54,4 +54,4 @@ class TestTracer(unittest.TestCase):
             self.assertIs(trace.get_current_span(), span)
         finally:
             context.detach(token)
-        self.assertIs(trace.get_current_span(), None)
+        self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)

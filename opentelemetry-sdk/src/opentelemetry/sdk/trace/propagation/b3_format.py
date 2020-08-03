@@ -123,7 +123,7 @@ class B3Format(HTTPTextFormat):
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        if span is None:
+        if span.get_context() == trace.INVALID_SPAN_CONTEXT:
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
