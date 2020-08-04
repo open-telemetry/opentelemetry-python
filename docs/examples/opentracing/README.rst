@@ -100,6 +100,6 @@ Useful links
 ------------
 
 - OpenTelemetry_
-- :doc:`../../ext/opentracing_shim/opentracing_shim`
+- :doc:`../../instrumentation/opentracing_shim/opentracing_shim`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
