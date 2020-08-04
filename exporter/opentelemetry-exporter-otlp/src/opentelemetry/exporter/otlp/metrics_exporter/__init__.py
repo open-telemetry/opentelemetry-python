@@ -70,12 +70,18 @@ def _get_data_points(sdk_metric, data_point_class):
             string_key_values.append(
                 StringKeyValue(key=label_key, value=label_value)
             )
-        data_points.append(
-            data_point_class(
-                labels=string_key_values,
-                value=bound_counter.aggregator.current,
-            )
-        )
+
+        for view_data in bound_counter.view_datas:
+
+            if view_data.labels == label:
+
+                data_points.append(
+                    data_point_class(
+                        labels=string_key_values,
+                        value=view_data.aggregator.current
+                    )
+                )
+                break
 
     return data_points
 

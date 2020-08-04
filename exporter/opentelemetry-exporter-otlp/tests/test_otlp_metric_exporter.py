@@ -62,7 +62,7 @@ class TestOTLPMetricExporter(TestCase):
             SumAggregator(),
         )
 
-    def test_translate_spans(self):
+    def test_translate_metrics(self):
         # pylint: disable=no-member
 
         self.counter_metric_record.instrument.add(1, OrderedDict([("a", "b")]))
