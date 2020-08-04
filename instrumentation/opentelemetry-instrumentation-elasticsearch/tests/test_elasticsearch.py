@@ -23,7 +23,9 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
 
 import opentelemetry.instrumentation.elasticsearch
-from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
+from opentelemetry.instrumentation.elasticsearch import (
+    ElasticsearchInstrumentor,
+)
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 

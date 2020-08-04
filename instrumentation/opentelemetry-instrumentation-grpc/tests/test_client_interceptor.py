@@ -107,7 +107,9 @@ class TestClientProto(TestBase):
         self.assertIs(span.kind, trace.SpanKind.CLIENT)
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.grpc)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.grpc
+        )
 
         self._verify_success_records(8, 8, "/GRPCTestServer/SimpleMethod")
 
@@ -121,7 +123,9 @@ class TestClientProto(TestBase):
         self.assertIs(span.kind, trace.SpanKind.CLIENT)
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.grpc)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.grpc
+        )
 
         self._verify_success_records(
             8, 40, "/GRPCTestServer/ServerStreamingMethod"
@@ -137,7 +141,9 @@ class TestClientProto(TestBase):
         self.assertIs(span.kind, trace.SpanKind.CLIENT)
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.grpc)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.grpc
+        )
 
         self._verify_success_records(
             40, 8, "/GRPCTestServer/ClientStreamingMethod"
@@ -155,7 +161,9 @@ class TestClientProto(TestBase):
         self.assertIs(span.kind, trace.SpanKind.CLIENT)
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.grpc)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.grpc
+        )
 
         self._verify_success_records(
             40, 40, "/GRPCTestServer/BidirectionalStreamingMethod"
@@ -285,4 +293,6 @@ class TestClientNoMetrics(TestBase):
         self.assertIs(span.kind, trace.SpanKind.CLIENT)
 
         # Check version and name in span's instrumentation info
-        self.check_span_instrumentation_info(span, opentelemetry.instrumentation.grpc)
+        self.check_span_instrumentation_info(
+            span, opentelemetry.instrumentation.grpc
+        )

@@ -58,7 +58,8 @@ def test_instrumentation_info(celery_app, memory_exporter):
         == opentelemetry.instrumentation.celery.__version__
     )
     assert (
-        run_span.instrumentation_info.name == opentelemetry.instrumentation.celery.__name__
+        run_span.instrumentation_info.name
+        == opentelemetry.instrumentation.celery.__name__
     )
     assert (
         run_span.instrumentation_info.version
