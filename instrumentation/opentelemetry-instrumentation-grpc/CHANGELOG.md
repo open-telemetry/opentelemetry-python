@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Change package name to opentelemetry-instrumentation-grpc
+  ([#999](https://github.com/open-telemetry/opentelemetry-python/pull/999))
+
 ## Version 0.11b0
 
 Released 2020-07-28
