@@ -15,12 +15,11 @@
 from collections import OrderedDict
 from unittest import TestCase
 
-from opentelemetry.ext.otlp.metrics_exporter import OTLPMetricsExporter
+from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
-    AttributeKeyValue,
     StringKeyValue,
 )
 from opentelemetry.proto.metrics.v1.metrics_pb2 import (
@@ -34,6 +33,7 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
 )
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as CollectorResource,
 )
@@ -72,8 +72,10 @@ class TestOTLPMetricExporter(TestCase):
                 ResourceMetrics(
                     resource=CollectorResource(
                         attributes=[
-                            AttributeKeyValue(key="a", int_value=1),
-                            AttributeKeyValue(key="b", bool_value=False),
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
                         ]
                     ),
                     instrumentation_library_metrics=[

@@ -16,7 +16,7 @@
 import logging
 from typing import Sequence
 
-from opentelemetry.ext.otlp.exporter import (
+from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
     _translate_key_values,

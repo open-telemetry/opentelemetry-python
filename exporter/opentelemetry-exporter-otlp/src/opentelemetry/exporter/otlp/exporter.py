@@ -16,6 +16,7 @@
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Mapping, Sequence
 from time import sleep
 
 from backoff import expo
@@ -28,33 +29,38 @@ from grpc import (
     secure_channel,
 )
 
-from opentelemetry.proto.common.v1.common_pb2 import AttributeKeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 
 logger = logging.getLogger(__name__)
 
 
 def _translate_key_values(key, value):
-    key_value = {"key": key}
 
     if isinstance(value, bool):
-        key_value["bool_value"] = value
+        any_value = AnyValue(bool_value=value)
 
     elif isinstance(value, str):
-        key_value["string_value"] = value
+        any_value = AnyValue(string_value=value)
 
     elif isinstance(value, int):
-        key_value["int_value"] = value
+        any_value = AnyValue(int_value=value)
 
     elif isinstance(value, float):
-        key_value["double_value"] = value
+        any_value = AnyValue(double_value=value)
+
+    elif isinstance(value, Sequence):
+        any_value = AnyValue(array_value=value)
+
+    elif isinstance(value, Mapping):
+        any_value = AnyValue(kvlist_value=value)
 
     else:
         raise Exception(
             "Invalid type {} of value {}".format(type(value), value)
         )
 
-    return key_value
+    return KeyValue(key=key, value=any_value)
 
 
 def _get_resource_data(
@@ -75,7 +81,7 @@ def _get_resource_data(
             try:
                 # pylint: disable=no-member
                 collector_resource.attributes.append(
-                    AttributeKeyValue(**_translate_key_values(key, value))
+                    _translate_key_values(key, value)
                 )
             except Exception as error:  # pylint: disable=broad-except
                 logger.exception(error)
