@@ -17,7 +17,7 @@ import os
 import pymysql as pymy
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymysql import PyMySQLInstrumentor
+from opentelemetry.instrumentation.pymysql import PyMySQLInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")

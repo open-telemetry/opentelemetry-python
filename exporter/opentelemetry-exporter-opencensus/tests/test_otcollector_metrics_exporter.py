@@ -25,7 +25,7 @@ from opentelemetry.sdk.metrics import (
     Counter,
     MeterProvider,
     ValueRecorder,
-    get_labels_as_key,
+    get_dict_as_key,
 )
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
@@ -42,7 +42,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
         cls._labels = {"environment": "staging"}
-        cls._key_labels = get_labels_as_key(cls._labels)
+        cls._key_labels = get_dict_as_key(cls._labels)
 
     def test_constructor(self):
         mock_get_node = mock.Mock()
@@ -119,7 +119,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             client=mock_client, host_name=host_name
         )
         test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, ["environment"]
+            "testname", "testdesc", "unit", int, Counter,
         )
         record = MetricRecord(
             test_metric, self._key_labels, aggregate.SumAggregator(),
@@ -142,7 +142,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     def test_translate_to_collector(self):
         test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, ["environment"]
+            "testname", "testdesc", "unit", int, Counter,
         )
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)

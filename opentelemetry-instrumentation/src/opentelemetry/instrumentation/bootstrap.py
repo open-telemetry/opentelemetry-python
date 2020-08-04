@@ -25,58 +25,58 @@ logger = getLogger(__file__)
 
 # target library to desired instrumentor path/versioned package name
 instrumentations = {
-    "asgi": "opentelemetry-ext-asgi>=0.11b0",
-    "asyncpg": "opentelemetry-ext-asyncpg>=0.11b0",
+    "asgi": "opentelemetry-instrumentation-asgi>=0.11b0",
+    "asyncpg": "opentelemetry-instrumentation-asyncpg>=0.11b0",
     "boto": "opentelemetry-ext-boto>=0.11b0",
     "botocore": "opentelemetry-ext-botocore>=0.11b0",
     "celery": "opentelemetry-ext-celery>=0.11b0",
-    "dbapi": "opentelemetry-ext-dbapi>=0.8b0",
-    "django": "opentelemetry-ext-django>=0.8b0",
+    "dbapi": "opentelemetry-instrumentation-dbapi>=0.8b0",
+    "django": "opentelemetry-instrumentation-django>=0.8b0",
     "elasticsearch": "opentelemetry-ext-elasticsearch>=0.11b0",
     "fastapi": "opentelemetry-instrumentation-fastapi>=0.11b0",
-    "flask": "opentelemetry-ext-flask>=0.8b0",
+    "flask": "opentelemetry-instrumentation-flask>=0.8b0",
     "grpc": "opentelemetry-ext-grpc>=0.8b0",
     "jinja2": "opentelemetry-ext-jinja2>=0.8b0",
-    "mysql": "opentelemetry-ext-mysql>=0.8b0",
-    "psycopg2": "opentelemetry-ext-psycopg2>=0.8b0",
-    "pymemcache": "opentelemetry-ext-pymemcache>=0.11b0",
-    "pymongo": "opentelemetry-ext-pymongo>=0.8b0",
-    "pymysql": "opentelemetry-ext-pymysql>=0.8b0",
-    "pyramid": "opentelemetry-ext-pyramid>=0.11b0",
-    "redis": "opentelemetry-ext-redis>=0.8b0",
-    "requests": "opentelemetry-ext-requests>=0.8b0",
-    "sqlalchemy": "opentelemetry-ext-sqlalchemy>=0.8b0",
-    "sqlite3": "opentelemetry-ext-sqlite3>=0.11b0",
+    "mysql": "opentelemetry-instrumentation-mysql>=0.8b0",
+    "psycopg2": "opentelemetry-instrumentation-psycopg2>=0.8b0",
+    "pymemcache": "opentelemetry-instrumentation-pymemcache>=0.11b0",
+    "pymongo": "opentelemetry-instrumentation-pymongo>=0.8b0",
+    "pymysql": "opentelemetry-instrumentation-pymysql>=0.8b0",
+    "pyramid": "opentelemetry-instrumentation-pyramid>=0.11b0",
+    "redis": "opentelemetry-instrumentation-redis>=0.8b0",
+    "requests": "opentelemetry-instrumentation-requests>=0.8b0",
+    "sqlalchemy": "opentelemetry-instrumentation-sqlalchemy>=0.8b0",
+    "sqlite3": "opentelemetry-instrumentation-sqlite3>=0.11b0",
     "starlette": "opentelemetry-instrumentation-starlette>=0.11b0",
-    "wsgi": "opentelemetry-ext-wsgi>=0.8b0",
+    "wsgi": "opentelemetry-instrumentation-wsgi>=0.8b0",
 }
 
 # relevant instrumentors and tracers to uninstall and check for conflicts for target libraries
 libraries = {
-    "asgi": ("opentelemetry-ext-asgi",),
-    "asyncpg": ("opentelemetry-ext-asyncpg",),
+    "asgi": ("opentelemetry-instrumentation-asgi",),
+    "asyncpg": ("opentelemetry-instrumentation-asyncpg",),
     "boto": ("opentelemetry-ext-boto",),
     "botocore": ("opentelemetry-ext-botocore",),
     "celery": ("opentelemetry-ext-celery",),
-    "dbapi": ("opentelemetry-ext-dbapi",),
-    "django": ("opentelemetry-ext-django",),
+    "dbapi": ("opentelemetry-instrumentation-dbapi",),
+    "django": ("opentelemetry-instrumentation-django",),
     "elasticsearch": ("opentelemetry-ext-elasticsearch",),
     "fastapi": ("opentelemetry-instrumentation-fastapi",),
-    "flask": ("opentelemetry-ext-flask",),
+    "flask": ("opentelemetry-instrumentation-flask",),
     "grpc": ("opentelemetry-ext-grpc",),
     "jinja2": ("opentelemetry-ext-jinja2",),
-    "mysql": ("opentelemetry-ext-mysql",),
-    "psycopg2": ("opentelemetry-ext-psycopg2",),
-    "pymemcache": ("opentelemetry-ext-pymemcache",),
-    "pymongo": ("opentelemetry-ext-pymongo",),
-    "pymysql": ("opentelemetry-ext-pymysql",),
-    "pyramid": ("opentelemetry-ext-pyramid",),
-    "redis": ("opentelemetry-ext-redis",),
-    "requests": ("opentelemetry-ext-requests",),
-    "sqlalchemy": ("opentelemetry-ext-sqlalchemy",),
-    "sqlite3": ("opentelemetry-ext-sqlite3",),
+    "mysql": ("opentelemetry-instrumentation-mysql",),
+    "psycopg2": ("opentelemetry-instrumentation-psycopg2",),
+    "pymemcache": ("opentelemetry-instrumentation-pymemcache",),
+    "pymongo": ("opentelemetry-instrumentation-pymongo",),
+    "pymysql": ("opentelemetry-instrumentation-pymysql",),
+    "pyramid": ("opentelemetry-instrumentation-pyramid",),
+    "redis": ("opentelemetry-instrumentation-redis",),
+    "requests": ("opentelemetry-instrumentation-requests",),
+    "sqlalchemy": ("opentelemetry-instrumentation-sqlalchemy",),
+    "sqlite3": ("opentelemetry-instrumentation-sqlite3",),
     "starlette": ("opentelemetry-instrumentation-starlette",),
-    "wsgi": ("opentelemetry-ext-wsgi",),
+    "wsgi": ("opentelemetry-instrumentation-wsgi",),
 }
 
 
@@ -87,10 +87,10 @@ def _install_package(library, instrumentation):
 
 
     OpenTelemetry auto-instrumentation packages often have traced libraries
-    as instrumentation dependency (e.g. flask for opentelemetry-ext-flask),
-    so using -I on library could cause likely undesired Flask upgrade.
-    Using --no-dependencies alone would leave potential for nonfunctional
-    installations.
+    as instrumentation dependency (e.g. flask for
+    opentelemetry-instrumentation-flask), so using -I on library could cause
+    likely undesired Flask upgrade.Using --no-dependencies alone would leave
+    potential for nonfunctional installations.
     """
     pip_list = _sys_pip_freeze()
     for package in libraries[library]:
@@ -159,7 +159,7 @@ def _pip_check():
     Clean check reported as:
     'No broken requirements found.'
     Dependency conflicts are reported as:
-    'opentelemetry-ext-flask 1.0.1 has requirement opentelemetry-sdk<2.0,>=1.0, but you have opentelemetry-sdk 0.5.'
+    'opentelemetry-instrumentation-flask 1.0.1 has requirement opentelemetry-sdk<2.0,>=1.0, but you have opentelemetry-sdk 0.5.'
     To not be too restrictive, we'll only check for relevant packages.
     """
     check_pipe = subprocess.Popen(

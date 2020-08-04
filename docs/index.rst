@@ -84,6 +84,14 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     :name: Instrumentations
     :glob:
 
+    instrumentation/**
+
+.. toctree::
+    :maxdepth: 2
+    :caption: OpenTelemetry Integrations
+    :name: integrations
+    :glob:
+
     ext/**
 
 .. toctree::
