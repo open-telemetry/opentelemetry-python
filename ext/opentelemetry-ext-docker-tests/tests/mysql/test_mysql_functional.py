@@ -18,7 +18,7 @@ import time
 import mysql.connector
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.mysql import MySQLInstrumentor
+from opentelemetry.instrumentation.mysql import MySQLInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 MYSQL_USER = os.getenv("MYSQL_USER ", "testuser")
