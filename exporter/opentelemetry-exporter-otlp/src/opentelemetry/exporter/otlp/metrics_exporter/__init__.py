@@ -78,7 +78,7 @@ def _get_data_points(sdk_metric, data_point_class):
                 data_points.append(
                     data_point_class(
                         labels=string_key_values,
-                        value=view_data.aggregator.current
+                        value=view_data.aggregator.current,
                     )
                 )
                 break

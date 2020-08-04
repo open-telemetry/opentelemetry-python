@@ -20,6 +20,8 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    KeyValue,
     StringKeyValue,
 )
 from opentelemetry.proto.metrics.v1.metrics_pb2 import (
@@ -33,7 +35,6 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as CollectorResource,
 )

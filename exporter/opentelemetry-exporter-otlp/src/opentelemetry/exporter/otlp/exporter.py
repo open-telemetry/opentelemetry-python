@@ -29,8 +29,8 @@ from grpc import (
     secure_channel,
 )
 
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
+from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 
 logger = logging.getLogger(__name__)
 
@@ -178,8 +178,7 @@ class OTLPExporterMixin(ABC):
                         )
 
                     logger.debug(
-                        "Waiting %ss before retrying export of span",
-                        delay
+                        "Waiting %ss before retrying export of span", delay
                     )
                     sleep(delay)
                     continue
