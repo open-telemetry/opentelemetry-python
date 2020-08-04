@@ -18,7 +18,7 @@ from functools import wraps
 import pytest
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.celery import CeleryInstrumentor
+from opentelemetry.instrumentation.celery import CeleryInstrumentor
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,

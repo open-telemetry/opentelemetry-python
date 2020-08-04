@@ -38,7 +38,7 @@ _INSTRUMENTATION_SPAN_TYPES = {
     "opentelemetry.instrumentation.django": DatadogSpanTypes.WEB,
     "opentelemetry.instrumentation.flask": DatadogSpanTypes.WEB,
     "opentelemetry.instrumentation.grpc": DatadogSpanTypes.GRPC,
-    "opentelemetry.ext.jinja2": DatadogSpanTypes.TEMPLATE,
+    "opentelemetry.instrumentation.jinja2": DatadogSpanTypes.TEMPLATE,
     "opentelemetry.instrumentation.mysql": DatadogSpanTypes.SQL,
     "opentelemetry.instrumentation.psycopg2": DatadogSpanTypes.SQL,
     "opentelemetry.instrumentation.pymemcache": DatadogSpanTypes.CACHE,

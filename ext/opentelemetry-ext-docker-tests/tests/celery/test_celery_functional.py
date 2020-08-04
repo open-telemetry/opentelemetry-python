@@ -20,9 +20,9 @@ import pytest
 from celery import signals
 from celery.exceptions import Retry
 
-import opentelemetry.ext.celery
+import opentelemetry.instrumentation.celery
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.celery import CeleryInstrumentor
+from opentelemetry.instrumentation.celery import CeleryInstrumentor
 from opentelemetry.sdk import resources
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -51,18 +51,18 @@ def test_instrumentation_info(celery_app, memory_exporter):
 
     assert (
         async_span.instrumentation_info.name
-        == opentelemetry.ext.celery.__name__
+        == opentelemetry.instrumentation.celery.__name__
     )
     assert (
         async_span.instrumentation_info.version
-        == opentelemetry.ext.celery.__version__
+        == opentelemetry.instrumentation.celery.__version__
     )
     assert (
-        run_span.instrumentation_info.name == opentelemetry.ext.celery.__name__
+        run_span.instrumentation_info.name == opentelemetry.instrumentation.celery.__name__
     )
     assert (
         run_span.instrumentation_info.version
-        == opentelemetry.ext.celery.__version__
+        == opentelemetry.instrumentation.celery.__version__
     )
 
 

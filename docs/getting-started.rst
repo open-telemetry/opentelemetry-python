@@ -122,7 +122,7 @@ for Jaeger, but you can install that as a separate package:
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-jaeger
+    pip install opentelemetry-exporter-jaeger
 
 Once installed, update your code to import the Jaeger exporter, and use that instead:
 
@@ -228,7 +228,7 @@ For our Python application, we will need to install an exporter specific to Prom
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-prometheus
+    pip install opentelemetry-exporter-prometheus
 
 
 And use that instead of the `ConsoleMetricsExporter`:
@@ -284,15 +284,3 @@ Start the docker container:
         -v /tmp/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
         omnition/opentelemetry-collector-contrib:latest \
         --config=/etc/otel-collector-config.yaml
-
-Install the OpenTelemetry Collector exporter:
-
-.. code-block:: sh
-
-    pip install opentelemetry-ext-otcollector
-
-And execute the following script:
-
-.. literalinclude:: getting_started/otcollector_example.py
-    :language: python
-    :lines: 15-
