@@ -73,7 +73,7 @@ Installation
 
     $ pip install opentelemetry-sdk
     $ pip install opentelemetry-instrumentation
-    $ pip install opentelemetry-ext-flask
+    $ pip install opentelemetry-instrumentation-flask
     $ pip install requests
 
 Execution

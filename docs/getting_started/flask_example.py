@@ -17,8 +17,8 @@ import flask
 import requests
 
 from opentelemetry import trace
-from opentelemetry.ext.flask import FlaskInstrumentor
-from opentelemetry.ext.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,

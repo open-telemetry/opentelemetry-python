@@ -19,8 +19,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from opentelemetry import trace
-from opentelemetry.ext.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.ext.sqlalchemy.engine import _DB, _ROWS, _STMT
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.instrumentation.sqlalchemy.engine import _DB, _ROWS, _STMT
 from opentelemetry.test.test_base import TestBase
 
 Base = declarative_base()

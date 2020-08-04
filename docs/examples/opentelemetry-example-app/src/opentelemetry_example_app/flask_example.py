@@ -19,9 +19,9 @@ the requests library to perform downstream requests
 import flask
 import requests
 
-import opentelemetry.ext.requests
+import opentelemetry.instrumentation.requests
 from opentelemetry import trace
-from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -33,7 +33,7 @@ from opentelemetry.sdk.trace.export import (
 # It must be done before instrumenting any library
 trace.set_tracer_provider(TracerProvider())
 
-opentelemetry.ext.requests.RequestsInstrumentor().instrument()
+opentelemetry.instrumentation.requests.RequestsInstrumentor().instrument()
 
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
