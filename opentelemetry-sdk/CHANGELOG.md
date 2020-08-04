@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed default Sampler to `ParentOrElse(AlwaysOn)`
 - Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL`
   ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
 - Implement Views in metrics SDK

@@ -17,7 +17,7 @@ import os
 from pymongo import MongoClient
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.pymongo import PymongoInstrumentor
+from opentelemetry.instrumentation.pymongo import PymongoInstrumentor
 from opentelemetry.test.test_base import TestBase
 
 MONGODB_HOST = os.getenv("MONGODB_HOST ", "localhost")
