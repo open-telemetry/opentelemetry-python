@@ -344,6 +344,7 @@ class TestSpanCreation(unittest.TestCase):
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
