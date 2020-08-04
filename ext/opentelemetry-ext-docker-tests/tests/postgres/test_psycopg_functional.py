@@ -18,7 +18,7 @@ import time
 import psycopg2
 
 from opentelemetry import trace as trace_api
-from opentelemetry.ext.psycopg2 import Psycopg2Instrumentor
+from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
 from opentelemetry.test.test_base import TestBase
 
 POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")
