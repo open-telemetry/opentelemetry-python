@@ -284,3 +284,13 @@ Start the docker container:
         -v /tmp/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
         omnition/opentelemetry-collector-contrib:latest \
         --config=/etc/otel-collector-config.yaml
+
+Install the OpenTelemetry Collector exporter:
+
+.. code-block:: sh
+    pip install opentelemetry-instrumentation-otlp
+And execute the following script:
+
+.. literalinclude:: getting_started/otcollector_example.py
+    :language: python
+    :lines: 15-
