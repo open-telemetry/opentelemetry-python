@@ -288,7 +288,9 @@ Start the docker container:
 Install the OpenTelemetry Collector exporter:
 
 .. code-block:: sh
-    pip install opentelemetry-instrumentation-otlp
+
+    pip install opentelemetry-instrumentation-otcollector
+
 And execute the following script:
 
 .. literalinclude:: getting_started/otcollector_example.py
