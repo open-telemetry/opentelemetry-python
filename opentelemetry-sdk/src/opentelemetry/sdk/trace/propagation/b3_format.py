@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import typing
-from re import fullmatch
+from re import compile as re_compile
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
@@ -39,6 +39,8 @@ class B3Format(HTTPTextFormat):
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
+    _trace_id_regex = re_compile(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
+    _span_id_regex = re_compile(r"[\da-fA-F]{16}")
 
     def extract(
         self,
@@ -98,8 +100,8 @@ class B3Format(HTTPTextFormat):
             )
 
         if (
-            fullmatch(r"[\da-fA-F]{16}|[\da-fA-F]{32}", trace_id) is None
-            or fullmatch(r"[\da-fA-F]{16}", span_id) is None
+            self._trace_id_regex.fullmatch(trace_id) is None
+            or self._span_id_regex.fullmatch(span_id) is None
         ):
             trace_id = generate_trace_id()
             span_id = generate_span_id()
