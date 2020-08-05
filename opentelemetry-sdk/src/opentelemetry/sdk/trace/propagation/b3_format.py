@@ -107,6 +107,10 @@ class B3Format(HTTPTextFormat):
             span_id = generate_span_id()
             sampled = "0"
 
+        else:
+            trace_id = int(trace_id, 16)
+            span_id = int(span_id, 16)
+
         options = 0
         # The b3 spec provides no defined behavior for both sample and
         # flag values set. Since the setting of at least one implies
@@ -114,12 +118,6 @@ class B3Format(HTTPTextFormat):
         # header is set to allow.
         if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
-
-        if isinstance(trace_id, str):
-            trace_id = int(trace_id, 16)
-
-        if isinstance(span_id, str):
-            span_id = int(span_id, 16)
 
         return trace.set_span_in_context(
             trace.DefaultSpan(
