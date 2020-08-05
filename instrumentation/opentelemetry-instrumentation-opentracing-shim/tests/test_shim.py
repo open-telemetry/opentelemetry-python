@@ -422,7 +422,7 @@ class TestShim(TestCase):
             )
             self.assertEqual(span.unwrap().events[1].attributes["foo"], "bar")
             # Tolerate inaccuracies of less than a microsecond. See Note:
-            # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.instrumentation.opentracing_shim.html
+            # https://open-telemetry.github.io/opentelemetry-python/instrumentation/opentracing_shim/opentracing_shim.html
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
