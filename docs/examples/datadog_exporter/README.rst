@@ -50,7 +50,7 @@ Distributed Example
     pip install opentelemetry-sdk
     pip install opentelemetry-exporter-datadog
     pip install opentelemetry-instrumentation
-    pip install opentelemetry-ext-flask
+    pip install opentelemetry-instrumentation-flask
     pip install flask
     pip install requests
 
