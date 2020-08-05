@@ -4,7 +4,7 @@
 
 - Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL`
   ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
-- Stop TracerProvider from being overridden
+- Stop TracerProvider and MeterProvider from being overridden
   ([#959](https://github.com/open-telemetry/opentelemetry-python/pull/959))
 
 ## Version 0.11b0
