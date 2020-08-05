@@ -63,12 +63,19 @@ pip install opentelemetry-sdk
 ```
 
 The
-[`ext/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/ext)
-directory includes OpenTelemetry integration packages, which can be installed
-separately as:
+[`instrumentation/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/instrumentation)
+directory includes OpenTelemetry instrumentation packages, which can be installed separately as:
 
 ```sh
-pip install opentelemetry-ext-{integration}
+pip install opentelemetry-instrumentation-{instrumentation}
+```
+
+The
+[`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/exporter)
+directory includes OpenTelemetry exporter packages, which can be installed separately as:
+
+```sh
+pip install opentelemetry-exporter-{exporter}
 ```
 
 To install the development versions of these packages instead, clone or fork
@@ -78,7 +85,7 @@ install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
 ```sh
 pip install -e ./opentelemetry-api
 pip install -e ./opentelemetry-sdk
-pip install -e ./ext/opentelemetry-ext-{integration}
+pip install -e ./ext/opentelemetry-instrumentation-{instrumentation}
 ```
 
 ## Documentation
