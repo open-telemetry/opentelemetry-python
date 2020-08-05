@@ -93,8 +93,8 @@ from deprecated import deprecated
 from opentelemetry import propagators
 from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.correlationcontext import get_correlation, set_correlation
-from opentelemetry.ext.opentracing_shim import util
-from opentelemetry.ext.opentracing_shim.version import __version__
+from opentelemetry.instrumentation.opentracing_shim import util
+from opentelemetry.instrumentation.opentracing_shim.version import __version__
 from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
     DefaultSpan,
