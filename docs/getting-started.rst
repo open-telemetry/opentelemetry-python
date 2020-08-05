@@ -122,7 +122,7 @@ for Jaeger, but you can install that as a separate package:
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-jaeger
+    pip install opentelemetry-exporter-jaeger
 
 Once installed, update your code to import the Jaeger exporter, and use that instead:
 
@@ -228,7 +228,7 @@ For our Python application, we will need to install an exporter specific to Prom
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-prometheus
+    pip install opentelemetry-exporter-prometheus
 
 
 And use that instead of the `ConsoleMetricsExporter`:
@@ -289,7 +289,7 @@ Install the OpenTelemetry Collector exporter:
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-otcollector
+    pip install opentelemetry-instrumentation-otcollector
 
 And execute the following script:
 
