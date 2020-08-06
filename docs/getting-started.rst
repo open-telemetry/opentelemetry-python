@@ -312,7 +312,7 @@ Install the OpenTelemetry Collector exporter:
 
 .. code-block:: sh
 
-    pip install opentelemetry-instrumentation-otcollector
+    pip install opentelemetry-exporter-otlp
 
 And execute the following script:
 
