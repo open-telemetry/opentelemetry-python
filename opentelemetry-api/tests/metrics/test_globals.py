@@ -16,8 +16,8 @@ class TestGlobals(unittest.TestCase):
                 test.output,
                 [
                     (
-                        "WARNING:opentelemetry.metrics:Overriding current "
-                        "MeterProvider"
+                        "WARNING:opentelemetry.metrics:Overriding of current "
+                        "MeterProvider is not allowed"
                     )
                 ],
             )

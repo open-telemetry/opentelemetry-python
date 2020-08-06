@@ -459,7 +459,8 @@ def set_meter_provider(meter_provider: MeterProvider) -> None:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is not None:
-        logger.warning("Overriding current MeterProvider")
+        logger.warning("Overriding of current MeterProvider is not allowed")
+        return
 
     _METER_PROVIDER = meter_provider
 
