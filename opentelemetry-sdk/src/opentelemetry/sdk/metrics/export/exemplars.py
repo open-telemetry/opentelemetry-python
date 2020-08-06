@@ -16,7 +16,7 @@
     Exemplars are sample data points for aggregators. For more information, see the `spec <https://github.com/open-telemetry/oteps/pull/113>`_
 
     Every synchronous aggregator is instrumented with two exemplar recorders:
-        1. A "semantic" exemplar sampler, which only samples exemplars if they have a sampled trace context (and can pick exemplars with other biases, ie min + max).
+        1. A "trace" exemplar sampler, which only samples exemplars if they have a sampled trace context (and can pick exemplars with other biases, ie min + max).
         2. A "statistical" exemplar sampler, which samples exemplars without bias (ie no preferenced for traced exemplars)
 
     To use an exemplar recorder, pass in two arguments to the aggregator config in views (see the "Exemplars" example for an example):
@@ -154,6 +154,8 @@ class RandomExemplarSampler(ExemplarSampler):
             self.sample_set.append(exemplar)
             return
 
+        # We sample a random subset of a stream using "Algorithm R":
+        # https://en.wikipedia.org/wiki/Reservoir_sampling#Simple_algorithm
         replace_index = random.randint(0, self.rand_count - 1)
 
         if replace_index < self._k:
@@ -277,7 +279,7 @@ class BucketedExemplarSampler(ExemplarSampler):
 class ExemplarManager:
     """
         Manages two different exemplar samplers:
-        1. A "semantic" exemplar sampler, which only samples exemplars if they have a sampled trace context.
+        1. A "trace" exemplar sampler, which only samples exemplars if they have a sampled trace context.
         2. A "statistical" exemplar sampler, which samples exemplars without bias (ie no preferenced for traced exemplars)
     """
 

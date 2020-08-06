@@ -28,13 +28,13 @@ The opentelemetry SDK provides a way to sample exemplars statistically:
 
 See 'statistical_exemplars.ipynb' for the example (TODO: how do I link this?)
 
-Semantic exemplars
+Trace exemplars
 ^^^^^^^^^^^^^^^^^^
 
-Semantic exemplars are exemplars that have not been sampled statistically,
+Trace exemplars are exemplars that have not been sampled statistically,
 but instead aim to provide value as individual exemplars.
 They will have a trace id/span id attached for the active trace when the exemplar was recorded,
 and they may focus on measurements with abnormally high/low values.
 
-'semantic_exemplars.py' shows how to generate exemplars for a histogram aggregation.
+'trace_exemplars.py' shows how to generate exemplars for a histogram aggregation.
 Currently only the Google Cloud Monitoring exporter supports uploading these exemplars.

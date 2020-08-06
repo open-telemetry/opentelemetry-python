@@ -223,21 +223,12 @@ class TestExemplarManager(unittest.TestCase):
         merged = manager.merge([Exemplar(2, time())], [Exemplar(3, time())])
         self.assertEqual(len(merged), 1)
 
-    def test_semantic(self):
-        config = {"statistical_exemplars": True, "num_exemplars": 1}
+    def test_trace(self):
+        config = {"statistical_exemplars": False, "num_exemplars": 1}
         manager = ExemplarManager(
             config, MinMaxExemplarSampler, RandomExemplarSampler
         )
-        self.assertIsInstance(manager.exemplar_sampler, RandomExemplarSampler)
-        manager.sample(5, {})
-        self.assertEqual(len(manager.exemplar_sampler.sample_set), 1)
-        self.assertEqual(manager.exemplar_sampler.sample_set[0].value, 5)
-
-        checkpoint = manager.take_checkpoint()
-        self.assertEqual(len(checkpoint), 1)
-        self.assertEqual(checkpoint[0].value, 5)
-
-        self.assertEqual(len(manager.exemplar_sampler.sample_set), 0)
+        self.assertIsInstance(manager.exemplar_sampler, MinMaxExemplarSampler)
 
         merged = manager.merge([Exemplar(2, time())], [Exemplar(3, time())])
         self.assertEqual(len(merged), 1)

@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 """
-This example shows how to generate "semantic" exemplars for a histogram, and how to export them to Google Cloud Monitoring.
+This example shows how to generate trace exemplars for a histogram, and how to export them to Google Cloud Monitoring.
 """
 
 import random
