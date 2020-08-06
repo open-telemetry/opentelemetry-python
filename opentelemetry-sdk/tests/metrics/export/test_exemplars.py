@@ -97,11 +97,11 @@ class TestRandomExemplarSampler(unittest.TestCase):
         set1 = [1, 2, 3]
         set2 = [4, 5, 6]
         sampler = RandomExemplarSampler(6)
-        self.assertEqual(set1 + set2, sampler.merge(set1, set2))
+        self.assertEqual(set2, sampler.merge(set1, set2))
         sampler = RandomExemplarSampler(8)
-        self.assertEqual(set1 + set2, sampler.merge(set1, set2))
+        self.assertEqual(set2, sampler.merge(set1, set2))
         sampler = RandomExemplarSampler(4)
-        self.assertEqual(4, len(sampler.merge(set1, set2)))
+        self.assertEqual(3, len(sampler.merge(set1, set2)))
 
 
 class TestMinMaxExemplarSampler(unittest.TestCase):
@@ -140,10 +140,10 @@ class TestMinMaxExemplarSampler(unittest.TestCase):
         self.assertEqual(len(sampler.sample_set), 1)
 
     def test_merge(self):
-        set1 = [1, 2, 3]
-        set2 = [4, 5, 6]
+        set1 = [1, 3]
+        set2 = [4, 6]
         sampler = MinMaxExemplarSampler(2)
-        self.assertEqual([1, 6], sampler.merge(set1, set2))
+        self.assertEqual([4, 6], sampler.merge(set1, set2))
 
 
 class TestBucketedExemplarSampler(unittest.TestCase):
@@ -195,7 +195,7 @@ class TestBucketedExemplarSampler(unittest.TestCase):
                     [Exemplar(2, time())],
                 )
             ),
-            2,
+            1,
         )
 
 
@@ -339,7 +339,7 @@ class TestStandardExemplars(unittest.TestCase):
 
         agg1.merge(agg2)
 
-        self.assertEqual(len(agg1.checkpoint_exemplars), 2)
+        self.assertEqual(len(agg1.checkpoint_exemplars), 1)
 
     def test_sum_aggregator(self):
         self._no_exemplars_test(SumAggregator)
@@ -495,8 +495,8 @@ class TestFullPipelineExemplars(unittest.TestCase):
         # Since this is using the HistogramAggregator, the bucket counts will be reflected
         # with each record
         requests_size.record(25, {"environment": "staging", "test": "value"})
-        requests_size.record(1, {"environment": "staging", "test": "value2"})
-        requests_size.record(200, {"environment": "staging", "test": "value3"})
+        requests_size.record(1, {"environment": "staging", "test": "value"})
+        requests_size.record(200, {"environment": "staging", "test": "value"})
 
         controller.tick()
         metrics_list = exporter.get_exported_metrics()
@@ -509,8 +509,8 @@ class TestFullPipelineExemplars(unittest.TestCase):
                 for exemplar in exemplars
             ],
             [
-                (1, (("test", "value2"),)),
+                (1, (("test", "value"),)),
                 (25, (("test", "value"),)),
-                (200, (("test", "value3"),)),
+                (200, (("test", "value"),)),
             ],
         )

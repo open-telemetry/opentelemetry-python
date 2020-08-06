@@ -19,7 +19,7 @@
         1. A "trace" exemplar sampler, which only samples exemplars if they have a sampled trace context (and can pick exemplars with other biases, ie min + max).
         2. A "statistical" exemplar sampler, which samples exemplars without bias (ie no preferenced for traced exemplars)
 
-    To use an exemplar recorder, pass in two arguments to the aggregator config in views (see the "Exemplars" example for an example):
+    To use an exemplar recorder, pass in two arguments to the aggregator config in views (see the :ref:`Exemplars` example for an example):
         "num_exemplars": The number of exemplars to record (if applicable, in each bucket). Note that in non-statistical mode the recorder may not use "num_exemplars"
         "statistical_exemplars": If exemplars should be recorded statistically
 
@@ -29,6 +29,7 @@
 import abc
 import itertools
 import random
+from typing import List, Optional, Tuple, Union
 
 from opentelemetry.context import get_current
 from opentelemetry.util import time_ns
@@ -41,12 +42,12 @@ class Exemplar:
 
     def __init__(
         self,
-        value,
-        timestamp,
-        dropped_labels=None,
-        span_id=None,
-        trace_id=None,
-        sample_count=None,
+        value: Union[int, float],
+        timestamp: int,
+        dropped_labels: Optional[Tuple[Tuple[str, str]]] = None,
+        span_id: Optional[bytes] = None,
+        trace_id: Optional[bytes] = None,
+        sample_count: Optional[float] = None,
     ):
         self._value = value
         self._timestamp = timestamp
@@ -94,22 +95,22 @@ class Exemplar:
         """For statistical exemplars, how many measurements a single exemplar represents"""
         return self._sample_count
 
-    def set_sample_count(self, count):
+    def set_sample_count(self, count: float):
         self._sample_count = count
 
 
-class ExemplarSampler:
+class ExemplarSampler(abc.ABC):
     """
-        Abstract class to sample exemplars through a stream of incoming measurements
+        Abstract class to sample `k` exemplars in some way through a stream of incoming measurements
     """
 
-    def __init__(self, k, statistical=False):
+    def __init__(self, k: int, statistical: bool = False):
         self._k = k
         self._statistical = statistical
-        self._sample_set = list()
+        self._sample_set = []
 
     @abc.abstractmethod
-    def sample(self, exemplar, **kwargs):
+    def sample(self, exemplar: Exemplar, **kwargs):
         """
         Given an exemplar, determine if it should be sampled or not
         """
@@ -122,7 +123,7 @@ class ExemplarSampler:
         """
 
     @abc.abstractmethod
-    def merge(self, set1, set2):
+    def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
         """
         Given two lists of sampled exemplars, merge them while maintaining the invariants specified by this sampler
         """
@@ -139,19 +140,19 @@ class RandomExemplarSampler(ExemplarSampler):
         Randomly sample a set of k exemplars from a stream. Each measurement in the stream
         will have an equal chance of being sampled.
 
-        If RandomExemplarSampler` is specified to be statistical, it will add a sample_count to every exemplar it records.
+        If `RandomExemplarSampler` is specified to be statistical, it will add a sample_count to every exemplar it records.
         This value will be equal to the number of measurements recorded per every exemplar measured - all exemplars will have the same sample_count value.
     """
 
-    def __init__(self, k, statistical=False):
+    def __init__(self, k: int, statistical: bool = False):
         super().__init__(k, statistical=statistical)
         self.rand_count = 0
 
-    def sample(self, exemplar, **kwargs):
+    def sample(self, exemplar: Exemplar, **kwargs):
         self.rand_count += 1
 
-        if len(self.sample_set) < self._k:
-            self.sample_set.append(exemplar)
+        if len(self._sample_set) < self._k:
+            self._sample_set.append(exemplar)
             return
 
         # We sample a random subset of a stream using "Algorithm R":
@@ -159,13 +160,15 @@ class RandomExemplarSampler(ExemplarSampler):
         replace_index = random.randint(0, self.rand_count - 1)
 
         if replace_index < self._k:
-            self.sample_set[replace_index] = exemplar
+            self._sample_set[replace_index] = exemplar
 
-    def merge(self, set1, set2):
-        combined = set1 + set2
-        if len(combined) <= self._k:
-            return combined
-        return random.sample(combined, self._k)
+    def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
+        """
+        Assume that set2 is the latest set of exemplars.
+        For simplicity, we will just keep set2 and assume set1 has already been exported.
+        This may need to change with a different SDK implementation.
+        """
+        return set2
 
     @property
     def sample_set(self):
@@ -186,12 +189,12 @@ class MinMaxExemplarSampler(ExemplarSampler):
         Sample the minimum and maximum measurements recorded only
     """
 
-    def __init__(self, k, statistical=False):
+    def __init__(self, k: int, statistical: bool = False):
         # K will always be 2 (min and max), and selecting min and max can never be statistical
         super().__init__(2, statistical=False)
         self._sample_set = []
 
-    def sample(self, exemplar, **kwargs):
+    def sample(self, exemplar: Exemplar, **kwargs):
         self._sample_set = [
             min(
                 self._sample_set + [exemplar],
@@ -209,12 +212,13 @@ class MinMaxExemplarSampler(ExemplarSampler):
     def sample_set(self):
         return self._sample_set
 
-    def merge(self, set1, set2):
-        merged_set = set1 + set2
-        if len(merged_set) <= 2:
-            return sorted(merged_set, key=lambda exemplar: exemplar.value)
-
-        return [min(merged_set), max(merged_set)]
+    def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
+        """
+        Assume that set2 is the latest set of exemplars.
+        For simplicity, we will just keep set2 and assume set1 has already been exported.
+        This may need to change with a different SDK implementation.
+        """
+        return set2
 
     def reset(self):
         self._sample_set = []
@@ -228,7 +232,9 @@ class BucketedExemplarSampler(ExemplarSampler):
         This value will be equal to `len(bucket.exemplars) / bucket.count`, that is the number of measurements each exemplar represents.
     """
 
-    def __init__(self, k, statistical=False, boundaries=None):
+    def __init__(
+        self, k: int, statistical: bool = False, boundaries: list = None
+    ):
         super().__init__(k)
         self._boundaries = boundaries
         self._sample_set = [
@@ -236,7 +242,7 @@ class BucketedExemplarSampler(ExemplarSampler):
             for _ in range(len(self._boundaries) + 1)
         ]
 
-    def sample(self, exemplar, **kwargs):
+    def sample(self, exemplar: Exemplar, **kwargs):
         bucket_index = kwargs.get("bucket_index")
         if bucket_index is None:
             return
@@ -251,25 +257,13 @@ class BucketedExemplarSampler(ExemplarSampler):
             )
         )
 
-    def merge(self, set1, set2):
-        exemplar_set = [list() for _ in range(len(self._boundaries) + 1)]
-        # Sort both sets back into buckets
-        for setx in [set1, set2]:
-            bucket_idx = 0
-            for exemplar in setx:
-                if exemplar.value >= self._boundaries[-1]:
-                    exemplar_set[-1].append(exemplar)
-                    continue
-
-                while exemplar.value >= self._boundaries[bucket_idx]:
-                    bucket_idx += 1
-                exemplar_set[bucket_idx].append(exemplar)
-
-        # Pick only k exemplars for every bucket
-        for index, inner_set in enumerate(exemplar_set):
-            if len(inner_set) > self._k:
-                exemplar_set[index] = random.sample(inner_set, self._k)
-        return list(itertools.chain.from_iterable(exemplar_set))
+    def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
+        """
+        Assume that set2 is the latest set of exemplars.
+        For simplicity, we will just keep set2 and assume set1 has already been exported.
+        This may need to change with a different SDK implementation.
+        """
+        return set2
 
     def reset(self):
         for sampler in self._sample_set:
@@ -285,9 +279,9 @@ class ExemplarManager:
 
     def __init__(
         self,
-        config,
-        default_exemplar_sampler,
-        statistical_exemplar_sampler,
+        config: dict,
+        default_exemplar_sampler: ExemplarSampler,
+        statistical_exemplar_sampler: ExemplarSampler,
         **kwargs
     ):
         if config:
@@ -311,7 +305,12 @@ class ExemplarManager:
         else:
             self.record_exemplars = False
 
-    def sample(self, value, dropped_labels, **kwargs):
+    def sample(
+        self,
+        value: Union[int, float],
+        dropped_labels: Tuple[Tuple[str, str]],
+        **kwargs
+    ):
         context = get_current()
 
         is_sampled = (
@@ -343,7 +342,11 @@ class ExemplarManager:
             return ret
         return []
 
-    def merge(self, checkpoint_exemplars, other_checkpoint_exemplars):
+    def merge(
+        self,
+        checkpoint_exemplars: List[Exemplar],
+        other_checkpoint_exemplars: List[Exemplar],
+    ):
         if self.record_exemplars:
             return self.exemplar_sampler.merge(
                 checkpoint_exemplars, other_checkpoint_exemplars

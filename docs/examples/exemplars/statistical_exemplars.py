@@ -61,8 +61,8 @@ def unknown_customer_calls():
 
     # customer 123 is a big user, and made 1000 requests in this timeframe
     requests = np.random.normal(
-        1000, 250, 1000
-    )  # 1000 requests with average 1000 bytes, covariance 100
+        1000, 100, 1000
+    )  # 1000 requests with average 1000 bytes, standard deviation 100
 
     for request in requests:
         bytes_counter.add(
@@ -123,7 +123,7 @@ for exemplar in exemplars:
 
 
 customer_bytes_list = sorted(
-    list(customer_bytes_map.items()), key=lambda t: t[1], reverse=True
+    customer_bytes_map.items(), key=lambda t: t[1], reverse=True
 )
 
 # Save our top 5 customers and sum all of the rest into "Others".
@@ -146,7 +146,6 @@ customer_123_bytes = customer_bytes_map[
 
 # Since the exemplars were randomly sampled, all sample_counts will be the same
 sample_count = exemplars[0].sample_count
-print("sample count", sample_count, "custmer", customer_123_bytes)
 full_customer_123_bytes = sample_count * customer_123_bytes
 
 # With seed == 1 we get 1008612 - quite close to the statistical mean of 1000000! (more exemplars would make this estimation even more accurate)
@@ -160,13 +159,10 @@ print(
 top_25_customers = customer_bytes_list[:25]
 
 # out of those 25 customers, determine how many used grpc, and come up with a ratio
-percent_grpc = len(
-    list(
-        filter(
-            lambda customer_value: customer_value[0][1][1] == "gRPC",
-            top_25_customers,
-        )
-    )
+percent_grpc = sum(
+    1
+    for customer_value in top_25_customers
+    if customer_value[0][1][1] == "gRPC"
 ) / len(top_25_customers)
 
 print(

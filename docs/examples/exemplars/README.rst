@@ -1,6 +1,8 @@
 OpenTelemetry Exemplars Example
 ===============================
 
+.. _Exemplars:
+
 Exemplars are example measurements for aggregations. While they are simple conceptually, exemplars can estimate any statistic about the input distribution, can provide links to sample traces for high latency requests, and much more.
 For more information about exemplars and how they work in OpenTelemetry, see the `spec <https://github.com/open-telemetry/oteps/pull/113>`_
 
@@ -24,7 +26,7 @@ Statistical exemplars
 The opentelemetry SDK provides a way to sample exemplars statistically:
 
     - Exemplars will be picked to represent the input distribution, without unquantifiable bias
-    - A "sample_count" attribute will be set on each exemplar to quantify how many measurements each exemplar represents
+    - A "sample_count" attribute will be set on each exemplar to quantify how many measurements each exemplar represents (for randomly sampled exemplars, this value will be N (total measurements) / num_samples. For histogram exemplars, this value will be specific to each bucket).
 
 See 'statistical_exemplars.ipynb' for the example (TODO: how do I link this?)
 
