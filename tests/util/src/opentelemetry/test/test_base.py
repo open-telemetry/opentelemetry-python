@@ -41,6 +41,9 @@ class TestBase(unittest.TestCase):
         cls.original_meter_provider = metrics_api.get_meter_provider()
         result = cls.create_meter_provider()
         cls.meter_provider, cls.memory_metrics_exporter = result
+        # This is done because set_meter_provider cannot override the
+        # current meter provider.
+        metrics_api._METER_PROVIDER = None  # pylint: disable=protected-access
         metrics_api.set_meter_provider(cls.meter_provider)
 
     @classmethod
@@ -49,6 +52,9 @@ class TestBase(unittest.TestCase):
         # current tracer provider.
         trace_api._TRACER_PROVIDER = None  # pylint: disable=protected-access
         trace_api.set_tracer_provider(cls.original_tracer_provider)
+        # This is done because set_meter_provider cannot override the
+        # current meter provider.
+        metrics_api._METER_PROVIDER = None  # pylint: disable=protected-access
         metrics_api.set_meter_provider(cls.original_meter_provider)
 
     def setUp(self):
