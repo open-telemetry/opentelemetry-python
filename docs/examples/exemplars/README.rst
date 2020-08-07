@@ -45,4 +45,5 @@ and they may focus on measurements with abnormally high/low values.
 .. literalinclude:: trace_exemplars.py
      :language: python
      :lines: 1-
+
 Currently only the Google Cloud Monitoring exporter supports uploading these exemplars.

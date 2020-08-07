@@ -42,7 +42,7 @@ class Aggregator(abc.ABC):
             self.config = config
         else:
             self.config = {}
-        self.checkpoint_exemplars = list()
+        self.checkpoint_exemplars = []
 
     @abc.abstractmethod
     def update(self, value, dropped_labels=None):

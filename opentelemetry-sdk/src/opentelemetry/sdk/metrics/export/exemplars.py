@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-    Exemplars are sample data points for aggregators. For more information, see the `spec <https://github.com/open-telemetry/oteps/pull/113>`_
+"""Exemplars are sample data points for aggregators. For more information, see the `spec <https://github.com/open-telemetry/oteps/pull/113>`_
 
-    Every synchronous aggregator is instrumented with two exemplar recorders:
-        1. A "trace" exemplar sampler, which only samples exemplars if they have a sampled trace context (and can pick exemplars with other biases, ie min + max).
-        2. A "statistical" exemplar sampler, which samples exemplars without bias (ie no preferenced for traced exemplars)
+Every synchronous aggregator is instrumented with two exemplar recorders:
+  1. A "trace" exemplar sampler, which only samples exemplars if they have a sampled trace context (and can pick exemplars with other biases, ie min + max).
+  2. A "statistical" exemplar sampler, which samples exemplars without bias (ie no preferenced for traced exemplars)
 
-    To use an exemplar recorder, pass in two arguments to the aggregator config in views (see the :ref:`Exemplars` example for an example):
-        "num_exemplars": The number of exemplars to record (if applicable, in each bucket). Note that in non-statistical mode the recorder may not use "num_exemplars"
-        "statistical_exemplars": If exemplars should be recorded statistically
+To use an exemplar recorder, pass in two arguments to the aggregator config in views (see the :ref:`Exemplars` example for an example):
+  "num_exemplars": The number of exemplars to record (if applicable, in each bucket). Note that in non-statistical mode the recorder may not use "num_exemplars"
+  "statistical_exemplars": If exemplars should be recorded statistically
 
-    For exemplars to be recorded, `num_exemplars` must be greater than 0.
+For exemplars to be recorded, `num_exemplars` must be greater than 0.
 """
 
 import abc
 import itertools
 import random
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Type, Union
 
 from opentelemetry.context import get_current
 from opentelemetry.util import time_ns
@@ -95,7 +94,8 @@ class Exemplar:
         """For statistical exemplars, how many measurements a single exemplar represents"""
         return self._sample_count
 
-    def set_sample_count(self, count: float):
+    @sample_count.setter
+    def sample_count(self, count: float):
         self._sample_count = count
 
 
@@ -122,11 +122,14 @@ class ExemplarSampler(abc.ABC):
         Return the list of exemplars that have been sampled
         """
 
-    @abc.abstractmethod
     def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
         """
-        Given two lists of sampled exemplars, merge them while maintaining the invariants specified by this sampler
+        Assume that set2 is the latest set of exemplars.
+        For simplicity, we will just keep set2 and assume set1 has already been exported.
+        This may need to change with a different SDK implementation.
         """
+        # pylint: disable=unused-argument,no-self-use
+        return set2
 
     @abc.abstractmethod
     def reset(self):
@@ -162,21 +165,11 @@ class RandomExemplarSampler(ExemplarSampler):
         if replace_index < self._k:
             self._sample_set[replace_index] = exemplar
 
-    def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
-        """
-        Assume that set2 is the latest set of exemplars.
-        For simplicity, we will just keep set2 and assume set1 has already been exported.
-        This may need to change with a different SDK implementation.
-        """
-        return set2
-
     @property
     def sample_set(self):
         if self._statistical:
             for exemplar in self._sample_set:
-                exemplar.set_sample_count(
-                    self.rand_count / len(self._sample_set)
-                )
+                exemplar.sample_count = self.rand_count / len(self._sample_set)
         return self._sample_set
 
     def reset(self):
@@ -212,14 +205,6 @@ class MinMaxExemplarSampler(ExemplarSampler):
     def sample_set(self):
         return self._sample_set
 
-    def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
-        """
-        Assume that set2 is the latest set of exemplars.
-        For simplicity, we will just keep set2 and assume set1 has already been exported.
-        This may need to change with a different SDK implementation.
-        """
-        return set2
-
     def reset(self):
         self._sample_set = []
 
@@ -233,7 +218,7 @@ class BucketedExemplarSampler(ExemplarSampler):
     """
 
     def __init__(
-        self, k: int, statistical: bool = False, boundaries: list = None
+        self, k: int, statistical: bool = False, boundaries: List[float] = None
     ):
         super().__init__(k)
         self._boundaries = boundaries
@@ -253,17 +238,9 @@ class BucketedExemplarSampler(ExemplarSampler):
     def sample_set(self):
         return list(
             itertools.chain.from_iterable(
-                [sampler.sample_set for sampler in self._sample_set]
+                sampler.sample_set for sampler in self._sample_set
             )
         )
-
-    def merge(self, set1: List[Exemplar], set2: List[Exemplar]):
-        """
-        Assume that set2 is the latest set of exemplars.
-        For simplicity, we will just keep set2 and assume set1 has already been exported.
-        This may need to change with a different SDK implementation.
-        """
-        return set2
 
     def reset(self):
         for sampler in self._sample_set:
@@ -280,8 +257,8 @@ class ExemplarManager:
     def __init__(
         self,
         config: dict,
-        default_exemplar_sampler: ExemplarSampler,
-        statistical_exemplar_sampler: ExemplarSampler,
+        default_exemplar_sampler: Type[ExemplarSampler],
+        statistical_exemplar_sampler: Type[ExemplarSampler],
         **kwargs
     ):
         if config:
