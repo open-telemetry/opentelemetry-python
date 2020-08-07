@@ -28,7 +28,11 @@ The opentelemetry SDK provides a way to sample exemplars statistically:
     - Exemplars will be picked to represent the input distribution, without unquantifiable bias
     - A "sample_count" attribute will be set on each exemplar to quantify how many measurements each exemplar represents (for randomly sampled exemplars, this value will be N (total measurements) / num_samples. For histogram exemplars, this value will be specific to each bucket).
 
-See 'statistical_exemplars.ipynb' for the example (TODO: how do I link this?)
+.. literalinclude:: statistical_exemplars.py
+     :language: python
+     :lines: 1-
+
+For the output of this example, see the corresponding Jupyter notebook.
 
 Trace exemplars
 ^^^^^^^^^^^^^^^^^^
@@ -38,5 +42,7 @@ but instead aim to provide value as individual exemplars.
 They will have a trace id/span id attached for the active trace when the exemplar was recorded,
 and they may focus on measurements with abnormally high/low values.
 
-'trace_exemplars.py' shows how to generate exemplars for a histogram aggregation.
+.. literalinclude:: trace_exemplars.py
+     :language: python
+     :lines: 1-
 Currently only the Google Cloud Monitoring exporter supports uploading these exemplars.
