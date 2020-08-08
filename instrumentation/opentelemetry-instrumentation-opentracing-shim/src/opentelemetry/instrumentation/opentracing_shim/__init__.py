@@ -541,7 +541,7 @@ class TracerShim(Tracer):
     def start_active_span(
         self,
         operation_name: str,
-        child_of: Union[SpanShim, SpanContextShim] = None,
+        child_of: Union[SpanShim, SpanContextShim]=None,
         references: list = None,
         tags: Attributes = None,
         start_time: float = None,
@@ -592,7 +592,7 @@ class TracerShim(Tracer):
     def start_span(
         self,
         operation_name: str = None,
-        child_of: Union[SpanShim, SpanContextShim] = None,
+        child_of: Union[SpanShim, SpanContextShim]=None,
         references: list = None,
         tags: Attributes = None,
         start_time: float = None,
