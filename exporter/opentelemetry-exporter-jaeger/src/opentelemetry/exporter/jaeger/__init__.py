@@ -77,6 +77,7 @@ from opentelemetry.trace.status import StatusCanonicalCode
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
 DEFAULT_COLLECTOR_ENDPOINT = "/api/traces?format=jaeger.thrift"
+DEFAULT_COLLECTOR_PROTOCOL = "http"
 
 UDP_PACKET_MAX_LENGTH = 65000
 
@@ -109,6 +110,7 @@ class JaegerSpanExporter(SpanExporter):
         collector_host_name=None,
         collector_port=None,
         collector_endpoint=DEFAULT_COLLECTOR_ENDPOINT,
+        collector_protocol=DEFAULT_COLLECTOR_PROTOCOL,
         username=None,
         password=None,
     ):
@@ -119,6 +121,7 @@ class JaegerSpanExporter(SpanExporter):
         self.collector_host_name = collector_host_name
         self.collector_port = collector_port
         self.collector_endpoint = collector_endpoint
+        self.collector_protocol = collector_protocol
         self.username = username
         self.password = password
         self._collector = None
@@ -139,7 +142,8 @@ class JaegerSpanExporter(SpanExporter):
         if self.collector_host_name is None or self.collector_port is None:
             return None
 
-        thrift_url = "http://{}:{}{}".format(
+        thrift_url = "{}://{}:{}{}".format(
+            self.collector_protocol,
             self.collector_host_name,
             self.collector_port,
             self.collector_endpoint,
