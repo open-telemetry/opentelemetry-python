@@ -42,6 +42,7 @@ Usage
         # collector_host_name='localhost',
         # collector_port=14268,
         # collector_endpoint='/api/traces?format=jaeger.thrift',
+        # collector_protocol='http',
         # username=xxxx, # optional
         # password=xxxx, # optional
     )
@@ -92,10 +93,11 @@ class JaegerSpanExporter(SpanExporter):
             when query for spans.
         agent_host_name: The host name of the Jaeger-Agent.
         agent_port: The port of the Jaeger-Agent.
-        collector_host_name: The host name of the Jaeger-Collector HTTP
+        collector_host_name: The host name of the Jaeger-Collector HTTP/HTTPS
             Thrift.
-        collector_port: The port of the Jaeger-Collector HTTP Thrift.
-        collector_endpoint: The endpoint of the Jaeger-Collector HTTP Thrift.
+        collector_port: The port of the Jaeger-Collector HTTP/HTTPS Thrift.
+        collector_endpoint: The endpoint of the Jaeger-Collector HTTP/HTTPS Thrift.
+        collector_protocol: The transfer protocol for the Jaeger-Collector(HTTP or HTTPS).
         username: The user name of the Basic Auth if authentication is
             required.
         password: The password of the Basic Auth if authentication is
