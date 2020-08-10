@@ -52,24 +52,6 @@ class OTLPSpanExporter(SpanExporter, OTLPExporterMixin):
     _result = SpanExportResult
     _stub = TraceServiceStub
 
-    def __init__(
-        self,
-        endpoint="localhost:55680",
-        credentials: ChannelCredentials = None,
-        metadata=None,
-    ):
-        super().__init__()
-
-        self._metadata = metadata
-        self._collector_span_kwargs = None
-
-        if credentials is None:
-            self._client = TraceServiceStub(insecure_channel(endpoint))
-        else:
-            self._client = TraceServiceStub(
-                secure_channel(endpoint, credentials)
-            )
-
     def _translate_name(self, sdk_span):
         self._collector_span_kwargs["name"] = sdk_span.name
 
