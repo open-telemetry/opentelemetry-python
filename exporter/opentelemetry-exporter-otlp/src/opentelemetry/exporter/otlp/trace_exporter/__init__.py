@@ -204,6 +204,3 @@ class OTLPSpanExporter(SpanExporter, OTLPExporterMixin):
 
     def export(self, spans: Sequence[SDKSpan]) -> SpanExportResult:
         return self._export(spans)
-
-    def shutdown(self):
-        pass

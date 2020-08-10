@@ -189,3 +189,6 @@ class OTLPExporterMixin(ABC):
                 return self.result.FAILURE
 
         return self._result.FAILURE
+
+    def shutdown(self):
+        pass

@@ -15,7 +15,9 @@
 """OTLP Metrics Exporter"""
 
 import logging
+from typing import Sequence
 
+# pylint: disable=duplicate-code
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
@@ -39,8 +41,9 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
 )
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics import Metric as SDKMetric
 from opentelemetry.sdk.metrics import (
-    Counter,
     SumObserver,
     UpDownCounter,
     UpDownSumObserver,
@@ -189,3 +192,7 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
                 "metrics",
             )
         )
+
+    def export(self, metrics: Sequence[SDKMetric]) -> MetricsExportResult:
+        # pylint: disable=arguments-differ
+        return self._export(metrics)
