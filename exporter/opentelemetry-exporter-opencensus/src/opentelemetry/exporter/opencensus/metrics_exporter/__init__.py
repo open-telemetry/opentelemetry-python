@@ -37,12 +37,12 @@ from opentelemetry.sdk.metrics.export import (
 DEFAULT_ENDPOINT = "localhost:55678"
 
 # In priority order. See collector impl https://bit.ly/2DvJW6y
-OT_LABEL_PRESENCE_TO_RESOURCE_TYPE = [
+_OT_LABEL_PRESENCE_TO_RESOURCE_TYPE = (
     ("container.name", "container"),
     ("k8s.pod.name", "k8s"),
     ("host.name", "host"),
     ("cloud.provider", "cloud"),
-]
+)
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +203,7 @@ def infer_oc_resource_type(resource_labels: Dict[str, str]) -> str:
     for (
         ot_resource_key,
         oc_resource_type,
-    ) in OT_LABEL_PRESENCE_TO_RESOURCE_TYPE:
+    ) in _OT_LABEL_PRESENCE_TO_RESOURCE_TYPE:
         if ot_resource_key in resource_labels:
             return oc_resource_type
     return ""
