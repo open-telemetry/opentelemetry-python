@@ -18,11 +18,11 @@
 
 """The Python implementation of the gRPC route guide server.
 
-Note that you need ``opentelemetry-ext-grpc`` and ``protobuf`` to be installed
+Note that you need ``opentelemetry-instrumentation-grpc`` and ``protobuf`` to be installed
 to run these examples. To run this script in the context of the example app,
 install ``opentelemetry-example-app``::
 
-    pip install -e ext/opentelemetry-ext-grpc/
+    pip install -e ext/opentelemetry-instrumentation-grpc/
     pip install -e docs/examples/opentelemetry-example-app
 
 Then run the server in one shell::
@@ -45,8 +45,8 @@ from concurrent import futures
 import grpc
 
 from opentelemetry import trace
-from opentelemetry.ext.grpc import server_interceptor
-from opentelemetry.ext.grpc.grpcext import intercept_server
+from opentelemetry.instrumentation.grpc import server_interceptor
+from opentelemetry.instrumentation.grpc.grpcext import intercept_server
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,

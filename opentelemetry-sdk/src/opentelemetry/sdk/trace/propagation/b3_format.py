@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import typing
+from re import compile as re_compile
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
+from opentelemetry.sdk.trace import generate_span_id, generate_trace_id
 from opentelemetry.trace.propagation.httptextformat import (
     Getter,
     HTTPTextFormat,
@@ -37,6 +39,8 @@ class B3Format(HTTPTextFormat):
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
+    _trace_id_regex = re_compile(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
+    _span_id_regex = re_compile(r"[\da-fA-F]{16}")
 
     def extract(
         self,
@@ -95,6 +99,18 @@ class B3Format(HTTPTextFormat):
                 or flags
             )
 
+        if (
+            self._trace_id_regex.fullmatch(trace_id) is None
+            or self._span_id_regex.fullmatch(span_id) is None
+        ):
+            trace_id = generate_trace_id()
+            span_id = generate_span_id()
+            sampled = "0"
+
+        else:
+            trace_id = int(trace_id, 16)
+            span_id = int(span_id, 16)
+
         options = 0
         # The b3 spec provides no defined behavior for both sample and
         # flag values set. Since the setting of at least one implies
@@ -102,12 +118,13 @@ class B3Format(HTTPTextFormat):
         # header is set to allow.
         if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
+
         return trace.set_span_in_context(
             trace.DefaultSpan(
                 trace.SpanContext(
                     # trace an span ids are encoded in hex, so must be converted
-                    trace_id=int(trace_id, 16),
-                    span_id=int(span_id, 16),
+                    trace_id=trace_id,
+                    span_id=span_id,
                     is_remote=True,
                     trace_flags=trace.TraceFlags(options),
                     trace_state=trace.TraceState(),
