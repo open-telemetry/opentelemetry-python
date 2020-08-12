@@ -167,36 +167,36 @@ class TestResources(unittest.TestCase):
 
 class TestOTELResourceDetector(unittest.TestCase):
     def setUp(self) -> None:
-        os.environ["OTEL_RESOURCE"] = ""
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = ""
 
     def tearDown(self) -> None:
-        os.environ.pop("OTEL_RESOURCE")
+        os.environ.pop("OTEL_RESOURCE_ATTRIBUTES")
 
     def test_empty(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE"] = ""
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = ""
         self.assertEqual(detector.detect(), resources.Resource.create_empty())
 
     def test_one(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE"] = "k=v"
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "k=v"
         self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
     def test_one_with_whitespace(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE"] = "    k  = v   "
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "    k  = v   "
         self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
     def test_multiple(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE"] = "k=v,k2=v2"
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "k=v,k2=v2"
         self.assertEqual(
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
 
     def test_multiple_with_whitespace(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE"] = "    k  = v  , k2   = v2 "
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "    k  = v  , k2   = v2 "
         self.assertEqual(
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
