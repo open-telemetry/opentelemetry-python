@@ -2,10 +2,10 @@
 
 ## Unreleased
 
-- Send start_timestamp and convert labels to strings
-  ([#937](https://github.com/open-telemetry/opentelemetry-python/pull/937))
 - Change package name to opentelemetry-exporter-opencensus
   ([#953](https://github.com/open-telemetry/opentelemetry-python/pull/953))
+- Send start_timestamp and convert labels to strings
+  ([#937](https://github.com/open-telemetry/opentelemetry-python/pull/937))
 
 ## 0.8b0
 
