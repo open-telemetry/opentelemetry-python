@@ -15,7 +15,6 @@
 import unittest
 from unittest import mock
 
-from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics import Counter, ValueRecorder, view
 from opentelemetry.sdk.metrics.export import aggregate
