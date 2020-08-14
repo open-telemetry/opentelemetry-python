@@ -33,7 +33,16 @@ def ns_to_iso_str(nanoseconds):
 
 def get_dict_as_key(labels):
     """Converts a dict to be used as a unique key"""
-    return tuple(sorted(labels.items()))
+    return tuple(
+        sorted(
+            map(
+                lambda kv: (kv[0], tuple(kv[1]))
+                if isinstance(kv[1], list)
+                else kv,
+                labels.items(),
+            )
+        )
+    )
 
 
 class BoundedList(Sequence):
