@@ -1,0 +1,45 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    env:
+      # We use these variables to convert between tox and GHA version literals
+      py34: 3.4
+      py35: 3.5
+      py36: 3.6
+      py37: 3.7
+      py38: 3.8
+      pypy3: pypy3
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
+      matrix:
+        python-version: [ py34, py35, py36, py37, py38, pypy3 ]
+        package: ["core", "exporter", "instrumentation"]
+        include:
+          - python-version: py38
+            package: "tracecontext"
+          - python-version: py38
+            package: "mypy"
+          - python-version: py38
+            package: "mypyinstalled"
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env[matrix.python-version] }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env[matrix.python-version] }}
+      - name: Install tox
+        run: pip install -U tox-factor
+      - name: Cache tox environment
+        # Preserves .tox directory between runs for faster installs
+        uses: actions/cache@v2
+        with:
+          path: .tox
+          key: tox-cache-${{ matrix.python-version }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
+      - name: run tox
+        run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
