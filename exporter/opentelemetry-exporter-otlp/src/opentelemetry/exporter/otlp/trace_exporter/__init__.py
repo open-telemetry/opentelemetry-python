@@ -89,7 +89,7 @@ class OTLPSpanExporter(SpanExporter):
 
     def __init__(
         self,
-        endpoint="localhost:55678",
+        endpoint="localhost:55680",
         credentials: ChannelCredentials = None,
         metadata=None,
     ):

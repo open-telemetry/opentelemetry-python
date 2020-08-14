@@ -7,6 +7,8 @@
   ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
 - Implement Views in metrics SDK
   ([#596](https://github.com/open-telemetry/opentelemetry-python/pull/596))
+- Update environment variable OTEL_RESOURCE to OTEL_RESOURCE_ATTRIBUTES as per
+  the specification
 
 ## Version 0.11b0
 
