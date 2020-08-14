@@ -218,7 +218,7 @@ class SpanShim(Span):
         when ending the span.
 
         Args:
-            finish_time: A value hat represents the finish time expressed as
+            finish_time: A value that represents the finish time expressed as
                 the number of seconds since the epoch as returned by
                 :func:`time.time()`.
         """
