@@ -189,11 +189,9 @@ class TestStateless(unittest.TestCase):
 
 class TestHistogramView(unittest.TestCase):
     def test_histogram_stateful(self):
-        # Use the meter type provided by the SDK package
-        metrics_api.set_meter_provider(metrics.MeterProvider())
-        meter = metrics_api.get_meter(__name__)
+        meter = metrics.MeterProvider(stateful=True).get_meter(__name__)
         exporter = InMemoryMetricsExporter()
-        controller = PushController(meter, exporter, 5)
+        controller = PushController(meter, exporter, 30)
 
         requests_size = meter.create_metric(
             name="requests_size",
@@ -246,10 +244,9 @@ class TestHistogramView(unittest.TestCase):
 
     def test_histogram_stateless(self):
         # Use the meter type provided by the SDK package
-        metrics_api.set_meter_provider(metrics.MeterProvider(stateful=False))
-        meter = metrics_api.get_meter(__name__)
+        meter = metrics.MeterProvider(stateful=False).get_meter(__name__)
         exporter = InMemoryMetricsExporter()
-        controller = PushController(meter, exporter, 5)
+        controller = PushController(meter, exporter, 30)
 
         requests_size = meter.create_metric(
             name="requests_size",
