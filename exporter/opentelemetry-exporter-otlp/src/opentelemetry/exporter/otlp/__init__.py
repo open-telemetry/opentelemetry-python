@@ -43,7 +43,7 @@ The **OTLP Span Exporter** allows to export `OpenTelemetry`_ traces to the
     trace.set_tracer_provider(TracerProvider(resource=resource)))
     tracer = trace.get_tracer(__name__)
 
-    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55678")
+    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
 
     span_processor = BatchExportSpanProcessor(otlp_exporter)
 
