@@ -6,7 +6,7 @@
 
 Released 2020-08-14
 
-- Change package name to opentelemetry-instrumentation-aiohttp-client
+- Change package name to opentelemetry-instrumentation-starlette
   ([#961](https://github.com/open-telemetry/opentelemetry-python/pull/961))
   
 ## Version 0.10b0
