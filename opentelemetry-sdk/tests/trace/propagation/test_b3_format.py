@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import patch
 
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
@@ -244,6 +245,50 @@ class TestB3Format(unittest.TestCase):
         ctx = FORMAT.extract(get_as_list, carrier)
         span_context = trace_api.get_current_span(ctx).get_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+
+    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_trace_id")
+    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_span_id")
+    def test_invalid_trace_id(
+        self, mock_generate_span_id, mock_generate_trace_id
+    ):
+        """If a trace id is invalid, generate a trace id."""
+
+        mock_generate_trace_id.configure_mock(return_value=1)
+        mock_generate_span_id.configure_mock(return_value=2)
+
+        carrier = {
+            FORMAT.TRACE_ID_KEY: "abc123",
+            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+            FORMAT.FLAGS_KEY: "1",
+        }
+
+        ctx = FORMAT.extract(get_as_list, carrier)
+        span_context = trace_api.get_current_span(ctx).get_context()
+
+        self.assertEqual(span_context.trace_id, 1)
+        self.assertEqual(span_context.span_id, 2)
+
+    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_trace_id")
+    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_span_id")
+    def test_invalid_span_id(
+        self, mock_generate_span_id, mock_generate_trace_id
+    ):
+        """If a span id is invalid, generate a trace id."""
+
+        mock_generate_trace_id.configure_mock(return_value=1)
+        mock_generate_span_id.configure_mock(return_value=2)
+
+        carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+            FORMAT.SPAN_ID_KEY: "abc123",
+            FORMAT.FLAGS_KEY: "1",
+        }
+
+        ctx = FORMAT.extract(get_as_list, carrier)
+        span_context = trace_api.get_current_span(ctx).get_context()
+
+        self.assertEqual(span_context.trace_id, 1)
+        self.assertEqual(span_context.span_id, 2)
 
     def test_missing_span_id(self):
         """If a trace id is missing, populate an invalid trace id."""

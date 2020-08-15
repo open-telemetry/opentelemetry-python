@@ -859,7 +859,7 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
-        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        sampler: sampling.Sampler = trace_api.sampling.DEFAULT_ON,
         resource: Resource = Resource.create_empty(),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[

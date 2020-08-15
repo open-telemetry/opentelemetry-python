@@ -4,6 +4,8 @@
 
 - Change package name to opentelemetry-exporter-otlp
   ([#953](https://github.com/open-telemetry/opentelemetry-python/pull/953))
+- Update default port to 55680 
+  ([#977](https://github.com/open-telemetry/opentelemetry-python/pull/977))
 
 ## Version 0.11b0
 

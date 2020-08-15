@@ -1,8 +1,8 @@
 OpenTracing Shim Example
 ==========================
 
-This example shows how to use the :doc:`opentelemetry-ext-opentracing-shim
-package <../../ext/opentracing_shim/opentracing_shim>`
+This example shows how to use the :doc:`opentelemetry-instrumentation-opentracing-shim
+package <../../instrumentation/opentracing_shim/opentracing_shim>`
 to interact with libraries instrumented with
 `opentracing-python <https://github.com/opentracing/opentracing-python>`_.
 
@@ -61,7 +61,7 @@ Alternatively, you can install the Python dependencies separately:
     pip install \
         opentelemetry-api \
         opentelemetry-sdk \
-        opentelemetry-ext-jaeger \
+        opentelemetry-exporter-jaeger \
         opentelemetry-opentracing-shim \
         redis \
         redis_opentracing
@@ -100,6 +100,6 @@ Useful links
 ------------
 
 - OpenTelemetry_
-- :doc:`../../ext/opentracing_shim/opentracing_shim`
+- :doc:`../../instrumentation/opentracing_shim/opentracing_shim`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
