@@ -40,6 +40,6 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .tox
-          key: tox-cache-${{ matrix.python-version }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
+          key: tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
