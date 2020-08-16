@@ -1,1 +1,1 @@
-Deprecated, please install supported package https://pypi.org/project/opentelemetry-exporter-jaeger/.
+Deprecated, please install supported package https://pypi.org/project/opentelemetry-instrumentation-jaeger/.
