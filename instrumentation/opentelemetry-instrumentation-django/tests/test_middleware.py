@@ -15,6 +15,7 @@
 from sys import modules
 from unittest.mock import patch
 
+from django import VERSION
 from django.conf import settings
 from django.conf.urls import url
 from django.test import Client
@@ -36,6 +37,8 @@ from .views import (
     route_span_name,
     traced,
 )
+
+DJANGO_2_2 = VERSION >= (2, 2)
 
 urlpatterns = [
     url(r"^traced/", traced),
@@ -73,7 +76,9 @@ class TestMiddleware(WsgiTestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "^traced/")
+        self.assertEqual(
+            span.name, "^traced/" if DJANGO_2_2 else "tests.views.traced"
+        )
         self.assertEqual(span.kind, SpanKind.SERVER)
         self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
         self.assertEqual(span.attributes["http.method"], "GET")
@@ -92,7 +97,9 @@ class TestMiddleware(WsgiTestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "^traced/")
+        self.assertEqual(
+            span.name, "^traced/" if DJANGO_2_2 else "tests.views.traced"
+        )
         self.assertEqual(span.kind, SpanKind.SERVER)
         self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
         self.assertEqual(span.attributes["http.method"], "POST")
@@ -112,7 +119,9 @@ class TestMiddleware(WsgiTestBase):
 
         span = spans[0]
 
-        self.assertEqual(span.name, "^error/")
+        self.assertEqual(
+            span.name, "^error/" if DJANGO_2_2 else "tests.views.error"
+        )
         self.assertEqual(span.kind, SpanKind.SERVER)
         self.assertEqual(
             span.status.canonical_code, StatusCanonicalCode.UNKNOWN
@@ -151,7 +160,12 @@ class TestMiddleware(WsgiTestBase):
         self.assertEqual(len(span_list), 1)
 
         span = span_list[0]
-        self.assertEqual(span.name, "^span_name/([0-9]{4})/$")
+        self.assertEqual(
+            span.name,
+            "^span_name/([0-9]{4})/$"
+            if DJANGO_2_2
+            else "tests.views.route_span_name",
+        )
 
     def test_span_name_404(self):
         Client().get("/span_name/1234567890/")
