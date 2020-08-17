@@ -763,7 +763,7 @@ class Tracer(trace_api.Tracer):
         ):
             raise TypeError("parent must be a Span, SpanContext or None.")
 
-        if parent_context is None or not parent_context.is_valid():
+        if parent_context is None or not parent_context.is_valid:
             parent = parent_context = None
             trace_id = generate_trace_id()
             trace_flags = None

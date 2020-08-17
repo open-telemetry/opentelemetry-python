@@ -32,4 +32,4 @@ class TestDefaultSpan(unittest.TestCase):
     def test_invalid_span(self):
         self.assertIsNotNone(trace.INVALID_SPAN)
         self.assertIsNotNone(trace.INVALID_SPAN.get_context())
-        self.assertFalse(trace.INVALID_SPAN.get_context().is_valid())
+        self.assertFalse(trace.INVALID_SPAN.get_context().is_valid)
