@@ -61,6 +61,7 @@ class Batcher:
         """Stores record information to be ready for exporting."""
         # Checkpoints the current aggregator value to be collected for export
         aggregator = record.aggregator
+        aggregator.take_checkpoint()
 
         # The uniqueness of a batch record is defined by a specific metric
         # using an aggregator type with a specific set of labels.
@@ -72,19 +73,20 @@ class Batcher:
             get_dict_as_key(aggregator.config),
             record.labels,
         )
-        batch_value = self._batch_map.get(key)
-        if batch_value:
-            if batch_value != aggregator:
-                aggregator.take_checkpoint()
-                batch_value.merge(aggregator)
-        else:
-            aggregator.take_checkpoint()
 
-        if self.stateful:
-            # if stateful batcher, create a copy of the aggregator and update
-            # it with the current checkpointed value for long-term storage
-            aggregator = record.aggregator.__class__(
-                config=record.aggregator.config
-            )
-            aggregator.merge(record.aggregator)
+        batch_value = self._batch_map.get(key)
+
+        if batch_value:
+            # Update the stored checkpointed value if exists. The call to merge
+            # here combines only identical records (same key).
+            batch_value.merge(aggregator)
+            return
+
+        # create a copy of the aggregator and update
+        # it with the current checkpointed value for long-term storage
+        aggregator = record.aggregator.__class__(
+            config=record.aggregator.config
+        )
+        aggregator.merge(record.aggregator)
+
         self._batch_map[key] = aggregator

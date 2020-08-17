@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+## Version 0.12b0
+
+Released 2020-08-14
+
 - Change package name to opentelemetry-exporter-jaeger
   ([#953](https://github.com/open-telemetry/opentelemetry-python/pull/953))
+
+- Thrift URL for Jaeger exporter doesn't allow HTTPS (hardcoded to HTTP)
+  ([#978] (https://github.com/open-telemetry/opentelemetry-python/pull/978))
 
 ## 0.8b0
 
