@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed span name extraction from request to comply semantic convention
+
 ## Version 0.12b0
 
 Released 2020-08-14
