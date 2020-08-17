@@ -14,11 +14,6 @@
 
 from logging import getLogger
 
-try:
-    from django.urls import resolve, Resolver404
-except ImportError:
-    from django.core.urlresolvers import resolve
-
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import attach, detach
 from opentelemetry.instrumentation.django.version import __version__
@@ -30,6 +25,14 @@ from opentelemetry.instrumentation.wsgi import (
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.util import ExcludeList
+
+try:
+    from django.core.urlresolvers import (  # pylint: disable=no-name-in-module
+        resolve,
+        Resolver404,
+    )
+except ImportError:
+    from django.urls import resolve, Resolver404
 
 try:
     from django.utils.deprecation import MiddlewareMixin
@@ -65,29 +68,23 @@ class _DjangoMiddleware(MiddlewareMixin):
 
             if hasattr(match, "route"):
                 return match.route
-            else:
-                # Instead of using `view_name`, better to use `_func_path` as some applications can use similar
-                # view names in different modules
-                if hasattr(match, "_func_name"):
-                    return match._func_name
-                else:
-                    # Fallback for safety as `_func_name` private field
-                    return match.view_name
+
+            # Instead of using `view_name`, better to use `_func_path` as some applications can use similar
+            # view names in different modules
+            if hasattr(match, "_func_name"):
+                return match._func_name  # pylint: disable=protected-access
+
+            # Fallback for safety as `_func_name` private field
+            return match.view_name
 
         except Resolver404:
             return "HTTP {}".format(request.method)
 
-    def process_request(
-        self, request
-    ):  # pylint: disable=unused-argument
+    def process_request(self, request):
         # request.META is a dictionary containing all available HTTP headers
         # Read more about request.META here:
         # https://docs.djangoproject.com/en/3.0/ref/request-response/#django.http.HttpRequest.META
 
-        # environ = {
-        #     key.lower().replace('_', '-').replace("http-", "", 1): value
-        #     for key, value in request.META.items()
-        # }
         if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
             return
 

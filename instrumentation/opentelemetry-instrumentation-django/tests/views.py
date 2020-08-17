@@ -21,5 +21,7 @@ def excluded_noarg2(request):  # pylint: disable=unused-argument
     return HttpResponse()
 
 
-def route_span_name(request, *args, **kwargs):  # pylint: disable=unused-argument
+def route_span_name(
+    request, *args, **kwargs
+):  # pylint: disable=unused-argument
     return HttpResponse()

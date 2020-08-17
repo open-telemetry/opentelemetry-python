@@ -28,7 +28,14 @@ from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import ExcludeList
 
 # pylint: disable=import-error
-from .views import error, excluded, excluded_noarg, excluded_noarg2, traced, route_span_name
+from .views import (
+    error,
+    excluded,
+    excluded_noarg,
+    excluded_noarg2,
+    route_span_name,
+    traced,
+)
 
 urlpatterns = [
     url(r"^traced/", traced),
