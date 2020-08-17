@@ -34,7 +34,7 @@ def set_span_in_context(
     return ctx
 
 
-def get_current_span(context: Optional[Context] = None) -> Optional[Span]:
+def get_current_span(context: Optional[Context] = None) -> Span:
     """Retrieve the current span.
 
     Args:
@@ -42,11 +42,9 @@ def get_current_span(context: Optional[Context] = None) -> Optional[Span]:
             default current context is used instead.
 
     Returns:
-        The Span set in the context if it exists. None otherwise.
+        The Span set in the context if it exists. INVALID_SPAN otherwise.
     """
     span = get_value(SPAN_KEY, context=context)
-    if span is None:
-        return None
-    if not isinstance(span, Span):
+    if span is None or not isinstance(span, Span):
         return INVALID_SPAN
     return span

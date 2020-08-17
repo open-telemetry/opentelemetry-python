@@ -55,7 +55,7 @@ def _load_runtime_context(func: _F) -> _F:
                     default_context = "contextvars_context"
 
                 configured_context = environ.get(
-                    "OPENTELEMETRY_CONTEXT", default_context
+                    "OTEL_CONTEXT", default_context
                 )  # type: str
                 try:
                     _RUNTIME_CONTEXT = next(

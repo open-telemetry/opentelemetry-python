@@ -17,7 +17,7 @@
 import os
 import sys
 
-from opentelemetry.ext.django import DjangoInstrumentor
+from opentelemetry.instrumentation.django import DjangoInstrumentor
 
 
 def main():

@@ -520,6 +520,7 @@ class Span(trace_api.Span):
         f_span["attributes"] = self._format_attributes(self.attributes)
         f_span["events"] = self._format_events(self.events)
         f_span["links"] = self._format_links(self.links)
+        f_span["resource"] = self.resource.labels
 
         return json.dumps(f_span, indent=indent)
 
@@ -682,14 +683,14 @@ class Span(trace_api.Span):
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
-    def record_error(self, err: Exception) -> None:
-        """Records an error as a span event."""
+    def record_exception(self, exception: Exception) -> None:
+        """Records an exception as a span event."""
         self.add_event(
-            name="error",
+            name="exception",
             attributes={
-                "error.type": err.__class__.__name__,
-                "error.message": str(err),
-                "error.stack": traceback.format_exc(),
+                "exception.type": exception.__class__.__name__,
+                "exception.message": str(exception),
+                "exception.stacktrace": traceback.format_exc(),
             },
         )
 
@@ -858,7 +859,7 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
-        sampler: sampling.Sampler = trace_api.sampling.ALWAYS_ON,
+        sampler: sampling.Sampler = trace_api.sampling.DEFAULT_ON,
         resource: Resource = Resource.create_empty(),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[

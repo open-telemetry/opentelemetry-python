@@ -5,7 +5,7 @@ These examples show how to use OpenTelemetry to capture and report metrics.
 
 There are three different examples:
 
-* basic_metrics: Shows to how create a metric instrument, how to configure an
+* basic_metrics: Shows how to create a metric instrument, how to configure an
   exporter and a controller and also how to capture data by using the direct
   calling convention.
 

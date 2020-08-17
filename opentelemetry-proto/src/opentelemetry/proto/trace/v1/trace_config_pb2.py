@@ -18,7 +18,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.trace.v1',
   syntax='proto3',
   serialized_options=b'\n\037io.opentelemetry.proto.trace.v1B\020TraceConfigProtoP\001ZGgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1',
-  create_key=_descriptor._internal_create_key,
   serialized_pb=b'\n/opentelemetry/proto/trace/v1/trace_config.proto\x12\x1copentelemetry.proto.trace.v1\"\xc8\x03\n\x0bTraceConfig\x12I\n\x10\x63onstant_sampler\x18\x01 \x01(\x0b\x32-.opentelemetry.proto.trace.v1.ConstantSamplerH\x00\x12O\n\x13probability_sampler\x18\x02 \x01(\x0b\x32\x30.opentelemetry.proto.trace.v1.ProbabilitySamplerH\x00\x12R\n\x15rate_limiting_sampler\x18\x03 \x01(\x0b\x32\x31.opentelemetry.proto.trace.v1.RateLimitingSamplerH\x00\x12 \n\x18max_number_of_attributes\x18\x04 \x01(\x03\x12\"\n\x1amax_number_of_timed_events\x18\x05 \x01(\x03\x12\x30\n(max_number_of_attributes_per_timed_event\x18\x06 \x01(\x03\x12\x1b\n\x13max_number_of_links\x18\x07 \x01(\x03\x12)\n!max_number_of_attributes_per_link\x18\x08 \x01(\x03\x42\t\n\x07sampler\"\xa9\x01\n\x0f\x43onstantSampler\x12P\n\x08\x64\x65\x63ision\x18\x01 \x01(\x0e\x32>.opentelemetry.proto.trace.v1.ConstantSampler.ConstantDecision\"D\n\x10\x43onstantDecision\x12\x0e\n\nALWAYS_OFF\x10\x00\x12\r\n\tALWAYS_ON\x10\x01\x12\x11\n\rALWAYS_PARENT\x10\x02\"1\n\x12ProbabilitySampler\x12\x1b\n\x13samplingProbability\x18\x01 \x01(\x01\"\"\n\x13RateLimitingSampler\x12\x0b\n\x03qps\x18\x01 \x01(\x03\x42~\n\x1fio.opentelemetry.proto.trace.v1B\x10TraceConfigProtoP\x01ZGgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1b\x06proto3'
 )
 
@@ -29,23 +28,19 @@ _CONSTANTSAMPLER_CONSTANTDECISION = _descriptor.EnumDescriptor(
   full_name='opentelemetry.proto.trace.v1.ConstantSampler.ConstantDecision',
   filename=None,
   file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
   values=[
     _descriptor.EnumValueDescriptor(
       name='ALWAYS_OFF', index=0, number=0,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
       name='ALWAYS_ON', index=1, number=1,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
     _descriptor.EnumValueDescriptor(
       name='ALWAYS_PARENT', index=2, number=2,
       serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
@@ -61,7 +56,6 @@ _TRACECONFIG = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='constant_sampler', full_name='opentelemetry.proto.trace.v1.TraceConfig.constant_sampler', index=0,
@@ -69,56 +63,56 @@ _TRACECONFIG = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='probability_sampler', full_name='opentelemetry.proto.trace.v1.TraceConfig.probability_sampler', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='rate_limiting_sampler', full_name='opentelemetry.proto.trace.v1.TraceConfig.rate_limiting_sampler', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='max_number_of_attributes', full_name='opentelemetry.proto.trace.v1.TraceConfig.max_number_of_attributes', index=3,
       number=4, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='max_number_of_timed_events', full_name='opentelemetry.proto.trace.v1.TraceConfig.max_number_of_timed_events', index=4,
       number=5, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='max_number_of_attributes_per_timed_event', full_name='opentelemetry.proto.trace.v1.TraceConfig.max_number_of_attributes_per_timed_event', index=5,
       number=6, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='max_number_of_links', full_name='opentelemetry.proto.trace.v1.TraceConfig.max_number_of_links', index=6,
       number=7, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='max_number_of_attributes_per_link', full_name='opentelemetry.proto.trace.v1.TraceConfig.max_number_of_attributes_per_link', index=7,
       number=8, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -132,9 +126,7 @@ _TRACECONFIG = _descriptor.Descriptor(
   oneofs=[
     _descriptor.OneofDescriptor(
       name='sampler', full_name='opentelemetry.proto.trace.v1.TraceConfig.sampler',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
+      index=0, containing_type=None, fields=[]),
   ],
   serialized_start=82,
   serialized_end=538,
@@ -147,7 +139,6 @@ _CONSTANTSAMPLER = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='decision', full_name='opentelemetry.proto.trace.v1.ConstantSampler.decision', index=0,
@@ -155,7 +146,7 @@ _CONSTANTSAMPLER = _descriptor.Descriptor(
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -180,7 +171,6 @@ _PROBABILITYSAMPLER = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='samplingProbability', full_name='opentelemetry.proto.trace.v1.ProbabilitySampler.samplingProbability', index=0,
@@ -188,7 +178,7 @@ _PROBABILITYSAMPLER = _descriptor.Descriptor(
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -212,7 +202,6 @@ _RATELIMITINGSAMPLER = _descriptor.Descriptor(
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
-  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
       name='qps', full_name='opentelemetry.proto.trace.v1.RateLimitingSampler.qps', index=0,
@@ -220,7 +209,7 @@ _RATELIMITINGSAMPLER = _descriptor.Descriptor(
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],

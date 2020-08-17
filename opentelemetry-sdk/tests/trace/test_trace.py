@@ -225,7 +225,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -264,7 +264,7 @@ class TestSpanCreation(unittest.TestCase):
 
             self.assertIsNotNone(child.end_time)
 
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
         self.assertIsNotNone(root.end_time)
 
     def test_start_span_explicit(self):
@@ -277,7 +277,7 @@ class TestSpanCreation(unittest.TestCase):
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -320,7 +320,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_as_current_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         with tracer.start_as_current_span("root") as root:
             self.assertIs(trace_api.get_current_span(), root)
@@ -334,7 +334,7 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
         self.assertIsNotNone(root.end_time)
 
     def test_start_as_current_span_explicit(self):
@@ -344,9 +344,10 @@ class TestSpanCreation(unittest.TestCase):
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
 
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         # Test with the implicit root span
         with tracer.start_as_current_span("root") as root:
@@ -552,7 +553,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
 
     def test_events(self):
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         with self.tracer.start_as_current_span("root") as root:
             # only event name
@@ -608,7 +609,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[4].timestamp, now)
 
     def test_invalid_event_attributes(self):
-        self.assertIsNone(trace_api.get_current_span())
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
@@ -801,18 +802,23 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
-    def test_record_error(self):
+    def test_record_exception(self):
         span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
         try:
             raise ValueError("invalid")
         except ValueError as err:
-            span.record_error(err)
-        error_event = span.events[0]
-        self.assertEqual("error", error_event.name)
-        self.assertEqual("invalid", error_event.attributes["error.message"])
-        self.assertEqual("ValueError", error_event.attributes["error.type"])
+            span.record_exception(err)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "invalid", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "ValueError", exception_event.attributes["exception.type"]
+        )
         self.assertIn(
-            "ValueError: invalid", error_event.attributes["error.stack"]
+            "ValueError: invalid",
+            exception_event.attributes["exception.stacktrace"],
         )
 
 
@@ -954,10 +960,11 @@ class TestSpanProcessor(unittest.TestCase):
     "end_time": null,
     "attributes": {},
     "events": [],
-    "links": []
+    "links": [],
+    "resource": {}
 }""",
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": []}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )

@@ -25,8 +25,8 @@ jobs:
     # might have already been updated, this would be bad.
     - name: Publish to TestPyPI
       env:
-        TWINE_USERNAME: ${{ secrets.test_pypi_username }}
-        TWINE_PASSWORD: ${{ secrets.test_pypi_password }}
+        TWINE_USERNAME: '__token__'
+        TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
       run: |
         twine upload --repository testpypi --skip-existing --verbose dist/*
     - name: Publish to PyPI

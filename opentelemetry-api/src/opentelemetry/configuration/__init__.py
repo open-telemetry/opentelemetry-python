@@ -16,30 +16,33 @@
 Simple configuration manager
 
 This is a configuration manager for OpenTelemetry. It reads configuration
-values from environment variables prefixed with ``OPENTELEMETRY_PYTHON_`` whose
-characters are only alphanumeric characters and unserscores, except for the
-first character after ``OPENTELEMETRY_PYTHON_`` which must not be a number.
+values from environment variables prefixed with ``OTEL_`` (for environment
+variables that apply to any OpenTelemetry implementation) or with
+``OTEL_PYTHON_`` (for environment variables that are specific to the Python
+implementation of OpenTelemetry) whose characters are only alphanumeric
+characters and unserscores, except for the first character after ``OTEL_`` or
+``OTEL_PYTHON_`` which must not be a number.
 
 For example, these environment variables will be read:
 
-1. ``OPENTELEMETRY_PYTHON_SOMETHING``
-2. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_``
-3. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND__ELSE``
-4. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND_else``
-5. ``OPENTELEMETRY_PYTHON_SOMETHING_ELSE_AND_else2``
+1. ``OTEL_SOMETHING``
+2. ``OTEL_SOMETHING_ELSE_``
+3. ``OTEL_SOMETHING_ELSE_AND__ELSE``
+4. ``OTEL_SOMETHING_ELSE_AND_else``
+5. ``OTEL_SOMETHING_ELSE_AND_else2``
 
 These won't:
 
 1. ``OPENTELEMETRY_PYTH_SOMETHING``
-2. ``OPENTELEMETRY_PYTHON_2_SOMETHING_AND__ELSE``
-3. ``OPENTELEMETRY_PYTHON_SOMETHING_%_ELSE``
+2. ``OTEL_2_SOMETHING_AND__ELSE``
+3. ``OTEL_SOMETHING_%_ELSE``
 
 The values stored in the environment variables can be found in an instance of
 ``opentelemetry.configuration.Configuration``. This class can be instantiated
 freely because instantiating it returns always the same object.
 
 For example, if the environment variable
-``OPENTELEMETRY_PYTHON_METER_PROVIDER`` value is ``my_meter_provider``, then
+``OTEL_PYTHON_METER_PROVIDER`` value is ``my_meter_provider``, then
 ``Configuration().meter_provider == "my_meter_provider"`` would be ``True``.
 
 Non defined attributes will always return ``None``. This is intended to make it
@@ -49,8 +52,8 @@ necessary to check for the attribute to be defined first.
 Environment variables used by OpenTelemetry
 -------------------------------------------
 
-1. OPENTELEMETRY_PYTHON_METER_PROVIDER
-2. OPENTELEMETRY_PYTHON_TRACER_PROVIDER
+1. OTEL_PYTHON_METER_PROVIDER
+2. OTEL_PYTHON_TRACER_PROVIDER
 
 The value of these environment variables should be the name of the entry point
 that points to the class that implements either provider. This OpenTelemetry
@@ -70,7 +73,7 @@ setup.py file::
     }
 
 To use the meter provider above, then the
-``OPENTELEMETRY_PYTHON_METER_PROVIDER`` should be set to
+``OTEL_PYTHON_METER_PROVIDER`` should be set to
 ``"default_meter_provider"`` (this is not actually necessary since the
 OpenTelemetry API provided providers are the default ones used if no
 configuration is found in the environment variables).
@@ -110,13 +113,11 @@ class Configuration:
             instance = super().__new__(cls)
             for key, value_str in environ.items():
 
-                match = fullmatch(
-                    r"OPENTELEMETRY_PYTHON_([A-Za-z_][\w_]*)", key
-                )
+                match = fullmatch(r"OTEL_(PYTHON_)?([A-Za-z_][\w_]*)", key)
 
                 if match is not None:
 
-                    key = match.group(1)
+                    key = match.group(2)
                     value = value_str  # type: ConfigValue
 
                     if value_str == "True":
@@ -142,19 +143,18 @@ class Configuration:
     def __getattr__(self, name: str) -> Optional[ConfigValue]:
         return self._config_map.get(name)
 
-    def __setattr__(self, key: str, val: ConfigValue) -> None:
-        if key == "_config_map":
-            super().__setattr__(key, val)
+    def __setattr__(self, name: str, value: ConfigValue) -> None:
+        if name not in self._config_map.keys():
+            self._config_map[name] = value
         else:
-            raise AttributeError(key)
+            raise AttributeError(name)
 
     def get(self, name: str, default: _T) -> _T:
         """Use this typed method for dynamic access instead of `getattr`
 
         :rtype: str or bool or int or float or None
         """
-        val = self._config_map.get(name, default)
-        return val
+        return self._config_map.get(name, default)
 
     @classmethod
     def _reset(cls) -> None:
