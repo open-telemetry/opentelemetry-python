@@ -69,7 +69,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             if hasattr(match, "route"):
                 return match.route
 
-            # Instead of using `view_name`, better to use `_func_path` as some applications can use similar
+            # Instead of using `view_name`, better to use `_func_name` as some applications can use similar
             # view names in different modules
             if hasattr(match, "_func_name"):
                 return match._func_name  # pylint: disable=protected-access
