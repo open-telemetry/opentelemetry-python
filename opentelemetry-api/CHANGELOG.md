@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refactor `SpanContext.is_valid` from a method to a data attribute
+  ([#1005](https://github.com/open-telemetry/opentelemetry-python/pull/1005))
+
 ## Version 0.12b0
 
 Released 2020-08-14
