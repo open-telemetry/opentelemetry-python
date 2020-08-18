@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-## Version 0.12b0
+- Add metric OTLP exporter
+  ([#835](https://github.com/open-telemetry/opentelemetry-python/pull/835))
 
-Released 2020-08-14
+## Version 0.12b0
 
 - Change package name to opentelemetry-exporter-otlp
   ([#953](https://github.com/open-telemetry/opentelemetry-python/pull/953))
