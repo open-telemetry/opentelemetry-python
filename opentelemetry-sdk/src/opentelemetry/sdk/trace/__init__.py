@@ -308,7 +308,7 @@ class LazyEvent(EventBase):
         attributes = self._event_formatter()
         _filter_attribute_values(attributes)
         if not attributes:
-            attributes = self._new_attributes()
+            attributes = Span._new_attributes()
         return attributes
 
 
