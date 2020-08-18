@@ -305,7 +305,11 @@ class LazyEvent(EventBase):
 
     @property
     def attributes(self) -> types.Attributes:
-        return self._event_formatter()
+        attributes = self._event_formatter()
+        _filter_attribute_values(attributes)
+        if not attributes:
+            attributes = self._new_attributes()
+        return attributes
 
 
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
@@ -348,6 +352,18 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
         )
         return False
     return True
+
+
+def _filter_attribute_values(attributes: types.Attributes):
+    if attributes:
+        for attr_key, attr_value in list(attributes.items()):
+            if _is_valid_attribute_value(attr_value):
+                if isinstance(attr_value, MutableSequence):
+                    attributes[attr_key] = tuple(attr_value)
+                else:
+                    attributes[attr_key] = attr_value
+            else:
+                attributes.pop(attr_key)
 
 
 class Span(trace_api.Span):
@@ -401,7 +417,7 @@ class Span(trace_api.Span):
         self.status = None
         self._lock = threading.Lock()
 
-        self._filter_attribute_values(attributes)
+        _filter_attribute_values(attributes)
         if not attributes:
             self.attributes = self._new_attributes()
         else:
@@ -412,7 +428,7 @@ class Span(trace_api.Span):
         self.events = self._new_events()
         if events:
             for event in events:
-                self._filter_attribute_values(event.attributes)
+                _filter_attribute_values(event.attributes)
                 self.events.append(event)
 
         if links is None:
@@ -553,18 +569,6 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
-    @staticmethod
-    def _filter_attribute_values(attributes: types.Attributes):
-        if attributes:
-            for attr_key, attr_value in list(attributes.items()):
-                if _is_valid_attribute_value(attr_value):
-                    if isinstance(attr_value, MutableSequence):
-                        attributes[attr_key] = tuple(attr_value)
-                    else:
-                        attributes[attr_key] = attr_value
-                else:
-                    attributes.pop(attr_key)
-
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
             if not self.is_recording_events():
@@ -582,7 +586,7 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        self._filter_attribute_values(attributes)
+        _filter_attribute_values(attributes)
         if not attributes:
             attributes = self._new_attributes()
         self._add_event(
