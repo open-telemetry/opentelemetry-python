@@ -94,7 +94,7 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
         )
 
 
-def _format_correlations(correlations: typing.Dict[str, object]) -> str:
+def _format_correlations(correlations: typing.Mapping[str, object]) -> str:
     return ",".join(
         key + "=" + urllib.parse.quote_plus(str(value))
         for key, value in correlations.items()
