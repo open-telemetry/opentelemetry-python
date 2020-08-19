@@ -22,6 +22,7 @@ from ddtrace.span import Span as DatadogSpan
 
 import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace import sampling
 from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint:disable=relative-beyond-top-level
@@ -246,7 +247,7 @@ def _get_sampling_rate(span):
     return (
         span.sampler.rate
         if ctx.trace_flags.sampled
-        and isinstance(span.sampler, trace_api.sampling.ProbabilitySampler)
+        and isinstance(span.sampler, sampling.ProbabilitySampler)
         else None
     )
 
