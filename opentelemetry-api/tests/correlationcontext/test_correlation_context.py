@@ -48,7 +48,8 @@ class TestCorrelationContextManager(unittest.TestCase):
         ctx = cctx.set_correlation("test", "value")
         self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
         correlations = cctx.get_correlations(context=ctx)
-        correlations["test"] = "mess-this-up"
+        with self.assertRaises(TypeError):
+            correlations["test"] = "mess-this-up"
         self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
 
     def test_remove_correlations(self):

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import typing
+from types import MappingProxyType
 
 from opentelemetry.context import get_value, set_value
 from opentelemetry.context.context import Context
@@ -22,7 +23,7 @@ _CORRELATION_CONTEXT_KEY = "correlation-context"
 
 def get_correlations(
     context: typing.Optional[Context] = None,
-) -> typing.Dict[str, object]:
+) -> typing.Mapping[str, object]:
     """Returns the name/value pairs in the CorrelationContext
 
     Args:
@@ -33,8 +34,8 @@ def get_correlations(
     """
     correlations = get_value(_CORRELATION_CONTEXT_KEY, context=context)
     if isinstance(correlations, dict):
-        return correlations.copy()
-    return {}
+        return MappingProxyType(correlations.copy())
+    return MappingProxyType({})
 
 
 def get_correlation(
@@ -67,7 +68,7 @@ def set_correlation(
     Returns:
         A Context with the value updated
     """
-    correlations = get_correlations(context=context)
+    correlations = dict(get_correlations(context=context))
     correlations[name] = value
     return set_value(_CORRELATION_CONTEXT_KEY, correlations, context=context)
 
@@ -84,7 +85,7 @@ def remove_correlation(
     Returns:
         A Context with the name/value removed
     """
-    correlations = get_correlations(context=context)
+    correlations = dict(get_correlations(context=context))
     correlations.pop(name, None)
 
     return set_value(_CORRELATION_CONTEXT_KEY, correlations, context=context)
