@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add metric OTLP exporter
+  ([#835](https://github.com/open-telemetry/opentelemetry-python/pull/835))
+
+## Version 0.12b0
+
 - Change package name to opentelemetry-exporter-otlp
   ([#953](https://github.com/open-telemetry/opentelemetry-python/pull/953))
 - Update default port to 55680 

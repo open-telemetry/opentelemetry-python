@@ -142,8 +142,8 @@ class TestOTLPSpanExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
-    @patch("opentelemetry.exporter.otlp.trace_exporter.expo")
-    @patch("opentelemetry.exporter.otlp.trace_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
@@ -156,8 +156,8 @@ class TestOTLPSpanExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.trace_exporter.expo")
-    @patch("opentelemetry.exporter.otlp.trace_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
@@ -274,4 +274,4 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         # pylint: disable=protected-access
-        self.assertEqual(expected, self.exporter._translate_spans([self.span]))
+        self.assertEqual(expected, self.exporter._translate_data([self.span]))

@@ -141,7 +141,7 @@ workflows:
       - build:
           matrix:
             parameters:
-              version: ["py38", "py37", "py36", "py35", "pypy3"]
+              version: ["py37", "py36", "py35", "pypy3"]
               package: ["core", "exporter", "instrumentation"]
       - build-py34:
           matrix:
