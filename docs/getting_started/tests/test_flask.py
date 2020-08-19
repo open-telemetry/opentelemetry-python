@@ -38,6 +38,6 @@ class TestFlask(unittest.TestCase):
             server.terminate()
 
         output = str(server.stdout.read())
-        self.assertIn('"name": ""', output)
+        self.assertIn('"name": "HTTP get"', output)
         self.assertIn('"name": "example-request"', output)
         self.assertIn('"name": "hello"', output)
