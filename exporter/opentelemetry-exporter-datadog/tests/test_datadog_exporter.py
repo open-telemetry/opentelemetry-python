@@ -496,7 +496,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x34BF92DEEFC58C92,
             is_remote=False,
-            trace_flags=sampling.TraceFlags(sampling.TraceFlags.SAMPLED),
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
         sampler = sampling.ProbabilitySampler(0.5)
 
