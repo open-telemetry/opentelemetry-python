@@ -155,6 +155,7 @@ class TestPymongo(TestBase):
 
         self.assertEqual(span.name, "mongodb.command_name.123")
 
+
 class MockCommand:
     def __init__(self, command_attrs):
         self.command_attrs = command_attrs
