@@ -23,6 +23,7 @@ from ddtrace.internal.writer import AgentWriter
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter import datadog
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
@@ -495,9 +496,9 @@ class TestDatadogSpanExporter(unittest.TestCase):
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x34BF92DEEFC58C92,
             is_remote=False,
-            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+            trace_flags=sampling.TraceFlags(sampling.TraceFlags.SAMPLED),
         )
-        sampler = trace_api.sampling.ProbabilitySampler(0.5)
+        sampler = sampling.ProbabilitySampler(0.5)
 
         span = trace.Span(
             name="sampled", context=context, parent=None, sampler=sampler
