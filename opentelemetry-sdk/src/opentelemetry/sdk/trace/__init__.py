@@ -360,8 +360,6 @@ def _filter_attribute_values(attributes: types.Attributes):
             if _is_valid_attribute_value(attr_value):
                 if isinstance(attr_value, MutableSequence):
                     attributes[attr_key] = tuple(attr_value)
-                else:
-                    attributes[attr_key] = attr_value
             else:
                 attributes.pop(attr_key)
 
