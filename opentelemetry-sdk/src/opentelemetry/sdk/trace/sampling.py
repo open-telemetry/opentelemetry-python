@@ -36,12 +36,12 @@ To use a sampler, pass it into the tracer provider constructor. For example:
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.trace.sampling import ProbabilitySampler
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
         SimpleExportSpanProcessor,
     )
+    from opentelemetry.sdk.trace.sampling import ProbabilitySampler
 
     # sample 1 in every 1000 traces
     sampler = ProbabilitySampler(1/1000)
