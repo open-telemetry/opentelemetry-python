@@ -86,6 +86,24 @@ class TestFunctionalPsycopg(TestBase):
             )
         self.validate_spans()
 
+    def test_execute_with_connection_context_manager(self):
+        """Should create a child span for execute with connection context
+        """
+        with self._tracer.start_as_current_span("rootSpan"):
+            with self._connection as conn:
+                cursor = conn.cursor()
+                cursor.execute("CREATE TABLE IF NOT EXISTS test (id INT)")
+        self.validate_spans()
+
+    def test_execute_with_cursor_context_manager(self):
+        """Should create a child span for execute with cursor context
+        """
+        with self._tracer.start_as_current_span("rootSpan"):
+            with self._connection.cursor() as cursor:
+                cursor.execute("CREATE TABLE IF NOT EXISTS test (id INT)")
+        self.validate_spans()
+        self.assertTrue(cursor.closed)
+
     def test_executemany(self):
         """Should create a child span for executemany
         """
