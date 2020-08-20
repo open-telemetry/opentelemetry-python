@@ -610,6 +610,7 @@ class TestSpan(unittest.TestCase):
 
     def test_invalid_event_attributes(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        now = time_ns()
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
@@ -622,6 +623,19 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[1].attributes, {})
             self.assertEqual(root.events[2].attributes, {})
             self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
+
+            def event_formatter():
+                properties = {}
+                properties["attr1"] = dict()
+                properties["attr2"] = "hello"
+                return properties
+
+            root.add_lazy_event("event4", event_formatter, now)
+
+            self.assertEqual(len(root.events), 5)
+            self.assertEqual(root.events[4].name, "event4")
+            self.assertEqual(root.events[4].attributes, {"attr2": "hello"})
+            self.assertEqual(root.events[4].timestamp, now)
 
     def test_links(self):
         other_context1 = trace_api.SpanContext(
