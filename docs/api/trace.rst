@@ -6,7 +6,6 @@ Submodules
 
 .. toctree::
 
-   trace.sampling
    trace.status
    trace.span
 
