@@ -40,9 +40,10 @@ from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace import SpanContext, sampling
+from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
@@ -869,7 +870,7 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
-        sampler: sampling.Sampler = trace_api.sampling.DEFAULT_ON,
+        sampler: sampling.Sampler = sampling.DEFAULT_ON,
         resource: Resource = Resource.create_empty(),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[

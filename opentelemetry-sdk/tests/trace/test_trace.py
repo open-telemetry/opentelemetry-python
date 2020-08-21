@@ -20,8 +20,8 @@ from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import resources, trace
+from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace import sampling
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
 

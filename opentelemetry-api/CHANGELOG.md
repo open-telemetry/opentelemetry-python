@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Moved samplers from API to SDK
+  ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
+
 ## Version 0.12b0
 
 Released 2020-08-14
