@@ -170,7 +170,11 @@ class TestClientProto(TestBase):
             40, 40, "/GRPCTestServer/BidirectionalStreamingMethod"
         )
 
-    def _verify_error_records(self, method):
+    def _verify_error_records(
+        self, method, status_code=grpc.StatusCode.UNAVAILABLE
+    ):
+        # Updating grpc to 1.31.0 makes the status codes for two test cases
+        # change, this is why the status code is passed as an argument now.
         # pylint: disable=protected-access,no-member
         self.channel._interceptor.controller.tick()
         records = self.memory_metrics_exporter.get_exported_metrics()
@@ -194,11 +198,7 @@ class TestClientProto(TestBase):
 
         self.assertEqual(errors.instrument.name, "grpcio/client/errors")
         self.assertEqual(
-            errors.labels,
-            (
-                ("method", method),
-                ("status_code", grpc.StatusCode.INVALID_ARGUMENT),
-            ),
+            errors.labels, (("method", method), ("status_code", status_code),),
         )
         self.assertEqual(errors.aggregator.checkpoint, 1)
 
@@ -207,7 +207,7 @@ class TestClientProto(TestBase):
             (
                 ("error", True),
                 ("method", method),
-                ("status_code", grpc.StatusCode.INVALID_ARGUMENT),
+                ("status_code", status_code),
             ),
         )
 
@@ -215,7 +215,9 @@ class TestClientProto(TestBase):
         with self.assertRaises(grpc.RpcError):
             simple_method(self._stub, error=True)
 
-        self._verify_error_records("/GRPCTestServer/SimpleMethod")
+        self._verify_error_records(
+            "/GRPCTestServer/SimpleMethod", grpc.StatusCode.INVALID_ARGUMENT
+        )
 
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
@@ -229,7 +231,10 @@ class TestClientProto(TestBase):
         with self.assertRaises(grpc.RpcError):
             client_streaming_method(self._stub, error=True)
 
-        self._verify_error_records("/GRPCTestServer/ClientStreamingMethod")
+        self._verify_error_records(
+            "/GRPCTestServer/ClientStreamingMethod",
+            grpc.StatusCode.INVALID_ARGUMENT,
+        )
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
@@ -242,7 +247,10 @@ class TestClientProto(TestBase):
         with self.assertRaises(grpc.RpcError):
             server_streaming_method(self._stub, error=True)
 
-        self._verify_error_records("/GRPCTestServer/ServerStreamingMethod")
+        self._verify_error_records(
+            "/GRPCTestServer/ServerStreamingMethod",
+            grpc.StatusCode.INVALID_ARGUMENT,
+        )
 
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
@@ -265,7 +273,7 @@ class TestClientProto(TestBase):
         span = spans[0]
         self.assertEqual(
             span.status.canonical_code.value,
-            grpc.StatusCode.INVALID_ARGUMENT.value[0],
+            grpc.StatusCode.UNAVAILABLE.value[0],
         )
 
 
