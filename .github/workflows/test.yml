@@ -3,7 +3,7 @@ name: Test
 on: [push, pull_request]
 
 jobs:
-  test:
+  build:
     env:
       # We use these variables to convert between tox and GHA version literals
       py34: 3.4
@@ -43,3 +43,23 @@ jobs:
           key: tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
+  docker-tests:
+    env:
+      python-version: 3.7
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Install tox
+        run: pip install tox
+      - name: Cache tox environment
+        # Preserves .tox directory between runs for faster installs
+        uses: actions/cache@v2
+        with:
+          path: .tox
+          key: tox-cache-docker-tests-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
+      - name: run tox
+        run: tox -e docker-tests
