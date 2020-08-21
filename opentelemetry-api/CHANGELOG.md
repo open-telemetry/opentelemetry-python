@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Moved samplers from API to SDK
+  ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
 - Change return value type of `correlationcontext.get_correlations` to immutable `MappingProxyType`
   ([#1024](https://github.com/open-telemetry/opentelemetry-python/pull/1024))
 
