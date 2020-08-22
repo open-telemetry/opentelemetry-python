@@ -111,6 +111,7 @@ class SystemMetrics:
             }
         else:
             self._config = config
+
         self._proc = psutil.Process(os.getpid())
 
         self._system_cpu_time_labels = {}
@@ -152,6 +153,8 @@ class SystemMetrics:
 
             self._system_swap_usage_labels[key] = value
             self._system_swap_utilization_labels[key] = value
+            # self._system_swap_page_faults[key] = value
+            # self._system_swap_page_operations [key] = value
 
             self._system_disk_io_labels[key] = value
             self._system_disk_operations_labels[key] = value
@@ -161,11 +164,11 @@ class SystemMetrics:
             # self._system_filesystem_usage_labels[key] = value
             # self._system_filesystem_utilization_labels[key] = value
 
-            self._system_network_dropped_packets[key] = value
-            self._system_network_packets[key] = value
-            self._system_network_errors[key] = value
-            self._system_network_io[key] = value
-            self._system_network_connections[key] = value
+            self._system_network_dropped_packets_labels[key] = value
+            self._system_network_packets_labels[key] = value
+            self._system_network_errors_labels[key] = value
+            self._system_network_io_labels[key] = value
+            self._system_network_connections_labels[key] = value
 
         self.meter.register_observer(
             callback=self._get_system_cpu_time,
@@ -333,7 +336,7 @@ class SystemMetrics:
             callback=self._get_system_network_connections,
             name="system.network.connections",
             description="System network connections",
-            unit="bytes",
+            unit="connections",
             value_type=int,
             observer_type=UpDownSumObserver,
         )
@@ -495,11 +498,11 @@ class SystemMetrics:
         """
         for device, counters in psutil.disk_io_counters(perdisk=True).items():
             for metric in self._config["system_disk_operations"]:
-                self._system_disk_io_labels["device"] = device
-                self._system_disk_io_labels["direction"] = metric
+                self._system_disk_operations_labels["device"] = device
+                self._system_disk_operations_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "{}_count".format(metric)),
-                    self._system_disk_io_labels
+                    self._system_disk_operations_labels
                 )
 
     def _get_system_disk_time(
@@ -512,11 +515,11 @@ class SystemMetrics:
         """
         for device, counters in psutil.disk_io_counters(perdisk=True).items():
             for metric in self._config["system_disk_time"]:
-                self._system_disk_io_labels["device"] = device
-                self._system_disk_io_labels["direction"] = metric
+                self._system_disk_time_labels["device"] = device
+                self._system_disk_time_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "{}_time".format(metric)) / 1000,
-                    self._system_disk_io_labels
+                    self._system_disk_time_labels
                 )
 
     def _get_system_disk_merged(
@@ -533,11 +536,11 @@ class SystemMetrics:
 
         for device, counters in psutil.disk_io_counters(perdisk=True).items():
             for metric in self._config["system_disk_time"]:
-                self._system_disk_io_labels["device"] = device
-                self._system_disk_io_labels["direction"] = metric
+                self._system_disk_merged_labels["device"] = device
+                self._system_disk_merged_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "{}_merged_count".format(metric)),
-                    self._system_disk_io_labels
+                    self._system_disk_merged_labels
                 )
 
     # TODO Add _get_system_filesystem_usage
@@ -557,8 +560,8 @@ class SystemMetrics:
         for device, counters in psutil.net_io_counters(pernic=True).items():
             for metric in self._config["system_network_dropped_packets"]:
                 in_out = {"receive": "in", "transmit": "out"}[metric]
-                self._system_disk_io_labels["device"] = device
-                self._system_disk_io_labels["direction"] = metric
+                self._system_network_dropped_packets_labels["device"] = device
+                self._system_network_dropped_packets_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "drop{}".format(in_out)),
                     self._system_network_dropped_packets_labels
@@ -576,11 +579,11 @@ class SystemMetrics:
         for device, counters in psutil.net_io_counters(pernic=True).items():
             for metric in self._config["system_network_dropped_packets"]:
                 recv_sent = {"receive": "recv", "transmit": "sent"}[metric]
-                self._system_disk_io_labels["device"] = device
-                self._system_disk_io_labels["direction"] = metric
+                self._system_network_packets_labels["device"] = device
+                self._system_network_packets_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "packets_{}".format(recv_sent)),
-                    self._system_network_dropped_packets_labels
+                    self._system_network_packets_labels
                 )
 
     def _get_system_network_errors(
@@ -594,8 +597,8 @@ class SystemMetrics:
         for device, counters in psutil.net_io_counters(pernic=True).items():
             for metric in self._config["system_network_errors"]:
                 in_out = {"receive": "in", "transmit": "out"}[metric]
-                self._system_disk_io_labels["device"] = device
-                self._system_disk_io_labels["direction"] = metric
+                self._system_network_errors_labels["device"] = device
+                self._system_network_errors_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "err{}".format(in_out)),
                     self._system_network_errors_labels
@@ -613,8 +616,8 @@ class SystemMetrics:
         for device, counters in psutil.net_io_counters(pernic=True).items():
             for metric in self._config["system_network_dropped_packets"]:
                 recv_sent = {"receive": "recv", "transmit": "sent"}[metric]
-                self._system_disk_io_labels["device"] = device
-                self._system_disk_io_labels["direction"] = metric
+                self._system_network_io_labels["device"] = device
+                self._system_network_io_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "bytes_{}".format(recv_sent)),
                     self._system_network_io_labels
