@@ -78,9 +78,7 @@ class Decision:
 
 
 def is_recording(decision: Decision):
-    return (
-        decision == Decision.RECORD or decision == Decision.RECORD_AND_SAMPLED
-    )
+    return decision in (Decision.RECORD, Decision.RECORD_AND_SAMPLED)
 
 
 def is_sampled(decision: Decision):
@@ -147,14 +145,12 @@ class StaticSampler(Sampler):
     ) -> "SamplingResult":
         if self._decision == Decision.NOT_RECORD:
             return SamplingResult(self._decision)
-        else:
-            return SamplingResult(self._decision, attributes)
+        return SamplingResult(self._decision, attributes)
 
     def get_description(self) -> str:
         if self._decision == Decision.NOT_RECORD:
             return "AlwaysOffSampler"
-        else:
-            return "AlwaysOnSampler"
+        return "AlwaysOnSampler"
 
 
 class ProbabilitySampler(Sampler):
@@ -206,8 +202,7 @@ class ProbabilitySampler(Sampler):
             decision = Decision.RECORD_AND_SAMPLED
         if decision == Decision.NOT_RECORD:
             return SamplingResult(decision)
-        else:
-            return SamplingResult(decision, attributes)
+        return SamplingResult(decision, attributes)
 
     def get_description(self) -> str:
         return "ProbabilitySampler{{{}}}".format(self._rate)
@@ -240,8 +235,7 @@ class ParentOrElse(Sampler):
                 or not parent_context.trace_flags.sampled
             ):
                 return SamplingResult(Decision.NOT_RECORD)
-            else:
-                return SamplingResult(Decision.RECORD_AND_SAMPLED, attributes)
+            return SamplingResult(Decision.RECORD_AND_SAMPLED, attributes)
 
         return self._delegate.should_sample(
             parent_context=parent_context,
@@ -255,11 +249,11 @@ class ParentOrElse(Sampler):
         return "ParentOrElse{{{}}}".format(self._delegate.get_description())
 
 
-"""Sampler that never samples spans, regardless of the parent span's sampling decision."""
 ALWAYS_OFF = StaticSampler(Decision.NOT_RECORD)
+"""Sampler that never samples spans, regardless of the parent span's sampling decision."""
 
-"""Sampler that always samples spans, regardless of the parent span's sampling decision."""
 ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLED)
+"""Sampler that always samples spans, regardless of the parent span's sampling decision."""
 
 DEFAULT_OFF = ParentOrElse(ALWAYS_OFF)
 """Sampler that respects its parent span's sampling decision, but otherwise never samples."""
