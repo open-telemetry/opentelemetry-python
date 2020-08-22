@@ -30,11 +30,12 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            {"sampled parent":"sampling on"},
+            {"sampled parent": "sampling on"},
         )
         self.assertTrue(sampling.is_sampled(no_record_always_on.decision))
-        self.assertEqual(no_record_always_on.attributes,
-            {"sampled parent":"sampling on"})
+        self.assertEqual(
+            no_record_always_on.attributes, {"sampled parent": "sampling on"}
+        )
 
         sampled_always_on = sampling.ALWAYS_ON.should_sample(
             trace.SpanContext(
@@ -42,11 +43,12 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            {"sampled parent":"sampling on"},
+            {"sampled parent": "sampling on"},
         )
         self.assertTrue(sampling.is_sampled(no_record_always_on.decision))
-        self.assertEqual(sampled_always_on.attributes,
-            {"sampled parent":"sampling on"})
+        self.assertEqual(
+            sampled_always_on.attributes, {"sampled parent": "sampling on"}
+        )
 
     def test_always_off(self):
         no_record_always_off = sampling.ALWAYS_OFF.should_sample(
@@ -89,19 +91,20 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            {"sampled parent":"sampling on"},
+            {"sampled parent": "sampling on"},
         )
         self.assertTrue(sampling.is_sampled(sampled_default_on.decision))
-        self.assertEqual(sampled_default_on.attributes, {"sampled parent":"sampling on"})
+        self.assertEqual(
+            sampled_default_on.attributes, {"sampled parent": "sampling on"}
+        )
 
         default_on = sampling.DEFAULT_ON.should_sample(
-            None,
-            0xDEADBEF1,
-            0xDEADBEF2,
-            {"sampled parent":"sampling on"},
+            None, 0xDEADBEF1, 0xDEADBEF2, {"sampled parent": "sampling on"},
         )
         self.assertTrue(sampling.is_sampled(default_on.decision))
-        self.assertEqual(default_on.attributes, {"sampled parent":"sampling on"})
+        self.assertEqual(
+            default_on.attributes, {"sampled parent": "sampling on"}
+        )
 
     def test_default_off(self):
         no_record_default_off = sampling.DEFAULT_OFF.should_sample(
@@ -121,16 +124,15 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            {"sampled parent":"sampling on"},
+            {"sampled parent": "sampling on"},
         )
         self.assertTrue(sampling.is_sampled(sampled_default_off.decision))
-        self.assertEqual(sampled_default_off.attributes, {"sampled parent":"sampling on"})
+        self.assertEqual(
+            sampled_default_off.attributes, {"sampled parent": "sampling on"}
+        )
 
         default_off = sampling.DEFAULT_OFF.should_sample(
-            None,
-            0xDEADBEF1,
-            0xDEADBEF2,
-            "unsampled parent, sampling off",
+            None, 0xDEADBEF1, 0xDEADBEF2, "unsampled parent, sampling off",
         )
         self.assertFalse(sampling.is_sampled(default_off.decision))
         self.assertEqual(default_off.attributes, {})
@@ -186,7 +188,7 @@ class TestSampler(unittest.TestCase):
                 almost_always_off.should_sample(
                     None, 0x0, 0xDEADBEEF, "span name"
                 ).decision
-                )
+            )
         )
         self.assertFalse(
             sampling.is_sampled(

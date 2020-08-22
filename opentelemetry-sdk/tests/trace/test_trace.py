@@ -141,12 +141,10 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(child_span, trace.Span)
         self.assertTrue(root_span.context.trace_flags.sampled)
         self.assertEqual(
-            root_span.get_context().trace_flags,
-            trace_api.TraceFlags.SAMPLED
+            root_span.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
         )
         self.assertEqual(
-            child_span.get_context().trace_flags,
-            trace_api.TraceFlags.SAMPLED
+            child_span.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
         )
 
     def test_sampler_no_sampling(self):
@@ -160,12 +158,10 @@ class TestTracerSampling(unittest.TestCase):
         child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
         self.assertEqual(
-            root_span.get_context().trace_flags,
-            trace_api.TraceFlags.DEFAULT
+            root_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
         )
         self.assertEqual(
-            child_span.get_context().trace_flags,
-            trace_api.TraceFlags.DEFAULT
+            child_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
         )
 
 
@@ -542,22 +538,19 @@ class TestSpan(unittest.TestCase):
             "attr-in-both": "decision-attr",
         }
         tracer_provider = trace.TracerProvider(
-            sampling.StaticSampler(
-                sampling.Decision.RECORD_AND_SAMPLED,
-            )
+            sampling.StaticSampler(sampling.Decision.RECORD_AND_SAMPLED,)
         )
 
         self.tracer = tracer_provider.get_tracer(__name__)
 
         with self.tracer.start_as_current_span(
-            name="root2",
-            attributes=sampling_attributes) as root:
+            name="root2", attributes=sampling_attributes
+        ) as root:
             self.assertEqual(len(root.attributes), 2)
             self.assertEqual(root.attributes["sampler-attr"], "sample-val")
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
             self.assertEqual(
-                root.get_context().trace_flags,
-                trace_api.TraceFlags.SAMPLED
+                root.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
             )
 
     def test_events(self):

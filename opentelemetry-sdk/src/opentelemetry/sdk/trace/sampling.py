@@ -22,7 +22,7 @@ OpenTelemetry provides two types of samplers:
 
 A `StaticSampler` always returns the same sampling result regardless of the conditions. Both possible StaticSamplers are already created:
 
-- Always sample spans: `ALWAYS_ON`
+- Always sample spans: ALWAYS_ON
 - Never sample spans: `ALWAYS_OFF`
 
 A `ProbabilitySampler` makes a random sampling result based on the sampling probability given.
@@ -78,8 +78,9 @@ class Decision:
 
 
 def is_recording(decision: Decision):
-    return decision == Decision.RECORD \
-        or decision == Decision.RECORD_AND_SAMPLED
+    return (
+        decision == Decision.RECORD or decision == Decision.RECORD_AND_SAMPLED
+    )
 
 
 def is_sampled(decision: Decision):
@@ -221,6 +222,7 @@ class ParentOrElse(Sampler):
     Args:
         delegate: The delegate sampler to use if parent is not set.
     """
+
     def __init__(self, delegate: Sampler):
         self._delegate = delegate
 
@@ -233,8 +235,10 @@ class ParentOrElse(Sampler):
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
         if parent_context is not None:
-            if not parent_context.is_valid() or \
-                not parent_context.trace_flags.sampled:
+            if (
+                not parent_context.is_valid()
+                or not parent_context.trace_flags.sampled
+            ):
                 return SamplingResult(Decision.NOT_RECORD)
             else:
                 return SamplingResult(Decision.RECORD_AND_SAMPLED, attributes)

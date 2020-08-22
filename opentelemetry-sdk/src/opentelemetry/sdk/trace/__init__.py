@@ -790,16 +790,14 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.source.sampler.should_sample(
-            parent_context,
-            trace_id,
-            name,
-            attributes,
-            links,
+            parent_context, trace_id, name, attributes, links,
         )
 
-        trace_flags = trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED) if \
-            sampling.is_sampled(sampling_result.decision) else \
-            trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
+        trace_flags = (
+            trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
+            if sampling.is_sampled(sampling_result.decision)
+            else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
+        )
         context = trace_api.SpanContext(
             trace_id,
             generate_span_id(),
