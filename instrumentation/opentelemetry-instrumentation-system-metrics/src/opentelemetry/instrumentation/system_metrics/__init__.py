@@ -188,6 +188,7 @@ class SystemMetrics:
             observer_type=UpDownSumObserver,
         )
 
+        """
         self.meter.register_observer(
             callback=self._get_system_memory_usage,
             name="system.memory.usage",
@@ -367,6 +368,7 @@ class SystemMetrics:
             value_type=int,
             observer_type=SumObserver,
         )
+        """
 
     def _get_system_cpu_time(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for system CPU time
