@@ -20,14 +20,16 @@ OpenTelemetry provides two types of samplers:
 - `StaticSampler`
 - `ProbabilitySampler`
 
-A `StaticSampler` always returns the same sampling decision regardless of the conditions. Both possible StaticSamplers are already created:
+A `StaticSampler` always returns the same sampling result regardless of the conditions. Both possible StaticSamplers are already created:
 
 - Always sample spans: `ALWAYS_ON`
 - Never sample spans: `ALWAYS_OFF`
 
-A `ProbabilitySampler` makes a random sampling decision based on the sampling probability given. If the span being sampled has a parent, `ProbabilitySampler` will respect the parent span's sampling decision.
+A `ProbabilitySampler` makes a random sampling result based on the sampling probability given.
 
-Currently, sampling decisions are always made during the creation of the span. However, this might not always be the case in the future (see `OTEP #115 <https://github.com/open-telemetry/oteps/pull/115>`_).
+If the span being sampled has a parent, `ParentOrElse` will respect the parent span's sampling result. Otherwise, it returns the sampling result from the given delegate sampler.
+
+Currently, sampling results are always made during the creation of the span. However, this might not always be the case in the future (see `OTEP #115 <https://github.com/open-telemetry/oteps/pull/115>`_).
 
 Custom samplers can be created by subclassing `Sampler` and implementing `Sampler.should_sample`.
 
@@ -67,28 +69,48 @@ from opentelemetry.util.types import Attributes, AttributeValue
 
 
 class Decision:
-    """A sampling decision as applied to a newly-created Span.
+    # IsRecording() == false, span will not be recorded and all events and attributes will be dropped.
+    NOT_RECORD = 0
+    # IsRecording() == true, but Sampled flag MUST NOT be set.
+    RECORD = 1
+    # IsRecording() == true AND Sampled flag` MUST be set.
+    RECORD_AND_SAMPLED = 2
+
+
+def is_recording(decision: Decision):
+    return decision == Decision.RECORD \
+        or decision == Decision.RECORD_AND_SAMPLED
+
+
+def is_sampled(decision: Decision):
+    return decision == Decision.RECORD_AND_SAMPLED
+
+
+class SamplingResult:
+    """A sampling result as applied to a newly-created Span.
 
     Args:
-        sampled: Whether the `opentelemetry.trace.Span` should be sampled.
+        decision: A sampling decision based off of whether the span is recorded
+            and the sampled flag in trace flags in the span context.
         attributes: Attributes to add to the `opentelemetry.trace.Span`.
     """
 
     def __repr__(self) -> str:
         return "{}({}, attributes={})".format(
-            type(self).__name__, str(self.sampled), str(self.attributes)
+            type(self).__name__, str(self.decision), str(self.attributes)
         )
 
     def __init__(
         self,
-        sampled: bool = False,
+        decision: Decision,
         attributes: Optional[Mapping[str, "AttributeValue"]] = None,
     ) -> None:
-        self.sampled = sampled  # type: bool
+        self.decision = decision
+        # TODO: attributes must be immutable
         if attributes is None:
             self.attributes = {}  # type: Dict[str, "AttributeValue"]
         else:
-            self.attributes = dict(attributes)
+            self.attributes = attributes
 
 
 class Sampler(abc.ABC):
@@ -97,11 +119,14 @@ class Sampler(abc.ABC):
         self,
         parent_context: Optional["SpanContext"],
         trace_id: int,
-        span_id: int,
         name: str,
         attributes: Optional[Attributes] = None,
         links: Sequence["Link"] = (),
-    ) -> "Decision":
+    ) -> "SamplingResult":
+        pass
+
+    @abc.abstractmethod
+    def get_description(self) -> str:
         pass
 
 
@@ -115,12 +140,20 @@ class StaticSampler(Sampler):
         self,
         parent_context: Optional["SpanContext"],
         trace_id: int,
-        span_id: int,
         name: str,
         attributes: Optional[Attributes] = None,
         links: Sequence["Link"] = (),
-    ) -> "Decision":
-        return self._decision
+    ) -> "SamplingResult":
+        if self._decision == Decision.NOT_RECORD:
+            return SamplingResult(self._decision)
+        else:
+            return SamplingResult(self._decision, attributes)
+
+    def get_description(self) -> str:
+        if self._decision == Decision.NOT_RECORD:
+            return "AlwaysOffSampler"
+        else:
+            return "AlwaysOnSampler"
 
 
 class ProbabilitySampler(Sampler):
@@ -133,6 +166,8 @@ class ProbabilitySampler(Sampler):
     """
 
     def __init__(self, rate: float):
+        if rate < 0.0 or rate > 1.0:
+            raise ValueError("Probability must be in range [0.0, 1.0].")
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
 
@@ -161,26 +196,69 @@ class ProbabilitySampler(Sampler):
         self,
         parent_context: Optional["SpanContext"],
         trace_id: int,
-        span_id: int,
         name: str,
         attributes: Optional[Attributes] = None,  # TODO
         links: Sequence["Link"] = (),
-    ) -> "Decision":
+    ) -> "SamplingResult":
+        decision = Decision.NOT_RECORD
+        if trace_id & self.TRACE_ID_LIMIT < self.bound:
+            decision = Decision.RECORD_AND_SAMPLED
+        if decision == Decision.NOT_RECORD:
+            return SamplingResult(decision)
+        else:
+            return SamplingResult(decision, attributes)
+
+    def get_description(self) -> str:
+        return "ProbabilitySampler{{{}}}".format(self._rate)
+
+
+class ParentOrElse(Sampler):
+    """
+    If a parent is set, follows the same sampling decision as the parent.
+    Otherwise, uses the delegate provided at initialization to make a
+    decision.
+
+    Args:
+        delegate: The delegate sampler to use if parent is not set.
+    """
+    def __init__(self, delegate: Sampler):
+        self._delegate = delegate
+
+    def should_sample(
+        self,
+        parent_context: Optional["SpanContext"],
+        trace_id: int,
+        name: str,
+        attributes: Optional[Attributes] = None,  # TODO
+        links: Sequence["Link"] = (),
+    ) -> "SamplingResult":
         if parent_context is not None:
-            return Decision(parent_context.trace_flags.sampled)
+            if not parent_context.is_valid() or \
+                not parent_context.trace_flags.sampled:
+                return SamplingResult(Decision.NOT_RECORD)
+            else:
+                return SamplingResult(Decision.RECORD_AND_SAMPLED, attributes)
 
-        return Decision(trace_id & self.TRACE_ID_LIMIT < self.bound)
+        return self._delegate.should_sample(
+            parent_context=parent_context,
+            trace_id=trace_id,
+            name=name,
+            attributes=attributes,
+            links=links,
+        )
+
+    def get_description(self):
+        return "ParentOrElse{{{}}}".format(self._delegate.get_description())
 
 
-ALWAYS_OFF = StaticSampler(Decision(False))
 """Sampler that never samples spans, regardless of the parent span's sampling decision."""
+ALWAYS_OFF = StaticSampler(Decision.NOT_RECORD)
 
-ALWAYS_ON = StaticSampler(Decision(True))
 """Sampler that always samples spans, regardless of the parent span's sampling decision."""
+ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLED)
 
-
-DEFAULT_OFF = ProbabilitySampler(0.0)
+DEFAULT_OFF = ParentOrElse(ALWAYS_OFF)
 """Sampler that respects its parent span's sampling decision, but otherwise never samples."""
 
-DEFAULT_ON = ProbabilitySampler(1.0)
+DEFAULT_ON = ParentOrElse(ALWAYS_ON)
 """Sampler that respects its parent span's sampling decision, but otherwise always samples."""

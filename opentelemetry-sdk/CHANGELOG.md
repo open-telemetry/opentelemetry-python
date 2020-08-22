@@ -4,6 +4,8 @@
 
 - Moved samplers from API to SDK
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
+- Sampling spec changes
+  ([#1024](https://github.com/open-telemetry/opentelemetry-python/pull/1024))
 
 ## Version 0.12b0
 
