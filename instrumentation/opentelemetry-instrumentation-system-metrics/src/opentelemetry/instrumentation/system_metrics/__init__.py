@@ -515,7 +515,7 @@ class SystemMetrics:
                 self._system_disk_io_labels["device"] = device
                 self._system_disk_io_labels["direction"] = metric
                 observer.observe(
-                    getattr(counters, "{}_time".format(metric)),
+                    getattr(counters, "{}_time".format(metric)) / 1000,
                     self._system_disk_io_labels
                 )
 
