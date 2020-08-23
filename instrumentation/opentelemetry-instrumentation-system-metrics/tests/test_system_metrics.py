@@ -86,8 +86,7 @@ class TestSystemMetrics(TestBase):
             self._assert_metrics(observer_name, system_metrics, expected)
 
     @mock.patch("psutil.cpu_times")
-    @mock.patch("psutil.cpu_times_percent")
-    def test_system_cpu_time(self, mock_cpu_times, var):
+    def test_system_cpu_time(self, mock_cpu_times):
         CPUTimes = namedtuple("CPUTimes", ["idle", "user", "system", "irq"])
         mock_cpu_times.return_value = [
             CPUTimes(idle=1.2, user=3.4, system=5.6, irq=7.8),
@@ -95,10 +94,14 @@ class TestSystemMetrics(TestBase):
         ]
 
         expected = {
-            (("state", "idle"),): 1.2,
-            (("state", "user"),): 3.4,
-            (("state", "system"),): 5.6,
-            (("state", "irq"),): 7.8,
+            (("cpu", 1), ("state", "idle"),): 1.2,
+            (("cpu", 1), ("state", "user"),): 3.4,
+            (("cpu", 1), ("state", "system"),): 5.6,
+            (("cpu", 1), ("state", "irq"),): 7.8,
+            (("cpu", 2), ("state", "idle"),): 1.2,
+            (("cpu", 2), ("state", "user"),): 3.4,
+            (("cpu", 2), ("state", "system"),): 5.6,
+            (("cpu", 2), ("state", "irq"),): 7.8,
         }
         self._test_metrics("system.cpu.time", expected)
 
@@ -111,9 +114,13 @@ class TestSystemMetrics(TestBase):
         ]
 
         expected = {
-            (("state", "idle"),): 1.2,
-            (("state", "user"),): 3.4,
-            (("state", "system"),): 5.6,
-            (("state", "irq"),): 7.8,
+            (("cpu", 1), ("state", "idle"),): 1.2 / 100,
+            (("cpu", 1), ("state", "user"),): 3.4 / 100,
+            (("cpu", 1), ("state", "system"),): 5.6 / 100,
+            (("cpu", 1), ("state", "irq"),): 7.8 / 100,
+            (("cpu", 2), ("state", "idle"),): 1.2 / 100,
+            (("cpu", 2), ("state", "user"),): 3.4 / 100,
+            (("cpu", 2), ("state", "system"),): 5.6 / 100,
+            (("cpu", 2), ("state", "irq"),): 7.8 / 100,
         }
         self._test_metrics("system.cpu.utilization", expected)
