@@ -158,3 +158,33 @@ class TestSystemMetrics(TestBase):
             (("state", "cached"),): 3 / 4,
         }
         self._test_metrics("system.memory.utilization", expected)
+
+    @mock.patch("psutil.swap_memory")
+    def test_system_swap_usage(self, mock_swap_memory):
+        SwapMemory = namedtuple(
+            "SwapMemory", ["used", "free", "total"]
+        )
+        mock_swap_memory.return_value = SwapMemory(
+            used=1, free=2, total=3
+        )
+
+        expected = {
+            (("state", "used"),): 1,
+            (("state", "free"),): 2,
+        }
+        self._test_metrics("system.swap.usage", expected)
+
+    @mock.patch("psutil.swap_memory")
+    def test_system_swap_utilization(self, mock_swap_memory):
+        SwapMemory = namedtuple(
+            "SwapMemory", ["used", "free", "total"]
+        )
+        mock_swap_memory.return_value = SwapMemory(
+            used=1, free=2, total=3
+        )
+
+        expected = {
+            (("state", "used"),): 1 / 3,
+            (("state", "free"),): 2 / 3,
+        }
+        self._test_metrics("system.swap.utilization", expected)
