@@ -107,10 +107,12 @@ class TestSystemMetrics(TestBase):
 
     @mock.patch("psutil.cpu_times_percent")
     def test_system_cpu_utilization(self, mock_cpu_times_percent):
-        CPUTimes = namedtuple("CPUTimes", ["idle", "user", "system", "irq"])
+        CPUTimesPercent = namedtuple(
+            "CPUTimesPercent", ["idle", "user", "system", "irq"]
+        )
         mock_cpu_times_percent.return_value = [
-            CPUTimes(idle=1.2, user=3.4, system=5.6, irq=7.8),
-            CPUTimes(idle=1.2, user=3.4, system=5.6, irq=7.8),
+            CPUTimesPercent(idle=1.2, user=3.4, system=5.6, irq=7.8),
+            CPUTimesPercent(idle=1.2, user=3.4, system=5.6, irq=7.8),
         ]
 
         expected = {
@@ -125,22 +127,34 @@ class TestSystemMetrics(TestBase):
         }
         self._test_metrics("system.cpu.utilization", expected)
 
-    @mock.patch("psutil.cpu_times_percent")
-    def test_system_cpu_utilization(self, mock_cpu_times_percent):
-        CPUTimes = namedtuple("CPUTimes", ["idle", "user", "system", "irq"])
-        mock_cpu_times_percent.return_value = [
-            CPUTimes(idle=1.2, user=3.4, system=5.6, irq=7.8),
-            CPUTimes(idle=1.2, user=3.4, system=5.6, irq=7.8),
-        ]
+    @mock.patch("psutil.virtual_memory")
+    def test_system_memory_usage(self, mock_virtual_memory):
+        VirtualMemory = namedtuple(
+            "VirtualMemory", ["used", "free", "cached", "total"]
+        )
+        mock_virtual_memory.return_value = VirtualMemory(
+            used=1, free=2, cached=3, total=4
+        )
 
         expected = {
-            (("cpu", 1), ("state", "idle"),): 1.2 / 100,
-            (("cpu", 1), ("state", "user"),): 3.4 / 100,
-            (("cpu", 1), ("state", "system"),): 5.6 / 100,
-            (("cpu", 1), ("state", "irq"),): 7.8 / 100,
-            (("cpu", 2), ("state", "idle"),): 1.2 / 100,
-            (("cpu", 2), ("state", "user"),): 3.4 / 100,
-            (("cpu", 2), ("state", "system"),): 5.6 / 100,
-            (("cpu", 2), ("state", "irq"),): 7.8 / 100,
+            (("state", "used"),): 1,
+            (("state", "free"),): 2,
+            (("state", "cached"),): 3,
         }
-        self._test_metrics("system.cpu.utilization", expected)
+        self._test_metrics("system.memory.usage", expected)
+
+    @mock.patch("psutil.virtual_memory")
+    def test_system_memory_utilization(self, mock_virtual_memory):
+        VirtualMemory = namedtuple(
+            "VirtualMemory", ["used", "free", "cached", "total"]
+        )
+        mock_virtual_memory.return_value = VirtualMemory(
+            used=1, free=2, cached=3, total=4
+        )
+
+        expected = {
+            (("state", "used"),): 1 / 4,
+            (("state", "free"),): 2 / 4,
+            (("state", "cached"),): 3 / 4,
+        }
+        self._test_metrics("system.memory.utilization", expected)
