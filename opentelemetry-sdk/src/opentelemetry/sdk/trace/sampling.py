@@ -119,7 +119,7 @@ class Sampler(abc.ABC):
         parent_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
-        attributes: Optional[Attributes] = None,
+        attributes: Attributes = None,
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
         pass
@@ -140,7 +140,7 @@ class StaticSampler(Sampler):
         parent_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
-        attributes: Optional[Attributes] = None,
+        attributes: Attributes = None,
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
         if self._decision == Decision.NOT_RECORD:
@@ -194,7 +194,7 @@ class ProbabilitySampler(Sampler):
         parent_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
-        attributes: Optional[Attributes] = None,  # TODO
+        attributes: Attributes = None,  # TODO
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
         decision = Decision.NOT_RECORD
@@ -226,7 +226,7 @@ class ParentOrElse(Sampler):
         parent_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
-        attributes: Optional[Attributes] = None,  # TODO
+        attributes: Attributes = None,  # TODO
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
         if parent_context is not None:

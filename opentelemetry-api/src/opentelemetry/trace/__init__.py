@@ -251,7 +251,7 @@ class Tracer(abc.ABC):
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
         set_status_on_exception: bool = True,
@@ -303,7 +303,7 @@ class Tracer(abc.ABC):
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
@@ -379,7 +379,7 @@ class DefaultTracer(Tracer):
         name: str,
         parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
         set_status_on_exception: bool = True,
@@ -393,7 +393,7 @@ class DefaultTracer(Tracer):
         name: str,
         parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use

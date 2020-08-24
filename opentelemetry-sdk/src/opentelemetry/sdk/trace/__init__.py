@@ -746,7 +746,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(name, parent, kind, attributes, links)
@@ -757,7 +757,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
