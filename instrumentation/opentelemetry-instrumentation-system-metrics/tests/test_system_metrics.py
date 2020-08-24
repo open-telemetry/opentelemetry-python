@@ -458,3 +458,48 @@ class TestSystemMetrics(TestBase):
             (("device", "eth1"), ("direction", "transmit"),): 11,
         }
         self._test_metrics("system.network.packets", expected)
+
+    @mock.patch("psutil.net_io_counters")
+    def test_system_network_errors(self, mock_disk_io_counters):
+        NetIO = namedtuple(
+            "NetIO", [
+                "dropin",
+                "dropout",
+                "packets_sent",
+                "packets_recv",
+                "errin",
+                "errout",
+                "bytes_sent",
+                "bytes_recv",
+            ]
+        )
+        mock_disk_io_counters.return_value = {
+            "eth0": NetIO(
+                dropin=1,
+                dropout=2,
+                packets_sent=3,
+                packets_recv=4,
+                errin=5,
+                errout=6,
+                bytes_sent=7,
+                bytes_recv=8,
+            ),
+            "eth1": NetIO(
+                dropin=9,
+                dropout=10,
+                packets_sent=11,
+                packets_recv=12,
+                errin=13,
+                errout=14,
+                bytes_sent=15,
+                bytes_recv=16,
+            ),
+        }
+
+        expected = {
+            (("device", "eth0"), ("direction", "receive"),): 5,
+            (("device", "eth0"), ("direction", "transmit"),): 6,
+            (("device", "eth1"), ("direction", "receive"),): 13,
+            (("device", "eth1"), ("direction", "transmit"),): 14,
+        }
+        self._test_metrics("system.network.errors", expected)
