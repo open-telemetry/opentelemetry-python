@@ -188,3 +188,48 @@ class TestSystemMetrics(TestBase):
             (("state", "free"),): 2 / 3,
         }
         self._test_metrics("system.swap.utilization", expected)
+
+    @mock.patch("psutil.disk_io_counters")
+    def test_system_disk_io(self, mock_disk_io_counters):
+        DiskIO = namedtuple(
+            "DiskIO", [
+                "read_count",
+                "write_count",
+                "read_bytes",
+                "write_bytes",
+                "read_time",
+                "write_time",
+                "read_merged_count",
+                "write_merged_count",
+            ]
+        )
+        mock_disk_io_counters.return_value = {
+            "sda": DiskIO(
+                read_count=1,
+                write_count=2,
+                read_bytes=3,
+                write_bytes=4,
+                read_time=5,
+                write_time=6,
+                read_merged_count=7,
+                write_merged_count=8,
+            ),
+            "sdb": DiskIO(
+                read_count=9,
+                write_count=10,
+                read_bytes=11,
+                write_bytes=12,
+                read_time=13,
+                write_time=14,
+                read_merged_count=15,
+                write_merged_count=16,
+            ),
+        }
+
+        expected = {
+            (("device", "sda"), ("direction", "read"),): 3,
+            (("device", "sda"), ("direction", "write"),): 4,
+            (("device", "sdb"), ("direction", "read"),): 11,
+            (("device", "sdb"), ("direction", "write"),): 12,
+        }
+        self._test_metrics("system.disk.io", expected)
