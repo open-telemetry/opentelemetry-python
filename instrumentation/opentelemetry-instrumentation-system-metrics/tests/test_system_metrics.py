@@ -161,12 +161,8 @@ class TestSystemMetrics(TestBase):
 
     @mock.patch("psutil.swap_memory")
     def test_system_swap_usage(self, mock_swap_memory):
-        SwapMemory = namedtuple(
-            "SwapMemory", ["used", "free", "total"]
-        )
-        mock_swap_memory.return_value = SwapMemory(
-            used=1, free=2, total=3
-        )
+        SwapMemory = namedtuple("SwapMemory", ["used", "free", "total"])
+        mock_swap_memory.return_value = SwapMemory(used=1, free=2, total=3)
 
         expected = {
             (("state", "used"),): 1,
@@ -176,12 +172,8 @@ class TestSystemMetrics(TestBase):
 
     @mock.patch("psutil.swap_memory")
     def test_system_swap_utilization(self, mock_swap_memory):
-        SwapMemory = namedtuple(
-            "SwapMemory", ["used", "free", "total"]
-        )
-        mock_swap_memory.return_value = SwapMemory(
-            used=1, free=2, total=3
-        )
+        SwapMemory = namedtuple("SwapMemory", ["used", "free", "total"])
+        mock_swap_memory.return_value = SwapMemory(used=1, free=2, total=3)
 
         expected = {
             (("state", "used"),): 1 / 3,
@@ -192,7 +184,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.disk_io_counters")
     def test_system_disk_io(self, mock_disk_io_counters):
         DiskIO = namedtuple(
-            "DiskIO", [
+            "DiskIO",
+            [
                 "read_count",
                 "write_count",
                 "read_bytes",
@@ -201,7 +194,7 @@ class TestSystemMetrics(TestBase):
                 "write_time",
                 "read_merged_count",
                 "write_merged_count",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "sda": DiskIO(
@@ -237,7 +230,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.disk_io_counters")
     def test_system_disk_operations(self, mock_disk_io_counters):
         DiskIO = namedtuple(
-            "DiskIO", [
+            "DiskIO",
+            [
                 "read_count",
                 "write_count",
                 "read_bytes",
@@ -246,7 +240,7 @@ class TestSystemMetrics(TestBase):
                 "write_time",
                 "read_merged_count",
                 "write_merged_count",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "sda": DiskIO(
@@ -282,7 +276,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.disk_io_counters")
     def test_system_disk_time(self, mock_disk_io_counters):
         DiskIO = namedtuple(
-            "DiskIO", [
+            "DiskIO",
+            [
                 "read_count",
                 "write_count",
                 "read_bytes",
@@ -291,7 +286,7 @@ class TestSystemMetrics(TestBase):
                 "write_time",
                 "read_merged_count",
                 "write_merged_count",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "sda": DiskIO(
@@ -327,7 +322,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.disk_io_counters")
     def test_system_disk_merged(self, mock_disk_io_counters):
         DiskIO = namedtuple(
-            "DiskIO", [
+            "DiskIO",
+            [
                 "read_count",
                 "write_count",
                 "read_bytes",
@@ -336,7 +332,7 @@ class TestSystemMetrics(TestBase):
                 "write_time",
                 "read_merged_count",
                 "write_merged_count",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "sda": DiskIO(
@@ -372,7 +368,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.net_io_counters")
     def test_system_network_dropped_packets(self, mock_disk_io_counters):
         NetIO = namedtuple(
-            "NetIO", [
+            "NetIO",
+            [
                 "dropin",
                 "dropout",
                 "packets_sent",
@@ -381,7 +378,7 @@ class TestSystemMetrics(TestBase):
                 "errout",
                 "bytes_sent",
                 "bytes_recv",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "eth0": NetIO(
@@ -417,7 +414,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.net_io_counters")
     def test_system_network_packets(self, mock_disk_io_counters):
         NetIO = namedtuple(
-            "NetIO", [
+            "NetIO",
+            [
                 "dropin",
                 "dropout",
                 "packets_sent",
@@ -426,7 +424,7 @@ class TestSystemMetrics(TestBase):
                 "errout",
                 "bytes_sent",
                 "bytes_recv",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "eth0": NetIO(
@@ -462,7 +460,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.net_io_counters")
     def test_system_network_errors(self, mock_disk_io_counters):
         NetIO = namedtuple(
-            "NetIO", [
+            "NetIO",
+            [
                 "dropin",
                 "dropout",
                 "packets_sent",
@@ -471,7 +470,7 @@ class TestSystemMetrics(TestBase):
                 "errout",
                 "bytes_sent",
                 "bytes_recv",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "eth0": NetIO(
@@ -507,7 +506,8 @@ class TestSystemMetrics(TestBase):
     @mock.patch("psutil.net_io_counters")
     def test_system_network_io(self, mock_disk_io_counters):
         NetIO = namedtuple(
-            "NetIO", [
+            "NetIO",
+            [
                 "dropin",
                 "dropout",
                 "packets_sent",
@@ -516,7 +516,7 @@ class TestSystemMetrics(TestBase):
                 "errout",
                 "bytes_sent",
                 "bytes_recv",
-            ]
+            ],
         )
         mock_disk_io_counters.return_value = {
             "eth0": NetIO(

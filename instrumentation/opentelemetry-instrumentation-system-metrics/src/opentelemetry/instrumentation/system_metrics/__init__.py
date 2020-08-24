@@ -61,18 +61,19 @@ import typing
 import psutil
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import UpDownSumObserver, SumObserver
+from opentelemetry.sdk.metrics import SumObserver, UpDownSumObserver
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 
 class SystemMetrics:
+    # pylint: disable=too-many-statements
     def __init__(
         self,
         exporter: MetricsExporter,
         interval: int = 30,
-        labels: typing.Optional[typing.Dict[str, str]]=None,
-        config: typing.Optional[typing.Dict[str, typing.List[str]]]=None,
+        labels: typing.Optional[typing.Dict[str, str]] = None,
+        config: typing.Optional[typing.Dict[str, typing.List[str]]] = None,
     ):
         self._labels = {} if labels is None else labels
         self.meter = metrics.get_meter(__name__)
@@ -83,29 +84,23 @@ class SystemMetrics:
             self._config = {
                 "system_cpu_time": ["idle", "user", "system", "irq"],
                 "system_cpu_utilization": ["idle", "user", "system", "irq"],
-
                 "system_memory_usage": ["used", "free", "cached"],
                 "system_memory_utilization": ["used", "free", "cached"],
-
                 "system_swap_usage": ["used", "free"],
                 "system_swap_utilization": ["used", "free"],
                 # system_swap_page_faults: [],
                 # system_swap_page_operations: [],
-
                 "system_disk_io": ["read", "write"],
                 "system_disk_operations": ["read", "write"],
                 "system_disk_time": ["read", "write"],
                 "system_disk_merged": ["read", "write"],
-
                 # "system_filesystem_usage": [],
                 # "system_filesystem_utilization": [],
-
                 "system_network_dropped_packets": ["transmit", "receive"],
                 "system_network_packets": ["transmit", "receive"],
                 "system_network_errors": ["transmit", "receive"],
                 "system_network_io": ["trasmit", "receive"],
                 "system_network_connections": ["family", "type"],
-
                 "runtime_cpython_memory": ["rss", "vms"],
                 "runtime_cpython_cpu_time": ["user", "system"],
             }
@@ -399,7 +394,7 @@ class SystemMetrics:
                 self._system_cpu_utilization_labels["cpu"] = cpu + 1
                 observer.observe(
                     getattr(times_percent, metric) / 100,
-                    self._system_cpu_utilization_labels
+                    self._system_cpu_utilization_labels,
                 )
 
     def _get_system_memory_usage(
@@ -415,7 +410,7 @@ class SystemMetrics:
             self._system_memory_usage_labels["state"] = metric
             observer.observe(
                 getattr(virtual_memory, metric),
-                self._system_memory_usage_labels
+                self._system_memory_usage_labels,
             )
 
     def _get_system_memory_utilization(
@@ -431,15 +426,11 @@ class SystemMetrics:
         for metric in self._config["system_memory_utilization"]:
             self._system_memory_utilization_labels["state"] = metric
             observer.observe(
-                getattr(
-                    system_memory, metric
-                ) / system_memory.total,
-                self._system_memory_utilization_labels
+                getattr(system_memory, metric) / system_memory.total,
+                self._system_memory_utilization_labels,
             )
 
-    def _get_system_swap_usage(
-        self, observer: metrics.ValueObserver
-    ) -> None:
+    def _get_system_swap_usage(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for swap usage
 
         Args:
@@ -467,7 +458,7 @@ class SystemMetrics:
             self._system_swap_utilization_labels["state"] = metric
             observer.observe(
                 getattr(system_swap, metric) / system_swap.total,
-                self._system_swap_utilization_labels
+                self._system_swap_utilization_labels,
             )
 
     # TODO Add _get_system_swap_page_faults
@@ -485,7 +476,7 @@ class SystemMetrics:
                 self._system_disk_io_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "{}_bytes".format(metric)),
-                    self._system_disk_io_labels
+                    self._system_disk_io_labels,
                 )
 
     def _get_system_disk_operations(
@@ -502,12 +493,10 @@ class SystemMetrics:
                 self._system_disk_operations_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "{}_count".format(metric)),
-                    self._system_disk_operations_labels
+                    self._system_disk_operations_labels,
                 )
 
-    def _get_system_disk_time(
-        self, observer: metrics.SumObserver
-    ) -> None:
+    def _get_system_disk_time(self, observer: metrics.SumObserver) -> None:
         """Observer callback for disk time
 
         Args:
@@ -519,12 +508,10 @@ class SystemMetrics:
                 self._system_disk_time_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "{}_time".format(metric)) / 1000,
-                    self._system_disk_time_labels
+                    self._system_disk_time_labels,
                 )
 
-    def _get_system_disk_merged(
-        self, observer: metrics.SumObserver
-    ) -> None:
+    def _get_system_disk_merged(self, observer: metrics.SumObserver) -> None:
         """Observer callback for disk merged operations
 
         Args:
@@ -540,7 +527,7 @@ class SystemMetrics:
                 self._system_disk_merged_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "{}_merged_count".format(metric)),
-                    self._system_disk_merged_labels
+                    self._system_disk_merged_labels,
                 )
 
     # TODO Add _get_system_filesystem_usage
@@ -561,10 +548,12 @@ class SystemMetrics:
             for metric in self._config["system_network_dropped_packets"]:
                 in_out = {"receive": "in", "transmit": "out"}[metric]
                 self._system_network_dropped_packets_labels["device"] = device
-                self._system_network_dropped_packets_labels["direction"] = metric
+                self._system_network_dropped_packets_labels[
+                    "direction"
+                ] = metric
                 observer.observe(
                     getattr(counters, "drop{}".format(in_out)),
-                    self._system_network_dropped_packets_labels
+                    self._system_network_dropped_packets_labels,
                 )
 
     def _get_system_network_packets(
@@ -583,7 +572,7 @@ class SystemMetrics:
                 self._system_network_packets_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "packets_{}".format(recv_sent)),
-                    self._system_network_packets_labels
+                    self._system_network_packets_labels,
                 )
 
     def _get_system_network_errors(
@@ -601,12 +590,10 @@ class SystemMetrics:
                 self._system_network_errors_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "err{}".format(in_out)),
-                    self._system_network_errors_labels
+                    self._system_network_errors_labels,
                 )
 
-    def _get_system_network_io(
-        self, observer: metrics.SumObserver
-    ) -> None:
+    def _get_system_network_io(self, observer: metrics.SumObserver) -> None:
         """Observer callback for network IO
 
         Args:
@@ -620,7 +607,7 @@ class SystemMetrics:
                 self._system_network_io_labels["direction"] = metric
                 observer.observe(
                     getattr(counters, "bytes_{}".format(recv_sent)),
-                    self._system_network_io_labels
+                    self._system_network_io_labels,
                 )
 
     def _get_system_network_connections(
@@ -636,14 +623,15 @@ class SystemMetrics:
         for net_connection in psutil.net_connections():
             for metric in self._config["system_network_connections"]:
                 self._system_network_connections_labels["protocol"] = {
-                    1: "tcp", 2: "udp"
+                    1: "tcp",
+                    2: "udp",
                 }[net_connection.type.value]
                 self._system_network_connections_labels[
                     "state"
                 ] = net_connection.status
                 observer.observe(
                     getattr(net_connection, metric),
-                    self._system_network_connections_labels
+                    self._system_network_connections_labels,
                 )
 
     def _get_runtime_cpython_memory(
@@ -659,7 +647,7 @@ class SystemMetrics:
             self._runtime_cpython_memory_labels["type"] = metric
             observer.observe(
                 getattr(proc_memory, metric),
-                self._runtime_cpython_memory_labels
+                self._runtime_cpython_memory_labels,
             )
 
     def _get_runtime_cpython_cpu_time(
@@ -675,7 +663,7 @@ class SystemMetrics:
             self._runtime_cpython_cpu_time_labels["type"] = metric
             observer.observe(
                 getattr(proc_cpu, metric),
-                self._runtime_cpython_cpu_time_labels
+                self._runtime_cpython_cpu_time_labels,
             )
 
     def _get_runtime_cpython_gc_count(
