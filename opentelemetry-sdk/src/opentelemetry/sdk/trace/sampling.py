@@ -61,6 +61,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
         ...
 """
 import abc
+import enum
 from typing import Dict, Mapping, Optional, Sequence
 
 # pylint: disable=unused-import
@@ -68,7 +69,7 @@ from opentelemetry.trace import Link, SpanContext
 from opentelemetry.util.types import Attributes, AttributeValue
 
 
-class Decision:
+class Decision(enum.Enum):
     # IsRecording() == false, span will not be recorded and all events and attributes will be dropped.
     NOT_RECORD = 0
     # IsRecording() == true, but Sampled flag MUST NOT be set.
@@ -82,7 +83,7 @@ def is_recording(decision: Decision):
 
 
 def is_sampled(decision: Decision):
-    return decision == Decision.RECORD_AND_SAMPLED
+    return decision is Decision.RECORD_AND_SAMPLED
 
 
 class SamplingResult:
@@ -143,12 +144,12 @@ class StaticSampler(Sampler):
         attributes: Attributes = None,
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
-        if self._decision == Decision.NOT_RECORD:
+        if self._decision is Decision.NOT_RECORD:
             return SamplingResult(self._decision)
         return SamplingResult(self._decision, attributes)
 
     def get_description(self) -> str:
-        if self._decision == Decision.NOT_RECORD:
+        if self._decision is Decision.NOT_RECORD:
             return "AlwaysOffSampler"
         return "AlwaysOnSampler"
 
@@ -200,7 +201,7 @@ class ProbabilitySampler(Sampler):
         decision = Decision.NOT_RECORD
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
             decision = Decision.RECORD_AND_SAMPLED
-        if decision == Decision.NOT_RECORD:
+        if decision is Decision.NOT_RECORD:
             return SamplingResult(decision)
         return SamplingResult(decision, attributes)
 
