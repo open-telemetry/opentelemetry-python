@@ -5,7 +5,7 @@
 - Moved samplers from API to SDK
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
 - Change is_recording_events to is_recording
-  ([#1024](https://github.com/open-telemetry/opentelemetry-python/pull/1024))
+  ([#1034](https://github.com/open-telemetry/opentelemetry-python/pull/1034))
 
 ## Version 0.12b0
 
