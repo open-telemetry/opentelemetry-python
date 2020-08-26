@@ -16,12 +16,22 @@ import abc
 import concurrent.futures
 import logging
 import os
+import pkg_resources
 import typing
 from json import dumps
 
 LabelValue = typing.Union[str, bool, int, float]
 Labels = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
+
+
+TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
+TELEMETRY_SDK_NAME = "telemetry.sdk.name"
+TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
+
+OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
+    "opentelemetry-sdk"
+).version
 
 
 class Resource:
@@ -31,8 +41,8 @@ class Resource:
     @staticmethod
     def create(labels: Labels) -> "Resource":
         if not labels:
-            return _EMPTY_RESOURCE
-        return Resource(labels)
+            return _DEFAULT_RESOURCE
+        return _DEFAULT_RESOURCE.merge(Resource(labels))
 
     @staticmethod
     def create_empty() -> "Resource":
@@ -60,6 +70,13 @@ class Resource:
 
 
 _EMPTY_RESOURCE = Resource({})
+_DEFAULT_RESOURCE = Resource(
+    {
+        TELEMETRY_SDK_NAME: "opentelemetry",
+        TELEMETRY_SDK_LANGUAGE: "python",
+        TELEMETRY_SDK_VERSION: OPENTELEMETRY_SDK_VERSION,
+    }
+)
 
 
 class ResourceDetector(abc.ABC):

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pkg_resources
 import shutil
 import subprocess
 import unittest
@@ -24,6 +25,11 @@ from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
+
+
+OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
+    "opentelemetry-sdk"
+).version
 
 
 def new_tracer() -> trace_api.Tracer:
@@ -384,7 +390,7 @@ class TestSpanCreation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
         # pylint: disable=protected-access
-        self.assertIs(span.resource, resources._EMPTY_RESOURCE)
+        self.assertIs(span.resource, resources._DEFAULT_RESOURCE)
 
     def test_span_context_remote_flag(self):
         tracer = new_tracer()
@@ -924,24 +930,33 @@ class TestSpanProcessor(unittest.TestCase):
 
         self.assertEqual(
             span.to_json(),
-            """{
+            """{{
     "name": "span-name",
-    "context": {
+    "context": {{
         "trace_id": "0x000000000000000000000000deadbeef",
         "span_id": "0x00000000deadbef0",
-        "trace_state": "{}"
-    },
+        "trace_state": "{{}}"
+    }},
     "kind": "SpanKind.INTERNAL",
     "parent_id": null,
     "start_time": null,
     "end_time": null,
-    "attributes": {},
+    "attributes": {{}},
     "events": [],
     "links": [],
-    "resource": {}
-}""",
+    "resource": {{
+        "telemetry.sdk.name": "opentelemetry",
+        "telemetry.sdk.language": "python",
+        "telemetry.sdk.version": "{version}"
+    }}
+}}""".format(
+                version=OPENTELEMETRY_SDK_VERSION
+            ),
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{{"name": "span-name", "context": {{"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{{}}"}}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {{}}, "events": [], "links": [], "resource": {{"telemetry.sdk.name": "opentelemetry", "telemetry.sdk.language": "python", "telemetry.sdk.version": "{version}"}}}}'.format(
+                version=OPENTELEMETRY_SDK_VERSION
+            ),
         )
+
