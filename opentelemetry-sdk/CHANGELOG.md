@@ -4,6 +4,8 @@
 
 - Moved samplers from API to SDK
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
+- Remove lazy Event and Link API from Span interface
+  ([]())
 
 ## Version 0.12b0
 

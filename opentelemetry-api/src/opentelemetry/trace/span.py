@@ -52,19 +52,6 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_lazy_event(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
-        timestamp: typing.Optional[int] = None,
-    ) -> None:
-        """Adds an `Event`.
-        Adds a single `Event` with the name, an event formatter that calculates
-        the attributes lazily and, optionally, a timestamp. Implementations
-        should generate a timestamp if the `timestamp` argument is omitted.
-        """
-
-    @abc.abstractmethod
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
@@ -239,14 +226,6 @@ class DefaultSpan(Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
-    ) -> None:
-        pass
-
-    def add_lazy_event(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
         timestamp: typing.Optional[int] = None,
     ) -> None:
         pass
