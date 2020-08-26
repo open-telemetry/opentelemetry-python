@@ -30,6 +30,12 @@ class Span(abc.ABC):
             A :class:`opentelemetry.trace.SpanContext` with a copy of this span's immutable state.
         """
 
+    @property
+    def attribute(self):
+        """
+        Sets a property value attribute such that it can be read by getter
+        """
+
     @abc.abstractmethod
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
@@ -38,7 +44,8 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_attribute(self, key: str) -> types.AttributeValue:
+    @attribute.getter
+    def attribute(self, key: str) -> types.AttributeValue:
         """Get attribute.
 
         Gets a single Attribute given a key and returns the attributes value
@@ -240,7 +247,13 @@ class DefaultSpan(Span):
     def end(self, end_time: typing.Optional[int] = None) -> None:
         pass
 
-    def get_attribute(self, key: str) -> types.AttributeValue:
+    @property
+    def attribute(self):
+        pass
+
+    @property
+    @attribute.getter
+    def attribute(self, key: str) -> types.AttributeValue:
         pass
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
