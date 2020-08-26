@@ -572,7 +572,6 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
-    @property
     @attribute.getter
     def attribute(self, key: str) -> types.AttributeValue:
         if key is None:

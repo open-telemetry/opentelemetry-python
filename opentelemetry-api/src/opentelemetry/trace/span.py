@@ -43,7 +43,6 @@ class Span(abc.ABC):
         Sets a single Attribute with the key and value passed as arguments.
         """
 
-    @abc.abstractmethod
     @attribute.getter
     def attribute(self, key: str) -> types.AttributeValue:
         """Get attribute.
@@ -251,7 +250,6 @@ class DefaultSpan(Span):
     def attribute(self):
         pass
 
-    @property
     @attribute.getter
     def attribute(self, key: str) -> types.AttributeValue:
         pass
