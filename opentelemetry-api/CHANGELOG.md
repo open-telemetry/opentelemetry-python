@@ -2,8 +2,24 @@
 
 ## Unreleased
 
+- Moved samplers from API to SDK
+  ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
+
+## Version 0.12b0
+
+Released 2020-08-14
+
+- Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL`
+  ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
+- Stop TracerProvider and MeterProvider from being overridden
+  ([#959](https://github.com/open-telemetry/opentelemetry-python/pull/959))
+
+## Version 0.11b0
+
 - Return INVALID_SPAN if no TracerProvider set for get_current_span
   ([#751](https://github.com/open-telemetry/opentelemetry-python/pull/751))
+- Rename record_error to record_exception
+  ([#927](https://github.com/open-telemetry/opentelemetry-python/pull/927))
 
 ## 0.9b0
 

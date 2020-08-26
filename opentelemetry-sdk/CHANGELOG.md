@@ -2,8 +2,28 @@
 
 ## Unreleased
 
+- Moved samplers from API to SDK
+  ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
+
+## Version 0.12b0
+
+Released 2020-08-14
+
+- Changed default Sampler to `ParentOrElse(AlwaysOn)`
+  ([#960](https://github.com/open-telemetry/opentelemetry-python/pull/960))
+- Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL`
+  ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
+- Implement Views in metrics SDK
+  ([#596](https://github.com/open-telemetry/opentelemetry-python/pull/596))
+- Update environment variable OTEL_RESOURCE to OTEL_RESOURCE_ATTRIBUTES as per
+  the specification
+
+## Version 0.11b0
+
 - Add support for resources and resource detector
   ([#853](https://github.com/open-telemetry/opentelemetry-python/pull/853))
+- Rename record_error to record_exception
+  ([#927](https://github.com/open-telemetry/opentelemetry-python/pull/927))
 
 ## Version 0.10b0
 

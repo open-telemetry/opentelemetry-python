@@ -24,8 +24,8 @@ import flask
 import requests
 
 from opentelemetry import trace
-from opentelemetry.ext.requests import RequestsInstrumentor
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,

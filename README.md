@@ -63,12 +63,19 @@ pip install opentelemetry-sdk
 ```
 
 The
-[`ext/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/ext)
-directory includes OpenTelemetry integration packages, which can be installed
-separately as:
+[`instrumentation/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/instrumentation)
+directory includes OpenTelemetry instrumentation packages, which can be installed separately as:
 
 ```sh
-pip install opentelemetry-ext-{integration}
+pip install opentelemetry-instrumentation-{instrumentation}
+```
+
+The
+[`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/exporter)
+directory includes OpenTelemetry exporter packages, which can be installed separately as:
+
+```sh
+pip install opentelemetry-exporter-{exporter}
 ```
 
 To install the development versions of these packages instead, clone or fork
@@ -78,7 +85,7 @@ install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
 ```sh
 pip install -e ./opentelemetry-api
 pip install -e ./opentelemetry-sdk
-pip install -e ./ext/opentelemetry-ext-{integration}
+pip install -e ./ext/opentelemetry-instrumentation-{instrumentation}
 ```
 
 ## Documentation
@@ -95,7 +102,7 @@ See the [OpenTelemetry registry](https://opentelemetry.io/registry/?s=python) fo
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-We meet weekly on Thursday, and the time of the meeting alternates between 9AM PT and 4PM PT. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
+We meet weekly on Thursday at 9AM PT. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
 
 Meetings take place via [Zoom video conference](https://zoom.us/j/6729396170).
 
@@ -103,12 +110,12 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
+- [Aaron Abbott](https://github.com/aabmass), Google
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
 - [Tahir H. Butt](https://github.com/majorgreys) DataDog
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Diego Hurtado](https://github.com/ocelotl)
 - [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
-- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Reiley Yang](https://github.com/reyang), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 

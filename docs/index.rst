@@ -26,9 +26,11 @@ The API and SDK packages are available on PyPI, and can installed via pip:
 
 In addition, there are several extension packages which can be installed separately as::
 
-    pip install opentelemetry-ext-{integration}
+    pip install opentelemetry-exporter-{exporter}
+    pip install opentelemetry-instrumentation-{instrumentation}
 
-The extension packages can be found in :scm_web:`ext/ directory of the repository <ext/>`.
+These are for exporter and instrumentation packages respectively.
+The packages can be found in :scm_web:`instrumentation/ directory of the repository <ext/>`.
 
 Extensions
 ----------
@@ -51,7 +53,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     cd opentelemetry-python
     pip install -e ./opentelemetry-api
     pip install -e ./opentelemetry-sdk
-    pip install -e ./ext/opentelemetry-ext-{integration}
+    pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 
 
 .. toctree::
@@ -72,11 +74,19 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
 .. toctree::
     :maxdepth: 2
-    :caption: OpenTelemetry Integrations
-    :name: integrations
+    :caption: OpenTelemetry Exporters
+    :name: exporters
     :glob:
 
-    ext/**
+    exporter/**
+
+.. toctree::
+    :maxdepth: 2
+    :caption: OpenTelemetry Instrumentations
+    :name: Instrumentations
+    :glob:
+
+    instrumentation/**
 
 .. toctree::
     :maxdepth: 1

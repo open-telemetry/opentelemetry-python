@@ -96,8 +96,8 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def record_error(self, err: Exception) -> None:
-        """Records an error as a span event."""
+    def record_exception(self, exception: Exception) -> None:
+        """Records an exception as a span event."""
 
     def __enter__(self) -> "Span":
         """Invoked when `Span` is used as a context manager.
@@ -268,7 +268,7 @@ class DefaultSpan(Span):
     def set_status(self, status: Status) -> None:
         pass
 
-    def record_error(self, err: Exception) -> None:
+    def record_exception(self, exception: Exception) -> None:
         pass
 
 
