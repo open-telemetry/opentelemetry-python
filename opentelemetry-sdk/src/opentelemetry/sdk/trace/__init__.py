@@ -542,6 +542,10 @@ class Span(trace_api.Span):
     def get_context(self):
         return self.context
 
+    @property
+    def attribute(self):
+        return self.attribute
+
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
             if not self.is_recording_events():
@@ -568,7 +572,9 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
-    def get_attribute(self, key: str) -> types.AttributeValue:
+    @property
+    @attribute.getter
+    def attribute(self, key: str) -> types.AttributeValue:
         if key is None:
             logger.warning("invalid key (empty or null)")
             return None
@@ -579,8 +585,6 @@ class Span(trace_api.Span):
                 return None
 
             return self.attributes[key]
-
-
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
