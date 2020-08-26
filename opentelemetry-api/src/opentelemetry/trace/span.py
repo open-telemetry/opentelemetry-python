@@ -31,7 +31,7 @@ class Span(abc.ABC):
         """
 
     @property
-    def attribute(self):
+    def attribute(self) -> types.AttributeValue:
         """
         Sets a property value attribute such that it can be read by getter
         """
@@ -44,6 +44,7 @@ class Span(abc.ABC):
         """
 
     @attribute.getter
+    @abc.abstractmethod
     def attribute(self, key: str) -> types.AttributeValue:
         """Get attribute.
 
@@ -247,11 +248,13 @@ class DefaultSpan(Span):
         pass
 
     @property
-    def attribute(self):
+    def attribute(self) -> types.AttributeValue:
         pass
 
     @attribute.getter
-    def attribute(self, key: str) -> types.AttributeValue:
+    def attribute(  # pylint: disable=invalid-overridden-method, arguments-differ
+        self, key: str
+    ) -> types.AttributeValue:
         pass
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:

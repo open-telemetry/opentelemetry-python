@@ -543,7 +543,7 @@ class Span(trace_api.Span):
         return self.context
 
     @property
-    def attribute(self):
+    def attribute(self) -> types.AttributeValue:
         return self.attribute
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -573,7 +573,9 @@ class Span(trace_api.Span):
                 self.attributes[key] = value
 
     @attribute.getter
-    def attribute(self, key: str) -> types.AttributeValue:
+    def attribute(  # pylint: disable=invalid-overridden-method, arguments-differ
+        self, key: str
+    ) -> types.AttributeValue:
         if key is None:
             logger.warning("invalid key (empty or null)")
             return None
