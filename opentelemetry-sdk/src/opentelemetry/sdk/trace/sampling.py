@@ -106,7 +106,7 @@ class SamplingResult:
         self.decision = decision
         # TODO: attributes must be immutable
         if attributes is None:
-            self.attributes = {}  # type: Mapping[str, "AttributeValue"]
+            self.attributes = {}
         else:
             self.attributes = attributes
 
