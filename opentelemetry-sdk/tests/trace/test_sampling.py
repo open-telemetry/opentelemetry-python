@@ -16,7 +16,7 @@ import sys
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.trace import sampling
+from opentelemetry.sdk.trace import sampling
 
 TO_DEFAULT = trace.TraceFlags(trace.TraceFlags.DEFAULT)
 TO_SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
