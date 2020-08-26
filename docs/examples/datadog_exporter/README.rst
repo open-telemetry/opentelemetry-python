@@ -13,7 +13,7 @@ Basic Example
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-ext-datadog
+    pip install opentelemetry-exporter-datadog
 
 * Start Datadog Agent
 
@@ -48,9 +48,9 @@ Distributed Example
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-ext-datadog
+    pip install opentelemetry-exporter-datadog
     pip install opentelemetry-instrumentation
-    pip install opentelemetry-ext-flask
+    pip install opentelemetry-instrumentation-flask
     pip install flask
     pip install requests
 

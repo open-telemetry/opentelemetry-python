@@ -122,7 +122,7 @@ for Jaeger, but you can install that as a separate package:
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-jaeger
+    pip install opentelemetry-exporter-jaeger
 
 Once installed, update your code to import the Jaeger exporter, and use that instead:
 
@@ -156,8 +156,8 @@ We will now instrument a basic Flask application that uses the requests library 
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-flask
-    pip install opentelemetry-ext-requests
+    pip install opentelemetry-instrumentation-flask
+    pip install opentelemetry-instrumentation-requests
 
 
 And let's write a small Flask application that sends an HTTP request, activating each instrumentation during the initialization:
@@ -172,6 +172,29 @@ Now run the above script, hit the root url (http://localhost:5000/) a few times,
 .. code-block:: sh
 
    python flask_example.py
+
+
+Configure Your HTTP Propagator (b3, CorrelationContext)
+-------------------------------------------------------
+
+A major feature of distributed tracing is the ability to correlate a trace across
+multiple services. However, those services need to propagate information about a
+trace from one service to the other.
+
+To enable this, OpenTelemetry has the concept of `propagators <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md>`_,
+which provide a common method to encode and decode span information from a request and response,
+respectively.
+
+By default, opentelemetry-python is configured to use the `W3C Trace Context <https://www.w3.org/TR/trace-context/>`_
+HTTP headers for HTTP requests. This can be configured to leverage different propagators. Here's
+an example using Zipkin's `b3 propagation <https://github.com/openzipkin/b3-propagation>`_:
+
+.. code-block:: python
+
+    from opentelemetry import propagators
+    from opentelemetry.sdk.trace.propagation.b3_format import B3Format
+
+    propagators.set_global_httptextformat(B3Format())
 
 
 Adding Metrics
@@ -228,7 +251,7 @@ For our Python application, we will need to install an exporter specific to Prom
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-prometheus
+    pip install opentelemetry-exporter-prometheus
 
 
 And use that instead of the `ConsoleMetricsExporter`:
@@ -289,10 +312,10 @@ Install the OpenTelemetry Collector exporter:
 
 .. code-block:: sh
 
-    pip install opentelemetry-ext-otcollector
+    pip install opentelemetry-exporter-otlp
 
 And execute the following script:
 
-.. literalinclude:: getting_started/otcollector_example.py
+.. literalinclude:: getting_started/otlpcollector_example.py
     :language: python
     :lines: 15-

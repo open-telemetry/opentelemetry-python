@@ -74,7 +74,7 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-        env_resources_items = os.environ.get("OTEL_RESOURCE")
+        env_resources_items = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
         env_resource_map = {}
         if env_resources_items:
             env_resource_map = {

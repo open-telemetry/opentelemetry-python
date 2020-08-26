@@ -19,6 +19,7 @@ It shows:
 - How to configure a meter passing a sateful or stateless.
 - How to configure an exporter and how to create a controller.
 - How to create some metrics intruments and how to capture data with them.
+- How to use views to specify aggregation types for each metric instrument.
 """
 import sys
 import time
@@ -57,7 +58,6 @@ requests_counter = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Counter,
-    label_keys=("environment",),
 )
 
 requests_size = meter.create_metric(
@@ -66,7 +66,6 @@ requests_size = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=ValueRecorder,
-    label_keys=("environment",),
 )
 
 # Labels are used to identify key-values that are associated with a specific
@@ -86,4 +85,5 @@ time.sleep(5)
 
 requests_counter.add(35, testing_labels)
 requests_size.record(2, testing_labels)
-time.sleep(5)
+
+input("...\n")

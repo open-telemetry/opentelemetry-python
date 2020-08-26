@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.ext.datadog import (
+from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )

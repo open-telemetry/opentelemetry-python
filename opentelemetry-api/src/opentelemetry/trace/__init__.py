@@ -70,44 +70,13 @@ either implicit or explicit context propagation consistently throughout.
     `set_tracer_provider`.
 """
 
-__all__ = [
-    "DEFAULT_TRACE_OPTIONS",
-    "DEFAULT_TRACE_STATE",
-    "INVALID_SPAN",
-    "INVALID_SPAN_CONTEXT",
-    "INVALID_SPAN_ID",
-    "INVALID_TRACE_ID",
-    "DefaultSpan",
-    "DefaultTracer",
-    "DefaultTracerProvider",
-    "LazyLink",
-    "Link",
-    "LinkBase",
-    "ParentSpan",
-    "Span",
-    "SpanContext",
-    "SpanKind",
-    "TraceFlags",
-    "TraceState",
-    "TracerProvider",
-    "Tracer",
-    "format_span_id",
-    "format_trace_id",
-    "get_current_span",
-    "get_tracer",
-    "get_tracer_provider",
-    "set_tracer_provider",
-    "set_span_in_context",
-]
 
 import abc
 import enum
-import types as python_types
 import typing
 from contextlib import contextmanager
 from logging import getLogger
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -242,7 +211,7 @@ class TracerProvider(abc.ABC):
                 This should *not* be the name of the module that is
                 instrumented but the name of the module doing the instrumentation.
                 E.g., instead of ``"requests"``, use
-                ``"opentelemetry.ext.requests"``.
+                ``"opentelemetry.instrumentation.requests"``.
 
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
@@ -461,11 +430,16 @@ def get_tracer(
 
 
 def set_tracer_provider(tracer_provider: TracerProvider) -> None:
-    """Sets the current global :class:`~.TracerProvider` object."""
+    """Sets the current global :class:`~.TracerProvider` object.
+
+    This can only be done once, a warning will be logged if any furter attempt
+    is made.
+    """
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is not None:
-        logger.warning("Overriding current TracerProvider")
+        logger.warning("Overriding of current TracerProvider is not allowed")
+        return
 
     _TRACER_PROVIDER = tracer_provider
 
@@ -478,3 +452,35 @@ def get_tracer_provider() -> TracerProvider:
         _TRACER_PROVIDER = _load_trace_provider("tracer_provider")
 
     return _TRACER_PROVIDER
+
+
+__all__ = [
+    "DEFAULT_TRACE_OPTIONS",
+    "DEFAULT_TRACE_STATE",
+    "INVALID_SPAN",
+    "INVALID_SPAN_CONTEXT",
+    "INVALID_SPAN_ID",
+    "INVALID_TRACE_ID",
+    "DefaultSpan",
+    "DefaultTracer",
+    "DefaultTracerProvider",
+    "LazyLink",
+    "Link",
+    "LinkBase",
+    "ParentSpan",
+    "Span",
+    "SpanContext",
+    "SpanKind",
+    "TraceFlags",
+    "TraceState",
+    "TracerProvider",
+    "Tracer",
+    "format_span_id",
+    "format_trace_id",
+    "get_current_span",
+    "get_tracer",
+    "get_tracer_provider",
+    "set_tracer_provider",
+    "set_span_in_context",
+    "Status",
+]

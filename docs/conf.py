@@ -30,13 +30,21 @@ source_dirs = [
     os.path.abspath("../opentelemetry-instrumentation/src/"),
 ]
 
-ext = "../ext"
-ext_dirs = [
-    os.path.abspath("/".join(["../ext", f, "src"]))
-    for f in listdir(ext)
-    if isdir(join(ext, f))
+exp = "../exporter"
+exp_dirs = [
+    os.path.abspath("/".join(["../exporter", f, "src"]))
+    for f in listdir(exp)
+    if isdir(join(exp, f))
 ]
-sys.path[:0] = source_dirs + ext_dirs
+
+instr = "../instrumentation"
+instr_dirs = [
+    os.path.abspath("/".join(["../instrumentation", f, "src"]))
+    for f in listdir(instr)
+    if isdir(join(instr, f))
+]
+
+sys.path[:0] = source_dirs + exp_dirs + instr_dirs
 
 # -- Project information -----------------------------------------------------
 
