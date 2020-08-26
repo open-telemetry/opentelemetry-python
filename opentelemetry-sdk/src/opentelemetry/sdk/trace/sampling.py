@@ -66,7 +66,7 @@ from typing import Dict, Mapping, Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.trace import Link, SpanContext
-from opentelemetry.util.types import Attributes, AttributeValue
+from opentelemetry.util.types import Attributes
 
 
 class Decision(enum.Enum):
@@ -103,12 +103,12 @@ class SamplingResult:
     def __init__(
         self,
         decision: Decision,
-        attributes: Optional[Mapping[str, "AttributeValue"]] = None,
+        attributes: Attributes = None,
     ) -> None:
         self.decision = decision
         # TODO: attributes must be immutable
         if attributes is None:
-            self.attributes = {}  # type: Dict[str, "AttributeValue"]
+            self.attributes = {}  # type: Mapping[str, "AttributeValue"]
         else:
             self.attributes = attributes
 
