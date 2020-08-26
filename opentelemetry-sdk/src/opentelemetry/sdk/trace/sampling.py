@@ -101,9 +101,7 @@ class SamplingResult:
         )
 
     def __init__(
-        self,
-        decision: Decision,
-        attributes: Attributes = None,
+        self, decision: Decision, attributes: Attributes = None,
     ) -> None:
         self.decision = decision
         # TODO: attributes must be immutable
