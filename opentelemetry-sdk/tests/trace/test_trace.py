@@ -177,7 +177,7 @@ class TestSpanCreation(unittest.TestCase):
         new_span = tracer.start_span(
             "root", parent=trace_api.INVALID_SPAN_CONTEXT
         )
-        self.assertTrue(new_span.context.is_valid())
+        self.assertTrue(new_span.context.is_valid)
         self.assertIsNone(new_span.parent)
 
     def test_instrumentation_info(self):
