@@ -139,18 +139,20 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(root_span, trace.Span)
         child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace.Span)
-        self.assertTrue(root_span.context.trace_flags.sampled)
+        self.assertTrue(root_span.get_context().trace_flags.sampled)
 
     def test_sampler_no_sampling(self):
         tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
 
         # Check that the default tracer creates no-op spans if the sampler
-        # decides not to sampler
+        # decides not to sample
         root_span = tracer.start_span(name="root span", parent=None)
         self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        self.assertFalse(root_span.get_context().trace_flags.sampled)
         child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
+        self.assertFalse(child_span.get_context().trace_flags.sampled)
 
 
 class TestSpanCreation(unittest.TestCase):

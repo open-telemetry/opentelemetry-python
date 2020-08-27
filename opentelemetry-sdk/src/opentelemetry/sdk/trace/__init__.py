@@ -788,6 +788,8 @@ class Tracer(trace_api.Tracer):
             )
             span.start(start_time=start_time)
         else:
+            options = context.trace_flags & ~trace_api.TraceFlags.SAMPLED
+            context.trace_flags = trace_api.TraceFlags(options)
             span = trace_api.DefaultSpan(context=context)
         return span
 
