@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refactor `SpanContext.is_valid` from a method to a data attribute
+  ([#1005](https://github.com/open-telemetry/opentelemetry-python/pull/1005))
 - Moved samplers from API to SDK
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
 - Remove lazy Event and Link API from Span interface

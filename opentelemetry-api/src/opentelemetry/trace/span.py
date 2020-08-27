@@ -174,6 +174,10 @@ class SpanContext:
         self.trace_flags = trace_flags
         self.trace_state = trace_state
         self.is_remote = is_remote
+        self.is_valid = (
+            self.trace_id != INVALID_TRACE_ID
+            and self.span_id != INVALID_SPAN_ID
+        )
 
     def __repr__(self) -> str:
         return (
@@ -184,20 +188,6 @@ class SpanContext:
             format_span_id(self.span_id),
             self.trace_state,
             self.is_remote,
-        )
-
-    def is_valid(self) -> bool:
-        """Get whether this `SpanContext` is valid.
-
-        A `SpanContext` is said to be invalid if its trace ID or span ID is
-        invalid (i.e. ``0``).
-
-        Returns:
-            True if the `SpanContext` is valid, false otherwise.
-        """
-        return (
-            self.trace_id != INVALID_TRACE_ID
-            and self.span_id != INVALID_SPAN_ID
         )
 
 
