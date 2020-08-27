@@ -230,7 +230,7 @@ class ParentOrElse(Sampler):
     ) -> "SamplingResult":
         if parent_context is not None:
             if (
-                not parent_context.is_valid()
+                not parent_context.is_valid
                 or not parent_context.trace_flags.sampled
             ):
                 return SamplingResult(Decision.NOT_RECORD)
