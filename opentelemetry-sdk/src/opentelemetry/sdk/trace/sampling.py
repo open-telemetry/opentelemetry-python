@@ -62,7 +62,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
 """
 import abc
 import enum
-from typing import Dict, Mapping, Optional, Sequence
+from typing import Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.trace import Link, SpanContext
