@@ -240,6 +240,7 @@ class Observer(metrics_api.Observer):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        meter: "Meter",
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
@@ -248,6 +249,7 @@ class Observer(metrics_api.Observer):
         self.description = description
         self.unit = unit
         self.value_type = value_type
+        self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
 
@@ -448,7 +450,14 @@ class Meter(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.Observer:
         ob = observer_type(
-            callback, name, description, unit, value_type, label_keys, enabled
+            callback,
+            name,
+            description,
+            unit,
+            value_type,
+            self,
+            label_keys,
+            enabled,
         )
         with self.observers_lock:
             self.observers.add(ob)

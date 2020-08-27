@@ -42,12 +42,14 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             view.get_default_aggregator(ud_counter), aggregate.SumAggregator
         )
-        observer = metrics.SumObserver(lambda: None, "", "", "1", int)
+        observer = metrics.SumObserver(lambda: None, "", "", "1", int, meter)
         self.assertEqual(
             view.get_default_aggregator(observer),
             aggregate.LastValueAggregator,
         )
-        ud_observer = metrics.SumObserver(lambda: None, "", "", "1", int)
+        ud_observer = metrics.SumObserver(
+            lambda: None, "", "", "1", int, meter
+        )
         self.assertEqual(
             view.get_default_aggregator(ud_observer),
             aggregate.LastValueAggregator,
@@ -57,7 +59,9 @@ class TestUtil(unittest.TestCase):
             view.get_default_aggregator(recorder),
             aggregate.MinMaxSumCountAggregator,
         )
-        v_observer = metrics.ValueObserver(lambda: None, "", "", "1", int)
+        v_observer = metrics.ValueObserver(
+            lambda: None, "", "", "1", int, meter
+        )
         self.assertEqual(
             view.get_default_aggregator(v_observer),
             aggregate.ValueObserverAggregator,

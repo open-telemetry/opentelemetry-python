@@ -68,81 +68,79 @@ class TestMeterProvider(unittest.TestCase):
 
 
 class TestMeter(unittest.TestCase):
+    def setUp(self):
+        self.meter = metrics.MeterProvider().get_meter(__name__)
+
     def test_extends_api(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        self.assertIsInstance(meter, metrics_api.Meter)
+        self.assertIsInstance(self.meter, metrics_api.Meter)
 
     def test_collect_metrics(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
-        counter = meter.create_metric(
+        self.meter.batcher = batcher_mock
+        counter = self.meter.create_metric(
             "name", "desc", "unit", float, metrics.Counter
         )
         labels = {"key1": "value1"}
-        meter.register_view(View(counter, SumAggregator))
+        self.meter.register_view(View(counter, SumAggregator))
         counter.add(1.0, labels)
-        meter.collect()
+        self.meter.collect()
         self.assertTrue(batcher_mock.process.called)
 
     def test_collect_no_metrics(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
-        meter.collect()
+        self.meter.batcher = batcher_mock
+        self.meter.collect()
         self.assertFalse(batcher_mock.process.called)
 
     def test_collect_not_registered(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
-        counter = metrics.Counter("name", "desc", "unit", float, meter)
+        self.meter.batcher = batcher_mock
+        counter = metrics.Counter("name", "desc", "unit", float, self.meter)
         labels = {"key1": "value1"}
         counter.add(1.0, labels)
-        meter.collect()
+        self.meter.collect()
         self.assertFalse(batcher_mock.process.called)
 
     def test_collect_disabled_metric(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
-        counter = metrics.Counter("name", "desc", "unit", float, meter, False)
+        self.meter.batcher = batcher_mock
+        counter = metrics.Counter(
+            "name", "desc", "unit", float, self.meter, False
+        )
         labels = {"key1": "value1"}
-        meter.register_view(View(counter, SumAggregator))
+        self.meter.register_view(View(counter, SumAggregator))
         counter.add(1.0, labels)
-        meter.collect()
+        self.meter.collect()
         self.assertFalse(batcher_mock.process.called)
 
     def test_collect_observers(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        self.meter.batcher = batcher_mock
 
         def callback(observer):
             self.assertIsInstance(observer, metrics_api.Observer)
             observer.observe(45, {})
 
         observer = metrics.ValueObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, self.meter, (), True
         )
 
-        meter.observers.add(observer)
-        meter.collect()
+        self.meter.observers.add(observer)
+        self.meter.collect()
         self.assertTrue(batcher_mock.process.called)
 
     def test_record_batch(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
         labels = {"key1": "value1", "key2": "value2", "key3": "value3"}
-        counter = metrics.Counter("name", "desc", "unit", float, meter)
+        counter = metrics.Counter("name", "desc", "unit", float, self.meter)
         valuerecorder = metrics.ValueRecorder(
-            "name", "desc", "unit", float, meter
+            "name", "desc", "unit", float, self.meter
         )
         counter_v = View(counter, SumAggregator)
         measure_v = View(valuerecorder, MinMaxSumCountAggregator)
-        meter.register_view(counter_v)
-        meter.register_view(measure_v)
+        self.meter.register_view(counter_v)
+        self.meter.register_view(measure_v)
         record_tuples = [(counter, 1.0), (valuerecorder, 3.0)]
-        meter.record_batch(labels, record_tuples)
+        self.meter.record_batch(labels, record_tuples)
         labels_key = metrics.get_dict_as_key(labels)
         self.assertEqual(
             counter.bound_instruments[labels_key]
@@ -171,8 +169,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(counter.meter, meter)
 
     def test_create_updowncounter(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        updowncounter = meter.create_metric(
+        updowncounter = self.meter.create_metric(
             "name", "desc", "unit", float, metrics.UpDownCounter, ()
         )
         self.assertIsInstance(updowncounter, metrics.UpDownCounter)
@@ -180,26 +177,23 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(updowncounter.name, "name")
 
     def test_create_valuerecorder(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        valuerecorder = meter.create_metric(
+        valuerecorder = self.meter.create_metric(
             "name", "desc", "unit", float, metrics.ValueRecorder
         )
         self.assertIsInstance(valuerecorder, metrics.ValueRecorder)
         self.assertEqual(valuerecorder.value_type, float)
         self.assertEqual(valuerecorder.name, "name")
-        self.assertEqual(valuerecorder.meter, meter)
+        self.assertEqual(valuerecorder.meter, self.meter)
 
     def test_register_observer(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-
         callback = mock.Mock()
 
-        observer = meter.register_observer(
+        observer = self.meter.register_observer(
             callback, "name", "desc", "unit", int, metrics.ValueObserver
         )
 
         self.assertIsInstance(observer, metrics_api.Observer)
-        self.assertEqual(len(meter.observers), 1)
+        self.assertEqual(len(self.meter.observers), 1)
 
         self.assertEqual(observer.callback, callback)
         self.assertEqual(observer.name, "name")
@@ -208,18 +202,17 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(observer.value_type, int)
         self.assertEqual(observer.label_keys, ())
         self.assertTrue(observer.enabled)
+        self.assertEqual(observer.meter, self.meter)
 
     def test_unregister_observer(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-
         callback = mock.Mock()
 
-        observer = meter.register_observer(
+        observer = self.meter.register_observer(
             callback, "name", "desc", "unit", int, metrics.ValueObserver
         )
 
-        meter.unregister_observer(observer)
-        self.assertEqual(len(meter.observers), 0)
+        self.meter.unregister_observer(observer)
+        self.assertEqual(len(self.meter.observers), 0)
 
 
 class TestMetric(unittest.TestCase):
@@ -311,9 +304,12 @@ class TestValueRecorder(unittest.TestCase):
 
 
 class TestSumObserver(unittest.TestCase):
+    def setUp(self):
+        self.meter = metrics.MeterProvider().get_meter(__name__)
+
     def test_observe(self):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, self.meter, ("key",), True
         )
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
@@ -325,7 +321,7 @@ class TestSumObserver(unittest.TestCase):
 
     def test_observe_disabled(self):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), False
+            None, "name", "desc", "unit", int, self.meter, ("key",), False
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
@@ -334,7 +330,7 @@ class TestSumObserver(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, self.meter, ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37.0, labels)
@@ -344,7 +340,7 @@ class TestSumObserver(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_observe_non_decreasing_error(self, logger_mock):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, self.meter, ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
@@ -355,7 +351,7 @@ class TestSumObserver(unittest.TestCase):
     def test_run(self):
         callback = mock.Mock()
         observer = metrics.SumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, self.meter, (), True
         )
 
         self.assertTrue(observer.run())
@@ -367,7 +363,7 @@ class TestSumObserver(unittest.TestCase):
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.SumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, self.meter, (), True
         )
 
         self.assertFalse(observer.run())
@@ -375,9 +371,12 @@ class TestSumObserver(unittest.TestCase):
 
 
 class TestUpDownSumObserver(unittest.TestCase):
+    def setUp(self):
+        self.meter = metrics.MeterProvider().get_meter(__name__)
+
     def test_observe(self):
         observer = metrics.UpDownSumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, self.meter, ("key",), True
         )
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
@@ -389,7 +388,7 @@ class TestUpDownSumObserver(unittest.TestCase):
 
     def test_observe_disabled(self):
         observer = metrics.UpDownSumObserver(
-            None, "name", "desc", "unit", int, ("key",), False
+            None, "name", "desc", "unit", int, self.meter, ("key",), False
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
@@ -398,7 +397,7 @@ class TestUpDownSumObserver(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         observer = metrics.UpDownSumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, self.meter, ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37.0, labels)
@@ -408,7 +407,7 @@ class TestUpDownSumObserver(unittest.TestCase):
     def test_run(self):
         callback = mock.Mock()
         observer = metrics.UpDownSumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, self.meter, (), True
         )
 
         self.assertTrue(observer.run())
@@ -420,7 +419,7 @@ class TestUpDownSumObserver(unittest.TestCase):
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.UpDownSumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, self.meter, (), True
         )
 
         self.assertFalse(observer.run())
@@ -428,9 +427,12 @@ class TestUpDownSumObserver(unittest.TestCase):
 
 
 class TestValueObserver(unittest.TestCase):
+    def setUp(self):
+        self.meter = metrics.MeterProvider().get_meter(__name__)
+
     def test_observe(self):
         observer = metrics.ValueObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, self.meter, ("key",), True
         )
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
@@ -446,7 +448,7 @@ class TestValueObserver(unittest.TestCase):
 
     def test_observe_disabled(self):
         observer = metrics.ValueObserver(
-            None, "name", "desc", "unit", int, ("key",), False
+            None, "name", "desc", "unit", int, self.meter, ("key",), False
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
@@ -455,7 +457,7 @@ class TestValueObserver(unittest.TestCase):
     @mock.patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         observer = metrics.ValueObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, self.meter, ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37.0, labels)
@@ -465,7 +467,7 @@ class TestValueObserver(unittest.TestCase):
     def test_run(self):
         callback = mock.Mock()
         observer = metrics.ValueObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, self.meter, (), True
         )
 
         self.assertTrue(observer.run())
