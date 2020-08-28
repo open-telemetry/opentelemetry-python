@@ -6,7 +6,8 @@
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
 - Remove lazy Event and Link API from Span interface
   ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
-
+- Populate resource attributes as per semantic conventions
+  ([#1053](https://github.com/open-telemetry/opentelemetry-python/pull/1053))
 ## Version 0.12b0
 
 Released 2020-08-14
