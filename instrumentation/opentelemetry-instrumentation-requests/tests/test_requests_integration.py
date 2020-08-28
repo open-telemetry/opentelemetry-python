@@ -32,6 +32,19 @@ class RequestsIntegrationTestBase(abc.ABC):
 
     URL = "http://httpbin.org/status/200"
 
+    # pylint: disable=invalid-name
+    def setUp(self):
+        super().setUp()
+        RequestsInstrumentor().instrument()
+        httpretty.enable()
+        httpretty.register_uri(httpretty.GET, self.URL, body="Hello!")
+
+    # pylint: disable=invalid-name
+    def tearDown(self):
+        super().tearDown()
+        RequestsInstrumentor().uninstrument()
+        httpretty.disable()
+
     def assert_span(self, exporter=None, num_spans=1):
         if exporter is None:
             exporter = self.memory_exporter
@@ -266,26 +279,7 @@ class RequestsIntegrationTestBase(abc.ABC):
         )
 
 
-def setup_test(url: str):
-    RequestsInstrumentor().instrument()
-    httpretty.enable()
-    httpretty.register_uri(httpretty.GET, url, body="Hello!")
-
-
-def teardown_test():
-    RequestsInstrumentor().uninstrument()
-    httpretty.disable()
-
-
-class TestRequestsIntegration(TestBase, RequestsIntegrationTestBase):
-    def setUp(self):
-        super().setUp()
-        setup_test(self.URL)
-
-    def tearDown(self):
-        super().tearDown()
-        teardown_test()
-
+class TestRequestsIntegration(RequestsIntegrationTestBase, TestBase):
     @staticmethod
     def perform_request(url: str, session: requests.Session = None):
         if session is None:
@@ -316,16 +310,8 @@ class TestRequestsIntegration(TestBase, RequestsIntegrationTestBase):
 
 
 class TestRequestsIntegrationPreparedRequest(
-    TestBase, RequestsIntegrationTestBase
+    RequestsIntegrationTestBase, TestBase
 ):
-    def setUp(self):
-        super().setUp()
-        setup_test(self.URL)
-
-    def tearDown(self):
-        super().tearDown()
-        teardown_test()
-
     @staticmethod
     def perform_request(url: str, session: requests.Session = None):
         if session is None:

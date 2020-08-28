@@ -29,12 +29,6 @@ Usage
     opentelemetry.instrumentation.requests.RequestsInstrumentor().instrument()
     response = requests.get(url="https://www.example.org/")
 
-Limitations
------------
-
-If you find any way to trigger an untraced HTTP request, please report it via a
-GitHub issue with :code:`[requests: untraced API]` in the title.
-
 API
 ---
 """
@@ -45,6 +39,7 @@ import types
 from requests import Timeout, URLRequired
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from requests.sessions import Session
+from requests.structures import CaseInsensitiveDict
 
 from opentelemetry import context, propagators
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
@@ -95,7 +90,9 @@ def _instrument(tracer_provider=None, span_callback=None):
     def instrumented_send(self, request, **kwargs):
         def get_or_create_headers():
             request.headers = (
-                request.headers if request.headers is not None else {}
+                request.headers
+                if request.headers is not None
+                else CaseInsensitiveDict()
             )
             return request.headers
 
