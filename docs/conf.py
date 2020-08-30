@@ -115,6 +115,7 @@ nitpick_ignore = [
         "any",
         "opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject",
     ),
+    ("py:class", "BaseEstimator"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
