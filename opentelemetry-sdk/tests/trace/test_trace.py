@@ -573,13 +573,7 @@ class TestSpan(unittest.TestCase):
             mutable_list = ["original_contents"]
             root.add_event("event3", {"name": mutable_list})
 
-            def event_formatter():
-                return {"name": "hello"}
-
-            # lazy event
-            root.add_lazy_event("event4", event_formatter, now)
-
-            self.assertEqual(len(root.events), 5)
+            self.assertEqual(len(root.events), 4)
 
             self.assertEqual(root.events[0].name, "event0")
             self.assertEqual(root.events[0].attributes, {})
@@ -605,13 +599,8 @@ class TestSpan(unittest.TestCase):
                 root.events[3].attributes, {"name": ("original_contents",)}
             )
 
-            self.assertEqual(root.events[4].name, "event4")
-            self.assertEqual(root.events[4].attributes, {"name": "hello"})
-            self.assertEqual(root.events[4].timestamp, now)
-
     def test_invalid_event_attributes(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
-        now = time_ns()
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
@@ -625,19 +614,6 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[2].attributes, {})
             self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
-            def event_formatter():
-                properties = {}
-                properties["attr1"] = dict()
-                properties["attr2"] = "hello"
-                return properties
-
-            root.add_lazy_event("event4", event_formatter, now)
-
-            self.assertEqual(len(root.events), 5)
-            self.assertEqual(root.events[4].name, "event4")
-            self.assertEqual(root.events[4].attributes, {"attr2": "hello"})
-            self.assertEqual(root.events[4].timestamp, now)
-
     def test_links(self):
         other_context1 = trace_api.SpanContext(
             trace_id=trace.generate_trace_id(),
@@ -649,23 +625,14 @@ class TestSpan(unittest.TestCase):
             span_id=trace.generate_span_id(),
             is_remote=False,
         )
-        other_context3 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
-            is_remote=False,
-        )
-
-        def get_link_attributes():
-            return {"component": "http"}
 
         links = (
             trace_api.Link(other_context1),
             trace_api.Link(other_context2, {"name": "neighbor"}),
-            trace_api.LazyLink(other_context3, get_link_attributes),
         )
         with self.tracer.start_as_current_span("root", links=links) as root:
 
-            self.assertEqual(len(root.links), 3)
+            self.assertEqual(len(root.links), 2)
             self.assertEqual(
                 root.links[0].context.trace_id, other_context1.trace_id
             )
@@ -680,10 +647,6 @@ class TestSpan(unittest.TestCase):
                 root.links[1].context.span_id, other_context2.span_id
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
-            self.assertEqual(
-                root.links[2].context.span_id, other_context3.span_id
-            )
-            self.assertEqual(root.links[2].attributes, {"component": "http"})
 
     def test_update_name(self):
         with self.tracer.start_as_current_span("root") as root:

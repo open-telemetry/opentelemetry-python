@@ -138,28 +138,6 @@ class Link(LinkBase):
         return self._attributes
 
 
-class LazyLink(LinkBase):
-    """A lazy link to a `Span`.
-
-    Args:
-        context: `SpanContext` of the `Span` to link to.
-        link_formatter: Callable object that returns the attributes of the
-            Link.
-    """
-
-    def __init__(
-        self,
-        context: "SpanContext",
-        link_formatter: types.AttributesFormatter,
-    ) -> None:
-        super().__init__(context)
-        self._link_formatter = link_formatter
-
-    @property
-    def attributes(self) -> types.Attributes:
-        return self._link_formatter()
-
-
 class SpanKind(enum.Enum):
     """Specifies additional details on how this span relates to its parent span.
 
@@ -464,7 +442,6 @@ __all__ = [
     "DefaultSpan",
     "DefaultTracer",
     "DefaultTracerProvider",
-    "LazyLink",
     "Link",
     "LinkBase",
     "ParentSpan",

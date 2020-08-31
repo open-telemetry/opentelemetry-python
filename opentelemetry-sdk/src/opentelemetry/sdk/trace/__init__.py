@@ -284,35 +284,6 @@ class Event(EventBase):
         return self._attributes
 
 
-class LazyEvent(EventBase):
-    """A text annotation with a set of attributes.
-
-    Args:
-        name: Name of the event.
-        event_formatter: Callable object that returns the attributes of the
-            event.
-        timestamp: Timestamp of the event. If `None` it will filled
-            automatically.
-    """
-
-    def __init__(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
-        timestamp: Optional[int] = None,
-    ) -> None:
-        super().__init__(name, timestamp)
-        self._event_formatter = event_formatter
-
-    @property
-    def attributes(self) -> types.Attributes:
-        attributes = self._event_formatter()
-        _filter_attribute_values(attributes)
-        if not attributes:
-            attributes = Span._new_attributes()
-        return attributes
-
-
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
@@ -592,20 +563,6 @@ class Span(trace_api.Span):
             Event(
                 name=name,
                 attributes=attributes,
-                timestamp=time_ns() if timestamp is None else timestamp,
-            )
-        )
-
-    def add_lazy_event(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
-        timestamp: Optional[int] = None,
-    ) -> None:
-        self._add_event(
-            LazyEvent(
-                name=name,
-                event_formatter=event_formatter,
                 timestamp=time_ns() if timestamp is None else timestamp,
             )
         )
