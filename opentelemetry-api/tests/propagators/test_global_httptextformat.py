@@ -41,7 +41,7 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         headers = {
-            "otcorrelationcontext": ["key1=val1,key2=val2"],
+            "otcorrelations": ["key1=val1,key2=val2"],
             "traceparent": [traceparent_value],
             "tracestate": [tracestate_value],
         }
@@ -61,8 +61,8 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         output = {}
         inject(dict.__setitem__, output, context=ctx)
         self.assertEqual(traceparent_value, output["traceparent"])
-        self.assertIn("key3=val3", output["otcorrelationcontext"])
-        self.assertIn("key4=val4", output["otcorrelationcontext"])
+        self.assertIn("key3=val3", output["otcorrelations"])
+        self.assertIn("key4=val4", output["otcorrelations"])
         self.assertIn("foo=1", output["tracestate"])
         self.assertIn("bar=2", output["tracestate"])
         self.assertIn("baz=3", output["tracestate"])

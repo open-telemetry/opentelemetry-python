@@ -25,7 +25,7 @@ class BaggagePropagator(httptextformat.HTTPTextFormat):
     MAX_HEADER_LENGTH = 8192
     MAX_PAIR_LENGTH = 4096
     MAX_PAIRS = 180
-    _BAGGAGE_HEADER_NAME = "otcorrelationcontext"
+    _BAGGAGE_HEADER_NAME = "otcorrelations"
 
     def extract(
         self,
