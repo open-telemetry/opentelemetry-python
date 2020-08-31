@@ -176,13 +176,14 @@ class TestSampler(unittest.TestCase):
         # should get sampled.
         almost_always_off = sampling.TraceIdRatioBased(2 ** -64)
         self.assertTrue(
-                almost_always_off.should_sample(
-                    None, 0x0, 0xDEADBEEF, "span name"
-                ).decision.is_sampled()
+            almost_always_off.should_sample(
+                None, 0x0, 0xDEADBEEF, "span name"
+            ).decision.is_sampled()
         )
-                almost_always_off.should_sample(
-                    None, 0x1, 0xDEADBEEF, "span name"
-                ).decision.is_sampled()
+        self.assertFalse(
+            almost_always_off.should_sample(
+                None, 0x1, 0xDEADBEEF, "span name"
+            ).decision.is_sampled()
         )
         self.assertEqual(
             sampling.TraceIdRatioBased.get_bound_for_rate(2 ** -64), 0x1
@@ -198,9 +199,9 @@ class TestSampler(unittest.TestCase):
 
         almost_always_on = sampling.TraceIdRatioBased(1 - 2 ** -64)
         self.assertTrue(
-                almost_always_on.should_sample(
-                    None, 0xFFFFFFFFFFFFFFFE, 0xDEADBEEF, "span name"
-                ).decision.is_sampled()
+            almost_always_on.should_sample(
+                None, 0xFFFFFFFFFFFFFFFE, 0xDEADBEEF, "span name"
+            ).decision.is_sampled()
         )
 
         # These tests are logically consistent, but fail because of the float
