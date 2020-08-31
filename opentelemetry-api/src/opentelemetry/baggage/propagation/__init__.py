@@ -88,9 +88,7 @@ class BaggagePropagator(httptextformat.HTTPTextFormat):
 
         baggage_string = _format_baggage(baggage_entries)
         set_in_carrier(
-            carrier,
-            self._BAGGAGE_HEADER_NAME,
-            baggage_string,
+            carrier, self._BAGGAGE_HEADER_NAME, baggage_string,
         )
 
 

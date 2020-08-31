@@ -55,10 +55,8 @@ Example::
 
 import typing
 
+from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context.context import Context
-from opentelemetry.baggage.propagation import (
-    BaggagePropagator,
-)
 from opentelemetry.propagators import composite
 from opentelemetry.trace.propagation import httptextformat
 from opentelemetry.trace.propagation.tracecontexthttptextformat import (

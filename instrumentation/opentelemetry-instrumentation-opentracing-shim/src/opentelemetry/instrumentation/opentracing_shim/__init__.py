@@ -100,8 +100,8 @@ from opentracing import (
 )
 
 from opentelemetry import propagators
-from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.baggage import get_baggage, set_baggage
+from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.instrumentation.opentracing_shim import util
 from opentelemetry.instrumentation.opentracing_shim.version import __version__
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, DefaultSpan, Link

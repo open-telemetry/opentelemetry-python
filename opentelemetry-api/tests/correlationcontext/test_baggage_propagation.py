@@ -16,10 +16,8 @@ import typing
 import unittest
 
 from opentelemetry import baggage
+from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context import get_current
-from opentelemetry.baggage.propagation import (
-    BaggagePropagator,
-)
 
 
 def get_as_list(
@@ -35,9 +33,7 @@ class TestBaggagePropagation(unittest.TestCase):
     def _extract(self, header_value):
         """Test helper"""
         header = {"otcorrelations": [header_value]}
-        return baggage.get_all(
-            self.propagator.extract(get_as_list, header)
-        )
+        return baggage.get_all(self.propagator.extract(get_as_list, header))
 
     def _inject(self, values):
         """Test helper"""
