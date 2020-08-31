@@ -8,6 +8,6 @@ OpenTelemetry Python API
 
     configuration
     context
-    correlationcontext
+    baggage
     metrics
     trace
