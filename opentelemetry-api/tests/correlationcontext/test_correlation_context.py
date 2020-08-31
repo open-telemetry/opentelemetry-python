@@ -15,57 +15,57 @@
 import unittest
 
 from opentelemetry import context
-from opentelemetry import correlationcontext as cctx
+from opentelemetry import baggage
 
 
-class TestCorrelationContextManager(unittest.TestCase):
-    def test_set_correlation(self):
-        self.assertEqual({}, cctx.get_correlations())
+class TestBaggageManager(unittest.TestCase):
+    def test_set_baggage(self):
+        self.assertEqual({}, baggage.get_all())
 
-        ctx = cctx.set_correlation("test", "value")
-        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
+        ctx = baggage.set_baggage("test", "value")
+        self.assertEqual(baggage.get_baggage("test", context=ctx), "value")
 
-        ctx = cctx.set_correlation("test", "value2", context=ctx)
-        self.assertEqual(cctx.get_correlation("test", context=ctx), "value2")
+        ctx = baggage.set_baggage("test", "value2", context=ctx)
+        self.assertEqual(baggage.get_baggage("test", context=ctx), "value2")
 
-    def test_correlations_current_context(self):
-        token = context.attach(cctx.set_correlation("test", "value"))
-        self.assertEqual(cctx.get_correlation("test"), "value")
+    def test_baggages_current_context(self):
+        token = context.attach(baggage.set_baggage("test", "value"))
+        self.assertEqual(baggage.get_baggage("test"), "value")
         context.detach(token)
-        self.assertEqual(cctx.get_correlation("test"), None)
+        self.assertEqual(baggage.get_baggage("test"), None)
 
-    def test_set_multiple_correlations(self):
-        ctx = cctx.set_correlation("test", "value")
-        ctx = cctx.set_correlation("test2", "value2", context=ctx)
-        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
-        self.assertEqual(cctx.get_correlation("test2", context=ctx), "value2")
+    def test_set_multiple_baggage_entries(self):
+        ctx = baggage.set_baggage("test", "value")
+        ctx = baggage.set_baggage("test2", "value2", context=ctx)
+        self.assertEqual(baggage.get_baggage("test", context=ctx), "value")
+        self.assertEqual(baggage.get_baggage("test2", context=ctx), "value2")
         self.assertEqual(
-            cctx.get_correlations(context=ctx),
+            baggage.get_all(context=ctx),
             {"test": "value", "test2": "value2"},
         )
 
-    def test_modifying_correlations(self):
-        ctx = cctx.set_correlation("test", "value")
-        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
-        correlations = cctx.get_correlations(context=ctx)
+    def test_modifying_baggage(self):
+        ctx = baggage.set_baggage("test", "value")
+        self.assertEqual(baggage.get_baggage("test", context=ctx), "value")
+        baggage_entries = baggage.get_all(context=ctx)
         with self.assertRaises(TypeError):
-            correlations["test"] = "mess-this-up"
-        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
+            baggage_entries["test"] = "mess-this-up"
+        self.assertEqual(baggage.get_baggage("test", context=ctx), "value")
 
-    def test_remove_correlations(self):
-        self.assertEqual({}, cctx.get_correlations())
+    def test_remove_baggage_entry(self):
+        self.assertEqual({}, baggage.get_all())
 
-        ctx = cctx.set_correlation("test", "value")
-        ctx = cctx.set_correlation("test2", "value2", context=ctx)
-        ctx = cctx.remove_correlation("test", context=ctx)
-        self.assertEqual(cctx.get_correlation("test", context=ctx), None)
-        self.assertEqual(cctx.get_correlation("test2", context=ctx), "value2")
+        ctx = baggage.set_baggage("test", "value")
+        ctx = baggage.set_baggage("test2", "value2", context=ctx)
+        ctx = baggage.remove_baggage("test", context=ctx)
+        self.assertEqual(baggage.get_baggage("test", context=ctx), None)
+        self.assertEqual(baggage.get_baggage("test2", context=ctx), "value2")
 
-    def test_clear_correlations(self):
-        self.assertEqual({}, cctx.get_correlations())
+    def test_clear_baggage(self):
+        self.assertEqual({}, baggage.get_all())
 
-        ctx = cctx.set_correlation("test", "value")
-        self.assertEqual(cctx.get_correlation("test", context=ctx), "value")
+        ctx = baggage.set_baggage("test", "value")
+        self.assertEqual(baggage.get_baggage("test", context=ctx), "value")
 
-        ctx = cctx.clear_correlations(context=ctx)
-        self.assertEqual(cctx.get_correlations(context=ctx), {})
+        ctx = baggage.clear(context=ctx)
+        self.assertEqual(baggage.get_all(context=ctx), {})
