@@ -752,7 +752,7 @@ class Tracer(trace_api.Tracer):
 
         trace_flags = (
             trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
-            if sampling.is_sampled(sampling_result.decision)
+            if sampling_result.decision.is_sampled()
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
         context = trace_api.SpanContext(
@@ -764,7 +764,7 @@ class Tracer(trace_api.Tracer):
         )
 
         # Only record if is_recording() is true
-        if sampling.is_recording(sampling_result.decision):
+        if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
             span = Span(
                 name=name,

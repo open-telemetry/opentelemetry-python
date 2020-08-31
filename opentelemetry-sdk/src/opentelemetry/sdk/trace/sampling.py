@@ -27,11 +27,11 @@ A `StaticSampler` always returns the same sampling result regardless of the cond
 
 A `TraceIdRatioBased` sampler makes a random sampling result based on the sampling probability given.
 
-If the span being sampled has a parent, `ParentOrElse` will respect the parent span's sampling result. Otherwise, it returns the sampling result from the given delegate sampler.
+If the span being sampled has a parent, `ParentBased` will respect the parent span's sampling result. Otherwise, it returns the sampling result from the given delegate sampler.
 
 Currently, sampling results are always made during the creation of the span. However, this might not always be the case in the future (see `OTEP #115 <https://github.com/open-telemetry/oteps/pull/115>`_).
 
-Custom samplers can be created by subclassing `Sampler` and implementing `Sampler.should_sample`.
+Custom samplers can be created by subclassing `Sampler` and implementing `Sampler.should_sample` as well as `Sampler.get_description`.
 
 To use a sampler, pass it into the tracer provider constructor. For example:
 
@@ -77,13 +77,11 @@ class Decision(enum.Enum):
     # IsRecording() == true AND Sampled flag` MUST be set.
     RECORD_AND_SAMPLED = 2
 
+    def is_recording(self):
+        return self in (Decision.RECORD, Decision.RECORD_AND_SAMPLED)
 
-def is_recording(decision: Decision):
-    return decision in (Decision.RECORD, Decision.RECORD_AND_SAMPLED)
-
-
-def is_sampled(decision: Decision):
-    return decision is Decision.RECORD_AND_SAMPLED
+    def is_sampled(self):
+        return self is Decision.RECORD_AND_SAMPLED
 
 
 class SamplingResult:
@@ -207,7 +205,7 @@ class TraceIdRatioBased(Sampler):
         return "TraceIdRatioBased{{{}}}".format(self._rate)
 
 
-class ParentOrElse(Sampler):
+class ParentBased(Sampler):
     """
     If a parent is set, follows the same sampling decision as the parent.
     Otherwise, uses the delegate provided at initialization to make a
@@ -245,7 +243,7 @@ class ParentOrElse(Sampler):
         )
 
     def get_description(self):
-        return "ParentOrElse{{{}}}".format(self._delegate.get_description())
+        return "ParentBased{{{}}}".format(self._delegate.get_description())
 
 
 ALWAYS_OFF = StaticSampler(Decision.NOT_RECORD)
@@ -254,8 +252,8 @@ ALWAYS_OFF = StaticSampler(Decision.NOT_RECORD)
 ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLED)
 """Sampler that always samples spans, regardless of the parent span's sampling decision."""
 
-DEFAULT_OFF = ParentOrElse(ALWAYS_OFF)
+DEFAULT_OFF = ParentBased(ALWAYS_OFF)
 """Sampler that respects its parent span's sampling decision, but otherwise never samples."""
 
-DEFAULT_ON = ParentOrElse(ALWAYS_ON)
+DEFAULT_ON = ParentBased(ALWAYS_ON)
 """Sampler that respects its parent span's sampling decision, but otherwise always samples."""
