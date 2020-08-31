@@ -62,7 +62,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def is_recording_events(self) -> bool:
+    def is_recording(self) -> bool:
         """Returns whether this span will be recorded.
 
         Returns true if this Span is active and recording information like
@@ -203,7 +203,7 @@ class DefaultSpan(Span):
     def get_context(self) -> "SpanContext":
         return self._context
 
-    def is_recording_events(self) -> bool:
+    def is_recording(self) -> bool:
         return False
 
     def end(self, end_time: typing.Optional[int] = None) -> None:
