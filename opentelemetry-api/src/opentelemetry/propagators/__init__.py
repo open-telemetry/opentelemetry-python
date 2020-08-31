@@ -55,8 +55,6 @@ Example::
 
 import typing
 
-import opentelemetry.trace as trace
-from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.baggage.propagation import (
     BaggagePropagator,
