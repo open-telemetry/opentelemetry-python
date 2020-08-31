@@ -101,8 +101,8 @@ class SystemMetrics:
                 "system_network_errors": ["transmit", "receive"],
                 "system_network_io": ["trasmit", "receive"],
                 "system_network_connections": ["family", "type"],
-                "runtime_cpython_memory": ["rss", "vms"],
-                "runtime_cpython_cpu_time": ["user", "system"],
+                "runtime_CPython_memory": ["rss", "vms"],
+                "runtime_CPython_cpu_time": ["user", "system"],
             }
         else:
             self._config = config
@@ -338,7 +338,7 @@ class SystemMetrics:
 
         self.meter.register_observer(
             callback=self._get_runtime_cpython_memory,
-            name="runtime.cpython.memory",
+            name="runtime.CPython.memory",
             description="Runtime CPython memory",
             unit="bytes",
             value_type=int,
@@ -347,7 +347,7 @@ class SystemMetrics:
 
         self.meter.register_observer(
             callback=self._get_runtime_cpython_cpu_time,
-            name="runtime.cpython.cpu_time",
+            name="runtime.CPython.cpu_time",
             description="Runtime CPython CPU time",
             unit="seconds",
             value_type=float,
@@ -356,7 +356,7 @@ class SystemMetrics:
 
         self.meter.register_observer(
             callback=self._get_runtime_cpython_memory,
-            name="runtime.cpython.gc_count",
+            name="runtime.CPython.gc_count",
             description="Runtime CPython GC count",
             unit="bytes",
             value_type=int,
@@ -643,7 +643,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         proc_memory = self._proc.memory_info()
-        for metric in self._config["runtime_cpython_memory"]:
+        for metric in self._config["runtime_CPython_memory"]:
             self._runtime_cpython_memory_labels["type"] = metric
             observer.observe(
                 getattr(proc_memory, metric),
@@ -659,7 +659,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         proc_cpu = self._proc.cpu_times()
-        for metric in self._config["runtime_cpython_cpu_time"]:
+        for metric in self._config["runtime_CPython_cpu_time"]:
             self._runtime_cpython_cpu_time_labels["type"] = metric
             observer.observe(
                 getattr(proc_cpu, metric),

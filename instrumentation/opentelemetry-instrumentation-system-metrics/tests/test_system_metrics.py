@@ -50,9 +50,9 @@ class TestSystemMetrics(TestBase):
             "system.network.errors",
             "system.network.io",
             "system.network.connections",
-            "runtime.cpython.memory",
-            "runtime.cpython.cpu_time",
-            "runtime.cpython.gc_count",
+            "runtime.CPython.memory",
+            "runtime.CPython.cpu_time",
+            "runtime.CPython.gc_count",
         ]
 
         for observer in meter.observers:
