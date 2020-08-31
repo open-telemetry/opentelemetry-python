@@ -19,6 +19,8 @@ from opentelemetry import metrics
 from opentelemetry.instrumentation.system_metrics import SystemMetrics
 from opentelemetry.test.test_base import TestBase
 
+from opentelemetry.sdk.metrics.export.aggregate import ValueObserverAggregator
+
 
 class TestSystemMetrics(TestBase):
     def setUp(self):
@@ -116,14 +118,62 @@ class TestSystemMetrics(TestBase):
         ]
 
         expected = {
-            (("cpu", 1), ("state", "idle"),): 1.2 / 100,
-            (("cpu", 1), ("state", "user"),): 3.4 / 100,
-            (("cpu", 1), ("state", "system"),): 5.6 / 100,
-            (("cpu", 1), ("state", "irq"),): 7.8 / 100,
-            (("cpu", 2), ("state", "idle"),): 1.2 / 100,
-            (("cpu", 2), ("state", "user"),): 3.4 / 100,
-            (("cpu", 2), ("state", "system"),): 5.6 / 100,
-            (("cpu", 2), ("state", "irq"),): 7.8 / 100,
+            (("cpu", 1), ("state", "idle"),): ValueObserverAggregator._TYPE(
+                min=1.2 / 100,
+                max=1.2 / 100,
+                sum=1.2 / 100,
+                count=1,
+                last=1.2 / 100
+            ),
+            (("cpu", 1), ("state", "user"),): ValueObserverAggregator._TYPE(
+                min=3.4 / 100,
+                max=3.4 / 100,
+                sum=3.4 / 100,
+                count=1,
+                last=3.4 / 100
+            ),
+            (("cpu", 1), ("state", "system"),): ValueObserverAggregator._TYPE(
+                min=5.6 / 100,
+                max=5.6 / 100,
+                sum=5.6 / 100,
+                count=1,
+                last=5.6 / 100
+            ),
+            (("cpu", 1), ("state", "irq"),): ValueObserverAggregator._TYPE(
+                min=7.8 / 100,
+                max=7.8 / 100,
+                sum=7.8 / 100,
+                count=1,
+                last=7.8 / 100
+            ),
+            (("cpu", 2), ("state", "idle"),): ValueObserverAggregator._TYPE(
+                min=1.2 / 100,
+                max=1.2 / 100,
+                sum=1.2 / 100,
+                count=1,
+                last=1.2 / 100
+            ),
+            (("cpu", 2), ("state", "user"),): ValueObserverAggregator._TYPE(
+                min=3.4 / 100,
+                max=3.4 / 100,
+                sum=3.4 / 100,
+                count=1,
+                last=3.4 / 100
+            ),
+            (("cpu", 2), ("state", "system"),): ValueObserverAggregator._TYPE(
+                min=5.6 / 100,
+                max=5.6 / 100,
+                sum=5.6 / 100,
+                count=1,
+                last=5.6 / 100
+            ),
+            (("cpu", 2), ("state", "irq"),): ValueObserverAggregator._TYPE(
+                min=7.8 / 100,
+                max=7.8 / 100,
+                sum=7.8 / 100,
+                count=1,
+                last=7.8 / 100
+            ),
         }
         self._test_metrics("system.cpu.utilization", expected)
 
@@ -137,9 +187,15 @@ class TestSystemMetrics(TestBase):
         )
 
         expected = {
-            (("state", "used"),): 1,
-            (("state", "free"),): 2,
-            (("state", "cached"),): 3,
+            (("state", "used"),): ValueObserverAggregator._TYPE(
+                min=1, max=1, sum=1, count=1, last=1
+            ),
+            (("state", "free"),): ValueObserverAggregator._TYPE(
+                min=2, max=2, sum=2, count=1, last=2
+            ),
+            (("state", "cached"),): ValueObserverAggregator._TYPE(
+                min=3, max=3, sum=3, count=1, last=3
+            ),
         }
         self._test_metrics("system.memory.usage", expected)
 
@@ -153,9 +209,15 @@ class TestSystemMetrics(TestBase):
         )
 
         expected = {
-            (("state", "used"),): 1 / 4,
-            (("state", "free"),): 2 / 4,
-            (("state", "cached"),): 3 / 4,
+            (("state", "used"),): ValueObserverAggregator._TYPE(
+                min=1 / 4, max=1 / 4, sum=1 / 4, count=1, last=1 / 4
+            ),
+            (("state", "free"),): ValueObserverAggregator._TYPE(
+                min=2 / 4, max=2 / 4, sum=2 / 4, count=1, last=2 / 4
+            ),
+            (("state", "cached"),): ValueObserverAggregator._TYPE(
+                min=3 / 4, max=3 / 4, sum=3 / 4 , count=1, last=3 / 4
+            ),
         }
         self._test_metrics("system.memory.utilization", expected)
 
@@ -165,8 +227,12 @@ class TestSystemMetrics(TestBase):
         mock_swap_memory.return_value = SwapMemory(used=1, free=2, total=3)
 
         expected = {
-            (("state", "used"),): 1,
-            (("state", "free"),): 2,
+            (("state", "used"),): ValueObserverAggregator._TYPE(
+                min=1, max=1, sum=1, count=1, last=1
+            ),
+            (("state", "free"),): ValueObserverAggregator._TYPE(
+                min=2, max=2, sum=2, count=1, last=2
+            ),
         }
         self._test_metrics("system.swap.usage", expected)
 
@@ -176,8 +242,12 @@ class TestSystemMetrics(TestBase):
         mock_swap_memory.return_value = SwapMemory(used=1, free=2, total=3)
 
         expected = {
-            (("state", "used"),): 1 / 3,
-            (("state", "free"),): 2 / 3,
+            (("state", "used"),): ValueObserverAggregator._TYPE(
+                min=1 / 3, max=1 / 3, sum=1 / 3, count=1, last=1 / 3
+            ),
+            (("state", "free"),): ValueObserverAggregator._TYPE(
+                min=2 / 3, max=2 / 3, sum=2 / 3, count=1, last=2 / 3
+            ),
         }
         self._test_metrics("system.swap.utilization", expected)
 

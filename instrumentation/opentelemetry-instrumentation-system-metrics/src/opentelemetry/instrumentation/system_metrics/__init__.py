@@ -61,7 +61,7 @@ import typing
 import psutil
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import SumObserver, UpDownSumObserver
+from opentelemetry.sdk.metrics import SumObserver, ValueObserver
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
@@ -180,7 +180,7 @@ class SystemMetrics:
             description="System CPU utilization",
             unit="1",
             value_type=float,
-            observer_type=UpDownSumObserver,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -189,7 +189,7 @@ class SystemMetrics:
             description="System memory usage",
             unit="bytes",
             value_type=int,
-            observer_type=UpDownSumObserver,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -198,7 +198,7 @@ class SystemMetrics:
             description="System memory utilization",
             unit="1",
             value_type=float,
-            observer_type=UpDownSumObserver,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -207,7 +207,7 @@ class SystemMetrics:
             description="System swap usage",
             unit="pages",
             value_type=int,
-            observer_type=UpDownSumObserver,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -216,7 +216,7 @@ class SystemMetrics:
             description="System swap utilization",
             unit="1",
             value_type=float,
-            observer_type=UpDownSumObserver,
+            observer_type=ValueObserver,
         )
 
         # self.meter.register_observer(
@@ -279,7 +279,7 @@ class SystemMetrics:
         #     description="System filesystem usage",
         #     unit="bytes",
         #     value_type=int,
-        #     observer_type=UpDownSumObserver,
+        #     observer_type=ValueObserver,
         # )
 
         # self.meter.register_observer(
@@ -288,7 +288,7 @@ class SystemMetrics:
         #     description="System filesystem utilization",
         #     unit="1",
         #     value_type=float,
-        #     observer_type=UpDownSumObserver,
+        #     observer_type=ValueObserver,
         # )
 
         self.meter.register_observer(
@@ -333,7 +333,7 @@ class SystemMetrics:
             description="System network connections",
             unit="connections",
             value_type=int,
-            observer_type=UpDownSumObserver,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -342,7 +342,7 @@ class SystemMetrics:
             description="Runtime CPython memory",
             unit="bytes",
             value_type=int,
-            observer_type=UpDownSumObserver,
+            observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
@@ -414,7 +414,7 @@ class SystemMetrics:
             )
 
     def _get_system_memory_utilization(
-        self, observer: metrics.UpDownSumObserver
+        self, observer: metrics.ValueObserver
     ) -> None:
         """Observer callback for memory utilization
 
@@ -611,7 +611,7 @@ class SystemMetrics:
                 )
 
     def _get_system_network_connections(
-        self, observer: metrics.UpDownSumObserver
+        self, observer: metrics.ValueObserver
     ) -> None:
         """Observer callback for network connections
 
@@ -635,7 +635,7 @@ class SystemMetrics:
                 )
 
     def _get_runtime_cpython_memory(
-        self, observer: metrics.UpDownSumObserver
+        self, observer: metrics.ValueObserver
     ) -> None:
         """Observer callback for runtime CPyhton memory
 
