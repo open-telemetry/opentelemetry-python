@@ -18,14 +18,14 @@ For general information about sampling, see `the specification <https://github.c
 OpenTelemetry provides two types of samplers:
 
 - `StaticSampler`
-- `ProbabilitySampler`
+- `TraceIdRatioBased`
 
 A `StaticSampler` always returns the same sampling result regardless of the conditions. Both possible StaticSamplers are already created:
 
 - Always sample spans: ALWAYS_ON
-- Never sample spans: `ALWAYS_OFF`
+- Never sample spans: ALWAYS_OFF
 
-A `ProbabilitySampler` makes a random sampling result based on the sampling probability given.
+A `TraceIdRatioBased` sampler makes a random sampling result based on the sampling probability given.
 
 If the span being sampled has a parent, `ParentOrElse` will respect the parent span's sampling result. Otherwise, it returns the sampling result from the given delegate sampler.
 
@@ -43,10 +43,10 @@ To use a sampler, pass it into the tracer provider constructor. For example:
         ConsoleSpanExporter,
         SimpleExportSpanProcessor,
     )
-    from opentelemetry.sdk.trace.sampling import ProbabilitySampler
+    from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 
     # sample 1 in every 1000 traces
-    sampler = ProbabilitySampler(1/1000)
+    sampler = TraceIdRatioBased(1/1000)
 
     # set the sampler onto the global tracer provider
     trace.set_tracer_provider(TracerProvider(sampler=sampler))
@@ -56,7 +56,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
         SimpleExportSpanProcessor(ConsoleSpanExporter())
     )
 
-    # created spans will now be sampled by the ProbabilitySampler
+    # created spans will now be sampled by the TraceIdRatioBased sampler
     with trace.get_tracer(__name__).start_as_current_span("Test Span"):
         ...
 """
@@ -152,7 +152,7 @@ class StaticSampler(Sampler):
         return "AlwaysOnSampler"
 
 
-class ProbabilitySampler(Sampler):
+class TraceIdRatioBased(Sampler):
     """
     Sampler that makes sampling decisions probabalistically based on `rate`,
     while also respecting the parent span sampling decision.
@@ -204,7 +204,7 @@ class ProbabilitySampler(Sampler):
         return SamplingResult(decision, attributes)
 
     def get_description(self) -> str:
-        return "ProbabilitySampler{{{}}}".format(self._rate)
+        return "TraceIdRatioBased{{{}}}".format(self._rate)
 
 
 class ParentOrElse(Sampler):

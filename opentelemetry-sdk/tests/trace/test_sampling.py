@@ -30,11 +30,11 @@ class TestSampler(unittest.TestCase):
             ),
             0xDEADBEF1,
             0xDEADBEF2,
-            {"sampled parent": "sampling on"},
+            {"unsampled parent": "sampling on"},
         )
         self.assertTrue(sampling.is_sampled(no_record_always_on.decision))
         self.assertEqual(
-            no_record_always_on.attributes, {"sampled parent": "sampling on"}
+            no_record_always_on.attributes, {"unsampled parent": "sampling on"}
         )
 
         sampled_always_on = sampling.ALWAYS_ON.should_sample(
@@ -70,7 +70,7 @@ class TestSampler(unittest.TestCase):
             0xDEADBEF2,
             "sampled parent, sampling off",
         )
-        self.assertFalse(sampling.is_sampled(no_record_always_off.decision))
+        self.assertFalse(sampling.is_sampled(sampled_always_on.decision))
         self.assertEqual(sampled_always_on.attributes, {})
 
     def test_default_on(self):
@@ -138,7 +138,7 @@ class TestSampler(unittest.TestCase):
         self.assertEqual(default_off.attributes, {})
 
     def test_probability_sampler(self):
-        sampler = sampling.ProbabilitySampler(0.5)
+        sampler = sampling.TraceIdRatioBased(0.5)
 
         # Check that we sample based on the trace ID if the parent context is
         # null
@@ -158,7 +158,7 @@ class TestSampler(unittest.TestCase):
         )
 
     def test_probability_sampler_zero(self):
-        default_off = sampling.ProbabilitySampler(0.0)
+        default_off = sampling.TraceIdRatioBased(0.0)
         self.assertFalse(
             sampling.is_sampled(
                 default_off.should_sample(
@@ -168,7 +168,7 @@ class TestSampler(unittest.TestCase):
         )
 
     def test_probability_sampler_one(self):
-        default_off = sampling.ProbabilitySampler(1.0)
+        default_off = sampling.TraceIdRatioBased(1.0)
         self.assertTrue(
             sampling.is_sampled(
                 default_off.should_sample(
@@ -182,7 +182,7 @@ class TestSampler(unittest.TestCase):
         # Sample one of every 2^64 (= 5e-20) traces. This is the lowest
         # possible meaningful sampling rate, only traces with trace ID 0x0
         # should get sampled.
-        almost_always_off = sampling.ProbabilitySampler(2 ** -64)
+        almost_always_off = sampling.TraceIdRatioBased(2 ** -64)
         self.assertTrue(
             sampling.is_sampled(
                 almost_always_off.should_sample(
@@ -198,7 +198,7 @@ class TestSampler(unittest.TestCase):
             )
         )
         self.assertEqual(
-            sampling.ProbabilitySampler.get_bound_for_rate(2 ** -64), 0x1
+            sampling.TraceIdRatioBased.get_bound_for_rate(2 ** -64), 0x1
         )
 
         # Sample every trace with trace ID less than 0xffffffffffffffff. In
@@ -209,7 +209,7 @@ class TestSampler(unittest.TestCase):
         #
         #     1 - sys.float_info.epsilon
 
-        almost_always_on = sampling.ProbabilitySampler(1 - 2 ** -64)
+        almost_always_on = sampling.TraceIdRatioBased(1 - 2 ** -64)
         self.assertTrue(
             sampling.is_sampled(
                 almost_always_on.should_sample(
@@ -231,13 +231,13 @@ class TestSampler(unittest.TestCase):
         #     ).sampled
         # )
         # self.assertEqual(
-        #     sampling.ProbabilitySampler.get_bound_for_rate(1 - 2 ** -64)),
+        #     sampling.TraceIdRatioBased.get_bound_for_rate(1 - 2 ** -64)),
         #     0xFFFFFFFFFFFFFFFF,
         # )
 
         # Check that a sampler with the highest effective sampling rate < 1
         # refuses to sample traces with trace ID 0xffffffffffffffff.
-        almost_almost_always_on = sampling.ProbabilitySampler(
+        almost_almost_always_on = sampling.TraceIdRatioBased(
             1 - sys.float_info.epsilon
         )
         self.assertFalse(
