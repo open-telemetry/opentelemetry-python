@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 from collections import namedtuple
+from platform import python_implementation
 from unittest import mock
 
 from opentelemetry import metrics
 from opentelemetry.instrumentation.system_metrics import SystemMetrics
-from opentelemetry.test.test_base import TestBase
-
 from opentelemetry.sdk.metrics.export.aggregate import ValueObserverAggregator
+from opentelemetry.test.test_base import TestBase
 
 
 class TestSystemMetrics(TestBase):
@@ -35,6 +37,8 @@ class TestSystemMetrics(TestBase):
             SystemMetrics(self.memory_metrics_exporter)
 
         self.assertEqual(len(meter.observers), 18)
+
+        implementation = python_implementation().lower()
 
         observer_names = [
             "system.cpu.time",
@@ -52,9 +56,9 @@ class TestSystemMetrics(TestBase):
             "system.network.errors",
             "system.network.io",
             "system.network.connections",
-            "runtime.CPython.memory",
-            "runtime.CPython.cpu_time",
-            "runtime.CPython.gc_count",
+            "runtime.{}.memory".format(implementation),
+            "runtime.{}.cpu_time".format(implementation),
+            "runtime.{}.gc_count".format(implementation),
         ]
 
         for observer in meter.observers:
@@ -123,56 +127,56 @@ class TestSystemMetrics(TestBase):
                 max=1.2 / 100,
                 sum=1.2 / 100,
                 count=1,
-                last=1.2 / 100
+                last=1.2 / 100,
             ),
             (("cpu", 1), ("state", "user"),): ValueObserverAggregator._TYPE(
                 min=3.4 / 100,
                 max=3.4 / 100,
                 sum=3.4 / 100,
                 count=1,
-                last=3.4 / 100
+                last=3.4 / 100,
             ),
             (("cpu", 1), ("state", "system"),): ValueObserverAggregator._TYPE(
                 min=5.6 / 100,
                 max=5.6 / 100,
                 sum=5.6 / 100,
                 count=1,
-                last=5.6 / 100
+                last=5.6 / 100,
             ),
             (("cpu", 1), ("state", "irq"),): ValueObserverAggregator._TYPE(
                 min=7.8 / 100,
                 max=7.8 / 100,
                 sum=7.8 / 100,
                 count=1,
-                last=7.8 / 100
+                last=7.8 / 100,
             ),
             (("cpu", 2), ("state", "idle"),): ValueObserverAggregator._TYPE(
                 min=1.2 / 100,
                 max=1.2 / 100,
                 sum=1.2 / 100,
                 count=1,
-                last=1.2 / 100
+                last=1.2 / 100,
             ),
             (("cpu", 2), ("state", "user"),): ValueObserverAggregator._TYPE(
                 min=3.4 / 100,
                 max=3.4 / 100,
                 sum=3.4 / 100,
                 count=1,
-                last=3.4 / 100
+                last=3.4 / 100,
             ),
             (("cpu", 2), ("state", "system"),): ValueObserverAggregator._TYPE(
                 min=5.6 / 100,
                 max=5.6 / 100,
                 sum=5.6 / 100,
                 count=1,
-                last=5.6 / 100
+                last=5.6 / 100,
             ),
             (("cpu", 2), ("state", "irq"),): ValueObserverAggregator._TYPE(
                 min=7.8 / 100,
                 max=7.8 / 100,
                 sum=7.8 / 100,
                 count=1,
-                last=7.8 / 100
+                last=7.8 / 100,
             ),
         }
         self._test_metrics("system.cpu.utilization", expected)
@@ -216,7 +220,7 @@ class TestSystemMetrics(TestBase):
                 min=2 / 4, max=2 / 4, sum=2 / 4, count=1, last=2 / 4
             ),
             (("state", "cached"),): ValueObserverAggregator._TYPE(
-                min=3 / 4, max=3 / 4, sum=3 / 4 , count=1, last=3 / 4
+                min=3 / 4, max=3 / 4, sum=3 / 4, count=1, last=3 / 4
             ),
         }
         self._test_metrics("system.memory.utilization", expected)

@@ -57,6 +57,7 @@ API
 import gc
 import os
 import typing
+from platform import python_implementation
 
 import psutil
 
@@ -80,6 +81,7 @@ class SystemMetrics:
         self.controller = PushController(
             meter=self.meter, exporter=exporter, interval=interval
         )
+        self._python_implementation = python_implementation().lower()
         if config is None:
             self._config = {
                 "system_cpu_time": ["idle", "user", "system", "irq"],
@@ -101,69 +103,42 @@ class SystemMetrics:
                 "system_network_errors": ["transmit", "receive"],
                 "system_network_io": ["trasmit", "receive"],
                 "system_network_connections": ["family", "type"],
-                "runtime_CPython_memory": ["rss", "vms"],
-                "runtime_CPython_cpu_time": ["user", "system"],
+                "runtime_memory": ["rss", "vms"],
+                "runtime_cpu_time": ["user", "system"],
             }
         else:
             self._config = config
 
         self._proc = psutil.Process(os.getpid())
 
-        self._system_cpu_time_labels = {}
-        self._system_cpu_utilization_labels = {}
+        self._system_cpu_time_labels = self._labels.copy()
+        self._system_cpu_utilization_labels = self._labels.copy()
 
-        self._system_memory_usage_labels = {}
-        self._system_memory_utilization_labels = {}
+        self._system_memory_usage_labels = self._labels.copy()
+        self._system_memory_utilization_labels = self._labels.copy()
 
-        self._system_swap_usage_labels = {}
-        self._system_swap_utilization_labels = {}
-        # self._system_swap_page_faults = {}
-        # self._system_swap_page_operations = {}
+        self._system_swap_usage_labels = self._labels.copy()
+        self._system_swap_utilization_labels = self._labels.copy()
+        # self._system_swap_page_faults = self._labels.copy()
+        # self._system_swap_page_operations = self._labels.copy()
 
-        self._system_disk_io_labels = {}
-        self._system_disk_operations_labels = {}
-        self._system_disk_time_labels = {}
-        self._system_disk_merged_labels = {}
+        self._system_disk_io_labels = self._labels.copy()
+        self._system_disk_operations_labels = self._labels.copy()
+        self._system_disk_time_labels = self._labels.copy()
+        self._system_disk_merged_labels = self._labels.copy()
 
-        # self._system_filesystem_usage_labels = {}
-        # self._system_filesystem_utilization_labels = {}
+        # self._system_filesystem_usage_labels = self._labels.copy()
+        # self._system_filesystem_utilization_labels = self._labels.copy()
 
-        self._system_network_dropped_packets_labels = {}
-        self._system_network_packets_labels = {}
-        self._system_network_errors_labels = {}
-        self._system_network_io_labels = {}
-        self._system_network_connections_labels = {}
+        self._system_network_dropped_packets_labels = self._labels.copy()
+        self._system_network_packets_labels = self._labels.copy()
+        self._system_network_errors_labels = self._labels.copy()
+        self._system_network_io_labels = self._labels.copy()
+        self._system_network_connections_labels = self._labels.copy()
 
-        self._runtime_cpython_memory_labels = {}
-        self._runtime_cpython_cpu_time_labels = {}
-        self._runtime_cpython_gc_count_labels = {}
-
-        # create the label set for each observer once
-        for key, value in self._labels.items():
-            self._system_cpu_time_labels[key] = value
-            self._system_cpu_utilization_labels[key] = value
-
-            self._system_memory_usage_labels[key] = value
-            self._system_memory_utilization_labels[key] = value
-
-            self._system_swap_usage_labels[key] = value
-            self._system_swap_utilization_labels[key] = value
-            # self._system_swap_page_faults[key] = value
-            # self._system_swap_page_operations [key] = value
-
-            self._system_disk_io_labels[key] = value
-            self._system_disk_operations_labels[key] = value
-            self._system_disk_time_labels[key] = value
-            self._system_disk_merged_labels[key] = value
-
-            # self._system_filesystem_usage_labels[key] = value
-            # self._system_filesystem_utilization_labels[key] = value
-
-            self._system_network_dropped_packets_labels[key] = value
-            self._system_network_packets_labels[key] = value
-            self._system_network_errors_labels[key] = value
-            self._system_network_io_labels[key] = value
-            self._system_network_connections_labels[key] = value
+        self._runtime_memory_labels = self._labels.copy()
+        self._runtime_cpu_time_labels = self._labels.copy()
+        self._runtime_gc_count_labels = self._labels.copy()
 
         self.meter.register_observer(
             callback=self._get_system_cpu_time,
@@ -337,27 +312,33 @@ class SystemMetrics:
         )
 
         self.meter.register_observer(
-            callback=self._get_runtime_cpython_memory,
-            name="runtime.CPython.memory",
-            description="Runtime CPython memory",
+            callback=self._get_runtime_memory,
+            name="runtime.{}.memory".format(self._python_implementation),
+            description="Runtime {} memory".format(
+                self._python_implementation
+            ),
             unit="bytes",
             value_type=int,
             observer_type=ValueObserver,
         )
 
         self.meter.register_observer(
-            callback=self._get_runtime_cpython_cpu_time,
-            name="runtime.CPython.cpu_time",
-            description="Runtime CPython CPU time",
+            callback=self._get_runtime_cpu_time,
+            name="runtime.{}.cpu_time".format(self._python_implementation),
+            description="Runtime {} CPU time".format(
+                self._python_implementation
+            ),
             unit="seconds",
             value_type=float,
             observer_type=SumObserver,
         )
 
         self.meter.register_observer(
-            callback=self._get_runtime_cpython_memory,
-            name="runtime.CPython.gc_count",
-            description="Runtime CPython GC count",
+            callback=self._get_runtime_memory,
+            name="runtime.{}.gc_count".format(self._python_implementation),
+            description="Runtime {} GC count".format(
+                self._python_implementation
+            ),
             unit="bytes",
             value_type=int,
             observer_type=SumObserver,
@@ -634,46 +615,38 @@ class SystemMetrics:
                     self._system_network_connections_labels,
                 )
 
-    def _get_runtime_cpython_memory(
-        self, observer: metrics.ValueObserver
-    ) -> None:
-        """Observer callback for runtime CPyhton memory
+    def _get_runtime_memory(self, observer: metrics.ValueObserver) -> None:
+        """Observer callback for runtime memory
 
         Args:
             observer: the observer to update
         """
         proc_memory = self._proc.memory_info()
-        for metric in self._config["runtime_CPython_memory"]:
-            self._runtime_cpython_memory_labels["type"] = metric
+        for metric in self._config["runtime_memory"]:
+            self._runtime_memory_labels["type"] = metric
             observer.observe(
-                getattr(proc_memory, metric),
-                self._runtime_cpython_memory_labels,
+                getattr(proc_memory, metric), self._runtime_memory_labels,
             )
 
-    def _get_runtime_cpython_cpu_time(
-        self, observer: metrics.SumObserver
-    ) -> None:
-        """Observer callback for runtime CPython CPU time
+    def _get_runtime_cpu_time(self, observer: metrics.SumObserver) -> None:
+        """Observer callback for runtime CPU time
 
         Args:
             observer: the observer to update
         """
         proc_cpu = self._proc.cpu_times()
-        for metric in self._config["runtime_CPython_cpu_time"]:
-            self._runtime_cpython_cpu_time_labels["type"] = metric
+        for metric in self._config["runtime_cpu_time"]:
+            self._runtime_cpu_time_labels["type"] = metric
             observer.observe(
-                getattr(proc_cpu, metric),
-                self._runtime_cpython_cpu_time_labels,
+                getattr(proc_cpu, metric), self._runtime_cpu_time_labels,
             )
 
-    def _get_runtime_cpython_gc_count(
-        self, observer: metrics.SumObserver
-    ) -> None:
-        """Observer callback for CPython garbage collection
+    def _get_runtime_gc_count(self, observer: metrics.SumObserver) -> None:
+        """Observer callback for garbage collection
 
         Args:
             observer: the observer to update
         """
         for index, count in enumerate(gc.get_count()):
-            self._runtime_cpython_gc_count_labels["count"] = str(index)
-            observer.observe(count, self._runtime_cpython_gc_count_labels)
+            self._runtime_gc_count_labels["count"] = str(index)
+            observer.observe(count, self._runtime_gc_count_labels)
