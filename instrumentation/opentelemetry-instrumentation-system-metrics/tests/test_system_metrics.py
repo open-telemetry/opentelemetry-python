@@ -94,8 +94,12 @@ class TestSystemMetrics(TestBase):
             system_metrics = SystemMetrics(self.memory_metrics_exporter)
             self._assert_metrics(observer_name, system_metrics, expected)
 
+    # When this test case is executed, _get_system_cpu_utilization gets run
+    # too because of the controller thread which runs all observers. This patch
+    # is added here to stop a warning that would otherwise be raised.
+    @mock.patch("psutil.cpu_times_percent")
     @mock.patch("psutil.cpu_times")
-    def test_system_cpu_time(self, mock_cpu_times):
+    def test_system_cpu_time(self, mock_cpu_times, mock_cpu_times_percent):
         CPUTimes = namedtuple("CPUTimes", ["idle", "user", "system", "irq"])
         mock_cpu_times.return_value = [
             CPUTimes(idle=1.2, user=3.4, system=5.6, irq=7.8),
