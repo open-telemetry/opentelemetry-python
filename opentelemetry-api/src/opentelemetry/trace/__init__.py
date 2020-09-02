@@ -138,28 +138,6 @@ class Link(LinkBase):
         return self._attributes
 
 
-class LazyLink(LinkBase):
-    """A lazy link to a `Span`.
-
-    Args:
-        context: `SpanContext` of the `Span` to link to.
-        link_formatter: Callable object that returns the attributes of the
-            Link.
-    """
-
-    def __init__(
-        self,
-        context: "SpanContext",
-        link_formatter: types.AttributesFormatter,
-    ) -> None:
-        super().__init__(context)
-        self._link_formatter = link_formatter
-
-    @property
-    def attributes(self) -> types.Attributes:
-        return self._link_formatter()
-
-
 class SpanKind(enum.Enum):
     """Specifies additional details on how this span relates to its parent span.
 
@@ -251,7 +229,7 @@ class Tracer(abc.ABC):
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
         set_status_on_exception: bool = True,
@@ -303,7 +281,7 @@ class Tracer(abc.ABC):
         name: str,
         parent: ParentSpan = CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
@@ -379,7 +357,7 @@ class DefaultTracer(Tracer):
         name: str,
         parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
         set_status_on_exception: bool = True,
@@ -393,7 +371,7 @@ class DefaultTracer(Tracer):
         name: str,
         parent: ParentSpan = Tracer.CURRENT_SPAN,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: typing.Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
@@ -464,7 +442,6 @@ __all__ = [
     "DefaultSpan",
     "DefaultTracer",
     "DefaultTracerProvider",
-    "LazyLink",
     "Link",
     "LinkBase",
     "ParentSpan",
