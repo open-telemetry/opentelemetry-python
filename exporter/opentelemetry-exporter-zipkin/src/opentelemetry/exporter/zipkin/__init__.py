@@ -24,6 +24,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 
 .. _Zipkin: https://zipkin.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+.. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
 
 .. code:: python
 
@@ -56,6 +57,8 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
+
+The exporter supports endpoint configuration via the OTEL_EXPORTER_ZIPKIN_ENDPOINT environment variables as defined in the `Specification`_
 
 API
 ---
