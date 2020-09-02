@@ -15,7 +15,7 @@
 import typing
 import unittest
 
-from opentelemetry import correlationcontext, trace
+from opentelemetry import baggage, trace
 from opentelemetry.propagators import extract, inject
 from opentelemetry.trace import get_current_span, set_span_in_context
 
@@ -41,28 +41,28 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         headers = {
-            "otcorrelationcontext": ["key1=val1,key2=val2"],
+            "otcorrelations": ["key1=val1,key2=val2"],
             "traceparent": [traceparent_value],
             "tracestate": [tracestate_value],
         }
         ctx = extract(get_as_list, headers)
-        correlations = correlationcontext.get_correlations(context=ctx)
+        baggage_entries = baggage.get_all(context=ctx)
         expected = {"key1": "val1", "key2": "val2"}
-        self.assertEqual(correlations, expected)
+        self.assertEqual(baggage_entries, expected)
         span_context = get_current_span(context=ctx).get_context()
 
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
 
         span = trace.DefaultSpan(span_context)
-        ctx = correlationcontext.set_correlation("key3", "val3")
-        ctx = correlationcontext.set_correlation("key4", "val4", context=ctx)
+        ctx = baggage.set_baggage("key3", "val3")
+        ctx = baggage.set_baggage("key4", "val4", context=ctx)
         ctx = set_span_in_context(span, context=ctx)
         output = {}
         inject(dict.__setitem__, output, context=ctx)
         self.assertEqual(traceparent_value, output["traceparent"])
-        self.assertIn("key3=val3", output["otcorrelationcontext"])
-        self.assertIn("key4=val4", output["otcorrelationcontext"])
+        self.assertIn("key3=val3", output["otcorrelations"])
+        self.assertIn("key4=val4", output["otcorrelations"])
         self.assertIn("foo=1", output["tracestate"])
         self.assertIn("bar=2", output["tracestate"])
         self.assertIn("baz=3", output["tracestate"])
