@@ -18,6 +18,8 @@ import unittest
 from time import sleep
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 
 class TestFlask(unittest.TestCase):
@@ -27,10 +29,13 @@ class TestFlask(unittest.TestCase):
         server = subprocess.Popen(
             [sys.executable, server_script], stdout=subprocess.PIPE,
         )
-        sleep(1)
+        retry_strategy = Retry(total=10, backoff_factor=1)
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        http = requests.Session()
+        http.mount("http://", adapter)
 
         try:
-            result = requests.get("http://localhost:5000")
+            result = http.get("http://localhost:5000")
             self.assertEqual(result.status_code, 200)
 
             sleep(0.1)
