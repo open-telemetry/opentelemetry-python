@@ -94,11 +94,33 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
 
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
 
+    def test_simple_span_processor_not_sampled(self):
+        tracer_provider = trace.TracerProvider(sampler=trace.sampling.ALWAYS_OFF)
+        tracer = tracer_provider.get_tracer(__name__)
+
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.SimpleExportSpanProcessor(my_exporter)
+        tracer_provider.add_span_processor(span_processor)
+
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_as_current_span("bar"):
+                with tracer.start_as_current_span("xxx"):
+                    pass
+
+        self.assertListEqual([], spans_names_list)
+
 
 def _create_start_and_end_span(name, span_processor):
     span = trace.Span(
         name,
-        mock.Mock(spec=trace_api.SpanContext),
+        trace_api.SpanContext(
+            0xDEADBEEF,
+            0xDEADBEEF,
+            is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
+        ),
         span_processor=span_processor,
     )
     span.start()
@@ -176,7 +198,6 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         for _ in range(512):
             _create_start_and_end_span("foo", span_processor)
-
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 512)
         span_processor.shutdown()
@@ -203,6 +224,29 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 1024)
+        span_processor.shutdown()
+
+    def test_batch_span_processor_not_sampled(self):
+        tracer_provider = trace.TracerProvider(sampler=trace.sampling.ALWAYS_OFF)
+        tracer = tracer_provider.get_tracer(__name__)
+        spans_names_list = []
+
+        my_exporter = MySpanExporter(
+            destination=spans_names_list, max_export_batch_size=128
+        )
+        span_processor = export.BatchExportSpanProcessor(
+            my_exporter,
+            max_queue_size=256,
+            max_export_batch_size=64,
+            schedule_delay_millis=100,
+        )
+        tracer_provider.add_span_processor(span_processor)
+        with tracer.start_as_current_span("foo"):
+            pass
+        time.sleep(0.05)  # give some time for the exporter to upload spans
+
+        self.assertTrue(span_processor.force_flush())
+        self.assertEqual(len(spans_names_list), 0)
         span_processor.shutdown()
 
     def test_batch_span_processor_scheduled_delay(self):

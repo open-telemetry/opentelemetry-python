@@ -23,6 +23,7 @@ from enum import Enum
 from opentelemetry.context import attach, detach, get_current, set_value
 from opentelemetry.trace import DefaultSpan
 from opentelemetry.util import time_ns
+from opentelemetry.sdk.trace import sampling
 
 from .. import Span, SpanProcessor
 
@@ -75,6 +76,8 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
+        if not span.context.trace_flags.sampled:
+            return
         token = attach(set_value("suppress_instrumentation", True))
         try:
             self.span_exporter.export((span,))
@@ -150,6 +153,8 @@ class BatchExportSpanProcessor(SpanProcessor):
     def on_end(self, span: Span) -> None:
         if self.done:
             logger.warning("Already shutdown, dropping span.")
+            return
+        if not span.context.trace_flags.sampled:
             return
         if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
