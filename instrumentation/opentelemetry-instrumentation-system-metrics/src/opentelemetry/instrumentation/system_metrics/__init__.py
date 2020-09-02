@@ -62,7 +62,10 @@ from platform import python_implementation
 import psutil
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import SumObserver, ValueObserver
+from opentelemetry.sdk.metrics import (
+    SumObserver, ValueObserver, UpDownSumObserver
+)
+from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
@@ -308,7 +311,7 @@ class SystemMetrics:
             description="System network connections",
             unit="connections",
             value_type=int,
-            observer_type=ValueObserver,
+            observer_type=UpDownSumObserver,
         )
 
         self.meter.register_observer(
@@ -592,7 +595,7 @@ class SystemMetrics:
                 )
 
     def _get_system_network_connections(
-        self, observer: metrics.ValueObserver
+        self, observer: metrics.UpDownSumObserver
     ) -> None:
         """Observer callback for network connections
 
@@ -601,6 +604,9 @@ class SystemMetrics:
         """
         # TODO How to find the device identifier for a particular
         # connection?
+
+        connection_counters = {}
+
         for net_connection in psutil.net_connections():
             for metric in self._config["system_network_connections"]:
                 self._system_network_connections_labels["protocol"] = {
@@ -610,10 +616,24 @@ class SystemMetrics:
                 self._system_network_connections_labels[
                     "state"
                 ] = net_connection.status
-                observer.observe(
-                    getattr(net_connection, metric),
-                    self._system_network_connections_labels,
-                )
+
+            connection_counters_key = get_dict_as_key(
+                self._system_network_connections_labels
+            )
+
+            if connection_counters_key in connection_counters.keys():
+                connection_counters[connection_counters_key]["counter"] += 1
+            else:
+                connection_counters[connection_counters_key] = {
+                    "counter": 1,
+                    "labels": self._system_network_connections_labels.copy()
+                }
+
+        for connection_counter in connection_counters.values():
+            observer.observe(
+                connection_counter["counter"],
+                connection_counter["labels"],
+            )
 
     def _get_runtime_memory(self, observer: metrics.ValueObserver) -> None:
         """Observer callback for runtime memory

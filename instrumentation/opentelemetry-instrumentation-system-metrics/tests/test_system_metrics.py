@@ -73,6 +73,9 @@ class TestSystemMetrics(TestBase):
         ) in (
             self.memory_metrics_exporter._exported_metrics  # pylint: disable=protected-access
         ):
+            if metric.instrument.name == "system.network.connections":
+                from ipdb import set_trace
+                set_trace
             if (
                 metric.labels in expected
                 and metric.instrument.name == observer_name
@@ -440,7 +443,7 @@ class TestSystemMetrics(TestBase):
         self._test_metrics("system.disk.merged", expected)
 
     @mock.patch("psutil.net_io_counters")
-    def test_system_network_dropped_packets(self, mock_disk_io_counters):
+    def test_system_network_dropped_packets(self, mock_net_io_counters):
         NetIO = namedtuple(
             "NetIO",
             [
@@ -454,7 +457,7 @@ class TestSystemMetrics(TestBase):
                 "bytes_recv",
             ],
         )
-        mock_disk_io_counters.return_value = {
+        mock_net_io_counters.return_value = {
             "eth0": NetIO(
                 dropin=1,
                 dropout=2,
@@ -486,7 +489,7 @@ class TestSystemMetrics(TestBase):
         self._test_metrics("system.network.dropped_packets", expected)
 
     @mock.patch("psutil.net_io_counters")
-    def test_system_network_packets(self, mock_disk_io_counters):
+    def test_system_network_packets(self, mock_net_io_counters):
         NetIO = namedtuple(
             "NetIO",
             [
@@ -500,7 +503,7 @@ class TestSystemMetrics(TestBase):
                 "bytes_recv",
             ],
         )
-        mock_disk_io_counters.return_value = {
+        mock_net_io_counters.return_value = {
             "eth0": NetIO(
                 dropin=1,
                 dropout=2,
@@ -532,7 +535,7 @@ class TestSystemMetrics(TestBase):
         self._test_metrics("system.network.packets", expected)
 
     @mock.patch("psutil.net_io_counters")
-    def test_system_network_errors(self, mock_disk_io_counters):
+    def test_system_network_errors(self, mock_net_io_counters):
         NetIO = namedtuple(
             "NetIO",
             [
@@ -546,7 +549,7 @@ class TestSystemMetrics(TestBase):
                 "bytes_recv",
             ],
         )
-        mock_disk_io_counters.return_value = {
+        mock_net_io_counters.return_value = {
             "eth0": NetIO(
                 dropin=1,
                 dropout=2,
@@ -578,7 +581,7 @@ class TestSystemMetrics(TestBase):
         self._test_metrics("system.network.errors", expected)
 
     @mock.patch("psutil.net_io_counters")
-    def test_system_network_io(self, mock_disk_io_counters):
+    def test_system_network_io(self, mock_net_io_counters):
         NetIO = namedtuple(
             "NetIO",
             [
@@ -592,7 +595,7 @@ class TestSystemMetrics(TestBase):
                 "bytes_recv",
             ],
         )
-        mock_disk_io_counters.return_value = {
+        mock_net_io_counters.return_value = {
             "eth0": NetIO(
                 dropin=1,
                 dropout=2,
@@ -622,3 +625,28 @@ class TestSystemMetrics(TestBase):
             (("device", "eth1"), ("direction", "transmit"),): 15,
         }
         self._test_metrics("system.network.io", expected)
+
+    @mock.patch("psutil.net_connections")
+    def test_system_network_connections(self, mock_net_connections):
+        NetConnection = namedtuple(
+            "NetworkConnection", ["family", "type", "status"]
+        )
+        Type = namedtuple("Type", ["value"])
+        mock_net_connections.return_value = [
+            NetConnection(
+                family=1,
+                status="ESTABLISHED",
+                type=Type(value=2),
+            ),
+            NetConnection(
+                family=1,
+                status="ESTABLISHED",
+                type=Type(value=1),
+            ),
+        ]
+
+        expected = {
+            (("protocol", "udp"), ("state", "ESTABLISHED"),): 1,
+            (("protocol", "tcp"), ("state", "ESTABLISHED"),): 1,
+        }
+        self._test_metrics("system.network.connections", expected)
