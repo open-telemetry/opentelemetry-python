@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add support for OTEL_EXPORTER_ZIPKIN_ENDPOINT env var
+  ([#1064](https://github.com/open-telemetry/opentelemetry-python/pull/1064))
+
 ## Version 0.12b0
 
 Released 2020-08-14
