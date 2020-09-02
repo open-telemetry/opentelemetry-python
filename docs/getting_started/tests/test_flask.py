@@ -29,10 +29,7 @@ class TestFlask(unittest.TestCase):
         server = subprocess.Popen(
             [sys.executable, server_script], stdout=subprocess.PIPE,
         )
-        retry_strategy = Retry(
-            total=10,
-            backoff_factor=1,
-        )
+        retry_strategy = Retry(total=10, backoff_factor=1)
         adapter = HTTPAdapter(max_retries=retry_strategy)
         http = requests.Session()
         http.mount("http://", adapter)
