@@ -12,6 +12,8 @@
   ([#1034](https://github.com/open-telemetry/opentelemetry-python/pull/1034))
 - Remove lazy Event and Link API from Span interface
   ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
+- Rename CorrelationContext to Baggage
+  ([#1060](https://github.com/open-telemetry/opentelemetry-python/pull/1060))
 
 ## Version 0.12b0
 
