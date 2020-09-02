@@ -15,11 +15,9 @@
 import typing
 import unittest
 
-from opentelemetry import correlationcontext
+from opentelemetry import baggage
+from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context import get_current
-from opentelemetry.correlationcontext.propagation import (
-    CorrelationContextPropagator,
-)
 
 
 def get_as_list(
@@ -28,31 +26,29 @@ def get_as_list(
     return dict_object.get(key, [])
 
 
-class TestCorrelationContextPropagation(unittest.TestCase):
+class TestBaggagePropagation(unittest.TestCase):
     def setUp(self):
-        self.propagator = CorrelationContextPropagator()
+        self.propagator = BaggagePropagator()
 
     def _extract(self, header_value):
         """Test helper"""
-        header = {"otcorrelationcontext": [header_value]}
-        return correlationcontext.get_correlations(
-            self.propagator.extract(get_as_list, header)
-        )
+        header = {"otcorrelations": [header_value]}
+        return baggage.get_all(self.propagator.extract(get_as_list, header))
 
     def _inject(self, values):
         """Test helper"""
         ctx = get_current()
         for k, v in values.items():
-            ctx = correlationcontext.set_correlation(k, v, context=ctx)
+            ctx = baggage.set_baggage(k, v, context=ctx)
         output = {}
         self.propagator.inject(dict.__setitem__, output, context=ctx)
-        return output.get("otcorrelationcontext")
+        return output.get("otcorrelations")
 
     def test_no_context_header(self):
-        correlations = correlationcontext.get_correlations(
+        baggage_entries = baggage.get_all(
             self.propagator.extract(get_as_list, {})
         )
-        self.assertEqual(correlations, {})
+        self.assertEqual(baggage_entries, {})
 
     def test_empty_context_header(self):
         header = ""
@@ -94,7 +90,7 @@ class TestCorrelationContextPropagation(unittest.TestCase):
         self.assertEqual(self._extract(header), expected)
 
     def test_header_too_long(self):
-        long_value = "s" * (CorrelationContextPropagator.MAX_HEADER_LENGTH + 1)
+        long_value = "s" * (BaggagePropagator.MAX_HEADER_LENGTH + 1)
         header = "key1={}".format(long_value)
         expected = {}
         self.assertEqual(self._extract(header), expected)
@@ -103,20 +99,20 @@ class TestCorrelationContextPropagation(unittest.TestCase):
         header = ",".join(
             [
                 "key{}=val".format(k)
-                for k in range(CorrelationContextPropagator.MAX_PAIRS + 1)
+                for k in range(BaggagePropagator.MAX_PAIRS + 1)
             ]
         )
         self.assertEqual(
-            len(self._extract(header)), CorrelationContextPropagator.MAX_PAIRS
+            len(self._extract(header)), BaggagePropagator.MAX_PAIRS
         )
 
     def test_header_contains_pair_too_long(self):
-        long_value = "s" * (CorrelationContextPropagator.MAX_PAIR_LENGTH + 1)
+        long_value = "s" * (BaggagePropagator.MAX_PAIR_LENGTH + 1)
         header = "key1=value1,key2={},key3=value3".format(long_value)
         expected = {"key1": "value1", "key3": "value3"}
         self.assertEqual(self._extract(header), expected)
 
-    def test_inject_no_correlations(self):
+    def test_inject_no_baggage_entries(self):
         values = {}
         output = self._inject(values)
         self.assertEqual(None, output)
