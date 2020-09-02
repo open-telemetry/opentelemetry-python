@@ -6,8 +6,8 @@ OpenTelemetry Python API
 .. toctree::
     :maxdepth: 1
 
+    baggage
     configuration
     context
-    baggage
     metrics
     trace
