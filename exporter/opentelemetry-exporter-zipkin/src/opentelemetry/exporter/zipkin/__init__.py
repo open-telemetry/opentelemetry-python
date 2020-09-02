@@ -63,7 +63,9 @@ API
 
 import json
 import logging
+import os
 from typing import Optional, Sequence
+from urllib.parse import urlparse
 
 import requests
 
@@ -75,6 +77,9 @@ DEFAULT_HOST_NAME = "localhost"
 DEFAULT_PORT = 9411
 DEFAULT_PROTOCOL = "http"
 DEFAULT_RETRY = False
+DEFAULT_URL = "{}://{}:{}{}".format(
+    DEFAULT_PROTOCOL, DEFAULT_HOST_NAME, DEFAULT_PORT, DEFAULT_ENDPOINT
+)
 ZIPKIN_HEADERS = {"Content-Type": "application/json"}
 
 SPAN_KIND_MAP = {
@@ -117,13 +122,14 @@ class ZipkinSpanExporter(SpanExporter):
         retry: Optional[str] = DEFAULT_RETRY,
     ):
         self.service_name = service_name
-        self.host_name = host_name
-        self.port = port
-        self.endpoint = endpoint
-        self.protocol = protocol
-        self.url = "{}://{}:{}{}".format(
-            self.protocol, self.host_name, self.port, self.endpoint
-        )
+        self.url = os.environ.get("OTEL_EXPORTER_ZIPKIN_ENDPOINT", DEFAULT_URL)
+
+        url = "{}://{}:{}{}".format(protocol, host_name, port, endpoint)
+        if url != DEFAULT_URL:
+            self.url = url
+
+        self.port = urlparse(self.url).port
+
         self.ipv4 = ipv4
         self.ipv6 = ipv6
         self.retry = retry
