@@ -478,7 +478,7 @@ class MeterProvider(metrics_api.MeterProvider):
     def __init__(
         self,
         stateful=True,
-        resource: Resource = Resource.create_empty(),
+        resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
     ):
         self.stateful = stateful
