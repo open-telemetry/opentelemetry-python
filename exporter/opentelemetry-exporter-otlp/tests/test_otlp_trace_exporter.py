@@ -87,6 +87,14 @@ class TraceServiceServicerSUCCESS(TraceServiceServicer):
         return ExportTraceServiceResponse()
 
 
+class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
+    # pylint: disable=invalid-name,unused-argument,no-self-use
+    def Export(self, request, context):
+        context.set_code(StatusCode.ALREADY_EXISTS)
+
+        return ExportTraceServiceResponse()
+
+
 class TestOTLPSpanExporter(TestCase):
     def setUp(self):
         tracer_provider = TracerProvider()
@@ -176,6 +184,14 @@ class TestOTLPSpanExporter(TestCase):
         )
         self.assertEqual(
             self.exporter.export([self.span]), SpanExportResult.SUCCESS
+        )
+
+    def test_failure(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerALREADY_EXISTS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export([self.span]), SpanExportResult.FAILURE
         )
 
     def test_translate_spans(self):
