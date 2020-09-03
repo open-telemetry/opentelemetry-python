@@ -684,3 +684,17 @@ class TestSystemMetrics(TestBase):
         self._test_metrics(
             "runtime.{}.cpu_time".format(self.implementation), expected
         )
+
+    @mock.patch("gc.get_count")
+    def test_runtime_get_count(self, mock_gc_get_count):
+
+        mock_gc_get_count.configure_mock(**{"return_value": (1, 2, 3)})
+
+        expected = {
+            (("count", "0"),): 1,
+            (("count", "1"),): 2,
+            (("count", "2"),): 3,
+        }
+        self._test_metrics(
+            "runtime.{}.gc_count".format(self.implementation), expected
+        )

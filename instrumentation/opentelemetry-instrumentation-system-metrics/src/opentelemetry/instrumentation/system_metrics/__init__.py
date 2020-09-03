@@ -337,7 +337,7 @@ class SystemMetrics:
         )
 
         self.meter.register_observer(
-            callback=self._get_runtime_memory,
+            callback=self._get_runtime_gc_count,
             name="runtime.{}.gc_count".format(self._python_implementation),
             description="Runtime {} GC count".format(
                 self._python_implementation
