@@ -62,6 +62,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     :name: getting-started
 
     getting-started
+    faq-and-cookbook
 
 .. toctree::
     :maxdepth: 1
