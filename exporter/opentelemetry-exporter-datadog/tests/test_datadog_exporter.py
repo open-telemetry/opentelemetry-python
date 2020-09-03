@@ -23,7 +23,7 @@ from ddtrace.internal.writer import AgentWriter
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter import datadog
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace import sampling, Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
@@ -144,6 +144,10 @@ class TestDatadogSpanExporter(unittest.TestCase):
         # pylint: disable=invalid-name
         self.maxDiff = None
 
+        resource = Resource(
+            labels={"key_resource": "some_resource", "service.name": "resource_service_name"}
+        )
+
         span_names = ("test1", "test2", "test3")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         trace_id_low = 0x6F9EFCD03927272E
@@ -191,7 +195,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 instrumentation_info=instrumentation_info,
             ),
             trace.Span(
-                name=span_names[2], context=other_context, parent=None,
+                name=span_names[2], context=other_context, parent=None, resource=resource,
             ),
         ]
 
@@ -245,8 +249,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 start=start_times[2],
                 duration=durations[2],
                 error=0,
-                service="test-service",
-                meta={"env": "test", "team": "testers", "version": "0.0.1"},
+                service="resource_service_name",
+                meta={"env": "test", "team": "testers", "version": "0.0.1", "key_resource": "some_resource"},
             ),
         ]
 

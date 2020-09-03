@@ -26,7 +26,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint:disable=relative-beyond-top-level
-from .constants import DD_ORIGIN, ENV_KEY, SAMPLE_RATE_METRIC_KEY, VERSION_KEY
+from .constants import DD_ORIGIN, ENV_KEY, SAMPLE_RATE_METRIC_KEY, VERSION_KEY, SERVICE_NAME_TAG
 
 logger = logging.getLogger(__name__)
 
@@ -119,10 +119,14 @@ class DatadogSpanExporter(SpanExporter):
             # duration.
             tracer = None
 
+            # extract rasource labels to be used as tags as well as potential service name 
+            
+            [resource_tags, resource_service_name] = _extract_tags_from_resource(span.resource)
+
             datadog_span = DatadogSpan(
                 tracer,
                 _get_span_name(span),
-                service=self.service,
+                service=resource_service_name or self.service,
                 resource=_get_resource(span),
                 span_type=_get_span_type(span),
                 trace_id=trace_id,
@@ -140,7 +144,13 @@ class DatadogSpanExporter(SpanExporter):
                     datadog_span.set_tag("error.msg", exc_val)
                     datadog_span.set_tag("error.type", exc_type)
 
-            datadog_span.set_tags(span.attributes)
+
+            # combine resource labels and span attributes, don't modify existy span attributes
+            combined_span_tags = {}
+            combined_span_tags.update(resource_tags)
+            combined_span_tags.update(span.attributes)
+
+            datadog_span.set_tags(combined_span_tags)
 
             # add configured env tag
             if self.env is not None:
@@ -282,3 +292,28 @@ def _parse_tags_str(tags_str):
             parsed_tags[key] = value
 
     return parsed_tags
+
+
+def _extract_tags_from_resource(resource):
+    """Parse tags from resource.labels, except service.name which
+    has special significance within datadog"""
+    tags = {}
+    service_name = None
+    if not resource and resource.labels:
+        return [tags, service_name]
+
+    for attribute_key, attribute_value in resource.labels.items():
+        if isinstance(attribute_value, (int, bool, float)):
+            value = str(attribute_value)
+        elif isinstance(attribute_value, str):
+            value = attribute_value[:128]
+        else:
+            logger.warning("Could not serialize tag %s", attribute_key)
+            continue
+
+        if attribute_key == SERVICE_NAME_TAG:
+            service_name = value
+        else:
+            tags[attribute_key] = value
+    return [tags, service_name]
+
