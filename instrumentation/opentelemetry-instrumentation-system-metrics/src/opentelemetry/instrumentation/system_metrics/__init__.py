@@ -16,24 +16,27 @@ Instrument to report system (CPU, memory, network) and
 process (CPU, memory, garbage collection) metrics. By default, the
 following metrics are configured:
 
-"system.cpu.time": ["idle", "user", "system", "irq"],
-"system.cpu.utilization": ["idle", "user", "system", "irq"],
-"system.memory.usage": ["used", "free", "cached"],
-"system.memory.utilization": ["used", "free", "cached"],
-"system.swap.usage": ["used", "free"],
-"system.swap.utilization": ["used", "free"],
-"system.disk.io": ["read", "write"],
-"system.disk.operations": ["read", "write"],
-"system.disk.time": ["read", "write"],
-"system.disk.merged": ["read", "write"],
-"system.network.dropped.packets": ["transmit", "receive"],
-"system.network.packets": ["transmit", "receive"],
-"system.network.errors": ["transmit", "receive"],
-"system.network.io": ["trasmit", "receive"],
-"system.network.connections": ["family", "type"],
-"runtime.memory": ["rss", "vms"],
-"runtime.cpu.time": ["user", "system"],
+.. code:: python
 
+    {
+        "system.cpu.time": ["idle", "user", "system", "irq"],
+        "system.cpu.utilization": ["idle", "user", "system", "irq"],
+        "system.memory.usage": ["used", "free", "cached"],
+        "system.memory.utilization": ["used", "free", "cached"],
+        "system.swap.usage": ["used", "free"],
+        "system.swap.utilization": ["used", "free"],
+        "system.disk.io": ["read", "write"],
+        "system.disk.operations": ["read", "write"],
+        "system.disk.time": ["read", "write"],
+        "system.disk.merged": ["read", "write"],
+        "system.network.dropped.packets": ["transmit", "receive"],
+        "system.network.packets": ["transmit", "receive"],
+        "system.network.errors": ["transmit", "receive"],
+        "system.network.io": ["trasmit", "receive"],
+        "system.network.connections": ["family", "type"],
+        "runtime.memory": ["rss", "vms"],
+        "runtime.cpu.time": ["user", "system"],
+    }
 
 Usage
 -----
