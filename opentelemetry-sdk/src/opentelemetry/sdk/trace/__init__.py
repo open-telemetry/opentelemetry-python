@@ -515,7 +515,7 @@ class Span(trace_api.Span):
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             has_ended = self.end_time is not None
         if has_ended:
@@ -541,7 +541,7 @@ class Span(trace_api.Span):
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             has_ended = self.end_time is not None
 
@@ -569,7 +569,7 @@ class Span(trace_api.Span):
 
     def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             has_started = self.start_time is not None
             if not has_started:
@@ -583,7 +583,7 @@ class Span(trace_api.Span):
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             if self.start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
@@ -610,7 +610,7 @@ class Span(trace_api.Span):
             return
         self.name = name
 
-    def is_recording_events(self) -> bool:
+    def is_recording(self) -> bool:
         return True
 
     def set_status(self, status: trace_api.Status) -> None:
@@ -703,7 +703,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(name, parent, kind, attributes, links)
@@ -714,7 +714,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
@@ -741,6 +741,20 @@ class Tracer(trace_api.Tracer):
             trace_flags = parent_context.trace_flags
             trace_state = parent_context.trace_state
 
+        # The sampler decides whether to create a real or no-op span at the
+        # time of span creation. No-op spans do not record events, and are not
+        # exported.
+        # The sampler may also add attributes to the newly-created span, e.g.
+        # to include information about the sampling result.
+        sampling_result = self.source.sampler.should_sample(
+            parent_context, trace_id, name, attributes, links,
+        )
+
+        trace_flags = (
+            trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
+            if sampling_result.decision.is_sampled()
+            else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
+        )
         context = trace_api.SpanContext(
             trace_id,
             generate_span_id(),
@@ -749,29 +763,8 @@ class Tracer(trace_api.Tracer):
             trace_state=trace_state,
         )
 
-        # The sampler decides whether to create a real or no-op span at the
-        # time of span creation. No-op spans do not record events, and are not
-        # exported.
-        # The sampler may also add attributes to the newly-created span, e.g.
-        # to include information about the sampling decision.
-        sampling_decision = self.source.sampler.should_sample(
-            parent_context,
-            context.trace_id,
-            context.span_id,
-            name,
-            attributes,
-            links,
-        )
-
-        if sampling_decision.sampled:
-            options = context.trace_flags | trace_api.TraceFlags.SAMPLED
-            context.trace_flags = trace_api.TraceFlags(options)
-            if attributes is None:
-                span_attributes = sampling_decision.attributes
-            else:
-                # apply sampling decision attributes after initial attributes
-                span_attributes = attributes.copy()
-                span_attributes.update(sampling_decision.attributes)
+        # Only record if is_recording() is true
+        if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
             span = Span(
                 name=name,
@@ -779,7 +772,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
-                attributes=span_attributes,
+                attributes=sampling_result.attributes.copy(),
                 span_processor=self.source._active_span_processor,
                 kind=kind,
                 links=links,

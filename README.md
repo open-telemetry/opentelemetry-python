@@ -36,11 +36,13 @@
 
 ---
 
-## About this project
+## OpenTelemetry Python
 
-The Python [OpenTelemetry](https://opentelemetry.io/) client.
+The Python [OpenTelemetry](https://opentelemetry.io/) implementation.
 
-## Installation
+## Getting started
+
+OpenTelemetry's goal is to provide a single set of APIs to capture distributed traces and metrics from your application and send them to an observability platform. This project allows you to do just that for applications written in Python.
 
 This repository includes multiple installable packages. The `opentelemetry-api`
 package includes abstract classes and no-op implementations that comprise the OpenTelemetry API following
@@ -51,9 +53,6 @@ The `opentelemetry-sdk` package is the reference implementation of the API.
 Libraries that produce telemetry data should only depend on `opentelemetry-api`,
 and defer the choice of the SDK to the application developer. Applications may
 depend on `opentelemetry-sdk` or another package that implements the API.
-
-**Please note** that this library is currently in _beta_, and shouldn't
-generally be used in production environments.
 
 The API and SDK packages are available on PyPI, and can installed via `pip`:
 
@@ -94,13 +93,9 @@ The online documentation is available at https://opentelemetry-python.readthedoc
 if you want to access the documentation for the latest version use
 https://opentelemetry-python.readthedocs.io/en/latest/.
 
-## Compatible Exporters
-
-See the [OpenTelemetry registry](https://opentelemetry.io/registry/?s=python) for a list of exporters available.
-
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 We meet weekly on Thursday at 9AM PT. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
 
@@ -134,78 +129,7 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-python" />
 </a>
 
-## Release Schedule
+## Project Status
 
-OpenTelemetry Python is under active development.
-
-The library is not yet _generally available_, and releases aren't guaranteed to
-conform to a specific version of the specification. Future releases will not
-attempt to maintain backwards compatibility with previous releases. Each alpha
-and beta release includes significant changes to the API and SDK packages,
-making them incompatible with each other.
-
-The [v0.1 alpha
-release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.1.0)
-includes:
-
-- Tracing API
-- Tracing SDK
-- Metrics API
-- Metrics SDK (Partial)
-- W3C Trace Context Propagation
-- B3 Context Propagation
-- HTTP Integrations
-
-The [v0.2 alpha
-release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.2.0)
-includes:
-
-- OpenTracing Bridge
-- Jaeger Trace Exporter
-- Trace Sampling
-
-The [v0.3 alpha
-release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.3.0)
-includes:
-
-- Metrics Instruments and Labels
-- Flask Integration
-- PyMongo Integration
-
-The [v0.4 alpha
-release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.4.0)
-includes:
-
-- Metrics MinMaxSumCount Aggregator
-- Context API
-- Full Metrics SDK Pipeline
-- Metrics STDOUT Exporter
-- Dbapi2 Integration
-- MySQL Integration
-- Psycopg2 Integration
-- Zipkin Exporter
-- Prometheus Metrics Exporter
-- New Examples and Improvements to Existing Examples
-
-The [v0.5 beta
-release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.5.0)
-includes:
-
-- W3C Correlation Context Propagation
-- OpenTelemetry Collector Exporter Integration for both metrics and traces
-- Metrics SDK
-- Global configuration module
-- Documentation improvements
-
-The [v0.6 beta
-release](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.6.0)
-includes:
-
-- API changes and bugfixes
-- An autoinstrumentation package and updated Flask instrumentation
-- gRPC integration
-
-See the [project
-milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
-for details on upcoming releases. The dates and features described in issues
+Project [boards](https://github.com/open-telemetry/opentelemetry-python/projects) and [milestones](https://github.com/open-telemetry/opentelemetry-python/milestones) can be found at the respective links. We try to keep these accurate and should be the best place to go for answers on project status. The dates and features described in issues
 and milestones are estimates, and subject to change.

@@ -55,12 +55,8 @@ Example::
 
 import typing
 
-import opentelemetry.trace as trace
-from opentelemetry.context import get_current
+from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context.context import Context
-from opentelemetry.correlationcontext.propagation import (
-    CorrelationContextPropagator,
-)
 from opentelemetry.propagators import composite
 from opentelemetry.trace.propagation import httptextformat
 from opentelemetry.trace.propagation.tracecontexthttptextformat import (
@@ -111,7 +107,7 @@ def inject(
 
 
 _HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(
-    [TraceContextHTTPTextFormat(), CorrelationContextPropagator()],
+    [TraceContextHTTPTextFormat(), BaggagePropagator()],
 )  # type: httptextformat.HTTPTextFormat
 
 

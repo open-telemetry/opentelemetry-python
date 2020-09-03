@@ -8,8 +8,12 @@
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
 - Change return value type of `correlationcontext.get_correlations` to immutable `MappingProxyType`
   ([#1024](https://github.com/open-telemetry/opentelemetry-python/pull/1024))
+- Change is_recording_events to is_recording
+  ([#1034](https://github.com/open-telemetry/opentelemetry-python/pull/1034))
 - Remove lazy Event and Link API from Span interface
   ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
+- Rename CorrelationContext to Baggage
+  ([#1060](https://github.com/open-telemetry/opentelemetry-python/pull/1060))
 
 ## Version 0.12b0
 
