@@ -21,7 +21,7 @@ from unittest import mock
 import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
-from opentelemetry.sdk import trace, resources
+from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
@@ -171,21 +171,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         default_tags = [
             jaeger.Tag(
-                key=resources.TELEMETRY_SDK_NAME,
-                vType=jaeger.TagType.STRING,
-                vStr="opentelemetry",
-            ),
-            jaeger.Tag(
-                key=resources.TELEMETRY_SDK_LANGUAGE,
-                vType=jaeger.TagType.STRING,
-                vStr="python",
-            ),
-            jaeger.Tag(
-                key=resources.TELEMETRY_SDK_VERSION,
-                vType=jaeger.TagType.STRING,
-                vStr=resources.OPENTELEMETRY_SDK_VERSION,
-            ),
-            jaeger.Tag(
                 key="status.code",
                 vType=jaeger.TagType.LONG,
                 vLong=StatusCanonicalCode.OK.value,
@@ -230,9 +215,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
+        otel_spans[1].resource = Resource({})
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
+        otel_spans[2].resource = Resource({})
         otel_spans[2].end(end_time=end_times[2])
 
         # pylint: disable=protected-access
