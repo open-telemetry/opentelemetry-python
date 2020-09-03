@@ -27,10 +27,6 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
 
-OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
-    "opentelemetry-sdk"
-).version
-
 
 def new_tracer() -> trace_api.Tracer:
     return trace.TracerProvider().get_tracer(__name__)
@@ -950,12 +946,12 @@ class TestSpanProcessor(unittest.TestCase):
         "telemetry.sdk.version": "{version}"
     }}
 }}""".format(
-                version=OPENTELEMETRY_SDK_VERSION
+                version=resources.OPENTELEMETRY_SDK_VERSION
             ),
         )
         self.assertEqual(
             span.to_json(indent=None),
             '{{"name": "span-name", "context": {{"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{{}}"}}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {{}}, "events": [], "links": [], "resource": {{"telemetry.sdk.name": "opentelemetry", "telemetry.sdk.language": "python", "telemetry.sdk.version": "{version}"}}}}'.format(
-                version=OPENTELEMETRY_SDK_VERSION
+                version=resources.OPENTELEMETRY_SDK_VERSION
             ),
         )

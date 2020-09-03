@@ -22,10 +22,6 @@ import pkg_resources
 
 from opentelemetry.sdk import resources
 
-OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
-    "opentelemetry-sdk"
-).version
-
 
 class TestResources(unittest.TestCase):
     def test_create(self):
@@ -43,7 +39,7 @@ class TestResources(unittest.TestCase):
             "cost": 112.12,
             resources.TELEMETRY_SDK_NAME: "opentelemetry",
             resources.TELEMETRY_SDK_LANGUAGE: "python",
-            resources.TELEMETRY_SDK_VERSION: OPENTELEMETRY_SDK_VERSION,
+            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
         }
 
         resource = resources.Resource.create(labels)
@@ -94,7 +90,7 @@ class TestResources(unittest.TestCase):
         default_labels = {
             resources.TELEMETRY_SDK_NAME: "opentelemetry",
             resources.TELEMETRY_SDK_LANGUAGE: "python",
-            resources.TELEMETRY_SDK_VERSION: OPENTELEMETRY_SDK_VERSION,
+            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
         }
 
         labels_copy = labels.copy()
