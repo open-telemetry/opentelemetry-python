@@ -62,6 +62,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
 """
 import abc
 import enum
+from types import MappingProxyType
 from typing import Optional, Sequence
 
 # pylint: disable=unused-import
@@ -102,11 +103,10 @@ class SamplingResult:
         self, decision: Decision, attributes: Attributes = None,
     ) -> None:
         self.decision = decision
-        # TODO: attributes must be immutable
         if attributes is None:
-            self.attributes = {}
+            self.attributes = MappingProxyType({})
         else:
-            self.attributes = attributes
+            self.attributes = MappingProxyType(attributes)
 
 
 class Sampler(abc.ABC):

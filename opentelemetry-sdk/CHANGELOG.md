@@ -10,6 +10,8 @@
   ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
 - Improve BatchExportSpanProcessor
   ([#1062](https://github.com/open-telemetry/opentelemetry-python/pull/1062))
+- Populate resource attributes as per semantic conventions
+  ([#1053](https://github.com/open-telemetry/opentelemetry-python/pull/1053))
 
 ## Version 0.12b0
 
