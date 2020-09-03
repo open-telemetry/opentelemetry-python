@@ -941,8 +941,8 @@ class TestSpanProcessor(unittest.TestCase):
     "events": [],
     "links": [],
     "resource": {{
-        "telemetry.sdk.name": "opentelemetry",
         "telemetry.sdk.language": "python",
+        "telemetry.sdk.name": "opentelemetry",
         "telemetry.sdk.version": "{version}"
     }}
 }}""".format(
@@ -951,7 +951,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{{"name": "span-name", "context": {{"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{{}}"}}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {{}}, "events": [], "links": [], "resource": {{"telemetry.sdk.name": "opentelemetry", "telemetry.sdk.language": "python", "telemetry.sdk.version": "{version}"}}}}'.format(
+            '{{"name": "span-name", "context": {{"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{{}}"}}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {{}}, "events": [], "links": [], "resource": {{"telemetry.sdk.language": "python", "telemetry.sdk.name": "opentelemetry", "telemetry.sdk.version": "{version}"}}}}'.format(
                 version=resources.OPENTELEMETRY_SDK_VERSION
             ),
         )

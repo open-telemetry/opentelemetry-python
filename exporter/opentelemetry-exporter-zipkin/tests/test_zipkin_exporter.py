@@ -204,8 +204,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "key_bool": "False",
                     "key_string": "hello_world",
                     "key_float": "111.22",
-                    resources.TELEMETRY_SDK_NAME: "opentelemetry",
                     resources.TELEMETRY_SDK_LANGUAGE: "python",
+                    resources.TELEMETRY_SDK_NAME: "opentelemetry",
                     resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
                 },
                 "annotations": [
@@ -251,9 +251,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "localEndpoint": local_endpoint,
                 "kind": None,
                 "tags": {
-                    "telemetry.sdk.name": "opentelemetry",
-                    "telemetry.sdk.language": "python",
-                    "telemetry.sdk.version": "0.13.dev0",
+                    resources.TELEMETRY_SDK_LANGUAGE: "python",
+                    resources.TELEMETRY_SDK_NAME: "opentelemetry",
+                    resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
                 },
                 "annotations": None,
             },
@@ -319,8 +319,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "localEndpoint": local_endpoint,
                 "kind": None,
                 "tags": {
-                    resources.TELEMETRY_SDK_NAME: "opentelemetry",
                     resources.TELEMETRY_SDK_LANGUAGE: "python",
+                    resources.TELEMETRY_SDK_NAME: "opentelemetry",
                     resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
                 },
                 "annotations": None,

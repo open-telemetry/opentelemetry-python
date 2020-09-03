@@ -73,8 +73,8 @@ class Resource:
 _EMPTY_RESOURCE = Resource({})
 _DEFAULT_RESOURCE = Resource(
     {
-        TELEMETRY_SDK_NAME: "opentelemetry",
         TELEMETRY_SDK_LANGUAGE: "python",
+        TELEMETRY_SDK_NAME: "opentelemetry",
         TELEMETRY_SDK_VERSION: OPENTELEMETRY_SDK_VERSION,
     }
 )
