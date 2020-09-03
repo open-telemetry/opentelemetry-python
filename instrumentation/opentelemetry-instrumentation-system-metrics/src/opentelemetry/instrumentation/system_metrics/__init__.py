@@ -322,7 +322,7 @@ class SystemMetrics:
             ),
             unit="bytes",
             value_type=int,
-            observer_type=ValueObserver,
+            observer_type=SumObserver,
         )
 
         self.meter.register_observer(
@@ -635,7 +635,7 @@ class SystemMetrics:
                 connection_counter["labels"],
             )
 
-    def _get_runtime_memory(self, observer: metrics.ValueObserver) -> None:
+    def _get_runtime_memory(self, observer: metrics.SumObserver) -> None:
         """Observer callback for runtime memory
 
         Args:

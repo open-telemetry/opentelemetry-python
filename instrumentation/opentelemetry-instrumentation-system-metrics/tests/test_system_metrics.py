@@ -28,6 +28,7 @@ class TestSystemMetrics(TestBase):
     def setUp(self):
         super().setUp()
         self.memory_metrics_exporter.clear()
+        self.implementation = python_implementation().lower()
 
     def test_system_metrics_constructor(self):
         # ensure the observers have been registered
@@ -37,8 +38,6 @@ class TestSystemMetrics(TestBase):
             SystemMetrics(self.memory_metrics_exporter)
 
         self.assertEqual(len(meter.observers), 18)
-
-        implementation = python_implementation().lower()
 
         observer_names = [
             "system.cpu.time",
@@ -56,9 +55,9 @@ class TestSystemMetrics(TestBase):
             "system.network.errors",
             "system.network.io",
             "system.network.connections",
-            "runtime.{}.memory".format(implementation),
-            "runtime.{}.cpu_time".format(implementation),
-            "runtime.{}.gc_count".format(implementation),
+            "runtime.{}.memory".format(self.implementation),
+            "runtime.{}.cpu_time".format(self.implementation),
+            "runtime.{}.gc_count".format(self.implementation),
         ]
 
         for observer in meter.observers:
@@ -73,10 +72,7 @@ class TestSystemMetrics(TestBase):
         ) in (
             self.memory_metrics_exporter._exported_metrics  # pylint: disable=protected-access
         ):
-            if metric.instrument.name == "system.network.connections":
-                from ipdb import set_trace
-                set_trace
-            if (
+           if (
                 metric.labels in expected
                 and metric.instrument.name == observer_name
             ):
@@ -654,3 +650,20 @@ class TestSystemMetrics(TestBase):
             (("protocol", "tcp"), ("state", "ESTABLISHED"),): 1,
         }
         self._test_metrics("system.network.connections", expected)
+
+    @mock.patch("psutil.Process.memory_info")
+    def test_runtime_memory(self, mock_process_memory_info):
+
+        PMem = namedtuple("PMem", ["rss", "vms"])
+
+        mock_process_memory_info.configure_mock(
+            **{"return_value": PMem(rss=1, vms=2)}
+        )
+
+        expected = {
+            (("type", "rss"),): 1,
+            (("type", "vms"),): 2,
+        }
+        self._test_metrics(
+            "runtime.{}.memory".format(self.implementation), expected
+        )
