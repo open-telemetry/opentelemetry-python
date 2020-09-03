@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin import ZipkinSpanExporter
-from opentelemetry.sdk import trace
+from opentelemetry.sdk import trace, resources
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import TraceFlags
@@ -204,6 +204,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "key_bool": "False",
                     "key_string": "hello_world",
                     "key_float": "111.22",
+                    resources.TELEMETRY_SDK_NAME: "opentelemetry",
+                    resources.TELEMETRY_SDK_LANGUAGE: "python",
+                    resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
                 },
                 "annotations": [
                     {
@@ -247,7 +250,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {},
+                "tags": {
+                    "telemetry.sdk.name": "opentelemetry",
+                    "telemetry.sdk.language": "python",
+                    "telemetry.sdk.version": "0.13.dev0",
+                },
                 "annotations": None,
             },
         ]
@@ -311,7 +318,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": duration // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {},
+                "tags": {
+                    resources.TELEMETRY_SDK_NAME: "opentelemetry",
+                    resources.TELEMETRY_SDK_LANGUAGE: "python",
+                    resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+                },
                 "annotations": None,
                 "debug": True,
                 "parentId": "0aaaaaaaaaaaaaaa",
