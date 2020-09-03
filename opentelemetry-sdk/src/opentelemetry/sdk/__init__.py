@@ -16,6 +16,28 @@
 The OpenTelemetry SDK package is an implementation of the OpenTelemetry
 API
 """
+import logging
+import os
+
 from . import metrics, trace, util
 
 __all__ = ["metrics", "trace", "util"]
+
+_LOG_LEVELS = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+    "CRITICAL": logging.CRITICAL,
+}
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if os.getenv("OTEL_LOG_LEVEL") is not None:
+    key = os.getenv("OTEL_LOG_LEVEL").upper()
+    if key in _LOG_LEVELS:
+        logger.setLevel(_LOG_LEVELS.get(key))
+    else:
+        logger.warning(
+            "Invalid value for environment variable OTEL_LOG_LEVEL. Defaulting to INFO."
+        )
