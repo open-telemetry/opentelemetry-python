@@ -89,27 +89,27 @@ class SystemMetrics:
         self._python_implementation = python_implementation().lower()
         if config is None:
             self._config = {
-                "system_cpu_time": ["idle", "user", "system", "irq"],
-                "system_cpu_utilization": ["idle", "user", "system", "irq"],
-                "system_memory_usage": ["used", "free", "cached"],
-                "system_memory_utilization": ["used", "free", "cached"],
-                "system_swap_usage": ["used", "free"],
-                "system_swap_utilization": ["used", "free"],
-                # system_swap_page_faults: [],
-                # system_swap_page_operations: [],
-                "system_disk_io": ["read", "write"],
-                "system_disk_operations": ["read", "write"],
-                "system_disk_time": ["read", "write"],
-                "system_disk_merged": ["read", "write"],
-                # "system_filesystem_usage": [],
-                # "system_filesystem_utilization": [],
-                "system_network_dropped_packets": ["transmit", "receive"],
-                "system_network_packets": ["transmit", "receive"],
-                "system_network_errors": ["transmit", "receive"],
-                "system_network_io": ["trasmit", "receive"],
-                "system_network_connections": ["family", "type"],
-                "runtime_memory": ["rss", "vms"],
-                "runtime_cpu_time": ["user", "system"],
+                "system.cpu.time": ["idle", "user", "system", "irq"],
+                "system.cpu.utilization": ["idle", "user", "system", "irq"],
+                "system.memory.usage": ["used", "free", "cached"],
+                "system.memory.utilization": ["used", "free", "cached"],
+                "system.swap.usage": ["used", "free"],
+                "system.swap.utilization": ["used", "free"],
+                # system.swap.page.faults: [],
+                # system.swap.page.operations: [],
+                "system.disk.io": ["read", "write"],
+                "system.disk.operations": ["read", "write"],
+                "system.disk.time": ["read", "write"],
+                "system.disk.merged": ["read", "write"],
+                # "system.filesystem.usage": [],
+                # "system.filesystem.utilization": [],
+                "system.network.dropped.packets": ["transmit", "receive"],
+                "system.network.packets": ["transmit", "receive"],
+                "system.network.errors": ["transmit", "receive"],
+                "system.network.io": ["trasmit", "receive"],
+                "system.network.connections": ["family", "type"],
+                "runtime.memory": ["rss", "vms"],
+                "runtime.cpu.time": ["user", "system"],
             }
         else:
             self._config = config
@@ -356,7 +356,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         for cpu, times in enumerate(psutil.cpu_times(percpu=True)):
-            for metric in self._config["system_cpu_time"]:
+            for metric in self._config["system.cpu.time"]:
                 self._system_cpu_time_labels["state"] = metric
                 self._system_cpu_time_labels["cpu"] = cpu + 1
                 observer.observe(
@@ -375,7 +375,7 @@ class SystemMetrics:
         for cpu, times_percent in enumerate(
             psutil.cpu_times_percent(percpu=True)
         ):
-            for metric in self._config["system_cpu_utilization"]:
+            for metric in self._config["system.cpu.utilization"]:
                 self._system_cpu_utilization_labels["state"] = metric
                 self._system_cpu_utilization_labels["cpu"] = cpu + 1
                 observer.observe(
@@ -392,7 +392,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         virtual_memory = psutil.virtual_memory()
-        for metric in self._config["system_memory_usage"]:
+        for metric in self._config["system.memory.usage"]:
             self._system_memory_usage_labels["state"] = metric
             observer.observe(
                 getattr(virtual_memory, metric),
@@ -409,7 +409,7 @@ class SystemMetrics:
         """
         system_memory = psutil.virtual_memory()
 
-        for metric in self._config["system_memory_utilization"]:
+        for metric in self._config["system.memory.utilization"]:
             self._system_memory_utilization_labels["state"] = metric
             observer.observe(
                 getattr(system_memory, metric) / system_memory.total,
@@ -424,7 +424,7 @@ class SystemMetrics:
         """
         system_swap = psutil.swap_memory()
 
-        for metric in self._config["system_swap_usage"]:
+        for metric in self._config["system.swap.usage"]:
             self._system_swap_usage_labels["state"] = metric
             observer.observe(
                 getattr(system_swap, metric), self._system_swap_usage_labels
@@ -440,7 +440,7 @@ class SystemMetrics:
         """
         system_swap = psutil.swap_memory()
 
-        for metric in self._config["system_swap_utilization"]:
+        for metric in self._config["system.swap.utilization"]:
             self._system_swap_utilization_labels["state"] = metric
             observer.observe(
                 getattr(system_swap, metric) / system_swap.total,
@@ -457,7 +457,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         for device, counters in psutil.disk_io_counters(perdisk=True).items():
-            for metric in self._config["system_disk_io"]:
+            for metric in self._config["system.disk.io"]:
                 self._system_disk_io_labels["device"] = device
                 self._system_disk_io_labels["direction"] = metric
                 observer.observe(
@@ -474,7 +474,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         for device, counters in psutil.disk_io_counters(perdisk=True).items():
-            for metric in self._config["system_disk_operations"]:
+            for metric in self._config["system.disk.operations"]:
                 self._system_disk_operations_labels["device"] = device
                 self._system_disk_operations_labels["direction"] = metric
                 observer.observe(
@@ -489,7 +489,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         for device, counters in psutil.disk_io_counters(perdisk=True).items():
-            for metric in self._config["system_disk_time"]:
+            for metric in self._config["system.disk.time"]:
                 self._system_disk_time_labels["device"] = device
                 self._system_disk_time_labels["direction"] = metric
                 observer.observe(
@@ -508,7 +508,7 @@ class SystemMetrics:
         # operations or the value type should be Double
 
         for device, counters in psutil.disk_io_counters(perdisk=True).items():
-            for metric in self._config["system_disk_time"]:
+            for metric in self._config["system.disk.time"]:
                 self._system_disk_merged_labels["device"] = device
                 self._system_disk_merged_labels["direction"] = metric
                 observer.observe(
@@ -531,7 +531,7 @@ class SystemMetrics:
         """
 
         for device, counters in psutil.net_io_counters(pernic=True).items():
-            for metric in self._config["system_network_dropped_packets"]:
+            for metric in self._config["system.network.dropped.packets"]:
                 in_out = {"receive": "in", "transmit": "out"}[metric]
                 self._system_network_dropped_packets_labels["device"] = device
                 self._system_network_dropped_packets_labels[
@@ -552,7 +552,7 @@ class SystemMetrics:
         """
 
         for device, counters in psutil.net_io_counters(pernic=True).items():
-            for metric in self._config["system_network_dropped_packets"]:
+            for metric in self._config["system.network.dropped.packets"]:
                 recv_sent = {"receive": "recv", "transmit": "sent"}[metric]
                 self._system_network_packets_labels["device"] = device
                 self._system_network_packets_labels["direction"] = metric
@@ -570,7 +570,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         for device, counters in psutil.net_io_counters(pernic=True).items():
-            for metric in self._config["system_network_errors"]:
+            for metric in self._config["system.network.errors"]:
                 in_out = {"receive": "in", "transmit": "out"}[metric]
                 self._system_network_errors_labels["device"] = device
                 self._system_network_errors_labels["direction"] = metric
@@ -587,7 +587,7 @@ class SystemMetrics:
         """
 
         for device, counters in psutil.net_io_counters(pernic=True).items():
-            for metric in self._config["system_network_dropped_packets"]:
+            for metric in self._config["system.network.dropped.packets"]:
                 recv_sent = {"receive": "recv", "transmit": "sent"}[metric]
                 self._system_network_io_labels["device"] = device
                 self._system_network_io_labels["direction"] = metric
@@ -610,7 +610,7 @@ class SystemMetrics:
         connection_counters = {}
 
         for net_connection in psutil.net_connections():
-            for metric in self._config["system_network_connections"]:
+            for metric in self._config["system.network.connections"]:
                 self._system_network_connections_labels["protocol"] = {
                     1: "tcp",
                     2: "udp",
@@ -646,7 +646,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         proc_memory = self._proc.memory_info()
-        for metric in self._config["runtime_memory"]:
+        for metric in self._config["runtime.memory"]:
             self._runtime_memory_labels["type"] = metric
             observer.observe(
                 getattr(proc_memory, metric), self._runtime_memory_labels,
@@ -659,7 +659,7 @@ class SystemMetrics:
             observer: the observer to update
         """
         proc_cpu = self._proc.cpu_times()
-        for metric in self._config["runtime_cpu_time"]:
+        for metric in self._config["runtime.cpu.time"]:
             self._runtime_cpu_time_labels["type"] = metric
             observer.observe(
                 getattr(proc_cpu, metric), self._runtime_cpu_time_labels,
