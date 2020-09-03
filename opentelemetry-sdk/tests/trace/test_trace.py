@@ -18,11 +18,9 @@ import unittest
 from logging import ERROR, WARNING
 from unittest import mock
 
-import pkg_resources
-
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import resources, trace
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
@@ -923,35 +921,28 @@ class TestSpanProcessor(unittest.TestCase):
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
         span = trace.Span("span-name", context)
+        span.resource = Resource({})
 
         self.assertEqual(
             span.to_json(),
-            """{{
+            """{
     "name": "span-name",
-    "context": {{
+    "context": {
         "trace_id": "0x000000000000000000000000deadbeef",
         "span_id": "0x00000000deadbef0",
-        "trace_state": "{{}}"
-    }},
+        "trace_state": "{}"
+    },
     "kind": "SpanKind.INTERNAL",
     "parent_id": null,
     "start_time": null,
     "end_time": null,
-    "attributes": {{}},
+    "attributes": {},
     "events": [],
     "links": [],
-    "resource": {{
-        "telemetry.sdk.language": "python",
-        "telemetry.sdk.name": "opentelemetry",
-        "telemetry.sdk.version": "{version}"
-    }}
-}}""".format(
-                version=resources.OPENTELEMETRY_SDK_VERSION
-            ),
+    "resource": {}
+}""",
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{{"name": "span-name", "context": {{"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{{}}"}}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {{}}, "events": [], "links": [], "resource": {{"telemetry.sdk.language": "python", "telemetry.sdk.name": "opentelemetry", "telemetry.sdk.version": "{version}"}}}}'.format(
-                version=resources.OPENTELEMETRY_SDK_VERSION
-            ),
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )
