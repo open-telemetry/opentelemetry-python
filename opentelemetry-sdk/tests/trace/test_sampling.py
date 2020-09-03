@@ -22,6 +22,43 @@ TO_DEFAULT = trace.TraceFlags(trace.TraceFlags.DEFAULT)
 TO_SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
 
 
+class TestDecision(unittest.TestCase):
+    def test_is_recording(self):
+        self.assertTrue(
+            sampling.Decision.is_recording(sampling.Decision.RECORD)
+        )
+        self.assertTrue(
+            sampling.Decision.is_recording(
+                sampling.Decision.RECORD_AND_SAMPLED
+            )
+        )
+        self.assertFalse(
+            sampling.Decision.is_recording(sampling.Decision.NOT_RECORD)
+        )
+
+    def test_is_sampled(self):
+        self.assertFalse(
+            sampling.Decision.is_sampled(sampling.Decision.RECORD)
+        )
+        self.assertTrue(
+            sampling.Decision.is_sampled(sampling.Decision.RECORD_AND_SAMPLED)
+        )
+        self.assertFalse(
+            sampling.Decision.is_sampled(sampling.Decision.NOT_RECORD)
+        )
+
+
+class TestSamplingResult(unittest.TestCase):
+    def test_ctr(self):
+        attributes = {"asd": "test"}
+        result = sampling.SamplingResult(sampling.Decision.RECORD, attributes)
+        self.assertIs(result.decision, sampling.Decision.RECORD)
+        with self.assertRaises(TypeError):
+            result.attributes["test"] = "mess-this-up"
+        self.assertTrue(len(result.attributes), 1)
+        self.assertEqual(result.attributes["asd"], "test")
+
+
 class TestSampler(unittest.TestCase):
     def test_always_on(self):
         no_record_always_on = sampling.ALWAYS_ON.should_sample(
