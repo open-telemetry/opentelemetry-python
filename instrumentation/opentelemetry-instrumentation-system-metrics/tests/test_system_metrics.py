@@ -667,3 +667,20 @@ class TestSystemMetrics(TestBase):
         self._test_metrics(
             "runtime.{}.memory".format(self.implementation), expected
         )
+
+    @mock.patch("psutil.Process.cpu_times")
+    def test_runtime_cpu_time(self, mock_process_cpu_times):
+
+        PCPUTimes = namedtuple("PCPUTimes", ["user", "system"])
+
+        mock_process_cpu_times.configure_mock(
+            **{"return_value": PCPUTimes(user=1.1, system=2.2)}
+        )
+
+        expected = {
+            (("type", "user"),): 1.1,
+            (("type", "system"),): 2.2,
+        }
+        self._test_metrics(
+            "runtime.{}.cpu_time".format(self.implementation), expected
+        )
