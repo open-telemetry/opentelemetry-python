@@ -72,7 +72,7 @@ class TestSystemMetrics(TestBase):
         ) in (
             self.memory_metrics_exporter._exported_metrics  # pylint: disable=protected-access
         ):
-           if (
+            if (
                 metric.labels in expected
                 and metric.instrument.name == observer_name
             ):
@@ -93,6 +93,7 @@ class TestSystemMetrics(TestBase):
     # When this test case is executed, _get_system_cpu_utilization gets run
     # too because of the controller thread which runs all observers. This patch
     # is added here to stop a warning that would otherwise be raised.
+    # pylint: disable=unused-argument
     @mock.patch("psutil.cpu_times_percent")
     @mock.patch("psutil.cpu_times")
     def test_system_cpu_time(self, mock_cpu_times, mock_cpu_times_percent):
@@ -633,21 +634,23 @@ class TestSystemMetrics(TestBase):
         )
         Type = namedtuple("Type", ["value"])
         mock_net_connections.return_value = [
-            NetConnection(
-                family=1,
-                status="ESTABLISHED",
-                type=Type(value=2),
-            ),
-            NetConnection(
-                family=1,
-                status="ESTABLISHED",
-                type=Type(value=1),
-            ),
+            NetConnection(family=1, status="ESTABLISHED", type=Type(value=2),),
+            NetConnection(family=1, status="ESTABLISHED", type=Type(value=1),),
         ]
 
         expected = {
-            (("protocol", "udp"), ("state", "ESTABLISHED"),): 1,
-            (("protocol", "tcp"), ("state", "ESTABLISHED"),): 1,
+            (
+                ("family", 1),
+                ("protocol", "udp"),
+                ("state", "ESTABLISHED"),
+                ("type", Type(value=2)),
+            ): 1,
+            (
+                ("family", 1),
+                ("protocol", "tcp"),
+                ("state", "ESTABLISHED"),
+                ("type", Type(value=1)),
+            ): 1,
         }
         self._test_metrics("system.network.connections", expected)
 

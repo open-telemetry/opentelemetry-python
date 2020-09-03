@@ -63,11 +63,13 @@ import psutil
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import (
-    SumObserver, ValueObserver, UpDownSumObserver
+    SumObserver,
+    UpDownSumObserver,
+    ValueObserver,
 )
-from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.util import get_dict_as_key
 
 
 class SystemMetrics:
@@ -616,6 +618,9 @@ class SystemMetrics:
                 self._system_network_connections_labels[
                     "state"
                 ] = net_connection.status
+                self._system_network_connections_labels[metric] = getattr(
+                    net_connection, metric
+                )
 
             connection_counters_key = get_dict_as_key(
                 self._system_network_connections_labels
@@ -626,13 +631,12 @@ class SystemMetrics:
             else:
                 connection_counters[connection_counters_key] = {
                     "counter": 1,
-                    "labels": self._system_network_connections_labels.copy()
+                    "labels": self._system_network_connections_labels.copy(),
                 }
 
         for connection_counter in connection_counters.values():
             observer.observe(
-                connection_counter["counter"],
-                connection_counter["labels"],
+                connection_counter["counter"], connection_counter["labels"],
             )
 
     def _get_runtime_memory(self, observer: metrics.SumObserver) -> None:
