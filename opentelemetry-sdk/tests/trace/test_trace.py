@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pkg_resources
 import shutil
 import subprocess
 import unittest
 from logging import ERROR, WARNING
 from unittest import mock
+
+import pkg_resources
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import resources, trace
@@ -25,7 +26,6 @@ from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
-
 
 OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
     "opentelemetry-sdk"
@@ -959,4 +959,3 @@ class TestSpanProcessor(unittest.TestCase):
                 version=OPENTELEMETRY_SDK_VERSION
             ),
         )
-

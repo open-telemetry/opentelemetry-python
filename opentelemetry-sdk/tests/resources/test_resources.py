@@ -15,12 +15,12 @@
 # pylint: disable=protected-access
 
 import os
-import pkg_resources
 import unittest
 from unittest import mock
 
-from opentelemetry.sdk import resources
+import pkg_resources
 
+from opentelemetry.sdk import resources
 
 OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
     "opentelemetry-sdk"

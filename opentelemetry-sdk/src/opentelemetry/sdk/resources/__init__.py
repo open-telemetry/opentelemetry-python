@@ -16,9 +16,10 @@ import abc
 import concurrent.futures
 import logging
 import os
-import pkg_resources
 import typing
 from json import dumps
+
+import pkg_resources
 
 LabelValue = typing.Union[str, bool, int, float]
 Labels = typing.Dict[str, LabelValue]
