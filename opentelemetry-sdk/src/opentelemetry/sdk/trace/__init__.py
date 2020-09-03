@@ -772,7 +772,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
-                attributes=sampling_result.attributes,
+                attributes=sampling_result.attributes.copy(),
                 span_processor=self.source._active_span_processor,
                 kind=kind,
                 links=links,
