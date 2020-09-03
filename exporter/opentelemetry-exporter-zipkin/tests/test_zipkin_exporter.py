@@ -50,19 +50,19 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
     def test_constructor_env_var(self):
         """Test the default values assigned by constructor."""
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = "https://foo:9911/path"
+        url = "https://foo:9911/path"
+        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = url
         service_name = "my-service-name"
         port = 9911
         exporter = ZipkinSpanExporter(service_name)
         ipv4 = None
         ipv6 = None
-        url = "https://foo:9911/path"
 
         self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.port, port)
         self.assertEqual(exporter.ipv4, ipv4)
         self.assertEqual(exporter.ipv6, ipv6)
         self.assertEqual(exporter.url, url)
+        self.assertEqual(exporter.port, port)
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
@@ -82,21 +82,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_constructor_explicit(self):
         """Test the constructor passing all the options."""
         service_name = "my-opentelemetry-zipkin"
-        host_name = "opentelemetry.io"
         port = 15875
-        endpoint = "/myapi/traces?format=zipkin"
         ipv4 = "1.2.3.4"
         ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-        protocol = "https"
         url = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
         exporter = ZipkinSpanExporter(
-            service_name=service_name,
-            host_name=host_name,
-            port=port,
-            endpoint=endpoint,
-            ipv4=ipv4,
-            ipv6=ipv6,
-            protocol=protocol,
+            service_name=service_name, url=url, ipv4=ipv4, ipv6=ipv6,
         )
 
         self.assertEqual(exporter.service_name, service_name)
