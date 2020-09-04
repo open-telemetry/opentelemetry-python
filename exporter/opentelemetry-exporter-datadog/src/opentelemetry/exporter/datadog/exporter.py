@@ -313,7 +313,7 @@ def _extract_tags_from_resource(resource):
         if isinstance(attribute_value, (int, bool, float)):
             value = str(attribute_value)
         elif isinstance(attribute_value, str):
-            value = attribute_value[:128]
+            value = attribute_value
         else:
             logger.warning("Could not serialize tag %s", attribute_key)
             continue
