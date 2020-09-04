@@ -30,18 +30,28 @@ class TestResources(unittest.TestCase):
             "cost": 112.12,
         }
 
+        expected_labels = {
+            "service": "ui",
+            "version": 1,
+            "has_bugs": True,
+            "cost": 112.12,
+            resources.TELEMETRY_SDK_NAME: "opentelemetry",
+            resources.TELEMETRY_SDK_LANGUAGE: "python",
+            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+        }
+
         resource = resources.Resource.create(labels)
         self.assertIsInstance(resource, resources.Resource)
-        self.assertEqual(resource.labels, labels)
+        self.assertEqual(resource.labels, expected_labels)
 
         resource = resources.Resource.create_empty()
         self.assertIs(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create(None)
-        self.assertIs(resource, resources._EMPTY_RESOURCE)
+        self.assertIs(resource, resources._DEFAULT_RESOURCE)
 
         resource = resources.Resource.create({})
-        self.assertIs(resource, resources._EMPTY_RESOURCE)
+        self.assertIs(resource, resources._DEFAULT_RESOURCE)
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
@@ -75,7 +85,14 @@ class TestResources(unittest.TestCase):
             "cost": 112.12,
         }
 
+        default_labels = {
+            resources.TELEMETRY_SDK_NAME: "opentelemetry",
+            resources.TELEMETRY_SDK_LANGUAGE: "python",
+            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+        }
+
         labels_copy = labels.copy()
+        labels_copy.update(default_labels)
 
         resource = resources.Resource.create(labels)
         self.assertEqual(resource.labels, labels_copy)
