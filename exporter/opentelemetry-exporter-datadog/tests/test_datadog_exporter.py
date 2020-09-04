@@ -1,4 +1,4 @@
-# Copyright The OpenTelemetry Authors
+    # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -145,7 +145,10 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.maxDiff = None
 
         resource = Resource(
-            labels={"key_resource": "some_resource", "service.name": "resource_service_name"}
+            labels={
+                "key_resource": "some_resource",
+                "service.name": "resource_service_name"
+            }
         )
 
         span_names = ("test1", "test2", "test3")
@@ -195,7 +198,10 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 instrumentation_info=instrumentation_info,
             ),
             trace.Span(
-                name=span_names[2], context=other_context, parent=None, resource=resource,
+                name=span_names[2],
+                context=other_context,
+                parent=None,
+                resource=resource,
             ),
         ]
 
@@ -250,7 +256,12 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 duration=durations[2],
                 error=0,
                 service="resource_service_name",
-                meta={"env": "test", "team": "testers", "version": "0.0.1", "key_resource": "some_resource"},
+                meta={
+                    "env": "test",
+                    "team": "testers",
+                    "version": "0.0.1",
+                    "key_resource": "some_resource"
+                },
             ),
         ]
 

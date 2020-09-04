@@ -26,7 +26,13 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint:disable=relative-beyond-top-level
-from .constants import DD_ORIGIN, ENV_KEY, SAMPLE_RATE_METRIC_KEY, VERSION_KEY, SERVICE_NAME_TAG
+from .constants import (
+    DD_ORIGIN,
+    ENV_KEY,
+    SAMPLE_RATE_METRIC_KEY,
+    VERSION_KEY,
+    SERVICE_NAME_TAG
+)
 
 logger = logging.getLogger(__name__)
 
@@ -120,8 +126,10 @@ class DatadogSpanExporter(SpanExporter):
             tracer = None
 
             # extract rasource labels to be used as tags as well as potential service name 
-            
-            [resource_tags, resource_service_name] = _extract_tags_from_resource(span.resource)
+            [
+                resource_tags,
+                resource_service_name
+            ] = _extract_tags_from_resource(span.resource)
 
             datadog_span = DatadogSpan(
                 tracer,
@@ -143,7 +151,6 @@ class DatadogSpanExporter(SpanExporter):
                     # no mapping for error.stack since traceback not recorded
                     datadog_span.set_tag("error.msg", exc_val)
                     datadog_span.set_tag("error.type", exc_type)
-
 
             # combine resource labels and span attributes, don't modify existy span attributes
             combined_span_tags = {}
@@ -316,4 +323,3 @@ def _extract_tags_from_resource(resource):
         else:
             tags[attribute_key] = value
     return [tags, service_name]
-
