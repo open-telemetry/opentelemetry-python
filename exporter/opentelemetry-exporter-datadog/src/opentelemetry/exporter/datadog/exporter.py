@@ -31,7 +31,7 @@ from .constants import (
     ENV_KEY,
     SAMPLE_RATE_METRIC_KEY,
     VERSION_KEY,
-    SERVICE_NAME_TAG
+    SERVICE_NAME_TAG,
 )
 
 logger = logging.getLogger(__name__)
@@ -125,10 +125,10 @@ class DatadogSpanExporter(SpanExporter):
             # duration.
             tracer = None
 
-            # extract rasource labels to be used as tags as well as potential service name 
+            # extract resource labels to be used as tags as well as potential service name
             [
                 resource_tags,
-                resource_service_name
+                resource_service_name,
             ] = _extract_tags_from_resource(span.resource)
 
             datadog_span = DatadogSpan(

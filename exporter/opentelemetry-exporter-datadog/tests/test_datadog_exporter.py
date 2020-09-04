@@ -147,7 +147,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         resource = Resource(
             labels={
                 "key_resource": "some_resource",
-                "service.name": "resource_service_name"
+                "service.name": "resource_service_name",
             }
         )
 
@@ -260,7 +260,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                     "env": "test",
                     "team": "testers",
                     "version": "0.0.1",
-                    "key_resource": "some_resource"
+                    "key_resource": "some_resource",
                 },
             ),
         ]
