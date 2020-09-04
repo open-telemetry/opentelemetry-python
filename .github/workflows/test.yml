@@ -73,3 +73,39 @@ jobs:
           key: tox-cache-docker-tests-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
       - name: run tox
         run: tox -e docker-tests
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install tox
+        run: pip install -U tox
+      - name: Cache tox environment
+        # Preserves .tox directory between runs for faster installs
+        uses: actions/cache@v2
+        with:
+          path: .tox
+          key: tox-cache-lint-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
+      - name: run tox
+        run: tox -e lint
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install tox
+        run: pip install --upgrade tox
+      - name: Cache tox environment
+        # Preserves .tox directory between runs for faster installs
+        uses: actions/cache@v2
+        with:
+          path: .tox
+          key: tox-cache-docs-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
+      - name: run tox
+        run: tox -e docs
