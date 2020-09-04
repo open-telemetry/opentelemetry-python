@@ -194,7 +194,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
             # subtract the duration of this export call to the next timeout
             start = time_ns()
-            self.export(flush_request)
+            self._export(flush_request)
             end = time_ns()
             duration = (end - start) / 1e9
             timeout = self.schedule_delay_millis / 1e3 - duration
@@ -247,7 +247,7 @@ class BatchExportSpanProcessor(SpanProcessor):
             self._flush_request = _FlushRequest()
         return self._flush_request
 
-    def export(self, flush_request: typing.Optional[_FlushRequest]):
+    def _export(self, flush_request: typing.Optional[_FlushRequest]):
         """Exports spans considering the given flush_request.
 
         In case of a given flush_requests spans are exported in batches until
@@ -257,18 +257,18 @@ class BatchExportSpanProcessor(SpanProcessor):
         exported.
         """
         if not flush_request:
-            self.export_batch()
+            self._export_batch()
             return
 
         num_spans = flush_request.num_spans
         while self.queue:
-            num_exported = self.export_batch()
+            num_exported = self._export_batch()
             num_spans -= num_exported
 
             if num_spans <= 0:
                 break
 
-    def export_batch(self) -> int:
+    def _export_batch(self) -> int:
         """Exports at most max_export_batch_size spans and returns the number of
          exported spans.
          """
@@ -299,7 +299,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         `export` that is not thread safe.
         """
         while self.queue:
-            self.export_batch()
+            self._export_batch()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         if self.done:
