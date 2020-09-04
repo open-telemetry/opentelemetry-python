@@ -4,6 +4,8 @@
 
 - Updating span name to match semantic conventions
   ([#972](https://github.com/open-telemetry/opentelemetry-python/pull/972))
+- Add instrumentor and auto instrumentation support for aiohttp
+  ([#1075](https://github.com/open-telemetry/opentelemetry-python/pull/1075))
 
 ## Version 0.12b0
 
