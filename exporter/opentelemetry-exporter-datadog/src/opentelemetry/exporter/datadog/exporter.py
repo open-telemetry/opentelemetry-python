@@ -30,8 +30,8 @@ from .constants import (
     DD_ORIGIN,
     ENV_KEY,
     SAMPLE_RATE_METRIC_KEY,
-    VERSION_KEY,
     SERVICE_NAME_TAG,
+    VERSION_KEY,
 )
 
 logger = logging.getLogger(__name__)

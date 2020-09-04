@@ -21,8 +21,8 @@ from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk import resources
+from opentelemetry.sdk.trace import TracerProvider
 
 service_name = "example-client"
 

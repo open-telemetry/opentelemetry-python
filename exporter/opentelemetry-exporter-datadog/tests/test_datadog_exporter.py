@@ -23,7 +23,7 @@ from ddtrace.internal.writer import AgentWriter
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter import datadog
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import sampling, Resource
+from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
