@@ -20,7 +20,7 @@ from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import resources, trace
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
@@ -396,7 +396,7 @@ class TestSpanCreation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
         # pylint: disable=protected-access
-        self.assertIs(span.resource, resources._EMPTY_RESOURCE)
+        self.assertIs(span.resource, resources._DEFAULT_RESOURCE)
 
     def test_span_context_remote_flag(self):
         tracer = new_tracer()
@@ -922,6 +922,7 @@ class TestSpanProcessor(unittest.TestCase):
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
         span = trace.Span("span-name", context)
+        span.resource = Resource({})
 
         self.assertEqual(
             span.to_json(),
