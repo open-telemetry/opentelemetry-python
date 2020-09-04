@@ -5,7 +5,7 @@
 # run arbitrary code.
 extension-pkg-whitelist=
 
-# Add files or directories to the denylist. They should be base names, not
+# Add list of files or directories to be excluded. They should be base names, not
 # paths.
 ignore=CVS,gen,proto
 
