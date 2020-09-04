@@ -9,7 +9,7 @@ extension-pkg-whitelist=
 # paths.
 ignore=CVS,gen,proto
 
-# Add files or directories matching the regex patterns to the denylist. The
+# Add files or directories matching the regex patterns to be excluded. The
 # regex matches against base names, not paths.
 ignore-patterns=
 
