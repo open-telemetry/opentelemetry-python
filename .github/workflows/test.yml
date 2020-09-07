@@ -17,7 +17,7 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [ py34, py35, py36, py37, py38, pypy3 ]
-        package: ["core", "exporter", "instrumentation"]
+        package: ["instrumentation", "core", "exporter"]
         os: [ ubuntu-latest ]
         include:
           - python-version: py38
@@ -53,27 +53,12 @@ jobs:
           key: tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
-  docker-tests:
-    env:
-      python-version: 3.7
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ env.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.python-version }}
-      - name: Install tox
-        run: pip install tox
-      - name: Cache tox environment
-        # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: .tox
-          key: tox-cache-docker-tests-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
-      - name: run tox
-        run: tox -e docker-tests
-  lint:
+  misc:
+    strategy:
+      fail-fast: false
+      matrix:
+        tox-environment: [ "docker-tests", "lint", "docs" ]
+    name: ${{ matrix.tox-environment }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -88,24 +73,6 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .tox
-          key: tox-cache-lint-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
+          key: tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
       - name: run tox
-        run: tox -e lint
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Install tox
-        run: pip install --upgrade tox
-      - name: Cache tox environment
-        # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: .tox
-          key: tox-cache-docs-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}
-      - name: run tox
-        run: tox -e docs
+        run: tox -e ${{ matrix.tox-environment }}
