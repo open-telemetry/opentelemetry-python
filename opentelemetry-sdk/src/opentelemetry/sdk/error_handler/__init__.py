@@ -22,7 +22,7 @@ logger = getLogger(__name__)
 class ErrorHandler(ABC):
 
     @abstractmethod
-    def handle(error: Exception, *args, **kwargs):
+    def handle(self, error: Exception, *args, **kwargs):
         """
         Handle an exception
         """
@@ -35,28 +35,57 @@ class DefaultErrorHandler(ErrorHandler):
     This error handler just logs the exception using standard logging.
     """
 
-    def handle(error: Exception, *args, **kwargs):
+    def handle(self, error: Exception, *args, **kwargs):
 
         logger.exception("Error handled by default error handler: ")
 
 
 class GlobalErrorHandler:
 
-    def handle(error: Exception):
+    _instance = None
+
+    def __new__(cls) -> "GlobalErrorHandler":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+
+        return cls._instance
+
+    def handle(self, error: Exception):
         """
         Handle the error through the registered error handlers.
         """
 
-        handling_result = {}
+        error_handling_result = {}
 
         for error_handler_class in iter_entry_points(
             "opentelemetry_error_handler"
         ):
 
-            if issubclass(error_handler_class, error):
+            if issubclass(error_handler_class, error.__class__):
 
-                handling_result[
-                    error_handler_class
-                ] = error_handler_class().handle(error)
+                try:
 
-        return handling_result
+                    error_handling_result[
+                        error_handler_class
+                    ] = error_handler_class().handle(error)
+
+                except Exception as error_handling_error:
+
+                    logger.exception(
+                        "Error while handling error "
+                        "by {} error handler".format(
+                            error_handler_class.__name__
+                        )
+                    )
+
+                    error_handling_result[error_handler_class] = (
+                        error_handling_error
+                    )
+
+        if not error_handling_result:
+
+            error_handling_result[DefaultErrorHandler] = (
+                DefaultErrorHandler().handle(error)
+            )
+
+        return error_handling_result
