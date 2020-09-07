@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from unittest import TestCase
+from logging import ERROR
 
-from opentelemetry.sdk.error_handler import DefaultErrorHandler
+from opentelemetry.sdk.error_handler import DefaultErrorHandler, logger
 
 
 class TestErrorHandler(TestCase):
@@ -24,4 +25,5 @@ class TestErrorHandler(TestCase):
         try:
             raise Exception("some exception")
         except Exception as error:
-            DefaultErrorHandler(error)
+            with self.assertLogs(logger, ERROR):
+                DefaultErrorHandler().handle(error)
