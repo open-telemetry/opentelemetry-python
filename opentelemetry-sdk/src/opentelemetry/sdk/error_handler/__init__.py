@@ -50,6 +50,14 @@ class GlobalErrorHandler:
 
         return cls._instance
 
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_value is not None:
+            self.handle(exc_value)
+            return True
+
     def handle(self, error: Exception):
         """
         Handle the error through the registered error handlers.

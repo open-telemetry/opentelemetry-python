@@ -14,7 +14,7 @@
 
 from unittest import TestCase
 from logging import ERROR, disable, NOTSET
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from opentelemetry.sdk.error_handler import (
     DefaultErrorHandler, logger, GlobalErrorHandler, ErrorHandler
@@ -35,7 +35,7 @@ class TestErrorHandler(TestCase):
             raise Exception("some exception")
         except Exception as error:
             with self.assertLogs(logger, ERROR):
-                error_handling_result = GlobalErrorHandler.handle(error)
+                error_handling_result = GlobalErrorHandler().handle(error)
 
         self.assertIsNone(error_handling_result[DefaultErrorHandler])
 
@@ -82,3 +82,29 @@ class TestErrorHandler(TestCase):
             disable(NOTSET)
 
         self.assertEqual(error_handling_result, {DefaultErrorHandler: None})
+
+    @patch("opentelemetry.sdk.error_handler.iter_entry_points")
+    def test_plugin_error_handler_context_manager(
+        self, mock_iter_entry_points
+    ):
+
+        mock_error_handler_instance = Mock()
+
+        class MockErrorHandlerClass(IndexError):
+
+            def __new__(cls):
+                return mock_error_handler_instance
+
+        mock_iter_entry_points.configure_mock(
+            **{"return_value": [MockErrorHandlerClass]}
+        )
+
+        error = IndexError()
+
+        with GlobalErrorHandler():
+            raise error
+
+        with GlobalErrorHandler():
+            pass
+
+        mock_error_handler_instance.handle.assert_called_once_with(error)
