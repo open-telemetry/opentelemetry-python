@@ -92,9 +92,8 @@ class GlobalErrorHandler:
                 except Exception as error_handling_error:
 
                     logger.exception(
-                        "Error while handling error "
-                        "by %s error handler",
-                        error_handler_class.__name__
+                        "Error while handling error " "by %s error handler",
+                        error_handler_class.__name__,
                     )
 
                     error_handling_result[
