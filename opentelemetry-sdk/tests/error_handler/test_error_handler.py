@@ -11,18 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=broad-except
 
+from logging import ERROR, NOTSET, disable
 from unittest import TestCase
-from logging import ERROR, disable, NOTSET
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.sdk.error_handler import (
-    DefaultErrorHandler, logger, GlobalErrorHandler, ErrorHandler
+    DefaultErrorHandler,
+    ErrorHandler,
+    GlobalErrorHandler,
+    logger,
 )
 
 
 class TestErrorHandler(TestCase):
-
     def test_default_error_handler(self):
 
         try:
@@ -41,21 +44,21 @@ class TestErrorHandler(TestCase):
 
     @patch("opentelemetry.sdk.error_handler.iter_entry_points")
     def test_plugin_error_handler(self, mock_iter_entry_points):
-
         class ZeroDivisionErrorHandler(ErrorHandler, ZeroDivisionError):
-
+            # pylint: disable=arguments-differ
             def handle(self, error: Exception):
                 return 0
 
         class AssertionErrorHandler(ErrorHandler, AssertionError):
-
+            # pylint: disable=arguments-differ
             def handle(self, error: Exception):
                 return 1
 
         mock_iter_entry_points.configure_mock(
             **{
                 "return_value": [
-                    ZeroDivisionErrorHandler, AssertionErrorHandler
+                    ZeroDivisionErrorHandler,
+                    AssertionErrorHandler,
                 ]
             }
         )
@@ -83,6 +86,7 @@ class TestErrorHandler(TestCase):
 
         self.assertEqual(error_handling_result, {DefaultErrorHandler: None})
 
+    # pylint: disable=no-self-use
     @patch("opentelemetry.sdk.error_handler.iter_entry_points")
     def test_plugin_error_handler_context_manager(
         self, mock_iter_entry_points
@@ -91,7 +95,6 @@ class TestErrorHandler(TestCase):
         mock_error_handler_instance = Mock()
 
         class MockErrorHandlerClass(IndexError):
-
             def __new__(cls):
                 return mock_error_handler_instance
 

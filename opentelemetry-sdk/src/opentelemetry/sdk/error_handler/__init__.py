@@ -13,14 +13,14 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from pkg_resources import iter_entry_points
 from logging import getLogger
+
+from pkg_resources import iter_entry_points
 
 logger = getLogger(__name__)
 
 
 class ErrorHandler(ABC):
-
     @abstractmethod
     def handle(self, error: Exception, *args, **kwargs):
         """
@@ -35,9 +35,11 @@ class DefaultErrorHandler(ErrorHandler):
     This error handler just logs the exception using standard logging.
     """
 
+    # pylint: disable=useless-return
     def handle(self, error: Exception, *args, **kwargs):
 
         logger.exception("Error handled by default error handler: ")
+        return None
 
 
 class GlobalErrorHandler:
@@ -60,10 +62,12 @@ class GlobalErrorHandler:
     def __enter__(self):
         pass
 
+    # pylint: disable=no-self-use
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_value is not None:
             self.handle(exc_value)
             return True
+        return None
 
     def handle(self, error: Exception):
         """
@@ -84,23 +88,24 @@ class GlobalErrorHandler:
                         error_handler_class
                     ] = error_handler_class().handle(error)
 
+                # pylint: disable=broad-except
                 except Exception as error_handling_error:
 
                     logger.exception(
                         "Error while handling error "
-                        "by {} error handler".format(
-                            error_handler_class.__name__
-                        )
+                        "by %s error handler",
+                        error_handler_class.__name__
                     )
 
-                    error_handling_result[error_handler_class] = (
-                        error_handling_error
-                    )
+                    error_handling_result[
+                        error_handler_class
+                    ] = error_handling_error
 
         if not error_handling_result:
 
-            error_handling_result[DefaultErrorHandler] = (
-                DefaultErrorHandler().handle(error)
-            )
+            # pylint: disable=assignment-from-none
+            error_handling_result[
+                DefaultErrorHandler
+            ] = DefaultErrorHandler().handle(error)
 
         return error_handling_result
