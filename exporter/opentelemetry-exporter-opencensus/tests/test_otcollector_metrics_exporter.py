@@ -40,13 +40,13 @@ class TestCollectorMetricsExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # pylint: disable=protected-access
-        cls._resource_attributes = {
+        cls._resource_labels = {
             "key_with_str_value": "some string",
             "key_with_int_val": 321,
             "key_with_true": True,
         }
         metrics.set_meter_provider(
-            MeterProvider(resource=Resource(cls._resource_attributes))
+            MeterProvider(resource=Resource(cls._resource_labels))
         )
         cls._meter = metrics.get_meter(__name__)
         cls._labels = {"environment": "staging", "number": 321}
@@ -187,22 +187,22 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             output_metrics[0].resource.type, "",
         )
         self.assertEqual(
-            output_metrics[0].resource.attributes["key_with_str_value"],
-            self._resource_attributes["key_with_str_value"],
+            output_metrics[0].resource.labels["key_with_str_value"],
+            self._resource_labels["key_with_str_value"],
         )
         self.assertIsInstance(
-            output_metrics[0].resource.attributes["key_with_int_val"], str,
+            output_metrics[0].resource.labels["key_with_int_val"], str,
         )
         self.assertEqual(
-            output_metrics[0].resource.attributes["key_with_int_val"],
-            str(self._resource_attributes["key_with_int_val"]),
+            output_metrics[0].resource.labels["key_with_int_val"],
+            str(self._resource_labels["key_with_int_val"]),
         )
         self.assertIsInstance(
-            output_metrics[0].resource.attributes["key_with_true"], str,
+            output_metrics[0].resource.labels["key_with_true"], str,
         )
         self.assertEqual(
-            output_metrics[0].resource.attributes["key_with_true"],
-            str(self._resource_attributes["key_with_true"]),
+            output_metrics[0].resource.labels["key_with_true"],
+            str(self._resource_labels["key_with_true"]),
         )
 
         self.assertEqual(len(output_metrics[0].timeseries), 1)
