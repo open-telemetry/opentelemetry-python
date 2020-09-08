@@ -186,7 +186,7 @@ class OTLPExporterMixin(ABC):
                 if error.code() == StatusCode.OK:
                     return self._result.SUCCESS
 
-                return self.result.FAILURE
+                return self._result.FAILURE
 
         return self._result.FAILURE
 
