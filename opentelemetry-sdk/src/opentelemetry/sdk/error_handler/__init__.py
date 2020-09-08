@@ -41,6 +41,13 @@ class DefaultErrorHandler(ErrorHandler):
 
 
 class GlobalErrorHandler:
+    """
+    Global error handler
+
+    This is a singleton class that can be instantiated anywhere to get the
+    global error handler. This object provides a handle method that receives
+    an exception object that will be handled by the registered error handlers.
+    """
 
     _instance = None
 
