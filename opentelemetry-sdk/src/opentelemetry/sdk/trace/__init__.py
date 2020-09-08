@@ -364,7 +364,7 @@ class Span(trace_api.Span):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: Resource = Resource.create_empty(),
+        resource: Resource = Resource.create({}),
         attributes: types.Attributes = None,  # TODO
         events: Sequence[Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
@@ -772,7 +772,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
-                attributes=sampling_result.attributes,
+                attributes=sampling_result.attributes.copy(),
                 span_processor=self.source._active_span_processor,
                 kind=kind,
                 links=links,
@@ -821,7 +821,7 @@ class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = sampling.DEFAULT_ON,
-        resource: Resource = Resource.create_empty(),
+        resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
