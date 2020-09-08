@@ -12,6 +12,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Global Error Handler
+
+This module provides a global error handler and an interface that allows
+error handlers to be registered with the global error handler via entry points.
+A default error handler is also provided.
+
+To use this feature, users can create an error handler that is registered
+using the ``opentelemetry_error_handler`` entry point. A class is to be
+registered in this entry point, this class must inherit from the
+``opentelemetry.sdk.error_handler.ErrorHandler`` class and implement the
+corresponding ``handle`` method. This method will receive the exception object
+that is to be handled. The error handler class should also inherit from the
+exception classes it wants to handle. For example, this would be an error
+handler that handles ``ZeroDivisionError``:
+
+.. code:: python
+
+    from opentelemetry.sdk.error_handler import ErrorHandler
+    from logging import getLogger
+
+    logger = getLogger(__name__)
+
+
+    class ErrorHandler0(ErrorHandler, ZeroDivisionError):
+
+        def handle(self, error: Exception, *args, **kwargs):
+
+            logger.exception("ErrorHandler0 handling a ZeroDivisionError")
+
+To use the global error handler, just instantiate it as a context manager where
+you want exceptions to be handled:
+
+
+.. code:: python
+
+    from opentelemetry.sdk.error_handler import GlobalErrorHandler
+
+    with GlobalErrorHandler():
+        1 / 0
+
+If the class of the exception raised in the scope of the ``GlobalErrorHandler``
+object is not parent of any registered error handler, then the default error
+handler will handle the exception. This default error handler will only log the
+exception to standard logging, the exception won't be raised any further.
+"""
+
 from abc import ABC, abstractmethod
 from logging import getLogger
 

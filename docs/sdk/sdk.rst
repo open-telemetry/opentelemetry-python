@@ -9,3 +9,4 @@ OpenTelemetry Python SDK
     metrics
     resources
     trace
+    error_handler
