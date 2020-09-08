@@ -76,9 +76,11 @@ class GlobalErrorHandler:
 
         error_handling_result = {}
 
-        for error_handler_class in iter_entry_points(
+        for error_handler_entry_point in iter_entry_points(
             "opentelemetry_error_handler"
         ):
+
+            error_handler_class = error_handler_entry_point.load()
 
             if issubclass(error_handler_class, error.__class__):
 
