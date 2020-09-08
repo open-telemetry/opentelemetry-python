@@ -54,11 +54,20 @@ class TestErrorHandler(TestCase):
             def handle(self, error: Exception):
                 return 1
 
+        mock_entry_point_zero_division_error_handler = Mock()
+        mock_entry_point_zero_division_error_handler.configure_mock(
+            **{"load.return_value": ZeroDivisionErrorHandler}
+        )
+        mock_entry_point_assertion_error_handler = Mock()
+        mock_entry_point_assertion_error_handler.configure_mock(
+            **{"load.return_value": AssertionErrorHandler}
+        )
+
         mock_iter_entry_points.configure_mock(
             **{
                 "return_value": [
-                    ZeroDivisionErrorHandler,
-                    AssertionErrorHandler,
+                    mock_entry_point_zero_division_error_handler,
+                    mock_entry_point_assertion_error_handler,
                 ]
             }
         )
@@ -98,8 +107,13 @@ class TestErrorHandler(TestCase):
             def __new__(cls):
                 return mock_error_handler_instance
 
+        mock_entry_point_error_handler = Mock()
+        mock_entry_point_error_handler.configure_mock(
+            **{"load.return_value": MockErrorHandlerClass}
+        )
+
         mock_iter_entry_points.configure_mock(
-            **{"return_value": [MockErrorHandlerClass]}
+            **{"return_value": [mock_entry_point_error_handler]}
         )
 
         error = IndexError()
