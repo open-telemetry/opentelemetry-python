@@ -22,7 +22,7 @@ Example::
     from opentelemetry import propagators
 
 
-    PROPAGATOR = propagators.get_global_httptextformat()
+    PROPAGATOR = propagators.get_global_textmap()
 
 
     def get_header_from_flask_request(request, key):
@@ -58,15 +58,15 @@ import typing
 from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import composite
-from opentelemetry.trace.propagation import httptextformat
-from opentelemetry.trace.propagation.tracecontexthttptextformat import (
-    TraceContextHTTPTextFormat,
+from opentelemetry.trace.propagation import textmap
+from opentelemetry.trace.propagation.tracecontext import (
+    TraceContextTextMapPropagator,
 )
 
 
 def extract(
-    get_from_carrier: httptextformat.Getter[httptextformat.HTTPTextFormatT],
-    carrier: httptextformat.HTTPTextFormatT,
+    get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+    carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> Context:
     """ Uses the configured propagator to extract a Context from the carrier.
@@ -82,14 +82,12 @@ def extract(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_httptextformat().extract(
-        get_from_carrier, carrier, context
-    )
+    return get_global_textmap().extract(get_from_carrier, carrier, context)
 
 
 def inject(
-    set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
-    carrier: httptextformat.HTTPTextFormatT,
+    set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+    carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> None:
     """ Uses the configured propagator to inject a Context into the carrier.
@@ -103,20 +101,18 @@ def inject(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    get_global_httptextformat().inject(set_in_carrier, carrier, context)
+    get_global_textmap().inject(set_in_carrier, carrier, context)
 
 
 _HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(
-    [TraceContextHTTPTextFormat(), BaggagePropagator()],
-)  # type: httptextformat.HTTPTextFormat
+    [TraceContextTextMapPropagator(), BaggagePropagator()],
+)  # type: textmap.TextMapPropagator
 
 
-def get_global_httptextformat() -> httptextformat.HTTPTextFormat:
+def get_global_textmap() -> textmap.TextMapPropagator:
     return _HTTP_TEXT_FORMAT
 
 
-def set_global_httptextformat(
-    http_text_format: httptextformat.HTTPTextFormat,
-) -> None:
+def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
     _HTTP_TEXT_FORMAT = http_text_format
