@@ -95,7 +95,9 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
 
     def test_simple_span_processor_not_sampled(self):
-        tracer_provider = trace.TracerProvider(sampler=trace.sampling.ALWAYS_OFF)
+        tracer_provider = trace.TracerProvider(
+            sampler=trace.sampling.ALWAYS_OFF
+        )
         tracer = tracer_provider.get_tracer(__name__)
 
         spans_names_list = []
@@ -119,7 +121,7 @@ def _create_start_and_end_span(name, span_processor):
             0xDEADBEEF,
             0xDEADBEEF,
             is_remote=False,
-            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         ),
         span_processor=span_processor,
     )
@@ -198,6 +200,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         for _ in range(512):
             _create_start_and_end_span("foo", span_processor)
+        from time import sleep
+
+        sleep(1)
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 512)
         span_processor.shutdown()
@@ -227,7 +232,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         span_processor.shutdown()
 
     def test_batch_span_processor_not_sampled(self):
-        tracer_provider = trace.TracerProvider(sampler=trace.sampling.ALWAYS_OFF)
+        tracer_provider = trace.TracerProvider(
+            sampler=trace.sampling.ALWAYS_OFF
+        )
         tracer = tracer_provider.get_tracer(__name__)
         spans_names_list = []
 
