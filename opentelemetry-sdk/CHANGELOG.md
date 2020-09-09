@@ -12,6 +12,8 @@
   ([#1062](https://github.com/open-telemetry/opentelemetry-python/pull/1062))
 - Populate resource attributes as per semantic conventions
   ([#1053](https://github.com/open-telemetry/opentelemetry-python/pull/1053))
+- Rename Resource labels to attributes
+  ([#1082](https://github.com/open-telemetry/opentelemetry-python/pull/1082))
 
 ## Version 0.12b0
 

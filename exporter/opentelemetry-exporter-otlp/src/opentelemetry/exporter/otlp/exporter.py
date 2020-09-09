@@ -76,7 +76,7 @@ def _get_resource_data(
 
         collector_resource = Resource()
 
-        for key, value in sdk_resource.labels.items():
+        for key, value in sdk_resource.attributes.items():
 
             try:
                 # pylint: disable=no-member
