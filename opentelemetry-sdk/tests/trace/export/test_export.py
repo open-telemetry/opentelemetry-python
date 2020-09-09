@@ -242,9 +242,8 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         for _ in range(512):
             _create_start_and_end_span("foo", span_processor)
-        from time import sleep  # pylint: disable=import-outside-toplevel
 
-        sleep(1)
+        time.sleep(1)
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 512)
         span_processor.shutdown()
