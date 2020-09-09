@@ -41,7 +41,7 @@ An example is provided in the
 
 You can just run it, you should get output similar to this one:
 
-.. code::
+.. code:: pytb
 
     ErrorHandler0 handling a ZeroDivisionError
     Traceback (most recent call last):
