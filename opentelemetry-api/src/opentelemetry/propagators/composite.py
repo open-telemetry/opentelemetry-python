@@ -15,12 +15,12 @@ import logging
 import typing
 
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import httptextformat
+from opentelemetry.trace.propagation import textmap
 
 logger = logging.getLogger(__name__)
 
 
-class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
+class CompositeHTTPPropagator(textmap.TextMapPropagator):
     """ CompositeHTTPPropagator provides a mechanism for combining multiple
     propagators into a single one.
 
@@ -29,16 +29,14 @@ class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
     """
 
     def __init__(
-        self, propagators: typing.Sequence[httptextformat.HTTPTextFormat]
+        self, propagators: typing.Sequence[textmap.TextMapPropagator]
     ) -> None:
         self._propagators = propagators
 
     def extract(
         self,
-        get_from_carrier: httptextformat.Getter[
-            httptextformat.HTTPTextFormatT
-        ],
-        carrier: httptextformat.HTTPTextFormatT,
+        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """ Run each of the configured propagators with the given context and carrier.
@@ -46,7 +44,7 @@ class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
         propagators write the same context key, the propagator later in the list
         will override previous propagators.
 
-        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
+        See `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
         for propagator in self._propagators:
             context = propagator.extract(get_from_carrier, carrier, context)
@@ -54,8 +52,8 @@ class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
-        carrier: httptextformat.HTTPTextFormatT,
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """ Run each of the configured propagators with the given context and carrier.
@@ -63,7 +61,7 @@ class CompositeHTTPPropagator(httptextformat.HTTPTextFormat):
         propagators write the same carrier key, the propagator later in the list
         will override previous propagators.
 
-        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
+        See `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
         """
         for propagator in self._propagators:
             propagator.inject(set_in_carrier, carrier, context)
