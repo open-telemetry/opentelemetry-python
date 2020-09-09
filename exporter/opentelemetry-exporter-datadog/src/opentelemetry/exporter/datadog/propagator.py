@@ -19,9 +19,9 @@ from opentelemetry.context import Context
 from opentelemetry.trace import get_current_span, set_span_in_context
 from opentelemetry.trace.propagation.textmap import (
     Getter,
+    Setter,
     TextMapPropagator,
     TextMapPropagatorT,
-    Setter,
 )
 
 # pylint:disable=relative-beyond-top-level

@@ -20,9 +20,9 @@ from opentelemetry.context import Context
 from opentelemetry.sdk.trace import generate_span_id, generate_trace_id
 from opentelemetry.trace.propagation.textmap import (
     Getter,
+    Setter,
     TextMapPropagator,
     TextMapPropagatorT,
-    Setter,
 )
 
 
