@@ -21,8 +21,8 @@ import typing
 from enum import Enum
 
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.util import time_ns
 from opentelemetry.sdk.trace import sampling
+from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
 
