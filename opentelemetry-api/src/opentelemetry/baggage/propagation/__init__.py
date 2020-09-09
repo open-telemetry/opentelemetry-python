@@ -18,10 +18,10 @@ import urllib.parse
 from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import httptextformat
+from opentelemetry.trace.propagation import textmap
 
 
-class BaggagePropagator(httptextformat.HTTPTextFormat):
+class BaggagePropagator(textmap.TextMapPropagator):
     MAX_HEADER_LENGTH = 8192
     MAX_PAIR_LENGTH = 4096
     MAX_PAIRS = 180
@@ -29,16 +29,14 @@ class BaggagePropagator(httptextformat.HTTPTextFormat):
 
     def extract(
         self,
-        get_from_carrier: httptextformat.Getter[
-            httptextformat.HTTPTextFormatT
-        ],
-        carrier: httptextformat.HTTPTextFormatT,
+        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Extract Baggage from the carrier.
 
         See
-        `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
 
         if context is None:
@@ -73,14 +71,14 @@ class BaggagePropagator(httptextformat.HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
-        carrier: httptextformat.HTTPTextFormatT,
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Injects Baggage into the carrier.
 
         See
-        `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
         """
         baggage_entries = baggage.get_all(context=context)
         if not baggage_entries:
@@ -100,8 +98,8 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
 
 def _extract_first_element(
-    items: typing.Iterable[httptextformat.HTTPTextFormatT],
-) -> typing.Optional[httptextformat.HTTPTextFormatT]:
+    items: typing.Iterable[textmap.TextMapPropagatorT],
+) -> typing.Optional[textmap.TextMapPropagatorT]:
     if items is None:
         return None
     return next(iter(items), None)

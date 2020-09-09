@@ -16,9 +16,9 @@ import typing
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.trace.propagation import tracecontexthttptextformat
+from opentelemetry.trace.propagation import tracecontext
 
-FORMAT = tracecontexthttptextformat.TraceContextHTTPTextFormat()
+FORMAT = tracecontext.TraceContextTextMapPropagator()
 
 
 def get_as_list(
