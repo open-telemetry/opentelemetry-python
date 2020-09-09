@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.sdk.error_handler import ErrorHandler
 from logging import getLogger
+
+from opentelemetry.sdk.error_handler import ErrorHandler
 
 logger = getLogger(__name__)
 
 
 class ErrorHandler0(ErrorHandler, ZeroDivisionError):
-
     def handle(self, error: Exception, *args, **kwargs):
 
         logger.exception("ErrorHandler0 handling a ZeroDivisionError")

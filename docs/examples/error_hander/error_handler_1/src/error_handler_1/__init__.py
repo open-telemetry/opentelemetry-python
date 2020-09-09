@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.sdk.error_handler import ErrorHandler
 from logging import getLogger
+
+from opentelemetry.sdk.error_handler import ErrorHandler
 
 logger = getLogger(__name__)
 
 
 class ErrorHandler1(ErrorHandler, IndexError, KeyError):
-
     def handle(self, error: Exception, *args, **kwargs):
 
         if isinstance(error, IndexError):

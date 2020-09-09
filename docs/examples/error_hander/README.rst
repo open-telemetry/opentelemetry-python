@@ -21,9 +21,10 @@ This example will be executed in a separate virtual environment:
 Installation
 ------------
 
-Here we install first `opentelemetry-sdk`, the only dependency. Afterwards, 2
-error handlers are installed: `error_handler_0`  will handle `ZeroDivisionError`
-exceptions, `error_handler_1` will handle `IndexError` and `KeyError` exceptions.
+Here we install first ``opentelemetry-sdk``, the only dependency. Afterwards, 2
+error handlers are installed: ``error_handler_0``  will handle
+``ZeroDivisionError`` exceptions, ``error_handler_1`` will handle
+``IndexError`` and ``KeyError`` exceptions.
 
 .. code:: sh
 
@@ -35,7 +36,8 @@ exceptions, `error_handler_1` will handle `IndexError` and `KeyError` exceptions
 Execution
 ---------
 
-An example is provided in the `opentelemetry-python/docs/examples/error_handler/example.py`.
+An example is provided in the
+``opentelemetry-python/docs/examples/error_handler/example.py``.
 
 You can just run it, you should get output similar to this one:
 
@@ -67,11 +69,11 @@ You can just run it, you should get output similar to this one:
 
     No error raised
 
-The `opentelemetry-sdk.error_handler` module includes documentation that
+The ``opentelemetry-sdk.error_handler`` module includes documentation that
 explains how this works. We recommend you read it also, here is just a small
 summary.
 
-In `example.py` we use `GlobalErrorHandler` as a context manager in several
+In ``example.py`` we use ``GlobalErrorHandler`` as a context manager in several
 places, for example:
 
 
@@ -80,10 +82,11 @@ places, for example:
     with GlobalErrorHandler():
         {1: 2}[2]
 
-Running that code will raise a `KeyError` exception, of course. `GlobalErrorHandler`
-will "capture" that exception and pass it down to the registered error handlers.
-If there is one that handles `KeyError` exceptions then it will handle it. That
-can be seen in the result of the execution of `example.py`:
+Running that code will raise a ``KeyError`` exception, of course.
+``GlobalErrorHandler`` will "capture" that exception and pass it down to the
+registered error handlers. If there is one that handles ``KeyError`` exceptions
+then it will handle it. That can be seen in the result of the execution of
+``example.py``:
 
 .. code::
 
@@ -93,9 +96,9 @@ can be seen in the result of the execution of `example.py`:
         {1: 2}[2]
     KeyError: 2
 
-There is no registered error handler that can handle `AssertionError` exceptions
-so this kind of errors are handled by the default error handler which just logs
-the exception to standard logging, as seen here:
+There is no registered error handler that can handle ``AssertionError``
+exceptions so this kind of errors are handled by the default error handler
+which just logs the exception to standard logging, as seen here:
 
 .. code::
 
@@ -105,8 +108,8 @@ the exception to standard logging, as seen here:
         assert False
     AssertionError
 
-When no exception is raised, the code inside the scope of `GlobalErrorHandler`
-is exectued normally:
+When no exception is raised, the code inside the scope of
+``GlobalErrorHandler`` is exectued normally:
 
 .. code::
 
@@ -114,13 +117,14 @@ is exectued normally:
 
 Users can create Python packages that provide their own custom error handlers
 and install them in their virtual environments before running their code which
-instantiates `GlobalErrorHandler` context managers. `error_handler_0` and
-`error_handler_1` can be used as examples to create these custom error handlers.
+instantiates ``GlobalErrorHandler`` context managers. ``error_handler_0`` and
+``error_handler_1`` can be used as examples to create these custom error
+handlers.
 
 In order for the error handlers to be registered, they need to create a class
-that inherits from `opentelemetry.sdk.error_handler.ErrorHandler` and at least
-one `Exception`-type class. For example, this is an error handler that handles
-`ZeroDivisionError` exceptions:
+that inherits from ``opentelemetry.sdk.error_handler.ErrorHandler`` and at
+least one ``Exception``-type class. For example, this is an error handler that
+handles ``ZeroDivisionError`` exceptions:
 
 .. code:: python
 
@@ -136,7 +140,7 @@ one `Exception`-type class. For example, this is an error handler that handles
 
             logger.exception("ErrorHandler0 handling a ZeroDivisionError")
 
-To register this error handler, use the `opentelemetry_error_handler` entry
+To register this error handler, use the ``opentelemetry_error_handler`` entry
 point in the setup of the error handler package:
 
 .. code::
@@ -145,5 +149,5 @@ point in the setup of the error handler package:
     opentelemetry_error_handler =
         error_handler_0 = error_handler_0:ErrorHandler0
 
-This entry point should point to the error handler class, `ErrorHandler0` in
+This entry point should point to the error handler class, ``ErrorHandler0`` in
 this case.
