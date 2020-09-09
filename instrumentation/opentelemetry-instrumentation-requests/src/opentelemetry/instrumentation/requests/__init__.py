@@ -121,39 +121,45 @@ def _instrument(tracer_provider=None, span_callback=None):
         with get_tracer(
             __name__, __version__, tracer_provider
         ).start_as_current_span(span_name, kind=SpanKind.CLIENT) as span:
-            span.set_attribute("component", "http")
-            span.set_attribute("http.method", method.upper())
-            span.set_attribute("http.url", url)
+            if span.is_recording():
+                span.set_attribute("component", "http")
+                span.set_attribute("http.method", method.upper())
+                span.set_attribute("http.url", url)
 
-            headers = get_or_create_headers()
-            propagators.inject(type(headers).__setitem__, headers)
+                headers = get_or_create_headers()
+                propagators.inject(type(headers).__setitem__, headers)
 
-            token = context.attach(
-                context.set_value(_SUPPRESS_REQUESTS_INSTRUMENTATION_KEY, True)
-            )
-            try:
-                result = call_wrapped()  # *** PROCEED
-            except Exception as exc:  # pylint: disable=W0703
-                exception = exc
-                result = getattr(exc, "response", None)
-            finally:
-                context.detach(token)
-
-            if exception is not None:
-                span.set_status(
-                    Status(_exception_to_canonical_code(exception))
+                token = context.attach(
+                    context.set_value(_SUPPRESS_REQUESTS_INSTRUMENTATION_KEY, True)
                 )
-                span.record_exception(exception)
+                try:
+                    result = call_wrapped()  # *** PROCEED
+                except Exception as exc:  # pylint: disable=W0703
+                    exception = exc
+                    result = getattr(exc, "response", None)
+                finally:
+                    context.detach(token)
 
-            if result is not None:
-                span.set_attribute("http.status_code", result.status_code)
-                span.set_attribute("http.status_text", result.reason)
-                span.set_status(
-                    Status(http_status_to_canonical_code(result.status_code))
-                )
+                if exception is not None:
+                    span.set_status(
+                        Status(_exception_to_canonical_code(exception))
+                    )
+                    span.record_exception(exception)
 
-            if span_callback is not None:
-                span_callback(span, result)
+                if result is not None:
+                    span.set_attribute("http.status_code", result.status_code)
+                    span.set_attribute("http.status_text", result.reason)
+                    span.set_status(
+                        Status(http_status_to_canonical_code(result.status_code))
+                    )
+
+                if span_callback is not None:
+                    span_callback(span, result)
+            else:
+                try:
+                    result = call_wrapped()  # *** PROCEED
+                except Exception as exc:  # pylint: disable=W0703
+                    exception = exc
 
         if exception is not None:
             raise exception.with_traceback(exception.__traceback__)

@@ -147,6 +147,19 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         self.assert_span(num_spans=0)
 
+    def test_not_recording(self):
+        RequestsInstrumentor().uninstrument()
+        RequestsInstrumentor().instrument(
+            tracer_provider=self.original_tracer_provider
+        )
+
+        result = self.perform_request(self.URL)
+        self.assertEqual(result.text, "Hello!")
+
+        span = self.assert_span(None, 0)
+        with self.assertRaises(AttributeError):
+            attr = span.attributes
+
     def test_distributed_context(self):
         previous_propagator = propagators.get_global_httptextformat()
         try:
