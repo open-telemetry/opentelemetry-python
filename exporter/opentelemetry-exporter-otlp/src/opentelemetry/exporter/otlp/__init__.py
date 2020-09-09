@@ -36,7 +36,7 @@ The **OTLP Span Exporter** allows to export `OpenTelemetry`_ traces to the
 
     # Resource can be required for some backends, e.g. Jaeger
     # If resource wouldn't be set - traces wouldn't appears in Jaeger
-    resource = Resource(labels=labels={
+    resource = Resource(attributes={
         "service.name": "service"
     })
 
