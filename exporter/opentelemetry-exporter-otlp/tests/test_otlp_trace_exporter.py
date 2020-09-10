@@ -30,7 +30,11 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
     add_TraceServiceServicer_to_server,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    InstrumentationLibrary,
+    KeyValue,
+)
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as CollectorResource,
 )
@@ -46,6 +50,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleExportSpanProcessor,
     SpanExportResult,
 )
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
 
 
@@ -142,6 +147,9 @@ class TestOTLPSpanExporter(TestCase):
                     }
                 )
             ],
+            instrumentation_info=InstrumentationInfo(
+                name="name", version="version"
+            ),
         )
 
         self.span.start()
@@ -209,6 +217,9 @@ class TestOTLPSpanExporter(TestCase):
                     ),
                     instrumentation_library_spans=[
                         InstrumentationLibrarySpans(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name", version="version"
+                            ),
                             spans=[
                                 CollectorSpan(
                                     # pylint: disable=no-member
@@ -282,7 +293,7 @@ class TestOTLPSpanExporter(TestCase):
                                         )
                                     ],
                                 )
-                            ]
+                            ],
                         )
                     ],
                 ),

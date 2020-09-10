@@ -27,6 +27,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceStub,
 )
+from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
 from opentelemetry.proto.trace.v1.trace_pb2 import (
     InstrumentationLibrarySpans,
     ResourceSpans,
@@ -168,9 +169,22 @@ class OTLPSpanExporter(SpanExporter, OTLPExporterMixin):
             if sdk_span.resource not in (
                 sdk_resource_instrumentation_library_spans.keys()
             ):
+                if sdk_span.instrumentation_info is not None:
+                    instrumentation_library_spans = InstrumentationLibrarySpans(
+                        instrumentation_library=InstrumentationLibrary(
+                            name=sdk_span.instrumentation_info.name,
+                            version=sdk_span.instrumentation_info.version,
+                        )
+                    )
+
+                else:
+                    instrumentation_library_spans = (
+                        InstrumentationLibrarySpans()
+                    )
+
                 sdk_resource_instrumentation_library_spans[
                     sdk_span.resource
-                ] = InstrumentationLibrarySpans()
+                ] = instrumentation_library_spans
 
             self._collector_span_kwargs = {}
 
