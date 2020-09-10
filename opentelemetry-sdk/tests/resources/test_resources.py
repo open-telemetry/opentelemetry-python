@@ -23,25 +23,35 @@ from opentelemetry.sdk import resources
 
 class TestResources(unittest.TestCase):
     def test_create(self):
-        labels = {
+        attributes = {
             "service": "ui",
             "version": 1,
             "has_bugs": True,
             "cost": 112.12,
         }
 
-        resource = resources.Resource.create(labels)
+        expected_attributes = {
+            "service": "ui",
+            "version": 1,
+            "has_bugs": True,
+            "cost": 112.12,
+            resources.TELEMETRY_SDK_NAME: "opentelemetry",
+            resources.TELEMETRY_SDK_LANGUAGE: "python",
+            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+        }
+
+        resource = resources.Resource.create(attributes)
         self.assertIsInstance(resource, resources.Resource)
-        self.assertEqual(resource.labels, labels)
+        self.assertEqual(resource.attributes, expected_attributes)
 
         resource = resources.Resource.create_empty()
         self.assertIs(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create(None)
-        self.assertIs(resource, resources._EMPTY_RESOURCE)
+        self.assertIs(resource, resources._DEFAULT_RESOURCE)
 
         resource = resources.Resource.create({})
-        self.assertIs(resource, resources._EMPTY_RESOURCE)
+        self.assertIs(resource, resources._DEFAULT_RESOURCE)
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
@@ -54,7 +64,7 @@ class TestResources(unittest.TestCase):
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.
 
-        Labels from the source Resource take precedence, with
+        Attributes from the source Resource take precedence, with
         the exception of the empty string.
 
         """
@@ -68,23 +78,30 @@ class TestResources(unittest.TestCase):
         )
 
     def test_immutability(self):
-        labels = {
+        attributes = {
             "service": "ui",
             "version": 1,
             "has_bugs": True,
             "cost": 112.12,
         }
 
-        labels_copy = labels.copy()
+        default_attributes = {
+            resources.TELEMETRY_SDK_NAME: "opentelemetry",
+            resources.TELEMETRY_SDK_LANGUAGE: "python",
+            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+        }
 
-        resource = resources.Resource.create(labels)
-        self.assertEqual(resource.labels, labels_copy)
+        attributes_copy = attributes.copy()
+        attributes_copy.update(default_attributes)
 
-        resource.labels["has_bugs"] = False
-        self.assertEqual(resource.labels, labels_copy)
+        resource = resources.Resource.create(attributes)
+        self.assertEqual(resource.attributes, attributes_copy)
 
-        labels["cost"] = 999.91
-        self.assertEqual(resource.labels, labels_copy)
+        resource.attributes["has_bugs"] = False
+        self.assertEqual(resource.attributes, attributes_copy)
+
+        attributes["cost"] = 999.91
+        self.assertEqual(resource.attributes, attributes_copy)
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])

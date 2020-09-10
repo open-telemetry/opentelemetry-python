@@ -15,55 +15,53 @@
 import typing
 import urllib.parse
 
-from opentelemetry import correlationcontext
+from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import httptextformat
+from opentelemetry.trace.propagation import textmap
 
 
-class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
+class BaggagePropagator(textmap.TextMapPropagator):
     MAX_HEADER_LENGTH = 8192
     MAX_PAIR_LENGTH = 4096
     MAX_PAIRS = 180
-    _CORRELATION_CONTEXT_HEADER_NAME = "otcorrelationcontext"
+    _BAGGAGE_HEADER_NAME = "otcorrelations"
 
     def extract(
         self,
-        get_from_carrier: httptextformat.Getter[
-            httptextformat.HTTPTextFormatT
-        ],
-        carrier: httptextformat.HTTPTextFormatT,
+        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        """Extract CorrelationContext from the carrier.
+        """Extract Baggage from the carrier.
 
         See
-        `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
 
         if context is None:
             context = get_current()
 
         header = _extract_first_element(
-            get_from_carrier(carrier, self._CORRELATION_CONTEXT_HEADER_NAME)
+            get_from_carrier(carrier, self._BAGGAGE_HEADER_NAME)
         )
 
         if not header or len(header) > self.MAX_HEADER_LENGTH:
             return context
 
-        correlations = header.split(",")
-        total_correlations = self.MAX_PAIRS
-        for correlation in correlations:
-            if total_correlations <= 0:
+        baggage_entries = header.split(",")
+        total_baggage_entries = self.MAX_PAIRS
+        for entry in baggage_entries:
+            if total_baggage_entries <= 0:
                 return context
-            total_correlations -= 1
-            if len(correlation) > self.MAX_PAIR_LENGTH:
+            total_baggage_entries -= 1
+            if len(entry) > self.MAX_PAIR_LENGTH:
                 continue
             try:
-                name, value = correlation.split("=", 1)
+                name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
                 continue
-            context = correlationcontext.set_correlation(
+            context = baggage.set_baggage(
                 urllib.parse.unquote(name).strip(),
                 urllib.parse.unquote(value).strip(),
                 context=context,
@@ -73,37 +71,35 @@ class CorrelationContextPropagator(httptextformat.HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
-        carrier: httptextformat.HTTPTextFormatT,
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        """Injects CorrelationContext into the carrier.
+        """Injects Baggage into the carrier.
 
         See
-        `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
         """
-        correlations = correlationcontext.get_correlations(context=context)
-        if not correlations:
+        baggage_entries = baggage.get_all(context=context)
+        if not baggage_entries:
             return
 
-        correlation_context_string = _format_correlations(correlations)
+        baggage_string = _format_baggage(baggage_entries)
         set_in_carrier(
-            carrier,
-            self._CORRELATION_CONTEXT_HEADER_NAME,
-            correlation_context_string,
+            carrier, self._BAGGAGE_HEADER_NAME, baggage_string,
         )
 
 
-def _format_correlations(correlations: typing.Dict[str, object]) -> str:
+def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
     return ",".join(
         key + "=" + urllib.parse.quote_plus(str(value))
-        for key, value in correlations.items()
+        for key, value in baggage_entries.items()
     )
 
 
 def _extract_first_element(
-    items: typing.Iterable[httptextformat.HTTPTextFormatT],
-) -> typing.Optional[httptextformat.HTTPTextFormatT]:
+    items: typing.Iterable[textmap.TextMapPropagatorT],
+) -> typing.Optional[textmap.TextMapPropagatorT]:
     if items is None:
         return None
     return next(iter(items), None)

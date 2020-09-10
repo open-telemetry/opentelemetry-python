@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Refactor `SpanContext.is_valid` from a method to a data attribute
+  ([#1005](https://github.com/open-telemetry/opentelemetry-python/pull/1005))
+- Moved samplers from API to SDK
+  ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
+- Change return value type of `correlationcontext.get_correlations` to immutable `MappingProxyType`
+  ([#1024](https://github.com/open-telemetry/opentelemetry-python/pull/1024))
+- Change is_recording_events to is_recording
+  ([#1034](https://github.com/open-telemetry/opentelemetry-python/pull/1034))
+- Remove lazy Event and Link API from Span interface
+  ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
+- Rename CorrelationContext to Baggage
+  ([#1060](https://github.com/open-telemetry/opentelemetry-python/pull/1060))
+- Rename HTTPTextFormat to TextMapPropagator. This change also updates `get_global_httptextformat` and
+  `set_global_httptextformat` to `get_global_textmap` and `set_global_textmap`
+  ([#1085](https://github.com/open-telemetry/opentelemetry-python/pull/1085))
+
+## Version 0.12b0
+
+Released 2020-08-14
+
 - Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL`
   ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
 - Stop TracerProvider and MeterProvider from being overridden

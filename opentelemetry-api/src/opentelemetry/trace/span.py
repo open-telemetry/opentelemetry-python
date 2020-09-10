@@ -52,19 +52,6 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_lazy_event(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
-        timestamp: typing.Optional[int] = None,
-    ) -> None:
-        """Adds an `Event`.
-        Adds a single `Event` with the name, an event formatter that calculates
-        the attributes lazily and, optionally, a timestamp. Implementations
-        should generate a timestamp if the `timestamp` argument is omitted.
-        """
-
-    @abc.abstractmethod
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
@@ -75,7 +62,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def is_recording_events(self) -> bool:
+    def is_recording(self) -> bool:
         """Returns whether this span will be recorded.
 
         Returns true if this Span is active and recording information like
@@ -187,6 +174,10 @@ class SpanContext:
         self.trace_flags = trace_flags
         self.trace_state = trace_state
         self.is_remote = is_remote
+        self.is_valid = (
+            self.trace_id != INVALID_TRACE_ID
+            and self.span_id != INVALID_SPAN_ID
+        )
 
     def __repr__(self) -> str:
         return (
@@ -197,20 +188,6 @@ class SpanContext:
             format_span_id(self.span_id),
             self.trace_state,
             self.is_remote,
-        )
-
-    def is_valid(self) -> bool:
-        """Get whether this `SpanContext` is valid.
-
-        A `SpanContext` is said to be invalid if its trace ID or span ID is
-        invalid (i.e. ``0``).
-
-        Returns:
-            True if the `SpanContext` is valid, false otherwise.
-        """
-        return (
-            self.trace_id != INVALID_TRACE_ID
-            and self.span_id != INVALID_SPAN_ID
         )
 
 
@@ -226,7 +203,7 @@ class DefaultSpan(Span):
     def get_context(self) -> "SpanContext":
         return self._context
 
-    def is_recording_events(self) -> bool:
+    def is_recording(self) -> bool:
         return False
 
     def end(self, end_time: typing.Optional[int] = None) -> None:
@@ -239,14 +216,6 @@ class DefaultSpan(Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
-    ) -> None:
-        pass
-
-    def add_lazy_event(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
         timestamp: typing.Optional[int] = None,
     ) -> None:
         pass

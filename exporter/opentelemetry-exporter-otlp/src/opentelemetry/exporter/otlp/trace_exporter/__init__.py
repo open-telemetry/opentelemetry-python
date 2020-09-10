@@ -1,5 +1,4 @@
 # Copyright The OpenTelemetry Authors
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,28 +14,19 @@
 """OTLP Span Exporter"""
 
 import logging
-from collections.abc import Mapping, Sequence
-from time import sleep
-from typing import Sequence as TypingSequence
+from typing import Sequence
 
-from backoff import expo
-from google.rpc.error_details_pb2 import RetryInfo
-from grpc import (
-    ChannelCredentials,
-    RpcError,
-    StatusCode,
-    insecure_channel,
-    secure_channel,
+from opentelemetry.exporter.otlp.exporter import (
+    OTLPExporterMixin,
+    _get_resource_data,
+    _translate_key_values,
 )
-
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.proto.trace.v1.trace_pb2 import (
     InstrumentationLibrarySpans,
     ResourceSpans,
@@ -49,36 +39,8 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 logger = logging.getLogger(__name__)
 
 
-def _translate_key_values(key, value):
-
-    if isinstance(value, bool):
-        any_value = AnyValue(bool_value=value)
-
-    elif isinstance(value, str):
-        any_value = AnyValue(string_value=value)
-
-    elif isinstance(value, int):
-        any_value = AnyValue(int_value=value)
-
-    elif isinstance(value, float):
-        any_value = AnyValue(double_value=value)
-
-    elif isinstance(value, Sequence):
-        any_value = AnyValue(array_value=value)
-
-    elif isinstance(value, Mapping):
-        any_value = AnyValue(kvlist_value=value)
-
-    else:
-        raise Exception(
-            "Invalid type {} of value {}".format(type(value), value)
-        )
-
-    return KeyValue(key=key, value=any_value)
-
-
 # pylint: disable=no-member
-class OTLPSpanExporter(SpanExporter):
+class OTLPSpanExporter(SpanExporter, OTLPExporterMixin):
     """OTLP span exporter
 
     Args:
@@ -87,23 +49,8 @@ class OTLPSpanExporter(SpanExporter):
         metadata: Metadata to send when exporting
     """
 
-    def __init__(
-        self,
-        endpoint="localhost:55680",
-        credentials: ChannelCredentials = None,
-        metadata=None,
-    ):
-        super().__init__()
-
-        self._metadata = metadata
-        self._collector_span_kwargs = None
-
-        if credentials is None:
-            self._client = TraceServiceStub(insecure_channel(endpoint))
-        else:
-            self._client = TraceServiceStub(
-                secure_channel(endpoint, credentials)
-            )
+    _result = SpanExportResult
+    _stub = TraceServiceStub
 
     def _translate_name(self, sdk_span):
         self._collector_span_kwargs["name"] = sdk_span.name
@@ -212,13 +159,11 @@ class OTLPSpanExporter(SpanExporter):
                 message=sdk_span.status.description,
             )
 
-    def _translate_spans(
-        self, sdk_spans: TypingSequence[SDKSpan],
-    ) -> ExportTraceServiceRequest:
+    def _translate_data(self, data) -> ExportTraceServiceRequest:
 
         sdk_resource_instrumentation_library_spans = {}
 
-        for sdk_span in sdk_spans:
+        for sdk_span in data:
 
             if sdk_span.resource not in (
                 sdk_resource_instrumentation_library_spans.keys()
@@ -249,92 +194,13 @@ class OTLPSpanExporter(SpanExporter):
                 sdk_span.resource
             ].spans.append(CollectorSpan(**self._collector_span_kwargs))
 
-        resource_spans = []
-
-        for (
-            sdk_resource,
-            instrumentation_library_spans,
-        ) in sdk_resource_instrumentation_library_spans.items():
-
-            collector_resource = Resource()
-
-            for key, value in sdk_resource.labels.items():
-
-                try:
-                    collector_resource.attributes.append(
-                        _translate_key_values(key, value)
-                    )
-                except Exception as error:  # pylint: disable=broad-except
-                    logger.exception(error)
-
-            resource_spans.append(
-                ResourceSpans(
-                    resource=collector_resource,
-                    instrumentation_library_spans=[
-                        instrumentation_library_spans
-                    ],
-                )
+        return ExportTraceServiceRequest(
+            resource_spans=_get_resource_data(
+                sdk_resource_instrumentation_library_spans,
+                ResourceSpans,
+                "spans",
             )
+        )
 
-        return ExportTraceServiceRequest(resource_spans=resource_spans)
-
-    def export(self, spans: TypingSequence[SDKSpan]) -> SpanExportResult:
-        # expo returns a generator that yields delay values which grow
-        # exponentially. Once delay is greater than max_value, the yielded
-        # value will remain constant.
-        # max_value is set to 900 (900 seconds is 15 minutes) to use the same
-        # value as used in the Go implementation.
-
-        max_value = 900
-
-        for delay in expo(max_value=max_value):
-
-            if delay == max_value:
-                return SpanExportResult.FAILURE
-
-            try:
-                self._client.Export(
-                    request=self._translate_spans(spans),
-                    metadata=self._metadata,
-                )
-
-                return SpanExportResult.SUCCESS
-
-            except RpcError as error:
-
-                if error.code() in [
-                    StatusCode.CANCELLED,
-                    StatusCode.DEADLINE_EXCEEDED,
-                    StatusCode.PERMISSION_DENIED,
-                    StatusCode.UNAUTHENTICATED,
-                    StatusCode.RESOURCE_EXHAUSTED,
-                    StatusCode.ABORTED,
-                    StatusCode.OUT_OF_RANGE,
-                    StatusCode.UNAVAILABLE,
-                    StatusCode.DATA_LOSS,
-                ]:
-
-                    retry_info_bin = dict(error.trailing_metadata()).get(
-                        "google.rpc.retryinfo-bin"
-                    )
-                    if retry_info_bin is not None:
-                        retry_info = RetryInfo()
-                        retry_info.ParseFromString(retry_info_bin)
-                        delay = (
-                            retry_info.retry_delay.seconds
-                            + retry_info.retry_delay.nanos / 1.0e9
-                        )
-
-                    logger.debug("Waiting %ss before retrying export of span")
-                    sleep(delay)
-                    continue
-
-                if error.code() == StatusCode.OK:
-                    return SpanExportResult.SUCCESS
-
-                return SpanExportResult.FAILURE
-
-        return SpanExportResult.FAILURE
-
-    def shutdown(self):
-        pass
+    def export(self, spans: Sequence[SDKSpan]) -> SpanExportResult:
+        return self._export(spans)

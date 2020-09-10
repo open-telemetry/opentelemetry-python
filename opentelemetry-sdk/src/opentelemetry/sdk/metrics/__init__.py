@@ -132,7 +132,7 @@ class Metric(metrics_api.Metric):
     This is the class that is used to represent a metric that is to be
     synchronously recorded and tracked. Synchronous instruments are called
     inside a request, meaning they have an associated distributed context
-    (i.e. Span context, correlation context). Multiple metric events may occur
+    (i.e. Span context, baggage). Multiple metric events may occur
     for a synchronous instrument within a give collection interval.
 
     Each metric has a set of bound metrics that are created from the metric.
@@ -478,7 +478,7 @@ class MeterProvider(metrics_api.MeterProvider):
     def __init__(
         self,
         stateful=True,
-        resource: Resource = Resource.create_empty(),
+        resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
     ):
         self.stateful = stateful

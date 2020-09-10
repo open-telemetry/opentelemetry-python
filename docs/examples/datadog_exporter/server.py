@@ -35,19 +35,19 @@ trace.get_tracer_provider().add_span_processor(
 )
 
 # append Datadog format for propagation to and from Datadog instrumented services
-global_httptextformat = propagators.get_global_httptextformat()
+global_textmap = propagators.get_global_textmap()
 if isinstance(
-    global_httptextformat, propagators.composite.CompositeHTTPPropagator
+    global_textmap, propagators.composite.CompositeHTTPPropagator
 ) and not any(
-    isinstance(p, DatadogFormat) for p in global_httptextformat._propagators
+    isinstance(p, DatadogFormat) for p in global_textmap._propagators
 ):
-    propagators.set_global_httptextformat(
+    propagators.set_global_textmap(
         propagators.composite.CompositeHTTPPropagator(
-            global_httptextformat._propagators + [DatadogFormat()]
+            global_textmap._propagators + [DatadogFormat()]
         )
     )
 else:
-    propagators.set_global_httptextformat(DatadogFormat())
+    propagators.set_global_textmap(DatadogFormat())
 
 tracer = trace.get_tracer(__name__)
 

@@ -87,6 +87,14 @@ class TraceServiceServicerSUCCESS(TraceServiceServicer):
         return ExportTraceServiceResponse()
 
 
+class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
+    # pylint: disable=invalid-name,unused-argument,no-self-use
+    def Export(self, request, context):
+        context.set_code(StatusCode.ALREADY_EXISTS)
+
+        return ExportTraceServiceResponse()
+
+
 class TestOTLPSpanExporter(TestCase):
     def setUp(self):
         tracer_provider = TracerProvider()
@@ -142,8 +150,8 @@ class TestOTLPSpanExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
-    @patch("opentelemetry.exporter.otlp.trace_exporter.expo")
-    @patch("opentelemetry.exporter.otlp.trace_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
@@ -156,8 +164,8 @@ class TestOTLPSpanExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.trace_exporter.expo")
-    @patch("opentelemetry.exporter.otlp.trace_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
@@ -176,6 +184,14 @@ class TestOTLPSpanExporter(TestCase):
         )
         self.assertEqual(
             self.exporter.export([self.span]), SpanExportResult.SUCCESS
+        )
+
+    def test_failure(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerALREADY_EXISTS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export([self.span]), SpanExportResult.FAILURE
         )
 
     def test_translate_spans(self):
@@ -274,4 +290,4 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         # pylint: disable=protected-access
-        self.assertEqual(expected, self.exporter._translate_spans([self.span]))
+        self.assertEqual(expected, self.exporter._translate_data([self.span]))
