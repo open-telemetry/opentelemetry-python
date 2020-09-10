@@ -11,8 +11,8 @@ The Python `OpenTelemetry <https://opentelemetry.io/>`_ client.
 This documentation describes the :doc:`opentelemetry-api <api/api>`,
 :doc:`opentelemetry-sdk <sdk/sdk>`, and several `integration packages <#integrations>`_.
 
-**Please note** that this library is currently in alpha, and shouldn't be
-used in production environments.
+**Please note** that this library is currently in _beta_, and shouldn't
+generally be used in production environments.
 
 Installation
 ------------
@@ -62,6 +62,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     :name: getting-started
 
     getting-started
+    faq-and-cookbook
 
 .. toctree::
     :maxdepth: 1

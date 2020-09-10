@@ -18,15 +18,15 @@ from re import compile as re_compile
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace import generate_span_id, generate_trace_id
-from opentelemetry.trace.propagation.httptextformat import (
+from opentelemetry.trace.propagation.textmap import (
     Getter,
-    HTTPTextFormat,
-    HTTPTextFormatT,
     Setter,
+    TextMapPropagator,
+    TextMapPropagatorT,
 )
 
 
-class B3Format(HTTPTextFormat):
+class B3Format(TextMapPropagator):
     """Propagator for the B3 HTTP header format.
 
     See: https://github.com/openzipkin/b3-propagation
@@ -44,8 +44,8 @@ class B3Format(HTTPTextFormat):
 
     def extract(
         self,
-        get_from_carrier: Getter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        get_from_carrier: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
@@ -134,8 +134,8 @@ class B3Format(HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: Setter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context=context)
@@ -170,8 +170,8 @@ def format_span_id(span_id: int) -> str:
 
 
 def _extract_first_element(
-    items: typing.Iterable[HTTPTextFormatT],
-) -> typing.Optional[HTTPTextFormatT]:
+    items: typing.Iterable[TextMapPropagatorT],
+) -> typing.Optional[TextMapPropagatorT]:
     if items is None:
         return None
     return next(iter(items), None)

@@ -40,9 +40,10 @@ from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace import SpanContext, sampling
+from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
@@ -283,31 +284,6 @@ class Event(EventBase):
         return self._attributes
 
 
-class LazyEvent(EventBase):
-    """A text annotation with a set of attributes.
-
-    Args:
-        name: Name of the event.
-        event_formatter: Callable object that returns the attributes of the
-            event.
-        timestamp: Timestamp of the event. If `None` it will filled
-            automatically.
-    """
-
-    def __init__(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
-        timestamp: Optional[int] = None,
-    ) -> None:
-        super().__init__(name, timestamp)
-        self._event_formatter = event_formatter
-
-    @property
-    def attributes(self) -> types.Attributes:
-        return self._event_formatter()
-
-
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
@@ -350,6 +326,16 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     return True
 
 
+def _filter_attribute_values(attributes: types.Attributes):
+    if attributes:
+        for attr_key, attr_value in list(attributes.items()):
+            if _is_valid_attribute_value(attr_value):
+                if isinstance(attr_value, MutableSequence):
+                    attributes[attr_key] = tuple(attr_value)
+            else:
+                attributes.pop(attr_key)
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -378,7 +364,7 @@ class Span(trace_api.Span):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: Resource = Resource.create_empty(),
+        resource: Resource = Resource.create({}),
         attributes: types.Attributes = None,  # TODO
         events: Sequence[Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
@@ -401,7 +387,7 @@ class Span(trace_api.Span):
         self.status = None
         self._lock = threading.Lock()
 
-        self._filter_attribute_values(attributes)
+        _filter_attribute_values(attributes)
         if not attributes:
             self.attributes = self._new_attributes()
         else:
@@ -412,7 +398,7 @@ class Span(trace_api.Span):
         self.events = self._new_events()
         if events:
             for event in events:
-                self._filter_attribute_values(event.attributes)
+                _filter_attribute_values(event.attributes)
                 self.events.append(event)
 
         if links is None:
@@ -520,7 +506,7 @@ class Span(trace_api.Span):
         f_span["attributes"] = self._format_attributes(self.attributes)
         f_span["events"] = self._format_events(self.events)
         f_span["links"] = self._format_links(self.links)
-        f_span["resource"] = self.resource.labels
+        f_span["resource"] = self.resource.attributes
 
         return json.dumps(f_span, indent=indent)
 
@@ -529,7 +515,7 @@ class Span(trace_api.Span):
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             has_ended = self.end_time is not None
         if has_ended:
@@ -553,21 +539,9 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
-    @staticmethod
-    def _filter_attribute_values(attributes: types.Attributes):
-        if attributes:
-            for attr_key, attr_value in list(attributes.items()):
-                if _is_valid_attribute_value(attr_value):
-                    if isinstance(attr_value, MutableSequence):
-                        attributes[attr_key] = tuple(attr_value)
-                    else:
-                        attributes[attr_key] = attr_value
-                else:
-                    attributes.pop(attr_key)
-
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             has_ended = self.end_time is not None
 
@@ -582,7 +556,7 @@ class Span(trace_api.Span):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        self._filter_attribute_values(attributes)
+        _filter_attribute_values(attributes)
         if not attributes:
             attributes = self._new_attributes()
         self._add_event(
@@ -593,23 +567,9 @@ class Span(trace_api.Span):
             )
         )
 
-    def add_lazy_event(
-        self,
-        name: str,
-        event_formatter: types.AttributesFormatter,
-        timestamp: Optional[int] = None,
-    ) -> None:
-        self._add_event(
-            LazyEvent(
-                name=name,
-                event_formatter=event_formatter,
-                timestamp=time_ns() if timestamp is None else timestamp,
-            )
-        )
-
     def start(self, start_time: Optional[int] = None) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             has_started = self.start_time is not None
             if not has_started:
@@ -623,7 +583,7 @@ class Span(trace_api.Span):
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
-            if not self.is_recording_events():
+            if not self.is_recording():
                 return
             if self.start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
@@ -650,7 +610,7 @@ class Span(trace_api.Span):
             return
         self.name = name
 
-    def is_recording_events(self) -> bool:
+    def is_recording(self) -> bool:
         return True
 
     def set_status(self, status: trace_api.Status) -> None:
@@ -743,7 +703,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(name, parent, kind, attributes, links)
@@ -754,7 +714,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: Optional[types.Attributes] = None,
+        attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
@@ -771,7 +731,7 @@ class Tracer(trace_api.Tracer):
         ):
             raise TypeError("parent must be a Span, SpanContext or None.")
 
-        if parent_context is None or not parent_context.is_valid():
+        if parent_context is None or not parent_context.is_valid:
             parent = parent_context = None
             trace_id = generate_trace_id()
             trace_flags = None
@@ -781,6 +741,20 @@ class Tracer(trace_api.Tracer):
             trace_flags = parent_context.trace_flags
             trace_state = parent_context.trace_state
 
+        # The sampler decides whether to create a real or no-op span at the
+        # time of span creation. No-op spans do not record events, and are not
+        # exported.
+        # The sampler may also add attributes to the newly-created span, e.g.
+        # to include information about the sampling result.
+        sampling_result = self.source.sampler.should_sample(
+            parent_context, trace_id, name, attributes, links,
+        )
+
+        trace_flags = (
+            trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
+            if sampling_result.decision.is_sampled()
+            else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
+        )
         context = trace_api.SpanContext(
             trace_id,
             generate_span_id(),
@@ -789,29 +763,8 @@ class Tracer(trace_api.Tracer):
             trace_state=trace_state,
         )
 
-        # The sampler decides whether to create a real or no-op span at the
-        # time of span creation. No-op spans do not record events, and are not
-        # exported.
-        # The sampler may also add attributes to the newly-created span, e.g.
-        # to include information about the sampling decision.
-        sampling_decision = self.source.sampler.should_sample(
-            parent_context,
-            context.trace_id,
-            context.span_id,
-            name,
-            attributes,
-            links,
-        )
-
-        if sampling_decision.sampled:
-            options = context.trace_flags | trace_api.TraceFlags.SAMPLED
-            context.trace_flags = trace_api.TraceFlags(options)
-            if attributes is None:
-                span_attributes = sampling_decision.attributes
-            else:
-                # apply sampling decision attributes after initial attributes
-                span_attributes = attributes.copy()
-                span_attributes.update(sampling_decision.attributes)
+        # Only record if is_recording() is true
+        if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
             span = Span(
                 name=name,
@@ -819,7 +772,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
-                attributes=span_attributes,
+                attributes=sampling_result.attributes.copy(),
                 span_processor=self.source._active_span_processor,
                 kind=kind,
                 links=links,
@@ -867,8 +820,8 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
-        sampler: sampling.Sampler = trace_api.sampling.DEFAULT_ON,
-        resource: Resource = Resource.create_empty(),
+        sampler: sampling.Sampler = sampling.DEFAULT_ON,
+        resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor

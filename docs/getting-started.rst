@@ -174,7 +174,7 @@ Now run the above script, hit the root url (http://localhost:5000/) a few times,
    python flask_example.py
 
 
-Configure Your HTTP Propagator (b3, CorrelationContext)
+Configure Your HTTP Propagator (b3, Baggage)
 -------------------------------------------------------
 
 A major feature of distributed tracing is the ability to correlate a trace across
@@ -194,7 +194,7 @@ an example using Zipkin's `b3 propagation <https://github.com/openzipkin/b3-prop
     from opentelemetry import propagators
     from opentelemetry.sdk.trace.propagation.b3_format import B3Format
 
-    propagators.set_global_httptextformat(B3Format())
+    propagators.set_global_textmap(B3Format())
 
 
 Adding Metrics

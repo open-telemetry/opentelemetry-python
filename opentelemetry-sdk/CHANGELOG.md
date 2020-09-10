@@ -2,11 +2,25 @@
 
 ## Unreleased
 
+- Moved samplers from API to SDK
+  ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
+- Sampling spec changes
+  ([#1034](https://github.com/open-telemetry/opentelemetry-python/pull/1034))
+- Remove lazy Event and Link API from Span interface
+  ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
+- Improve BatchExportSpanProcessor
+  ([#1062](https://github.com/open-telemetry/opentelemetry-python/pull/1062))
+- Populate resource attributes as per semantic conventions
+  ([#1053](https://github.com/open-telemetry/opentelemetry-python/pull/1053))
+- Rename Resource labels to attributes
+  ([#1082](https://github.com/open-telemetry/opentelemetry-python/pull/1082))
+
 ## Version 0.12b0
 
 Released 2020-08-14
 
 - Changed default Sampler to `ParentOrElse(AlwaysOn)`
+  ([#960](https://github.com/open-telemetry/opentelemetry-python/pull/960))
 - Update environment variable names, prefix changed from `OPENTELEMETRY` to `OTEL`
   ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
 - Implement Views in metrics SDK

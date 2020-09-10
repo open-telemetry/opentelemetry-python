@@ -207,7 +207,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_attribute("key_tuple", ("tuple_element",))
         otel_spans[0].resource = Resource(
-            labels={"key_resource": "some_resource"}
+            attributes={"key_resource": "some_resource"}
         )
         otel_spans[0].set_status(
             Status(StatusCanonicalCode.UNKNOWN, "Example description")
@@ -215,9 +215,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
+        otel_spans[1].resource = Resource({})
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
+        otel_spans[2].resource = Resource({})
         otel_spans[2].end(end_time=end_times[2])
 
         # pylint: disable=protected-access
@@ -367,7 +369,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         exporter._collector = collector_mock
 
         exporter.export((self._test_span,))
-        self.assertEqual(agent_client_mock.emit.call_count, 2)
+        self.assertEqual(agent_client_mock.emit.call_count, 1)
         self.assertEqual(collector_mock.submit.call_count, 1)
 
     def test_agent_client(self):
