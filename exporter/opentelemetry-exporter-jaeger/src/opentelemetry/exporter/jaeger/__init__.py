@@ -219,11 +219,11 @@ def _translate_to_jaeger(spans: Span):
                 [
                     _get_string_tag(
                         "otel.instrumentation_library.name",
-                        span.instrumentation_info.name
+                        span.instrumentation_info.name,
                     ),
                     _get_string_tag(
                         "otel.instrumentation_library.version",
-                        span.instrumentation_info.version
+                        span.instrumentation_info.version,
                     ),
                 ]
             )

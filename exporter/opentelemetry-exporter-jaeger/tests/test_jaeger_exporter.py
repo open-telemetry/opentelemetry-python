@@ -347,7 +347,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="status.message",
                         vType=jaeger.TagType.STRING,
-                        vStr=None
+                        vStr=None,
                     ),
                     jaeger.Tag(
                         key="span.kind",
