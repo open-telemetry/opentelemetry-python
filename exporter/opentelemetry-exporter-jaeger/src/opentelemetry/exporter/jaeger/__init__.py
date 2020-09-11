@@ -217,8 +217,14 @@ def _translate_to_jaeger(spans: Span):
         if span.instrumentation_info is not None:
             tags.extend(
                 [
-                    _get_string_tag("otel.instrumentation_library.name", span.instrumentation_info.name),
-                    _get_string_tag("otel.instrumentation_library.version", span.instrumentation_info.version),
+                    _get_string_tag(
+                        "otel.instrumentation_library.name",
+                        span.instrumentation_info.name
+                    ),
+                    _get_string_tag(
+                        "otel.instrumentation_library.version",
+                        span.instrumentation_info.version
+                    ),
                 ]
             )
 

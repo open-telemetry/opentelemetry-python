@@ -345,7 +345,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         vLong=StatusCanonicalCode.OK.value,
                     ),
                     jaeger.Tag(
-                        key="status.message", vType=jaeger.TagType.STRING, vStr=None
+                        key="status.message",
+                        vType=jaeger.TagType.STRING,
+                        vStr=None
                     ),
                     jaeger.Tag(
                         key="span.kind",
@@ -355,12 +357,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="otel.instrumentation_library.name",
                         vType=jaeger.TagType.STRING,
-                        vStr="name"
+                        vStr="name",
                     ),
                     jaeger.Tag(
                         key="otel.instrumentation_library.version",
                         vType=jaeger.TagType.STRING,
-                        vStr="version"
+                        vStr="version",
                     ),
                 ],
             ),
