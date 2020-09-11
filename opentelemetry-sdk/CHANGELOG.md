@@ -14,6 +14,8 @@
   ([#1053](https://github.com/open-telemetry/opentelemetry-python/pull/1053))
 - Rename Resource labels to attributes
   ([#1082](https://github.com/open-telemetry/opentelemetry-python/pull/1082))
+- Merge `OTELResourceDetector` result when creating resources
+  ([#1096](https://github.com/open-telemetry/opentelemetry-python/pull/1096))
 
 ## Version 0.12b0
 

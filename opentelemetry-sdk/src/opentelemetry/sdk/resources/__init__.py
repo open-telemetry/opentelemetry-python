@@ -33,6 +33,7 @@ TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
 OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
     "opentelemetry-sdk"
 ).version
+OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 
 
 class Resource:
@@ -40,10 +41,12 @@ class Resource:
         self._attributes = attributes.copy()
 
     @staticmethod
-    def create(attributes: Attributes) -> "Resource":
+    def create(attributes: typing.Optional[Attributes]) -> "Resource":
         if not attributes:
-            return _DEFAULT_RESOURCE
-        return _DEFAULT_RESOURCE.merge(Resource(attributes))
+            resource = _DEFAULT_RESOURCE
+        else:
+            resource = _DEFAULT_RESOURCE.merge(Resource(attributes))
+        return resource.merge(OTELResourceDetector().detect())
 
     @staticmethod
     def create_empty() -> "Resource":
@@ -92,7 +95,7 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-        env_resources_items = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
+        env_resources_items = os.environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
         if env_resources_items:
             env_resource_map = {
