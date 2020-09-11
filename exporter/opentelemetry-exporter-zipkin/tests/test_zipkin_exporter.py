@@ -256,7 +256,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {"otel.instrumentation_library.name": "name", "otel.instrumentation_library.version": "version"},
+                "tags": {
+                    "otel.instrumentation_library.name": "name",
+                    "otel.instrumentation_library.version": "version",
+                },
                 "annotations": None,
             },
         ]
