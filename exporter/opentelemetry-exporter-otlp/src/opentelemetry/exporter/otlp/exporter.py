@@ -14,6 +14,7 @@
 
 """OTLP Exporter"""
 
+import os
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
@@ -127,18 +128,22 @@ class OTLPExporterMixin(
 
     def __init__(
         self,
-        endpoint: str = "localhost:55680",
+        endpoint: str,
+        insecure: bool,
         credentials: ChannelCredentials = None,
         metadata: Optional[Tuple[Any]] = None,
     ):
         super().__init__()
 
+        endpoint = endpoint or os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT") or "localhost:55680"
+        insecure = insecure or os.environ.get("OTEL_EXPORTER_OTLP_INSECURE") or True # TODO(jan25): verify spec for default value. This affects how credentials are passed
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        if credentials is None:
+        if insecure:
             self._client = self._stub(insecure_channel(endpoint))
         else:
+            credentials = credentials or os.environ.get("OTEL_EXPORTER_OTLP_CERTIFICATE")
             self._client = self._stub(secure_channel(endpoint, credentials))
 
     @abstractmethod

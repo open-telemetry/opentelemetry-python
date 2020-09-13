@@ -1,0 +1,983 @@
+{
+  "reportversion": "1",
+  "toxversion": "3.16.0",
+  "platform": "darwin",
+  "host": "C02W7086HV2T",
+  "commands": [],
+  "testenvs": {
+    "py34-test-api": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.4",
+          "retcode": 0
+        }
+      ]
+    },
+    "py35-test-api": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.5",
+          "retcode": 0
+        }
+      ]
+    },
+    "py36-test-api": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.6",
+          "retcode": 0
+        }
+      ]
+    },
+    "py37-test-api": {
+      "setup": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "-m",
+            "virtualenv",
+            "--no-download",
+            "--python",
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "py37-test-api"
+          ],
+          "output": "created virtual environment CPython3.7.7.final.0-64 in 583ms\n  creator CPython3Posix(dest=/Users/areddy/github/opentelemetry-python/.tox/py37-test-api, clear=False, global=False)\n  seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/Users/areddy/Library/Application Support/virtualenv)\n    added seed packages: pip==20.1.1, setuptools==47.3.1, wheel==0.34.2\n  activators BashActivator,CShellActivator,FishActivator,PowerShellActivator,PythonActivator,XonshActivator\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-api/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-cdev-requirements.txt",
+            "pytest"
+          ],
+          "output": "Collecting pytest!=5.2.3\n  Using cached pytest-5.4.3-py3-none-any.whl (248 kB)\nCollecting importlib-metadata>=0.12; python_version < \"3.8\"\n  Using cached importlib_metadata-1.7.0-py2.py3-none-any.whl (31 kB)\nCollecting pluggy<1.0,>=0.12\n  Using cached pluggy-0.13.1-py2.py3-none-any.whl (18 kB)\nCollecting py>=1.5.0\n  Using cached py-1.9.0-py2.py3-none-any.whl (99 kB)\nCollecting attrs>=17.4.0\n  Using cached attrs-19.3.0-py2.py3-none-any.whl (39 kB)\nCollecting packaging\n  Using cached packaging-20.4-py2.py3-none-any.whl (37 kB)\nCollecting wcwidth\n  Using cached wcwidth-0.2.5-py2.py3-none-any.whl (30 kB)\nCollecting more-itertools>=4.0.0\n  Using cached more_itertools-8.4.0-py3-none-any.whl (43 kB)\nCollecting zipp>=0.5\n  Using cached zipp-3.1.0-py3-none-any.whl (4.9 kB)\nCollecting six\n  Using cached six-1.15.0-py2.py3-none-any.whl (10 kB)\nCollecting pyparsing>=2.0.2\n  Using cached pyparsing-2.4.7-py2.py3-none-any.whl (67 kB)\nInstalling collected packages: zipp, importlib-metadata, pluggy, py, attrs, six, pyparsing, packaging, wcwidth, more-itertools, pytest\nSuccessfully installed attrs-19.3.0 importlib-metadata-1.7.0 more-itertools-8.4.0 packaging-20.4 pluggy-0.13.1 py-1.9.0 pyparsing-2.4.7 pytest-5.4.3 six-1.15.0 wcwidth-0.2.5 zipp-3.1.0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-api/bin/python",
+            "-m",
+            "pip",
+            "freeze"
+          ],
+          "output": "attrs==19.3.0\nimportlib-metadata==1.7.0\nmore-itertools==8.4.0\npackaging==20.4\npluggy==0.13.1\npy==1.9.0\npyparsing==2.4.7\npytest==5.4.3\nsix==1.15.0\nwcwidth==0.2.5\nzipp==3.1.0\n",
+          "retcode": 0
+        }
+      ],
+      "python": {
+        "executable": "/Users/areddy/github/opentelemetry-python/.tox/py37-test-api/bin/python",
+        "implementation": "CPython",
+        "version_info": [
+          3,
+          7,
+          7,
+          "final",
+          0
+        ],
+        "version": "3.7.7 (default, Mar 10 2020, 15:43:27) \n[Clang 10.0.0 (clang-1000.11.45.5)]",
+        "is_64": true,
+        "sysplatform": "darwin",
+        "extra_version_info": null
+      },
+      "installed_packages": [
+        "attrs==19.3.0",
+        "importlib-metadata==1.7.0",
+        "more-itertools==8.4.0",
+        "packaging==20.4",
+        "pluggy==0.13.1",
+        "py==1.9.0",
+        "pyparsing==2.4.7",
+        "pytest==5.4.3",
+        "six==1.15.0",
+        "wcwidth==0.2.5",
+        "zipp==3.1.0"
+      ],
+      "test": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-api/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "pip",
+            "setuptools",
+            "wheel"
+          ],
+          "output": "Requirement already up-to-date: pip in /Users/areddy/github/opentelemetry-python/.tox/py37-test-api/lib/python3.7/site-packages (20.1.1)\nRequirement already up-to-date: setuptools in /Users/areddy/github/opentelemetry-python/.tox/py37-test-api/lib/python3.7/site-packages (47.3.1)\nRequirement already up-to-date: wheel in /Users/areddy/github/opentelemetry-python/.tox/py37-test-api/lib/python3.7/site-packages (0.34.2)\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-api/bin/pip",
+            "install",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-api",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-sdk",
+            "/Users/areddy/github/opentelemetry-python/tests/util"
+          ],
+          "output": "Processing /Users/areddy/github/opentelemetry-python/opentelemetry-api\nProcessing /Users/areddy/github/opentelemetry-python/opentelemetry-sdk\nProcessing /Users/areddy/github/opentelemetry-python/tests/util\nBuilding wheels for collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\n  Building wheel for opentelemetry-api (setup.py): started\n  Building wheel for opentelemetry-api (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-api: filename=opentelemetry_api-0.11.dev0-py3-none-any.whl size=43158 sha256=4fa0faa4a388b8bc08b6c063a4fd1be1d34f8a1152b442c23521b91c4b22b62d\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/af/16/cd/b95c010ccee44917a6f02efacfc0e67808aba2cedc583dbd45\n  Building wheel for opentelemetry-sdk (setup.py): started\n  Building wheel for opentelemetry-sdk (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-sdk: filename=opentelemetry_sdk-0.11.dev0-py3-none-any.whl size=34135 sha256=2d1312d2c9dd033e24bac27ce0d1662e711417c28e040823e434b1d98f06b4fe\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/79/e4/48/7dd97aec7caf267cb0dcdfff7976dd50d70580da1401f325e7\n  Building wheel for opentelemetry-test (setup.py): started\n  Building wheel for opentelemetry-test (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-test: filename=opentelemetry_test-0.11.dev0-py3-none-any.whl size=7123 sha256=96df30a63c01f3216869e560e60d809a2c1bd1a21e6af6bf886b928d3e144d41\n  Stored in directory: /private/var/folders/sq/sd9brsd134b20r_8n3whz13s6z5n5g/T/pip-ephem-wheel-cache-pk7no59d/wheels/39/1f/ab/84a6a902302802e9eb3ef1dea18a7bbeff32b470d6f7a8ddd7\nSuccessfully built opentelemetry-api opentelemetry-sdk opentelemetry-test\nInstalling collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\nSuccessfully installed opentelemetry-api-0.11.dev0 opentelemetry-sdk-0.11.dev0 opentelemetry-test-0.11.dev0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-api/bin/pytest"
+          ],
+          "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.7.7, pytest-5.4.3, py-1.9.0, pluggy-0.13.1 -- /Users/areddy/github/opentelemetry-python/.tox/py37-test-api/bin/python\ncachedir: .tox/py37-test-api/.pytest_cache\nrootdir: /Users/areddy/github/opentelemetry-python, inifile: pytest.ini\ncollecting ... collected 99 items\n\ntest_implementation.py::TestAPIOnlyImplementation::test_create_metric PASSED [  1%]\ntest_implementation.py::TestAPIOnlyImplementation::test_default_meter PASSED [  2%]\ntest_implementation.py::TestAPIOnlyImplementation::test_default_span PASSED [  3%]\ntest_implementation.py::TestAPIOnlyImplementation::test_default_tracer PASSED [  4%]\ntest_implementation.py::TestAPIOnlyImplementation::test_meter PASSED     [  5%]\ntest_implementation.py::TestAPIOnlyImplementation::test_record_batch PASSED [  6%]\ntest_implementation.py::TestAPIOnlyImplementation::test_register_observer PASSED [  7%]\ntest_implementation.py::TestAPIOnlyImplementation::test_span PASSED      [  8%]\ntest_implementation.py::TestAPIOnlyImplementation::test_tracer PASSED    [  9%]\ntest_implementation.py::TestAPIOnlyImplementation::test_unregister_observer PASSED [ 10%]\nconfiguration/test_configuration.py::TestConfiguration::test_boolean PASSED [ 11%]\nconfiguration/test_configuration.py::TestConfiguration::test_environment_variables PASSED [ 12%]\nconfiguration/test_configuration.py::TestConfiguration::test_float PASSED [ 13%]\nconfiguration/test_configuration.py::TestConfiguration::test_getattr PASSED [ 14%]\nconfiguration/test_configuration.py::TestConfiguration::test_integer PASSED [ 15%]\nconfiguration/test_configuration.py::TestConfiguration::test_property PASSED [ 16%]\nconfiguration/test_configuration.py::TestConfiguration::test_reset PASSED [ 17%]\nconfiguration/test_configuration.py::TestConfiguration::test_singleton PASSED [ 18%]\nconfiguration/test_configuration.py::TestConfiguration::test_slots PASSED [ 19%]\ncontext/test_context.py::TestContext::test_context PASSED                [ 20%]\ncontext/test_context.py::TestContext::test_context_is_immutable PASSED   [ 21%]\ncontext/test_context.py::TestContext::test_set_current PASSED            [ 22%]\ncontext/test_context.py::TestContext::test_set_value PASSED              [ 23%]\ncontext/test_contextvars_context.py::TestContextVarsContext::test_attach PASSED [ 24%]\ncontext/test_contextvars_context.py::TestContextVarsContext::test_context PASSED [ 25%]\ncontext/test_contextvars_context.py::TestContextVarsContext::test_detach_out_of_order PASSED [ 26%]\ncontext/test_contextvars_context.py::TestContextVarsContext::test_set_value PASSED [ 27%]\ncontext/test_threadlocal_context.py::TestThreadLocalContext::test_attach PASSED [ 28%]\ncontext/test_threadlocal_context.py::TestThreadLocalContext::test_context PASSED [ 29%]\ncontext/test_threadlocal_context.py::TestThreadLocalContext::test_detach_out_of_order PASSED [ 30%]\ncontext/test_threadlocal_context.py::TestThreadLocalContext::test_set_value PASSED [ 31%]\ncorrelationcontext/test_correlation_context.py::TestCorrelationContextManager::test_clear_correlations PASSED [ 32%]\ncorrelationcontext/test_correlation_context.py::TestCorrelationContextManager::test_correlations_current_context PASSED [ 33%]\ncorrelationcontext/test_correlation_context.py::TestCorrelationContextManager::test_modifying_correlations PASSED [ 34%]\ncorrelationcontext/test_correlation_context.py::TestCorrelationContextManager::test_remove_correlations PASSED [ 35%]\ncorrelationcontext/test_correlation_context.py::TestCorrelationContextManager::test_set_correlation PASSED [ 36%]\ncorrelationcontext/test_correlation_context.py::TestCorrelationContextManager::test_set_multiple_correlations PASSED [ 37%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_empty_context_header PASSED [ 38%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_header_contains_pair_too_long PASSED [ 39%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_header_contains_too_many_entries PASSED [ 40%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_header_too_long PASSED [ 41%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_inject PASSED [ 42%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_inject_escaped_values PASSED [ 43%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_inject_no_correlations PASSED [ 44%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_inject_non_string_values PASSED [ 45%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_invalid_header PASSED [ 46%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_no_context_header PASSED [ 47%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_valid_header PASSED [ 48%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_valid_header_with_empty_value PASSED [ 49%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_valid_header_with_invalid_value PASSED [ 50%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_valid_header_with_properties PASSED [ 51%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_valid_header_with_space PASSED [ 52%]\ncorrelationcontext/test_correlation_context_propagation.py::TestCorrelationContextPropagation::test_valid_header_with_url_escaped_comma PASSED [ 53%]\nmetrics/test_metrics.py::TestMetrics::test_bound_counter PASSED          [ 54%]\nmetrics/test_metrics.py::TestMetrics::test_bound_valuerecorder PASSED    [ 55%]\nmetrics/test_metrics.py::TestMetrics::test_counter PASSED                [ 56%]\nmetrics/test_metrics.py::TestMetrics::test_counter_add PASSED            [ 57%]\nmetrics/test_metrics.py::TestMetrics::test_default PASSED                [ 58%]\nmetrics/test_metrics.py::TestMetrics::test_default_bound_metric PASSED   [ 59%]\nmetrics/test_metrics.py::TestMetrics::test_default_observer PASSED       [ 60%]\nmetrics/test_metrics.py::TestMetrics::test_sum_observer PASSED           [ 61%]\nmetrics/test_metrics.py::TestMetrics::test_updown_sum_observer PASSED    [ 62%]\nmetrics/test_metrics.py::TestMetrics::test_updowncounter PASSED          [ 63%]\nmetrics/test_metrics.py::TestMetrics::test_updowncounter_add PASSED      [ 64%]\nmetrics/test_metrics.py::TestMetrics::test_value_observer PASSED         [ 65%]\nmetrics/test_metrics.py::TestMetrics::test_valuerecorder PASSED          [ 66%]\nmetrics/test_metrics.py::TestMetrics::test_valuerecorder_record PASSED   [ 67%]\npropagators/test_composite.py::TestCompositePropagator::test_multiple_propagators PASSED [ 68%]\npropagators/test_composite.py::TestCompositePropagator::test_multiple_propagators_same_key PASSED [ 69%]\npropagators/test_composite.py::TestCompositePropagator::test_no_propagators PASSED [ 70%]\npropagators/test_composite.py::TestCompositePropagator::test_single_propagator PASSED [ 71%]\npropagators/test_global_httptextformat.py::TestDefaultGlobalPropagator::test_propagation PASSED [ 72%]\ntrace/test_defaultspan.py::TestDefaultSpan::test_ctor PASSED             [ 73%]\ntrace/test_defaultspan.py::TestDefaultSpan::test_invalid_span PASSED     [ 74%]\ntrace/test_globals.py::TestGlobals::test_get_tracer PASSED               [ 75%]\ntrace/test_globals.py::TestTracer::test_get_current_span PASSED          [ 76%]\ntrace/test_sampling.py::TestSampler::test_always_off PASSED              [ 77%]\ntrace/test_sampling.py::TestSampler::test_always_on PASSED               [ 78%]\ntrace/test_sampling.py::TestSampler::test_default_off PASSED             [ 79%]\ntrace/test_sampling.py::TestSampler::test_default_on PASSED              [ 80%]\ntrace/test_sampling.py::TestSampler::test_probability_sampler PASSED     [ 81%]\ntrace/test_sampling.py::TestSampler::test_probability_sampler_limits PASSED [ 82%]\ntrace/test_sampling.py::TestSampler::test_probability_sampler_one PASSED [ 83%]\ntrace/test_sampling.py::TestSampler::test_probability_sampler_zero PASSED [ 84%]\ntrace/test_status.py::TestStatus::test_constructor PASSED                [ 85%]\ntrace/test_status.py::TestStatus::test_invalid_description PASSED        [ 86%]\ntrace/test_tracer.py::TestTracer::test_start_as_current_span PASSED      [ 87%]\ntrace/test_tracer.py::TestTracer::test_start_span PASSED                 [ 88%]\ntrace/test_tracer.py::TestTracer::test_use_span PASSED                   [ 89%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_format_not_supported PASSED [ 90%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_headers_with_tracestate PASSED [ 91%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_invalid_parent_id PASSED [ 92%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_invalid_trace_id PASSED [ 93%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_no_send_empty_tracestate PASSED [ 94%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_no_traceparent_header PASSED [ 95%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_propagate_invalid_context PASSED [ 96%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_tracestate_empty_header PASSED [ 97%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_tracestate_header_with_trailing_comma PASSED [ 98%]\ntrace/propagation/test_tracecontexthttptextformat.py::TestTraceContextFormat::test_tracestate_keys PASSED [100%]\n\n============================== 99 passed in 0.50s ==============================\n",
+          "retcode": 0
+        }
+      ]
+    },
+    "py38-test-api": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.8",
+          "retcode": 0
+        }
+      ]
+    },
+    "pypy3-test-api": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: pypy3",
+          "retcode": 0
+        }
+      ]
+    },
+    "py34-test-proto": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.4",
+          "retcode": 0
+        }
+      ]
+    },
+    "py35-test-proto": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.5",
+          "retcode": 0
+        }
+      ]
+    },
+    "py36-test-proto": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.6",
+          "retcode": 0
+        }
+      ]
+    },
+    "py37-test-proto": {
+      "setup": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "-m",
+            "virtualenv",
+            "--no-download",
+            "--python",
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "py37-test-proto"
+          ],
+          "output": "created virtual environment CPython3.7.7.final.0-64 in 459ms\n  creator CPython3Posix(dest=/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto, clear=False, global=False)\n  seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/Users/areddy/Library/Application Support/virtualenv)\n    added seed packages: pip==20.1.1, setuptools==47.3.1, wheel==0.34.2\n  activators BashActivator,CShellActivator,FishActivator,PowerShellActivator,PythonActivator,XonshActivator\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-cdev-requirements.txt",
+            "pytest"
+          ],
+          "output": "Collecting pytest!=5.2.3\n  Using cached pytest-5.4.3-py3-none-any.whl (248 kB)\nCollecting importlib-metadata>=0.12; python_version < \"3.8\"\n  Using cached importlib_metadata-1.7.0-py2.py3-none-any.whl (31 kB)\nCollecting pluggy<1.0,>=0.12\n  Using cached pluggy-0.13.1-py2.py3-none-any.whl (18 kB)\nCollecting attrs>=17.4.0\n  Using cached attrs-19.3.0-py2.py3-none-any.whl (39 kB)\nCollecting packaging\n  Using cached packaging-20.4-py2.py3-none-any.whl (37 kB)\nCollecting py>=1.5.0\n  Using cached py-1.9.0-py2.py3-none-any.whl (99 kB)\nCollecting wcwidth\n  Using cached wcwidth-0.2.5-py2.py3-none-any.whl (30 kB)\nCollecting more-itertools>=4.0.0\n  Using cached more_itertools-8.4.0-py3-none-any.whl (43 kB)\nCollecting zipp>=0.5\n  Using cached zipp-3.1.0-py3-none-any.whl (4.9 kB)\nCollecting six\n  Using cached six-1.15.0-py2.py3-none-any.whl (10 kB)\nCollecting pyparsing>=2.0.2\n  Using cached pyparsing-2.4.7-py2.py3-none-any.whl (67 kB)\nInstalling collected packages: zipp, importlib-metadata, pluggy, attrs, six, pyparsing, packaging, py, wcwidth, more-itertools, pytest\nSuccessfully installed attrs-19.3.0 importlib-metadata-1.7.0 more-itertools-8.4.0 packaging-20.4 pluggy-0.13.1 py-1.9.0 pyparsing-2.4.7 pytest-5.4.3 six-1.15.0 wcwidth-0.2.5 zipp-3.1.0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/python",
+            "-m",
+            "pip",
+            "freeze"
+          ],
+          "output": "attrs==19.3.0\nimportlib-metadata==1.7.0\nmore-itertools==8.4.0\npackaging==20.4\npluggy==0.13.1\npy==1.9.0\npyparsing==2.4.7\npytest==5.4.3\nsix==1.15.0\nwcwidth==0.2.5\nzipp==3.1.0\n",
+          "retcode": 0
+        }
+      ],
+      "python": {
+        "executable": "/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/python",
+        "implementation": "CPython",
+        "version_info": [
+          3,
+          7,
+          7,
+          "final",
+          0
+        ],
+        "version": "3.7.7 (default, Mar 10 2020, 15:43:27) \n[Clang 10.0.0 (clang-1000.11.45.5)]",
+        "is_64": true,
+        "sysplatform": "darwin",
+        "extra_version_info": null
+      },
+      "installed_packages": [
+        "attrs==19.3.0",
+        "importlib-metadata==1.7.0",
+        "more-itertools==8.4.0",
+        "packaging==20.4",
+        "pluggy==0.13.1",
+        "py==1.9.0",
+        "pyparsing==2.4.7",
+        "pytest==5.4.3",
+        "six==1.15.0",
+        "wcwidth==0.2.5",
+        "zipp==3.1.0"
+      ],
+      "test": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "pip",
+            "setuptools",
+            "wheel"
+          ],
+          "output": "Requirement already up-to-date: pip in /Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/lib/python3.7/site-packages (20.1.1)\nRequirement already up-to-date: setuptools in /Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/lib/python3.7/site-packages (47.3.1)\nRequirement already up-to-date: wheel in /Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/lib/python3.7/site-packages (0.34.2)\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/pip",
+            "install",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-api",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-sdk",
+            "/Users/areddy/github/opentelemetry-python/tests/util"
+          ],
+          "output": "Processing /Users/areddy/github/opentelemetry-python/opentelemetry-api\nProcessing /Users/areddy/github/opentelemetry-python/opentelemetry-sdk\nProcessing /Users/areddy/github/opentelemetry-python/tests/util\nBuilding wheels for collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\n  Building wheel for opentelemetry-api (setup.py): started\n  Building wheel for opentelemetry-api (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-api: filename=opentelemetry_api-0.11.dev0-py3-none-any.whl size=43158 sha256=2d867058057c1a6689c33c5416281dfb08bd242455125f66f1722a8cb977dd11\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/af/16/cd/b95c010ccee44917a6f02efacfc0e67808aba2cedc583dbd45\n  Building wheel for opentelemetry-sdk (setup.py): started\n  Building wheel for opentelemetry-sdk (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-sdk: filename=opentelemetry_sdk-0.11.dev0-py3-none-any.whl size=34135 sha256=d0c4534b3d3c580dd19b19c809733705aa2526d8eb6ad189abeefa1692d58544\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/79/e4/48/7dd97aec7caf267cb0dcdfff7976dd50d70580da1401f325e7\n  Building wheel for opentelemetry-test (setup.py): started\n  Building wheel for opentelemetry-test (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-test: filename=opentelemetry_test-0.11.dev0-py3-none-any.whl size=7123 sha256=73842818cf8fad64d3d9cb00d0fbe30bd45d210d26a4f921a8d653f62041c981\n  Stored in directory: /private/var/folders/sq/sd9brsd134b20r_8n3whz13s6z5n5g/T/pip-ephem-wheel-cache-of_3d2xw/wheels/39/1f/ab/84a6a902302802e9eb3ef1dea18a7bbeff32b470d6f7a8ddd7\nSuccessfully built opentelemetry-api opentelemetry-sdk opentelemetry-test\nInstalling collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\nSuccessfully installed opentelemetry-api-0.11.dev0 opentelemetry-sdk-0.11.dev0 opentelemetry-test-0.11.dev0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/pip",
+            "install",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-proto"
+          ],
+          "output": "Processing /Users/areddy/github/opentelemetry-python/opentelemetry-proto\nCollecting protobuf~=3.12.2\n  Using cached protobuf-3.12.2-cp37-cp37m-macosx_10_9_x86_64.whl (1.3 MB)\nRequirement already satisfied: setuptools in /Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/lib/python3.7/site-packages (from protobuf~=3.12.2->opentelemetry-proto==0.11.dev0) (47.3.1)\nRequirement already satisfied: six>=1.9 in /Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/lib/python3.7/site-packages (from protobuf~=3.12.2->opentelemetry-proto==0.11.dev0) (1.15.0)\nBuilding wheels for collected packages: opentelemetry-proto\n  Building wheel for opentelemetry-proto (setup.py): started\n  Building wheel for opentelemetry-proto (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-proto: filename=opentelemetry_proto-0.11.dev0-py3-none-any.whl size=36208 sha256=79849b203f95b4ddd7773fa47de9464fd6db5a3d71583692087220284896d850\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/a9/87/15/cc1717bf55407bc3a47d4352cabc8e252041f951efe5b1fc19\nSuccessfully built opentelemetry-proto\nInstalling collected packages: protobuf, opentelemetry-proto\nSuccessfully installed opentelemetry-proto-0.11.dev0 protobuf-3.12.2\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/pytest"
+          ],
+          "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.7.7, pytest-5.4.3, py-1.9.0, pluggy-0.13.1 -- /Users/areddy/github/opentelemetry-python/.tox/py37-test-proto/bin/python\ncachedir: .tox/py37-test-proto/.pytest_cache\nrootdir: /Users/areddy/github/opentelemetry-python, inifile: pytest.ini\ncollecting ... collected 1 item\n\ntest_proto.py::TestInstrumentor::test_proto PASSED                       [100%]\n\n============================== 1 passed in 0.12s ===============================\n",
+          "retcode": 0
+        }
+      ]
+    },
+    "py38-test-proto": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.8",
+          "retcode": 0
+        }
+      ]
+    },
+    "pypy3-test-proto": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: pypy3",
+          "retcode": 0
+        }
+      ]
+    },
+    "py34-test-sdk": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.4",
+          "retcode": 0
+        }
+      ]
+    },
+    "py35-test-sdk": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.5",
+          "retcode": 0
+        }
+      ]
+    },
+    "py36-test-sdk": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.6",
+          "retcode": 0
+        }
+      ]
+    },
+    "py37-test-sdk": {
+      "setup": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "-m",
+            "virtualenv",
+            "--no-download",
+            "--python",
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "py37-test-sdk"
+          ],
+          "output": "created virtual environment CPython3.7.7.final.0-64 in 468ms\n  creator CPython3Posix(dest=/Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk, clear=False, global=False)\n  seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/Users/areddy/Library/Application Support/virtualenv)\n    added seed packages: pip==20.1.1, setuptools==47.3.1, wheel==0.34.2\n  activators BashActivator,CShellActivator,FishActivator,PowerShellActivator,PythonActivator,XonshActivator\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-cdev-requirements.txt",
+            "pytest"
+          ],
+          "output": "Collecting pytest!=5.2.3\n  Using cached pytest-5.4.3-py3-none-any.whl (248 kB)\nCollecting importlib-metadata>=0.12; python_version < \"3.8\"\n  Using cached importlib_metadata-1.7.0-py2.py3-none-any.whl (31 kB)\nCollecting pluggy<1.0,>=0.12\n  Using cached pluggy-0.13.1-py2.py3-none-any.whl (18 kB)\nCollecting py>=1.5.0\n  Using cached py-1.9.0-py2.py3-none-any.whl (99 kB)\nCollecting attrs>=17.4.0\n  Using cached attrs-19.3.0-py2.py3-none-any.whl (39 kB)\nCollecting packaging\n  Using cached packaging-20.4-py2.py3-none-any.whl (37 kB)\nCollecting wcwidth\n  Using cached wcwidth-0.2.5-py2.py3-none-any.whl (30 kB)\nCollecting more-itertools>=4.0.0\n  Using cached more_itertools-8.4.0-py3-none-any.whl (43 kB)\nCollecting zipp>=0.5\n  Using cached zipp-3.1.0-py3-none-any.whl (4.9 kB)\nCollecting six\n  Using cached six-1.15.0-py2.py3-none-any.whl (10 kB)\nCollecting pyparsing>=2.0.2\n  Using cached pyparsing-2.4.7-py2.py3-none-any.whl (67 kB)\nInstalling collected packages: zipp, importlib-metadata, pluggy, py, attrs, six, pyparsing, packaging, wcwidth, more-itertools, pytest\nSuccessfully installed attrs-19.3.0 importlib-metadata-1.7.0 more-itertools-8.4.0 packaging-20.4 pluggy-0.13.1 py-1.9.0 pyparsing-2.4.7 pytest-5.4.3 six-1.15.0 wcwidth-0.2.5 zipp-3.1.0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/bin/python",
+            "-m",
+            "pip",
+            "freeze"
+          ],
+          "output": "attrs==19.3.0\nimportlib-metadata==1.7.0\nmore-itertools==8.4.0\npackaging==20.4\npluggy==0.13.1\npy==1.9.0\npyparsing==2.4.7\npytest==5.4.3\nsix==1.15.0\nwcwidth==0.2.5\nzipp==3.1.0\n",
+          "retcode": 0
+        }
+      ],
+      "python": {
+        "executable": "/Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/bin/python",
+        "implementation": "CPython",
+        "version_info": [
+          3,
+          7,
+          7,
+          "final",
+          0
+        ],
+        "version": "3.7.7 (default, Mar 10 2020, 15:43:27) \n[Clang 10.0.0 (clang-1000.11.45.5)]",
+        "is_64": true,
+        "sysplatform": "darwin",
+        "extra_version_info": null
+      },
+      "installed_packages": [
+        "attrs==19.3.0",
+        "importlib-metadata==1.7.0",
+        "more-itertools==8.4.0",
+        "packaging==20.4",
+        "pluggy==0.13.1",
+        "py==1.9.0",
+        "pyparsing==2.4.7",
+        "pytest==5.4.3",
+        "six==1.15.0",
+        "wcwidth==0.2.5",
+        "zipp==3.1.0"
+      ],
+      "test": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "pip",
+            "setuptools",
+            "wheel"
+          ],
+          "output": "Requirement already up-to-date: pip in /Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/lib/python3.7/site-packages (20.1.1)\nRequirement already up-to-date: setuptools in /Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/lib/python3.7/site-packages (47.3.1)\nRequirement already up-to-date: wheel in /Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/lib/python3.7/site-packages (0.34.2)\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/bin/pip",
+            "install",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-api",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-sdk",
+            "/Users/areddy/github/opentelemetry-python/tests/util"
+          ],
+          "output": "Processing /Users/areddy/github/opentelemetry-python/opentelemetry-api\nProcessing /Users/areddy/github/opentelemetry-python/opentelemetry-sdk\nProcessing /Users/areddy/github/opentelemetry-python/tests/util\nBuilding wheels for collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\n  Building wheel for opentelemetry-api (setup.py): started\n  Building wheel for opentelemetry-api (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-api: filename=opentelemetry_api-0.11.dev0-py3-none-any.whl size=43158 sha256=cc693ba69916cba941486353a51e05eb0c958857de4a46d09719820efd1c72e1\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/af/16/cd/b95c010ccee44917a6f02efacfc0e67808aba2cedc583dbd45\n  Building wheel for opentelemetry-sdk (setup.py): started\n  Building wheel for opentelemetry-sdk (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-sdk: filename=opentelemetry_sdk-0.11.dev0-py3-none-any.whl size=34135 sha256=e3cbb7ec32aac9482d7410ffa5637e3908922ff2dd0ed54c1373583f3ea954d0\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/79/e4/48/7dd97aec7caf267cb0dcdfff7976dd50d70580da1401f325e7\n  Building wheel for opentelemetry-test (setup.py): started\n  Building wheel for opentelemetry-test (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-test: filename=opentelemetry_test-0.11.dev0-py3-none-any.whl size=7123 sha256=365662e86ad9b056d0f364460acebe5da2ce564bb95876c4a8d490ca0bbc0da8\n  Stored in directory: /private/var/folders/sq/sd9brsd134b20r_8n3whz13s6z5n5g/T/pip-ephem-wheel-cache-fxhl974x/wheels/39/1f/ab/84a6a902302802e9eb3ef1dea18a7bbeff32b470d6f7a8ddd7\nSuccessfully built opentelemetry-api opentelemetry-sdk opentelemetry-test\nInstalling collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\nSuccessfully installed opentelemetry-api-0.11.dev0 opentelemetry-sdk-0.11.dev0 opentelemetry-test-0.11.dev0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/bin/pytest"
+          ],
+          "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.7.7, pytest-5.4.3, py-1.9.0, pluggy-0.13.1 -- /Users/areddy/github/opentelemetry-python/.tox/py37-test-sdk/bin/python\ncachedir: .tox/py37-test-sdk/.pytest_cache\nrootdir: /Users/areddy/github/opentelemetry-python, inifile: pytest.ini\ncollecting ... collected 180 items\n\ntest_util.py::TestBoundedList::test_append_drop PASSED                   [  0%]\ntest_util.py::TestBoundedList::test_append_no_drop PASSED                [  1%]\ntest_util.py::TestBoundedList::test_extend_drop PASSED                   [  1%]\ntest_util.py::TestBoundedList::test_extend_no_drop PASSED                [  2%]\ntest_util.py::TestBoundedList::test_from_seq PASSED                      [  2%]\ntest_util.py::TestBoundedList::test_raises PASSED                        [  3%]\ntest_util.py::TestBoundedDict::test_bounded_dict PASSED                  [  3%]\ntest_util.py::TestBoundedDict::test_from_map PASSED                      [  4%]\ntest_util.py::TestBoundedDict::test_negative_maxlen PASSED               [  5%]\ncontext/test_asyncio.py::TestAsyncio::test_with_asyncio PASSED           [  5%]\nmetrics/test_implementation.py::TestMeterImplementation::test_meter PASSED [  6%]\nmetrics/test_metrics.py::TestMeterProvider::test_resource PASSED         [  6%]\nmetrics/test_metrics.py::TestMeterProvider::test_resource_empty PASSED   [  7%]\nmetrics/test_metrics.py::TestMeterProvider::test_shutdown PASSED         [  7%]\nmetrics/test_metrics.py::TestMeterProvider::test_start_pipeline PASSED   [  8%]\nmetrics/test_metrics.py::TestMeterProvider::test_stateful PASSED         [  8%]\nmetrics/test_metrics.py::TestMeter::test_collect PASSED                  [  9%]\nmetrics/test_metrics.py::TestMeter::test_collect_disabled_metric PASSED  [ 10%]\nmetrics/test_metrics.py::TestMeter::test_collect_no_metrics PASSED       [ 10%]\nmetrics/test_metrics.py::TestMeter::test_collect_observers PASSED        [ 11%]\nmetrics/test_metrics.py::TestMeter::test_create_metric PASSED            [ 11%]\nmetrics/test_metrics.py::TestMeter::test_create_updowncounter PASSED     [ 12%]\nmetrics/test_metrics.py::TestMeter::test_create_valuerecorder PASSED     [ 12%]\nmetrics/test_metrics.py::TestMeter::test_direct_call_release_bound_instrument PASSED [ 13%]\nmetrics/test_metrics.py::TestMeter::test_extends_api PASSED              [ 13%]\nmetrics/test_metrics.py::TestMeter::test_record_batch PASSED             [ 14%]\nmetrics/test_metrics.py::TestMeter::test_record_batch_exists PASSED      [ 15%]\nmetrics/test_metrics.py::TestMeter::test_record_batch_multiple PASSED    [ 15%]\nmetrics/test_metrics.py::TestMeter::test_register_observer PASSED        [ 16%]\nmetrics/test_metrics.py::TestMeter::test_release_bound_instrument \n-------------------------------- live log call ---------------------------------\nWARNING  opentelemetry.sdk.metrics:__init__.py:70 Invalid value passed for float.\nPASSED                                                                   [ 16%]\nmetrics/test_metrics.py::TestMeter::test_unregister_observer PASSED      [ 17%]\nmetrics/test_metrics.py::TestMetric::test_bind PASSED                    [ 17%]\nmetrics/test_metrics.py::TestCounter::test_add PASSED                    [ 18%]\nmetrics/test_metrics.py::TestCounter::test_add_non_decreasing_float_error PASSED [ 18%]\nmetrics/test_metrics.py::TestCounter::test_add_non_decreasing_int_error PASSED [ 19%]\nmetrics/test_metrics.py::TestUpDownCounter::test_add PASSED              [ 20%]\nmetrics/test_metrics.py::TestValueRecorder::test_record PASSED           [ 20%]\nmetrics/test_metrics.py::TestSumObserver::test_observe PASSED            [ 21%]\nmetrics/test_metrics.py::TestSumObserver::test_observe_disabled PASSED   [ 21%]\nmetrics/test_metrics.py::TestSumObserver::test_observe_incorrect_type PASSED [ 22%]\nmetrics/test_metrics.py::TestSumObserver::test_observe_non_decreasing_error PASSED [ 22%]\nmetrics/test_metrics.py::TestSumObserver::test_run PASSED                [ 23%]\nmetrics/test_metrics.py::TestSumObserver::test_run_exception PASSED      [ 23%]\nmetrics/test_metrics.py::TestUpDownSumObserver::test_observe PASSED      [ 24%]\nmetrics/test_metrics.py::TestUpDownSumObserver::test_observe_disabled PASSED [ 25%]\nmetrics/test_metrics.py::TestUpDownSumObserver::test_observe_incorrect_type PASSED [ 25%]\nmetrics/test_metrics.py::TestUpDownSumObserver::test_run PASSED          [ 26%]\nmetrics/test_metrics.py::TestUpDownSumObserver::test_run_exception PASSED [ 26%]\nmetrics/test_metrics.py::TestValueObserver::test_observe PASSED          [ 27%]\nmetrics/test_metrics.py::TestValueObserver::test_observe_disabled PASSED [ 27%]\nmetrics/test_metrics.py::TestValueObserver::test_observe_incorrect_type PASSED [ 28%]\nmetrics/test_metrics.py::TestValueObserver::test_run PASSED              [ 28%]\nmetrics/test_metrics.py::TestValueObserver::test_run_exception PASSED    [ 29%]\nmetrics/test_metrics.py::TestBoundCounter::test_add PASSED               [ 30%]\nmetrics/test_metrics.py::TestBoundCounter::test_add_disabled PASSED      [ 30%]\nmetrics/test_metrics.py::TestBoundCounter::test_add_incorrect_type PASSED [ 31%]\nmetrics/test_metrics.py::TestBoundCounter::test_update PASSED            [ 31%]\nmetrics/test_metrics.py::TestBoundValueRecorder::test_record PASSED      [ 32%]\nmetrics/test_metrics.py::TestBoundValueRecorder::test_record_disabled PASSED [ 32%]\nmetrics/test_metrics.py::TestBoundValueRecorder::test_record_incorrect_type PASSED [ 33%]\nmetrics/test_metrics.py::TestBoundValueRecorder::test_update PASSED      [ 33%]\nmetrics/export/test_export.py::TestConsoleMetricsExporter::test_export PASSED [ 34%]\nmetrics/export/test_export.py::TestBatcher::test_aggregator_for_counter PASSED [ 35%]\nmetrics/export/test_export.py::TestBatcher::test_aggregator_for_updowncounter PASSED [ 35%]\nmetrics/export/test_export.py::TestBatcher::test_checkpoint_set PASSED   [ 36%]\nmetrics/export/test_export.py::TestBatcher::test_checkpoint_set_empty PASSED [ 36%]\nmetrics/export/test_export.py::TestBatcher::test_finished_collection_stateful PASSED [ 37%]\nmetrics/export/test_export.py::TestBatcher::test_finished_collection_stateless PASSED [ 37%]\nmetrics/export/test_export.py::TestBatcher::test_ungrouped_batcher_process_exists PASSED [ 38%]\nmetrics/export/test_export.py::TestBatcher::test_ungrouped_batcher_process_not_exists PASSED [ 38%]\nmetrics/export/test_export.py::TestBatcher::test_ungrouped_batcher_process_not_stateful PASSED [ 39%]\nmetrics/export/test_export.py::TestSumAggregator::test_checkpoint PASSED [ 40%]\nmetrics/export/test_export.py::TestSumAggregator::test_concurrent_update PASSED [ 40%]\nmetrics/export/test_export.py::TestSumAggregator::test_concurrent_update_and_checkpoint PASSED [ 41%]\nmetrics/export/test_export.py::TestSumAggregator::test_merge PASSED      [ 41%]\nmetrics/export/test_export.py::TestSumAggregator::test_update PASSED     [ 42%]\nmetrics/export/test_export.py::TestMinMaxSumCountAggregator::test_checkpoint PASSED [ 42%]\nmetrics/export/test_export.py::TestMinMaxSumCountAggregator::test_concurrent_update PASSED [ 43%]\nmetrics/export/test_export.py::TestMinMaxSumCountAggregator::test_concurrent_update_and_checkpoint PASSED [ 43%]\nmetrics/export/test_export.py::TestMinMaxSumCountAggregator::test_merge PASSED [ 44%]\nmetrics/export/test_export.py::TestMinMaxSumCountAggregator::test_merge_checkpoint PASSED [ 45%]\nmetrics/export/test_export.py::TestMinMaxSumCountAggregator::test_merge_with_empty PASSED [ 45%]\nmetrics/export/test_export.py::TestMinMaxSumCountAggregator::test_update PASSED [ 46%]\nmetrics/export/test_export.py::TestValueObserverAggregator::test_checkpoint PASSED [ 46%]\nmetrics/export/test_export.py::TestValueObserverAggregator::test_merge PASSED [ 47%]\nmetrics/export/test_export.py::TestValueObserverAggregator::test_merge_last_updated PASSED [ 47%]\nmetrics/export/test_export.py::TestValueObserverAggregator::test_merge_last_updated_none PASSED [ 48%]\nmetrics/export/test_export.py::TestValueObserverAggregator::test_merge_with_empty PASSED [ 48%]\nmetrics/export/test_export.py::TestValueObserverAggregator::test_update PASSED [ 49%]\nmetrics/export/test_export.py::TestLastValueAggregator::test_checkpoint PASSED [ 50%]\nmetrics/export/test_export.py::TestLastValueAggregator::test_merge PASSED [ 50%]\nmetrics/export/test_export.py::TestLastValueAggregator::test_merge_last_updated PASSED [ 51%]\nmetrics/export/test_export.py::TestLastValueAggregator::test_merge_last_updated_none PASSED [ 51%]\nmetrics/export/test_export.py::TestLastValueAggregator::test_merge_with_empty PASSED [ 52%]\nmetrics/export/test_export.py::TestLastValueAggregator::test_update PASSED [ 52%]\nmetrics/export/test_export.py::TestController::test_push_controller PASSED [ 53%]\nmetrics/export/test_export.py::TestController::test_push_controller_suppress_instrumentation PASSED [ 53%]\nresources/test_resources.py::TestResources::test_create PASSED           [ 54%]\nresources/test_resources.py::TestResources::test_immutability PASSED     [ 55%]\nresources/test_resources.py::TestResources::test_resource_merge PASSED   [ 55%]\nresources/test_resources.py::TestResources::test_resource_merge_empty_string PASSED [ 56%]\ntrace/test_implementation.py::TestTracerImplementation::test_span PASSED [ 56%]\ntrace/test_implementation.py::TestTracerImplementation::test_tracer PASSED [ 57%]\ntrace/test_span_processor.py::TestSpanProcessor::test_add_span_processor_after_span_creation PASSED [ 57%]\ntrace/test_span_processor.py::TestSpanProcessor::test_span_processor PASSED [ 58%]\ntrace/test_span_processor.py::TestSynchronousMultiSpanProcessor::test_force_flush PASSED [ 58%]\ntrace/test_span_processor.py::TestSynchronousMultiSpanProcessor::test_force_flush_late_by_span_processor PASSED [ 59%]\ntrace/test_span_processor.py::TestSynchronousMultiSpanProcessor::test_force_flush_late_by_timeout PASSED [ 60%]\ntrace/test_span_processor.py::TestSynchronousMultiSpanProcessor::test_on_end PASSED [ 60%]\ntrace/test_span_processor.py::TestSynchronousMultiSpanProcessor::test_on_shutdown PASSED [ 61%]\ntrace/test_span_processor.py::TestSynchronousMultiSpanProcessor::test_on_start PASSED [ 61%]\ntrace/test_span_processor.py::TestConcurrentMultiSpanProcessor::test_force_flush PASSED [ 62%]\ntrace/test_span_processor.py::TestConcurrentMultiSpanProcessor::test_force_flush_late_by_span_processor PASSED [ 62%]\ntrace/test_span_processor.py::TestConcurrentMultiSpanProcessor::test_force_flush_late_by_timeout PASSED [ 63%]\ntrace/test_span_processor.py::TestConcurrentMultiSpanProcessor::test_on_end PASSED [ 63%]\ntrace/test_span_processor.py::TestConcurrentMultiSpanProcessor::test_on_shutdown PASSED [ 64%]\ntrace/test_span_processor.py::TestConcurrentMultiSpanProcessor::test_on_start PASSED [ 65%]\ntrace/test_trace.py::TestTracer::test_extends_api PASSED                 [ 65%]\ntrace/test_trace.py::TestTracer::test_shutdown PASSED                    [ 66%]\ntrace/test_trace.py::TestTracer::test_tracer_provider_accepts_concurrent_multi_span_processor PASSED [ 66%]\ntrace/test_trace.py::TestTracer::test_use_span_exception PASSED          [ 67%]\ntrace/test_trace.py::TestTracerSampling::test_default_sampler PASSED     [ 67%]\ntrace/test_trace.py::TestTracerSampling::test_sampler_no_sampling PASSED [ 68%]\ntrace/test_trace.py::TestSpanCreation::test_default_span_resource PASSED [ 68%]\ntrace/test_trace.py::TestSpanCreation::test_explicit_span_resource PASSED [ 69%]\ntrace/test_trace.py::TestSpanCreation::test_instrumentation_info PASSED  [ 70%]\ntrace/test_trace.py::TestSpanCreation::test_invalid_instrumentation_info PASSED [ 70%]\ntrace/test_trace.py::TestSpanCreation::test_span_context_remote_flag PASSED [ 71%]\ntrace/test_trace.py::TestSpanCreation::test_span_processor_for_source PASSED [ 71%]\ntrace/test_trace.py::TestSpanCreation::test_start_as_current_span_explicit PASSED [ 72%]\ntrace/test_trace.py::TestSpanCreation::test_start_as_current_span_implicit PASSED [ 72%]\ntrace/test_trace.py::TestSpanCreation::test_start_span_explicit PASSED   [ 73%]\ntrace/test_trace.py::TestSpanCreation::test_start_span_implicit PASSED   [ 73%]\ntrace/test_trace.py::TestSpanCreation::test_start_span_invalid_spancontext PASSED [ 74%]\ntrace/test_trace.py::TestSpan::test_attributes PASSED                    [ 75%]\ntrace/test_trace.py::TestSpan::test_basic_span PASSED                    [ 75%]\ntrace/test_trace.py::TestSpan::test_byte_type_attribute_value PASSED     [ 76%]\ntrace/test_trace.py::TestSpan::test_check_attribute_helper \n-------------------------------- live log call ---------------------------------\nWARNING  opentelemetry.sdk.trace:__init__.py:339 Mixed types int and float in attribute value sequence\nWARNING  opentelemetry.sdk.trace:__init__.py:330 Invalid type dict in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types\nWARNING  opentelemetry.sdk.trace:__init__.py:339 Mixed types str and float in attribute value sequence\nWARNING  opentelemetry.sdk.trace:__init__.py:339 Mixed types int and float in attribute value sequence\nWARNING  opentelemetry.sdk.trace:__init__.py:347 Invalid type dict for attribute value. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types\nPASSED                                                                   [ 76%]\ntrace/test_trace.py::TestSpan::test_ended_span PASSED                    [ 77%]\ntrace/test_trace.py::TestSpan::test_error_status PASSED                  [ 77%]\ntrace/test_trace.py::TestSpan::test_events PASSED                        [ 78%]\ntrace/test_trace.py::TestSpan::test_invalid_attribute_values \n-------------------------------- live log call ---------------------------------\nWARNING  opentelemetry.sdk.trace:__init__.py:347 Invalid type dict for attribute value. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types\nWARNING  opentelemetry.sdk.trace:__init__.py:339 Mixed types int and str in attribute value sequence\nWARNING  opentelemetry.sdk.trace:__init__.py:339 Mixed types bool and int in attribute value sequence\nWARNING  opentelemetry.sdk.trace:__init__.py:330 Invalid type dict in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types\nWARNING  opentelemetry.sdk.trace:__init__.py:539 invalid key (empty or null)\nWARNING  opentelemetry.sdk.trace:__init__.py:539 invalid key (empty or null)\nPASSED                                                                   [ 78%]\ntrace/test_trace.py::TestSpan::test_invalid_event_attributes \n-------------------------------- live log call ---------------------------------\nWARNING  opentelemetry.sdk.trace:__init__.py:339 Mixed types str and bool in attribute value sequence\nWARNING  opentelemetry.sdk.trace:__init__.py:347 Invalid type dict for attribute value. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types\nWARNING  opentelemetry.sdk.trace:__init__.py:330 Invalid type list in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types\nWARNING  opentelemetry.sdk.trace:__init__.py:330 Invalid type dict in attribute value sequence. Expected one of ['bool', 'str', 'int', 'float'] or a sequence of those types\nPASSED                                                                   [ 79%]\ntrace/test_trace.py::TestSpan::test_links PASSED                         [ 80%]\ntrace/test_trace.py::TestSpan::test_override_error_status PASSED         [ 80%]\ntrace/test_trace.py::TestSpan::test_record_error PASSED                  [ 81%]\ntrace/test_trace.py::TestSpan::test_sampling_attributes PASSED           [ 81%]\ntrace/test_trace.py::TestSpan::test_span_override_start_and_end_time PASSED [ 82%]\ntrace/test_trace.py::TestSpan::test_start_span PASSED                    [ 82%]\ntrace/test_trace.py::TestSpan::test_update_name PASSED                   [ 83%]\ntrace/test_trace.py::TestSpanProcessor::test_add_span_processor_after_span_creation PASSED [ 83%]\ntrace/test_trace.py::TestSpanProcessor::test_span_processor PASSED       [ 84%]\ntrace/test_trace.py::TestSpanProcessor::test_to_json PASSED              [ 85%]\ntrace/export/test_export.py::TestSimpleExportSpanProcessor::test_simple_span_processor PASSED [ 85%]\ntrace/export/test_export.py::TestSimpleExportSpanProcessor::test_simple_span_processor_no_context PASSED [ 86%]\ntrace/export/test_export.py::TestBatchExportSpanProcessor::test_batch_span_processor_lossless PASSED [ 86%]\ntrace/export/test_export.py::TestBatchExportSpanProcessor::test_batch_span_processor_many_spans PASSED [ 87%]\ntrace/export/test_export.py::TestBatchExportSpanProcessor::test_batch_span_processor_parameters PASSED [ 87%]\ntrace/export/test_export.py::TestBatchExportSpanProcessor::test_batch_span_processor_scheduled_delay PASSED [ 88%]\ntrace/export/test_export.py::TestBatchExportSpanProcessor::test_flush PASSED [ 88%]\ntrace/export/test_export.py::TestBatchExportSpanProcessor::test_flush_timeout PASSED [ 89%]\ntrace/export/test_export.py::TestBatchExportSpanProcessor::test_shutdown PASSED [ 90%]\ntrace/export/test_export.py::TestConsoleSpanExporter::test_export PASSED [ 90%]\ntrace/export/test_export.py::TestConsoleSpanExporter::test_export_custom PASSED [ 91%]\ntrace/export/test_in_memory_span_exporter.py::TestInMemorySpanExporter::test_clear PASSED [ 91%]\ntrace/export/test_in_memory_span_exporter.py::TestInMemorySpanExporter::test_get_finished_spans PASSED [ 92%]\ntrace/export/test_in_memory_span_exporter.py::TestInMemorySpanExporter::test_return_code PASSED [ 92%]\ntrace/export/test_in_memory_span_exporter.py::TestInMemorySpanExporter::test_shutdown PASSED [ 93%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_64bit_trace_id PASSED [ 93%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_disabled_sampling PASSED [ 94%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_enabled_sampling PASSED [ 95%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_extract_header_precedence PASSED [ 95%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_extract_multi_header PASSED [ 96%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_extract_single_header PASSED [ 96%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_flags PASSED     [ 97%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_flags_and_sampling PASSED [ 97%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_inject_empty_context PASSED [ 98%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_invalid_single_header PASSED [ 98%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_missing_span_id PASSED [ 99%]\ntrace/propagation/test_b3_format.py::TestB3Format::test_missing_trace_id PASSED [100%]\n\n============================= 180 passed in 4.40s ==============================\n",
+          "retcode": 0
+        }
+      ]
+    },
+    "py38-test-sdk": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.8",
+          "retcode": 0
+        }
+      ]
+    },
+    "pypy3-test-sdk": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: pypy3",
+          "retcode": 0
+        }
+      ]
+    },
+    "py35-test-instrumentation-base": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.5",
+          "retcode": 0
+        }
+      ]
+    },
+    "py36-test-instrumentation-base": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.6",
+          "retcode": 0
+        }
+      ]
+    },
+    "py37-test-instrumentation-base": {
+      "setup": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "-m",
+            "virtualenv",
+            "--no-download",
+            "--python",
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "py37-test-instrumentation-base"
+          ],
+          "output": "created virtual environment CPython3.7.7.final.0-64 in 902ms\n  creator CPython3Posix(dest=/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base, clear=False, global=False)\n  seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/Users/areddy/Library/Application Support/virtualenv)\n    added seed packages: pip==20.1.1, setuptools==47.3.1, wheel==0.34.2\n  activators BashActivator,CShellActivator,FishActivator,PowerShellActivator,PythonActivator,XonshActivator\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-cdev-requirements.txt",
+            "pytest"
+          ],
+          "output": "Collecting pytest!=5.2.3\n  Using cached pytest-5.4.3-py3-none-any.whl (248 kB)\nCollecting importlib-metadata>=0.12; python_version < \"3.8\"\n  Using cached importlib_metadata-1.7.0-py2.py3-none-any.whl (31 kB)\nCollecting pluggy<1.0,>=0.12\n  Using cached pluggy-0.13.1-py2.py3-none-any.whl (18 kB)\nCollecting py>=1.5.0\n  Using cached py-1.9.0-py2.py3-none-any.whl (99 kB)\nCollecting attrs>=17.4.0\n  Using cached attrs-19.3.0-py2.py3-none-any.whl (39 kB)\nCollecting packaging\n  Using cached packaging-20.4-py2.py3-none-any.whl (37 kB)\nCollecting wcwidth\n  Using cached wcwidth-0.2.5-py2.py3-none-any.whl (30 kB)\nCollecting more-itertools>=4.0.0\n  Using cached more_itertools-8.4.0-py3-none-any.whl (43 kB)\nCollecting zipp>=0.5\n  Using cached zipp-3.1.0-py3-none-any.whl (4.9 kB)\nCollecting six\n  Using cached six-1.15.0-py2.py3-none-any.whl (10 kB)\nCollecting pyparsing>=2.0.2\n  Using cached pyparsing-2.4.7-py2.py3-none-any.whl (67 kB)\nInstalling collected packages: zipp, importlib-metadata, pluggy, py, attrs, six, pyparsing, packaging, wcwidth, more-itertools, pytest\nSuccessfully installed attrs-19.3.0 importlib-metadata-1.7.0 more-itertools-8.4.0 packaging-20.4 pluggy-0.13.1 py-1.9.0 pyparsing-2.4.7 pytest-5.4.3 six-1.15.0 wcwidth-0.2.5 zipp-3.1.0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/python",
+            "-m",
+            "pip",
+            "freeze"
+          ],
+          "output": "attrs==19.3.0\nimportlib-metadata==1.7.0\nmore-itertools==8.4.0\npackaging==20.4\npluggy==0.13.1\npy==1.9.0\npyparsing==2.4.7\npytest==5.4.3\nsix==1.15.0\nwcwidth==0.2.5\nzipp==3.1.0\n",
+          "retcode": 0
+        }
+      ],
+      "python": {
+        "executable": "/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/python",
+        "implementation": "CPython",
+        "version_info": [
+          3,
+          7,
+          7,
+          "final",
+          0
+        ],
+        "version": "3.7.7 (default, Mar 10 2020, 15:43:27) \n[Clang 10.0.0 (clang-1000.11.45.5)]",
+        "is_64": true,
+        "sysplatform": "darwin",
+        "extra_version_info": null
+      },
+      "installed_packages": [
+        "attrs==19.3.0",
+        "importlib-metadata==1.7.0",
+        "more-itertools==8.4.0",
+        "packaging==20.4",
+        "pluggy==0.13.1",
+        "py==1.9.0",
+        "pyparsing==2.4.7",
+        "pytest==5.4.3",
+        "six==1.15.0",
+        "wcwidth==0.2.5",
+        "zipp==3.1.0"
+      ],
+      "test": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "pip",
+            "setuptools",
+            "wheel"
+          ],
+          "output": "Requirement already up-to-date: pip in /Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/lib/python3.7/site-packages (20.1.1)\nRequirement already up-to-date: setuptools in /Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/lib/python3.7/site-packages (47.3.1)\nRequirement already up-to-date: wheel in /Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/lib/python3.7/site-packages (0.34.2)\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/pip",
+            "install",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-api",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-sdk",
+            "/Users/areddy/github/opentelemetry-python/tests/util"
+          ],
+          "output": "Processing /Users/areddy/github/opentelemetry-python/opentelemetry-api\nProcessing /Users/areddy/github/opentelemetry-python/opentelemetry-sdk\nProcessing /Users/areddy/github/opentelemetry-python/tests/util\nBuilding wheels for collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\n  Building wheel for opentelemetry-api (setup.py): started\n  Building wheel for opentelemetry-api (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-api: filename=opentelemetry_api-0.11.dev0-py3-none-any.whl size=43158 sha256=b439dbedee43390a14226725e13470676e6c9815c81b020d1de99eb354b445d3\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/af/16/cd/b95c010ccee44917a6f02efacfc0e67808aba2cedc583dbd45\n  Building wheel for opentelemetry-sdk (setup.py): started\n  Building wheel for opentelemetry-sdk (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-sdk: filename=opentelemetry_sdk-0.11.dev0-py3-none-any.whl size=34135 sha256=394c0b078368abf514149c50c19fbe7fc3033ff4bd1dcb79e0a6ec9718f6a745\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/79/e4/48/7dd97aec7caf267cb0dcdfff7976dd50d70580da1401f325e7\n  Building wheel for opentelemetry-test (setup.py): started\n  Building wheel for opentelemetry-test (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-test: filename=opentelemetry_test-0.11.dev0-py3-none-any.whl size=7123 sha256=914ca44df88dce05ab741237d04ff918a7aad8164ff8d937982ca78c835b742f\n  Stored in directory: /private/var/folders/sq/sd9brsd134b20r_8n3whz13s6z5n5g/T/pip-ephem-wheel-cache-1aot1brs/wheels/39/1f/ab/84a6a902302802e9eb3ef1dea18a7bbeff32b470d6f7a8ddd7\nSuccessfully built opentelemetry-api opentelemetry-sdk opentelemetry-test\nInstalling collected packages: opentelemetry-api, opentelemetry-sdk, opentelemetry-test\nSuccessfully installed opentelemetry-api-0.11.dev0 opentelemetry-sdk-0.11.dev0 opentelemetry-test-0.11.dev0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/pip",
+            "install",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-instrumentation"
+          ],
+          "output": "Processing /Users/areddy/github/opentelemetry-python/opentelemetry-instrumentation\nRequirement already satisfied: opentelemetry-api==0.11.dev0 in /Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/lib/python3.7/site-packages (from opentelemetry-instrumentation==0.11.dev0) (0.11.dev0)\nProcessing /Users/areddy/Library/Caches/pip/wheels/62/76/4c/aa25851149f3f6d9785f6c869387ad82b3fd37582fa8147ac6/wrapt-1.12.1-cp37-cp37m-macosx_10_13_x86_64.whl\nBuilding wheels for collected packages: opentelemetry-instrumentation\n  Building wheel for opentelemetry-instrumentation (setup.py): started\n  Building wheel for opentelemetry-instrumentation (setup.py): finished with status 'done'\n  Created wheel for opentelemetry-instrumentation: filename=opentelemetry_instrumentation-0.11.dev0-py3-none-any.whl size=9860 sha256=cfb7aaa4fe2d9c9734196f8548163ee113dc6a3c52c89139b3898ce9e7667728\n  Stored in directory: /Users/areddy/Library/Caches/pip/wheels/f9/d4/fc/458c0ed7a858940d42bc8ff76455aab36ae8eb96a735149e4f\nSuccessfully built opentelemetry-instrumentation\nInstalling collected packages: wrapt, opentelemetry-instrumentation\nSuccessfully installed opentelemetry-instrumentation-0.11.dev0 wrapt-1.12.1\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/pytest"
+          ],
+          "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.7.7, pytest-5.4.3, py-1.9.0, pluggy-0.13.1 -- /Users/areddy/github/opentelemetry-python/.tox/py37-test-instrumentation-base/bin/python\ncachedir: .tox/py37-test-instrumentation-base/.pytest_cache\nrootdir: /Users/areddy/github/opentelemetry-python, inifile: pytest.ini\ncollecting ... collected 11 items\n\ntest_bootstrap.py::TestBootstrap::test_run_cmd_install PASSED            [  9%]\ntest_bootstrap.py::TestBootstrap::test_run_cmd_print PASSED              [ 18%]\ntest_bootstrap.py::TestBootstrap::test_run_unknown_cmd PASSED            [ 27%]\ntest_instrumentor.py::TestInstrumentor::test_protect PASSED              [ 36%]\ntest_instrumentor.py::TestInstrumentor::test_singleton PASSED            [ 45%]\ntest_run.py::TestRun::test_after_path PASSED                             [ 54%]\ntest_run.py::TestRun::test_empty PASSED                                  [ 63%]\ntest_run.py::TestRun::test_non_empty PASSED                              [ 72%]\ntest_run.py::TestRun::test_single_path PASSED                            [ 81%]\ntest_run.py::TestExecl::test_execl PASSED                                [ 90%]\ntest_utils.py::TestUtils::test_http_status_to_canonical_code PASSED      [100%]\n\n============================== 11 passed in 0.18s ==============================\n",
+          "retcode": 0
+        }
+      ]
+    },
+    "py38-test-instrumentation-base": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.8",
+          "retcode": 0
+        }
+      ]
+    },
+    "pypy3-test-instrumentation-base": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: pypy3",
+          "retcode": 0
+        }
+      ]
+    },
+    "py34-test-example-app": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.4",
+          "retcode": 0
+        }
+      ]
+    },
+    "py35-test-example-app": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.5",
+          "retcode": 0
+        }
+      ]
+    },
+    "py36-test-example-app": {
+      "setup": [
+        {
+          "command": [
+            "setup virtualenv"
+          ],
+          "output": "InterpreterNotFound: python3.6",
+          "retcode": 0
+        }
+      ]
+    },
+    "py37-test-example-app": {
+      "setup": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "-m",
+            "virtualenv",
+            "--no-download",
+            "--python",
+            "/Users/areddy/github/opentelemetry-python/.env/bin/python",
+            "py37-test-example-app"
+          ],
+          "output": "created virtual environment CPython3.7.7.final.0-64 in 535ms\n  creator CPython3Posix(dest=/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app, clear=False, global=False)\n  seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/Users/areddy/Library/Application Support/virtualenv)\n    added seed packages: pip==20.1.1, setuptools==47.3.1, wheel==0.34.2\n  activators BashActivator,CShellActivator,FishActivator,PowerShellActivator,PythonActivator,XonshActivator\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-cdev-requirements.txt",
+            "pytest"
+          ],
+          "output": "Collecting pytest!=5.2.3\n  Using cached pytest-5.4.3-py3-none-any.whl (248 kB)\nCollecting importlib-metadata>=0.12; python_version < \"3.8\"\n  Using cached importlib_metadata-1.7.0-py2.py3-none-any.whl (31 kB)\nCollecting pluggy<1.0,>=0.12\n  Using cached pluggy-0.13.1-py2.py3-none-any.whl (18 kB)\nCollecting attrs>=17.4.0\n  Using cached attrs-19.3.0-py2.py3-none-any.whl (39 kB)\nCollecting packaging\n  Using cached packaging-20.4-py2.py3-none-any.whl (37 kB)\nCollecting py>=1.5.0\n  Using cached py-1.9.0-py2.py3-none-any.whl (99 kB)\nCollecting wcwidth\n  Using cached wcwidth-0.2.5-py2.py3-none-any.whl (30 kB)\nCollecting more-itertools>=4.0.0\n  Using cached more_itertools-8.4.0-py3-none-any.whl (43 kB)\nCollecting zipp>=0.5\n  Using cached zipp-3.1.0-py3-none-any.whl (4.9 kB)\nCollecting six\n  Using cached six-1.15.0-py2.py3-none-any.whl (10 kB)\nCollecting pyparsing>=2.0.2\n  Using cached pyparsing-2.4.7-py2.py3-none-any.whl (67 kB)\nInstalling collected packages: zipp, importlib-metadata, pluggy, attrs, six, pyparsing, packaging, py, wcwidth, more-itertools, pytest\nSuccessfully installed attrs-19.3.0 importlib-metadata-1.7.0 more-itertools-8.4.0 packaging-20.4 pluggy-0.13.1 py-1.9.0 pyparsing-2.4.7 pytest-5.4.3 six-1.15.0 wcwidth-0.2.5 zipp-3.1.0\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/bin/python",
+            "-m",
+            "pip",
+            "freeze"
+          ],
+          "output": "attrs==19.3.0\nimportlib-metadata==1.7.0\nmore-itertools==8.4.0\npackaging==20.4\npluggy==0.13.1\npy==1.9.0\npyparsing==2.4.7\npytest==5.4.3\nsix==1.15.0\nwcwidth==0.2.5\nzipp==3.1.0\n",
+          "retcode": 0
+        }
+      ],
+      "python": {
+        "executable": "/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/bin/python",
+        "implementation": "CPython",
+        "version_info": [
+          3,
+          7,
+          7,
+          "final",
+          0
+        ],
+        "version": "3.7.7 (default, Mar 10 2020, 15:43:27) \n[Clang 10.0.0 (clang-1000.11.45.5)]",
+        "is_64": true,
+        "sysplatform": "darwin",
+        "extra_version_info": null
+      },
+      "installed_packages": [
+        "attrs==19.3.0",
+        "importlib-metadata==1.7.0",
+        "more-itertools==8.4.0",
+        "packaging==20.4",
+        "pluggy==0.13.1",
+        "py==1.9.0",
+        "pyparsing==2.4.7",
+        "pytest==5.4.3",
+        "six==1.15.0",
+        "wcwidth==0.2.5",
+        "zipp==3.1.0"
+      ],
+      "test": [
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "pip",
+            "setuptools",
+            "wheel"
+          ],
+          "output": "Requirement already up-to-date: pip in /Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages (20.1.1)\nRequirement already up-to-date: setuptools in /Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages (47.3.1)\nRequirement already up-to-date: wheel in /Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages (0.34.2)\n",
+          "retcode": 0
+        },
+        {
+          "command": [
+            "/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/bin/pip",
+            "install",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-api",
+            "/Users/areddy/github/opentelemetry-python/opentelemetry-sdk",
+            "/Users/areddy/github/opentelemetry-python/tests/util"
+          ],
+          "output": "Processing /Users/areddy/github/opentelemetry-python/opentelemetry-api\nProcessing /Users/areddy/github/opentelemetry-python/opentelemetry-sdk\nProcessing /Users/areddy/github/opentelemetry-python/tests/util\nERROR: Operation cancelled by user\nTraceback (most recent call last):\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/bin/pip\", line 8, in <module>\n    sys.exit(main())\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/cli/main.py\", line 75, in main\n    return command.main(cmd_args)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/cli/base_command.py\", line 114, in main\n    return self._main(args)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/cli/base_command.py\", line 226, in _main\n    self.handle_pip_version_check(options)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/cli/req_command.py\", line 155, in handle_pip_version_check\n    timeout=min(5, options.timeout)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/cli/req_command.py\", line 100, in _build_session\n    index_urls=self._get_index_urls(options),\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/network/session.py\", line 249, in __init__\n    self.headers[\"User-Agent\"] = user_agent()\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/network/session.py\", line 159, in user_agent\n    setuptools_version = get_installed_version(\"setuptools\")\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_internal/utils/misc.py\", line 629, in get_installed_version\n    req = pkg_resources.Requirement.parse(dist_name)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pkg_resources/__init__.py\", line 3148, in parse\n    req, = parse_requirements(s)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pkg_resources/__init__.py\", line 3094, in parse_requirements\n    yield Requirement(line)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pkg_resources/__init__.py\", line 3101, in __init__\n    super(Requirement, self).__init__(requirement_string)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/packaging/requirements.py\", line 98, in __init__\n    req = REQUIREMENT.parseString(requirement_string)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 1943, in parseString\n    loc, tokens = self._parse(instring, 0)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 1683, in _parseNoCache\n    loc, tokens = self.parseImpl(instring, preloc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 4069, in parseImpl\n    loc, exprtokens = e._parse(instring, loc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 1683, in _parseNoCache\n    loc, tokens = self.parseImpl(instring, preloc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 4462, in parseImpl\n    return self.expr._parse(instring, loc, doActions, callPreParse=False)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 1683, in _parseNoCache\n    loc, tokens = self.parseImpl(instring, preloc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 4069, in parseImpl\n    loc, exprtokens = e._parse(instring, loc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 1683, in _parseNoCache\n    loc, tokens = self.parseImpl(instring, preloc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 4781, in parseImpl\n    return super(ZeroOrMore, self).parseImpl(instring, loc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 4697, in parseImpl\n    loc, tokens = self_expr_parse(instring, loc, doActions, callPreParse=False)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 1683, in _parseNoCache\n    loc, tokens = self.parseImpl(instring, preloc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 4254, in parseImpl\n    ret = e._parse(instring, loc, doActions)\n  File \"/Users/areddy/github/opentelemetry-python/.tox/py37-test-example-app/lib/python3.7/site-packages/pip/_vendor/pyparsing.py\", line 1676, in _parseNoCache\n    if callPreParse and self.callPreparse:\nKeyboardInterrupt\n",
+          "retcode": null
+        }
+      ]
+    },
+    "py38-test-example-app": {},
+    "pypy3-test-example-app": {},
+    "py34-test-getting-started": {},
+    "py35-test-getting-started": {},
+    "py36-test-getting-started": {},
+    "py37-test-getting-started": {},
+    "py38-test-getting-started": {},
+    "pypy3-test-getting-started": {},
+    "py35-test-ext-aiohttp-client": {},
+    "py36-test-ext-aiohttp-client": {},
+    "py37-test-ext-aiohttp-client": {},
+    "py38-test-ext-aiohttp-client": {},
+    "pypy3-test-ext-aiohttp-client": {},
+    "py36-test-ext-botocore": {},
+    "py37-test-ext-botocore": {},
+    "py38-test-ext-botocore": {},
+    "pypy3-test-ext-botocore": {},
+    "py34-test-ext-django": {},
+    "py35-test-ext-django": {},
+    "py36-test-ext-django": {},
+    "py37-test-ext-django": {},
+    "py38-test-ext-django": {},
+    "pypy3-test-ext-django": {},
+    "py34-test-ext-dbapi": {},
+    "py35-test-ext-dbapi": {},
+    "py36-test-ext-dbapi": {},
+    "py37-test-ext-dbapi": {},
+    "py38-test-ext-dbapi": {},
+    "pypy3-test-ext-dbapi": {},
+    "py35-test-ext-boto": {},
+    "py36-test-ext-boto": {},
+    "py37-test-ext-boto": {},
+    "py38-test-ext-boto": {},
+    "pypy3-test-ext-boto": {},
+    "py34-test-ext-elasticsearch2": {},
+    "py34-test-ext-elasticsearch5": {},
+    "py34-test-ext-elasticsearch6": {},
+    "py34-test-ext-elasticsearch7": {},
+    "py35-test-ext-elasticsearch2": {},
+    "py35-test-ext-elasticsearch5": {},
+    "py35-test-ext-elasticsearch6": {},
+    "py35-test-ext-elasticsearch7": {},
+    "py36-test-ext-elasticsearch2": {},
+    "py36-test-ext-elasticsearch5": {},
+    "py36-test-ext-elasticsearch6": {},
+    "py36-test-ext-elasticsearch7": {},
+    "py37-test-ext-elasticsearch2": {},
+    "py37-test-ext-elasticsearch5": {},
+    "py37-test-ext-elasticsearch6": {},
+    "py37-test-ext-elasticsearch7": {},
+    "py38-test-ext-elasticsearch2": {},
+    "py38-test-ext-elasticsearch5": {},
+    "py38-test-ext-elasticsearch6": {},
+    "py38-test-ext-elasticsearch7": {},
+    "pypy3-test-ext-elasticsearch2": {},
+    "pypy3-test-ext-elasticsearch5": {},
+    "pypy3-test-ext-elasticsearch6": {},
+    "pypy3-test-ext-elasticsearch7": {},
+    "py34-test-ext-flask": {},
+    "py35-test-ext-flask": {},
+    "py36-test-ext-flask": {},
+    "py37-test-ext-flask": {},
+    "py38-test-ext-flask": {},
+    "pypy3-test-ext-flask": {},
+    "py34-test-ext-requests": {},
+    "py35-test-ext-requests": {},
+    "py36-test-ext-requests": {},
+    "py37-test-ext-requests": {},
+    "py38-test-ext-requests": {},
+    "pypy3-test-ext-requests": {},
+    "py36-test-instrumentation-starlette": {},
+    "py37-test-instrumentation-starlette": {},
+    "py38-test-instrumentation-starlette": {},
+    "pypy3-test-instrumentation-starlette": {},
+    "py34-test-ext-jinja2": {},
+    "py35-test-ext-jinja2": {},
+    "py36-test-ext-jinja2": {},
+    "py37-test-ext-jinja2": {},
+    "py38-test-ext-jinja2": {},
+    "pypy3-test-ext-jinja2": {},
+    "py34-test-ext-jaeger": {},
+    "py35-test-ext-jaeger": {},
+    "py36-test-ext-jaeger": {},
+    "py37-test-ext-jaeger": {},
+    "py38-test-ext-jaeger": {},
+    "pypy3-test-ext-jaeger": {},
+    "py35-test-ext-datadog": {},
+    "py36-test-ext-datadog": {},
+    "py37-test-ext-datadog": {},
+    "py38-test-ext-datadog": {},
+    "py34-test-ext-mysql": {},
+    "py35-test-ext-mysql": {},
+    "py36-test-ext-mysql": {},
+    "py37-test-ext-mysql": {},
+    "py38-test-ext-mysql": {},
+    "pypy3-test-ext-mysql": {},
+    "py34-test-ext-opencensusexporter": {},
+    "py35-test-ext-opencensusexporter": {},
+    "py36-test-ext-opencensusexporter": {},
+    "py37-test-ext-opencensusexporter": {},
+    "py38-test-ext-opencensusexporter": {},
+    "py35-test-ext-otlp": {},
+    "py36-test-ext-otlp": {},
+    "py37-test-ext-otlp": {},
+    "py38-test-ext-otlp": {},
+    "py34-test-ext-prometheus": {},
+    "py35-test-ext-prometheus": {},
+    "py36-test-ext-prometheus": {},
+    "py37-test-ext-prometheus": {},
+    "py38-test-ext-prometheus": {},
+    "pypy3-test-ext-prometheus": {},
+    "py34-test-ext-psycopg2": {},
+    "py35-test-ext-psycopg2": {},
+    "py36-test-ext-psycopg2": {},
+    "py37-test-ext-psycopg2": {},
+    "py38-test-ext-psycopg2": {},
+    "py34-test-ext-pymemcache": {},
+    "py35-test-ext-pymemcache": {},
+    "py36-test-ext-pymemcache": {},
+    "py37-test-ext-pymemcache": {},
+    "py38-test-ext-pymemcache": {},
+    "pypy3-test-ext-pymemcache": {},
+    "py34-test-ext-pymongo": {},
+    "py35-test-ext-pymongo": {},
+    "py36-test-ext-pymongo": {},
+    "py37-test-ext-pymongo": {},
+    "py38-test-ext-pymongo": {},
+    "pypy3-test-ext-pymongo": {},
+    "py34-test-ext-pymysql": {},
+    "py35-test-ext-pymysql": {},
+    "py36-test-ext-pymysql": {},
+    "py37-test-ext-pymysql": {},
+    "py38-test-ext-pymysql": {},
+    "pypy3-test-ext-pymysql": {},
+    "py34-test-ext-pyramid": {},
+    "py35-test-ext-pyramid": {},
+    "py36-test-ext-pyramid": {},
+    "py37-test-ext-pyramid": {},
+    "py38-test-ext-pyramid": {},
+    "pypy3-test-ext-pyramid": {},
+    "py35-test-ext-asgi": {},
+    "py36-test-ext-asgi": {},
+    "py37-test-ext-asgi": {},
+    "py38-test-ext-asgi": {},
+    "pypy3-test-ext-asgi": {},
+    "py35-test-ext-asyncpg": {},
+    "py36-test-ext-asyncpg": {},
+    "py37-test-ext-asyncpg": {},
+    "py38-test-ext-asyncpg": {},
+    "py34-test-ext-sqlite3": {},
+    "py35-test-ext-sqlite3": {},
+    "py36-test-ext-sqlite3": {},
+    "py37-test-ext-sqlite3": {},
+    "py38-test-ext-sqlite3": {},
+    "pypy3-test-ext-sqlite3": {},
+    "py34-test-ext-wsgi": {},
+    "py35-test-ext-wsgi": {},
+    "py36-test-ext-wsgi": {},
+    "py37-test-ext-wsgi": {},
+    "py38-test-ext-wsgi": {},
+    "pypy3-test-ext-wsgi": {},
+    "py34-test-ext-zipkin": {},
+    "py35-test-ext-zipkin": {},
+    "py36-test-ext-zipkin": {},
+    "py37-test-ext-zipkin": {},
+    "py38-test-ext-zipkin": {},
+    "pypy3-test-ext-zipkin": {},
+    "py34-test-opentracing-shim": {},
+    "py35-test-opentracing-shim": {},
+    "py36-test-opentracing-shim": {},
+    "py37-test-opentracing-shim": {},
+    "py38-test-opentracing-shim": {},
+    "pypy3-test-opentracing-shim": {},
+    "py34-test-ext-grpc": {},
+    "py35-test-ext-grpc": {},
+    "py36-test-ext-grpc": {},
+    "py37-test-ext-grpc": {},
+    "py38-test-ext-grpc": {},
+    "py34-test-ext-sqlalchemy": {},
+    "py35-test-ext-sqlalchemy": {},
+    "py36-test-ext-sqlalchemy": {},
+    "py37-test-ext-sqlalchemy": {},
+    "py38-test-ext-sqlalchemy": {},
+    "pypy3-test-ext-sqlalchemy": {},
+    "py34-test-ext-redis": {},
+    "py35-test-ext-redis": {},
+    "py36-test-ext-redis": {},
+    "py37-test-ext-redis": {},
+    "py38-test-ext-redis": {},
+    "pypy3-test-ext-redis": {},
+    "py35-test-ext-celery": {},
+    "py36-test-ext-celery": {},
+    "py37-test-ext-celery": {},
+    "py38-test-ext-celery": {},
+    "pypy3-test-ext-celery": {},
+    "py34-test-ext-system-metrics": {},
+    "py35-test-ext-system-metrics": {},
+    "py36-test-ext-system-metrics": {},
+    "py37-test-ext-system-metrics": {},
+    "py38-test-ext-system-metrics": {},
+    "py34-test-exporter-cloud-monitoring": {},
+    "py35-test-exporter-cloud-monitoring": {},
+    "py36-test-exporter-cloud-monitoring": {},
+    "py37-test-exporter-cloud-monitoring": {},
+    "py38-test-exporter-cloud-monitoring": {},
+    "py34-test-exporter-cloud-trace": {},
+    "py35-test-exporter-cloud-trace": {},
+    "py36-test-exporter-cloud-trace": {},
+    "py37-test-exporter-cloud-trace": {},
+    "py38-test-exporter-cloud-trace": {},
+    "lint": {},
+    "py38-tracecontext": {},
+    "py38-mypy": {},
+    "py38-mypyinstalled": {},
+    "docs": {},
+    "docker-tests": {}
+  }
+}

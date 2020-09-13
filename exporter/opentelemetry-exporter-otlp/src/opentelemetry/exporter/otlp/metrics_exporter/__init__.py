@@ -14,6 +14,7 @@
 
 """OTLP Metrics Exporter"""
 
+import os
 import logging
 from typing import List, Sequence, Type, TypeVar
 
@@ -115,6 +116,22 @@ class OTLPMetricsExporter(
 
     _stub = MetricsServiceStub
     _result = MetricsExportResult
+
+    def __init__(
+        self,
+        endpoint: str,
+        insecure: bool,
+        credentials: ChannelCredentials = None,
+        metadata: tuple = None,
+    ):
+        super().__init__(
+            **{
+                endpoint: endpoint or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_ENDPOINT"),
+                insecure: insecure or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_INSECURE"),
+                credentials: credentials or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE"),
+                metadata: metadata or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_HEADERS")
+            }
+        )
 
     # pylint: disable=no-self-use
     def _translate_data(

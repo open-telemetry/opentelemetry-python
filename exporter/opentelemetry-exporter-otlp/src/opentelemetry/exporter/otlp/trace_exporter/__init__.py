@@ -13,6 +13,7 @@
 
 """OTLP Span Exporter"""
 
+import os
 import logging
 from typing import Sequence
 
@@ -56,6 +57,22 @@ class OTLPSpanExporter(
 
     _result = SpanExportResult
     _stub = TraceServiceStub
+
+    def __init__(
+        self,
+        endpoint: str,
+        insecure: bool,
+        credentials: ChannelCredentials = None,
+        metadata: tuple = None,
+    ):
+        super().__init__(
+            **{
+                endpoint: endpoint or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_ENDPOINT"),
+                insecure: insecure or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_INSECURE"),
+                credentials: credentials or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE"),
+                metadata: metadata or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_HEADERS")
+            }
+        )
 
     def _translate_name(self, sdk_span: SDKSpan) -> None:
         self._collector_span_kwargs["name"] = sdk_span.name
