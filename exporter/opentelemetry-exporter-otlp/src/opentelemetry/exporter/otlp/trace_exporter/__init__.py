@@ -21,6 +21,7 @@ from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
     _translate_key_values,
+    _load_credential_from_file,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -65,11 +66,15 @@ class OTLPSpanExporter(
         credentials: ChannelCredentials = None,
         metadata: tuple = None,
     ):
+        insecure = insecure or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_INSECURE")
+        if not insecure:
+            credentials = credentials or _load_credential_from_file(os.environ.get("OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE"))
+
         super().__init__(
             **{
                 endpoint: endpoint or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_ENDPOINT"),
-                insecure: insecure or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_INSECURE"),
-                credentials: credentials or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE"),
+                insecure: insecure,
+                credentials: credentials,
                 metadata: metadata or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_HEADERS")
             }
         )

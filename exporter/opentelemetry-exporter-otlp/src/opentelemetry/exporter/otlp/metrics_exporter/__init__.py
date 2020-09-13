@@ -22,6 +22,7 @@ from typing import List, Sequence, Type, TypeVar
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
+    _load_credential_from_file,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -124,11 +125,15 @@ class OTLPMetricsExporter(
         credentials: ChannelCredentials = None,
         metadata: tuple = None,
     ):
+        insecure = insecure or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_INSECURE")
+        if not insecure:
+            credentials = credentials or _load_credential_from_file(os.environ.get("OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE"))
+
         super().__init__(
             **{
                 endpoint: endpoint or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_ENDPOINT"),
-                insecure: insecure or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_INSECURE"),
-                credentials: credentials or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE"),
+                insecure: insecure,
+                credentials: credentials,
                 metadata: metadata or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_HEADERS")
             }
         )

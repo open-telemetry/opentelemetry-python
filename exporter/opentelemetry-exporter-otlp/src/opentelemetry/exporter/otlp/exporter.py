@@ -26,6 +26,7 @@ from typing import Text, Tuple, TypeVar
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
+    ssl_channel_credentials,
     ChannelCredentials,
     RpcError,
     StatusCode,
@@ -113,6 +114,11 @@ def _get_resource_data(
 
     return resource_data
 
+def _load_credential_from_file(filepath) -> ChannelCredentials:
+    real_path = os.path.join(os.path.dirname(__file__), filepath)
+    with open(real_path, 'rb') as f:
+        credential = f.read()
+        return ssl_channel_credentials(credential)
 
 # pylint: disable=no-member
 class OTLPExporterMixin(
@@ -143,7 +149,7 @@ class OTLPExporterMixin(
         if insecure:
             self._client = self._stub(insecure_channel(endpoint))
         else:
-            credentials = credentials or os.environ.get("OTEL_EXPORTER_OTLP_CERTIFICATE")
+            credentials = credentials or _load_credential_from_file(os.environ.get("OTEL_EXPORTER_OTLP_CERTIFICATE"))
             self._client = self._stub(secure_channel(endpoint, credentials))
 
     @abstractmethod
