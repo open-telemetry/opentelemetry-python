@@ -162,8 +162,8 @@ class RequestsIntegrationTestBase(abc.ABC):
             self.assertEqual(result.text, "Hello!")
             self.assert_span(None, 0)
             with self.assertRaises(AttributeError):
-                # pylint: disable=unused-variable
-                attr = mock_span.attributes
+                # pylint: disable=pointless-statement
+                mock_span.attributes
             self.assertFalse(mock_span.is_recording())
             self.assertTrue(mock_span.is_recording.called)
             self.assertFalse(mock_span.set_attribute.called)
