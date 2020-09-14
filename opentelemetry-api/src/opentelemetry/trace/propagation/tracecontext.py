@@ -17,7 +17,7 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import httptextformat
+from opentelemetry.trace.propagation import textmap
 
 #    Keys and values are strings of up to 256 printable US-ASCII characters.
 #    Implementations should conform to the `W3C Trace Context - Tracestate`_
@@ -46,7 +46,7 @@ _MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
 _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
 
 
-class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
+class TraceContextTextMapPropagator(textmap.TextMapPropagator):
     """Extracts and injects using w3c TraceContext's headers.
     """
 
@@ -60,15 +60,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
 
     def extract(
         self,
-        get_from_carrier: httptextformat.Getter[
-            httptextformat.HTTPTextFormatT
-        ],
-        carrier: httptextformat.HTTPTextFormatT,
+        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Extracts SpanContext from the carrier.
 
-        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.extract`
+        See `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
         header = get_from_carrier(carrier, self._TRACEPARENT_HEADER_NAME)
 
@@ -111,13 +109,13 @@ class TraceContextHTTPTextFormat(httptextformat.HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
-        carrier: httptextformat.HTTPTextFormatT,
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Injects SpanContext into the carrier.
 
-        See `opentelemetry.trace.propagation.httptextformat.HTTPTextFormat.inject`
+        See `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
         """
         span = trace.get_current_span(context)
         span_context = span.get_context()
