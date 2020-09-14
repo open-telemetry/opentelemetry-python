@@ -1,8 +1,7 @@
-OpenTelemetry asgi Instrumentation
-===================================
+.. include:: ../../../instrumentation/opentelemetry-instrumentation-asgi/README.rst
 
-Module contents
----------------
+API
+---
 
 .. automodule:: opentelemetry.instrumentation.asgi
     :members:

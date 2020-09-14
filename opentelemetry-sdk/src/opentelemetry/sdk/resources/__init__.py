@@ -22,7 +22,7 @@ from json import dumps
 import pkg_resources
 
 LabelValue = typing.Union[str, bool, int, float]
-Labels = typing.Dict[str, LabelValue]
+Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 
@@ -36,38 +36,38 @@ OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
 
 
 class Resource:
-    def __init__(self, labels: Labels):
-        self._labels = labels.copy()
+    def __init__(self, attributes: Attributes):
+        self._attributes = attributes.copy()
 
     @staticmethod
-    def create(labels: Labels) -> "Resource":
-        if not labels:
+    def create(attributes: Attributes) -> "Resource":
+        if not attributes:
             return _DEFAULT_RESOURCE
-        return _DEFAULT_RESOURCE.merge(Resource(labels))
+        return _DEFAULT_RESOURCE.merge(Resource(attributes))
 
     @staticmethod
     def create_empty() -> "Resource":
         return _EMPTY_RESOURCE
 
     @property
-    def labels(self) -> Labels:
-        return self._labels.copy()
+    def attributes(self) -> Attributes:
+        return self._attributes.copy()
 
     def merge(self, other: "Resource") -> "Resource":
-        merged_labels = self.labels
+        merged_attributes = self.attributes
         # pylint: disable=protected-access
-        for key, value in other._labels.items():
-            if key not in merged_labels or merged_labels[key] == "":
-                merged_labels[key] = value
-        return Resource(merged_labels)
+        for key, value in other._attributes.items():
+            if key not in merged_attributes or merged_attributes[key] == "":
+                merged_attributes[key] = value
+        return Resource(merged_attributes)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self._labels == other._labels
+        return self._attributes == other._attributes
 
     def __hash__(self):
-        return hash(dumps(self._labels, sort_keys=True))
+        return hash(dumps(self._attributes, sort_keys=True))
 
 
 _EMPTY_RESOURCE = Resource({})

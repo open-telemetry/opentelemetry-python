@@ -17,16 +17,16 @@ import typing
 
 from opentelemetry.context.context import Context
 
-HTTPTextFormatT = typing.TypeVar("HTTPTextFormatT")
+TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
 
-Setter = typing.Callable[[HTTPTextFormatT, str, str], None]
-Getter = typing.Callable[[HTTPTextFormatT, str], typing.List[str]]
+Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
+Getter = typing.Callable[[TextMapPropagatorT, str], typing.List[str]]
 
 
-class HTTPTextFormat(abc.ABC):
+class TextMapPropagator(abc.ABC):
     """This class provides an interface that enables extracting and injecting
     context into headers of HTTP requests. HTTP frameworks and clients
-    can integrate with HTTPTextFormat by providing the object containing the
+    can integrate with TextMapPropagator by providing the object containing the
     headers, and a getter and setter function for the extraction and
     injection of values, respectively.
 
@@ -35,8 +35,8 @@ class HTTPTextFormat(abc.ABC):
     @abc.abstractmethod
     def extract(
         self,
-        get_from_carrier: Getter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        get_from_carrier: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Create a Context from values in the carrier.
@@ -63,8 +63,8 @@ class HTTPTextFormat(abc.ABC):
     @abc.abstractmethod
     def inject(
         self,
-        set_in_carrier: Setter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Inject values from a Context into a carrier.
