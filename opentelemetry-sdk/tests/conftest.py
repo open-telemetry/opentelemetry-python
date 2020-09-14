@@ -13,16 +13,11 @@
 # limitations under the License.
 
 from os import environ
-from sys import version_info
 
 
 def pytest_sessionstart(session):
     # pylint: disable=unused-argument
-    if version_info < (3, 5):
-        # contextvars are not supported in 3.4, use thread-local storage
-        environ["OTEL_CONTEXT"] = "threadlocal_context"
-    else:
-        environ["OTEL_CONTEXT"] = "contextvars_context"
+    environ["OTEL_CONTEXT"] = "contextvars_context"
 
 
 def pytest_sessionfinish(session):
