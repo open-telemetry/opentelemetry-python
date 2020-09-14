@@ -91,9 +91,7 @@ class RequestsIntegrationTestBase(abc.ABC):
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"
         httpretty.register_uri(
-            httpretty.GET,
-            url_404,
-            status=404,
+            httpretty.GET, url_404, status=404,
         )
         result = self.perform_request(url_404)
         self.assertEqual(result.status_code, 404)
@@ -167,8 +165,8 @@ class RequestsIntegrationTestBase(abc.ABC):
                 attr = mock_span.attributes
             self.assertFalse(mock_span.is_recording())
             self.assertTrue(mock_span.is_recording.called)
-            mock_span.set_attribute.assert_not_called()
-            mock_span.set_status.assert_not_called()
+            self.assertFalse(mock_span.set_attribute.called)
+            self.assertFalse(mock_span.set_status.called)
 
     def test_distributed_context(self):
         previous_propagator = propagators.get_global_textmap()
@@ -203,8 +201,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             )
 
         RequestsInstrumentor().instrument(
-            tracer_provider=self.tracer_provider,
-            span_callback=span_callback,
+            tracer_provider=self.tracer_provider, span_callback=span_callback,
         )
 
         result = self.perform_request(self.URL)
