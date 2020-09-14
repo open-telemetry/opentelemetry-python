@@ -163,8 +163,9 @@ class RequestsIntegrationTestBase(abc.ABC):
             with self.assertRaises(AttributeError):
                 attr = mock_span.attributes
             self.assertFalse(mock_span.is_recording())
-            mock_span.is_recording.assert_called()
+            self.assertTrue(mock_span.is_recording.called)
             mock_span.set_attribute.assert_not_called()
+            mock_span.set_status.assert_not_called()
 
     def test_distributed_context(self):
         previous_propagator = propagators.get_global_textmap()
