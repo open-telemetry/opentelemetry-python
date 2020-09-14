@@ -13,9 +13,6 @@ executors:
   py35:
     docker:
       - image: circleci/python:3.5
-  py34:
-    docker:
-      - image: circleci/python:3.4
   pypy3:
     docker:
       - image: pypy:3
@@ -101,23 +98,6 @@ jobs:
       - run_tox_scenario:
           pattern: py38-<< parameters.package >>
 
-  build-py34:
-    parameters:
-      package:
-        type: string
-        default: "core"
-    executor: py34
-    steps:
-      - checkout
-      - run:
-          name: "Install tox"
-          command: sudo pip install -U tox virtualenv tox-factor
-      - restore_tox_cache
-      - run:
-          name: "Run scripts/run-tox-scenario"
-          command: tox -f py34-<< parameters.package >>
-      - save_tox_cache
-
   build:
     parameters:
       version:
@@ -142,10 +122,6 @@ workflows:
           matrix:
             parameters:
               version: ["py37", "py36", "py35", "pypy3"]
-              package: ["core", "exporter", "instrumentation"]
-      - build-py34:
-          matrix:
-            parameters:
               package: ["core", "exporter", "instrumentation"]
       - docs
       - lint
