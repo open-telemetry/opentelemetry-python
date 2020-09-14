@@ -56,8 +56,8 @@ _SUPPRESS_REQUESTS_INSTRUMENTATION_KEY = "suppress_requests_instrumentation"
 # pylint: disable=unused-argument
 def _instrument(tracer_provider=None, span_callback=None):
     """Enables tracing of all requests calls that go through
-      :code:`requests.session.Session.request` (this includes
-      :code:`requests.get`, etc.)."""
+    :code:`requests.session.Session.request` (this includes
+    :code:`requests.get`, etc.)."""
 
     # Since
     # https://github.com/psf/requests/commit/d72d1162142d1bf8b1b5711c664fbbd674f349d1
