@@ -16,6 +16,8 @@
   ([#1082](https://github.com/open-telemetry/opentelemetry-python/pull/1082))
 - Fix api/sdk setup.cfg to include missing python files
   ([#1091](https://github.com/open-telemetry/opentelemetry-python/pull/1091))
+- Drop support for Python 3.4
+  ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
 - Merge `OTELResourceDetector` result when creating resources
   ([#1096](https://github.com/open-telemetry/opentelemetry-python/pull/1096))
 
