@@ -92,13 +92,15 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
         recorder = RequestsInstrumentor().meter.metrics.pop()
-        match_key = get_dict_as_key({
-            "http.flavor": 11,
-            "http.method": "GET",
-            "http.status_code": 200,
-            "http.status_text": "OK",
-            "http.url": "http://httpbin.org/status/200",
-        })
+        match_key = get_dict_as_key(
+            {
+                "http.flavor": 11,
+                "http.method": "GET",
+                "http.status_code": 200,
+                "http.status_text": "OK",
+                "http.url": "http://httpbin.org/status/200",
+            }
+        )
         for key in recorder.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
@@ -269,10 +271,12 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
         recorder = RequestsInstrumentor().meter.metrics.pop()
-        match_key = get_dict_as_key({
-            "http.method": "GET",
-            "http.url": "http://httpbin.org/status/200",
-        })
+        match_key = get_dict_as_key(
+            {
+                "http.method": "GET",
+                "http.url": "http://httpbin.org/status/200",
+            }
+        )
         for key in recorder.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
@@ -310,12 +314,14 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
         recorder = RequestsInstrumentor().meter.metrics.pop()
-        match_key = get_dict_as_key({
-            "http.method": "GET",
-            "http.status_code": 500,
-            "http.status_text": "Internal Server Error",
-            "http.url": "http://httpbin.org/status/200",
-        })
+        match_key = get_dict_as_key(
+            {
+                "http.method": "GET",
+                "http.status_code": 500,
+                "http.status_text": "Internal Server Error",
+                "http.url": "http://httpbin.org/status/200",
+            }
+        )
         for key in recorder.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
