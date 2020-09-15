@@ -39,10 +39,7 @@ Usage
         agent_host_name='localhost',
         agent_port=6831,
         # optional: configure also collector
-        # collector_host_name='localhost',
-        # collector_port=14268,
-        # collector_endpoint='/api/traces?format=jaeger.thrift',
-        # collector_protocol='http',
+        # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
         # username=xxxx, # optional
         # password=xxxx, # optional
     )
@@ -64,6 +61,7 @@ API
 
 import base64
 import logging
+import os
 import socket
 
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
@@ -77,12 +75,19 @@ from opentelemetry.trace.status import StatusCanonicalCode
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
-DEFAULT_COLLECTOR_ENDPOINT = "/api/traces?format=jaeger.thrift"
-DEFAULT_COLLECTOR_PROTOCOL = "http"
 
 UDP_PACKET_MAX_LENGTH = 65000
 
 logger = logging.getLogger(__name__)
+
+
+OTEL_ENVS = {
+    'agent_host': "OTEL_EXPORTER_JAEGER_AGENT_HOST",
+    'agent_port': "OTEL_EXPORTER_JAEGER_AGENT_PORT",
+    'collector_endpoint': "OTEL_EXPORTER_JAEGER_ENDPOINT",
+    'username': "OTEL_EXPORTER_JAEGER_USER",
+    'password': "OTEL_EXPORTER_JAEGER_PASSWORD"
+}
 
 
 class JaegerSpanExporter(SpanExporter):
@@ -93,11 +98,7 @@ class JaegerSpanExporter(SpanExporter):
             when query for spans.
         agent_host_name: The host name of the Jaeger-Agent.
         agent_port: The port of the Jaeger-Agent.
-        collector_host_name: The host name of the Jaeger-Collector HTTP/HTTPS
-            Thrift.
-        collector_port: The port of the Jaeger-Collector HTTP/HTTPS Thrift.
         collector_endpoint: The endpoint of the Jaeger-Collector HTTP/HTTPS Thrift.
-        collector_protocol: The transfer protocol for the Jaeger-Collector(HTTP or HTTPS).
         username: The user name of the Basic Auth if authentication is
             required.
         password: The password of the Basic Auth if authentication is
@@ -109,23 +110,18 @@ class JaegerSpanExporter(SpanExporter):
         service_name,
         agent_host_name=DEFAULT_AGENT_HOST_NAME,
         agent_port=DEFAULT_AGENT_PORT,
-        collector_host_name=None,
-        collector_port=None,
-        collector_endpoint=DEFAULT_COLLECTOR_ENDPOINT,
-        collector_protocol=DEFAULT_COLLECTOR_PROTOCOL,
+        collector_endpoint=None,
         username=None,
         password=None,
     ):
         self.service_name = service_name
-        self.agent_host_name = agent_host_name
-        self.agent_port = agent_port
+        self.agent_host_name = os.environ.get(OTEL_ENVS["agent_host"]) or agent_host_name
+        self.agent_port = int(os.environ.get(OTEL_ENVS["agent_port"])) \
+            if os.environ.get(OTEL_ENVS["agent_port"]) else agent_port
         self._agent_client = None
-        self.collector_host_name = collector_host_name
-        self.collector_port = collector_port
-        self.collector_endpoint = collector_endpoint
-        self.collector_protocol = collector_protocol
-        self.username = username
-        self.password = password
+        self.collector_endpoint = os.environ.get(OTEL_ENVS["collector_endpoint"]) or collector_endpoint
+        self.username = os.environ.get(OTEL_ENVS["username"]) or username
+        self.password = os.environ.get(OTEL_ENVS["password"]) or password
         self._collector = None
 
     @property
@@ -141,21 +137,16 @@ class JaegerSpanExporter(SpanExporter):
         if self._collector is not None:
             return self._collector
 
-        if self.collector_host_name is None or self.collector_port is None:
+        if self.collector_endpoint is None:
             return None
-
-        thrift_url = "{}://{}:{}{}".format(
-            self.collector_protocol,
-            self.collector_host_name,
-            self.collector_port,
-            self.collector_endpoint,
-        )
 
         auth = None
         if self.username is not None and self.password is not None:
             auth = (self.username, self.password)
 
-        self._collector = Collector(thrift_url=thrift_url, auth=auth)
+        self._collector = Collector(
+            thrift_url=self.collector_endpoint, auth=auth
+        )
         return self._collector
 
     def export(self, spans):
@@ -364,11 +355,11 @@ class AgentClientUDP:
     """
 
     def __init__(
-        self,
-        host_name,
-        port,
-        max_packet_size=UDP_PACKET_MAX_LENGTH,
-        client=agent.Client,
+            self,
+            host_name,
+            port,
+            max_packet_size=UDP_PACKET_MAX_LENGTH,
+            client=agent.Client,
     ):
         self.address = (host_name, port)
         self.max_packet_size = max_packet_size
