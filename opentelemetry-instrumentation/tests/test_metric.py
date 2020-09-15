@@ -19,14 +19,16 @@ from unittest import mock, TestCase
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.trace import SpanKind
-from opentelemetry.instrumentation.metric import MetricMixin, HTTPMetricRecorder
+from opentelemetry.instrumentation.metric import (
+    MetricMixin,
+    HTTPMetricRecorder,
+)
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
 
 class TestMetricMixin(TestCase):
-
     @classmethod
     def setUpClass(cls):
         metrics_api._METER_PROVIDER = None
@@ -59,7 +61,6 @@ class TestMetricMixin(TestCase):
 
 
 class TestHTTPMetricRecorder(TestCase):
-
     @classmethod
     def setUpClass(cls):
         metrics_api._METER_PROVIDER = None
@@ -76,17 +77,19 @@ class TestHTTPMetricRecorder(TestCase):
         # pylint: disable=protected-access
         self.assertTrue(isinstance(recorder._duration, metrics.ValueRecorder))
         self.assertEqual(recorder._duration.name, "http.client.duration")
-        self.assertEqual(recorder._duration.description,
-            "measures the duration of the outbound HTTP request")
+        self.assertEqual(
+            recorder._duration.description,
+            "measures the duration of the outbound HTTP request",
+        )
 
     def test_record_duration(self):
         meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, SpanKind.CLIENT)
-        labels = {"test":"asd"}
+        labels = {"test": "asd"}
         with recorder.record_duration(labels):
             labels["test2"] = "asd2"
             time.sleep(1)
-        key = tuple({"test":"asd","test2":"asd2"}.items())
+        key = tuple({"test": "asd", "test2": "asd2"}.items())
         # pylint: disable=protected-access
         bound = recorder._duration.bound_instruments.get(key)
         for view_data in bound.view_datas:
