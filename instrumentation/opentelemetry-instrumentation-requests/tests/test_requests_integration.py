@@ -112,7 +112,7 @@ class RequestsIntegrationTestBase(abc.ABC):
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"
         httpretty.register_uri(
-h           httpretty.GET, url_404, status=404,
+            httpretty.GET, url_404, status=404,
         )
         result = self.perform_request(url_404)
         self.assertEqual(result.status_code, 404)

@@ -26,6 +26,7 @@ from opentelemetry.instrumentation.metric import (
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
+from opentelemetry.sdk.util import get_dict_as_key
 
 
 class TestMetricMixin(TestCase):
@@ -89,7 +90,7 @@ class TestHTTPMetricRecorder(TestCase):
         with recorder.record_duration(labels):
             labels["test2"] = "asd2"
             time.sleep(1)
-        match_key = tuple({"test": "asd", "test2": "asd2"}.items())
+        match_key = get_dict_as_key({"test": "asd", "test2": "asd2"})
         for key in recorder._duration.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
