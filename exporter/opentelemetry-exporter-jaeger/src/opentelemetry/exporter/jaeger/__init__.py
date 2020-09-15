@@ -80,13 +80,12 @@ UDP_PACKET_MAX_LENGTH = 65000
 
 logger = logging.getLogger(__name__)
 
-
 OTEL_ENVS = {
-    'agent_host': "OTEL_EXPORTER_JAEGER_AGENT_HOST",
-    'agent_port': "OTEL_EXPORTER_JAEGER_AGENT_PORT",
-    'collector_endpoint': "OTEL_EXPORTER_JAEGER_ENDPOINT",
-    'username': "OTEL_EXPORTER_JAEGER_USER",
-    'password': "OTEL_EXPORTER_JAEGER_PASSWORD"
+    "agent_host": "OTEL_EXPORTER_JAEGER_AGENT_HOST",
+    "agent_port": "OTEL_EXPORTER_JAEGER_AGENT_PORT",
+    "collector_endpoint": "OTEL_EXPORTER_JAEGER_ENDPOINT",
+    "username": "OTEL_EXPORTER_JAEGER_USER",
+    "password": "OTEL_EXPORTER_JAEGER_PASSWORD",
 }
 
 
@@ -115,11 +114,19 @@ class JaegerSpanExporter(SpanExporter):
         password=None,
     ):
         self.service_name = service_name
-        self.agent_host_name = os.environ.get(OTEL_ENVS["agent_host"]) or agent_host_name
-        self.agent_port = int(os.environ.get(OTEL_ENVS["agent_port"])) \
-            if os.environ.get(OTEL_ENVS["agent_port"]) else agent_port
+        self.agent_host_name = (
+            os.environ.get(OTEL_ENVS["agent_host"]) or agent_host_name
+        )
+        self.agent_port = (
+            int(os.environ.get(OTEL_ENVS["agent_port"]))
+            if os.environ.get(OTEL_ENVS["agent_port"])
+            else agent_port
+        )
         self._agent_client = None
-        self.collector_endpoint = os.environ.get(OTEL_ENVS["collector_endpoint"]) or collector_endpoint
+        self.collector_endpoint = (
+            os.environ.get(OTEL_ENVS["collector_endpoint"])
+            or collector_endpoint
+        )
         self.username = os.environ.get(OTEL_ENVS["username"]) or username
         self.password = os.environ.get(OTEL_ENVS["password"]) or password
         self._collector = None
@@ -355,11 +362,11 @@ class AgentClientUDP:
     """
 
     def __init__(
-            self,
-            host_name,
-            port,
-            max_packet_size=UDP_PACKET_MAX_LENGTH,
-            client=agent.Client,
+        self,
+        host_name,
+        port,
+        max_packet_size=UDP_PACKET_MAX_LENGTH,
+        client=agent.Client,
     ):
         self.address = (host_name, port)
         self.max_packet_size = max_packet_size
