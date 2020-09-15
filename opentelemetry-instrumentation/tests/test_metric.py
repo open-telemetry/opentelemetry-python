@@ -17,7 +17,6 @@ import time
 from unittest import TestCase, mock
 
 from opentelemetry import metrics as metrics_api
-from opentelemetry.trace import SpanKind
 from opentelemetry.instrumentation.metric import (
     HTTPMetricRecorder,
     MetricMixin,
@@ -26,6 +25,7 @@ from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.util import get_dict_as_key
+from opentelemetry.trace import SpanKind
 
 
 class TestMetricMixin(TestCase):
