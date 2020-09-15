@@ -14,6 +14,13 @@
   ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
 - Rename CorrelationContext to Baggage
   ([#1060](https://github.com/open-telemetry/opentelemetry-python/pull/1060))
+- Rename HTTPTextFormat to TextMapPropagator. This change also updates `get_global_httptextformat` and
+  `set_global_httptextformat` to `get_global_textmap` and `set_global_textmap`
+  ([#1085](https://github.com/open-telemetry/opentelemetry-python/pull/1085))
+- Fix api/sdk setup.cfg to include missing python files
+  ([#1091](https://github.com/open-telemetry/opentelemetry-python/pull/1091))
+- Drop support for Python 3.4
+  ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
 
 ## Version 0.12b0
 
