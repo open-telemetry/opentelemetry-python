@@ -29,7 +29,9 @@ metrics.set_meter_provider(MeterProvider())
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 
-RequestsInstrumentor().instrument(metrics_exporter=exporter, metrics_interval=5)
+RequestsInstrumentor().instrument(
+    metrics_exporter=exporter, metrics_interval=5
+)
 response = requests.get("http://example.com")
 
 input("...\n")

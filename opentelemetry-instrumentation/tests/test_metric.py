@@ -89,10 +89,12 @@ class TestHTTPMetricRecorder(TestCase):
         with recorder.record_duration(labels):
             labels["test2"] = "asd2"
             time.sleep(1)
-        key = tuple({"test": "asd", "test2": "asd2"}.items())
-        # pylint: disable=protected-access
-        bound = recorder._duration.bound_instruments.get(key)
-        for view_data in bound.view_datas:
-            self.assertEqual(view_data.labels, key)
-            self.assertEqual(view_data.aggregator.current.count, 1)
-            self.assertGreater(view_data.aggregator.current.sum, 0)
+        match_key = tuple({"test": "asd", "test2": "asd2"}.items())
+        for key in recorder._duration.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder._duration.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
+                self.assertGreater(view_data.aggregator.current.sum, 0)

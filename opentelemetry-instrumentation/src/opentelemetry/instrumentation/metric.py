@@ -41,7 +41,7 @@ class MetricMixin:
 
 class MetricRecorder:
     """Base class for metric recorders of different types."""
-    
+
     def __init__(self, meter):
         self._meter = meter
 
