@@ -14,6 +14,10 @@
   ([#1053](https://github.com/open-telemetry/opentelemetry-python/pull/1053))
 - Rename Resource labels to attributes
   ([#1082](https://github.com/open-telemetry/opentelemetry-python/pull/1082))
+- Fix api/sdk setup.cfg to include missing python files
+  ([#1091](https://github.com/open-telemetry/opentelemetry-python/pull/1091))
+- Drop support for Python 3.4
+  ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
 
 ## Version 0.12b0
 

@@ -1,10 +1,11 @@
 # Changelog
 
 ## Unreleased
-
+- Drop support for Python 3.4
+  ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
 - Report instrumentation info
   ([#1098](https://github.com/open-telemetry/opentelemetry-python/pull/1098))
-  
+
 ## Version 0.12b0
 
 Released 2020-08-14
