@@ -15,7 +15,7 @@
 """OTLP Metrics Exporter"""
 
 import logging
-from typing import Sequence
+from typing import Any, Dict, List, Sequence, Type, TypeVar
 
 # pylint: disable=duplicate-code
 from opentelemetry.exporter.otlp.exporter import (
@@ -41,9 +41,8 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
 )
-from opentelemetry.sdk.metrics import Counter
-from opentelemetry.sdk.metrics import Metric as SDKMetric
 from opentelemetry.sdk.metrics import (
+    Counter,
     SumObserver,
     UpDownCounter,
     UpDownSumObserver,
@@ -51,14 +50,19 @@ from opentelemetry.sdk.metrics import (
     ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import (
+    MetricRecord,
     MetricsExporter,
     MetricsExportResult,
 )
+from opentelemetry.sdk.resources import Resource
 
 logger = logging.getLogger(__name__)
+DataPointT = TypeVar("DataPointT", Int64DataPoint, DoubleDataPoint)
 
 
-def _get_data_points(sdk_metric, data_point_class):
+def _get_data_points(
+    sdk_metric: MetricRecord, data_point_class: Type[DataPointT]
+) -> List[DataPointT]:
 
     data_points = []
 
@@ -89,7 +93,7 @@ def _get_data_points(sdk_metric, data_point_class):
     return data_points
 
 
-def _get_temporality(instrument):
+def _get_temporality(instrument: Any) -> MetricDescriptor.TemporalityValue:
     # pylint: disable=no-member
     if isinstance(instrument, (Counter, UpDownCounter)):
         temporality = MetricDescriptor.Temporality.DELTA
@@ -107,7 +111,7 @@ def _get_temporality(instrument):
     return temporality
 
 
-def _get_type(value_type):
+def _get_type(value_type: Any) -> MetricDescriptor.TypeValue:
     # pylint: disable=no-member
     if value_type is int:
         type_ = MetricDescriptor.Type.INT64
@@ -126,7 +130,13 @@ def _get_type(value_type):
     return type_
 
 
-class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
+class OTLPMetricsExporter(
+    MetricsExporter,
+    OTLPExporterMixin[
+        MetricRecord, ExportMetricsServiceRequest, MetricsExportResult
+    ],
+):
+    # pylint: disable=unsubscriptable-object
     """OTLP metrics exporter
 
     Args:
@@ -138,11 +148,15 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
     _stub = MetricsServiceStub
     _result = MetricsExportResult
 
-    def _translate_data(self, data):
+    def _translate_data(
+        self, data: Sequence[MetricRecord]
+    ) -> ExportMetricsServiceRequest:
         # pylint: disable=too-many-locals,no-member
         # pylint: disable=attribute-defined-outside-init
 
-        sdk_resource_instrumentation_library_metrics = {}
+        sdk_resource_instrumentation_library_metrics: Dict[
+            Resource, InstrumentationLibraryMetrics
+        ] = {}
 
         for sdk_metric in data:
 
@@ -153,7 +167,7 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
                     sdk_metric.instrument.meter.resource
                 ] = InstrumentationLibraryMetrics()
 
-            self._metric_descriptor_kwargs = {}
+            self._metric_descriptor_kwargs: Dict[Any, Any] = {}
 
             metric_descriptor = MetricDescriptor(
                 name=sdk_metric.instrument.name,
@@ -193,6 +207,6 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
             )
         )
 
-    def export(self, metrics: Sequence[SDKMetric]) -> MetricsExportResult:
+    def export(self, metrics: Sequence[MetricRecord]) -> MetricsExportResult:
         # pylint: disable=arguments-differ
         return self._export(metrics)
