@@ -43,7 +43,10 @@ from requests.structures import CaseInsensitiveDict
 
 from opentelemetry import context, propagators
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.instrumentation.metric import HTTPMetricRecorder, MetricMixin
+from opentelemetry.instrumentation.metric import (
+    HTTPMetricRecorder,
+    MetricMixin,
+)
 from opentelemetry.instrumentation.requests.version import __version__
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind, get_tracer
@@ -138,7 +141,9 @@ def _instrument(tracer_provider=None, span_callback=None):
                 propagators.inject(type(headers).__setitem__, headers)
 
                 token = context.attach(
-                    context.set_value(_SUPPRESS_REQUESTS_INSTRUMENTATION_KEY, True)
+                    context.set_value(
+                        _SUPPRESS_REQUESTS_INSTRUMENTATION_KEY, True
+                    )
                 )
                 try:
                     result = call_wrapped()  # *** PROCEED
@@ -156,10 +161,16 @@ def _instrument(tracer_provider=None, span_callback=None):
 
                 if result is not None:
                     if span.is_recording():
-                        span.set_attribute("http.status_code", result.status_code)
+                        span.set_attribute(
+                            "http.status_code", result.status_code
+                        )
                         span.set_attribute("http.status_text", result.reason)
                         span.set_status(
-                            Status(http_status_to_canonical_code(result.status_code))
+                            Status(
+                                http_status_to_canonical_code(
+                                    result.status_code
+                                )
+                            )
                         )
                     labels["http.status_code"] = result.status_code
                     labels["http.status_text"] = result.reason
@@ -219,6 +230,7 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
     """An instrumentor for requests
     See `BaseInstrumentor`
     """
+
     def _instrument(self, **kwargs):
         """Instruments requests module
 
@@ -236,8 +248,8 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
         self.init_metrics(
             __name__,
             __version__,
-            kwargs.get("metrics_exporter"), 
-            kwargs.get("metrics_interval")
+            kwargs.get("metrics_exporter"),
+            kwargs.get("metrics_interval"),
         )
         self.metric_recorder = HTTPMetricRecorder(self.meter, SpanKind.CLIENT)
 
