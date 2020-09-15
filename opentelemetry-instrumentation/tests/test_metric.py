@@ -14,7 +14,7 @@
 # type: ignore
 
 import time
-from unittest import TestCase, mock
+from unittest import TestCase
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.instrumentation.metric import (
@@ -27,7 +27,7 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.trace import SpanKind
 
-
+# pylint: disable=protected-access
 class TestMetricMixin(TestCase):
     @classmethod
     def setUpClass(cls):

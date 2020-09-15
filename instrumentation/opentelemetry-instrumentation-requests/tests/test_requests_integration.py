@@ -22,6 +22,7 @@ import opentelemetry.instrumentation.requests
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
+from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.test.mock_textmap import MockTextMapPropagator
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -91,15 +92,13 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
         recorder = RequestsInstrumentor().meter.metrics.pop()
-        match_key = tuple(
-            {
-                "http.flavor": 11,
-                "http.method": "GET",
-                "http.status_code": 200,
-                "http.status_text": "OK",
-                "http.url": "http://httpbin.org/status/200",
-            }.items()
-        )
+        match_key = get_dict_as_key({
+            "http.flavor": 11,
+            "http.method": "GET",
+            "http.status_code": 200,
+            "http.status_text": "OK",
+            "http.url": "http://httpbin.org/status/200",
+        })
         for key in recorder.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
@@ -270,12 +269,10 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
         recorder = RequestsInstrumentor().meter.metrics.pop()
-        match_key = tuple(
-            {
-                "http.method": "GET",
-                "http.url": "http://httpbin.org/status/200",
-            }.items()
-        )
+        match_key = get_dict_as_key({
+            "http.method": "GET",
+            "http.url": "http://httpbin.org/status/200",
+        })
         for key in recorder.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
@@ -313,14 +310,12 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
         recorder = RequestsInstrumentor().meter.metrics.pop()
-        match_key = tuple(
-            {
-                "http.method": "GET",
-                "http.status_code": 500,
-                "http.status_text": "Internal Server Error",
-                "http.url": "http://httpbin.org/status/200",
-            }.items()
-        )
+        match_key = get_dict_as_key({
+            "http.method": "GET",
+            "http.status_code": 500,
+            "http.status_text": "Internal Server Error",
+            "http.url": "http://httpbin.org/status/200",
+        })
         for key in recorder.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
