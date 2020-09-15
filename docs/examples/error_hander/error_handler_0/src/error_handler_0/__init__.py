@@ -20,6 +20,6 @@ logger = getLogger(__name__)
 
 
 class ErrorHandler0(ErrorHandler, ZeroDivisionError):
-    def handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs):
 
         logger.exception("ErrorHandler0 handling a ZeroDivisionError")

@@ -21,7 +21,7 @@ logger = getLogger(__name__)
 
 # pylint: disable=too-many-ancestors
 class ErrorHandler1(ErrorHandler, IndexError, KeyError):
-    def handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs):
 
         if isinstance(error, IndexError):
             logger.exception("ErrorHandler1 handling an IndexError")

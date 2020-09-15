@@ -13,12 +13,11 @@
 # limitations under the License.
 # pylint: disable=broad-except
 
-from logging import ERROR, NOTSET, disable
+from logging import ERROR
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from opentelemetry.sdk.error_handler import (
-    DefaultErrorHandler,
     ErrorHandler,
     GlobalErrorHandler,
     logger,
@@ -28,31 +27,22 @@ from opentelemetry.sdk.error_handler import (
 class TestErrorHandler(TestCase):
     def test_default_error_handler(self):
 
-        try:
-            raise Exception("some exception")
-        except Exception as error:
-            with self.assertLogs(logger, ERROR):
-                DefaultErrorHandler().handle(error)
+        with self.assertLogs(logger, ERROR):
+            with GlobalErrorHandler():
+                raise Exception("some exception")
 
-        try:
-            raise Exception("some exception")
-        except Exception as error:
-            with self.assertLogs(logger, ERROR):
-                error_handling_result = GlobalErrorHandler().handle(error)
-
-        self.assertIsNone(error_handling_result[DefaultErrorHandler])
-
+    # pylint: disable=no-self-use
     @patch("opentelemetry.sdk.error_handler.iter_entry_points")
     def test_plugin_error_handler(self, mock_iter_entry_points):
         class ZeroDivisionErrorHandler(ErrorHandler, ZeroDivisionError):
             # pylint: disable=arguments-differ
-            def handle(self, error: Exception):
-                return 0
+
+            _handle = Mock()
 
         class AssertionErrorHandler(ErrorHandler, AssertionError):
             # pylint: disable=arguments-differ
-            def handle(self, error: Exception):
-                return 1
+
+            _handle = Mock()
 
         mock_entry_point_zero_division_error_handler = Mock()
         mock_entry_point_zero_division_error_handler.configure_mock(
@@ -72,28 +62,43 @@ class TestErrorHandler(TestCase):
             }
         )
 
-        try:
-            1 / 0
-        except Exception as error:
-            error_handling_result = GlobalErrorHandler().handle(error)
+        error = ZeroDivisionError()
 
-        self.assertEqual(error_handling_result, {ZeroDivisionErrorHandler: 0})
+        with GlobalErrorHandler():
+            raise error
 
-        try:
-            assert False
-        except Exception as error:
-            error_handling_result = GlobalErrorHandler().handle(error)
+        # pylint: disable=protected-access
+        ZeroDivisionErrorHandler._handle.assert_called_with(error)
 
-        self.assertEqual(error_handling_result, {AssertionErrorHandler: 1})
+        error = AssertionError()
 
-        try:
-            {}[1]
-        except Exception as error:
-            disable(ERROR)
-            error_handling_result = GlobalErrorHandler().handle(error)
-            disable(NOTSET)
+        with GlobalErrorHandler():
+            raise error
 
-        self.assertEqual(error_handling_result, {DefaultErrorHandler: None})
+        AssertionErrorHandler._handle.assert_called_with(error)
+
+    @patch("opentelemetry.sdk.error_handler.iter_entry_points")
+    def test_error_in_handler(self, mock_iter_entry_points):
+        class ErrorErrorHandler(ErrorHandler, ZeroDivisionError):
+            # pylint: disable=arguments-differ
+
+            def _handle(self, error: Exception):
+                assert False
+
+        mock_entry_point_error_error_handler = Mock()
+        mock_entry_point_error_error_handler.configure_mock(
+            **{"load.return_value": ErrorErrorHandler}
+        )
+
+        mock_iter_entry_points.configure_mock(
+            **{"return_value": [mock_entry_point_error_error_handler]}
+        )
+
+        error = ZeroDivisionError()
+
+        with self.assertLogs(logger, ERROR):
+            with GlobalErrorHandler():
+                raise error
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.sdk.error_handler.iter_entry_points")
@@ -124,4 +129,5 @@ class TestErrorHandler(TestCase):
         with GlobalErrorHandler():
             pass
 
-        mock_error_handler_instance.handle.assert_called_once_with(error)
+        # pylint: disable=protected-access
+        mock_error_handler_instance._handle.assert_called_once_with(error)

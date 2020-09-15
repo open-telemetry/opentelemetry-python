@@ -38,7 +38,7 @@ handler that handles ``ZeroDivisionError``:
 
     class ErrorHandler0(ErrorHandler, ZeroDivisionError):
 
-        def handle(self, error: Exception, *args, **kwargs):
+        def _handle(self, error: Exception, *args, **kwargs):
 
             logger.exception("ErrorHandler0 handling a ZeroDivisionError")
 
@@ -69,7 +69,7 @@ logger = getLogger(__name__)
 
 class ErrorHandler(ABC):
     @abstractmethod
-    def handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs):
         """
         Handle an exception
         """
@@ -83,7 +83,7 @@ class DefaultErrorHandler(ErrorHandler):
     """
 
     # pylint: disable=useless-return
-    def handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs):
 
         logger.exception("Error handled by default error handler: ")
         return None
@@ -111,17 +111,12 @@ class GlobalErrorHandler:
 
     # pylint: disable=no-self-use
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_value is not None:
-            self.handle(exc_value)
-            return True
-        return None
 
-    def handle(self, error: Exception):
-        """
-        Handle the error through the registered error handlers.
-        """
+        if exc_value is None:
 
-        error_handling_result = {}
+            return None
+
+        plugin_handled = False
 
         for error_handler_entry_point in iter_entry_points(
             "opentelemetry_error_handler"
@@ -129,31 +124,26 @@ class GlobalErrorHandler:
 
             error_handler_class = error_handler_entry_point.load()
 
-            if issubclass(error_handler_class, error.__class__):
+            if issubclass(error_handler_class, exc_value.__class__):
 
                 try:
 
-                    error_handling_result[
-                        error_handler_class
-                    ] = error_handler_class().handle(error)
+                    error_handler_class()._handle(exc_value)
+                    plugin_handled = True
 
                 # pylint: disable=broad-except
                 except Exception as error_handling_error:
 
                     logger.exception(
-                        "Error while handling error " "by %s error handler",
+                        "%s error while handling error"
+                        " %s by error handler %s",
+                        error_handling_error.__class__.__name__,
+                        exc_value.__class__.__name__,
                         error_handler_class.__name__,
                     )
 
-                    error_handling_result[
-                        error_handler_class
-                    ] = error_handling_error
+        if not plugin_handled:
 
-        if not error_handling_result:
+            DefaultErrorHandler()._handle(exc_value)
 
-            # pylint: disable=assignment-from-none
-            error_handling_result[
-                DefaultErrorHandler
-            ] = DefaultErrorHandler().handle(error)
-
-        return error_handling_result
+        return True
