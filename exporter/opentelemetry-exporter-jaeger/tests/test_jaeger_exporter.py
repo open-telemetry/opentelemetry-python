@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 from unittest import mock
 
@@ -43,20 +44,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
         service_name = "my-service-name"
-        host_name = "localhost"
-        thrift_port = None
+        agent_host_name = "localhost"
         agent_port = 6831
-        collector_endpoint = "/api/traces?format=jaeger.thrift"
-        collector_protocol = "http"
         exporter = jaeger_exporter.JaegerSpanExporter(service_name)
 
         self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.collector_host_name, None)
-        self.assertEqual(exporter.agent_host_name, host_name)
+        self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, agent_port)
-        self.assertEqual(exporter.collector_port, thrift_port)
-        self.assertEqual(exporter.collector_protocol, collector_protocol)
-        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+        self.assertEqual(exporter.collector_endpoint, None)
         self.assertEqual(exporter.username, None)
         self.assertEqual(exporter.password, None)
         self.assertTrue(exporter.collector is None)
@@ -65,10 +60,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def test_constructor_explicit(self):
         """Test the constructor passing all the options."""
         service = "my-opentelemetry-jaeger"
-        collector_host_name = "opentelemetry.io"
-        collector_port = 15875
-        collector_endpoint = "/myapi/traces?format=jaeger.thrift"
-        collector_protocol = "https"
+        collector_endpoint = "https://opentelemetry.io:15875"
 
         agent_port = 14268
         agent_host_name = "opentelemetry.io"
@@ -79,21 +71,16 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         exporter = jaeger_exporter.JaegerSpanExporter(
             service_name=service,
-            collector_host_name=collector_host_name,
-            collector_port=collector_port,
-            collector_endpoint=collector_endpoint,
-            collector_protocol="https",
             agent_host_name=agent_host_name,
             agent_port=agent_port,
+            collector_endpoint=collector_endpoint,
             username=username,
             password=password,
         )
+
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, agent_port)
-        self.assertEqual(exporter.collector_host_name, collector_host_name)
-        self.assertEqual(exporter.collector_port, collector_port)
-        self.assertEqual(exporter.collector_protocol, collector_protocol)
         self.assertTrue(exporter.collector is not None)
         self.assertEqual(exporter.collector.auth, auth)
         # property should not construct new object
@@ -106,6 +93,52 @@ class TestJaegerSpanExporter(unittest.TestCase):
         exporter.password = None
         self.assertNotEqual(exporter.collector, collector)
         self.assertTrue(exporter.collector.auth is None)
+
+    def test_constructor_by_environment_variables(self):
+        """Test the constructor using Environment Variables."""
+        service = "my-opentelemetry-jaeger"
+
+        agent_host_name = "opentelemetry.io"
+        agent_port = 6833
+
+        collector_endpoint = "https://opentelemetry.io:15875"
+
+        username = "username"
+        password = "password"
+        auth = (username, password)
+
+        otel_envs = jaeger_exporter.OTEL_ENVS
+
+        os.environ[otel_envs["agent_host"]] = agent_host_name
+        os.environ[otel_envs["agent_port"]] = str(agent_port)
+        os.environ[otel_envs["collector_endpoint"]] = collector_endpoint
+        os.environ[otel_envs["username"]] = username
+        os.environ[otel_envs["password"]] = password
+
+        exporter = jaeger_exporter.JaegerSpanExporter(service_name=service)
+
+        self.assertEqual(exporter.service_name, service)
+        self.assertEqual(exporter.agent_host_name, agent_host_name)
+        self.assertEqual(exporter.agent_port, agent_port)
+        self.assertTrue(exporter.collector is not None)
+        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+        self.assertEqual(exporter.collector.auth, auth)
+        # property should not construct new object
+        collector = exporter.collector
+        self.assertEqual(exporter.collector, collector)
+        # property should construct new object
+        # pylint: disable=protected-access
+        exporter._collector = None
+        exporter.username = None
+        exporter.password = None
+        self.assertNotEqual(exporter.collector, collector)
+        self.assertTrue(exporter.collector.auth is None)
+
+        del os.environ[otel_envs["agent_host"]]
+        del os.environ[otel_envs["agent_port"]]
+        del os.environ[otel_envs["collector_endpoint"]]
+        del os.environ[otel_envs["username"]]
+        del os.environ[otel_envs["password"]]
 
     def test_nsec_to_usec_round(self):
         # pylint: disable=protected-access
