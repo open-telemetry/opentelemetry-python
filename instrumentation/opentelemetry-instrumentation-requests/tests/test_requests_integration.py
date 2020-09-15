@@ -88,6 +88,23 @@ class RequestsIntegrationTestBase(abc.ABC):
             span, opentelemetry.instrumentation.requests
         )
 
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        key = tuple({
+            'http.flavor': 11,
+            'http.method': 'GET',
+            'http.status_code': 200,
+            'http.status_text':'OK',
+            'http.url': 'http://httpbin.org/status/200'
+        }.items())
+        # pylint: disable=protected-access
+        bound = recorder.bound_instruments.get(key)
+        for view_data in bound.view_datas:
+            self.assertEqual(view_data.labels, key)
+            self.assertEqual(view_data.aggregator.current.count, 1)
+            self.assertGreater(view_data.aggregator.current.sum, 0)
+
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"
         httpretty.register_uri(
@@ -246,6 +263,19 @@ class RequestsIntegrationTestBase(abc.ABC):
             span.status.canonical_code, StatusCanonicalCode.UNKNOWN
         )
 
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        key = tuple({
+            'http.method': 'GET',
+            'http.url': 'http://httpbin.org/status/200'
+        }.items())
+        # pylint: disable=protected-access
+        bound = recorder.bound_instruments.get(key)
+        for view_data in bound.view_datas:
+            self.assertEqual(view_data.labels, key)
+            self.assertEqual(view_data.aggregator.current.count, 1)
+
     mocked_response = requests.Response()
     mocked_response.status_code = 500
     mocked_response.reason = "Internal Server Error"
@@ -272,6 +302,20 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertEqual(
             span.status.canonical_code, StatusCanonicalCode.INTERNAL
         )
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        key = tuple({
+            'http.method': 'GET',
+            'http.status_code': 500,
+            'http.status_text':'Internal Server Error',
+            'http.url': 'http://httpbin.org/status/200'
+        }.items())
+        # pylint: disable=protected-access
+        bound = recorder.bound_instruments.get(key)
+        for view_data in bound.view_datas:
+            self.assertEqual(view_data.labels, key)
+            self.assertEqual(view_data.aggregator.current.count, 1)
 
     @mock.patch("requests.adapters.HTTPAdapter.send", side_effect=Exception)
     def test_requests_basic_exception(self, *_, **__):
