@@ -58,6 +58,7 @@ _SUPPRESS_REQUESTS_INSTRUMENTATION_KEY = "suppress_requests_instrumentation"
 
 
 # pylint: disable=unused-argument
+# pylint: disable=R0915
 def _instrument(tracer_provider=None, span_callback=None):
     """Enables tracing of all requests calls that go through
     :code:`requests.session.Session.request` (this includes
@@ -251,6 +252,7 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
             kwargs.get("metrics_exporter"),
             kwargs.get("metrics_interval"),
         )
+        # pylint: disable=W0201
         self.metric_recorder = HTTPMetricRecorder(self.meter, SpanKind.CLIENT)
 
     def _uninstrument(self, **kwargs):
