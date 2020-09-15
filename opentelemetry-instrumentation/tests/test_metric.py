@@ -27,6 +27,7 @@ from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.trace import SpanKind
 
+
 # pylint: disable=protected-access
 class TestMetricMixin(TestCase):
     @classmethod
