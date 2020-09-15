@@ -20,8 +20,8 @@ from contextlib import contextmanager
 from time import time
 
 from opentelemetry import metrics
-from opentelemetry.trace import SpanKind
 from opentelemetry.sdk.metrics import PushController, ValueRecorder
+from opentelemetry.trace import SpanKind
 
 
 class MetricMixin:

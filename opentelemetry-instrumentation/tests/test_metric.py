@@ -14,14 +14,13 @@
 # type: ignore
 
 import time
-
-from unittest import mock, TestCase
+from unittest import TestCase, mock
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.trace import SpanKind
 from opentelemetry.instrumentation.metric import (
-    MetricMixin,
     HTTPMetricRecorder,
+    MetricMixin,
 )
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk import metrics
