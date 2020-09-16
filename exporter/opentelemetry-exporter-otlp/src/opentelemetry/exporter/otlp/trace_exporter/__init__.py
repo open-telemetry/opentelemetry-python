@@ -14,7 +14,7 @@
 """OTLP Span Exporter"""
 
 import logging
-from typing import Any, Dict, Sequence
+from typing import Sequence
 
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
@@ -34,7 +34,6 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
@@ -169,9 +168,7 @@ class OTLPSpanExporter(
         self, data: Sequence[SDKSpan]
     ) -> ExportTraceServiceRequest:
 
-        sdk_resource_instrumentation_library_spans: Dict[
-            Resource, InstrumentationLibrarySpans
-        ] = {}
+        sdk_resource_instrumentation_library_spans = {}
 
         for sdk_span in data:
 
@@ -195,7 +192,7 @@ class OTLPSpanExporter(
                     sdk_span.resource
                 ] = instrumentation_library_spans
 
-            self._collector_span_kwargs: Dict[str, Any] = {}
+            self._collector_span_kwargs = {}
 
             self._translate_name(sdk_span)
             self._translate_start_time(sdk_span)

@@ -15,7 +15,7 @@
 """OTLP Metrics Exporter"""
 
 import logging
-from typing import Any, Dict, List, Sequence, Type, TypeVar
+from typing import Any, List, Sequence, Type, TypeVar
 
 # pylint: disable=duplicate-code
 from opentelemetry.exporter.otlp.exporter import (
@@ -54,7 +54,6 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
     MetricsExportResult,
 )
-from opentelemetry.sdk.resources import Resource
 
 logger = logging.getLogger(__name__)
 DataPointT = TypeVar("DataPointT", Int64DataPoint, DoubleDataPoint)
@@ -154,9 +153,7 @@ class OTLPMetricsExporter(
         # pylint: disable=too-many-locals,no-member
         # pylint: disable=attribute-defined-outside-init
 
-        sdk_resource_instrumentation_library_metrics: Dict[
-            Resource, InstrumentationLibraryMetrics
-        ] = {}
+        sdk_resource_instrumentation_library_metrics = {}
 
         for sdk_metric in data:
 
@@ -167,7 +164,7 @@ class OTLPMetricsExporter(
                     sdk_metric.instrument.meter.resource
                 ] = InstrumentationLibraryMetrics()
 
-            self._metric_descriptor_kwargs: Dict[Any, Any] = {}
+            self._metric_descriptor_kwargs = {}
 
             metric_descriptor = MetricDescriptor(
                 name=sdk_metric.instrument.name,

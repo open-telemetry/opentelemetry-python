@@ -18,7 +18,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
-from typing import Any, Callable, Dict, Generic, List, Optional
+from typing import Any, Callable, Dict, Generic, List
 from typing import Sequence as TypingSequence
 from typing import Text, Tuple, TypeVar
 
@@ -134,7 +134,7 @@ class OTLPExporterMixin(
         super().__init__()
 
         self._metadata = metadata
-        self._collector_span_kwargs: Optional[Dict[str, Any]] = None
+        self._collector_span_kwargs = None
 
         if credentials is None:
             self._client = self._stub(insecure_channel(endpoint))
