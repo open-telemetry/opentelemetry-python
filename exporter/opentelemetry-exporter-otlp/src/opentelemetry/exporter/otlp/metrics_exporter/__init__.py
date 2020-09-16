@@ -93,7 +93,7 @@ def _get_data_points(
     return data_points
 
 
-def _get_temporality(instrument: Any) -> MetricDescriptor.TemporalityValue:
+def _get_temporality(instrument: Any) -> MetricDescriptor.Temporality:
     # pylint: disable=no-member
     if isinstance(instrument, (Counter, UpDownCounter)):
         temporality = MetricDescriptor.Temporality.DELTA
@@ -111,7 +111,7 @@ def _get_temporality(instrument: Any) -> MetricDescriptor.TemporalityValue:
     return temporality
 
 
-def _get_type(value_type: Any) -> MetricDescriptor.TypeValue:
+def _get_type(value_type: Any) -> MetricDescriptor.Type:
     # pylint: disable=no-member
     if value_type is int:
         type_ = MetricDescriptor.Type.INT64
