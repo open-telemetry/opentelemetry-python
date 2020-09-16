@@ -167,6 +167,7 @@ class OTLPSpanExporter(
     def _translate_data(
         self, data: Sequence[SDKSpan]
     ) -> ExportTraceServiceRequest:
+        # pylint: disable=attribute-defined-outside-init
 
         sdk_resource_instrumentation_library_spans = {}
 
