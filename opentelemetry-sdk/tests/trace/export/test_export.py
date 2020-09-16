@@ -286,7 +286,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
             for _ in range(256):
                 _create_start_and_end_span("foo", span_processor)
 
-            time.sleep(0.05)  # give some time for the exporter to upload spans
+            time.sleep(0.1)  # give some time for the exporter to upload spans
 
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 1024)
