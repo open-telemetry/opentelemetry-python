@@ -135,6 +135,7 @@ class TestWsgiApplication(WsgiTestBase):
         with mock.patch("opentelemetry.trace.get_tracer") as tracer:
             tracer.return_value = mock_tracer
             app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
+            # pylint: disable=W0612
             response = app(self.environ, self.start_response)  # noqa: F841
             self.assertFalse(mock_span.is_recording())
             self.assertTrue(mock_span.is_recording.called)
