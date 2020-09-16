@@ -20,8 +20,8 @@ import threading
 import typing
 from enum import Enum
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk.trace import sampling
 from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
@@ -113,10 +113,32 @@ class BatchExportSpanProcessor(SpanProcessor):
     def __init__(
         self,
         span_exporter: SpanExporter,
-        max_queue_size: int = 2048,
-        schedule_delay_millis: float = 5000,
-        max_export_batch_size: int = 512,
+        max_queue_size: int = None,
+        schedule_delay_millis: float = None,
+        max_export_batch_size: int = None,
+        export_timeout_millis: float = None,
     ):
+
+        if max_queue_size is None:
+            max_queue_size = Configuration().get(
+                "OTEL_BSP_MAX_QUEUE_SIZE", 2048
+            )
+
+        if schedule_delay_millis is None:
+            schedule_delay_millis = Configuration().get(
+                "OTEL_BSP_SCHEDULE_DELAY_MILLIS", 5000
+            )
+
+        if max_export_batch_size is None:
+            max_export_batch_size = Configuration().get(
+                "OTEL_BSP_MAX_EXPORT_BATCH_SIZE", 512
+            )
+
+        if export_timeout_millis is None:
+            export_timeout_millis = Configuration().get(
+                "OTEL_BSP_EXPORT_TIMEOUT_MILLIS", 30000
+            )
+
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
 
@@ -143,6 +165,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         self.schedule_delay_millis = schedule_delay_millis
         self.max_export_batch_size = max_export_batch_size
         self.max_queue_size = max_queue_size
+        self.export_timeout_millis = export_timeout_millis
         self.done = False
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
@@ -306,7 +329,11 @@ class BatchExportSpanProcessor(SpanProcessor):
         while self.queue:
             self._export_batch()
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = None) -> bool:
+
+        if timeout_millis is None:
+            timeout_millis = self.export_timeout_millis
+
         if self.done:
             logger.warning("Already shutdown, ignoring call to force_flush().")
             return True
