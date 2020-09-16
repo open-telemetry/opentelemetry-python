@@ -181,7 +181,8 @@ class OpenTelemetryMiddleware:
     def _create_start_response(span, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args, **kwargs):
-            add_response_attributes(span, status, response_headers)
+            if span.is_recording():
+                add_response_attributes(span, status, response_headers)
             return start_response(status, response_headers, *args, **kwargs)
 
         return _start_response
@@ -215,7 +216,8 @@ class OpenTelemetryMiddleware:
                     iterable, span, self.tracer, token
                 )
         except Exception as ex:
-            span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
+            if span.is_recording():
+                span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
             span.end()
             context.detach(token)
             raise
