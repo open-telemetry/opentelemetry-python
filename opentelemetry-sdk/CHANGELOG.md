@@ -18,6 +18,8 @@
   ([#1091](https://github.com/open-telemetry/opentelemetry-python/pull/1091))
 - Drop support for Python 3.4
   ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
+- Rename members of `trace.sampling.Decision` enum
+  ([#1115](https://github.com/open-telemetry/opentelemetry-python/pull/1115))
 
 ## Version 0.12b0
 
