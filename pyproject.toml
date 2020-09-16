@@ -13,3 +13,7 @@ exclude = '''
   )/
 )
 '''
+[tool.pytest.ini_options]
+addopts = "-rs -v"
+log_cli = true
+log_cli_level = "warning"
