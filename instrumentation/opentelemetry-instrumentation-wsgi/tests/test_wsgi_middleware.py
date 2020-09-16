@@ -132,7 +132,7 @@ class TestWsgiApplication(WsgiTestBase):
         mock_tracer.start_span.return_value = mock_span
         mock_tracer.use_span.return_value.__enter__ = mock_span
         mock_tracer.use_span.return_value.__exit__ = mock_span
-        with mock.patch('opentelemetry.trace.get_tracer') as tracer:
+        with mock.patch("opentelemetry.trace.get_tracer") as tracer:
             tracer.return_value = mock_tracer
             app = otel_wsgi.OpenTelemetryMiddleware(simple_wsgi)
             response = app(self.environ, self.start_response)
