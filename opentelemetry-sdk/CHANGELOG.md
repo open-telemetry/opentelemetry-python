@@ -9,6 +9,8 @@
 
 Released 2020-09-17
 
+- Add support for OTEL_BSP_X environment variables
+  ([#1105](https://github.com/open-telemetry/opentelemetry-python/pull/1105))
 - Moved samplers from API to SDK
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
 - Sampling spec changes

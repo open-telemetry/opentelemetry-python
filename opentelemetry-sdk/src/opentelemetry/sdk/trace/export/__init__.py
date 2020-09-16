@@ -120,23 +120,21 @@ class BatchExportSpanProcessor(SpanProcessor):
     ):
 
         if max_queue_size is None:
-            max_queue_size = Configuration().get(
-                "OTEL_BSP_MAX_QUEUE_SIZE", 2048
-            )
+            max_queue_size = Configuration().get("BSP_MAX_QUEUE_SIZE", 2048)
 
         if schedule_delay_millis is None:
             schedule_delay_millis = Configuration().get(
-                "OTEL_BSP_SCHEDULE_DELAY_MILLIS", 5000
+                "BSP_SCHEDULE_DELAY_MILLIS", 5000
             )
 
         if max_export_batch_size is None:
             max_export_batch_size = Configuration().get(
-                "OTEL_BSP_MAX_EXPORT_BATCH_SIZE", 512
+                "BSP_MAX_EXPORT_BATCH_SIZE", 512
             )
 
         if export_timeout_millis is None:
             export_timeout_millis = Configuration().get(
-                "OTEL_BSP_EXPORT_TIMEOUT_MILLIS", 30000
+                "BSP_EXPORT_TIMEOUT_MILLIS", 30000
             )
 
         if max_queue_size <= 0:
