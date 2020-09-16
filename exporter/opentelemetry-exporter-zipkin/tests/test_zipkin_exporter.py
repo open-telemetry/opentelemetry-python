@@ -213,6 +213,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "key_bool": "False",
                     "key_string": "hello_world",
                     "key_float": "111.22",
+                    "ot.status_code":0
                 },
                 "annotations": [
                     {
@@ -231,7 +232,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[1] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {"key_resource": "some_resource"},
+                "tags": {
+                    "key_resource": "some_resource",
+                    "ot.status_code":0
+                },
                 "annotations": None,
             },
             {
@@ -245,6 +249,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "tags": {
                     "key_string": "hello_world",
                     "key_resource": "some_resource",
+                    "ot.status_code":0
                 },
                 "annotations": None,
             },
@@ -259,6 +264,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "tags": {
                     "otel.instrumentation_library.name": "name",
                     "otel.instrumentation_library.version": "version",
+                    "ot.status_code":0
                 },
                 "annotations": None,
             },
@@ -324,7 +330,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": duration // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {},
+                "tags": {
+                    "ot.status_code":0
+                },
                 "annotations": None,
                 "debug": True,
                 "parentId": "0aaaaaaaaaaaaaaa",
