@@ -11,6 +11,8 @@
   ([#1097](https://github.com/open-telemetry/opentelemetry-python/pull/1097))  
 - Drop support for Python 3.4
   ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
+- Add status mapping to tags
+  ([#1111](https://github.com/open-telemetry/opentelemetry-python/issues/1111))
 
 ## Version 0.12b0
 
