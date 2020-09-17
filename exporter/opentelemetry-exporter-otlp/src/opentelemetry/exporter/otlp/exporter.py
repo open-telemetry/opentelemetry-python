@@ -18,7 +18,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
-from typing import Any, Callable, Dict, Generic, List
+from typing import Any, Callable, Dict, Generic, List, Optional
 from typing import Sequence as TypingSequence
 from typing import Text, Tuple, TypeVar
 
@@ -129,7 +129,7 @@ class OTLPExporterMixin(
         self,
         endpoint: str = "localhost:55680",
         credentials: ChannelCredentials = None,
-        metadata: Tuple[Any] = None,
+        metadata: Optional[Tuple[Any]] = None,
     ):
         super().__init__()
 

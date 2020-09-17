@@ -2,12 +2,12 @@
 
 ## Unreleased
 
-- Add type hints to OTLP exporter
-  ([#1121](https://github.com/open-telemetry/opentelemetry-python/pull/1121))
 - Add instrumentation info to exported spans
   ([#1095](https://github.com/open-telemetry/opentelemetry-python/pull/1095))
 - Add metric OTLP exporter
   ([#835](https://github.com/open-telemetry/opentelemetry-python/pull/835))
+- Add type hints to OTLP exporter
+  ([#1121](https://github.com/open-telemetry/opentelemetry-python/pull/1121))
 
 ## Version 0.12b0
 

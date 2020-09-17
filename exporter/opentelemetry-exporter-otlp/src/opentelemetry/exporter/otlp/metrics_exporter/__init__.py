@@ -15,13 +15,14 @@
 """OTLP Metrics Exporter"""
 
 import logging
-from typing import Any, List, Sequence, Type, TypeVar
+from typing import List, Sequence, Type, TypeVar, Union
 
 # pylint: disable=duplicate-code
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
 )
+from opentelemetry.metrics import InstrumentT
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -92,7 +93,7 @@ def _get_data_points(
     return data_points
 
 
-def _get_temporality(instrument: Any):
+def _get_temporality(instrument: InstrumentT) -> "MetricDescriptor.TemporalityValue":
     # pylint: disable=no-member
     if isinstance(instrument, (Counter, UpDownCounter)):
         temporality = MetricDescriptor.Temporality.DELTA
@@ -110,12 +111,12 @@ def _get_temporality(instrument: Any):
     return temporality
 
 
-def _get_type(value_type: Any):
+def _get_type(value_type: Union[int, float]) -> "MetricDescriptor.TypeValue":
     # pylint: disable=no-member
-    if value_type is int:
+    if value_type is int: # type: ignore[comparison-overlap]
         type_ = MetricDescriptor.Type.INT64
 
-    elif value_type is float:
+    elif value_type is float: # type: ignore[comparison-overlap]
         type_ = MetricDescriptor.Type.DOUBLE
 
     # FIXME What are the types that correspond with
