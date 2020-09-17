@@ -136,7 +136,8 @@ def add_response_attributes(
 ):  # pylint: disable=unused-argument
     """Adds HTTP response attributes to span using the arguments
     passed to a PEP3333-conforming start_response callable."""
-
+    if not span.is_recording():
+        return
     status_code, status_text = start_response_status.split(" ", 1)
     span.set_attribute("http.status_text", status_text)
 
@@ -181,8 +182,7 @@ class OpenTelemetryMiddleware:
     def _create_start_response(span, start_response):
         @functools.wraps(start_response)
         def _start_response(status, response_headers, *args, **kwargs):
-            if span.is_recording():
-                add_response_attributes(span, status, response_headers)
+            add_response_attributes(span, status, response_headers)
             return start_response(status, response_headers, *args, **kwargs)
 
         return _start_response
