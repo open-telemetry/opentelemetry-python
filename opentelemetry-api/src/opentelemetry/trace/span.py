@@ -170,12 +170,12 @@ class SpanContext(typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
         if trace_state is None:
             trace_state = DEFAULT_TRACE_STATE
             
-        is_valid = (
-            trace_id != INVALID_TRACE_ID
-            and span_id != INVALID_SPAN_ID
-        )
+        is_valid = trace_id != INVALID_TRACE_ID and span_id != INVALID_SPAN_ID
 
-        return tuple.__new__(cls, (trace_id, span_id, is_remote, trace_flags, trace_state, is_valid))
+        return tuple.__new__(
+            cls,
+            (trace_id, span_id, trace_flags, trace_state, is_remote, is_valid),
+         )
 
     @property
     def trace_id(self) -> int:
