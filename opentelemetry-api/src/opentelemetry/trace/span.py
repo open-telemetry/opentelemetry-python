@@ -143,7 +143,7 @@ class TraceState(typing.Dict[str, str]):
 DEFAULT_TRACE_STATE = TraceState.get_default()
 
 
-class SpanContext(tuple):
+class SpanContext(typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
     """The state of a Span to propagate between processes.
 
     This class includes the immutable attributes of a :class:`.Span` that must
@@ -164,7 +164,7 @@ class SpanContext(tuple):
         is_remote: bool,
         trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
-    ) -> None:
+    ) -> "SpanContext":
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
@@ -175,39 +175,39 @@ class SpanContext(tuple):
             and span_id != INVALID_SPAN_ID
         )
 
-        return tuple.__new__(cls, (trace_id, span_id, trace_flags, trace_state, is_remote, is_valid))
+        return tuple.__new__(cls, (trace_id, span_id, is_remote, trace_flags, trace_state, is_valid))
 
     @property
-    def trace_id(self):
-        return tuple.__getitem__(self, 0)
+    def trace_id(self) -> int:
+        return int(self[0])
 
     @property
-    def span_id(self):
-        return tuple.__getitem__(self, 1)
+    def span_id(self) -> int:
+        return int(self[1])
 
     @property
-    def trace_flags(self):
-        return tuple.__getitem__(self, 2)
+    def is_remote(self) -> bool:
+        return bool(self[2])
 
     @property
-    def trace_state(self):
-        return tuple.__getitem__(self, 3)
+    def trace_flags(self) -> "TraceFlags":
+        return TraceFlags(self[3])
 
     @property
-    def is_remote(self):
-        return tuple.__getitem__(self, 4)
+    def trace_state(self) -> "TraceState":
+        return TraceState(self[4])
 
     @property
-    def is_valid(self):
-        return tuple.__getitem__(self, 5)
+    def is_valid(self) -> bool:
+        return bool(self[5])
 
-    def __getattr__(self, *args):
+    def __getattr__(self, *args: str) -> None:
         raise TypeError
 
-    def __setattr__(self, *args):
+    def __setattr__(self, *args: str) -> None:
         raise TypeError
 
-    def __delattr__(self, *args):
+    def __delattr__(self, *args: str) -> None:
         raise TypeError
 
     def __repr__(self) -> str:

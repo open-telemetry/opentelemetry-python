@@ -15,6 +15,7 @@
 import unittest
 
 from opentelemetry import trace
+from opentelemetry.trace import TraceFlags, TraceState 
 
 
 class TestImmutableSpanContext(unittest.TestCase):
@@ -36,7 +37,7 @@ class TestImmutableSpanContext(unittest.TestCase):
     def test_attempt_change_attributes(self):
         context = trace.SpanContext(
             1,
-            1,
+            2,
             is_remote=False,
             trace_flags=trace.DEFAULT_TRACE_OPTIONS,
             trace_state=trace.DEFAULT_TRACE_STATE,
@@ -45,18 +46,16 @@ class TestImmutableSpanContext(unittest.TestCase):
         with self.assertRaises(TypeError):
             context.trace_id = 2
         with self.assertRaises(TypeError):
-            context.span_id = 2
+            context.span_id = 3
         with self.assertRaises(TypeError):
             context.is_remote = True
         with self.assertRaises(TypeError):
-            context.trace_flags = 2
+            context.trace_flags = TraceFlags(3)
         with self.assertRaises(TypeError):
-            context.trace_state = 2
+            context.trace_state = TraceState([("test", "test")])
 
         self.assertEqual(context.trace_id, 1)
-        self.assertEqual(context.span_id, 1)
+        self.assertEqual(context.span_id, 2)
         self.assertEqual(context.is_remote, False)
         self.assertEqual(context.trace_flags, trace.DEFAULT_TRACE_OPTIONS)
         self.assertEqual(context.trace_state, trace.DEFAULT_TRACE_STATE)
-
-        self.assertEqual(context.trace_id, 1)
