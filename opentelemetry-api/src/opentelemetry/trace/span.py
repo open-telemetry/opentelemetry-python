@@ -143,7 +143,9 @@ class TraceState(typing.Dict[str, str]):
 DEFAULT_TRACE_STATE = TraceState.get_default()
 
 
-class SpanContext(typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
+class SpanContext(
+    typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
+):
     """The state of a Span to propagate between processes.
 
     This class includes the immutable attributes of a :class:`.Span` that must
@@ -179,27 +181,27 @@ class SpanContext(typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
 
     @property
     def trace_id(self) -> int:
-        return int(self[0])
+        return self[0]
 
     @property
     def span_id(self) -> int:
-        return int(self[1])
+        return self[1]
 
     @property
     def is_remote(self) -> bool:
-        return bool(self[2])
+        return self[2]
 
     @property
     def trace_flags(self) -> "TraceFlags":
-        return TraceFlags(self[3])
+        return self[3]
 
     @property
     def trace_state(self) -> "TraceState":
-        return TraceState(self[4])
+        return self[4]
 
     @property
     def is_valid(self) -> bool:
-        return bool(self[5])
+        return self[5]
 
     def __getattr__(self, *args: str) -> None:
         raise TypeError
