@@ -93,7 +93,9 @@ def _get_data_points(
     return data_points
 
 
-def _get_temporality(instrument: InstrumentT) -> "MetricDescriptor.TemporalityValue":
+def _get_temporality(
+    instrument: InstrumentT,
+) -> "MetricDescriptor.TemporalityValue":
     # pylint: disable=no-member
     if isinstance(instrument, (Counter, UpDownCounter)):
         temporality = MetricDescriptor.Temporality.DELTA
@@ -113,10 +115,10 @@ def _get_temporality(instrument: InstrumentT) -> "MetricDescriptor.TemporalityVa
 
 def _get_type(value_type: Union[int, float]) -> "MetricDescriptor.TypeValue":
     # pylint: disable=no-member
-    if value_type is int: # type: ignore[comparison-overlap]
+    if value_type is int:  # type: ignore[comparison-overlap]
         type_ = MetricDescriptor.Type.INT64
 
-    elif value_type is float: # type: ignore[comparison-overlap]
+    elif value_type is float:  # type: ignore[comparison-overlap]
         type_ = MetricDescriptor.Type.DOUBLE
 
     # FIXME What are the types that correspond with
