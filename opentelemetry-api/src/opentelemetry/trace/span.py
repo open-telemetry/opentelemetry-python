@@ -143,7 +143,7 @@ class TraceState(typing.Dict[str, str]):
 DEFAULT_TRACE_STATE = TraceState.get_default()
 
 
-class SpanContext:
+class SpanContext(tuple):
     """The state of a Span to propagate between processes.
 
     This class includes the immutable attributes of a :class:`.Span` that must
@@ -157,8 +157,8 @@ class SpanContext:
         is_remote: True if propagated from a remote parent.
     """
 
-    def __init__(
-        self,
+    def __new__(
+        cls,
         trace_id: int,
         span_id: int,
         is_remote: bool,
@@ -169,15 +169,46 @@ class SpanContext:
             trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
             trace_state = DEFAULT_TRACE_STATE
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_flags = trace_flags
-        self.trace_state = trace_state
-        self.is_remote = is_remote
-        self.is_valid = (
-            self.trace_id != INVALID_TRACE_ID
-            and self.span_id != INVALID_SPAN_ID
+            
+        is_valid = (
+            trace_id != INVALID_TRACE_ID
+            and span_id != INVALID_SPAN_ID
         )
+
+        return tuple.__new__(cls, (trace_id, span_id, trace_flags, trace_state, is_remote, is_valid))
+
+    @property
+    def trace_id(self):
+        return tuple.__getitem__(self, 0)
+
+    @property
+    def span_id(self):
+        return tuple.__getitem__(self, 1)
+
+    @property
+    def trace_flags(self):
+        return tuple.__getitem__(self, 2)
+
+    @property
+    def trace_state(self):
+        return tuple.__getitem__(self, 3)
+
+    @property
+    def is_remote(self):
+        return tuple.__getitem__(self, 4)
+
+    @property
+    def is_valid(self):
+        return tuple.__getitem__(self, 5)
+
+    def __getattr__(self, *args):
+        raise TypeError
+
+    def __setattr__(self, *args):
+        raise TypeError
+
+    def __delattr__(self, *args):
+        raise TypeError
 
     def __repr__(self) -> str:
         return (
