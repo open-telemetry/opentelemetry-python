@@ -15,7 +15,7 @@
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.trace import TraceFlags, TraceState 
+from opentelemetry.trace import TraceFlags, TraceState
 
 
 class TestImmutableSpanContext(unittest.TestCase):
