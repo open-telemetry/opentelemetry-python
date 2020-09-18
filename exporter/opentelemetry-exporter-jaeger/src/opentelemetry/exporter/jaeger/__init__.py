@@ -127,8 +127,8 @@ class JaegerSpanExporter(SpanExporter):
             os.environ.get(OTEL_ENVS["collector_endpoint"])
             or collector_endpoint
         )
-        self.username = os.environ.get(OTEL_ENVS["username"]) or username
-        self.password = os.environ.get(OTEL_ENVS["password"]) or password
+        self.username = username or os.environ.get(OTEL_ENVS["username"])
+        self.password = password or os.environ.get(OTEL_ENVS["password"])
         self._collector = None
 
     @property
