@@ -4,6 +4,8 @@
 
 - Update sampling result names
   ([#1128](https://github.com/open-telemetry/opentelemetry-python/pull/1128))
+- Add required argument to initialize Span
+  ([#1136](https://github.com/open-telemetry/opentelemetry-python/pull/1136))
 
 ## Version 0.13b0
 
