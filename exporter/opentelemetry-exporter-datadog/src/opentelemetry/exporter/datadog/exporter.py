@@ -306,7 +306,7 @@ def _extract_tags_from_resource(resource):
     has special significance within datadog"""
     tags = {}
     service_name = None
-    if not (resource and resource.labels):
+    if not (resource and getattr(resource, 'labels', None)):
         return [tags, service_name]
 
     for attribute_key, attribute_value in resource.labels.items():
