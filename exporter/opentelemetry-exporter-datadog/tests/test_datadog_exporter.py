@@ -145,14 +145,14 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.maxDiff = None
 
         resource = Resource(
-            labels={
+            attributes={
                 "key_resource": "some_resource",
                 "service.name": "resource_service_name",
             }
         )
 
         resource_without_service = Resource(
-            labels={
+            attributes={
                 "conflicting_key": "conflicting_value",
             }
         )

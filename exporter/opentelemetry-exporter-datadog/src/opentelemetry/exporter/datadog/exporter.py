@@ -125,7 +125,7 @@ class DatadogSpanExporter(SpanExporter):
             # duration.
             tracer = None
 
-            # extract resource labels to be used as tags as well as potential service name
+            # extract resource attributes to be used as tags as well as potential service name
             [
                 resource_tags,
                 resource_service_name,
@@ -152,7 +152,7 @@ class DatadogSpanExporter(SpanExporter):
                     datadog_span.set_tag("error.msg", exc_val)
                     datadog_span.set_tag("error.type", exc_type)
 
-            # combine resource labels and span attributes, don't modify existing span attributes
+            # combine resource attributes and span attributes, don't modify existing span attributes
             combined_span_tags = {}
             combined_span_tags.update(resource_tags)
             combined_span_tags.update(span.attributes)
@@ -302,14 +302,14 @@ def _parse_tags_str(tags_str):
 
 
 def _extract_tags_from_resource(resource):
-    """Parse tags from resource.labels, except service.name which
+    """Parse tags from resource.attributes, except service.name which
     has special significance within datadog"""
     tags = {}
     service_name = None
-    if not (resource and getattr(resource, 'labels', None)):
+    if not (resource and getattr(resource, 'attributes', None)):
         return [tags, service_name]
 
-    for attribute_key, attribute_value in resource.labels.items():
+    for attribute_key, attribute_value in resource.attributes.items():
         if attribute_key == SERVICE_NAME_TAG:
             service_name = value
         else:
