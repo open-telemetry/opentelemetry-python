@@ -306,12 +306,12 @@ def _extract_tags_from_resource(resource):
     has special significance within datadog"""
     tags = {}
     service_name = None
-    if not (resource and getattr(resource, 'attributes', None)):
+    if not (resource and getattr(resource, "attributes", None)):
         return [tags, service_name]
 
     for attribute_key, attribute_value in resource.attributes.items():
         if attribute_key == SERVICE_NAME_TAG:
-            service_name = value
+            service_name = attribute_value
         else:
-            tags[attribute_key] = value
+            tags[attribute_key] = attribute_value
     return [tags, service_name]
