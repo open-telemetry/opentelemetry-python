@@ -364,7 +364,7 @@ class Span(trace_api.Span):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: Resource = Resource.create_empty(),
+        resource: Resource = Resource.create({}),
         attributes: types.Attributes = None,  # TODO
         events: Sequence[Event] = None,  # TODO
         links: Sequence[trace_api.Link] = (),
@@ -506,7 +506,7 @@ class Span(trace_api.Span):
         f_span["attributes"] = self._format_attributes(self.attributes)
         f_span["events"] = self._format_events(self.events)
         f_span["links"] = self._format_links(self.links)
-        f_span["resource"] = self.resource.labels
+        f_span["resource"] = self.resource.attributes
 
         return json.dumps(f_span, indent=indent)
 
@@ -821,7 +821,7 @@ class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = sampling.DEFAULT_ON,
-        resource: Resource = Resource.create_empty(),
+        resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor

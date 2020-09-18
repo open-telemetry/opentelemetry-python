@@ -20,8 +20,8 @@ import threading
 import typing
 from enum import Enum
 
-from opentelemetry.context import attach, detach, get_current, set_value
-from opentelemetry.trace import DefaultSpan
+from opentelemetry.context import attach, detach, set_value
+from opentelemetry.sdk.trace import sampling
 from opentelemetry.util import time_ns
 
 from .. import Span, SpanProcessor
@@ -75,6 +75,8 @@ class SimpleExportSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: Span) -> None:
+        if not span.context.trace_flags.sampled:
+            return
         token = attach(set_value("suppress_instrumentation", True))
         try:
             self.span_exporter.export((span,))
@@ -91,14 +93,22 @@ class SimpleExportSpanProcessor(SpanProcessor):
         return True
 
 
+class _FlushRequest:
+    """Represents a request for the BatchExportSpanProcessor to flush spans."""
+
+    __slots__ = ["event", "num_spans"]
+
+    def __init__(self):
+        self.event = threading.Event()
+        self.num_spans = 0
+
+
 class BatchExportSpanProcessor(SpanProcessor):
     """Batch span processor implementation.
 
     BatchExportSpanProcessor is an implementation of `SpanProcessor` that
     batches ended spans and pushes them to the configured `SpanExporter`.
     """
-
-    _FLUSH_TOKEN_SPAN = DefaultSpan(context=None)
 
     def __init__(
         self,
@@ -129,9 +139,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         )  # type: typing.Deque[Span]
         self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.condition = threading.Condition(threading.Lock())
-        self.flush_condition = threading.Condition(threading.Lock())
-        # flag to indicate that there is a flush operation on progress
-        self._flushing = False
+        self._flush_request = None  # type: typing.Optional[_FlushRequest]
         self.schedule_delay_millis = schedule_delay_millis
         self.max_export_batch_size = max_export_batch_size
         self.max_queue_size = max_queue_size
@@ -151,6 +159,8 @@ class BatchExportSpanProcessor(SpanProcessor):
         if self.done:
             logger.warning("Already shutdown, dropping span.")
             return
+        if not span.context.trace_flags.sampled:
+            return
         if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
                 logger.warning("Queue is full, likely spans will be dropped.")
@@ -164,60 +174,128 @@ class BatchExportSpanProcessor(SpanProcessor):
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
+        flush_request = None  # type: typing.Optional[_FlushRequest]
         while not self.done:
-            if (
-                len(self.queue) < self.max_export_batch_size
-                and not self._flushing
-            ):
-                with self.condition:
+            with self.condition:
+                if self.done:
+                    # done flag may have changed, avoid waiting
+                    break
+                flush_request = self._get_and_unset_flush_request()
+                if (
+                    len(self.queue) < self.max_export_batch_size
+                    and flush_request is None
+                ):
+
                     self.condition.wait(timeout)
+                    flush_request = self._get_and_unset_flush_request()
                     if not self.queue:
                         # spurious notification, let's wait again
+                        self._notify_flush_request_finished(flush_request)
+                        flush_request = None
                         continue
                     if self.done:
                         # missing spans will be sent when calling flush
                         break
 
-            # substract the duration of this export call to the next timeout
+            # subtract the duration of this export call to the next timeout
             start = time_ns()
-            self.export()
+            self._export(flush_request)
             end = time_ns()
             duration = (end - start) / 1e9
             timeout = self.schedule_delay_millis / 1e3 - duration
 
+            self._notify_flush_request_finished(flush_request)
+            flush_request = None
+
+        # there might have been a new flush request while export was running
+        # and before the done flag switched to true
+        with self.condition:
+            shutdown_flush_request = self._get_and_unset_flush_request()
+
         # be sure that all spans are sent
         self._drain_queue()
+        self._notify_flush_request_finished(flush_request)
+        self._notify_flush_request_finished(shutdown_flush_request)
 
-    def export(self) -> None:
-        """Exports at most max_export_batch_size spans."""
+    def _get_and_unset_flush_request(self,) -> typing.Optional[_FlushRequest]:
+        """Returns the current flush request and makes it invisible to the
+        worker thread for subsequent calls.
+        """
+        flush_request = self._flush_request
+        self._flush_request = None
+        if flush_request is not None:
+            flush_request.num_spans = len(self.queue)
+        return flush_request
+
+    @staticmethod
+    def _notify_flush_request_finished(
+        flush_request: typing.Optional[_FlushRequest],
+    ):
+        """Notifies the flush initiator(s) waiting on the given request/event
+        that the flush operation was finished.
+        """
+        if flush_request is not None:
+            flush_request.event.set()
+
+    def _get_or_create_flush_request(self) -> _FlushRequest:
+        """Either returns the current active flush event or creates a new one.
+
+        The flush event will be visible and read by the worker thread before an
+        export operation starts. Callers of a flush operation may wait on the
+        returned event to be notified when the flush/export operation was
+        finished.
+
+        This method is not thread-safe, i.e. callers need to take care about
+        synchronization/locking.
+        """
+        if self._flush_request is None:
+            self._flush_request = _FlushRequest()
+        return self._flush_request
+
+    def _export(self, flush_request: typing.Optional[_FlushRequest]):
+        """Exports spans considering the given flush_request.
+
+        In case of a given flush_requests spans are exported in batches until
+        the number of exported spans reached or exceeded the number of spans in
+        the flush request.
+        In no flush_request was given at most max_export_batch_size spans are
+        exported.
+        """
+        if not flush_request:
+            self._export_batch()
+            return
+
+        num_spans = flush_request.num_spans
+        while self.queue:
+            num_exported = self._export_batch()
+            num_spans -= num_exported
+
+            if num_spans <= 0:
+                break
+
+    def _export_batch(self) -> int:
+        """Exports at most max_export_batch_size spans and returns the number of
+         exported spans.
+         """
         idx = 0
-        notify_flush = False
         # currently only a single thread acts as consumer, so queue.pop() will
         # not raise an exception
         while idx < self.max_export_batch_size and self.queue:
-            span = self.queue.pop()
-            if span is self._FLUSH_TOKEN_SPAN:
-                notify_flush = True
-            else:
-                self.spans_list[idx] = span
-                idx += 1
+            self.spans_list[idx] = self.queue.pop()
+            idx += 1
         token = attach(set_value("suppress_instrumentation", True))
         try:
             # Ignore type b/c the Optional[None]+slicing is too "clever"
             # for mypy
             self.span_exporter.export(self.spans_list[:idx])  # type: ignore
-        # pylint: disable=broad-except
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception("Exception while exporting Span batch.")
         detach(token)
-
-        if notify_flush:
-            with self.flush_condition:
-                self.flush_condition.notify()
 
         # clean up list
         for index in range(idx):
             self.spans_list[index] = None
+        return idx
 
     def _drain_queue(self):
         """"Export all elements until queue is empty.
@@ -226,26 +304,20 @@ class BatchExportSpanProcessor(SpanProcessor):
         `export` that is not thread safe.
         """
         while self.queue:
-            self.export()
+            self._export_batch()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         if self.done:
             logger.warning("Already shutdown, ignoring call to force_flush().")
             return True
 
-        self._flushing = True
-        self.queue.appendleft(self._FLUSH_TOKEN_SPAN)
-
-        # wake up worker thread
         with self.condition:
+            flush_request = self._get_or_create_flush_request()
+            # signal the worker thread to flush and wait for it to finish
             self.condition.notify_all()
 
         # wait for token to be processed
-        with self.flush_condition:
-            ret = self.flush_condition.wait(timeout_millis / 1e3)
-
-        self._flushing = False
-
+        ret = flush_request.event.wait(timeout_millis / 1e3)
         if not ret:
             logger.warning("Timeout was exceeded in force_flush().")
         return ret

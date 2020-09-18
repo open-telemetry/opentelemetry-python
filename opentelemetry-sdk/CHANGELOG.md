@@ -2,12 +2,31 @@
 
 ## Unreleased
 
+- Update sampling result names
+  ([#1128](https://github.com/open-telemetry/opentelemetry-python/pull/1128))
+
+## Version 0.13b0
+
+Released 2020-09-17
+
 - Moved samplers from API to SDK
   ([#1023](https://github.com/open-telemetry/opentelemetry-python/pull/1023))
 - Sampling spec changes
   ([#1034](https://github.com/open-telemetry/opentelemetry-python/pull/1034))
 - Remove lazy Event and Link API from Span interface
   ([#1045](https://github.com/open-telemetry/opentelemetry-python/pull/1045))
+- Improve BatchExportSpanProcessor
+  ([#1062](https://github.com/open-telemetry/opentelemetry-python/pull/1062))
+- Populate resource attributes as per semantic conventions
+  ([#1053](https://github.com/open-telemetry/opentelemetry-python/pull/1053))
+- Rename Resource labels to attributes
+  ([#1082](https://github.com/open-telemetry/opentelemetry-python/pull/1082))
+- Fix api/sdk setup.cfg to include missing python files
+  ([#1091](https://github.com/open-telemetry/opentelemetry-python/pull/1091))
+- Drop support for Python 3.4
+  ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
+- Rename members of `trace.sampling.Decision` enum
+  ([#1115](https://github.com/open-telemetry/opentelemetry-python/pull/1115))
 
 ## Version 0.12b0
 

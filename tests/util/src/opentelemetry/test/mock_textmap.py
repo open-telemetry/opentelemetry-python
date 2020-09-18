@@ -16,15 +16,15 @@ import typing
 
 from opentelemetry import trace
 from opentelemetry.context import Context, get_current
-from opentelemetry.trace.propagation.httptextformat import (
+from opentelemetry.trace.propagation.textmap import (
     Getter,
-    HTTPTextFormat,
-    HTTPTextFormatT,
     Setter,
+    TextMapPropagator,
+    TextMapPropagatorT,
 )
 
 
-class NOOPHTTPTextFormat(HTTPTextFormat):
+class NOOPTextMapPropagator(TextMapPropagator):
     """A propagator that does not extract nor inject.
 
     This class is useful for catching edge cases assuming
@@ -33,22 +33,22 @@ class NOOPHTTPTextFormat(HTTPTextFormat):
 
     def extract(
         self,
-        get_from_carrier: Getter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        get_from_carrier: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         return get_current()
 
     def inject(
         self,
-        set_in_carrier: Setter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         return None
 
 
-class MockHTTPTextFormat(HTTPTextFormat):
+class MockTextMapPropagator(TextMapPropagator):
     """Mock propagator for testing purposes."""
 
     TRACE_ID_KEY = "mock-traceid"
@@ -56,8 +56,8 @@ class MockHTTPTextFormat(HTTPTextFormat):
 
     def extract(
         self,
-        get_from_carrier: Getter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        get_from_carrier: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         trace_id_list = get_from_carrier(carrier, self.TRACE_ID_KEY)
@@ -78,8 +78,8 @@ class MockHTTPTextFormat(HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: Setter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context)
