@@ -40,8 +40,10 @@ class TestTracerImplementation(unittest.TestCase):
     def test_span(self):
         with self.assertRaises(Exception):
             # pylint: disable=no-value-for-parameter
-            span = trace.Span()
+            span = trace.Span(force_direct_creation=True)
 
-        span = trace.Span("name", INVALID_SPAN_CONTEXT)
+        span = trace.Span(
+            "name", INVALID_SPAN_CONTEXT, force_direct_creation=True
+        )
         self.assertEqual(span.get_context(), INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), True)

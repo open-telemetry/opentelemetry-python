@@ -357,6 +357,7 @@ class Span(trace_api.Span):
             this `Span`.
     """
 
+    # pylint: disable=too-many-locals
     def __init__(
         self,
         name: str,
@@ -372,7 +373,13 @@ class Span(trace_api.Span):
         span_processor: SpanProcessor = SpanProcessor(),
         instrumentation_info: InstrumentationInfo = None,
         set_status_on_exception: bool = True,
+        force_direct_creation: bool = False,
     ) -> None:
+
+        if not force_direct_creation:
+            raise ValueError(
+                "Span objects via Tracer instead of this constructor."
+            )
 
         self.name = name
         self.context = context
@@ -778,6 +785,7 @@ class Tracer(trace_api.Tracer):
                 links=links,
                 instrumentation_info=self.instrumentation_info,
                 set_status_on_exception=set_status_on_exception,
+                force_direct_creation=True,
             )
             span.start(start_time=start_time)
         else:

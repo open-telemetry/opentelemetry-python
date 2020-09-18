@@ -195,6 +195,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 kind=trace_api.SpanKind.CLIENT,
                 instrumentation_info=instrumentation_info,
                 resource=Resource({}),
+                force_direct_creation=True,
             ),
             trace.Span(
                 name=span_names[1],
@@ -202,12 +203,14 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 parent=None,
                 instrumentation_info=instrumentation_info,
                 resource=resource_without_service,
+                force_direct_creation=True,
             ),
             trace.Span(
                 name=span_names[2],
                 context=other_context,
                 parent=None,
                 resource=resource,
+                force_direct_creation=True,
             ),
         ]
 
@@ -289,7 +292,9 @@ class TestDatadogSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        test_span = trace.Span("test_span", context=context)
+        test_span = trace.Span(
+            "test_span", context=context, force_direct_creation=True
+        )
         test_span.start()
         test_span.end()
 
@@ -492,9 +497,17 @@ class TestDatadogSpanExporter(unittest.TestCase):
             ),
         )
 
-        root_span = trace.Span(name="root", context=context, parent=None)
+        root_span = trace.Span(
+            name="root",
+            context=context,
+            parent=None,
+            force_direct_creation=True,
+        )
         child_span = trace.Span(
-            name="child", context=context, parent=root_span
+            name="child",
+            context=context,
+            parent=root_span,
+            force_direct_creation=True,
         )
         root_span.start()
         child_span.start()
@@ -529,7 +542,11 @@ class TestDatadogSpanExporter(unittest.TestCase):
         sampler = sampling.TraceIdRatioBased(0.5)
 
         span = trace.Span(
-            name="sampled", context=context, parent=None, sampler=sampler
+            name="sampled",
+            context=context,
+            parent=None,
+            sampler=sampler,
+            force_direct_creation=True,
         )
         span.start()
         span.end()

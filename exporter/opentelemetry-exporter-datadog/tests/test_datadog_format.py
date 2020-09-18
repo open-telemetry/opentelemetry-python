@@ -113,6 +113,7 @@ class TestDatadogFormat(unittest.TestCase):
                 trace_state=parent_context.trace_state,
             ),
             parent=parent_context,
+            force_direct_creation=True,
         )
 
         child_carrier = {}
@@ -158,6 +159,7 @@ class TestDatadogFormat(unittest.TestCase):
                 trace_state=parent_context.trace_state,
             ),
             parent=parent_context,
+            force_direct_creation=True,
         )
 
         child_carrier = {}

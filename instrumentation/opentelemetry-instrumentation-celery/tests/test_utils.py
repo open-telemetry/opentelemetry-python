@@ -42,7 +42,11 @@ class TestUtils(unittest.TestCase):
             "routing_key": "celery",
         }
 
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace.Span(
+            "name",
+            mock.Mock(spec=trace_api.SpanContext),
+            force_direct_creation=True,
+        )
         utils.set_attributes_from_context(span, context)
 
         self.assertEqual(
@@ -78,7 +82,11 @@ class TestUtils(unittest.TestCase):
             "retries": 0,
         }
 
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace.Span(
+            "name",
+            mock.Mock(spec=trace_api.SpanContext),
+            force_direct_creation=True,
+        )
         utils.set_attributes_from_context(span, context)
 
         self.assertEqual(len(span.attributes), 0)
@@ -99,7 +107,11 @@ class TestUtils(unittest.TestCase):
 
         # propagate and retrieve a Span
         task_id = "7c6731af-9533-40c3-83a9-25b58f0d837f"
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace.Span(
+            "name",
+            mock.Mock(spec=trace_api.SpanContext),
+            force_direct_creation=True,
+        )
         utils.attach_span(fn_task, task_id, span)
         span_after = utils.retrieve_span(fn_task, task_id)
         self.assertIs(span, span_after)
@@ -112,7 +124,11 @@ class TestUtils(unittest.TestCase):
 
         # propagate a Span
         task_id = "7c6731af-9533-40c3-83a9-25b58f0d837f"
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace.Span(
+            "name",
+            mock.Mock(spec=trace_api.SpanContext),
+            force_direct_creation=True,
+        )
         utils.attach_span(fn_task, task_id, span)
         # delete the Span
         utils.detach_span(fn_task, task_id)

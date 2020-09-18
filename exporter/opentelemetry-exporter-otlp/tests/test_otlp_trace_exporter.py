@@ -150,6 +150,7 @@ class TestOTLPSpanExporter(TestCase):
             instrumentation_info=InstrumentationInfo(
                 name="name", version="version"
             ),
+            force_direct_creation=True,
         )
 
         self.span.start()

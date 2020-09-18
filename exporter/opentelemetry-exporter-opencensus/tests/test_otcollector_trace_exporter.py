@@ -127,18 +127,21 @@ class TestCollectorSpanExporter(unittest.TestCase):
             events=(event,),
             links=(link_1,),
             kind=trace_api.SpanKind.CLIENT,
+            force_direct_creation=True,
         )
         span_2 = trace.Span(
             name="test2",
             context=parent_context,
             parent=None,
             kind=trace_api.SpanKind.SERVER,
+            force_direct_creation=True,
         )
         span_3 = trace.Span(
             name="test3",
             context=other_context,
             links=(link_2,),
             parent=span_2.get_context(),
+            force_direct_creation=True,
         )
         otel_spans = [span_1, span_2, span_3]
         otel_spans[0].start(start_time=start_times[0])
@@ -306,6 +309,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
                 name="test1",
                 context=span_context,
                 kind=trace_api.SpanKind.CLIENT,
+                force_direct_creation=True,
             )
         ]
         result_status = collector_exporter.export(otel_spans)
