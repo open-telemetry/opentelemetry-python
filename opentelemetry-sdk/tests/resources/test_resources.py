@@ -22,6 +22,12 @@ from opentelemetry.sdk import resources
 
 
 class TestResources(unittest.TestCase):
+    def setUp(self) -> None:
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = ""
+
+    def tearDown(self) -> None:
+        os.environ.pop(resources.OTEL_RESOURCE_ATTRIBUTES)
+
     def test_create(self):
         attributes = {
             "service": "ui",
@@ -44,14 +50,22 @@ class TestResources(unittest.TestCase):
         self.assertIsInstance(resource, resources.Resource)
         self.assertEqual(resource.attributes, expected_attributes)
 
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "key=value"
+        resource = resources.Resource.create(attributes)
+        self.assertIsInstance(resource, resources.Resource)
+        expected_with_envar = expected_attributes.copy()
+        expected_with_envar["key"] = "value"
+        self.assertEqual(resource.attributes, expected_with_envar)
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = ""
+
         resource = resources.Resource.create_empty()
-        self.assertIs(resource, resources._EMPTY_RESOURCE)
+        self.assertEqual(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create(None)
-        self.assertIs(resource, resources._DEFAULT_RESOURCE)
+        self.assertEqual(resource, resources._DEFAULT_RESOURCE)
 
         resource = resources.Resource.create({})
-        self.assertIs(resource, resources._DEFAULT_RESOURCE)
+        self.assertEqual(resource, resources._DEFAULT_RESOURCE)
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
@@ -184,36 +198,38 @@ class TestResources(unittest.TestCase):
 
 class TestOTELResourceDetector(unittest.TestCase):
     def setUp(self) -> None:
-        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = ""
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = ""
 
     def tearDown(self) -> None:
-        os.environ.pop("OTEL_RESOURCE_ATTRIBUTES")
+        os.environ.pop(resources.OTEL_RESOURCE_ATTRIBUTES)
 
     def test_empty(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = ""
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = ""
         self.assertEqual(detector.detect(), resources.Resource.create_empty())
 
     def test_one(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "k=v"
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "k=v"
         self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
     def test_one_with_whitespace(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "    k  = v   "
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "    k  = v   "
         self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
     def test_multiple(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "k=v,k2=v2"
+        os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "k=v,k2=v2"
         self.assertEqual(
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
 
     def test_multiple_with_whitespace(self):
         detector = resources.OTELResourceDetector()
-        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "    k  = v  , k2   = v2 "
+        os.environ[
+            resources.OTEL_RESOURCE_ATTRIBUTES
+        ] = "    k  = v  , k2   = v2 "
         self.assertEqual(
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
