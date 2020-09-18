@@ -185,11 +185,11 @@ class ZipkinSpanExporter(SpanExporter):
 
             if span.status is not None:
                 zipkin_span["tags"][
-                    "ot.status_code"
+                    "otel.status_code"
                 ] = span.status.canonical_code.value
                 if span.status.description is not None:
                     zipkin_span["tags"][
-                        "ot.status_description"
+                        "otel.status_description"
                     ] = span.status.description
 
             if context.trace_flags.sampled:
