@@ -201,7 +201,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 parent=None,
                 instrumentation_info=instrumentation_info,
                 resource=resource_without_service,
-            ).set_attribute("conflicting_key", "original_value"),
+                attributes=("conflicting_key", "original_value"),
+            ),
             trace.Span(
                 name=span_names[2],
                 context=other_context,
