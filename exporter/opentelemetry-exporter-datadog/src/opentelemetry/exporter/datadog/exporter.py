@@ -113,6 +113,7 @@ class DatadogSpanExporter(SpanExporter):
             self.agent_writer.stop()
             self.agent_writer.join(self.agent_writer.exit_timeout)
 
+    # pylint: disable=too-many-locals
     def _translate_to_datadog(self, spans):
         datadog_spans = []
 
