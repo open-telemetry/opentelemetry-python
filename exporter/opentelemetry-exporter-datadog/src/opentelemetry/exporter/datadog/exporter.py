@@ -152,7 +152,7 @@ class DatadogSpanExporter(SpanExporter):
                     datadog_span.set_tag("error.msg", exc_val)
                     datadog_span.set_tag("error.type", exc_type)
 
-            # combine resource labels and span attributes, don't modify existy span attributes
+            # combine resource labels and span attributes, don't modify existing span attributes
             combined_span_tags = {}
             combined_span_tags.update(resource_tags)
             combined_span_tags.update(span.attributes)
@@ -306,18 +306,10 @@ def _extract_tags_from_resource(resource):
     has special significance within datadog"""
     tags = {}
     service_name = None
-    if not resource and resource.labels:
+    if not (resource and resource.labels):
         return [tags, service_name]
 
     for attribute_key, attribute_value in resource.labels.items():
-        if isinstance(attribute_value, (int, bool, float)):
-            value = str(attribute_value)
-        elif isinstance(attribute_value, str):
-            value = attribute_value
-        else:
-            logger.warning("Could not serialize tag %s", attribute_key)
-            continue
-
         if attribute_key == SERVICE_NAME_TAG:
             service_name = value
         else:

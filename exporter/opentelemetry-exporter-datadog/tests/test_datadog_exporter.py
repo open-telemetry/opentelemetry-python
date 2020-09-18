@@ -151,6 +151,12 @@ class TestDatadogSpanExporter(unittest.TestCase):
             }
         )
 
+        resource_without_service = Resource(
+            labels={
+                "conflicting_key": "conflicting_value",
+            }
+        )
+
         span_names = ("test1", "test2", "test3")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         trace_id_low = 0x6F9EFCD03927272E
@@ -196,7 +202,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 context=parent_context,
                 parent=None,
                 instrumentation_info=instrumentation_info,
-            ),
+                resource=resource_without_service,
+            ).set_attribute("conflicting_key", "original_value"),
             trace.Span(
                 name=span_names[2],
                 context=other_context,
@@ -244,7 +251,12 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 duration=durations[1],
                 error=0,
                 service="test-service",
-                meta={"env": "test", "team": "testers", "version": "0.0.1"},
+                meta={
+                    "env": "test",
+                    "team": "testers",
+                    "version": "0.0.1",
+                    "conflicting_key": "original_value",
+                },
             ),
             dict(
                 trace_id=trace_id_low,
