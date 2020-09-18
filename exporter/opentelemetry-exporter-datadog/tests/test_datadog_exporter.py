@@ -201,7 +201,6 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 parent=None,
                 instrumentation_info=instrumentation_info,
                 resource=resource_without_service,
-                attributes=("conflicting_key", "original_value"),
             ),
             trace.Span(
                 name=span_names[2],
@@ -210,6 +209,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 resource=resource,
             ),
         ]
+
+        otel_spans[1].set_attribute("conflicting_key", "original_value")
 
         otel_spans[0].start(start_time=start_times[0])
         otel_spans[0].end(end_time=end_times[0])
