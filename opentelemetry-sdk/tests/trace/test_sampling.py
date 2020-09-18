@@ -31,7 +31,7 @@ class TestDecision(unittest.TestCase):
             sampling.Decision.is_recording(sampling.Decision.RECORD_AND_SAMPLE)
         )
         self.assertFalse(
-            sampling.Decision.is_recording(sampling.Decision.IGNORE)
+            sampling.Decision.is_recording(sampling.Decision.DROP)
         )
 
     def test_is_sampled(self):
@@ -41,9 +41,7 @@ class TestDecision(unittest.TestCase):
         self.assertTrue(
             sampling.Decision.is_sampled(sampling.Decision.RECORD_AND_SAMPLE)
         )
-        self.assertFalse(
-            sampling.Decision.is_sampled(sampling.Decision.IGNORE)
-        )
+        self.assertFalse(sampling.Decision.is_sampled(sampling.Decision.DROP))
 
 
 class TestSamplingResult(unittest.TestCase):

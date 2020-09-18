@@ -72,7 +72,7 @@ from opentelemetry.util.types import Attributes
 
 class Decision(enum.Enum):
     # IsRecording() == false, span will not be recorded and all events and attributes will be dropped.
-    IGNORE = 0
+    DROP = 0
     # IsRecording() == true, but Sampled flag MUST NOT be set.
     RECORD_ONLY = 1
     # IsRecording() == true AND Sampled flag` MUST be set.
@@ -140,12 +140,12 @@ class StaticSampler(Sampler):
         attributes: Attributes = None,
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
-        if self._decision is Decision.IGNORE:
+        if self._decision is Decision.DROP:
             return SamplingResult(self._decision)
         return SamplingResult(self._decision, attributes)
 
     def get_description(self) -> str:
-        if self._decision is Decision.IGNORE:
+        if self._decision is Decision.DROP:
             return "AlwaysOffSampler"
         return "AlwaysOnSampler"
 
@@ -194,10 +194,10 @@ class TraceIdRatioBased(Sampler):
         attributes: Attributes = None,  # TODO
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
-        decision = Decision.IGNORE
+        decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
             decision = Decision.RECORD_AND_SAMPLE
-        if decision is Decision.IGNORE:
+        if decision is Decision.DROP:
             return SamplingResult(decision)
         return SamplingResult(decision, attributes)
 
@@ -231,7 +231,7 @@ class ParentBased(Sampler):
                 not parent_context.is_valid
                 or not parent_context.trace_flags.sampled
             ):
-                return SamplingResult(Decision.IGNORE)
+                return SamplingResult(Decision.DROP)
             return SamplingResult(Decision.RECORD_AND_SAMPLE, attributes)
 
         return self._delegate.should_sample(
@@ -246,7 +246,7 @@ class ParentBased(Sampler):
         return "ParentBased{{{}}}".format(self._delegate.get_description())
 
 
-ALWAYS_OFF = StaticSampler(Decision.IGNORE)
+ALWAYS_OFF = StaticSampler(Decision.DROP)
 """Sampler that never samples spans, regardless of the parent span's sampling decision."""
 
 ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLE)
