@@ -25,34 +25,32 @@ TO_SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
 class TestDecision(unittest.TestCase):
     def test_is_recording(self):
         self.assertTrue(
-            sampling.Decision.is_recording(sampling.Decision.RECORD)
+            sampling.Decision.is_recording(sampling.Decision.RECORD_ONLY)
         )
         self.assertTrue(
-            sampling.Decision.is_recording(
-                sampling.Decision.RECORD_AND_SAMPLED
-            )
+            sampling.Decision.is_recording(sampling.Decision.RECORD_AND_SAMPLE)
         )
         self.assertFalse(
-            sampling.Decision.is_recording(sampling.Decision.NOT_RECORD)
+            sampling.Decision.is_recording(sampling.Decision.DROP)
         )
 
     def test_is_sampled(self):
         self.assertFalse(
-            sampling.Decision.is_sampled(sampling.Decision.RECORD)
+            sampling.Decision.is_sampled(sampling.Decision.RECORD_ONLY)
         )
         self.assertTrue(
-            sampling.Decision.is_sampled(sampling.Decision.RECORD_AND_SAMPLED)
+            sampling.Decision.is_sampled(sampling.Decision.RECORD_AND_SAMPLE)
         )
-        self.assertFalse(
-            sampling.Decision.is_sampled(sampling.Decision.NOT_RECORD)
-        )
+        self.assertFalse(sampling.Decision.is_sampled(sampling.Decision.DROP))
 
 
 class TestSamplingResult(unittest.TestCase):
     def test_ctr(self):
         attributes = {"asd": "test"}
-        result = sampling.SamplingResult(sampling.Decision.RECORD, attributes)
-        self.assertIs(result.decision, sampling.Decision.RECORD)
+        result = sampling.SamplingResult(
+            sampling.Decision.RECORD_ONLY, attributes
+        )
+        self.assertIs(result.decision, sampling.Decision.RECORD_ONLY)
         with self.assertRaises(TypeError):
             result.attributes["test"] = "mess-this-up"
         self.assertTrue(len(result.attributes), 1)
