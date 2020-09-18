@@ -21,14 +21,19 @@ from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
+from opentelemetry.sdk import resources
 from opentelemetry.sdk.trace import TracerProvider
 
-trace.set_tracer_provider(TracerProvider())
+service_name = "example-client"
+
+resource = resources.Resource.create({"service.name": service_name})
+
+trace.set_tracer_provider(TracerProvider(resource=resource))
 
 trace.get_tracer_provider().add_span_processor(
     DatadogExportSpanProcessor(
         DatadogSpanExporter(
-            agent_url="http://localhost:8126", service="example-client"
+            agent_url="http://localhost:8126", service=service_name
         )
     )
 )
