@@ -194,6 +194,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
                 parent=parent_context,
                 kind=trace_api.SpanKind.CLIENT,
                 instrumentation_info=instrumentation_info,
+                resource=Resource({}),
             ),
             trace.Span(
                 name=span_names[1],
