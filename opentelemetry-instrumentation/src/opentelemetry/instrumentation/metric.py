@@ -23,7 +23,6 @@ from typing import Dict, Optional
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import ValueRecorder
-from opentelemetry.trace import SpanKind
 
 
 class HTTPMetricType(enum.Enum):
@@ -54,16 +53,16 @@ class HTTPMetricRecorder(MetricRecorder):
     """Metric recorder for http instrumentations. Tracks duration."""
 
     def __init__(
-        self, meter: Optional[metrics.Meter], type: HTTPMetricType,
+        self, meter: Optional[metrics.Meter], http_type: HTTPMetricType,
     ):
         super().__init__(meter)
-        self._type = type
+        self._http_type = http_type
         if self._meter:
             self._duration = self._meter.create_metric(
-                name="{}.{}.duration".format("http", self._type.name.lower()),
+                name="{}.{}.duration".format("http", self._http_type.name.lower()),
                 description="measures the duration of the {} HTTP request".format(
                     "inbound"
-                    if self._type is HTTPMetricType.SERVER
+                    if self._http_type is HTTPMetricType.SERVER
                     else "outbound"
                 ),
                 unit="ms",
