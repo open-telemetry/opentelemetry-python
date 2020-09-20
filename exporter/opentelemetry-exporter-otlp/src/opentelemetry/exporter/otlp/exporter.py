@@ -141,8 +141,8 @@ class OTLPExporterMixin(
 
     def __init__(
         self,
-        endpoint: str,
-        insecure: bool,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
         credentials: ChannelCredentials = None,
         metadata: Optional[Tuple[Any]] = None,
     ):
@@ -153,9 +153,12 @@ class OTLPExporterMixin(
             or Configuration().EXPORTER_OTLP_ENDPOINT
             or "localhost:55680"
         )
-        insecure = insecure or Configuration().EXPORTER_OTLP_INSECURE
+        
+        if insecure is None:
+            insecure = Configuration().EXPORTER_OTLP_INSECURE
         if insecure is None:
             insecure = True
+            
         self._metadata = metadata
         self._collector_span_kwargs = None
 

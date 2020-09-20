@@ -16,7 +16,7 @@
 
 import logging
 import os
-from typing import List, Sequence, Type, TypeVar, Union
+from typing import List, Sequence, Type, TypeVar, Union, Optional
 
 from grpc import ChannelCredentials
 
@@ -123,25 +123,24 @@ class OTLPMetricsExporter(
 
     def __init__(
         self,
-        endpoint: str,
-        insecure: bool,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
         credentials: ChannelCredentials = None,
         metadata: tuple = None,
     ):
-        insecure = insecure or Configuration().EXPORTER_OTLP_METRIC_INSECURE
-        if not insecure:
+        if insecure is None:
+            insecure = Configuration().EXPORTER_OTLP_METRIC_INSECURE
+        if insecure is False:
             credentials = credentials or _load_credential_from_file(
                 Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE
             )
 
         super().__init__(
             **{
-                endpoint: endpoint
-                or Configuration().EXPORTER_OTLP_METRIC_ENDPOINT,
-                insecure: insecure,
-                credentials: credentials,
-                metadata: metadata
-                or Configuration().EXPORTER_OTLP_METRIC_HEADERS,
+                "endpoint": endpoint or Configuration().EXPORTER_OTLP_METRIC_ENDPOINT,
+                "insecure": insecure,
+                "credentials": credentials,
+                "metadata": metadata or Configuration().EXPORTER_OTLP_METRIC_HEADERS,
             }
         )
 
