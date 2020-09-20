@@ -122,8 +122,8 @@ def _load_credential_from_file(filepath) -> ChannelCredentials:
         with open(real_path, "rb") as f:
             credential = f.read()
             return ssl_channel_credentials(credential)
-    except FileNotFoundError as error:
-        logger.exception(error)
+    except FileNotFoundError:
+        logger.exception("Failed to read credential file")
         return None
 
 
