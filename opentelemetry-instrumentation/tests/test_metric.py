@@ -14,7 +14,7 @@
 # type: ignore
 
 import time
-from unittest import mock, TestCase
+from unittest import TestCase, mock
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.instrumentation.metric import (
