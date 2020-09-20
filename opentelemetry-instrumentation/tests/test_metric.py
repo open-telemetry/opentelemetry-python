@@ -13,7 +13,6 @@
 # limitations under the License.
 # type: ignore
 
-import time
 from unittest import TestCase, mock
 
 from opentelemetry import metrics as metrics_api
