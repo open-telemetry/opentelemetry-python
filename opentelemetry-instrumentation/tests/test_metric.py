@@ -73,7 +73,7 @@ class TestHTTPMetricRecorder(TestCase):
         meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         labels = {"test": "asd"}
-        with mock.patch('time.time') as time_patch:
+        with mock.patch("time.time") as time_patch:
             time_patch.return_value = 5.0
             with recorder.record_duration(labels):
                 labels["test2"] = "asd2"

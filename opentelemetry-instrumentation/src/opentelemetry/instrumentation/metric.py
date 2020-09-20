@@ -54,9 +54,7 @@ class HTTPMetricRecorder(MetricRecorder):
     """Metric recorder for http instrumentations. Tracks duration."""
 
     def __init__(
-        self,
-        meter: Optional[metrics.Meter],
-        type: HTTPMetricType,
+        self, meter: Optional[metrics.Meter], type: HTTPMetricType,
     ):
         super().__init__(meter)
         self._type = type
@@ -64,7 +62,9 @@ class HTTPMetricRecorder(MetricRecorder):
             self._duration = self._meter.create_metric(
                 name="{}.{}.duration".format("http", self._type.name.lower()),
                 description="measures the duration of the {} HTTP request".format(
-                    "inbound" if self._type is HTTPMetricType.SERVER else "outbound"
+                    "inbound"
+                    if self._type is HTTPMetricType.SERVER
+                    else "outbound"
                 ),
                 unit="ms",
                 value_type=float,

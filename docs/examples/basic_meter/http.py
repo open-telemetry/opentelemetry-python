@@ -33,7 +33,9 @@ exporter = ConsoleMetricsExporter()
 RequestsInstrumentor().instrument()
 
 # Indicate to start collecting and exporting requests related metrics
-metrics.get_meter_provider().start_pipeline(RequestsInstrumentor().meter, exporter, 5)
+metrics.get_meter_provider().start_pipeline(
+    RequestsInstrumentor().meter, exporter, 5
+)
 
 response = requests.get("http://example.com")
 
