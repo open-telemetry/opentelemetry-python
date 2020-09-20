@@ -15,7 +15,7 @@
 
 import logging
 import os
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 from grpc import ChannelCredentials
 
@@ -78,10 +78,12 @@ class OTLPSpanExporter(
 
         super().__init__(
             **{
-                "endpoint": endpoint or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
+                "endpoint": endpoint
+                or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
                 "insecure": insecure,
                 "credentials": credentials,
-                "metadata": metadata or Configuration().EXPORTER_OTLP_SPAN_HEADERS,
+                "metadata": metadata
+                or Configuration().EXPORTER_OTLP_SPAN_HEADERS,
             }
         )
 
