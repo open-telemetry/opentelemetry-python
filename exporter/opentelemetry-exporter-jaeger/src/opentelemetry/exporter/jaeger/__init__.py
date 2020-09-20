@@ -168,7 +168,8 @@ class JaegerSpanExporter(SpanExporter):
 
         if self.collector is not None:
             self.collector.submit(batch)
-        self.agent_client.emit(batch)
+        else:
+            self.agent_client.emit(batch)
 
         return SpanExportResult.SUCCESS
 
@@ -203,7 +204,7 @@ def _translate_to_jaeger(spans: Span):
         parent_id = span.parent.span_id if span.parent else 0
 
         tags = _extract_tags(span.attributes)
-        tags.extend(_extract_tags(span.resource.labels))
+        tags.extend(_extract_tags(span.resource.attributes))
 
         tags.extend(
             [
@@ -212,6 +213,20 @@ def _translate_to_jaeger(spans: Span):
                 _get_string_tag("span.kind", span.kind.name),
             ]
         )
+
+        if span.instrumentation_info is not None:
+            tags.extend(
+                [
+                    _get_string_tag(
+                        "otel.instrumentation_library.name",
+                        span.instrumentation_info.name,
+                    ),
+                    _get_string_tag(
+                        "otel.instrumentation_library.version",
+                        span.instrumentation_info.version,
+                    ),
+                ]
+            )
 
         # Ensure that if Status.Code is not OK, that we set the "error" tag on the Jaeger span.
         if status.canonical_code is not StatusCanonicalCode.OK:

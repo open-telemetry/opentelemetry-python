@@ -100,8 +100,8 @@ from opentracing import (
 )
 
 from opentelemetry import propagators
+from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import Context, attach, detach, get_value, set_value
-from opentelemetry.correlationcontext import get_correlation, set_correlation
 from opentelemetry.instrumentation.opentracing_shim import util
 from opentelemetry.instrumentation.opentracing_shim.version import __version__
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, DefaultSpan, Link
@@ -290,7 +290,7 @@ class SpanShim(Span):
             value: A tag value.
         """
         # pylint: disable=protected-access
-        self._context._baggage = set_correlation(
+        self._context._baggage = set_baggage(
             key, value, context=self._context._baggage
         )
 
@@ -303,7 +303,7 @@ class SpanShim(Span):
             Returns this :class:`SpanShim` instance to allow call chaining.
         """
         # pylint: disable=protected-access
-        return get_correlation(key, context=self._context._baggage)
+        return get_baggage(key, context=self._context._baggage)
 
 
 class ScopeShim(Scope):
@@ -676,7 +676,7 @@ class TracerShim(Tracer):
         if format not in self._supported_formats:
             raise UnsupportedFormatException
 
-        propagator = propagators.get_global_httptextformat()
+        propagator = propagators.get_global_textmap()
 
         ctx = set_span_in_context(DefaultSpan(span_context.unwrap()))
         propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
@@ -710,7 +710,7 @@ class TracerShim(Tracer):
             value = dict_object.get(key)
             return [value] if value is not None else []
 
-        propagator = propagators.get_global_httptextformat()
+        propagator = propagators.get_global_textmap()
         ctx = propagator.extract(get_as_list, carrier)
         span = get_current_span(ctx)
         if span is not None:

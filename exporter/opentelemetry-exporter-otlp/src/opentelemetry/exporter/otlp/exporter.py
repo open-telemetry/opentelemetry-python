@@ -18,6 +18,9 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
+from typing import Any, Callable, Dict, Generic, List, Optional
+from typing import Sequence as TypingSequence
+from typing import Text, Tuple, TypeVar
 
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
@@ -31,11 +34,17 @@ from grpc import (
 
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
+from opentelemetry.sdk.resources import Resource as SDKResource
 
 logger = logging.getLogger(__name__)
+SDKDataT = TypeVar("SDKDataT")
+ResourceDataT = TypeVar("ResourceDataT")
+TypingResourceT = TypeVar("TypingResourceT")
+ExportServiceRequestT = TypeVar("ExportServiceRequestT")
+ExportResultT = TypeVar("ExportResultT")
 
 
-def _translate_key_values(key, value):
+def _translate_key_values(key: Text, value: Any) -> KeyValue:
 
     if isinstance(value, bool):
         any_value = AnyValue(bool_value=value)
@@ -64,8 +73,12 @@ def _translate_key_values(key, value):
 
 
 def _get_resource_data(
-    sdk_resource_instrumentation_library_data, resource_class, name
-):
+    sdk_resource_instrumentation_library_data: Dict[
+        SDKResource, ResourceDataT
+    ],
+    resource_class: Callable[..., TypingResourceT],
+    name: str,
+) -> List[TypingResourceT]:
 
     resource_data = []
 
@@ -76,7 +89,7 @@ def _get_resource_data(
 
         collector_resource = Resource()
 
-        for key, value in sdk_resource.labels.items():
+        for key, value in sdk_resource.attributes.items():
 
             try:
                 # pylint: disable=no-member
@@ -101,7 +114,9 @@ def _get_resource_data(
 
 
 # pylint: disable=no-member
-class OTLPExporterMixin(ABC):
+class OTLPExporterMixin(
+    ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
+):
     """OTLP span/metric exporter
 
     Args:
@@ -114,7 +129,7 @@ class OTLPExporterMixin(ABC):
         self,
         endpoint: str = "localhost:55680",
         credentials: ChannelCredentials = None,
-        metadata: tuple = None,
+        metadata: Optional[Tuple[Any]] = None,
     ):
         super().__init__()
 
@@ -127,10 +142,12 @@ class OTLPExporterMixin(ABC):
             self._client = self._stub(secure_channel(endpoint, credentials))
 
     @abstractmethod
-    def _translate_data(self, data):
+    def _translate_data(
+        self, data: TypingSequence[SDKDataT]
+    ) -> ExportServiceRequestT:
         pass
 
-    def _export(self, data):
+    def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
@@ -186,9 +203,9 @@ class OTLPExporterMixin(ABC):
                 if error.code() == StatusCode.OK:
                     return self._result.SUCCESS
 
-                return self.result.FAILURE
+                return self._result.FAILURE
 
         return self._result.FAILURE
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         pass

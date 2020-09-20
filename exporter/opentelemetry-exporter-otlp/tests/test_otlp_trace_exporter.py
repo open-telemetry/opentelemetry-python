@@ -30,7 +30,11 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
     add_TraceServiceServicer_to_server,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    InstrumentationLibrary,
+    KeyValue,
+)
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as CollectorResource,
 )
@@ -46,6 +50,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleExportSpanProcessor,
     SpanExportResult,
 )
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
 
 
@@ -83,6 +88,14 @@ class TraceServiceServicerSUCCESS(TraceServiceServicer):
     # pylint: disable=invalid-name,unused-argument,no-self-use
     def Export(self, request, context):
         context.set_code(StatusCode.OK)
+
+        return ExportTraceServiceResponse()
+
+
+class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
+    # pylint: disable=invalid-name,unused-argument,no-self-use
+    def Export(self, request, context):
+        context.set_code(StatusCode.ALREADY_EXISTS)
 
         return ExportTraceServiceResponse()
 
@@ -134,6 +147,9 @@ class TestOTLPSpanExporter(TestCase):
                     }
                 )
             ],
+            instrumentation_info=InstrumentationInfo(
+                name="name", version="version"
+            ),
         )
 
         self.span.start()
@@ -178,6 +194,14 @@ class TestOTLPSpanExporter(TestCase):
             self.exporter.export([self.span]), SpanExportResult.SUCCESS
         )
 
+    def test_failure(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerALREADY_EXISTS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export([self.span]), SpanExportResult.FAILURE
+        )
+
     def test_translate_spans(self):
 
         expected = ExportTraceServiceRequest(
@@ -193,6 +217,9 @@ class TestOTLPSpanExporter(TestCase):
                     ),
                     instrumentation_library_spans=[
                         InstrumentationLibrarySpans(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name", version="version"
+                            ),
                             spans=[
                                 CollectorSpan(
                                     # pylint: disable=no-member
@@ -266,7 +293,7 @@ class TestOTLPSpanExporter(TestCase):
                                         )
                                     ],
                                 )
-                            ]
+                            ],
                         )
                     ],
                 ),

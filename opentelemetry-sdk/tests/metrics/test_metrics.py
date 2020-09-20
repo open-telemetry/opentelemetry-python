@@ -40,7 +40,7 @@ class TestMeterProvider(unittest.TestCase):
         meter_provider = metrics.MeterProvider()
         meter = meter_provider.get_meter(__name__)
         # pylint: disable=protected-access
-        self.assertIs(meter.resource, resources._EMPTY_RESOURCE)
+        self.assertEqual(meter.resource, resources._DEFAULT_RESOURCE)
 
     def test_start_pipeline(self):
         exporter = mock.Mock()
