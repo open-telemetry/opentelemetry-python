@@ -59,7 +59,9 @@ class HTTPMetricRecorder(MetricRecorder):
         self._http_type = http_type
         if self._meter:
             self._duration = self._meter.create_metric(
-                name="{}.{}.duration".format("http", self._http_type.name.lower()),
+                name="{}.{}.duration".format(
+                    "http", self._http_type.name.lower()
+                ),
                 description="measures the duration of the {} HTTP request".format(
                     "inbound"
                     if self._http_type is HTTPMetricType.SERVER

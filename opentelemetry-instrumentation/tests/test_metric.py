@@ -60,7 +60,7 @@ class TestHTTPMetricRecorder(TestCase):
         meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         # pylint: disable=protected-access
-        self.assertEqual(recorder._type, HTTPMetricType.CLIENT)
+        self.assertEqual(recorder._http_type, HTTPMetricType.CLIENT)
         self.assertTrue(isinstance(recorder._duration, metrics.ValueRecorder))
         self.assertEqual(recorder._duration.name, "http.client.duration")
         self.assertEqual(
