@@ -26,6 +26,7 @@ from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
     ChannelCredentials,
+    Compression,
     RpcError,
     StatusCode,
     insecure_channel,
@@ -123,6 +124,7 @@ class OTLPExporterMixin(
         endpoint: OpenTelemetry Collector receiver endpoint
         credentials: ChannelCredentials object for server authentication
         metadata: Metadata to send when exporting
+        compression: Compression algorithm to be used in channel
     """
 
     def __init__(
@@ -130,16 +132,28 @@ class OTLPExporterMixin(
         endpoint: str = "localhost:55680",
         credentials: ChannelCredentials = None,
         metadata: Optional[Tuple[Any]] = None,
+        compression: str = None,
     ):
         super().__init__()
 
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        if credentials is None:
-            self._client = self._stub(insecure_channel(endpoint))
+        if compression is "gzip":
+            self.compression = Compression.Gzip
         else:
-            self._client = self._stub(secure_channel(endpoint, credentials))
+            self.compression = Compression.NoCompression
+
+        if credentials is None:
+            self._client = self._stub(
+                insecure_channel(endpoint, compression=self.compression)
+            )
+        else:
+            self._client = self._stub(
+                secure_channel(
+                    endpoint, credentials, compression=self.compression
+                )
+            )
 
     @abstractmethod
     def _translate_data(
