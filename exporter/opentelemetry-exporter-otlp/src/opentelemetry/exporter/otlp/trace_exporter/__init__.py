@@ -13,20 +13,18 @@
 
 """OTLP Span Exporter"""
 
-import os
 import logging
+import os
 from typing import Sequence
 
-from grpc import (
-    ChannelCredentials
-)
+from grpc import ChannelCredentials
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
-    _translate_key_values,
     _load_credential_from_file,
+    _translate_key_values,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -73,14 +71,18 @@ class OTLPSpanExporter(
     ):
         insecure = insecure or Configuration().EXPORTER_OTLP_SPAN_INSECURE
         if not insecure:
-            credentials = credentials or _load_credential_from_file(Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE)
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE
+            )
 
         super().__init__(
             **{
-                endpoint: endpoint or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
+                endpoint: endpoint
+                or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
                 insecure: insecure,
                 credentials: credentials,
-                metadata: metadata or Configuration().EXPORTER_OTLP_SPAN_HEADERS
+                metadata: metadata
+                or Configuration().EXPORTER_OTLP_SPAN_HEADERS,
             }
         )
 

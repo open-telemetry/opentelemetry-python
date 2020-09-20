@@ -14,8 +14,8 @@
 
 """OTLP Exporter"""
 
-import os
 import logging
+import os
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
@@ -26,12 +26,12 @@ from typing import Text, Tuple, TypeVar
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
-    ssl_channel_credentials,
     ChannelCredentials,
     RpcError,
     StatusCode,
     insecure_channel,
     secure_channel,
+    ssl_channel_credentials,
 )
 
 from opentelemetry.configuration import Configuration
@@ -115,15 +115,17 @@ def _get_resource_data(
 
     return resource_data
 
+
 def _load_credential_from_file(filepath) -> ChannelCredentials:
     real_path = os.path.join(os.path.dirname(__file__), filepath)
     try:
-        with open(real_path, 'rb') as f:
+        with open(real_path, "rb") as f:
             credential = f.read()
             return ssl_channel_credentials(credential)
     except FileNotFoundError as error:
         logger.exception(error)
         return None
+
 
 # pylint: disable=no-member
 class OTLPExporterMixin(
@@ -146,7 +148,11 @@ class OTLPExporterMixin(
     ):
         super().__init__()
 
-        endpoint = endpoint or Configuration().EXPORTER_OTLP_ENDPOINT or "localhost:55680"
+        endpoint = (
+            endpoint
+            or Configuration().EXPORTER_OTLP_ENDPOINT
+            or "localhost:55680"
+        )
         insecure = insecure or Configuration().EXPORTER_OTLP_INSECURE
         if insecure is None:
             insecure = True
@@ -156,7 +162,9 @@ class OTLPExporterMixin(
         if insecure:
             self._client = self._stub(insecure_channel(endpoint))
         else:
-            credentials = credentials or _load_credential_from_file(Configuration().EXPORTER_OTLP_CERTIFICATE)
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_CERTIFICATE
+            )
             self._client = self._stub(secure_channel(endpoint, credentials))
 
     @abstractmethod

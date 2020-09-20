@@ -14,13 +14,11 @@
 
 """OTLP Metrics Exporter"""
 
-import os
 import logging
-from typing import List, Sequence, Type, TypeVar
+import os
+from typing import List, Sequence, Type, TypeVar, Union
 
-from grpc import (
-    ChannelCredentials
-)
+from grpc import ChannelCredentials
 
 from opentelemetry.configuration import Configuration
 # pylint: disable=duplicate-code
@@ -132,14 +130,18 @@ class OTLPMetricsExporter(
     ):
         insecure = insecure or Configuration().EXPORTER_OTLP_METRIC_INSECURE
         if not insecure:
-            credentials = credentials or _load_credential_from_file(Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE)
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE
+            )
 
         super().__init__(
             **{
-                endpoint: endpoint or Configuration().EXPORTER_OTLP_METRIC_ENDPOINT,
+                endpoint: endpoint
+                or Configuration().EXPORTER_OTLP_METRIC_ENDPOINT,
                 insecure: insecure,
                 credentials: credentials,
-                metadata: metadata or Configuration().EXPORTER_OTLP_METRIC_HEADERS
+                metadata: metadata
+                or Configuration().EXPORTER_OTLP_METRIC_HEADERS,
             }
         )
 
