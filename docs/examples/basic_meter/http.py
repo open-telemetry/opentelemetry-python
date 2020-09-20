@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 """
-This module shows how you can enable collection and exporting of standard
-metrics related to instrumentations.
+This module shows how you can enable collection and exporting of http metrics
+related to instrumentations.
 """
 import requests
 
@@ -29,9 +29,12 @@ metrics.set_meter_provider(MeterProvider())
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 
-RequestsInstrumentor().instrument(
-    metrics_exporter=exporter, metrics_interval=5
-)
+# Instrument the requests library
+RequestsInstrumentor().instrument()
+
+# Indicate to start collecting and exporting requests related metrics
+metrics.get_meter_provider().start_pipeline(RequestsInstrumentor().meter, exporter, 5)
+
 response = requests.get("http://example.com")
 
 input("...\n")

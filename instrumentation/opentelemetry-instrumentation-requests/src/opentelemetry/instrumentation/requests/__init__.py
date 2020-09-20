@@ -173,10 +173,11 @@ def _instrument(tracer_provider=None, span_callback=None):
                                 )
                             )
                         )
-                    labels["http.status_code"] = result.status_code
+                    labels["http.status_code"] = str(result.status_code)
                     labels["http.status_text"] = result.reason
                     if result.raw and result.raw.version:
-                        labels["http.flavor"] = result.raw.version
+                        labels["http.flavor"] = str(result.raw.version)[:1] \
+                            + "." + str(result.raw.version)[:-1]
 
                 if span_callback is not None:
                     span_callback(span, result)
@@ -239,8 +240,6 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
             **kwargs: Optional arguments
                 ``tracer_provider``: a TracerProvider, defaults to global
                 ``span_callback``: An optional callback invoked before returning the http response. Invoked with Span and requests.Response
-                ``metrics_exporter``: the metric exporter to send requests related metrics to.
-                ``metrics_interval``: the export interval for the metric exporter
         """
         _instrument(
             tracer_provider=kwargs.get("tracer_provider"),
@@ -249,8 +248,6 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
         self.init_metrics(
             __name__,
             __version__,
-            kwargs.get("metrics_exporter"),
-            kwargs.get("metrics_interval"),
         )
         # pylint: disable=W0201
         self.metric_recorder = HTTPMetricRecorder(self.meter, SpanKind.CLIENT)

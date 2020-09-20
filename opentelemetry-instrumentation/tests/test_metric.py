@@ -14,18 +14,17 @@
 # type: ignore
 
 import time
-from unittest import TestCase
+from unittest import mock, TestCase
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.instrumentation.metric import (
     HTTPMetricRecorder,
+    HTTPMetricType,
     MetricMixin,
 )
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.util import get_dict_as_key
-from opentelemetry.trace import SpanKind
 
 
 # pylint: disable=protected-access
@@ -47,19 +46,6 @@ class TestMetricMixin(TestCase):
         self.assertEqual(meter.instrumentation_info.name, "test")
         self.assertEqual(meter.instrumentation_info.version, 1.0)
 
-    def test_init_exporter(self):
-        mixin = MetricMixin()
-        exporter = ConsoleMetricsExporter()
-        mixin.init_metrics("test", 1.0, exporter, 100.0)
-        meter = mixin.meter
-        self.assertTrue(isinstance(meter, metrics.Meter))
-        self.assertEqual(meter.instrumentation_info.name, "test")
-        self.assertEqual(meter.instrumentation_info.version, 1.0)
-        # pylint: disable=protected-access
-        self.assertEqual(mixin._controller.exporter, exporter)
-        self.assertEqual(mixin._controller.meter, meter)
-        mixin._controller.shutdown()
-
 
 class TestHTTPMetricRecorder(TestCase):
     @classmethod
@@ -73,9 +59,9 @@ class TestHTTPMetricRecorder(TestCase):
 
     def test_ctor(self):
         meter = metrics_api.get_meter(__name__)
-        recorder = HTTPMetricRecorder(meter, SpanKind.CLIENT)
-        self.assertEqual(recorder.kind, SpanKind.CLIENT)
+        recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         # pylint: disable=protected-access
+        self.assertEqual(recorder._type, HTTPMetricType.CLIENT)
         self.assertTrue(isinstance(recorder._duration, metrics.ValueRecorder))
         self.assertEqual(recorder._duration.name, "http.client.duration")
         self.assertEqual(
@@ -85,11 +71,12 @@ class TestHTTPMetricRecorder(TestCase):
 
     def test_record_duration(self):
         meter = metrics_api.get_meter(__name__)
-        recorder = HTTPMetricRecorder(meter, SpanKind.CLIENT)
+        recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         labels = {"test": "asd"}
-        with recorder.record_duration(labels):
-            labels["test2"] = "asd2"
-            time.sleep(1)
+        with mock.patch('time.time') as time_patch:
+            time_patch.return_value = 5.0
+            with recorder.record_duration(labels):
+                labels["test2"] = "asd2"
         match_key = get_dict_as_key({"test": "asd", "test2": "asd2"})
         for key in recorder._duration.bound_instruments.keys():
             self.assertEqual(key, match_key)
@@ -98,4 +85,4 @@ class TestHTTPMetricRecorder(TestCase):
             for view_data in bound.view_datas:
                 self.assertEqual(view_data.labels, key)
                 self.assertEqual(view_data.aggregator.current.count, 1)
-                self.assertGreater(view_data.aggregator.current.sum, 0)
+                self.assertGreaterEqual(view_data.aggregator.current.sum, 0)

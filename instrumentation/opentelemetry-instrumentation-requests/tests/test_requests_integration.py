@@ -94,9 +94,9 @@ class RequestsIntegrationTestBase(abc.ABC):
         recorder = RequestsInstrumentor().meter.metrics.pop()
         match_key = get_dict_as_key(
             {
-                "http.flavor": 11,
+                "http.flavor": "1.1",
                 "http.method": "GET",
-                "http.status_code": 200,
+                "http.status_code": '200',
                 "http.status_text": "OK",
                 "http.url": "http://httpbin.org/status/200",
             }
@@ -317,7 +317,7 @@ class RequestsIntegrationTestBase(abc.ABC):
         match_key = get_dict_as_key(
             {
                 "http.method": "GET",
-                "http.status_code": 500,
+                "http.status_code": '500',
                 "http.status_text": "Internal Server Error",
                 "http.url": "http://httpbin.org/status/200",
             }

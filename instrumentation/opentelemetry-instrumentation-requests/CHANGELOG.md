@@ -6,7 +6,7 @@
   ([#1040](https://github.com/open-telemetry/opentelemetry-python/pull/1040))
 - Drop support for Python 3.4
   ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
-- Add support for standard metrics - duration
+- Add support for http metrics
   ([#1116](https://github.com/open-telemetry/opentelemetry-python/pull/1116))
 
 ## Version 0.12b0
