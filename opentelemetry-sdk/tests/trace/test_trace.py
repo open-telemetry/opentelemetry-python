@@ -396,7 +396,7 @@ class TestSpanCreation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
         # pylint: disable=protected-access
-        self.assertIs(span.resource, resources._DEFAULT_RESOURCE)
+        self.assertEqual(span.resource, resources._DEFAULT_RESOURCE)
 
     def test_span_context_remote_flag(self):
         tracer = new_tracer()
