@@ -34,6 +34,7 @@ from grpc import (
     secure_channel,
 )
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -116,9 +117,13 @@ def _get_resource_data(
 
 def _load_credential_from_file(filepath) -> ChannelCredentials:
     real_path = os.path.join(os.path.dirname(__file__), filepath)
-    with open(real_path, 'rb') as f:
-        credential = f.read()
-        return ssl_channel_credentials(credential)
+    try:
+        with open(real_path, 'rb') as f:
+            credential = f.read()
+            return ssl_channel_credentials(credential)
+    except FileNotFoundError as error:
+        logger.exception(error)
+        return None
 
 # pylint: disable=no-member
 class OTLPExporterMixin(
@@ -141,15 +146,15 @@ class OTLPExporterMixin(
     ):
         super().__init__()
 
-        endpoint = endpoint or os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT") or "localhost:55680"
-        insecure = insecure or os.environ.get("OTEL_EXPORTER_OTLP_INSECURE") or True # TODO(jan25): verify spec for default value. This affects how credentials are passed
+        endpoint = endpoint or Configuration().EXPORTER_OTLP_ENDPOINT or "localhost:55680"
+        insecure = insecure or Configuration().EXPORTER_OTLP_INSECURE or True
         self._metadata = metadata
         self._collector_span_kwargs = None
 
         if insecure:
             self._client = self._stub(insecure_channel(endpoint))
         else:
-            credentials = credentials or _load_credential_from_file(os.environ.get("OTEL_EXPORTER_OTLP_CERTIFICATE"))
+            credentials = credentials or _load_credential_from_file(Configuration().EXPORTER_OTLP_CERTIFICATE)
             self._client = self._stub(secure_channel(endpoint, credentials))
 
     @abstractmethod

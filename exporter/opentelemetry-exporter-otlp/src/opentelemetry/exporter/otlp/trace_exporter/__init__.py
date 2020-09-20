@@ -17,6 +17,11 @@ import os
 import logging
 from typing import Sequence
 
+from grpc import (
+    ChannelCredentials
+)
+
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
@@ -66,16 +71,16 @@ class OTLPSpanExporter(
         credentials: ChannelCredentials = None,
         metadata: tuple = None,
     ):
-        insecure = insecure or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_INSECURE")
+        insecure = insecure or Configuration().EXPORTER_OTLP_SPAN_INSECURE
         if not insecure:
-            credentials = credentials or _load_credential_from_file(os.environ.get("OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE"))
+            credentials = credentials or _load_credential_from_file(Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE)
 
         super().__init__(
             **{
-                endpoint: endpoint or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_ENDPOINT"),
+                endpoint: endpoint or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
                 insecure: insecure,
                 credentials: credentials,
-                metadata: metadata or os.environ.get("OTEL_EXPORTER_OTLP_SPAN_HEADERS")
+                metadata: metadata or Configuration().EXPORTER_OTLP_SPAN_HEADERS
             }
         )
 

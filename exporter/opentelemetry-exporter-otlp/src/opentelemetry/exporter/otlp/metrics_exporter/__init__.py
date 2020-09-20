@@ -18,6 +18,11 @@ import os
 import logging
 from typing import List, Sequence, Type, TypeVar
 
+from grpc import (
+    ChannelCredentials
+)
+
+from opentelemetry.configuration import Configuration
 # pylint: disable=duplicate-code
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
@@ -125,16 +130,16 @@ class OTLPMetricsExporter(
         credentials: ChannelCredentials = None,
         metadata: tuple = None,
     ):
-        insecure = insecure or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_INSECURE")
+        insecure = insecure or Configuration().EXPORTER_OTLP_METRIC_INSECURE
         if not insecure:
-            credentials = credentials or _load_credential_from_file(os.environ.get("OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE"))
+            credentials = credentials or _load_credential_from_file(Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE)
 
         super().__init__(
             **{
-                endpoint: endpoint or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_ENDPOINT"),
+                endpoint: endpoint or Configuration().EXPORTER_OTLP_METRIC_ENDPOINT,
                 insecure: insecure,
                 credentials: credentials,
-                metadata: metadata or os.environ.get("OTEL_EXPORTER_OTLP_METRIC_HEADERS")
+                metadata: metadata or Configuration().EXPORTER_OTLP_METRIC_HEADERS
             }
         )
 
