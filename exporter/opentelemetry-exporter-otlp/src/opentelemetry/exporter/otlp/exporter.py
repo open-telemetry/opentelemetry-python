@@ -147,7 +147,9 @@ class OTLPExporterMixin(
         super().__init__()
 
         endpoint = endpoint or Configuration().EXPORTER_OTLP_ENDPOINT or "localhost:55680"
-        insecure = insecure or Configuration().EXPORTER_OTLP_INSECURE or True
+        insecure = insecure or Configuration().EXPORTER_OTLP_INSECURE
+        if insecure is None:
+            insecure = True
         self._metadata = metadata
         self._collector_span_kwargs = None
 
