@@ -128,11 +128,10 @@ class Configuration:
                         try:
                             value = int(value_str)
                         except ValueError:
-                            pass
-                        try:
-                            value = float(value_str)
-                        except ValueError:
-                            pass
+                            try:
+                                value = float(value_str)
+                            except ValueError:
+                                pass
 
                     instance._config_map[key] = value
 
