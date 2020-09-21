@@ -88,16 +88,13 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(span_list[0].attributes, expected_attrs)
 
     def test_not_recording(self):
-        expected_attrs = expected_attributes(
-            {"http.target": "/hello/123", "http.route": "/hello/{helloid}"}
-        )
         mock_tracer = Mock()
         mock_span = Mock()
         mock_span.is_recording.return_value = False
         mock_tracer.start_span.return_value = mock_span
         mock_tracer.use_span.return_value.__enter__ = mock_span
         mock_tracer.use_span.return_value.__exit__ = mock_span
-        with patch("opentelemetry.trace.get_tracer") as tracer:
+        with patch("opentelemetry.trace.get_tracer"):
             self.client.get("/hello/123")
             span_list = self.memory_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 0)
