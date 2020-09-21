@@ -61,13 +61,12 @@ API
 
 import base64
 import logging
-import os
 import socket
 
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
-import opentelemetry.trace as trace_api
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
@@ -79,14 +78,6 @@ DEFAULT_AGENT_PORT = 6831
 UDP_PACKET_MAX_LENGTH = 65000
 
 logger = logging.getLogger(__name__)
-
-OTEL_ENVS = {
-    "agent_host": "OTEL_EXPORTER_JAEGER_AGENT_HOST",
-    "agent_port": "OTEL_EXPORTER_JAEGER_AGENT_PORT",
-    "collector_endpoint": "OTEL_EXPORTER_JAEGER_ENDPOINT",
-    "username": "OTEL_EXPORTER_JAEGER_USER",
-    "password": "OTEL_EXPORTER_JAEGER_PASSWORD",
-}
 
 
 class JaegerSpanExporter(SpanExporter):
@@ -115,20 +106,17 @@ class JaegerSpanExporter(SpanExporter):
     ):
         self.service_name = service_name
         self.agent_host_name = (
-            os.environ.get(OTEL_ENVS["agent_host"]) or agent_host_name
+            Configuration().EXPORTER_JAEGER_AGENT_HOST or agent_host_name
         )
         self.agent_port = (
-            int(os.environ.get(OTEL_ENVS["agent_port"]))
-            if os.environ.get(OTEL_ENVS["agent_port"])
-            else agent_port
+            Configuration().EXPORTER_JAEGER_AGENT_PORT or agent_port
         )
         self._agent_client = None
         self.collector_endpoint = (
-            os.environ.get(OTEL_ENVS["collector_endpoint"])
-            or collector_endpoint
+            Configuration().EXPORTER_JAEGER_ENDPOINT or collector_endpoint
         )
-        self.username = username or os.environ.get(OTEL_ENVS["username"])
-        self.password = password or os.environ.get(OTEL_ENVS["password"])
+        self.username = username or Configuration().EXPORTER_JAEGER_USER
+        self.password = password or Configuration().EXPORTER_JAEGER_PASSWORD
         self._collector = None
 
     @property
