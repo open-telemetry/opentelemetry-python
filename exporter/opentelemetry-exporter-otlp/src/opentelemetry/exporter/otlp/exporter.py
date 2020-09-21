@@ -139,7 +139,7 @@ class OTLPExporterMixin(
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        if compression is "gzip":
+        if compression == "gzip":
             self.compression = Compression.Gzip
         else:
             self.compression = Compression.NoCompression
