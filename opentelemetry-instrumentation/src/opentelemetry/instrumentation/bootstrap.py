@@ -49,6 +49,7 @@ instrumentations = {
     "sqlalchemy": "opentelemetry-instrumentation-sqlalchemy>=0.8b0",
     "sqlite3": "opentelemetry-instrumentation-sqlite3>=0.11b0",
     "starlette": "opentelemetry-instrumentation-starlette>=0.11b0",
+    "tornado": "opentelemetry-instrumentation-tornado>=0.13b0",
     "wsgi": "opentelemetry-instrumentation-wsgi>=0.8b0",
 }
 
@@ -78,6 +79,7 @@ libraries = {
     "sqlalchemy": ("opentelemetry-instrumentation-sqlalchemy",),
     "sqlite3": ("opentelemetry-instrumentation-sqlite3",),
     "starlette": ("opentelemetry-instrumentation-starlette",),
+    "tornado": ("opentelemetry-instrumentation-tornado",),
     "wsgi": ("opentelemetry-instrumentation-wsgi",),
 }
 
