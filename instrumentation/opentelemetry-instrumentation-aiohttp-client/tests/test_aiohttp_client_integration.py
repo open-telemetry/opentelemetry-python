@@ -141,7 +141,7 @@ class TestAioHttpIntegration(TestBase):
         mock_span = mock.Mock()
         mock_span.is_recording.return_value = False
         mock_tracer.start_span.return_value = mock_span
-        with mock.patch("opentelemetry.trace.get_tracer") as tracer:
+        with mock.patch("opentelemetry.trace.get_tracer"):
             host, port = self._http_request(
                 trace_config=opentelemetry.instrumentation.aiohttp_client.create_trace_config(),
                 url="/test-path?query=param#foobar",
