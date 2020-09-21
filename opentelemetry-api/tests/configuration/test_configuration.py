@@ -119,15 +119,12 @@ class TestConfiguration(TestCase):
         },
     )
     def test_integer(self) -> None:
-        self.assertEqual(
-            Configuration().POSITIVE_INTEGER, 123
-        )  # pylint: disable=no-member
-        self.assertEqual(
-            Configuration().NEGATIVE_INTEGER, -123
-        )  # pylint: disable=no-member
-        self.assertEqual(
-            Configuration().NON_INTEGER, "-12z3"
-        )  # pylint: disable=no-member
+        # pylint: disable=no-member
+        self.assertIsInstance(Configuration().POSITIVE_INTEGER, int)
+        self.assertEqual(Configuration().POSITIVE_INTEGER, 123)
+        self.assertIsInstance(Configuration().NEGATIVE_INTEGER, int)
+        self.assertEqual(Configuration().NEGATIVE_INTEGER, -123)
+        self.assertEqual(Configuration().NON_INTEGER, "-12z3")
 
     @patch.dict(
         "os.environ",  # type: ignore
