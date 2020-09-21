@@ -133,8 +133,7 @@ def create_trace_config(
             request_span_name = str(trace_config_ctx.span_name)
 
         trace_config_ctx.span = trace_config_ctx.tracer.start_span(
-            request_span_name,
-            kind=SpanKind.CLIENT,
+            request_span_name, kind=SpanKind.CLIENT,
         )
 
         if trace_config_ctx.span.is_recording():

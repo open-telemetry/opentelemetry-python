@@ -159,8 +159,7 @@ class OpenTelemetryMiddleware:
 
         try:
             with self.tracer.start_as_current_span(
-                span_name + " asgi",
-                kind=trace.SpanKind.SERVER,
+                span_name + " asgi", kind=trace.SpanKind.SERVER,
             ) as span:
                 if span.is_recording():
                     attributes = collect_request_attributes(scope)
