@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import unittest
 from unittest import mock
 
@@ -21,6 +20,7 @@ from unittest import mock
 # pylint:disable=import-error
 import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
@@ -99,7 +99,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         service = "my-opentelemetry-jaeger"
 
         agent_host_name = "opentelemetry.io"
-        agent_port = 6833
+        agent_port = "6831"
 
         collector_endpoint = "https://opentelemetry.io:15875"
 
@@ -107,19 +107,24 @@ class TestJaegerSpanExporter(unittest.TestCase):
         password = "password"
         auth = (username, password)
 
-        otel_envs = jaeger_exporter.OTEL_ENVS
+        environ_patcher = mock.patch.dict(
+            "os.environ",
+            {
+                "OTEL_EXPORTER_JAEGER_AGENT_HOST": agent_host_name,
+                "OTEL_EXPORTER_JAEGER_AGENT_PORT": agent_port,
+                "OTEL_EXPORTER_JAEGER_ENDPOINT": collector_endpoint,
+                "OTEL_EXPORTER_JAEGER_USER": username,
+                "OTEL_EXPORTER_JAEGER_PASSWORD": password,
+            },
+        )
 
-        os.environ[otel_envs["agent_host"]] = agent_host_name
-        os.environ[otel_envs["agent_port"]] = str(agent_port)
-        os.environ[otel_envs["collector_endpoint"]] = collector_endpoint
-        os.environ[otel_envs["username"]] = username
-        os.environ[otel_envs["password"]] = password
+        environ_patcher.start()
 
         exporter = jaeger_exporter.JaegerSpanExporter(service_name=service)
 
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
-        self.assertEqual(exporter.agent_port, agent_port)
+        self.assertEqual(exporter.agent_port, int(agent_port))
         self.assertTrue(exporter.collector is not None)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertEqual(exporter.collector.auth, auth)
@@ -134,11 +139,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertNotEqual(exporter.collector, collector)
         self.assertTrue(exporter.collector.auth is None)
 
-        del os.environ[otel_envs["agent_host"]]
-        del os.environ[otel_envs["agent_port"]]
-        del os.environ[otel_envs["collector_endpoint"]]
-        del os.environ[otel_envs["username"]]
-        del os.environ[otel_envs["password"]]
+        environ_patcher.stop()
+
+        Configuration._reset()
 
     def test_nsec_to_usec_round(self):
         # pylint: disable=protected-access
