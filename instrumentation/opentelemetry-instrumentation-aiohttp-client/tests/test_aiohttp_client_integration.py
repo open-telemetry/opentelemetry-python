@@ -142,6 +142,7 @@ class TestAioHttpIntegration(TestBase):
         mock_span.is_recording.return_value = False
         mock_tracer.start_span.return_value = mock_span
         with mock.patch("opentelemetry.trace.get_tracer"):
+            # pylint: disable=W0612
             host, port = self._http_request(
                 trace_config=opentelemetry.instrumentation.aiohttp_client.create_trace_config(),
                 url="/test-path?query=param#foobar",
