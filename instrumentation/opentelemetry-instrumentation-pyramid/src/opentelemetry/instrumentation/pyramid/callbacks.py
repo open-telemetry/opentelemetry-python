@@ -91,7 +91,7 @@ def _before_traversal(event):
             attributes["http.route"] = request.matched_route.pattern
         for key, value in attributes.items():
             span.set_attribute(key, value)
-    
+
     activation = tracer.use_span(span, end_on_exit=True)
     activation.__enter__()
     environ[_ENVIRON_ACTIVATION_KEY] = activation

@@ -167,6 +167,7 @@ class OpenTelemetryMiddleware:
                     attributes.update(additional_attributes)
                     for key, value in attributes.items():
                         span.set_attribute(key, value)
+
                 @wraps(receive)
                 async def wrapped_receive():
                     with self.tracer.start_as_current_span(
