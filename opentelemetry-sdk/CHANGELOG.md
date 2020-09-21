@@ -27,6 +27,8 @@ Released 2020-09-17
   ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
 - Rename members of `trace.sampling.Decision` enum
   ([#1115](https://github.com/open-telemetry/opentelemetry-python/pull/1115))
+- Merge `OTELResourceDetector` result when creating resources
+  ([#1096](https://github.com/open-telemetry/opentelemetry-python/pull/1096))
 
 ## Version 0.12b0
 
