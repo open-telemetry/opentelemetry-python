@@ -358,6 +358,7 @@ class TestSpanCreation(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
+        other_parent_ctx = trace_api.set_span_in_context(other_parent)
 
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
@@ -369,7 +370,7 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIsNone(root.end_time)
 
             with tracer.start_as_current_span(
-                "stepchild", other_parent
+                "stepchild", other_parent_ctx
             ) as child:
                 # The child should become the current span as usual, but its
                 # parent should be the one passed in, not the

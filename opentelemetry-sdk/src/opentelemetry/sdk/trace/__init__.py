@@ -345,8 +345,7 @@ class Span(trace_api.Span):
     Args:
         name: The name of the operation this span represents
         context: The immutable span context
-        parent: This span's parent's `opentelemetry.trace.SpanContext`, or
-            null if this is a root span
+        parent: An optional Context containing the span's parent
         sampler: The sampler used to create this span
         trace_config: TODO
         resource: Entity producing telemetry
@@ -701,7 +700,7 @@ class Tracer(trace_api.Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        parent: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
@@ -712,19 +711,15 @@ class Tracer(trace_api.Tracer):
     def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        parent: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        if parent is Tracer.CURRENT_SPAN:
-            parent = trace_api.get_current_span()
 
-        parent_context = parent
-        if isinstance(parent_context, trace_api.Span):
-            parent_context = parent.get_context()
+        parent_context = trace_api.get_current_span(parent).get_context()
 
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext
@@ -732,7 +727,7 @@ class Tracer(trace_api.Tracer):
             raise TypeError("parent must be a Span, SpanContext or None.")
 
         if parent_context is None or not parent_context.is_valid:
-            parent = parent_context = None
+            parent_context = None
             trace_id = generate_trace_id()
             trace_flags = None
             trace_state = None

@@ -77,6 +77,8 @@ import typing
 from contextlib import contextmanager
 from logging import getLogger
 
+from opentelemetry.context import Context
+
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -100,9 +102,6 @@ from opentelemetry.trace.status import Status
 from opentelemetry.util import _load_trace_provider, types
 
 logger = getLogger(__name__)
-
-# TODO: quarantine
-ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
 class LinkBase(abc.ABC):
@@ -227,7 +226,7 @@ class Tracer(abc.ABC):
     def start_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        parent: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -279,7 +278,7 @@ class Tracer(abc.ABC):
     def start_as_current_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        parent: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -315,7 +314,7 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
+            parent: An optional Context containing the span's parent.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
@@ -355,7 +354,7 @@ class DefaultTracer(Tracer):
     def start_span(
         self,
         name: str,
-        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        parent: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -369,7 +368,7 @@ class DefaultTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        parent: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -444,7 +443,6 @@ __all__ = [
     "DefaultTracerProvider",
     "Link",
     "LinkBase",
-    "ParentSpan",
     "Span",
     "SpanContext",
     "SpanKind",
