@@ -21,6 +21,7 @@ from typing import List, Optional, Sequence, Type, TypeVar, Union
 from grpc import ChannelCredentials
 
 from opentelemetry.configuration import Configuration
+
 # pylint: disable=duplicate-code
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
