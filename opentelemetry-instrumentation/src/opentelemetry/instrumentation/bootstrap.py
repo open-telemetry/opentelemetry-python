@@ -34,7 +34,7 @@ instrumentations = {
     "django": "opentelemetry-instrumentation-django>=0.8b0",
     "elasticsearch": "opentelemetry-instrumentation-elasticsearch>=0.11b0",
     "fastapi": "opentelemetry-instrumentation-fastapi>=0.11b0",
-    "falcon": "opentelemetry-instrumentation-flask>=0.13b0",
+    "falcon": "opentelemetry-instrumentation-falcon>=0.13b0",
     "flask": "opentelemetry-instrumentation-flask>=0.8b0",
     "grpc": "opentelemetry-instrumentation-grpc>=0.8b0",
     "jinja2": "opentelemetry-instrumentation-jinja2>=0.8b0",
@@ -49,6 +49,7 @@ instrumentations = {
     "sqlalchemy": "opentelemetry-instrumentation-sqlalchemy>=0.8b0",
     "sqlite3": "opentelemetry-instrumentation-sqlite3>=0.11b0",
     "starlette": "opentelemetry-instrumentation-starlette>=0.11b0",
+    "tornado": "opentelemetry-instrumentation-tornado>=0.13b0",
     "wsgi": "opentelemetry-instrumentation-wsgi>=0.8b0",
 }
 
@@ -63,7 +64,7 @@ libraries = {
     "django": ("opentelemetry-instrumentation-django",),
     "elasticsearch": ("opentelemetry-instrumentation-elasticsearch",),
     "fastapi": ("opentelemetry-instrumentation-fastapi",),
-    "falcon": ("opentelemetry-instrumentation-flask",),
+    "falcon": ("opentelemetry-instrumentation-falcon",),
     "flask": ("opentelemetry-instrumentation-flask",),
     "grpc": ("opentelemetry-instrumentation-grpc",),
     "jinja2": ("opentelemetry-instrumentation-jinja2",),
@@ -78,6 +79,7 @@ libraries = {
     "sqlalchemy": ("opentelemetry-instrumentation-sqlalchemy",),
     "sqlite3": ("opentelemetry-instrumentation-sqlite3",),
     "starlette": ("opentelemetry-instrumentation-starlette",),
+    "tornado": ("opentelemetry-instrumentation-tornado",),
     "wsgi": ("opentelemetry-instrumentation-wsgi",),
 }
 
