@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed boostrap command to correctly install opentelemetry-instrumentation-falcon instead of opentelemetry-instrumentation-flask
+
 ## Version 0.13b0
 
 Released 2020-09-17
