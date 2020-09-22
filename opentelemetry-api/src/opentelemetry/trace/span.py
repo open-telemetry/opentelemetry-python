@@ -1,9 +1,12 @@
 import abc
+import logging
 import types as python_types
 import typing
 
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
+
+_logger = logging.getLogger(__name__)
 
 
 class Span(abc.ABC):
@@ -203,14 +206,11 @@ class SpanContext(
     def is_valid(self) -> bool:
         return self[5]
 
-    def __getattr__(self, *args: str) -> None:
-        raise TypeError
-
     def __setattr__(self, *args: str) -> None:
-        raise TypeError
+        _logger.warning("This method has been deprecated: SpanContext is immutable.")
 
     def __delattr__(self, *args: str) -> None:
-        raise TypeError
+        _logger.warning("This method has been deprecated: SpanContext is immutable.")
 
     def __repr__(self) -> str:
         return (

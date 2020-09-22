@@ -43,17 +43,14 @@ class TestImmutableSpanContext(unittest.TestCase):
             trace_state=trace.DEFAULT_TRACE_STATE,
         )
 
-        with self.assertRaises(TypeError):
-            context.trace_id = 2
-        with self.assertRaises(TypeError):
-            context.span_id = 3
-        with self.assertRaises(TypeError):
-            context.is_remote = True
-        with self.assertRaises(TypeError):
-            context.trace_flags = TraceFlags(3)
-        with self.assertRaises(TypeError):
-            context.trace_state = TraceState([("test", "test")])
+        # attempt to change the attribute values
+        context.trace_id = 2
+        context.span_id = 3
+        context.is_remote = True
+        context.trace_flags = TraceFlags(3)
+        context.trace_state = TraceState([("test", "test")])
 
+        # check if attributes changed
         self.assertEqual(context.trace_id, 1)
         self.assertEqual(context.span_id, 2)
         self.assertEqual(context.is_remote, False)
