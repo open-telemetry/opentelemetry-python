@@ -140,21 +140,23 @@ class B3Format(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        if span.get_context() == trace.INVALID_SPAN_CONTEXT:
+        span_context = span.get_context()
+        if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
-        sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
+        sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
+            carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, format_span_id(span.context.span_id)
+            carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
         )
-        if span.parent is not None:
+        span_parent = getattr(span, "parent", None)
+        if span_parent is not None:
             set_in_carrier(
                 carrier,
                 self.PARENT_SPAN_ID_KEY,
-                format_span_id(span.parent.span_id),
+                format_span_id(span_parent.span_id),
             )
         set_in_carrier(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
