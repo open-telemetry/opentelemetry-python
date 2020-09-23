@@ -16,16 +16,19 @@
 API for propagation of context.
 
 The propagators for the
-`opentelemetry.propagators.composite.CompositeHTTPPropagator` can be defined
-via configuration in the `OTEL_PROPAGATORS` environment variable. This variable
-should be set to a comma-separated string of names of values for the
-`opentelemetry_propagator` entry point. For example, setting `OTEL_PROPAGATORS`
-to `tracecontext,baggage` (which is the default value) would instantiate
-`opentelemetry.propagators.composite.CompositeHTTPPropagator` with 2
-propagators, one of type `opentelemetry.trace.propagation.tracecontext.TraceContextTextMapPropagator`
-and other of type `opentelemetry.baggage.propagation.BaggagePropagator`. Notice
-that these propagator classes are defined as `opentelemetry_propagator` entry
-points in the `setup.cfg` file of `opentelemetry`.
+``opentelemetry.propagators.composite.CompositeHTTPPropagator`` can be defined
+via configuration in the ``OTEL_PROPAGATORS`` environment variable. This
+variable should be set to a comma-separated string of names of values for the
+``opentelemetry_propagator`` entry point. For example, setting
+``OTEL_PROPAGATORS`` to ``tracecontext,baggage`` (which is the default value)
+would instantiate
+``opentelemetry.propagators.composite.CompositeHTTPPropagator`` with 2
+propagators, one of type
+``opentelemetry.trace.propagation.tracecontext.TraceContextTextMapPropagator``
+and other of type ``opentelemetry.baggage.propagation.BaggagePropagator``.
+Notice that these propagator classes are defined as
+``opentelemetry_propagator`` entry points in the ``setup.cfg`` file of
+``opentelemetry``.
 
 Example::
 
