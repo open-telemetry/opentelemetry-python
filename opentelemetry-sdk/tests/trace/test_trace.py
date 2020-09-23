@@ -136,8 +136,9 @@ class TestTracerSampling(unittest.TestCase):
         # Check that the default tracer creates real spans via the default
         # sampler
         root_span = tracer.start_span(name="root span", parent=None)
+        ctx = trace_api.set_span_in_context(root_span)
         self.assertIsInstance(root_span, trace.Span)
-        child_span = tracer.start_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=ctx)
         self.assertIsInstance(child_span, trace.Span)
         self.assertTrue(root_span.context.trace_flags.sampled)
         self.assertEqual(
@@ -154,8 +155,9 @@ class TestTracerSampling(unittest.TestCase):
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
         root_span = tracer.start_span(name="root span", parent=None)
+        ctx = trace_api.set_span_in_context(root_span)
         self.assertIsInstance(root_span, trace_api.DefaultSpan)
-        child_span = tracer.start_span(name="child span", parent=root_span)
+        child_span = tracer.start_span(name="child span", parent=ctx)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
         self.assertEqual(
             root_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
@@ -288,6 +290,7 @@ class TestSpanCreation(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
+        other_parent_context = trace_api.set_span_in_context(other_parent)
 
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
@@ -299,7 +302,7 @@ class TestSpanCreation(unittest.TestCase):
         with tracer.use_span(root, True):
             self.assertIs(trace_api.get_current_span(), root)
 
-            with tracer.start_span("stepchild", other_parent) as child:
+            with tracer.start_span("stepchild", other_parent_context) as child:
                 # The child's parent should be the one passed in,
                 # not the current span.
                 self.assertNotEqual(child.parent, root)
@@ -539,7 +542,9 @@ class TestSpan(unittest.TestCase):
             "attr-in-both": "decision-attr",
         }
         tracer_provider = trace.TracerProvider(
-            sampling.StaticSampler(sampling.Decision.RECORD_AND_SAMPLE,)
+            sampling.StaticSampler(
+                sampling.Decision.RECORD_AND_SAMPLE,
+            )
         )
 
         self.tracer = tracer_provider.get_tracer(__name__)
