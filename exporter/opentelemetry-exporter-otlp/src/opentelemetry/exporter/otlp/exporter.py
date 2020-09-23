@@ -15,13 +15,13 @@
 """OTLP Exporter"""
 
 import logging
+import enum
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
 from typing import Any, Callable, Dict, Generic, List, Optional
 from typing import Sequence as TypingSequence
 from typing import Text, Tuple, TypeVar
-
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
@@ -43,6 +43,11 @@ ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")
 ExportServiceRequestT = TypeVar("ExportServiceRequestT")
 ExportResultT = TypeVar("ExportResultT")
+
+
+class GRPCCompression(enum.Enum):
+    DEFAULT = 0
+    GZIP = 1
 
 
 def _translate_key_values(key: Text, value: Any) -> KeyValue:
@@ -132,20 +137,25 @@ class OTLPExporterMixin(
         endpoint: str = "localhost:55680",
         credentials: ChannelCredentials = None,
         metadata: Optional[Tuple[Any]] = None,
-        compression: Compression = Compression.NoCompression,
+        compression: enum.Enum = GRPCCompression.DEFAULT,
     ):
         super().__init__()
 
         self._metadata = metadata
         self._collector_span_kwargs = None
 
+        if compression is GRPCCompression.DEFAULT:
+            compression_algorithm = Compression.NoCompression
+        elif compression is GRPCCompression.GZIP:
+            compression_algorithm = Compression.Gzip
+
         if credentials is None:
             self._client = self._stub(
-                insecure_channel(endpoint, compression=compression)
+                insecure_channel(endpoint, compression=compression_algorithm)
             )
         else:
             self._client = self._stub(
-                secure_channel(endpoint, credentials, compression=compression)
+                secure_channel(endpoint, credentials, compression=compression_algorithm)
             )
 
     @abstractmethod
