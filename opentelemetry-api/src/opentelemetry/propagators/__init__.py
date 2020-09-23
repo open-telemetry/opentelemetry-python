@@ -122,13 +122,13 @@ try:
 
     propagators = []
 
-    for propagator in (
-        Configuration().get("PROPAGATORS", "tracecontext,baggage").split(",")
+    for propagator in (  # type: ignore
+        Configuration().get("PROPAGATORS", "tracecontext,baggage").split(",")  # type: ignore
     ):
 
-        propagators.append(
-            next(
-                iter_entry_points("opentelemetry_propagator", propagator)
+        propagators.append(  # type: ignore
+            next(  # type: ignore
+                iter_entry_points("opentelemetry_propagator", propagator)  # type: ignore
             ).load()()
         )
 
@@ -136,7 +136,7 @@ except Exception:  # pylint: disable=broad-except
     logger.exception("Failed to load configured propagators")
     raise
 
-_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)
+_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)  # type: ignore
 
 
 def get_global_textmap() -> textmap.TextMapPropagator:
@@ -145,4 +145,4 @@ def get_global_textmap() -> textmap.TextMapPropagator:
 
 def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format
+    _HTTP_TEXT_FORMAT = http_text_format  # type: ignore
