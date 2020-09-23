@@ -132,27 +132,20 @@ class OTLPExporterMixin(
         endpoint: str = "localhost:55680",
         credentials: ChannelCredentials = None,
         metadata: Optional[Tuple[Any]] = None,
-        compression: str = None,
+        compression: Compression = Compression.NoCompression,
     ):
         super().__init__()
 
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        if compression == "gzip":
-            self.compression = Compression.Gzip
-        else:
-            self.compression = Compression.NoCompression
-
         if credentials is None:
             self._client = self._stub(
-                insecure_channel(endpoint, compression=self.compression)
+                insecure_channel(endpoint, compression=compression)
             )
         else:
             self._client = self._stub(
-                secure_channel(
-                    endpoint, credentials, compression=self.compression
-                )
+                secure_channel(endpoint, credentials, compression=compression)
             )
 
     @abstractmethod
