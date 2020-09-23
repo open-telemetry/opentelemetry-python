@@ -166,9 +166,7 @@ class SklearnInstrumentor:
         """Instrument an estimator method with a span.
 
         Args:
-            estimator (BaseEstimator): A fitted ``sklearn`` estimator, with an
-              attribute which also contains an estimator or collection of
-              estimators.
+            estimator (BaseEstimator): A fitted ``sklearn`` estimator.
             method_name (str): The method name of the estimator on which to
               apply a span.
         """
