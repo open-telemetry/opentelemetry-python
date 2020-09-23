@@ -44,11 +44,11 @@ class TestImmutableSpanContext(unittest.TestCase):
         )
 
         # attempt to change the attribute values
-        context.trace_id = 2
-        context.span_id = 3
-        context.is_remote = True
-        context.trace_flags = TraceFlags(3)
-        context.trace_state = TraceState([("test", "test")])
+        context.trace_id = 2  # type: ignore
+        context.span_id = 3  # type: ignore
+        context.is_remote = True  # type: ignore
+        context.trace_flags = TraceFlags(3)  # type: ignore
+        context.trace_state = TraceState([("test", "test")])  # type: ignore
 
         # check if attributes changed
         self.assertEqual(context.trace_id, 1)

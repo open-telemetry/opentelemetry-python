@@ -184,33 +184,37 @@ class SpanContext(
 
     @property
     def trace_id(self) -> int:
-        return self[0]
+        return self[0]  # pylint: disable=unsubscriptable-object
 
     @property
     def span_id(self) -> int:
-        return self[1]
+        return self[1]  # pylint: disable=unsubscriptable-object
 
     @property
     def is_remote(self) -> bool:
-        return self[2]
+        return self[2]  # pylint: disable=unsubscriptable-object
 
     @property
     def trace_flags(self) -> "TraceFlags":
-        return self[3]
+        return self[3]  # pylint: disable=unsubscriptable-object
 
     @property
     def trace_state(self) -> "TraceState":
-        return self[4]
+        return self[4]  # pylint: disable=unsubscriptable-object
 
     @property
     def is_valid(self) -> bool:
-        return self[5]
+        return self[5]  # pylint: disable=unsubscriptable-object
 
     def __setattr__(self, *args: str) -> None:
-        _logger.warning("This method has been deprecated: SpanContext is immutable.")
+        _logger.debug(
+            "Immutable type, ignoring call to set attribute", stack_info=True
+        )
 
     def __delattr__(self, *args: str) -> None:
-        _logger.warning("This method has been deprecated: SpanContext is immutable.")
+        _logger.debug(
+            "Immutable type, ignoring call to set attribute", stack_info=True
+        )
 
     def __repr__(self) -> str:
         return (
