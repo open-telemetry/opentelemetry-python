@@ -20,7 +20,7 @@ from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import resources, trace
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
@@ -140,6 +140,12 @@ class TestTracerSampling(unittest.TestCase):
         child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace.Span)
         self.assertTrue(root_span.context.trace_flags.sampled)
+        self.assertEqual(
+            root_span.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
+        )
+        self.assertEqual(
+            child_span.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
+        )
 
     def test_sampler_no_sampling(self):
         tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
@@ -151,6 +157,12 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(root_span, trace_api.DefaultSpan)
         child_span = tracer.start_span(name="child span", parent=root_span)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
+        self.assertEqual(
+            root_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
+        )
+        self.assertEqual(
+            child_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
+        )
 
 
 class TestSpanCreation(unittest.TestCase):
@@ -201,7 +213,7 @@ class TestSpanCreation(unittest.TestCase):
             tracer1.instrumentation_info, InstrumentationInfo
         )
         span1 = tracer1.start_span("foo")
-        self.assertTrue(span1.is_recording_events())
+        self.assertTrue(span1.is_recording())
         self.assertEqual(tracer1.instrumentation_info.version, "")
         self.assertEqual(
             tracer1.instrumentation_info.name, "ERROR:MISSING MODULE NAME"
@@ -384,7 +396,7 @@ class TestSpanCreation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
         # pylint: disable=protected-access
-        self.assertIs(span.resource, resources._EMPTY_RESOURCE)
+        self.assertEqual(span.resource, resources._DEFAULT_RESOURCE)
 
     def test_span_context_remote_flag(self):
         tracer = new_tracer()
@@ -521,36 +533,25 @@ class TestSpan(unittest.TestCase):
         self.assertTrue(trace._is_valid_attribute_value(15))
 
     def test_sampling_attributes(self):
-        decision_attributes = {
+        sampling_attributes = {
             "sampler-attr": "sample-val",
             "attr-in-both": "decision-attr",
         }
         tracer_provider = trace.TracerProvider(
-            sampling.StaticSampler(
-                sampling.Decision(sampled=True, attributes=decision_attributes)
-            )
+            sampling.StaticSampler(sampling.Decision.RECORD_AND_SAMPLE,)
         )
 
         self.tracer = tracer_provider.get_tracer(__name__)
 
-        with self.tracer.start_as_current_span("root2") as root:
+        with self.tracer.start_as_current_span(
+            name="root2", attributes=sampling_attributes
+        ) as root:
             self.assertEqual(len(root.attributes), 2)
             self.assertEqual(root.attributes["sampler-attr"], "sample-val")
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
-
-        attributes = {
-            "attr-key": "val",
-            "attr-key2": "val2",
-            "attr-in-both": "span-attr",
-        }
-        with self.tracer.start_as_current_span(
-            "root2", attributes=attributes
-        ) as root:
-            self.assertEqual(len(root.attributes), 4)
-            self.assertEqual(root.attributes["attr-key"], "val")
-            self.assertEqual(root.attributes["attr-key2"], "val2")
-            self.assertEqual(root.attributes["sampler-attr"], "sample-val")
-            self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
+            self.assertEqual(
+                root.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
+            )
 
     def test_events(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
@@ -921,6 +922,7 @@ class TestSpanProcessor(unittest.TestCase):
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
         span = trace.Span("span-name", context)
+        span.resource = Resource({})
 
         self.assertEqual(
             span.to_json(),

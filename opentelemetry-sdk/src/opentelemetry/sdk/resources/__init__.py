@@ -12,6 +12,71 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This package implements `OpenTelemetry Resources
+<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#resource-sdk>`_:
+
+    *A Resource is an immutable representation of the entity producing
+    telemetry. For example, a process producing telemetry that is running in
+    a container on Kubernetes has a Pod name, it is in a namespace and
+    possibly is part of a Deployment which also has a name. All three of
+    these attributes can be included in the Resource.*
+
+Resource objects are created with `Resource.create`, which accepts attributes
+(key-values). Resource attributes can also be passed at process invocation in
+the :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should
+register your resource with the `opentelemetry.sdk.metrics.MeterProvider` and
+`opentelemetry.sdk.trace.TracerProvider` by passing them into their
+constructors. The `Resource` passed to a provider is available to the
+exporter, which can send on this information as it sees fit.
+
+.. code-block:: python
+
+    metrics.set_meter_provider(
+        MeterProvider(
+            resource=Resource.create({
+                "service.name": "shoppingcart",
+                "service.instance.id": "instance-12",
+            }),
+        ),
+    )
+    print(metrics.get_meter_provider().resource.attributes)
+
+    {'telemetry.sdk.language': 'python',
+    'telemetry.sdk.name': 'opentelemetry',
+    'telemetry.sdk.version': '0.13.dev0',
+    'service.name': 'shoppingcart',
+    'service.instance.id': 'instance-12'}
+
+Note that the OpenTelemetry project documents certain `"standard attributes"
+<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/README.md>`_
+that have prescribed semantic meanings, for example ``service.name`` in the
+above example.
+
+.. envvar:: OTEL_RESOURCE_ATTRIBUTES
+
+The :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable allows resource
+attributes to be passed to the SDK at process invocation. The attributes from
+:envvar:`OTEL_RESOURCE_ATTRIBUTES` are merged with those passed to
+`Resource.create`, meaning :envvar:`OTEL_RESOURCE_ATTRIBUTES` takes *lower*
+priority. Attributes should be in the format ``key1=value1,key2=value2``.
+Additional details are available `in the specification
+<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable>`_.
+
+.. code-block:: console
+
+    $ OTEL_RESOURCE_ATTRIBUTES="service.name=shoppingcard,will_be_overridden=foo" python - <<EOF
+    import pprint
+    from opentelemetry.sdk.resources import Resource
+    pprint.pprint(Resource.create({"will_be_overridden": "bar"}).attributes)
+    EOF
+    {'service.name': 'shoppingcard',
+    'telemetry.sdk.language': 'python',
+    'telemetry.sdk.name': 'opentelemetry',
+    'telemetry.sdk.version': '0.13.dev0',
+    'will_be_overridden': 'bar'}
+ """
+
 import abc
 import concurrent.futures
 import logging
@@ -19,47 +84,68 @@ import os
 import typing
 from json import dumps
 
+import pkg_resources
+
 LabelValue = typing.Union[str, bool, int, float]
-Labels = typing.Dict[str, LabelValue]
+Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 
+TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
+TELEMETRY_SDK_NAME = "telemetry.sdk.name"
+TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
+
+OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
+    "opentelemetry-sdk"
+).version
+OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
+
+
 class Resource:
-    def __init__(self, labels: Labels):
-        self._labels = labels.copy()
+    def __init__(self, attributes: Attributes):
+        self._attributes = attributes.copy()
 
     @staticmethod
-    def create(labels: Labels) -> "Resource":
-        if not labels:
-            return _EMPTY_RESOURCE
-        return Resource(labels)
+    def create(attributes: typing.Optional[Attributes] = None) -> "Resource":
+        if not attributes:
+            resource = _DEFAULT_RESOURCE
+        else:
+            resource = _DEFAULT_RESOURCE.merge(Resource(attributes))
+        return resource.merge(OTELResourceDetector().detect())
 
     @staticmethod
     def create_empty() -> "Resource":
         return _EMPTY_RESOURCE
 
     @property
-    def labels(self) -> Labels:
-        return self._labels.copy()
+    def attributes(self) -> Attributes:
+        return self._attributes.copy()
 
     def merge(self, other: "Resource") -> "Resource":
-        merged_labels = self.labels
+        merged_attributes = self.attributes
         # pylint: disable=protected-access
-        for key, value in other._labels.items():
-            if key not in merged_labels or merged_labels[key] == "":
-                merged_labels[key] = value
-        return Resource(merged_labels)
+        for key, value in other._attributes.items():
+            if key not in merged_attributes or merged_attributes[key] == "":
+                merged_attributes[key] = value
+        return Resource(merged_attributes)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self._labels == other._labels
+        return self._attributes == other._attributes
 
     def __hash__(self):
-        return hash(dumps(self._labels, sort_keys=True))
+        return hash(dumps(self._attributes, sort_keys=True))
 
 
 _EMPTY_RESOURCE = Resource({})
+_DEFAULT_RESOURCE = Resource(
+    {
+        TELEMETRY_SDK_LANGUAGE: "python",
+        TELEMETRY_SDK_NAME: "opentelemetry",
+        TELEMETRY_SDK_VERSION: OPENTELEMETRY_SDK_VERSION,
+    }
+)
 
 
 class ResourceDetector(abc.ABC):
@@ -74,7 +160,7 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-        env_resources_items = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
+        env_resources_items = os.environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
         if env_resources_items:
             env_resource_map = {
