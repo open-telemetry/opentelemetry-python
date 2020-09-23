@@ -1,6 +1,6 @@
 import logging
 from functools import wraps
-from typing import Callable, Dict, List, Sequence, Type
+from typing import Callable, Dict, List, MutableMapping, Sequence, Type
 
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import FeatureUnion, Pipeline
@@ -65,7 +65,7 @@ class SklearnInstrumentor:
     instance attributes. Support for walking this embedded sub-hierarchy is
     supported with ``recurse_attribs``. This argument is a dictionary
     with classes as keys, and a list of attributes representing embedded
-    estimators. By default, ``recurse_attribs`` is empty.
+    estimators as values. By default, ``recurse_attribs`` is empty.
 
     Similar to Pipelines, there are also estimators which have class attributes
     as a list of 2-tuples; for instance, the ``FeatureUnion`` and its attribute
@@ -120,6 +120,8 @@ class SklearnInstrumentor:
           element is the estimator. Defaults include sklearn's ``Pipeline``
           and its attribute ``steps``, and the ``FeatureUnion`` and its
           attribute ``transformer_list``.
+        spanner: A function with signature (func, str) which
+          decorates instance methods with opentelemetry spans.
     """
 
     def __init__(
@@ -129,12 +131,14 @@ class SklearnInstrumentor:
         recurse_namedtuple_attribs: Dict[
             Type[BaseEstimator], List[str]
         ] = None,
+        spanner: Callable = implement_spans,
     ):
         self.methods = methods or DEFAULT_METHODS
         self.recurse_attribs = recurse_attribs or DEFAULT_ATTRIBS
         self.recurse_namedtuple_attribs = (
             recurse_namedtuple_attribs or DEFAULT_NAMEDTUPLE_ATTRIBS
         )
+        self.spanner = spanner
 
     def instrument_estimator(self, estimator: BaseEstimator):
         """Instrument a fitted estimator and its hierarchy where configured.
@@ -152,18 +156,71 @@ class SklearnInstrumentor:
             self._instrument_estimator_attribute(estimator=estimator)
 
         for method_name in self.methods:
-            if hasattr(estimator, method_name):
+            self._instrument_estimator_method(
+                estimator=estimator, method_name=method_name
+            )
+
+    def _instrument_estimator_method(
+        self, estimator: BaseEstimator, method_name: str
+    ):
+        """Instrument an estimator method with a span.
+
+        Args:
+            estimator (BaseEstimator): A fitted ``sklearn`` estimator, with an
+              attribute which also contains an estimator or collection of
+              estimators.
+            method_name (str): The method name of the estimator on which to
+              apply a span.
+        """
+        if hasattr(estimator, method_name):
+            class_attr = getattr(type(estimator), method_name, None)
+            # handle attributes which are properties
+            if isinstance(class_attr, property):
+                # grab the returned value of the property
+                attrib = getattr(estimator, method_name)
+                # for properties, we get the actual instance ownership
+                # and patch the returned attribute on the instance
+                is_callable = isinstance(attrib, Callable)
+                if is_callable and "__self__" in dir(attrib):
+                    instance = getattr(attrib, "__self__")
+                    setattr(
+                        instance,
+                        attrib.__name__,
+                        self.spanner(attrib, estimator.__class__.__name__),
+                    )
+                # sometimes functions are wrapped,
+                # so we unwrap them here and recurse
+                elif is_callable and "__wrapped__" in dir(attrib):
+                    instance = getattr(attrib, "__wrapped__")
+                    self._instrument_estimator_method(
+                        estimator=instance, method_name=method_name
+                    )
+                else:
+                    logger.debug(
+                        "Unable to instrument: %s.%s",
+                        estimator.__class__.__name__,
+                        method_name,
+                    )
+            else:
+                method = getattr(estimator, method_name)
                 setattr(
                     estimator,
                     method_name,
-                    implement_spans(
-                        getattr(estimator, method_name),
-                        estimator.__class__.__name__,
-                    ),
+                    self.spanner(method, estimator.__class__.__name__),
                 )
+        else:
+            logger.debug(
+                "Unable to instrument (method not found): %s.%s",
+                estimator.__class__.__name__,
+                method_name,
+            )
 
     def _instrument_estimator_attribute(self, estimator: BaseEstimator):
         """Instrument instance attributes which also contain estimators.
+
+        Handle instance attributes which are also estimators, are a list
+        (Sequence) of estimators, or are mappings (dictionary) in which
+        the values are estimators.
 
         Examples include ``RandomForestClassifier`` and
         ``MultiOutputRegressor`` instances which have attributes
@@ -174,16 +231,17 @@ class SklearnInstrumentor:
               attribute which also contains an estimator or collection of
               estimators.
         """
-        for klass, attribs in self.recurse_attribs.items():
-            if isinstance(estimator, klass):
-                for attrib in attribs:
-                    attrib_value = getattr(estimator, attrib)
-                    if isinstance(attrib_value, Sequence):
-                        for value in attrib_value:
-                            self.instrument_estimator(estimator=value)
-                    else:
-                        self.instrument_estimator(estimator=attrib_value,)
-                break
+        attribs = self.recurse_attribs.get(estimator.__class__, [])
+        for attrib in attribs:
+            attrib_value = getattr(estimator, attrib)
+            if isinstance(attrib_value, Sequence):
+                for value in attrib_value:
+                    self.instrument_estimator(estimator=value)
+            elif isinstance(attrib_value, MutableMapping):
+                for value in attrib_value.values():
+                    self.instrument_estimator(estimator=value)
+            else:
+                self.instrument_estimator(estimator=attrib_value)
 
     def _instrument_estimator_namedtuple(self, estimator: BaseEstimator):
         """Instrument attributes with (name, estimator) tupled components.
@@ -195,10 +253,7 @@ class SklearnInstrumentor:
             estimator: A fitted sklearn estimator, with an attribute which also
               contains an estimator or collection of estimators.
         """
-        for klass, attribs in self.recurse_namedtuple_attribs.items():
-            if isinstance(estimator, klass):
-                for attrib in attribs:
-                    if hasattr(estimator, attrib):
-                        for _, est in getattr(estimator, attrib):
-                            self.instrument_estimator(estimator=est)
-                break
+        attribs = self.recurse_namedtuple_attribs.get(estimator.__class__, [])
+        for attrib in attribs:
+            for _, est in getattr(estimator, attrib):
+                self.instrument_estimator(estimator=est)
