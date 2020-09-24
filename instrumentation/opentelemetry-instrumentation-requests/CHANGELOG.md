@@ -2,8 +2,14 @@
 
 ## Unreleased
 
+## Version 0.13b0
+
+Released 2020-09-17
+
 - Add support for instrumenting prepared requests
   ([#1040](https://github.com/open-telemetry/opentelemetry-python/pull/1040))
+- Drop support for Python 3.4
+  ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
 
 ## Version 0.12b0
 

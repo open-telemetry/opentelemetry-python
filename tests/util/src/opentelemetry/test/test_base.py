@@ -69,6 +69,13 @@ class TestBase(unittest.TestCase):
             self.assertIn(key, span.attributes)
             self.assertEqual(val, span.attributes[key])
 
+    def sorted_spans(self, spans):  # pylint: disable=R0201
+        return sorted(
+            spans,
+            key=lambda s: s._start_time,  # pylint: disable=W0212
+            reverse=True,
+        )
+
     @staticmethod
     def create_tracer_provider(**kwargs):
         """Helper to create a configured tracer provider.

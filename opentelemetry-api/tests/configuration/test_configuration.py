@@ -20,9 +20,10 @@ from opentelemetry.configuration import Configuration
 
 
 class TestConfiguration(TestCase):
-    def tearDown(self) -> None:
-        # This call resets the attributes of the Configuration class so that
-        # each test is executed in the same conditions.
+
+    # These calls reset the attributes of the Configuration class so that each
+    # test is executed in the same conditions.
+    def setUp(self) -> None:
         Configuration._reset()
 
     def test_singleton(self) -> None:
@@ -119,15 +120,12 @@ class TestConfiguration(TestCase):
         },
     )
     def test_integer(self) -> None:
-        self.assertEqual(
-            Configuration().POSITIVE_INTEGER, 123
-        )  # pylint: disable=no-member
-        self.assertEqual(
-            Configuration().NEGATIVE_INTEGER, -123
-        )  # pylint: disable=no-member
-        self.assertEqual(
-            Configuration().NON_INTEGER, "-12z3"
-        )  # pylint: disable=no-member
+        # pylint: disable=no-member
+        self.assertIsInstance(Configuration().POSITIVE_INTEGER, int)
+        self.assertEqual(Configuration().POSITIVE_INTEGER, 123)
+        self.assertIsInstance(Configuration().NEGATIVE_INTEGER, int)
+        self.assertEqual(Configuration().NEGATIVE_INTEGER, -123)
+        self.assertEqual(Configuration().NON_INTEGER, "-12z3")
 
     @patch.dict(
         "os.environ",  # type: ignore

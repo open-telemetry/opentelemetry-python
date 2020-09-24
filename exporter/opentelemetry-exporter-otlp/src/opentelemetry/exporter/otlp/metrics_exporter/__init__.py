@@ -15,13 +15,14 @@
 """OTLP Metrics Exporter"""
 
 import logging
-from typing import Sequence
+from typing import List, Sequence, Type, TypeVar, Union
 
 # pylint: disable=duplicate-code
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
 )
+from opentelemetry.metrics import InstrumentT
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -41,9 +42,8 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     MetricDescriptor,
     ResourceMetrics,
 )
-from opentelemetry.sdk.metrics import Counter
-from opentelemetry.sdk.metrics import Metric as SDKMetric
 from opentelemetry.sdk.metrics import (
+    Counter,
     SumObserver,
     UpDownCounter,
     UpDownSumObserver,
@@ -51,14 +51,18 @@ from opentelemetry.sdk.metrics import (
     ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import (
+    MetricRecord,
     MetricsExporter,
     MetricsExportResult,
 )
 
 logger = logging.getLogger(__name__)
+DataPointT = TypeVar("DataPointT", Int64DataPoint, DoubleDataPoint)
 
 
-def _get_data_points(sdk_metric, data_point_class):
+def _get_data_points(
+    sdk_metric: MetricRecord, data_point_class: Type[DataPointT]
+) -> List[DataPointT]:
 
     data_points = []
 
@@ -89,7 +93,9 @@ def _get_data_points(sdk_metric, data_point_class):
     return data_points
 
 
-def _get_temporality(instrument):
+def _get_temporality(
+    instrument: InstrumentT,
+) -> "MetricDescriptor.TemporalityValue":
     # pylint: disable=no-member
     if isinstance(instrument, (Counter, UpDownCounter)):
         temporality = MetricDescriptor.Temporality.DELTA
@@ -107,12 +113,12 @@ def _get_temporality(instrument):
     return temporality
 
 
-def _get_type(value_type):
+def _get_type(value_type: Union[int, float]) -> "MetricDescriptor.TypeValue":
     # pylint: disable=no-member
-    if value_type is int:
+    if value_type is int:  # type: ignore[comparison-overlap]
         type_ = MetricDescriptor.Type.INT64
 
-    elif value_type is float:
+    elif value_type is float:  # type: ignore[comparison-overlap]
         type_ = MetricDescriptor.Type.DOUBLE
 
     # FIXME What are the types that correspond with
@@ -126,7 +132,13 @@ def _get_type(value_type):
     return type_
 
 
-class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
+class OTLPMetricsExporter(
+    MetricsExporter,
+    OTLPExporterMixin[
+        MetricRecord, ExportMetricsServiceRequest, MetricsExportResult
+    ],
+):
+    # pylint: disable=unsubscriptable-object
     """OTLP metrics exporter
 
     Args:
@@ -138,7 +150,9 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
     _stub = MetricsServiceStub
     _result = MetricsExportResult
 
-    def _translate_data(self, data):
+    def _translate_data(
+        self, data: Sequence[MetricRecord]
+    ) -> ExportMetricsServiceRequest:
         # pylint: disable=too-many-locals,no-member
         # pylint: disable=attribute-defined-outside-init
 
@@ -193,6 +207,6 @@ class OTLPMetricsExporter(MetricsExporter, OTLPExporterMixin):
             )
         )
 
-    def export(self, metrics: Sequence[SDKMetric]) -> MetricsExportResult:
+    def export(self, metrics: Sequence[MetricRecord]) -> MetricsExportResult:
         # pylint: disable=arguments-differ
         return self._export(metrics)
