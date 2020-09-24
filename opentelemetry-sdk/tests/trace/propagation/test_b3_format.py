@@ -307,3 +307,16 @@ class TestB3Format(unittest.TestCase):
         new_carrier = {}
         FORMAT.inject(dict.__setitem__, new_carrier, get_current())
         assert len(new_carrier) == 0
+
+    @staticmethod
+    def test_default_span():
+        """Make sure propagator does not crash when working with DefaultSpan"""
+
+        def getter(carrier, key):
+            return carrier.get(key, None)
+
+        def setter(carrier, key, value):
+            carrier[key] = value
+
+        ctx = FORMAT.extract(getter, {})
+        FORMAT.inject(setter, {}, ctx)
