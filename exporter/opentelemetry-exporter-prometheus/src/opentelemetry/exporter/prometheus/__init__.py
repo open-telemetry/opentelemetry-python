@@ -110,8 +110,8 @@ class PrometheusMetricsExporter(MetricsExporter):
 
 
 class CustomCollector:
-    """ CustomCollector represents the Prometheus Collector object
-        https://github.com/prometheus/client_python#custom-collectors
+    """CustomCollector represents the Prometheus Collector object
+    https://github.com/prometheus/client_python#custom-collectors
     """
 
     def __init__(self, prefix: str = ""):
@@ -189,7 +189,7 @@ class CustomCollector:
         return prometheus_metric
 
     def _sanitize(self, key: str) -> str:
-        """ sanitize the given metric name or label according to Prometheus rule.
+        """sanitize the given metric name or label according to Prometheus rule.
         Replace all characters other than [A-Za-z0-9_] with '_'.
         """
         return self._non_letters_nor_digits_re.sub("_", key)

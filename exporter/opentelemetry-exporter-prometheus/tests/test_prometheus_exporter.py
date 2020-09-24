@@ -29,6 +29,7 @@ from opentelemetry.sdk.metrics.export.aggregate import (
     MinMaxSumCountAggregator,
     SumAggregator,
 )
+from opentelemetry.sdk.util import get_dict_as_key
 
 
 class TestPrometheusMetricExporter(unittest.TestCase):
@@ -39,7 +40,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "testname", "testdesc", "unit", int, metrics.Counter,
         )
         labels = {"environment": "staging"}
-        self._labels_key = metrics.get_dict_as_key(labels)
+        self._labels_key = get_dict_as_key(labels)
 
         self._mock_registry_register = mock.Mock()
         self._registry_register_patch = mock.patch(
@@ -80,7 +81,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "test@name", "testdesc", "unit", int, metrics.ValueRecorder, []
         )
         labels = {}
-        key_labels = metrics.get_labels_as_key(labels)
+        key_labels = get_dict_as_key(labels)
         aggregator = MinMaxSumCountAggregator()
         aggregator.update(123)
         aggregator.update(456)
@@ -99,7 +100,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "test@name", "testdesc", "unit", int, metrics.Counter,
         )
         labels = {"environment@": "staging", "os": "Windows"}
-        key_labels = metrics.get_dict_as_key(labels)
+        key_labels = get_dict_as_key(labels)
         aggregator = SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
@@ -130,7 +131,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             "tesname", "testdesc", "unit", int, StubMetric
         )
         labels = {"environment": "staging"}
-        key_labels = metrics.get_dict_as_key(labels)
+        key_labels = get_dict_as_key(labels)
         record = MetricRecord(metric, key_labels, None)
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
