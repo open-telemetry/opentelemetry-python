@@ -16,6 +16,7 @@
 
 import enum
 import logging
+import os
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
@@ -145,10 +146,17 @@ class OTLPExporterMixin(
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        if compression is GRPCCompression.NO_COMPRESSION:
-            compression_algorithm = Compression.NoCompression
-        elif compression is GRPCCompression.GZIP:
+        compression_str = os.environ.get(
+            "OTEL_EXPORTER_OTLP_COMPRESSION", None
+        )
+
+        if compression_str == "gzip":
             compression_algorithm = Compression.Gzip
+        else:
+            if compression is GRPCCompression.NO_COMPRESSION:
+                compression_algorithm = Compression.NoCompression
+            elif compression is GRPCCompression.GZIP:
+                compression_algorithm = Compression.Gzip
 
         if credentials is None:
             self._client = self._stub(
