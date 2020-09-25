@@ -805,6 +805,38 @@ class TestSpan(unittest.TestCase):
             exception_event.attributes["exception.stacktrace"],
         )
 
+    def test_record_exception_context_manager(self):
+        try:
+            with self.tracer.start_as_current_span("span") as span:
+                raise RuntimeError("example error")
+        except RuntimeError:
+            pass
+        finally:
+            self.assertEqual(len(span.events), 1)
+            event = span.events[0]
+            self.assertEqual("exception", event.name)
+            self.assertEqual(
+                "RuntimeError", event.attributes["exception.type"]
+            )
+            self.assertEqual(
+                "example error", event.attributes["exception.message"]
+            )
+
+            stacktrace = """in test_record_exception_context_manager
+    raise RuntimeError("example error")
+RuntimeError: example error"""
+            self.assertIn(stacktrace, event.attributes["exception.stacktrace"])
+
+        try:
+            with self.tracer.start_as_current_span(
+                "span", record_exception=False
+            ) as span:
+                raise RuntimeError("example error")
+        except RuntimeError:
+            pass
+        finally:
+            self.assertEqual(len(span.events), 0)
+
 
 def span_event_start_fmt(span_processor_name, span_name):
     return span_processor_name + ":" + span_name + ":start"
