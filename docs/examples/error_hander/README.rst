@@ -82,7 +82,7 @@ places, for example:
     with GlobalErrorHandler():
         {1: 2}[2]
 
-Running that code will raise a ``KeyError`` exception, of course.
+Running that code will raise a ``KeyError`` exception.
 ``GlobalErrorHandler`` will "capture" that exception and pass it down to the
 registered error handlers. If there is one that handles ``KeyError`` exceptions
 then it will handle it. That can be seen in the result of the execution of
