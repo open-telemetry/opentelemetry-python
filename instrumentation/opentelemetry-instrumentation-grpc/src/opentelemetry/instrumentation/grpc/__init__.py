@@ -77,8 +77,7 @@ Usage Server
     import grpc
 
     from opentelemetry import trace
-    from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer, server_interceptor
-    from opentelemetry.instrumentation.grpc.grpcext import intercept_server
+    from opentelemetry.instrumentation.grpc import server_interceptor
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
@@ -94,8 +93,6 @@ Usage Server
     trace.get_tracer_provider().add_span_processor(
         SimpleExportSpanProcessor(ConsoleSpanExporter())
     )
-    grpc_server_instrumentor = GrpcInstrumentorServer()
-    grpc_server_instrumentor.instrument()
 
 
     class Greeter(helloworld_pb2_grpc.GreeterServicer):
@@ -105,8 +102,8 @@ Usage Server
 
     def serve():
 
-        server = grpc.server(futures.ThreadPoolExecutor())
-        server = intercept_server(server, server_interceptor())
+        server = grpc.server(futures.ThreadPoolExecutor(),
+                             interceptors = [server_interceptor()])
 
         helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
         server.add_insecure_port("[::]:50051")
@@ -118,17 +115,14 @@ Usage Server
         logging.basicConfig()
         serve()
 """
-from contextlib import contextmanager
 from functools import partial
 
 import grpc
 from wrapt import wrap_function_wrapper as _wrap
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.grpc.grpcext import (
-    intercept_channel,
-    intercept_server,
-)
+from opentelemetry.instrumentation.grpc._server import OpenTelemetryServerInterceptor
+from opentelemetry.instrumentation.grpc.grpcext import intercept_channel
 from opentelemetry.instrumentation.grpc.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
@@ -138,17 +132,12 @@ from opentelemetry.instrumentation.utils import unwrap
 # pylint:disable=unused-argument
 # isort:skip
 
-
-class GrpcInstrumentorServer(BaseInstrumentor):
-    def _instrument(self, **kwargs):
-        _wrap("grpc", "server", self.wrapper_fn)
-
-    def _uninstrument(self, **kwargs):
-        unwrap(grpc, "server")
-
-    def wrapper_fn(self, original_func, instance, args, kwargs):
-        server = original_func(*args, **kwargs)
-        return intercept_server(server, server_interceptor())
+__all__ = [
+    "GrpcInstrumentorClient",
+    "OpenTelemetryServerInterceptor",
+    "client_interceptor",
+    "server_interceptor",
+]
 
 
 class GrpcInstrumentorClient(BaseInstrumentor):
@@ -218,8 +207,6 @@ def server_interceptor(tracer_provider=None):
     Returns:
         A service-side interceptor object.
     """
-    from . import _server
-
     tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
-    return _server.OpenTelemetryServerInterceptor(tracer)
+    return OpenTelemetryServerInterceptor(tracer)
