@@ -136,6 +136,26 @@ def _create_start_and_end_span(name, span_processor):
 
 
 class TestBatchExportSpanProcessor(unittest.TestCase):
+    @mock.patch.dict(
+        "os.environ",
+        {
+            "OTEL_BSP_MAX_QUEUE_SIZE": "10",
+            "OTEL_BSP_SCHEDULE_DELAY_MILLIS": "2",
+            "OTEL_BSP_MAX_EXPORT_BATCH_SIZE": "3",
+            "OTEL_BSP_EXPORT_TIMEOUT_MILLIS": "4",
+        },
+    )
+    def test_batch_span_processor_environment_variables(self):
+
+        batch_span_processor = export.BatchExportSpanProcessor(
+            MySpanExporter(destination=[])
+        )
+
+        self.assertEqual(batch_span_processor.max_queue_size, 10)
+        self.assertEqual(batch_span_processor.schedule_delay_millis, 2)
+        self.assertEqual(batch_span_processor.max_export_batch_size, 3)
+        self.assertEqual(batch_span_processor.export_timeout_millis, 4)
+
     def test_shutdown(self):
         spans_names_list = []
 
@@ -266,7 +286,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
             for _ in range(256):
                 _create_start_and_end_span("foo", span_processor)
 
-            time.sleep(0.05)  # give some time for the exporter to upload spans
+            time.sleep(0.1)  # give some time for the exporter to upload spans
 
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 1024)
