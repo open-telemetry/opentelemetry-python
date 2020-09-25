@@ -109,7 +109,10 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self._active_span.set_attribute("grpc.status_code", code.name)
         self._active_span.set_attribute("grpc.details", details)
         self._active_span.set_status(
-            Status(canonical_code=StatusCanonicalCode(code.value[0]), description=details)
+            Status(
+                canonical_code=StatusCanonicalCode(code.value[0]),
+                description=details,
+            )
         )
         return self._servicer_context.abort(code, details)
 
@@ -122,7 +125,10 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         details = self.details or code.value[1]
         self._active_span.set_attribute("grpc.status_code", code.name)
         self._active_span.set_status(
-            Status(canonical_code=StatusCanonicalCode(code.value[0]), description=details)
+            Status(
+                canonical_code=StatusCanonicalCode(code.value[0]),
+                description=details,
+            )
         )
         return self._servicer_context.set_code(code)
 
@@ -130,7 +136,10 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.details = details
         self._active_span.set_attribute("grpc.details", details)
         self._active_span.set_status(
-            Status(canonical_code=StatusCanonicalCode(self.code.value[0]), description=details)
+            Status(
+                canonical_code=StatusCanonicalCode(self.code.value[0]),
+                description=details,
+            )
         )
         return self._servicer_context.set_details(details)
 
@@ -182,22 +191,21 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
         }
 
         metadata = dict(context.invocation_metadata())
-        if 'user-agent' in metadata:
-            attributes["grpc.user_agent"] = metadata['user-agent']
+        if "user-agent" in metadata:
+            attributes["grpc.user_agent"] = metadata["user-agent"]
 
         # Split up the peer to keep with how other telemetry sources
         # do it.  This looks like ipv6:[::1]:57284 or ipv4:127.0.0.1:57284.
-        peer = context.peer().split(':', 1)[1]
-        host, port = peer.rsplit(':', 1)
+        peer = context.peer().split(":", 1)[1]
+        host, port = peer.rsplit(":", 1)
 
         # other telemetry sources convert this, so we will too
         if host == "[::1]" or host == "127.0.0.1":
             host = "localhost"
 
-        attributes.update({
-            "net.peer.name": host,
-            "net.peer.port": port,
-        })
+        attributes.update(
+            {"net.peer.name": host, "net.peer.port": port,}
+        )
 
         return self._tracer.start_as_current_span(
             name=handler_call_details.method,
@@ -210,7 +218,9 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
             def telemetry_interceptor(request_or_iterator, context):
 
                 with self._set_remote_context(context):
-                    with self._start_span(handler_call_details, context) as span:
+                    with self._start_span(
+                        handler_call_details, context
+                    ) as span:
                         # wrap the context
                         context = _OpenTelemetryServicerContext(context, span)
 
