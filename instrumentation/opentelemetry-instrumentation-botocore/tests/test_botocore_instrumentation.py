@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import Mock, patch
+
 import botocore.session
 from botocore.exceptions import ParamValidationError
 from moto import (  # pylint: disable=import-error
@@ -22,7 +24,6 @@ from moto import (  # pylint: disable=import-error
     mock_s3,
     mock_sqs,
 )
-from unittest.mock import Mock, patch
 
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.sdk.resources import Resource
