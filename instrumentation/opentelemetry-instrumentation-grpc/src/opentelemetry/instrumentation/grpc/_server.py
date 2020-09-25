@@ -203,9 +203,7 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
         if host == "[::1]" or host == "127.0.0.1":
             host = "localhost"
 
-        attributes.update(
-            {"net.peer.name": host, "net.peer.port": port,}
-        )
+        attributes.update({"net.peer.name": host, "net.peer.port": port})
 
         return self._tracer.start_as_current_span(
             name=handler_call_details.method,
