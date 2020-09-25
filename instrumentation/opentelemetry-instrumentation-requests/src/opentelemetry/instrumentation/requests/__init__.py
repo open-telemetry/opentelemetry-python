@@ -129,6 +129,7 @@ def _instrument(tracer_provider=None, span_callback=None):
         labels["http.method"] = method
         labels["http.url"] = url
 
+
         with get_tracer(
             __name__, __version__, tracer_provider
         ).start_as_current_span(span_name, kind=SpanKind.CLIENT) as span:
