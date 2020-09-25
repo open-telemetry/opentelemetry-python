@@ -157,7 +157,9 @@ class BotoInstrumentor(BaseInstrumentor):
                 for key, value in meta.items():
                     span.set_attribute(key, value)
 
-                span.set_attribute("http.status_code", getattr(result, "status"))
+                span.set_attribute(
+                    "http.status_code", getattr(result, "status")
+                )
                 span.set_attribute("http.method", getattr(result, "_method"))
 
             return result

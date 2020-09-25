@@ -98,7 +98,6 @@ class TestBotoInstrumentor(TestBase):
             self.assertFalse(mock_span.set_attribute.called)
             self.assertFalse(mock_span.set_status.called)
 
-
     @mock_ec2_deprecated
     def test_analytics_enabled_with_rate(self):
         ec2 = boto.ec2.connect_to_region("us-west-2")

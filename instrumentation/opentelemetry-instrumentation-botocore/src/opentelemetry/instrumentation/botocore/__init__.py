@@ -137,7 +137,8 @@ class BotocoreInstrumentor(BaseInstrumentor):
                     result["ResponseMetadata"]["HTTPStatusCode"],
                 )
                 span.set_attribute(
-                    "retry_attempts", result["ResponseMetadata"]["RetryAttempts"],
+                    "retry_attempts",
+                    result["ResponseMetadata"]["RetryAttempts"],
                 )
 
             return result
