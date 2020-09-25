@@ -71,7 +71,16 @@ def get_excluded_urls():
     return ExcludeList(urls)
 
 
+def get_traced_request_attrs():
+    attrs = configuration.Configuration().TORNADO_TRACED_REQUEST_ATTRS or ""
+    if attrs:
+        attrs = [attr.strip() for attr in attrs.split(",")]
+    else:
+        attrs = []
+    return attrs
+
 _excluded_urls = get_excluded_urls()
+_traced_attrs = get_traced_request_attrs()
 
 
 class TornadoInstrumentor(BaseInstrumentor):
