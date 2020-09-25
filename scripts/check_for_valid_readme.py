@@ -30,7 +30,7 @@ def main():
 
     for path in map(Path, args.paths):
 
-        # docs/examples/error_handler incldues two Python packages that lack a
+        # docs/examples/error_handler includes two Python packages that lack a
         # README file. This is intentional so they are skipped here.
         if "error_handler" in path.as_posix():
             continue
