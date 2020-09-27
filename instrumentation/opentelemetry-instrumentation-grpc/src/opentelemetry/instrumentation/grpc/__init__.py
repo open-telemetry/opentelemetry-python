@@ -171,7 +171,7 @@ class GrpcInstrumentorServer(BaseInstrumentor):
         grpc.server = server
 
     def _uninstrument(self, **kwargs):
-        unwrap(grpc, "server")
+        grpc.server = self._original_func
 
 
 class GrpcInstrumentorClient(BaseInstrumentor):
