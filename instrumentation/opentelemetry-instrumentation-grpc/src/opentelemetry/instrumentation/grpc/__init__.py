@@ -155,6 +155,8 @@ class GrpcInstrumentorServer(BaseInstrumentor):
 
     """
 
+    # pylint:disable=attribute-defined-outside-init
+
     def _instrument(self, **kwargs):
         self._original_func = grpc.server
 

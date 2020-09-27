@@ -33,7 +33,7 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 # wrap an RPC call
 # see https://github.com/grpc/grpc/issues/18191
-def _wrap_rpc_behavior(handler, fn):
+def _wrap_rpc_behavior(handler, continuation):
     if handler is None:
         return None
 
@@ -51,7 +51,9 @@ def _wrap_rpc_behavior(handler, fn):
         handler_factory = grpc.unary_unary_rpc_method_handler
 
     return handler_factory(
-        fn(behavior_fn, handler.request_streaming, handler.response_streaming),
+        continuation(
+            behavior_fn, handler.request_streaming, handler.response_streaming
+        ),
         request_deserializer=handler.request_deserializer,
         response_serializer=handler.response_serializer,
     )
@@ -144,6 +146,9 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         return self._servicer_context.set_details(details)
 
 
+# pylint:disable=abstract-method
+# pylint:disable=no-self-use
+# pylint:disable=unused-argument
 class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
     """
     A gRPC server interceptor, to add OpenTelemetry.
@@ -196,11 +201,10 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
 
         # Split up the peer to keep with how other telemetry sources
         # do it.  This looks like ipv6:[::1]:57284 or ipv4:127.0.0.1:57284.
-        peer = context.peer().split(":", 1)[1]
-        host, port = peer.rsplit(":", 1)
+        host, port = context.peer().split(":", 1)[1].rsplit(":", 1)
 
         # other telemetry sources convert this, so we will too
-        if host == "[::1]" or host == "127.0.0.1":
+        if host in ("[::1]", "127.0.0.1"):
             host = "localhost"
 
         attributes.update({"net.peer.name": host, "net.peer.port": port})
@@ -225,13 +229,14 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
                         # And now we run the actual RPC.
                         try:
                             return behavior(request_or_iterator, context)
-                        except Exception as e:
+                        except Exception as error:
                             # Bare exceptions are likely to be gRPC aborts, which
                             # we handle in our context wrapper.
                             # Here, we're interested in uncaught exceptions.
-                            if type(e) != Exception:
-                                span.set_attribute("error", repr(e))
-                            raise e
+                            # pylint:disable=unidiomatic-typecheck
+                            if type(error) != Exception:
+                                span.set_attribute("error", repr(error))
+                            raise error
 
             return telemetry_interceptor
 
