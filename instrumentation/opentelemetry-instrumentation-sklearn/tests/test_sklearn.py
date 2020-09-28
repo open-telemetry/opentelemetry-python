@@ -1,6 +1,11 @@
 from sklearn.ensemble import RandomForestClassifier
 
-from opentelemetry.instrumentation.sklearn import SklearnInstrumentor
+from opentelemetry.instrumentation.sklearn import (
+    DEFAULT_EXCLUDE_CLASSES,
+    DEFAULT_METHODS,
+    SklearnInstrumentor,
+    get_base_estimators,
+)
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace import SpanKind
 
@@ -8,12 +13,49 @@ from .fixtures import pipeline, random_input
 
 
 class TestSklearn(TestBase):
+    def test_package_instrumentation(self):
+        ski = SklearnInstrumentor(packages=["sklearn"])
+
+        base_estimators = get_base_estimators(packages=["sklearn"])
+
+        ski.instrument()
+        # assert instrumented
+        for _, estimator in base_estimators.items():
+            for method_name in DEFAULT_METHODS:
+                if issubclass(estimator, tuple(DEFAULT_EXCLUDE_CLASSES)):
+                    assert not hasattr(estimator, "_original_" + method_name)
+                    continue
+                class_attr = getattr(estimator, method_name, None)
+                if isinstance(class_attr, property):
+                    assert not hasattr(estimator, "_original_" + method_name)
+                    continue
+                if hasattr(estimator, method_name):
+                    assert hasattr(estimator, "_original_" + method_name)
+
+        ski.uninstrument()
+        # assert uninstrumented
+        for _, estimator in base_estimators.items():
+            for method_name in DEFAULT_METHODS:
+                if issubclass(estimator, tuple(DEFAULT_EXCLUDE_CLASSES)):
+                    assert not hasattr(estimator, "_original_" + method_name)
+                    continue
+                class_attr = getattr(estimator, method_name, None)
+                if isinstance(class_attr, property):
+                    assert not hasattr(estimator, "_original_" + method_name)
+                    continue
+                if hasattr(estimator, method_name):
+                    assert not hasattr(estimator, "_original_" + method_name)
+
+        self.memory_exporter.clear()
+
     def test_span_properties(self):
         """Test that we get all of the spans we expect."""
         model = pipeline()
-        SklearnInstrumentor().instrument_estimator(estimator=model)
+        ski = SklearnInstrumentor()
+        ski.instrument_estimator(estimator=model)
 
         x_test = random_input()
+
         model.predict(x_test)
 
         spans = self.memory_exporter.get_finished_spans()
@@ -50,16 +92,35 @@ class TestSklearn(TestBase):
         self.assertEqual(span.name, "Pipeline.predict")
         self.assertEqual(span.kind, SpanKind.INTERNAL)
 
+        self.memory_exporter.clear()
+
+        # uninstrument
+        ski.uninstrument_estimator(estimator=model)
+        x_test = random_input()
+        model.predict(x_test)
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 0)
+
     def test_attrib_config(self):
         """Test that the attribute config makes spans on the decision trees."""
         model = pipeline()
         attrib_config = {RandomForestClassifier: ["estimators_"]}
-        SklearnInstrumentor(
-            recurse_attribs=attrib_config
-        ).instrument_estimator(estimator=model)
+        ski = SklearnInstrumentor(
+            recurse_attribs=attrib_config,
+            exclude_classes=[],  # decision trees excluded by default
+        )
+        ski.instrument_estimator(estimator=model)
 
         x_test = random_input()
         model.predict(x_test)
 
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 8 + model.steps[-1][-1].n_estimators)
+
+        self.memory_exporter.clear()
+
+        ski.uninstrument_estimator(estimator=model)
+        x_test = random_input()
+        model.predict(x_test)
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 0)
