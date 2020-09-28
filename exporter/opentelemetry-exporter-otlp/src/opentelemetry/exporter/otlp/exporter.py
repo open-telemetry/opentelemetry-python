@@ -48,8 +48,8 @@ ExportResultT = TypeVar("ExportResultT")
 
 
 class OTLPCompression(enum.Enum):
-    NO_COMPRESSION = 0
-    GZIP = 1
+    NO_COMPRESSION = "no_compression"
+    GZIP = "gzip"
 
 
 def _translate_key_values(key: Text, value: Any) -> KeyValue:
@@ -139,7 +139,7 @@ class OTLPExporterMixin(
         endpoint: str = "localhost:55680",
         credentials: ChannelCredentials = None,
         metadata: Optional[Tuple[Any]] = None,
-        compression: GRPCCompression = GRPCCompression.NO_COMPRESSION,
+        compression: OTLPCompression = OTLPCompression.NO_COMPRESSION,
     ):
         super().__init__()
 
@@ -153,9 +153,9 @@ class OTLPExporterMixin(
         if compression_str == "gzip":
             compression_algorithm = Compression.Gzip
         else:
-            if compression is GRPCCompression.NO_COMPRESSION:
+            if compression is OTLPCompression.NO_COMPRESSION:
                 compression_algorithm = Compression.NoCompression
-            elif compression is GRPCCompression.GZIP:
+            elif compression is OTLPCompression.GZIP:
                 compression_algorithm = Compression.Gzip
 
         if credentials is None:
