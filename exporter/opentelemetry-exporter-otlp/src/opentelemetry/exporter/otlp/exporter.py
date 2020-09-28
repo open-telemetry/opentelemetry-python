@@ -47,7 +47,7 @@ ExportServiceRequestT = TypeVar("ExportServiceRequestT")
 ExportResultT = TypeVar("ExportResultT")
 
 
-class GRPCCompression(enum.Enum):
+class OTLPCompression(enum.Enum):
     NO_COMPRESSION = 0
     GZIP = 1
 
