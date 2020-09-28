@@ -121,7 +121,7 @@ def get_base_estimators(packages: List[str]) -> Dict[str, Type[BaseEstimator]]:
         for (_, module_name, _) in iter_modules([package_dir]):
             # import the module and iterate through its attributes
             try:
-                module = import_module(f"{package_name}.{module_name}")
+                module = import_module(package_name + "." + module_name)
             except ImportError:
                 logger.warning(
                     "Unable to import %s.%s", package_name, module_name
@@ -131,7 +131,7 @@ def get_base_estimators(packages: List[str]) -> Dict[str, Type[BaseEstimator]]:
                 attrib = getattr(module, attribute_name)
                 if isclass(attrib) and issubclass(attrib, BaseEstimator):
                     klasses[
-                        f"{package_name}.{module_name}.{attribute_name}"
+                        ".".join([package_name, module_name, attribute_name])
                     ] = attrib
     return klasses
 
