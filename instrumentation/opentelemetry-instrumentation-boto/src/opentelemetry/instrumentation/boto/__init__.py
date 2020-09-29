@@ -139,11 +139,11 @@ class BotoInstrumentor(BaseInstrumentor):
             # Original func returns a boto.connection.HTTPResponse object
             result = original_func(*args, **kwargs)
 
-            add_span_arg_tags(
-                span, endpoint_name, args, args_name, traced_args,
-            )
-
             if span.is_recording():
+                add_span_arg_tags(
+                    span, endpoint_name, args, args_name, traced_args,
+                )
+
                 # Obtaining region name
                 region_name = _get_instance_region_name(instance)
 

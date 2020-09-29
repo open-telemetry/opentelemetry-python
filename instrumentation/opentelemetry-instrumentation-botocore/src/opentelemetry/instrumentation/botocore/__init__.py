@@ -97,7 +97,7 @@ class BotocoreInstrumentor(BaseInstrumentor):
         ) as span:
 
             operation = None
-            if args:
+            if args and span.is_recording()::
                 operation = args[0]
                 span.resource = Resource(
                     attributes={
@@ -130,8 +130,9 @@ class BotocoreInstrumentor(BaseInstrumentor):
                 for key, value in meta.items():
                     span.set_attribute(key, value)
 
-                result = original_func(*args, **kwargs)
+            result = original_func(*args, **kwargs)
 
+            if span.is_recording():
                 span.set_attribute(
                     "http.status_code",
                     result["ResponseMetadata"]["HTTPStatusCode"],
