@@ -42,7 +42,7 @@ For example,
 
     export OTEL_PYTHON_TONADO_TRACED_REQUEST_ATTRS='uri,query'
 
-will extract path_info and content_type attributes from every traced request and add them as span attritbues.
+will extract path_info and content_type attributes from every traced request and add them as span attributes.
 
 References
 ----------
