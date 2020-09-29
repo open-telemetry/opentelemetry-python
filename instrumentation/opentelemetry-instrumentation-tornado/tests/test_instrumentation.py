@@ -362,10 +362,10 @@ class TestTornadoInstrumentation(TornadoTest):
         self.fetch("/ping?q=abc&b=123")
         spans = self.sorted_spans(self.memory_exporter.get_finished_spans())
         self.assertEqual(len(spans), 2)
-        server = spans[0]
-        self.assertEqual(server.kind, SpanKind.SERVER)
+        server_span = spans[0]
+        self.assertEqual(server_span.kind, SpanKind.SERVER)
         self.assert_span_has_attributes(
-            server, {"uri": "/ping?q=abc&b=123", "query": "q=abc&b=123"}
+            server_span, {"uri": "/ping?q=abc&b=123", "query": "q=abc&b=123"}
         )
         self.memory_exporter.clear()
 

@@ -165,9 +165,11 @@ class _TraceMiddleware:
         if not span:
             return
 
-        attributes = extract_attributes_from_object(req, self._traced_request_attrs)
+        attributes = extract_attributes_from_object(
+            req, self._traced_request_attrs
+        )
         for key, value in attributes.items():
-            span.set_attribute(key, str(value))
+            span.set_attribute(key, value)
 
     def process_resource(self, req, resp, resource, params):
         span = req.env.get(_ENVIRON_SPAN_KEY)
