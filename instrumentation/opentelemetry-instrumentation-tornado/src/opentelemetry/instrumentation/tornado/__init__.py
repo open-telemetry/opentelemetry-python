@@ -50,6 +50,7 @@ from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.tornado.version import __version__
 from opentelemetry.instrumentation.utils import (
+    extract_attributes_from_object,
     http_status_to_canonical_code,
     unwrap,
 )
@@ -78,6 +79,7 @@ def get_traced_request_attrs():
     else:
         attrs = []
     return attrs
+
 
 _excluded_urls = get_excluded_urls()
 _traced_attrs = get_traced_request_attrs()
@@ -205,7 +207,7 @@ def _get_attributes_from_request(request):
     if request.remote_ip:
         attrs["net.peer.ip"] = request.remote_ip
 
-    return attrs
+    return extract_attributes_from_object(request, _traced_attrs, attrs)
 
 
 def _get_operation_name(handler, request):
@@ -220,6 +222,7 @@ def _start_span(tracer, handler, start_time) -> _TraceContext:
             _get_header_from_request_headers, handler.request.headers,
         )
     )
+
     span = tracer.start_span(
         _get_operation_name(handler, handler.request),
         kind=trace.SpanKind.SERVER,
