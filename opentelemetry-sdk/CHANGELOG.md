@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Add Global Error Handler
-  ([#1079](https://github.com/open-telemetry/opentelemetry-python/pull/1079))
+  ([#1080](https://github.com/open-telemetry/opentelemetry-python/pull/1080))
 - Update sampling result names
   ([#1128](https://github.com/open-telemetry/opentelemetry-python/pull/1128))
 - Add support for `OTEL_BSP_MAX_QUEUE_SIZE`, `OTEL_BSP_SCHEDULE_DELAY_MILLIS`, `OTEL_BSP_MAX_EXPORT_BATCH_SIZE` and `OTEL_BSP_EXPORT_TIMEOUT_MILLIS` environment variables
