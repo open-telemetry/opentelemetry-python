@@ -97,7 +97,7 @@ class BotocoreInstrumentor(BaseInstrumentor):
         ) as span:
 
             operation = None
-            if args and span.is_recording()::
+            if args and span.is_recording():
                 operation = args[0]
                 span.resource = Resource(
                     attributes={
