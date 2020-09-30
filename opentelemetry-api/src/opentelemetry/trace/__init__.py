@@ -237,14 +237,15 @@ class Tracer(abc.ABC):
         """Starts a span.
 
         Create a new span. Start the span without setting it as the current
-        span in this tracer's context.
+        span in the context. To start the span and use the context in a single
+        method, see :meth:`start_as_current_span`.
 
-        By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a `Span` or a `opentelemetry.trace.SpanContext`. If
-        the specified value is `None`, the created span will be a root span.
+        By default the current span in the context will be used as parent, but an
+        explicit parent can also be specified, either a `Span` or a `opentelemetry.trace.SpanContext`.
+        If the specified value is `None`, the created span will be a root span.
 
-        The span can be used as context manager. On exiting, the span will be
-        ended.
+        The span can be used as a context manager. On exiting the context manager,
+        the span's end() method will be called.
 
         Example::
 
@@ -252,9 +253,6 @@ class Tracer(abc.ABC):
             # If none is found, the created span will be a root instance.
             with tracer.start_span("one") as child:
                 child.add_event("child's event")
-
-        Applications that need to set the newly created span as the current
-        instance should use :meth:`start_as_current_span` instead.
 
         Args:
             name: The name of the span to be created.
@@ -287,8 +285,9 @@ class Tracer(abc.ABC):
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
 
-        On exiting the context manager stops the span and set its parent as the
-        current span.
+        Exiting the context manager will call the span's end method,
+        as well as return the current span to it's previous value by
+        returning to the previous context.
 
         Example::
 
@@ -330,7 +329,9 @@ class Tracer(abc.ABC):
     def use_span(
         self, span: "Span", end_on_exit: bool = False
     ) -> typing.Iterator[None]:
-        """Context manager for controlling a span's lifetime.
+        """Context manager for setting the passed span as the
+        current span in the context, as well as resetting the
+        context back upon exiting the context manager.
 
         Set the given span as the current span in this tracer's context.
 
