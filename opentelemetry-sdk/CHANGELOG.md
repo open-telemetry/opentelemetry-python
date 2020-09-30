@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-- Move test to the SDK
-  ([#1184](https://github.com/open-telemetry/opentelemetry-python/pull/1184))
 - Add Global Error Handler
   ([#1080](https://github.com/open-telemetry/opentelemetry-python/pull/1080))
 - Update sampling result names
