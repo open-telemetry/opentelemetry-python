@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Move test to SDK
+  ([#1184](https://github.com/open-telemetry/opentelemetry-python/pull/1184))
 - Add support for `OTEL_PROPAGATORS`
   ([#1123](https://github.com/open-telemetry/opentelemetry-python/pull/1123))
 - Store `int`s as `int`s in the global Configuration object
