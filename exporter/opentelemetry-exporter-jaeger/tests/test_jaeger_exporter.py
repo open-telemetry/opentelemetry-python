@@ -30,13 +30,12 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 class TestJaegerSpanExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
-        context = trace_api.SpanContext(
+        self._test_span = trace.Span(
+            "test_span",
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
-
-        self._test_span = trace.Span("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
 
@@ -141,13 +140,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
             start_times[2] + durations[2],
         )
 
-        span_context = trace_api.SpanContext(
-            trace_id, span_id, is_remote=False
-        )
-        parent_context = trace_api.SpanContext(
+        parent_span = trace_api.DefaultSpan(
             trace_id, parent_id, is_remote=False
         )
-        other_context = trace_api.SpanContext(
+        other_span = trace_api.DefaultSpan(
             trace_id, other_id, is_remote=False
         )
 
@@ -167,7 +163,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         link_attributes = {"key_bool": True}
 
         link = trace_api.Link(
-            context=other_context, attributes=link_attributes
+            span=other_span, attributes=link_attributes
         )
 
         default_tags = [
@@ -189,16 +185,27 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans = [
             trace.Span(
                 name=span_names[0],
-                context=span_context,
-                parent=parent_context,
+                trace_id=trace_id,
+                span_id=span_id,
+                is_remote=False,
+                parent=parent_span,
                 events=(event,),
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
             ),
             trace.Span(
-                name=span_names[1], context=parent_context, parent=None
+                name=span_names[1],
+                trace_id=parent_span.trace_id,
+                span_id=parent_span.span_id,
+                is_remote=parent_span.is_remote,
+                parent=None
             ),
-            trace.Span(name=span_names[2], context=other_context, parent=None),
+            trace.Span(
+                name=span_names[2],
+                trace_id=other_span.trace_id,
+                span_id=other_span.span_id,
+                is_remote=other_span.is_remote,
+                parent=None),
         ]
 
         otel_spans[0].start(start_time=start_times[0])

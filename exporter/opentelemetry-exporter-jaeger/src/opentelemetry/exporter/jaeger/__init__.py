@@ -192,9 +192,8 @@ def _translate_to_jaeger(spans: Span):
     jaeger_spans = []
 
     for span in spans:
-        ctx = span.get_context()
-        trace_id = ctx.trace_id
-        span_id = ctx.span_id
+        trace_id = span.trace_id
+        span_id = span.span_id
 
         start_time_us = _nsec_to_usec_round(span.start_time)
         duration_us = _nsec_to_usec_round(span.end_time - span.start_time)
@@ -235,7 +234,7 @@ def _translate_to_jaeger(spans: Span):
         refs = _extract_refs_from_span(span)
         logs = _extract_logs_from_span(span)
 
-        flags = int(ctx.trace_flags)
+        flags = int(span.trace_flags)
 
         jaeger_span = jaeger.Span(
             traceIdHigh=_get_trace_id_high(trace_id),
@@ -263,8 +262,8 @@ def _extract_refs_from_span(span):
 
     refs = []
     for link in span.links:
-        trace_id = link.context.trace_id
-        span_id = link.context.span_id
+        trace_id = link.span.trace_id
+        span_id = link.span.span_id
         refs.append(
             jaeger.SpanRef(
                 refType=jaeger.SpanRefType.FOLLOWS_FROM,
