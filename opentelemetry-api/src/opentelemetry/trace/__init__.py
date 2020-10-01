@@ -85,12 +85,10 @@ from opentelemetry.trace.span import (
     DEFAULT_TRACE_OPTIONS,
     DEFAULT_TRACE_STATE,
     INVALID_SPAN,
-    INVALID_SPAN_CONTEXT,
     INVALID_SPAN_ID,
     INVALID_TRACE_ID,
     DefaultSpan,
     Span,
-    SpanContext,
     TraceFlags,
     TraceState,
     format_span_id,
@@ -102,16 +100,16 @@ from opentelemetry.util import _load_trace_provider, types
 logger = getLogger(__name__)
 
 # TODO: quarantine
-ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
+ParentSpan = typing.Optional["Span"]
 
 
 class LinkBase(abc.ABC):
-    def __init__(self, context: "SpanContext") -> None:
-        self._context = context
+    def __init__(self, span: "Span") -> None:
+        self._span = span
 
     @property
-    def context(self) -> "SpanContext":
-        return self._context
+    def span(self) -> "Span":
+        return self._span
 
     @property
     @abc.abstractmethod
@@ -128,9 +126,9 @@ class Link(LinkBase):
     """
 
     def __init__(
-        self, context: "SpanContext", attributes: types.Attributes = None,
+        self, span: "Span", attributes: types.Attributes = None,
     ) -> None:
-        super().__init__(context)
+        super().__init__(span)
         self._attributes = attributes
 
     @property
@@ -221,7 +219,7 @@ class Tracer(abc.ABC):
 
     # Constant used to represent the current span being used as a parent.
     # This is the default behavior when creating spans.
-    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
+    CURRENT_SPAN = INVALID_SPAN
 
     @abc.abstractmethod
     def start_span(

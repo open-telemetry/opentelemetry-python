@@ -31,19 +31,16 @@ def get_as_list(dict_object, key):
 def get_child_parent_new_carrier(old_carrier):
 
     ctx = FORMAT.extract(get_as_list, old_carrier)
-    parent_context = trace_api.get_current_span(ctx).get_context()
+    parent = trace_api.get_current_span(ctx)
 
-    parent = trace.Span("parent", parent_context)
     child = trace.Span(
         "child",
-        trace_api.SpanContext(
-            parent_context.trace_id,
-            trace.generate_span_id(),
-            is_remote=False,
-            trace_flags=parent_context.trace_flags,
-            trace_state=parent_context.trace_state,
-        ),
-        parent=parent.get_context(),
+        parent.trace_id,
+        trace.generate_span_id(),
+        is_remote=False,
+        trace_flags=parent.trace_flags,
+        trace_state=parent.trace_state,
+        parent=parent,
     )
 
     new_carrier = {}
@@ -79,17 +76,17 @@ class TestB3Format(unittest.TestCase):
 
         self.assertEqual(
             new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            b3_format.format_trace_id(child.trace_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            b3_format.format_span_id(child.span_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
+            b3_format.format_span_id(parent.span_id),
         )
-        self.assertTrue(parent.context.is_remote)
+        self.assertTrue(parent.is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_single_header(self):
@@ -104,14 +101,14 @@ class TestB3Format(unittest.TestCase):
 
         self.assertEqual(
             new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            b3_format.format_trace_id(child.trace_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            b3_format.format_span_id(child.span_id),
         )
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
-        self.assertTrue(parent.context.is_remote)
+        self.assertTrue(parent.is_remote)
 
         child, parent, new_carrier = get_child_parent_new_carrier(
             {
@@ -125,17 +122,17 @@ class TestB3Format(unittest.TestCase):
 
         self.assertEqual(
             new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            b3_format.format_trace_id(child.trace_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            b3_format.format_span_id(child.span_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
+            b3_format.format_span_id(parent.span_id),
         )
-        self.assertTrue(parent.context.is_remote)
+        self.assertTrue(parent.is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_header_precedence(self):
@@ -231,9 +228,9 @@ class TestB3Format(unittest.TestCase):
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        span = trace_api.get_current_span(ctx)
+        self.assertEqual(span.trace_id, trace_api.INVALID_TRACE_ID)
+        self.assertEqual(span.span_id, trace_api.INVALID_SPAN_ID)
 
     def test_missing_trace_id(self):
         """If a trace id is missing, populate an invalid trace id."""
@@ -243,8 +240,8 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        span = trace_api.get_current_span(ctx)
+        self.assertEqual(span.trace_id, trace_api.INVALID_TRACE_ID)
 
     @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_trace_id")
     @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_span_id")
@@ -263,10 +260,10 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        span = trace_api.get_current_span(ctx)
 
-        self.assertEqual(span_context.trace_id, 1)
-        self.assertEqual(span_context.span_id, 2)
+        self.assertEqual(span.trace_id, 1)
+        self.assertEqual(span.span_id, 2)
 
     @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_trace_id")
     @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_span_id")
@@ -285,10 +282,10 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        span = trace_api.get_current_span(ctx)
 
-        self.assertEqual(span_context.trace_id, 1)
-        self.assertEqual(span_context.span_id, 2)
+        self.assertEqual(span.trace_id, 1)
+        self.assertEqual(span.span_id, 2)
 
     def test_missing_span_id(self):
         """If a trace id is missing, populate an invalid trace id."""
@@ -298,8 +295,8 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        span = trace_api.get_current_span(ctx)
+        self.assertEqual(span.span_id, trace_api.INVALID_SPAN_ID)
 
     @staticmethod
     def test_inject_empty_context():

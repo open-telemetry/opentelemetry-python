@@ -19,17 +19,25 @@ from opentelemetry import trace
 
 class TestDefaultSpan(unittest.TestCase):
     def test_ctor(self):
-        context = trace.SpanContext(
+        span = trace.DefaultSpan(
             1,
             1,
             is_remote=False,
             trace_flags=trace.DEFAULT_TRACE_OPTIONS,
             trace_state=trace.DEFAULT_TRACE_STATE,
         )
-        span = trace.DefaultSpan(context)
-        self.assertEqual(context, span.get_context())
+        self.assertEqual(1, span.trace_id)
+        self.assertEqual(1, span.trace_id)
+        self.assertEqual(False, span.is_remote)
+        self.assertEqual(trace.DEFAULT_TRACE_OPTIONS, span.trace_flags)
+        self.assertEqual(trace.DEFAULT_TRACE_STATE, span.trace_state)
 
     def test_invalid_span(self):
+        # TODO: Test the actual expected values of an invalid Span.
         self.assertIsNotNone(trace.INVALID_SPAN)
-        self.assertIsNotNone(trace.INVALID_SPAN.get_context())
-        self.assertFalse(trace.INVALID_SPAN.get_context().is_valid)
+        self.assertIsNotNone(trace.INVALID_SPAN.trace_id)
+        self.assertIsNotNone(trace.INVALID_SPAN.span_id)
+        self.assertIsNotNone(trace.INVALID_SPAN.is_remote)
+        self.assertIsNotNone(trace.INVALID_SPAN.trace_flags)
+        self.assertIsNotNone(trace.INVALID_SPAN.trace_state)
+        self.assertFalse(trace.INVALID_SPAN.is_valid)

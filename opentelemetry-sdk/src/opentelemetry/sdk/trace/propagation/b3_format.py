@@ -121,14 +121,12 @@ class B3Format(TextMapPropagator):
 
         return trace.set_span_in_context(
             trace.DefaultSpan(
-                trace.SpanContext(
-                    # trace an span ids are encoded in hex, so must be converted
-                    trace_id=trace_id,
-                    span_id=span_id,
-                    is_remote=True,
-                    trace_flags=trace.TraceFlags(options),
-                    trace_state=trace.TraceState(),
-                )
+                # trace an span ids are encoded in hex, so must be converted
+                trace_id=trace_id,
+                span_id=span_id,
+                is_remote=True,
+                trace_flags=trace.TraceFlags(options),
+                trace_state=trace.TraceState(),
             )
         )
 
@@ -140,16 +138,15 @@ class B3Format(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        span_context = span.get_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if span == trace.INVALID_SPAN:
             return
 
-        sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
+        sampled = (trace.TraceFlags.SAMPLED & span.trace_flags) != 0
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
+            carrier, self.TRACE_ID_KEY, format_trace_id(span.trace_id),
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
+            carrier, self.SPAN_ID_KEY, format_span_id(span.span_id)
         )
         span_parent = getattr(span, "parent", None)
         if span_parent is not None:

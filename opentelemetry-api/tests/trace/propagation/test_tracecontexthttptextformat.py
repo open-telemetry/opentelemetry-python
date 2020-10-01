@@ -43,7 +43,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
         span = trace.get_current_span(FORMAT.extract(get_as_list, output))
-        self.assertIsInstance(span.get_context(), trace.SpanContext)
+        self.assertIsInstance(span, trace.Span)
 
     def test_headers_with_tracestate(self):
         """When there is a traceparent and tracestate header, data from
@@ -54,7 +54,7 @@ class TestTraceContextFormat(unittest.TestCase):
             span_id=format(self.SPAN_ID, "016x"),
         )
         tracestate_value = "foo=1,bar=2,baz=3"
-        span_context = trace.get_current_span(
+        span = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -62,15 +62,14 @@ class TestTraceContextFormat(unittest.TestCase):
                     "tracestate": [tracestate_value],
                 },
             )
-        ).get_context()
-        self.assertEqual(span_context.trace_id, self.TRACE_ID)
-        self.assertEqual(span_context.span_id, self.SPAN_ID)
-        self.assertEqual(
-            span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
-        self.assertTrue(span_context.is_remote)
+        self.assertEqual(span.trace_id, self.TRACE_ID)
+        self.assertEqual(span.span_id, self.SPAN_ID)
+        self.assertEqual(
+            span.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
+        )
+        self.assertTrue(span.is_remote)
         output = {}  # type:typing.Dict[str, str]
-        span = trace.DefaultSpan(span_context)
 
         ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
@@ -109,7 +108,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span, trace.INVALID_SPAN)
 
     def test_invalid_parent_id(self):
         """If the parent id is invalid, we must ignore the full traceparent
@@ -140,7 +139,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span, trace.INVALID_SPAN)
 
     def test_no_send_empty_tracestate(self):
         """If the tracestate is empty, do not set the header.
@@ -152,7 +151,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(
-            trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
+            self.TRACE_ID, self.SPAN_ID, is_remote=False
         )
         ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
@@ -179,7 +178,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span, trace.INVALID_SPAN)
 
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context."""
@@ -202,7 +201,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_context().trace_state["foo"], "1")
+        self.assertEqual(span.trace_state["foo"], "1")
 
     def test_tracestate_header_with_trailing_comma(self):
         """Do not propagate invalid trace context.
@@ -218,7 +217,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_context().trace_state["foo"], "1")
+        self.assertEqual(span.trace_state["foo"], "1")
 
     def test_tracestate_keys(self):
         """Test for valid key patterns in the tracestate
@@ -242,9 +241,9 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_context().trace_state["1a-2f@foo"], "bar1")
+        self.assertEqual(span.trace_state["1a-2f@foo"], "bar1")
         self.assertEqual(
-            span.get_context().trace_state["1a-_*/2b@foo"], "bar2"
+            span.trace_state["1a-_*/2b@foo"], "bar2"
         )
-        self.assertEqual(span.get_context().trace_state["foo"], "bar3")
-        self.assertEqual(span.get_context().trace_state["foo-_*/bar"], "bar4")
+        self.assertEqual(span.trace_state["foo"], "bar3")
+        self.assertEqual(span.trace_state["foo-_*/bar"], "bar4")

@@ -43,7 +43,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace import SpanContext
+from opentelemetry.trace import Span, DEFAULT_TRACE_OPTIONS, DEFAULT_TRACE_STATE
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 from opentelemetry.util import time_ns, types
@@ -345,7 +345,7 @@ class Span(trace_api.Span):
     Args:
         name: The name of the operation this span represents
         context: The immutable span context
-        parent: This span's parent's `opentelemetry.trace.SpanContext`, or
+        parent: This span's parent's `opentelemetry.trace.Span`, or
             null if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
@@ -360,8 +360,12 @@ class Span(trace_api.Span):
     def __init__(
         self,
         name: str,
-        context: trace_api.SpanContext,
-        parent: Optional[trace_api.SpanContext] = None,
+        trace_id: int,
+        span_id: int,
+        is_remote: bool,
+        trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
+        trace_state: "TraceState" = DEFAULT_TRACE_STATE,
+        parent: Optional[trace_api.Span] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
         resource: Resource = Resource.create({}),
@@ -374,8 +378,14 @@ class Span(trace_api.Span):
         set_status_on_exception: bool = True,
     ) -> None:
 
+        super().__init__(
+            trace_id,
+            span_id,
+            is_remote,
+            trace_flags,
+            trace_state
+        )
         self.name = name
-        self.context = context
         self.parent = parent
         self.sampler = sampler
         self.trace_config = trace_config
@@ -419,8 +429,9 @@ class Span(trace_api.Span):
         return self._end_time
 
     def __repr__(self):
+        # TODO - Print also the span context information.
         return '{}(name="{}", context={})'.format(
-            type(self).__name__, self.name, self.context
+            type(self).__name__, self.name
         )
 
     @staticmethod
@@ -436,11 +447,11 @@ class Span(trace_api.Span):
         return BoundedList(MAX_NUM_LINKS)
 
     @staticmethod
-    def _format_context(context):
+    def _format_context(span):
         x_ctx = OrderedDict()
-        x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
-        x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
-        x_ctx["trace_state"] = repr(context.trace_state)
+        x_ctx["trace_id"] = trace_api.format_trace_id(span.trace_id)
+        x_ctx["span_id"] = trace_api.format_span_id(span.span_id)
+        x_ctx["trace_state"] = repr(span.trace_state)
         return x_ctx
 
     @staticmethod
@@ -465,7 +476,7 @@ class Span(trace_api.Span):
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(link.context)
+            f_link["context"] = Span._format_context(link.span)
             f_link["attributes"] = Span._format_attributes(link.attributes)
             f_links.append(f_link)
         return f_links
@@ -474,9 +485,6 @@ class Span(trace_api.Span):
         parent_id = None
         if self.parent is not None:
             if isinstance(self.parent, Span):
-                ctx = self.parent.context
-                parent_id = trace_api.format_span_id(ctx.span_id)
-            elif isinstance(self.parent, SpanContext):
                 parent_id = trace_api.format_span_id(self.parent.span_id)
 
         start_time = None
@@ -496,7 +504,7 @@ class Span(trace_api.Span):
         f_span = OrderedDict()
 
         f_span["name"] = self.name
-        f_span["context"] = self._format_context(self.context)
+        f_span["context"] = self._format_context(self)
         f_span["kind"] = str(self.kind)
         f_span["parent_id"] = parent_id
         f_span["start_time"] = start_time
@@ -509,9 +517,6 @@ class Span(trace_api.Span):
         f_span["resource"] = self.resource.attributes
 
         return json.dumps(f_span, indent=indent)
-
-    def get_context(self):
-        return self.context
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
@@ -722,24 +727,20 @@ class Tracer(trace_api.Tracer):
         if parent is Tracer.CURRENT_SPAN:
             parent = trace_api.get_current_span()
 
-        parent_context = parent
-        if isinstance(parent_context, trace_api.Span):
-            parent_context = parent.get_context()
-
-        if parent_context is not None and not isinstance(
-            parent_context, trace_api.SpanContext
+        if parent is not None and not isinstance(
+            parent, trace_api.Span
         ):
-            raise TypeError("parent must be a Span, SpanContext or None.")
+            raise TypeError("parent must be a Span or None.")
 
-        if parent_context is None or not parent_context.is_valid:
-            parent = parent_context = None
+        if parent is None or not parent.is_valid:
+            parent = None
             trace_id = generate_trace_id()
             trace_flags = None
             trace_state = None
         else:
-            trace_id = parent_context.trace_id
-            trace_flags = parent_context.trace_flags
-            trace_state = parent_context.trace_state
+            trace_id = parent.trace_id
+            trace_flags = parent.trace_flags
+            trace_state = parent.trace_state
 
         # The sampler decides whether to create a real or no-op span at the
         # time of span creation. No-op spans do not record events, and are not
@@ -747,7 +748,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.source.sampler.should_sample(
-            parent_context, trace_id, name, attributes, links,
+            parent, trace_id, name, attributes, links,
         )
 
         trace_flags = (
@@ -755,21 +756,18 @@ class Tracer(trace_api.Tracer):
             if sampling_result.decision.is_sampled()
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
-        context = trace_api.SpanContext(
-            trace_id,
-            generate_span_id(),
-            is_remote=False,
-            trace_flags=trace_flags,
-            trace_state=trace_state,
-        )
 
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
             span = Span(
                 name=name,
-                context=context,
-                parent=parent_context,
+                trace_id=trace_id,
+                span_id=generate_span_id(),
+                is_remote=False,
+                trace_flags=trace_flags,
+                trace_state=trace_state,
+                parent=parent,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=sampling_result.attributes.copy(),
@@ -781,7 +779,13 @@ class Tracer(trace_api.Tracer):
             )
             span.start(start_time=start_time)
         else:
-            span = trace_api.DefaultSpan(context=context)
+            span = trace_api.DefaultSpan(
+                trace_id,
+                generate_span_id(),
+                is_remote=False,
+                trace_flags=trace_flags,
+                trace_state=trace_state
+            )
         return span
 
     @contextmanager

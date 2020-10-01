@@ -9,6 +9,28 @@ from opentelemetry.util import types
 class Span(abc.ABC):
     """A span represents a single operation within a trace."""
 
+    def __init__(
+        self,
+        trace_id: int,
+        span_id: int,
+        is_remote: bool,
+        trace_flags: "TraceFlags",
+        trace_state: "TraceState"
+    ) -> None:
+        if trace_flags is None:
+            trace_flags = DEFAULT_TRACE_OPTIONS
+        if trace_state is None:
+            trace_state = DEFAULT_TRACE_STATE
+        self.trace_id = trace_id
+        self.span_id = span_id
+        self.trace_flags = trace_flags
+        self.trace_state = trace_state
+        self.is_remote = is_remote
+        self.is_valid = (
+            self.trace_id != INVALID_TRACE_ID
+            and self.span_id != INVALID_SPAN_ID
+        )
+
     @abc.abstractmethod
     def end(self, end_time: typing.Optional[int] = None) -> None:
         """Sets the current time as the span's end time.
@@ -17,17 +39,6 @@ class Span(abc.ABC):
 
         Only the first call to `end` should modify the span, and
         implementations are free to ignore or raise on further calls.
-        """
-
-    @abc.abstractmethod
-    def get_context(self) -> "SpanContext":
-        """Gets the span's SpanContext.
-
-        Get an immutable, serializable identifier for this span that can be
-        used to create new child spans.
-
-        Returns:
-            A :class:`opentelemetry.trace.SpanContext` with a copy of this span's immutable state.
         """
 
     @abc.abstractmethod
@@ -143,20 +154,11 @@ class TraceState(typing.Dict[str, str]):
 DEFAULT_TRACE_STATE = TraceState.get_default()
 
 
-class SpanContext:
-    """The state of a Span to propagate between processes.
+class DefaultSpan(Span):
+    """The default Span that is used when no Span implementation is available.
 
-    This class includes the immutable attributes of a :class:`.Span` that must
-    be propagated to a span's children and across process boundaries.
-
-    Args:
-        trace_id: The ID of the trace that this span belongs to.
-        span_id: This span's ID.
-        trace_flags: Trace options to propagate.
-        trace_state: Tracing-system-specific info to propagate.
-        is_remote: True if propagated from a remote parent.
+    All operations are no-op except context propagation.
     """
-
     def __init__(
         self,
         trace_id: int,
@@ -165,43 +167,13 @@ class SpanContext:
         trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
     ) -> None:
-        if trace_flags is None:
-            trace_flags = DEFAULT_TRACE_OPTIONS
-        if trace_state is None:
-            trace_state = DEFAULT_TRACE_STATE
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_flags = trace_flags
-        self.trace_state = trace_state
-        self.is_remote = is_remote
-        self.is_valid = (
-            self.trace_id != INVALID_TRACE_ID
-            and self.span_id != INVALID_SPAN_ID
+        super().__init__(
+            trace_id,
+            span_id,
+            is_remote,
+            trace_flags,
+            trace_state
         )
-
-    def __repr__(self) -> str:
-        return (
-            "{}(trace_id={}, span_id={}, trace_state={!r}, is_remote={})"
-        ).format(
-            type(self).__name__,
-            format_trace_id(self.trace_id),
-            format_span_id(self.span_id),
-            self.trace_state,
-            self.is_remote,
-        )
-
-
-class DefaultSpan(Span):
-    """The default Span that is used when no Span implementation is available.
-
-    All operations are no-op except context propagation.
-    """
-
-    def __init__(self, context: "SpanContext") -> None:
-        self._context = context
-
-    def get_context(self) -> "SpanContext":
-        return self._context
 
     def is_recording(self) -> bool:
         return False
@@ -232,15 +204,13 @@ class DefaultSpan(Span):
 
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
-INVALID_SPAN_CONTEXT = SpanContext(
+INVALID_SPAN = DefaultSpan(
     trace_id=INVALID_TRACE_ID,
     span_id=INVALID_SPAN_ID,
     is_remote=False,
     trace_flags=DEFAULT_TRACE_OPTIONS,
     trace_state=DEFAULT_TRACE_STATE,
 )
-INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
-
 
 def format_trace_id(trace_id: int) -> str:
     return "0x{:032x}".format(trace_id)
