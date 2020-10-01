@@ -554,9 +554,7 @@ class TestSpan(unittest.TestCase):
             "attr-in-both": "decision-attr",
         }
         tracer_provider = trace.TracerProvider(
-            sampling.StaticSampler(
-                sampling.Decision.RECORD_AND_SAMPLE,
-            )
+            sampling.StaticSampler(sampling.Decision.RECORD_AND_SAMPLE)
         )
 
         self.tracer = tracer_provider.get_tracer(__name__)
