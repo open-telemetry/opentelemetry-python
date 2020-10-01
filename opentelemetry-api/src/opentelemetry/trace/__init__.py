@@ -77,7 +77,7 @@ import typing
 from contextlib import contextmanager
 from logging import getLogger
 
-from opentelemetry.context import Context
+from opentelemetry.context.context import Context
 from opentelemetry.trace.ids_generator import IdsGenerator, RandomIdsGenerator
 from opentelemetry.trace.propagation import (
     get_current_span,
