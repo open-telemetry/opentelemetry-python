@@ -146,17 +146,16 @@ class OTLPExporterMixin(
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        compression_str = os.environ.get(
-            "OTEL_EXPORTER_OTLP_COMPRESSION", None
-        )
-
-        if compression_str == "gzip":
+        if compression == OTLPCompression.GZIP:
             compression_algorithm = Compression.Gzip
         else:
-            if compression is OTLPCompression.NO_COMPRESSION:
-                compression_algorithm = Compression.NoCompression
-            elif compression is OTLPCompression.GZIP:
+            compression_str = os.environ.get(
+                "OTEL_EXPORTER_OTLP_COMPRESSION", None
+            )
+            if compression_str == "gzip":
                 compression_algorithm = Compression.Gzip
+            else:
+                compression_algorithm = Compression.NoCompression
 
         if credentials is None:
             self._client = self._stub(
