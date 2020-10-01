@@ -85,11 +85,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
             return
 
         baggage_string = _format_baggage(baggage_entries)
-        set_in_carrier(
-            carrier,
-            self._BAGGAGE_HEADER_NAME,
-            baggage_string,
-        )
+        set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
 
 def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
