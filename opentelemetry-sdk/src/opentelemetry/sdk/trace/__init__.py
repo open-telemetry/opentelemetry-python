@@ -357,6 +357,11 @@ class Span(trace_api.Span):
             this `Span`.
     """
 
+    def __new__(cls, *args, **kwargs):
+        if cls is Span:
+            raise TypeError("Span cannot be instantiated directly")
+        return super().__new__(cls)
+
     def __init__(
         self,
         name: str,
@@ -456,7 +461,7 @@ class Span(trace_api.Span):
             f_event = OrderedDict()
             f_event["name"] = event.name
             f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-            f_event["attributes"] = Span._format_attributes(event.attributes)
+            f_event["attributes"] = _Span._format_attributes(event.attributes)
             f_events.append(f_event)
         return f_events
 
@@ -465,8 +470,8 @@ class Span(trace_api.Span):
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(link.context)
-            f_link["attributes"] = Span._format_attributes(link.attributes)
+            f_link["context"] = _Span._format_context(link.context)
+            f_link["attributes"] = _Span._format_attributes(link.attributes)
             f_links.append(f_link)
         return f_links
 
@@ -663,6 +668,13 @@ class Span(trace_api.Span):
         )
 
 
+class _Span(Span):
+    """Protected implementation of `opentelemetry.trace.Span`.
+
+    This constructor should only be used internally.
+    """
+
+
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
@@ -748,7 +760,7 @@ class Tracer(trace_api.Tracer):
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
-            span = Span(
+            span = _Span(
                 name=name,
                 context=context,
                 parent=parent_context,

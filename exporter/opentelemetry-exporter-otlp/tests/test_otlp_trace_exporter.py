@@ -45,7 +45,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.trace import Span, TracerProvider
+from opentelemetry.sdk.trace import TracerProvider, _Span
 from opentelemetry.sdk.trace.export import (
     SimpleExportSpanProcessor,
     SpanExportResult,
@@ -123,7 +123,7 @@ class TestOTLPSpanExporter(TestCase):
 
         type(event_mock).name = PropertyMock(return_value="a")
 
-        self.span = Span(
+        self.span = _Span(
             "a",
             context=Mock(
                 **{
