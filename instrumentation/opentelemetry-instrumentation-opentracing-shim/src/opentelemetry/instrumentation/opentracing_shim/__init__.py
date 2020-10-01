@@ -630,6 +630,7 @@ class TracerShim(Tracer):
         # Use the specified parent or the active span if possible. Otherwise,
         # use a `None` parent, which triggers the creation of a new trace.
         parent = child_of.unwrap() if child_of else None
+        parent_context = set_span_in_context(parent) if parent else None
 
         links = []
         if references:
@@ -645,7 +646,7 @@ class TracerShim(Tracer):
 
         span = self._otel_tracer.start_span(
             operation_name,
-            parent,
+            parent_context,
             links=links,
             attributes=tags,
             start_time=start_time_ns,
