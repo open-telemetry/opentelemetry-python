@@ -102,7 +102,7 @@ class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
 class TestOTLPSpanExporter(TestCase):
     def setUp(self):
         tracer_provider = TracerProvider()
-        self.exporter = OTLPSpanExporter(insecure=False)
+        self.exporter = OTLPSpanExporter(insecure=True)
         tracer_provider.add_span_processor(
             SimpleExportSpanProcessor(self.exporter)
         )
