@@ -43,7 +43,7 @@ freely because instantiating it returns always the same object.
 
 For example, if the environment variable
 ``OTEL_PYTHON_METER_PROVIDER`` value is ``my_meter_provider``, then
-``Configuration().meter_provider == "my_meter_provider"`` would be ``True``.
+``Configuration().METER_PROVIDER == "my_meter_provider"`` would be ``True``.
 
 Non defined attributes will always return ``None``. This is intended to make it
 easier to use the ``Configuration`` object in actual code, because it won't be
@@ -128,11 +128,10 @@ class Configuration:
                         try:
                             value = int(value_str)
                         except ValueError:
-                            pass
-                        try:
-                            value = float(value_str)
-                        except ValueError:
-                            pass
+                            try:
+                                value = float(value_str)
+                            except ValueError:
+                                pass
 
                     instance._config_map[key] = value
 

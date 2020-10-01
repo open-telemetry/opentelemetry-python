@@ -13,3 +13,4 @@ Submodules
     :maxdepth: 1
 
     instrumentor
+    metric
