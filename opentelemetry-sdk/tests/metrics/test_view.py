@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from math import inf
 from unittest import mock
 
 from opentelemetry.sdk import metrics
@@ -223,7 +224,7 @@ class TestHistogramView(unittest.TestCase):
         checkpoint = metrics_list[0].aggregator.checkpoint
         self.assertEqual(
             tuple(checkpoint.items()),
-            ((20, 1), (40, 1), (60, 0), (80, 0), (100, 0), (">", 1)),
+            ((20, 1), (40, 1), (60, 0), (80, 0), (100, 0), (inf, 1)),
         )
         exporter.clear()
 
@@ -238,7 +239,7 @@ class TestHistogramView(unittest.TestCase):
         checkpoint = metrics_list[0].aggregator.checkpoint
         self.assertEqual(
             tuple(checkpoint.items()),
-            ((20, 2), (40, 2), (60, 0), (80, 0), (100, 0), (">", 2)),
+            ((20, 2), (40, 2), (60, 0), (80, 0), (100, 0), (inf, 2)),
         )
 
     def test_histogram_stateless(self):
@@ -278,7 +279,7 @@ class TestHistogramView(unittest.TestCase):
         checkpoint = metrics_list[0].aggregator.checkpoint
         self.assertEqual(
             tuple(checkpoint.items()),
-            ((20, 1), (40, 1), (60, 0), (80, 0), (100, 0), (">", 1)),
+            ((20, 1), (40, 1), (60, 0), (80, 0), (100, 0), (inf, 1)),
         )
         exporter.clear()
 
@@ -293,7 +294,7 @@ class TestHistogramView(unittest.TestCase):
         checkpoint = metrics_list[0].aggregator.checkpoint
         self.assertEqual(
             tuple(checkpoint.items()),
-            ((20, 1), (40, 1), (60, 0), (80, 0), (100, 0), (">", 1)),
+            ((20, 1), (40, 1), (60, 0), (80, 0), (100, 0), (inf, 1)),
         )
 
 

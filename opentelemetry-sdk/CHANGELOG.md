@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add timestamps to aggregators
+  ([#1199](https://github.com/open-telemetry/opentelemetry-python/pull/1199))
 - Add Global Error Handler
   ([#1080](https://github.com/open-telemetry/opentelemetry-python/pull/1080))
 - Update sampling result names
