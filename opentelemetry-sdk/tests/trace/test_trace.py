@@ -561,7 +561,6 @@ class TestSpan(unittest.TestCase):
             root.add_event("event0")
 
             # event name and attributes
-            now = time_ns()
             root.add_event(
                 "event1", {"name": "pluto", "some_bools": [True, False]}
             )
@@ -598,6 +597,32 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.events[3].attributes, {"name": ("original_contents",)}
             )
+
+
+    def test_events_are_immutable(self):
+        event_properties = [
+            prop for prop in dir(trace.EventBase)
+            if not prop.startswith("_")
+        ]
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_event("event0", {"name": ["birthday"]})
+            event = root.events[0]
+
+            for prop in event_properties:
+                with self.assertRaises(AttributeError):
+                    setattr(event, prop, "something")
+
+    def test_event_attributes_are_immutable(self):
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_event("event0", {"name": ["birthday"]})
+            event = root.events[0]
+
+            with self.assertRaises(TypeError):
+                event.attributes["name"][0] = "happy"
+
+            with self.assertRaises(TypeError):
+                event.attributes["name"] = "hello"
 
     def test_invalid_event_attributes(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)

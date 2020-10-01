@@ -41,7 +41,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.sdk.util import BoundedDict, BoundedList, make_immutable_dict
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
@@ -336,6 +336,10 @@ def _filter_attribute_values(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
+def _make_event_attributes_immutable(event: EventBase) -> None:
+    event._attributes = make_immutable_dict(event.attributes)
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -399,6 +403,7 @@ class Span(trace_api.Span):
         if events:
             for event in events:
                 _filter_attribute_values(event.attributes)
+                _make_event_attributes_immutable(event)
                 self.events.append(event)
 
         if links is None:
@@ -557,8 +562,7 @@ class Span(trace_api.Span):
         timestamp: Optional[int] = None,
     ) -> None:
         _filter_attribute_values(attributes)
-        if not attributes:
-            attributes = self._new_attributes()
+        attributes = make_immutable_dict(attributes)
         self._add_event(
             Event(
                 name=name,
