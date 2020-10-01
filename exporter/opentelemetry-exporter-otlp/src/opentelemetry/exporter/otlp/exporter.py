@@ -159,7 +159,7 @@ class OTLPExporterMixin(
         if insecure is None:
             insecure = False
 
-        self._metadata = metadata
+        self._metadata = metadata or Configuration().OTEL_EXPORTER_OTLP_HEADERS
         self._collector_span_kwargs = None
 
         if insecure:
