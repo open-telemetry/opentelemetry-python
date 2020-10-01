@@ -58,6 +58,13 @@ class _DjangoMiddleware(MiddlewareMixin):
     else:
         _excluded_urls = ExcludeList(_excluded_urls)
 
+    _traced_request_attrs = [
+        attr.strip()
+        for attr in (Configuration().DJANGO_TRACED_REQUEST_ATTRS or "").split(
+            ","
+        )
+    ]
+
     @staticmethod
     def _get_span_name(request):
         try:
@@ -94,16 +101,22 @@ class _DjangoMiddleware(MiddlewareMixin):
 
         tracer = get_tracer(__name__, __version__)
 
-        attributes = collect_request_attributes(environ)
-
         span = tracer.start_span(
             self._get_span_name(request),
             kind=SpanKind.SERVER,
-            attributes=attributes,
             start_time=environ.get(
                 "opentelemetry-instrumentor-django.starttime_key"
             ),
         )
+
+        if span.is_recording():
+            attributes = collect_request_attributes(environ)
+            for attr in self._traced_request_attrs:
+                value = getattr(request, attr, None)
+                if value is not None:
+                    attributes[attr] = str(value)
+            for key, value in attributes.items():
+                span.set_attribute(key, value)
 
         activation = tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
