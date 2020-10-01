@@ -663,24 +663,6 @@ class Span(trace_api.Span):
         )
 
 
-def generate_span_id() -> int:
-    """Get a new random span ID.
-
-    Returns:
-        A random 64-bit int for use as a span ID
-    """
-    return random.getrandbits(64)
-
-
-def generate_trace_id() -> int:
-    """Get a new random trace ID.
-
-    Returns:
-        A random 128-bit int for use as a trace ID
-    """
-    return random.getrandbits(128)
-
-
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
@@ -733,7 +715,7 @@ class Tracer(trace_api.Tracer):
 
         if parent_context is None or not parent_context.is_valid:
             parent = parent_context = None
-            trace_id = generate_trace_id()
+            trace_id = self.source.ids_generator.generate_trace_id()
             trace_flags = None
             trace_state = None
         else:
@@ -757,7 +739,7 @@ class Tracer(trace_api.Tracer):
         )
         context = trace_api.SpanContext(
             trace_id,
-            generate_span_id(),
+            self.source.ids_generator.generate_span_id(),
             is_remote=False,
             trace_flags=trace_flags,
             trace_state=trace_state,
@@ -826,10 +808,15 @@ class TracerProvider(trace_api.TracerProvider):
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ] = None,
+        ids_generator: trace_api.IdsGenerator = None,
     ):
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
         )
+        if ids_generator is None:
+            self.ids_generator = trace_api.RandomIdsGenerator()
+        else:
+            self.ids_generator = ids_generator
         self.resource = resource
         self.sampler = sampler
         self._atexit_handler = None
