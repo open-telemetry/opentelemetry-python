@@ -152,7 +152,7 @@ class OTLPExporterMixin(
             compression_str = os.environ.get(
                 "OTEL_EXPORTER_OTLP_COMPRESSION", None
             )
-            if compression_str == "gzip":
+            if compression_str == OTLPCompression.GZIP:
                 compression_algorithm = Compression.Gzip
             else:
                 compression_algorithm = Compression.NoCompression
