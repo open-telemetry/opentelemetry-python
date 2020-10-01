@@ -44,8 +44,9 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
-        self.exporter = OTLPMetricsExporter()
+        self.exporter = OTLPMetricsExporter(insecure=False)
         resource = SDKResource(OrderedDict([("a", 1), ("b", False)]))
+
         self.counter_metric_record = MetricRecord(
             Counter(
                 "a",
