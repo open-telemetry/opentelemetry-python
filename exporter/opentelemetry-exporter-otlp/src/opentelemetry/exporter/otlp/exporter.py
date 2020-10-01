@@ -157,7 +157,7 @@ class OTLPExporterMixin(
         if insecure is None:
             insecure = Configuration().EXPORTER_OTLP_INSECURE
         if insecure is None:
-            insecure = True
+            insecure = False
 
         self._metadata = metadata
         self._collector_span_kwargs = None
