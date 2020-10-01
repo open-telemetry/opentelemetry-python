@@ -176,9 +176,10 @@ class TestSpanCreation(unittest.TestCase):
         eliminates redundant error handling logic in exporters.
         """
         tracer = new_tracer()
-        new_span = tracer.start_span(
-            "root", parent=trace_api.INVALID_SPAN_CONTEXT
+        parent_context = trace_api.set_span_in_context(
+            trace_api.INVALID_SPAN_CONTEXT
         )
+        new_span = tracer.start_span("root", parent=parent_context)
         self.assertTrue(new_span.context.is_valid)
         self.assertIsNone(new_span.parent)
 
@@ -306,7 +307,7 @@ class TestSpanCreation(unittest.TestCase):
                 # The child's parent should be the one passed in,
                 # not the current span.
                 self.assertNotEqual(child.parent, root)
-                self.assertIs(child.parent, other_parent)
+                self.assertIs(child.parent, other_parent_context)
 
                 self.assertIsNotNone(child.start_time)
                 self.assertIsNone(child.end_time)
