@@ -4,6 +4,8 @@
 
 - Add Gzip compression for exporter
   ([#1107](https://github.com/open-telemetry/opentelemetry-python/pull/1141))
+- Update OpenTelemetry protos to v0.5.0
+  ([#1143](https://github.com/open-telemetry/opentelemetry-python/pull/1143))
 
 ## Version 0.13b0
 
