@@ -21,7 +21,6 @@ from werkzeug.wrappers import BaseResponse
 
 import opentelemetry_example_app.flask_example as flask_example
 from opentelemetry import trace
-from opentelemetry.sdk import trace as trace_sdk
 
 
 class TestFlaskExample(unittest.TestCase):
@@ -46,7 +45,8 @@ class TestFlaskExample(unittest.TestCase):
         self.send_patcher.stop()
 
     def test_full_path(self):
-        trace_id = trace_sdk.generate_trace_id()
+        ids_generator = trace.RandomIdsGenerator()
+        trace_id = ids_generator.generate_trace_id()
         # We need to use the Werkzeug test app because
         # The headers are injected at the wsgi layer.
         # The flask test app will not include these, and
@@ -58,7 +58,7 @@ class TestFlaskExample(unittest.TestCase):
             headers={
                 "traceparent": "00-{:032x}-{:016x}-{:02x}".format(
                     trace_id,
-                    trace_sdk.generate_span_id(),
+                    ids_generator.generate_span_id(),
                     trace.TraceFlags.SAMPLED,
                 )
             },

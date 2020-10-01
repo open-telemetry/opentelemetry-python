@@ -633,14 +633,15 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
     def test_links(self):
+        ids_generator = trace_api.RandomIdsGenerator()
         other_context1 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
+            trace_id=ids_generator.generate_trace_id(),
+            span_id=ids_generator.generate_span_id(),
             is_remote=False,
         )
         other_context2 = trace_api.SpanContext(
-            trace_id=trace.generate_trace_id(),
-            span_id=trace.generate_span_id(),
+            trace_id=ids_generator.generate_trace_id(),
+            span_id=ids_generator.generate_span_id(),
             is_remote=False,
         )
 

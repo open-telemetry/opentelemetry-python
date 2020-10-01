@@ -78,7 +78,7 @@ from contextlib import contextmanager
 from logging import getLogger
 
 from opentelemetry.context import Context
-
+from opentelemetry.trace.ids_generator import IdsGenerator, RandomIdsGenerator
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -435,6 +435,7 @@ def get_tracer_provider() -> TracerProvider:
 __all__ = [
     "DEFAULT_TRACE_OPTIONS",
     "DEFAULT_TRACE_STATE",
+    "IdsGenerator",
     "INVALID_SPAN",
     "INVALID_SPAN_CONTEXT",
     "INVALID_SPAN_ID",
@@ -444,6 +445,7 @@ __all__ = [
     "DefaultTracerProvider",
     "Link",
     "LinkBase",
+    "RandomIdsGenerator",
     "Span",
     "SpanContext",
     "SpanKind",
