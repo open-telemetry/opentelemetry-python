@@ -6,6 +6,8 @@
   ([#1123](https://github.com/open-telemetry/opentelemetry-python/pull/1123))
 - Store `int`s as `int`s in the global Configuration object
   ([#1118](https://github.com/open-telemetry/opentelemetry-python/pull/1118))
+- Update baggage propagation header
+  ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
 
 ## Version 0.13b0
 
