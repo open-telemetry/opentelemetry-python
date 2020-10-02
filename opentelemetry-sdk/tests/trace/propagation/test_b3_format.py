@@ -38,7 +38,7 @@ def get_child_parent_new_carrier(old_carrier):
         "child",
         trace_api.SpanContext(
             parent_context.trace_id,
-            trace.generate_span_id(),
+            trace_api.RandomIdsGenerator().generate_span_id(),
             is_remote=False,
             trace_flags=parent_context.trace_flags,
             trace_state=parent_context.trace_state,
@@ -56,14 +56,15 @@ def get_child_parent_new_carrier(old_carrier):
 class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        ids_generator = trace_api.RandomIdsGenerator()
         cls.serialized_trace_id = b3_format.format_trace_id(
-            trace.generate_trace_id()
+            ids_generator.generate_trace_id()
         )
         cls.serialized_span_id = b3_format.format_span_id(
-            trace.generate_span_id()
+            ids_generator.generate_span_id()
         )
         cls.serialized_parent_id = b3_format.format_span_id(
-            trace.generate_span_id()
+            ids_generator.generate_span_id()
         )
 
     def test_extract_multi_header(self):
@@ -246,8 +247,12 @@ class TestB3Format(unittest.TestCase):
         span_context = trace_api.get_current_span(ctx).get_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
-    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_trace_id")
-    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_span_id")
+    @patch(
+        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_trace_id"
+    )
+    @patch(
+        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_span_id"
+    )
     def test_invalid_trace_id(
         self, mock_generate_span_id, mock_generate_trace_id
     ):
@@ -268,8 +273,12 @@ class TestB3Format(unittest.TestCase):
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
 
-    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_trace_id")
-    @patch("opentelemetry.sdk.trace.propagation.b3_format.generate_span_id")
+    @patch(
+        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_trace_id"
+    )
+    @patch(
+        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_span_id"
+    )
     def test_invalid_span_id(
         self, mock_generate_span_id, mock_generate_trace_id
     ):
@@ -307,3 +316,16 @@ class TestB3Format(unittest.TestCase):
         new_carrier = {}
         FORMAT.inject(dict.__setitem__, new_carrier, get_current())
         assert len(new_carrier) == 0
+
+    @staticmethod
+    def test_default_span():
+        """Make sure propagator does not crash when working with DefaultSpan"""
+
+        def getter(carrier, key):
+            return carrier.get(key, None)
+
+        def setter(carrier, key, value):
+            carrier[key] = value
+
+        ctx = FORMAT.extract(getter, {})
+        FORMAT.inject(setter, {}, ctx)

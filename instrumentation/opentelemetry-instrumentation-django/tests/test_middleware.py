@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from sys import modules
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django import VERSION
 from django.conf import settings
@@ -88,6 +88,21 @@ class TestMiddleware(WsgiTestBase):
         self.assertEqual(span.attributes["http.scheme"], "http")
         self.assertEqual(span.attributes["http.status_code"], 200)
         self.assertEqual(span.attributes["http.status_text"], "OK")
+
+    def test_not_recording(self):
+        mock_tracer = Mock()
+        mock_span = Mock()
+        mock_span.is_recording.return_value = False
+        mock_tracer.start_span.return_value = mock_span
+        mock_tracer.use_span.return_value.__enter__ = mock_span
+        mock_tracer.use_span.return_value.__exit__ = mock_span
+        with patch("opentelemetry.trace.get_tracer") as tracer:
+            tracer.return_value = mock_tracer
+            Client().get("/traced/")
+            self.assertFalse(mock_span.is_recording())
+            self.assertTrue(mock_span.is_recording.called)
+            self.assertFalse(mock_span.set_attribute.called)
+            self.assertFalse(mock_span.set_status.called)
 
     def test_traced_post(self):
         Client().post("/traced/")
@@ -174,3 +189,30 @@ class TestMiddleware(WsgiTestBase):
 
         span = span_list[0]
         self.assertEqual(span.name, "HTTP GET")
+
+    def test_traced_request_attrs(self):
+        with patch(
+            "opentelemetry.instrumentation.django.middleware._DjangoMiddleware._traced_request_attrs",
+            [],
+        ):
+            Client().get("/span_name/1234/", CONTENT_TYPE="test/ct")
+            span_list = self.memory_exporter.get_finished_spans()
+            self.assertEqual(len(span_list), 1)
+
+            span = span_list[0]
+            self.assertNotIn("path_info", span.attributes)
+            self.assertNotIn("content_type", span.attributes)
+            self.memory_exporter.clear()
+
+        with patch(
+            "opentelemetry.instrumentation.django.middleware._DjangoMiddleware._traced_request_attrs",
+            ["path_info", "content_type", "non_existing_variable"],
+        ):
+            Client().get("/span_name/1234/", CONTENT_TYPE="test/ct")
+            span_list = self.memory_exporter.get_finished_spans()
+            self.assertEqual(len(span_list), 1)
+
+            span = span_list[0]
+            self.assertEqual(span.attributes["path_info"], "/span_name/1234/")
+            self.assertEqual(span.attributes["content_type"], "test/ct")
+            self.assertNotIn("non_existing_variable", span.attributes)

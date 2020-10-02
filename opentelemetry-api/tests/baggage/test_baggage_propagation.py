@@ -32,7 +32,7 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def _extract(self, header_value):
         """Test helper"""
-        header = {"otcorrelations": [header_value]}
+        header = {"baggage": [header_value]}
         return baggage.get_all(self.propagator.extract(get_as_list, header))
 
     def _inject(self, values):
@@ -42,7 +42,7 @@ class TestBaggagePropagation(unittest.TestCase):
             ctx = baggage.set_baggage(k, v, context=ctx)
         output = {}
         self.propagator.inject(dict.__setitem__, output, context=ctx)
-        return output.get("otcorrelations")
+        return output.get("baggage")
 
     def test_no_context_header(self):
         baggage_entries = baggage.get_all(

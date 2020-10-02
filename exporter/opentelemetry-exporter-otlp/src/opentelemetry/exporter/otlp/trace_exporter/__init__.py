@@ -208,7 +208,8 @@ class OTLPSpanExporter(
             self._translate_status(sdk_span)
 
             self._collector_span_kwargs["kind"] = getattr(
-                CollectorSpan.SpanKind, sdk_span.kind.name
+                CollectorSpan.SpanKind,
+                "SPAN_KIND_{}".format(sdk_span.kind.name),
             )
 
             sdk_resource_instrumentation_library_spans[
