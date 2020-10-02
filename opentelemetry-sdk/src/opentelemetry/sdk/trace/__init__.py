@@ -706,7 +706,7 @@ class Tracer(trace_api.Tracer):
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext
         ):
-            raise TypeError("parent must be a Span, SpanContext or None.")
+            raise TypeError("parent_context must be a SpanContext or None.")
 
         if parent_context is None or not parent_context.is_valid:
             parent_context = None
