@@ -504,14 +504,10 @@ class SklearnInstrumentor(BaseInstrumentor):
             )
         else:
             setattr(
-                estimator,
-                "_original_" + method_name,
-                (estimator, class_attr),
+                estimator, "_original_" + method_name, (estimator, class_attr),
             )
             setattr(
-                estimator,
-                method_name,
-                self.spanner(class_attr, estimator),
+                estimator, method_name, self.spanner(class_attr, estimator),
             )
 
     def _function_wrapper(self, function):
