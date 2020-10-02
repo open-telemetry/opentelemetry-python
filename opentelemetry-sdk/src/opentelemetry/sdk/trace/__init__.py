@@ -340,6 +340,7 @@ def _filter_attribute_values(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
+# pylint: disable=protected-access
 def _make_event_attributes_immutable(event: EventBase) -> None:
     event._attributes = make_immutable_dict(event.attributes)
 
