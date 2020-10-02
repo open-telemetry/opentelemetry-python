@@ -47,9 +47,7 @@ def get_dict_as_key(labels):
 
 
 def make_immutable_dict(attributes):
-    return MappingProxyType(
-        attributes.copy() if attributes else {}
-    )
+    return MappingProxyType(attributes.copy() if attributes else {})
 
 
 class BoundedList(Sequence):

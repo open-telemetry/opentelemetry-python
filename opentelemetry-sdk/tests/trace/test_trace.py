@@ -598,11 +598,9 @@ class TestSpan(unittest.TestCase):
                 root.events[3].attributes, {"name": ("original_contents",)}
             )
 
-
     def test_events_are_immutable(self):
         event_properties = [
-            prop for prop in dir(trace.EventBase)
-            if not prop.startswith("_")
+            prop for prop in dir(trace.EventBase) if not prop.startswith("_")
         ]
 
         with self.tracer.start_as_current_span("root") as root:

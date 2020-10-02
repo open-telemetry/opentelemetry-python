@@ -41,7 +41,11 @@ from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.util import BoundedDict, BoundedList, make_immutable_dict
+from opentelemetry.sdk.util import (
+    BoundedDict,
+    BoundedList,
+    make_immutable_dict
+)
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
