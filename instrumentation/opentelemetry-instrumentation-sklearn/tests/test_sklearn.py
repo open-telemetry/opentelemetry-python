@@ -14,9 +14,11 @@ from .fixtures import pipeline, random_input
 
 class TestSklearn(TestBase):
     def test_package_instrumentation(self):
-        ski = SklearnInstrumentor(packages=["sklearn"])
+        ski = SklearnInstrumentor()
 
         base_estimators = get_base_estimators(packages=["sklearn"])
+
+        model = pipeline()
 
         ski.instrument()
         # assert instrumented
@@ -32,6 +34,16 @@ class TestSklearn(TestBase):
                 if hasattr(estimator, method_name):
                     assert hasattr(estimator, "_original_" + method_name)
 
+        x_test = random_input()
+
+        model.predict(x_test)
+
+        spans = self.memory_exporter.get_finished_spans()
+        for span in spans:
+            print(span)
+        self.assertEqual(len(spans), 8)
+        self.memory_exporter.clear()
+
         ski.uninstrument()
         # assert uninstrumented
         for _, estimator in base_estimators.items():
@@ -46,7 +58,13 @@ class TestSklearn(TestBase):
                 if hasattr(estimator, method_name):
                     assert not hasattr(estimator, "_original_" + method_name)
 
-        self.memory_exporter.clear()
+        model = pipeline()
+        x_test = random_input()
+
+        model.predict(x_test)
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 0)
 
     def test_span_properties(self):
         """Test that we get all of the spans we expect."""

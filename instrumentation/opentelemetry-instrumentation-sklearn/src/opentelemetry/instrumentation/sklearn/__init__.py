@@ -429,15 +429,9 @@ class SklearnInstrumentor(BaseInstrumentor):
                 "Uninstrumenting: %s.%s", qualname, method_name,
             )
             _, orig_method = getattr(estimator, orig_method_name)
-            wrapper = self._function_wrapper_wrapper(orig_method)
-            if wrapper is not None:
-                setattr(
-                    wrapper, "__wrapped__", orig_method,
-                )
-            else:
-                setattr(
-                    estimator, method_name, orig_method,
-                )
+            setattr(
+                estimator, method_name, orig_method,
+            )
             delattr(estimator, orig_method_name)
         else:
             logger.debug(
@@ -509,29 +503,16 @@ class SklearnInstrumentor(BaseInstrumentor):
                 method_name,
             )
         else:
-            wrapper = self._function_wrapper(class_attr)
-            if wrapper is not None:
-                setattr(
-                    estimator,
-                    "_original_" + method_name,
-                    (estimator, wrapper.__wrapped__),
-                )
-                setattr(
-                    wrapper,
-                    "__wrapped__",
-                    self.spanner(wrapper.__wrapped__, estimator),
-                )
-            else:
-                setattr(
-                    estimator,
-                    "_original_" + method_name,
-                    (estimator, class_attr),
-                )
-                setattr(
-                    estimator,
-                    method_name,
-                    self.spanner(class_attr, estimator),
-                )
+            setattr(
+                estimator,
+                "_original_" + method_name,
+                (estimator, class_attr),
+            )
+            setattr(
+                estimator,
+                method_name,
+                self.spanner(class_attr, estimator),
+            )
 
     def _function_wrapper(self, function):
         """Get the inner-most decorator of a function."""
