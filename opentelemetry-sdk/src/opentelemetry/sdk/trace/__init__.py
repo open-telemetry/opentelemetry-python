@@ -345,7 +345,8 @@ class Span(trace_api.Span):
     Args:
         name: The name of the operation this span represents
         context: The immutable span context
-        parent: An optional Context containing the span's parent
+        parent: This span's parent's `opentelemetry.trace.SpanContext`, or
+            None if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
         resource: Entity producing telemetry

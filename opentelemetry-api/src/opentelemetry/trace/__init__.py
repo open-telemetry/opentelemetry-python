@@ -240,8 +240,9 @@ class Tracer(abc.ABC):
         method, see :meth:`start_as_current_span`.
 
         By default the current span in the context will be used as parent, but an
-        explicit parent can also be specified, either a `Span` or a `opentelemetry.trace.SpanContext`.
-        If the specified value is `None`, the created span will be a root span.
+        explicit parent can also be specified, by passing in a `Context` containing
+        a current `Span`. If there is no current span in the global `Context` or in
+        the specified parent `Context`, the created span will be a root span.
 
         The span can be used as a context manager. On exiting the context manager,
         the span's end() method will be called.
@@ -255,7 +256,8 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
+            parent: An optional Context containing the span's parent. Defaults to the
+                global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
@@ -313,7 +315,8 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: An optional Context containing the span's parent.
+            parent: An optional Context containing the span's parent. Defaults to the
+                global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
