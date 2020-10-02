@@ -115,8 +115,8 @@ class JaegerSpanExporter(SpanExporter):
         self.collector_endpoint = (
             Configuration().EXPORTER_JAEGER_ENDPOINT or collector_endpoint
         )
-        self.username = username or Configuration().EXPORTER_JAEGER_USER
-        self.password = password or Configuration().EXPORTER_JAEGER_PASSWORD
+        self.username = Configuration().EXPORTER_JAEGER_USER or username
+        self.password = Configuration().EXPORTER_JAEGER_PASSWORD or password
         self._collector = None
 
     @property
