@@ -22,9 +22,18 @@ from opentelemetry.trace import get_current_span, set_span_in_context
 FORMAT = propagator.DatadogFormat()
 
 
-def get_as_list(dict_object, key):
-    value = dict_object.get(key)
-    return [value] if value is not None else []
+class Getter:
+    @staticmethod
+    def get(dict_object, key):
+        value = dict_object.get(key)
+        return [value] if value is not None else []
+
+    @staticmethod
+    def keys(dict_object):
+        return dict_object.keys()
+
+
+get_as_list = Getter()
 
 
 class TestDatadogFormat(unittest.TestCase):

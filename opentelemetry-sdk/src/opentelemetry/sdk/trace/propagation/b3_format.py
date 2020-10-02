@@ -43,7 +43,7 @@ class B3Format(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        get_from_carrier: Getter,
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -53,7 +53,7 @@ class B3Format(TextMapPropagator):
         flags = None
 
         single_header = _extract_first_element(
-            get_from_carrier(carrier, self.SINGLE_HEADER_KEY)
+            get_from_carrier.get(carrier, self.SINGLE_HEADER_KEY)
         )
         if single_header:
             # The b3 spec calls for the sampling state to be
@@ -75,25 +75,25 @@ class B3Format(TextMapPropagator):
         else:
             trace_id = (
                 _extract_first_element(
-                    get_from_carrier(carrier, self.TRACE_ID_KEY)
+                    get_from_carrier.get(carrier, self.TRACE_ID_KEY)
                 )
                 or trace_id
             )
             span_id = (
                 _extract_first_element(
-                    get_from_carrier(carrier, self.SPAN_ID_KEY)
+                    get_from_carrier.get(carrier, self.SPAN_ID_KEY)
                 )
                 or span_id
             )
             sampled = (
                 _extract_first_element(
-                    get_from_carrier(carrier, self.SAMPLED_KEY)
+                    get_from_carrier.get(carrier, self.SAMPLED_KEY)
                 )
                 or sampled
             )
             flags = (
                 _extract_first_element(
-                    get_from_carrier(carrier, self.FLAGS_KEY)
+                    get_from_carrier.get(carrier, self.FLAGS_KEY)
                 )
                 or flags
             )

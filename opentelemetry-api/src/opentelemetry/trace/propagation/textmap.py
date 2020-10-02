@@ -20,7 +20,44 @@ from opentelemetry.context.context import Context
 TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
 
 Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
-Getter = typing.Callable[[TextMapPropagatorT, str], typing.List[str]]
+
+
+class Getter(abc.ABC):
+    """This class provides an interface that enables extracting propagated
+    fields from a carrier
+
+    """
+
+    @staticmethod
+    @abc.abstractmethod
+    def get(carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
+        """Function that can retrieve zero
+        or more values from the carrier. In the case that
+        the value does not exist, returns an empty list.
+
+        Args:
+            carrier: and object which contains values that are
+                used to construct a Context. This object
+                must be paired with an appropriate get_from_carrier
+                which understands how to extract a value from it.
+            key: key of a field in carrier.
+        Returns:
+            first value of the propagation key or an empty list if the key doesn't exist.
+        """
+
+    @staticmethod
+    @abc.abstractmethod
+    def keys(carrier: TextMapPropagatorT) -> typing.List[str]:
+        """Function that can retrieve all the keys in a carrier object.
+
+        Args:
+            carrier: and object which contains values that are
+                used to construct a Context. This object
+                must be paired with an appropriate get_from_carrier
+                which understands how to extract a value from it.
+        Returns:
+            list of keys from the carrier.
+        """
 
 
 class TextMapPropagator(abc.ABC):
@@ -35,7 +72,7 @@ class TextMapPropagator(abc.ABC):
     @abc.abstractmethod
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        get_from_carrier: Getter,
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:

@@ -110,6 +110,18 @@ def _check_error_code(span, servicer_context, rpc_info):
         rpc_info.error = servicer_context.code
 
 
+class Getter:
+    @staticmethod
+    def get(metadata, key) -> List[str]:
+        md_dict = {md.key: md.value for md in metadata}
+        return [md_dict[key]] if key in md_dict else []
+
+    @staticmethod
+    def keys(metadata) -> List[str]:
+        md_dict = {md.key: md.value for md in metadata}
+        return md_dict.keys()
+
+
 class OpenTelemetryServerInterceptor(
     grpcext.UnaryServerInterceptor, grpcext.StreamServerInterceptor
 ):
@@ -121,11 +133,8 @@ class OpenTelemetryServerInterceptor(
     def _set_remote_context(self, servicer_context):
         metadata = servicer_context.invocation_metadata()
         if metadata:
-            md_dict = {md.key: md.value for md in metadata}
 
-            def get_from_grpc_metadata(metadata, key) -> List[str]:
-                return [md_dict[key]] if key in md_dict else []
-
+            get_from_grpc_metadata = Getter()
             # Update the context with the traceparent from the RPC metadata.
             ctx = propagators.extract(get_from_grpc_metadata, metadata)
             token = attach(ctx)

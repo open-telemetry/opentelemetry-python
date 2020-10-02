@@ -60,7 +60,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        get_from_carrier: textmap.Getter,
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -68,7 +68,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
         See `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
-        header = get_from_carrier(carrier, self._TRACEPARENT_HEADER_NAME)
+        header = get_from_carrier.get(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
@@ -91,7 +91,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         if version == "ff":
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        tracestate_headers = get_from_carrier(
+        tracestate_headers = get_from_carrier.get(
             carrier, self._TRACESTATE_HEADER_NAME
         )
         tracestate = _parse_tracestate(tracestate_headers)

@@ -20,10 +20,17 @@ from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context import get_current
 
 
-def get_as_list(
-    dict_object: typing.Dict[str, typing.List[str]], key: str
-) -> typing.List[str]:
-    return dict_object.get(key, [])
+class Getter:
+    @staticmethod
+    def get(dict_object, key):
+        return dict_object.get(key, [])
+
+    @staticmethod
+    def keys(dict_object):
+        return dict_object.keys()
+
+
+get_as_list = Getter()
 
 
 class TestBaggagePropagation(unittest.TestCase):

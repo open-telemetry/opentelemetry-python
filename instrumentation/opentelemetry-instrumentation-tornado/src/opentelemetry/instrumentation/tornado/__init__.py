@@ -174,11 +174,15 @@ def _log_exception(tracer, func, handler, args, kwargs):
     return func(*args, **kwargs)
 
 
-def _get_header_from_request_headers(
-    headers: dict, header_name: str
-) -> typing.List[str]:
-    header = headers.get(header_name)
-    return [header] if header else []
+class Getter:
+    @staticmethod
+    def get(headers: dict, header_name: str) -> typing.List[str]:
+        header = headers.get(header_name)
+        return [header] if header else []
+
+    @staticmethod
+    def keys(headers) -> typing.List[str]:
+        return headers.keys()
 
 
 def _get_attributes_from_request(request):
@@ -206,6 +210,7 @@ def _get_operation_name(handler, request):
 
 
 def _start_span(tracer, handler, start_time) -> _TraceContext:
+    _get_header_from_request_headers = Getter()
     token = context.attach(
         propagators.extract(
             _get_header_from_request_headers, handler.request.headers,

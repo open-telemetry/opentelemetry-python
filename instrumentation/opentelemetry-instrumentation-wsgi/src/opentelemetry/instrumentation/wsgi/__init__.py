@@ -66,19 +66,31 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 _HTTP_VERSION_PREFIX = "HTTP/"
 
 
-def get_header_from_environ(
-    environ: dict, header_name: str
-) -> typing.List[str]:
-    """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
+class Getter:
+    @staticmethod
+    def get(environ: dict, header_name: str) -> typing.List[str]:
+        """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
 
-    Returns:
-        A list with a single string with the header value if it exists, else an empty list.
-    """
-    environ_key = "HTTP_" + header_name.upper().replace("-", "_")
-    value = environ.get(environ_key)
-    if value is not None:
-        return [value]
-    return []
+        Returns:
+            A list with a single string with the header value if it exists, else an empty list.
+        """
+        environ_key = "HTTP_" + header_name.upper().replace("-", "_")
+        value = environ.get(environ_key)
+        if value is not None:
+            return [value]
+        return []
+
+    @staticmethod
+    def keys(environ: dict) -> typing.List[str]:
+        """Retrieve all the  HTTP header keys for an PEP3333-conforming WSGI environ.
+
+        Returns:
+            A list with all the keys in environ.
+        """
+        return environ.keys()
+
+
+get_header_from_environ = Getter()
 
 
 def setifnotnone(dic, key, value):

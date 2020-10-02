@@ -20,11 +20,18 @@ from opentelemetry.propagators import extract, inject
 from opentelemetry.trace import get_current_span, set_span_in_context
 
 
-def get_as_list(
-    dict_object: typing.Dict[str, typing.List[str]], key: str
-) -> typing.List[str]:
-    value = dict_object.get(key)
-    return value if value is not None else []
+class Getter:
+    @staticmethod
+    def get(dict_object, key):
+        value = dict_object.get(key)
+        return value if value is not None else []
+
+    @staticmethod
+    def keys(dict_object):
+        return dict_object.keys()
+
+
+get_as_list = Getter()
 
 
 class TestDefaultGlobalPropagator(unittest.TestCase):

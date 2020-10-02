@@ -32,18 +32,32 @@ from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
-def get_header_from_scope(scope: dict, header_name: str) -> typing.List[str]:
-    """Retrieve a HTTP header value from the ASGI scope.
+class Getter:
+    @staticmethod
+    def get(scope: dict, header_name: str) -> typing.List[str]:
+        """Retrieve a HTTP header value from the ASGI scope.
 
-    Returns:
-        A list with a single string with the header value if it exists, else an empty list.
-    """
-    headers = scope.get("headers")
-    return [
-        value.decode("utf8")
-        for (key, value) in headers
-        if key.decode("utf8") == header_name
-    ]
+        Returns:
+            A list with a single string with the header value if it exists, else an empty list.
+        """
+        headers = scope.get("headers")
+        return [
+            value.decode("utf8")
+            for (key, value) in headers
+            if key.decode("utf8") == header_name
+        ]
+
+    @staticmethod
+    def keys(scope: dict) -> typing.List[str]:
+        """Retrieve all the  HTTP header keys for an ASGI scope..
+
+        Returns:
+            A list with all the keys in scope.
+        """
+        return scope.keys()
+
+
+get_header_from_scope = Getter()
 
 
 def collect_request_attributes(scope):
@@ -72,10 +86,10 @@ def collect_request_attributes(scope):
     http_method = scope.get("method")
     if http_method:
         result["http.method"] = http_method
-    http_host_value = ",".join(get_header_from_scope(scope, "host"))
+    http_host_value = ",".join(get_header_from_scope.get(scope, "host"))
     if http_host_value:
         result["http.server_name"] = http_host_value
-    http_user_agent = get_header_from_scope(scope, "user-agent")
+    http_user_agent = get_header_from_scope.get(scope, "user-agent")
     if len(http_user_agent) > 0:
         result["http.user_agent"] = http_user_agent[0]
 

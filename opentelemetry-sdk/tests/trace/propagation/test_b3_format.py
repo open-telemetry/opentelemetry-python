@@ -23,9 +23,18 @@ from opentelemetry.context import get_current
 FORMAT = b3_format.B3Format()
 
 
-def get_as_list(dict_object, key):
-    value = dict_object.get(key)
-    return [value] if value is not None else []
+class Getter:
+    @staticmethod
+    def get(dict_object, key):
+        value = dict_object.get(key)
+        return [value] if value is not None else []
+
+    @staticmethod
+    def keys(dict_object):
+        return dict_object.keys()
+
+
+get_as_list = Getter()
 
 
 def get_child_parent_new_carrier(old_carrier):
@@ -321,11 +330,8 @@ class TestB3Format(unittest.TestCase):
     def test_default_span():
         """Make sure propagator does not crash when working with DefaultSpan"""
 
-        def getter(carrier, key):
-            return carrier.get(key, None)
-
         def setter(carrier, key, value):
             carrier[key] = value
 
-        ctx = FORMAT.extract(getter, {})
+        ctx = FORMAT.extract(get_as_list, {})
         FORMAT.inject(setter, {}, ctx)

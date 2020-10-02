@@ -39,24 +39,24 @@ class DatadogFormat(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        get_from_carrier: Getter,
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         trace_id = extract_first_element(
-            get_from_carrier(carrier, self.TRACE_ID_KEY)
+            get_from_carrier.get(carrier, self.TRACE_ID_KEY)
         )
 
         span_id = extract_first_element(
-            get_from_carrier(carrier, self.PARENT_ID_KEY)
+            get_from_carrier.get(carrier, self.PARENT_ID_KEY)
         )
 
         sampled = extract_first_element(
-            get_from_carrier(carrier, self.SAMPLING_PRIORITY_KEY)
+            get_from_carrier.get(carrier, self.SAMPLING_PRIORITY_KEY)
         )
 
         origin = extract_first_element(
-            get_from_carrier(carrier, self.ORIGIN_KEY)
+            get_from_carrier.get(carrier, self.ORIGIN_KEY)
         )
 
         trace_flags = trace.TraceFlags()

@@ -503,6 +503,47 @@ class ScopeManagerShim(ScopeManager):
         return self._tracer
 
 
+class Getter:
+    """This class provides an interface that enables extracting propagated
+    fields from a carrier
+
+    """
+
+    @staticmethod
+    def get(carrier, key):
+        """Function that can retrieve zero
+        or more values from the carrier. In the case that
+        the value does not exist, returns an empty list.
+
+        Args:
+            carrier: and object which contains values that are
+                used to construct a Context. This object
+                must be paired with an appropriate get_from_carrier
+                which understands how to extract a value from it.
+            key: key of a field in carrier.
+        Returns:
+            first value of the propagation key or an empty list if the key doesn't exist.
+        """
+
+        value = carrier.get(key)
+        return [value] if value is not None else []
+
+    @staticmethod
+    def keys(carrier):
+        """Function that can retrieve all the keys in a carrier object.
+
+        Args:
+            carrier: and object which contains values that are
+                used to construct a Context. This object
+                must be paired with an appropriate get_from_carrier
+                which understands how to extract a value from it.
+        Returns:
+            list of keys from the carrier.
+        """
+
+        return carrier.keys()
+
+
 class TracerShim(Tracer):
     """Wraps a :class:`opentelemetry.trace.Tracer` object.
 
@@ -706,10 +747,7 @@ class TracerShim(Tracer):
         if format not in self._supported_formats:
             raise UnsupportedFormatException
 
-        def get_as_list(dict_object, key):
-            value = dict_object.get(key)
-            return [value] if value is not None else []
-
+        get_as_list = Getter()
         propagator = propagators.get_global_textmap()
         ctx = propagator.extract(get_as_list, carrier)
         span = get_current_span(ctx)

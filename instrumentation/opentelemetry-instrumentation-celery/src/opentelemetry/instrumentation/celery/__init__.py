@@ -118,6 +118,7 @@ class CeleryInstrumentor(BaseInstrumentor):
             return
 
         request = task.request
+        carrier_extractor = Getter()
         tracectx = propagators.extract(carrier_extractor, request) or {}
         parent = get_current_span(tracectx)
 
@@ -248,8 +249,14 @@ class CeleryInstrumentor(BaseInstrumentor):
         span.set_attribute(_TASK_RETRY_REASON_KEY, str(reason))
 
 
-def carrier_extractor(carrier, key):
-    value = getattr(carrier, key, [])
-    if isinstance(value, str) or not isinstance(value, Iterable):
-        value = (value,)
-    return value
+class Getter:
+    @staticmethod
+    def get(carrier, key):
+        value = getattr(carrier, key, [])
+        if isinstance(value, str) or not isinstance(value, Iterable):
+            value = (value,)
+        return value
+
+    @staticmethod
+    def keys(carrier):
+        return carrier.keys()
