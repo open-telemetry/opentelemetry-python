@@ -8,6 +8,8 @@
   ([#1118](https://github.com/open-telemetry/opentelemetry-python/pull/1118))
 - Allow for Custom Trace and Span IDs Generation - `IdsGenerator` for TracerProvider
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
+- Update baggage propagation header
+  ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
 
 ## Version 0.13b0
 
