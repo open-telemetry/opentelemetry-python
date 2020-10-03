@@ -18,12 +18,11 @@ import atexit
 import concurrent.futures
 import json
 import logging
-import random
 import threading
 import traceback
 from collections import OrderedDict
 from contextlib import contextmanager
-from types import TracebackType
+from types import MappingProxyType, TracebackType
 from typing import (
     Any,
     Callable,
@@ -41,11 +40,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.util import (
-    BoundedDict,
-    BoundedList,
-    make_immutable_dict,
-)
+from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
@@ -340,9 +335,8 @@ def _filter_attribute_values(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
-# pylint: disable=protected-access
-def _make_event_attributes_immutable(event: EventBase) -> None:
-    event._attributes = make_immutable_dict(event.attributes)
+def make_immutable_dict(attributes):
+    return MappingProxyType(attributes.copy() if attributes else {})
 
 
 class Span(trace_api.Span):
@@ -408,7 +402,8 @@ class Span(trace_api.Span):
         if events:
             for event in events:
                 _filter_attribute_values(event.attributes)
-                _make_event_attributes_immutable(event)
+                # pylint: disable=protected-access
+                event._attributes = make_immutable_dict(event.attributes)
                 self.events.append(event)
 
         if links is None:

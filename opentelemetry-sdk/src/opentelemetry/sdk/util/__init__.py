@@ -14,7 +14,6 @@
 import datetime
 import threading
 from collections import OrderedDict, deque
-from types import MappingProxyType
 
 try:
     # pylint: disable=ungrouped-imports
@@ -44,10 +43,6 @@ def get_dict_as_key(labels):
             )
         )
     )
-
-
-def make_immutable_dict(attributes):
-    return MappingProxyType(attributes.copy() if attributes else {})
 
 
 class BoundedList(Sequence):
