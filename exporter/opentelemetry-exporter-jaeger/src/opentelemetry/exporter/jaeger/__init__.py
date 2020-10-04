@@ -98,25 +98,39 @@ class JaegerSpanExporter(SpanExporter):
     def __init__(
         self,
         service_name,
-        agent_host_name=DEFAULT_AGENT_HOST_NAME,
-        agent_port=DEFAULT_AGENT_PORT,
+        agent_host_name=None,
+        agent_port=None,
         collector_endpoint=None,
         username=None,
         password=None,
     ):
         self.service_name = service_name
-        self.agent_host_name = (
-            Configuration().EXPORTER_JAEGER_AGENT_HOST or agent_host_name
+        self.agent_host_name = _parameter_setter(
+            param=agent_host_name,
+            env_variable=Configuration().EXPORTER_JAEGER_AGENT_HOST,
+            default=DEFAULT_AGENT_HOST_NAME,
         )
-        self.agent_port = (
-            Configuration().EXPORTER_JAEGER_AGENT_PORT or agent_port
+        self.agent_port = _parameter_setter(
+            param=agent_port,
+            env_variable=Configuration().EXPORTER_JAEGER_AGENT_PORT,
+            default=DEFAULT_AGENT_PORT,
         )
         self._agent_client = None
-        self.collector_endpoint = (
-            Configuration().EXPORTER_JAEGER_ENDPOINT or collector_endpoint
+        self.collector_endpoint = _parameter_setter(
+            param=collector_endpoint,
+            env_variable=Configuration().EXPORTER_JAEGER_ENDPOINT,
+            default=None,
         )
-        self.username = Configuration().EXPORTER_JAEGER_USER or username
-        self.password = Configuration().EXPORTER_JAEGER_PASSWORD or password
+        self.username = _parameter_setter(
+            param=username,
+            env_variable=Configuration().EXPORTER_JAEGER_USER,
+            default=None,
+        )
+        self.password = _parameter_setter(
+            param=password,
+            env_variable=Configuration().EXPORTER_JAEGER_PASSWORD,
+            default=None,
+        )
         self._collector = None
 
     @property
@@ -161,6 +175,22 @@ class JaegerSpanExporter(SpanExporter):
 
     def shutdown(self):
         pass
+
+
+def _parameter_setter(param, env_variable, default):
+    """Returns value according to the provided data.
+
+    Args:
+        param: Constructor parameter value
+        env_variable: Environment variable related to the parameter
+        default: Constructor parameter default value
+    """
+    if param is None:
+        res = env_variable or default
+    else:
+        res = param
+
+    return res
 
 
 def _nsec_to_usec_round(nsec):
