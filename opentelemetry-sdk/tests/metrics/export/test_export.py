@@ -29,8 +29,8 @@ from opentelemetry.sdk.metrics.export.aggregate import (
     SumAggregator,
     ValueObserverAggregator,
 )
-from opentelemetry.sdk.metrics.export.processor import Processor
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.export.processor import Processor
 
 
 # pylint: disable=protected-access
@@ -64,7 +64,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
 class TestBatcher(unittest.TestCase):
     def test_checkpoint_set(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Processor(True)
+        processor = Processor(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -73,21 +73,21 @@ class TestBatcher(unittest.TestCase):
         labels = ()
         _batch_map = {}
         _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
-        batcher._batch_map = _batch_map
-        records = batcher.checkpoint_set()
+        processor._batch_map = _batch_map
+        records = processor.checkpoint_set()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].instrument, metric)
         self.assertEqual(records[0].labels, labels)
         self.assertEqual(records[0].aggregator, aggregator)
 
     def test_checkpoint_set_empty(self):
-        batcher = Processor(True)
-        records = batcher.checkpoint_set()
+        processor = Processor(True)
+        records = processor.checkpoint_set()
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Processor(False)
+        processor = Processor(False)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -96,13 +96,13 @@ class TestBatcher(unittest.TestCase):
         labels = ()
         _batch_map = {}
         _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
-        batcher._batch_map = _batch_map
-        batcher.finished_collection()
-        self.assertEqual(len(batcher._batch_map), 0)
+        processor._batch_map = _batch_map
+        processor.finished_collection()
+        self.assertEqual(len(processor._batch_map), 0)
 
     def test_finished_collection_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Processor(True)
+        processor = Processor(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -111,13 +111,13 @@ class TestBatcher(unittest.TestCase):
         labels = ()
         _batch_map = {}
         _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
-        batcher._batch_map = _batch_map
-        batcher.finished_collection()
-        self.assertEqual(len(batcher._batch_map), 1)
+        processor._batch_map = _batch_map
+        processor.finished_collection()
+        self.assertEqual(len(processor._batch_map), 1)
 
     def test_batcher_process_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Processor(True)
+        processor = Processor(True)
         aggregator = SumAggregator()
         aggregator2 = SumAggregator()
         metric = metrics.Counter(
@@ -128,17 +128,17 @@ class TestBatcher(unittest.TestCase):
         batch_key = (metric, SumAggregator, tuple(), labels)
         _batch_map[batch_key] = aggregator
         aggregator2.update(1.0)
-        batcher._batch_map = _batch_map
+        processor._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator2)
-        batcher.process(record)
-        self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get(batch_key))
-        self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
+        processor.process(record)
+        self.assertEqual(len(processor._batch_map), 1)
+        self.assertIsNotNone(processor._batch_map.get(batch_key))
+        self.assertEqual(processor._batch_map.get(batch_key).current, 0)
+        self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
     def test_batcher_process_not_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Processor(True)
+        processor = Processor(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -147,17 +147,17 @@ class TestBatcher(unittest.TestCase):
         _batch_map = {}
         batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
-        batcher._batch_map = _batch_map
+        processor._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)
-        batcher.process(record)
-        self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get(batch_key))
-        self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
+        processor.process(record)
+        self.assertEqual(len(processor._batch_map), 1)
+        self.assertIsNotNone(processor._batch_map.get(batch_key))
+        self.assertEqual(processor._batch_map.get(batch_key).current, 0)
+        self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
     def test_batcher_process_not_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Processor(True)
+        processor = Processor(True)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -166,13 +166,13 @@ class TestBatcher(unittest.TestCase):
         _batch_map = {}
         batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
-        batcher._batch_map = _batch_map
+        processor._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)
-        batcher.process(record)
-        self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get(batch_key))
-        self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
+        processor.process(record)
+        self.assertEqual(len(processor._batch_map), 1)
+        self.assertIsNotNone(processor._batch_map.get(batch_key))
+        self.assertEqual(processor._batch_map.get(batch_key).current, 0)
+        self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
 
 class TestSumAggregator(unittest.TestCase):

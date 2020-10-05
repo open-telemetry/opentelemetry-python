@@ -19,17 +19,17 @@ from opentelemetry.sdk.util import get_dict_as_key
 
 
 class Processor:
-    """Base class for all batcher types.
+    """Base class for all processor types.
 
-    The batcher is responsible for storing the aggregators and aggregated
+    The processor is responsible for storing the aggregators and aggregated
     values received from updates from metrics in the meter. The stored values
     will be sent to an exporter for exporting.
     """
 
     def __init__(self, stateful: bool):
         self._batch_map = {}
-        # stateful=True indicates the batcher computes checkpoints from over
-        # the process lifetime. False indicates the batcher computes
+        # stateful=True indicates the processor computes checkpoints from over
+        # the process lifetime. False indicates the processor computes
         # checkpoints which describe the updates of a single collection period
         # (deltas)
         self.stateful = stateful
@@ -38,7 +38,7 @@ class Processor:
         """Returns a list of MetricRecords used for exporting.
 
         The list of MetricRecords is a snapshot created from the current
-        data in all of the aggregators in this batcher.
+        data in all of the aggregators in this processor.
         """
         metric_records = []
         # pylint: disable=W0612

@@ -28,7 +28,7 @@ class TestMeterProvider(unittest.TestCase):
     def test_stateful(self):
         meter_provider = metrics.MeterProvider(stateful=False)
         meter = meter_provider.get_meter(__name__)
-        self.assertIs(meter.batcher.stateful, False)
+        self.assertIs(meter.processor.stateful, False)
 
     def test_resource(self):
         resource = resources.Resource.create({})
@@ -75,7 +75,7 @@ class TestMeter(unittest.TestCase):
     def test_collect_metrics(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        meter.processor = batcher_mock
         counter = meter.create_metric(
             "name", "desc", "unit", float, metrics.Counter
         )
@@ -88,14 +88,14 @@ class TestMeter(unittest.TestCase):
     def test_collect_no_metrics(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        meter.processor = batcher_mock
         meter.collect()
         self.assertFalse(batcher_mock.process.called)
 
     def test_collect_not_registered(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        meter.processor = batcher_mock
         counter = metrics.Counter("name", "desc", "unit", float, meter)
         labels = {"key1": "value1"}
         counter.add(1.0, labels)
@@ -105,7 +105,7 @@ class TestMeter(unittest.TestCase):
     def test_collect_disabled_metric(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        meter.processor = batcher_mock
         counter = metrics.Counter("name", "desc", "unit", float, meter, False)
         labels = {"key1": "value1"}
         meter.register_view(View(counter, SumAggregator))
@@ -116,7 +116,7 @@ class TestMeter(unittest.TestCase):
     def test_collect_observers(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        meter.processor = batcher_mock
 
         def callback(observer):
             self.assertIsInstance(observer, metrics_api.Observer)
