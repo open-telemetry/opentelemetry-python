@@ -10,6 +10,8 @@
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
 - Update baggage propagation header
   ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
+- Make instances of SpanContext immutable
+  ([#1134](https://github.com/open-telemetry/opentelemetry-python/pull/1134))
 
 ## Version 0.13b0
 
