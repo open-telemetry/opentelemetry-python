@@ -359,7 +359,7 @@ class Span(trace_api.Span):
 
     def __new__(cls, *args, **kwargs):
         if cls is Span:
-            raise TypeError("Span cannot be instantiated directly")
+            raise TypeError("Span must be instantiated via a tracer.")
         return super().__new__(cls)
 
     def __init__(
