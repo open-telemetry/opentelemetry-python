@@ -23,7 +23,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
 )
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
-from opentelemetry.sdk.metrics.export.batcher import Batcher
+from opentelemetry.sdk.metrics.export.processor import Processor
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.view import (
     ViewData,
@@ -325,7 +325,7 @@ class ValueObserver(Observer, metrics_api.ValueObserver):
 
 
 class Record:
-    """Container class used for processing in the `Batcher`"""
+    """Container class used for processing in the `Processor`"""
 
     def __init__(
         self,
@@ -352,7 +352,7 @@ class Meter(metrics_api.Meter):
         instrumentation_info: "InstrumentationInfo",
     ):
         self.instrumentation_info = instrumentation_info
-        self.batcher = Batcher(source.stateful)
+        self.batcher = Processor(source.stateful)
         self.resource = source.resource
         self.metrics = set()
         self.observers = set()

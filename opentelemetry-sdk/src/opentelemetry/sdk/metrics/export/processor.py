@@ -18,7 +18,7 @@ from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.util import get_dict_as_key
 
 
-class Batcher:
+class Processor:
     """Base class for all batcher types.
 
     The batcher is responsible for storing the aggregators and aggregated
