@@ -31,6 +31,7 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 )
 from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.resources import Resource
 
 
 # pylint: disable=protected-access
@@ -49,7 +50,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         )
         labels = {"environment": "staging"}
         aggregator = SumAggregator()
-        record = MetricRecord(metric, labels, aggregator)
+        record = MetricRecord(metric, labels, aggregator, meter.resource)
         result = '{}(data="{}", labels="{}", value={})'.format(
             ConsoleMetricsExporter.__name__,
             metric,
@@ -64,7 +65,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
 class TestBatcher(unittest.TestCase):
     def test_checkpoint_set(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+        batcher = Batcher(True, meter.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -81,13 +82,13 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(records[0].aggregator, aggregator)
 
     def test_checkpoint_set_empty(self):
-        batcher = Batcher(True)
+        batcher = Batcher(True, Resource.create_empty())
         records = batcher.checkpoint_set()
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(False)
+        batcher = Batcher(True, meter.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -102,7 +103,7 @@ class TestBatcher(unittest.TestCase):
 
     def test_finished_collection_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+        batcher = Batcher(True, meter.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -117,7 +118,7 @@ class TestBatcher(unittest.TestCase):
 
     def test_batcher_process_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+        batcher = Batcher(True, meter.resource)
         aggregator = SumAggregator()
         aggregator2 = SumAggregator()
         metric = metrics.Counter(
@@ -138,7 +139,7 @@ class TestBatcher(unittest.TestCase):
 
     def test_batcher_process_not_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+        batcher = Batcher(True, meter.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -157,7 +158,7 @@ class TestBatcher(unittest.TestCase):
 
     def test_batcher_process_not_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+        batcher = Batcher(True, meter.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
