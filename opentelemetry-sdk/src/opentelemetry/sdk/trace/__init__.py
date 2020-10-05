@@ -335,7 +335,7 @@ def _filter_attribute_values(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
-def make_immutable_dict(attributes):
+def _create_immutable_attributes(attributes):
     return MappingProxyType(attributes.copy() if attributes else {})
 
 
@@ -403,7 +403,9 @@ class Span(trace_api.Span):
             for event in events:
                 _filter_attribute_values(event.attributes)
                 # pylint: disable=protected-access
-                event._attributes = make_immutable_dict(event.attributes)
+                event._attributes = _create_immutable_attributes(
+                    event.attributes
+                )
                 self.events.append(event)
 
         if links is None:
@@ -562,7 +564,7 @@ class Span(trace_api.Span):
         timestamp: Optional[int] = None,
     ) -> None:
         _filter_attribute_values(attributes)
-        attributes = make_immutable_dict(attributes)
+        attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(
                 name=name,
