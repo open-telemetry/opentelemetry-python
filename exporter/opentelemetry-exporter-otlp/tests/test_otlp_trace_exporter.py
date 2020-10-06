@@ -19,7 +19,7 @@ from unittest.mock import Mock, PropertyMock, patch
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
-from grpc import StatusCode, server
+from grpc import Compression, StatusCode, server
 
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -156,6 +156,19 @@ class TestOTLPSpanExporter(TestCase):
 
     def tearDown(self):
         self.server.stop(None)
+
+    def test_gzip_compression(self):
+        mock_get_compression = mock.Mock()
+        patch = mock.patch(
+            "opentelemetry.exporter.otlp.trace_exporter",
+            side_effect=mock_get_compression,
+        )
+        compression = Compression.Gzip
+        with patch:
+            exporter = OTLPSpanExporter(compression="gzip")
+        
+        self.assertEqual(exporter.compression, compression)
+
 
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")
