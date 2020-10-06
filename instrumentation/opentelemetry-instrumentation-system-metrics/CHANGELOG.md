@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix issue when specific metrics are not available in certain OS
+  ([]())
+
 ## Version 0.13b0
 
 Released 2020-09-17
