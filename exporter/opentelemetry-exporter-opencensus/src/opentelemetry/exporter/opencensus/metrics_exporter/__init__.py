@@ -139,7 +139,7 @@ def translate_to_collector(
 
         # If cumulative and stateful, explicitly set the start_timestamp to
         # exporter start time.
-        if metric_record.instrument.meter.batcher.stateful:
+        if metric_record.instrument.meter.processor.stateful:
             start_timestamp = exporter_start_timestamp
         else:
             start_timestamp = None

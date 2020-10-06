@@ -10,6 +10,8 @@
   ([#1105](https://github.com/open-telemetry/opentelemetry-python/pull/1120))
 - Allow for Custom Trace and Span IDs Generation - `IdsGenerator` for TracerProvider
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
+- Renaming metrics Batcher to Processor
+  ([#1203](https://github.com/open-telemetry/opentelemetry-python/pull/1203))
 
 ## Version 0.13b0
 
