@@ -33,7 +33,8 @@ class Aggregator(abc.ABC):
     def __init__(self, config=None):
         self._lock = threading.Lock()
         self.last_update_timestamp = 0
-        self.last_checkpoint_timestamp = 0
+        self.initial_checkpoint_timestamp = 0
+        self.checkpointed = True
         if config is not None:
             self.config = config
         else:
@@ -42,12 +43,15 @@ class Aggregator(abc.ABC):
     @abc.abstractmethod
     def update(self, value):
         """Updates the current with the new value."""
+        if self.checkpointed:
+            self.initial_checkpoint_timestamp = time_ns()
+            self.checkpointed = False
         self.last_update_timestamp = time_ns()
 
     @abc.abstractmethod
     def take_checkpoint(self):
         """Stores a snapshot of the current value."""
-        self.last_checkpoint_timestamp = time_ns()
+        self.checkpointed = True
 
     @abc.abstractmethod
     def merge(self, other):
@@ -55,8 +59,9 @@ class Aggregator(abc.ABC):
         self.last_update_timestamp = max(
             self.last_update_timestamp, other.last_update_timestamp
         )
-        self.last_checkpoint_timestamp = max(
-            self.last_checkpoint_timestamp, other.last_checkpoint_timestamp
+        self.initial_checkpoint_timestamp = max(
+            self.initial_checkpoint_timestamp,
+            other.initial_checkpoint_timestamp,
         )
 
     def _verify_type(self, other):

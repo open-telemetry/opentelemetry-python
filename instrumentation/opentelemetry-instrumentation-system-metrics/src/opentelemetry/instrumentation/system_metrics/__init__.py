@@ -88,11 +88,15 @@ class SystemMetrics:
         self,
         exporter: MetricsExporter,
         interval: int = 30,
+        meter=None,
         labels: typing.Optional[typing.Dict[str, str]] = None,
         config: typing.Optional[typing.Dict[str, typing.List[str]]] = None,
     ):
         self._labels = {} if labels is None else labels
-        self.meter = metrics.get_meter(__name__)
+        if meter is None:
+            self.meter = metrics.get_meter(__name__)
+        else:
+            self.meter = meter
         self.controller = PushController(
             meter=self.meter, exporter=exporter, interval=interval
         )
