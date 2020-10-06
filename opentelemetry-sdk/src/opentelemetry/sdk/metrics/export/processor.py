@@ -52,7 +52,7 @@ class Processor:
     def finished_collection(self):
         """Performs certain post-export logic.
 
-        For batchers that are stateless, resets the batch map.
+        For processors that are stateless, resets the batch map.
         """
         if not self.stateful:
             self._batch_map = {}

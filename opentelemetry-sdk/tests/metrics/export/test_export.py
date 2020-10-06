@@ -61,7 +61,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
             mock_stdout.write.assert_any_call(result)
 
 
-class TestBatcher(unittest.TestCase):
+class TestProcessor(unittest.TestCase):
     def test_checkpoint_set(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         processor = Processor(True)
@@ -115,7 +115,7 @@ class TestBatcher(unittest.TestCase):
         processor.finished_collection()
         self.assertEqual(len(processor._batch_map), 1)
 
-    def test_batcher_process_exists(self):
+    def test_processor_process_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         processor = Processor(True)
         aggregator = SumAggregator()
@@ -136,7 +136,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(processor._batch_map.get(batch_key).current, 0)
         self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
-    def test_batcher_process_not_exists(self):
+    def test_processor_process_not_exists(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         processor = Processor(True)
         aggregator = SumAggregator()
@@ -155,7 +155,7 @@ class TestBatcher(unittest.TestCase):
         self.assertEqual(processor._batch_map.get(batch_key).current, 0)
         self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
-    def test_batcher_process_not_stateful(self):
+    def test_processor_process_not_stateful(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         processor = Processor(True)
         aggregator = SumAggregator()
