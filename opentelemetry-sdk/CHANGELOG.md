@@ -12,6 +12,8 @@
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
 - Renaming metrics Batcher to Processor
   ([#1203](https://github.com/open-telemetry/opentelemetry-python/pull/1203))
+- Adding Resource to MeterRecord
+  ([#1209](https://github.com/open-telemetry/opentelemetry-python/pull/1209))
 
 ## Version 0.13b0
 
