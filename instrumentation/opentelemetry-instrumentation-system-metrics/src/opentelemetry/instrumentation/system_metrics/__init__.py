@@ -601,8 +601,8 @@ class SystemMetrics:
         """
         for device, counters in psutil.net_io_counters(pernic=True).items():
             for metric in self._config["system.network.errors"]:
+                in_out = {"receive": "in", "transmit": "out"}[metric]
                 if hasattr(counters, "err{}".format(in_out)):
-                    in_out = {"receive": "in", "transmit": "out"}[metric]
                     self._system_network_errors_labels["device"] = device
                     self._system_network_errors_labels["direction"] = metric
                     observer.observe(
@@ -619,8 +619,8 @@ class SystemMetrics:
 
         for device, counters in psutil.net_io_counters(pernic=True).items():
             for metric in self._config["system.network.dropped.packets"]:
+                recv_sent = {"receive": "recv", "transmit": "sent"}[metric]
                 if hasattr(counters, "bytes_{}".format(recv_sent)):
-                    recv_sent = {"receive": "recv", "transmit": "sent"}[metric]
                     self._system_network_io_labels["device"] = device
                     self._system_network_io_labels["direction"] = metric
                     observer.observe(
