@@ -51,11 +51,12 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         labels = {"environment": "staging"}
         aggregator = SumAggregator()
         record = MetricRecord(metric, labels, aggregator, meter.resource)
-        result = '{}(data="{}", labels="{}", value={})'.format(
+        result = '{}(data="{}", labels="{}", value={}, resource={})'.format(
             ConsoleMetricsExporter.__name__,
             metric,
             labels,
             aggregator.checkpoint,
+            meter.resource.attributes,
         )
         with mock.patch("sys.stdout") as mock_stdout:
             exporter.export([record])
