@@ -88,7 +88,7 @@ class TestBatcher(unittest.TestCase):
 
     def test_finished_collection_stateless(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True, meter.resource)
+        batcher = Batcher(False, meter.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
