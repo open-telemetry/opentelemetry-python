@@ -23,8 +23,8 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
 )
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
-from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.export.processor import Processor
 from opentelemetry.sdk.metrics.view import (
     ViewData,
     ViewManager,
@@ -325,7 +325,7 @@ class ValueObserver(Observer, metrics_api.ValueObserver):
 
 
 class Record:
-    """Container class used for processing in the `Batcher`"""
+    """Container class used for processing in the `Processor`"""
 
     def __init__(
         self,
@@ -352,7 +352,7 @@ class Meter(metrics_api.Meter):
         instrumentation_info: "InstrumentationInfo",
     ):
         self.instrumentation_info = instrumentation_info
-        self.batcher = Batcher(source.stateful)
+        self.processor = Processor(source.stateful)
         self.resource = source.resource
         self.metrics = set()
         self.observers = set()
@@ -363,7 +363,7 @@ class Meter(metrics_api.Meter):
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
 
-        Utilizes the batcher to create checkpoints of the current values in
+        Utilizes the processor to create checkpoints of the current values in
         each aggregator belonging to the metrics that were created with this
         meter instance.
         """
@@ -385,7 +385,7 @@ class Meter(metrics_api.Meter):
                         record = Record(
                             metric, view_data.labels, view_data.aggregator
                         )
-                        self.batcher.process(record)
+                        self.processor.process(record)
 
                     if bound_instrument.ref_count() == 0:
                         to_remove.append(labels)
@@ -405,7 +405,7 @@ class Meter(metrics_api.Meter):
 
                 for labels, aggregator in observer.aggregators.items():
                     record = Record(observer, labels, aggregator)
-                    self.batcher.process(record)
+                    self.processor.process(record)
 
     def record_batch(
         self,

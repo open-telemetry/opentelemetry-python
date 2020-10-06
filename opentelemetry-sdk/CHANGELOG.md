@@ -10,6 +10,8 @@
   ([#1105](https://github.com/open-telemetry/opentelemetry-python/pull/1120))
 - Allow for Custom Trace and Span IDs Generation - `IdsGenerator` for TracerProvider
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
+- Renaming metrics Batcher to Processor
+  ([#1203](https://github.com/open-telemetry/opentelemetry-python/pull/1203))
 - Parent is now always passed in via Context, intead of Span or SpanContext
   ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
 
