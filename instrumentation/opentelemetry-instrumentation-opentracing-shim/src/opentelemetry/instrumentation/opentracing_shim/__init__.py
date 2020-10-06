@@ -649,7 +649,7 @@ class TracerShim(Tracer):
 
         span = self._otel_tracer.start_span(
             operation_name,
-            parent=parent_context,
+            context=parent_context,
             links=links,
             attributes=tags,
             start_time=start_time_ns,

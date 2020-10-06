@@ -49,8 +49,11 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    # Explicit parent span assignment
-    child = tracer.start_span("child", parent=parent)
+    # Explicit parent span assignment is done via the Context
+    from opentelemetry.trace import set_span_in_context
+    
+    parent_context = set_span_in_context(parent)
+    child = tracer.start_span("child", context=parent_context)
 
     try:
         do_work(span=child)
@@ -226,7 +229,7 @@ class Tracer(abc.ABC):
     def start_span(
         self,
         name: str,
-        parent: typing.Optional[Context] = None,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -240,9 +243,9 @@ class Tracer(abc.ABC):
         method, see :meth:`start_as_current_span`.
 
         By default the current span in the context will be used as parent, but an
-        explicit parent can also be specified, by passing in a `Context` containing
+        explicit context can also be specified, by passing in a `Context` containing
         a current `Span`. If there is no current span in the global `Context` or in
-        the specified parent `Context`, the created span will be a root span.
+        the specified context, the created span will be a root span.
 
         The span can be used as a context manager. On exiting the context manager,
         the span's end() method will be called.
@@ -256,7 +259,7 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: An optional Context containing the span's parent. Defaults to the
+            context: An optional Context containing the span's parent. Defaults to the
                 global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
@@ -278,7 +281,7 @@ class Tracer(abc.ABC):
     def start_as_current_span(
         self,
         name: str,
-        parent: typing.Optional[Context] = None,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -315,7 +318,7 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: An optional Context containing the span's parent. Defaults to the
+            context: An optional Context containing the span's parent. Defaults to the
                 global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
@@ -358,7 +361,7 @@ class DefaultTracer(Tracer):
     def start_span(
         self,
         name: str,
-        parent: typing.Optional[Context] = None,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -372,7 +375,7 @@ class DefaultTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: typing.Optional[Context] = None,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),

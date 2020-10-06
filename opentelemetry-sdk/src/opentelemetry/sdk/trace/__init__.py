@@ -683,18 +683,18 @@ class Tracer(trace_api.Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: Optional[context_api.Context] = None,
+        context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
     ) -> Iterator[trace_api.Span]:
-        span = self.start_span(name, parent, kind, attributes, links)
+        span = self.start_span(name, context, kind, attributes, links)
         return self.use_span(span, end_on_exit=True)
 
     def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
-        parent: Optional[context_api.Context] = None,
+        context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
@@ -702,7 +702,7 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
 
-        parent_context = trace_api.get_current_span(parent).get_context()
+        parent_context = trace_api.get_current_span(context).get_context()
 
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext

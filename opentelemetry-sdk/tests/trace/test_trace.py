@@ -135,10 +135,10 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates real spans via the default
         # sampler
-        root_span = tracer.start_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", context=None)
         ctx = trace_api.set_span_in_context(root_span)
         self.assertIsInstance(root_span, trace.Span)
-        child_span = tracer.start_span(name="child span", parent=ctx)
+        child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace.Span)
         self.assertTrue(root_span.context.trace_flags.sampled)
         self.assertEqual(
@@ -154,10 +154,10 @@ class TestTracerSampling(unittest.TestCase):
 
         # Check that the default tracer creates no-op spans if the sampler
         # decides not to sampler
-        root_span = tracer.start_span(name="root span", parent=None)
+        root_span = tracer.start_span(name="root span", context=None)
         ctx = trace_api.set_span_in_context(root_span)
         self.assertIsInstance(root_span, trace_api.DefaultSpan)
-        child_span = tracer.start_span(name="child span", parent=ctx)
+        child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
         self.assertEqual(
             root_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
@@ -179,7 +179,7 @@ class TestSpanCreation(unittest.TestCase):
         parent_context = trace_api.set_span_in_context(
             trace_api.INVALID_SPAN_CONTEXT
         )
-        new_span = tracer.start_span("root", parent=parent_context)
+        new_span = tracer.start_span("root", context=parent_context)
         self.assertTrue(new_span.context.is_valid)
         self.assertIsNone(new_span.parent)
 
