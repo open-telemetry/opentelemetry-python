@@ -357,6 +357,11 @@ class Span(trace_api.Span):
             this `Span`.
     """
 
+    def __new__(cls, *args, **kwargs):
+        if cls is Span:
+            raise TypeError("Span must be instantiated via a tracer.")
+        return super().__new__(cls)
+
     def __init__(
         self,
         name: str,
@@ -663,6 +668,13 @@ class Span(trace_api.Span):
         )
 
 
+class _Span(Span):
+    """Protected implementation of `opentelemetry.trace.Span`.
+
+    This constructor should only be used internally.
+    """
+
+
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
@@ -748,7 +760,7 @@ class Tracer(trace_api.Tracer):
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
-            span = Span(
+            span = _Span(
                 name=name,
                 context=context,
                 parent=parent_context,
