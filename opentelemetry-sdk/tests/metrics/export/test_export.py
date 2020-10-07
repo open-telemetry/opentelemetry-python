@@ -31,13 +31,15 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 )
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.export.processor import Processor
+from opentelemetry.sdk.resources import Resource
 
 
 # pylint: disable=protected-access
 class TestConsoleMetricsExporter(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_export(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
             "available memory",
@@ -49,12 +51,15 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         )
         labels = {"environment": "staging"}
         aggregator = SumAggregator()
-        record = MetricRecord(metric, labels, aggregator)
-        result = '{}(data="{}", labels="{}", value={})'.format(
+        record = MetricRecord(
+            metric, labels, aggregator, meter_provider.resource
+        )
+        result = '{}(data="{}", labels="{}", value={}, resource={})'.format(
             ConsoleMetricsExporter.__name__,
             metric,
             labels,
             aggregator.checkpoint,
+            meter_provider.resource.attributes,
         )
         with mock.patch("sys.stdout") as mock_stdout:
             exporter.export([record])
@@ -63,8 +68,9 @@ class TestConsoleMetricsExporter(unittest.TestCase):
 
 class TestProcessor(unittest.TestCase):
     def test_checkpoint_set(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        processor = Processor(True)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -81,13 +87,14 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(records[0].aggregator, aggregator)
 
     def test_checkpoint_set_empty(self):
-        processor = Processor(True)
+        processor = Processor(True, Resource.create_empty())
         records = processor.checkpoint_set()
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        processor = Processor(False)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(False, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -101,8 +108,9 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(len(processor._batch_map), 0)
 
     def test_finished_collection_stateful(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        processor = Processor(True)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -116,8 +124,9 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(len(processor._batch_map), 1)
 
     def test_processor_process_exists(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        processor = Processor(True)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         aggregator2 = SumAggregator()
         metric = metrics.Counter(
@@ -137,8 +146,9 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
     def test_processor_process_not_exists(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        processor = Processor(True)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -156,11 +166,15 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
     def test_processor_process_not_stateful(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        processor = Processor(True)
+        meter_provider = metrics.MeterProvider()
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter_provider.get_meter(__name__),
         )
         labels = ()
         _batch_map = {}

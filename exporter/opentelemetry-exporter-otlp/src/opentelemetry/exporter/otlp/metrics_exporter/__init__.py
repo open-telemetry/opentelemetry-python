@@ -137,11 +137,11 @@ class OTLPMetricsExporter(
         #   ValueObserver      Gauge()
         for sdk_metric in data:
 
-            if sdk_metric.instrument.meter.resource not in (
+            if sdk_metric.resource not in (
                 sdk_resource_instrumentation_library_metrics.keys()
             ):
                 sdk_resource_instrumentation_library_metrics[
-                    sdk_metric.instrument.meter.resource
+                    sdk_metric.resource
                 ] = InstrumentationLibraryMetrics()
 
             type_class = {
@@ -217,7 +217,7 @@ class OTLPMetricsExporter(
                 argument = type_class[value_type]["gauge"]["argument"]
 
             sdk_resource_instrumentation_library_metrics[
-                sdk_metric.instrument.meter.resource
+                sdk_metric.resource
             ].metrics.append(
                 OTLPMetric(
                     **{
