@@ -123,14 +123,13 @@ class EngineTracer:
 
 def _set_attributes_from_url(span: trace.Span, url):
     """Set connection tags from the url. return true if successful."""
-    if not span.is_recording():
-        return
-    if url.host:
-        span.set_attribute(_HOST, url.host)
-    if url.port:
-        span.set_attribute(_PORT, url.port)
-    if url.database:
-        span.set_attribute(_DB, url.database)
+    if span.is_recording():
+        if url.host:
+            span.set_attribute(_HOST, url.host)
+        if url.port:
+            span.set_attribute(_PORT, url.port)
+        if url.database:
+            span.set_attribute(_DB, url.database)
 
     return bool(url.host)
 
