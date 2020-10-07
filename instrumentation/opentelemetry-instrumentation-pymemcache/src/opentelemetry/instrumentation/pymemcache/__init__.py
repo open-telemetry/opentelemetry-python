@@ -97,8 +97,7 @@ def _set_connection_attributes(span, instance):
 
 
 def _with_tracer_wrapper(func):
-    """Helper for providing tracer for wrapper functions.
-    """
+    """Helper for providing tracer for wrapper functions."""
 
     def _with_tracer(tracer, cmd):
         def wrapper(wrapped, instance, args, kwargs):

@@ -94,7 +94,9 @@ class CommandTracer(monitoring.CommandListener):
         except Exception as ex:  # noqa pylint: disable=broad-except
             if span is not None:
                 if span.is_recording():
-                    span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
+                    span.set_status(
+                        Status(StatusCanonicalCode.INTERNAL, str(ex))
+                    )
                 span.end()
                 self._pop_span(event)
 
@@ -106,7 +108,9 @@ class CommandTracer(monitoring.CommandListener):
         if span is None:
             return
         if span.is_recording():
-            span.set_attribute("db.mongo.duration_micros", event.duration_micros)
+            span.set_attribute(
+                "db.mongo.duration_micros", event.duration_micros
+            )
             span.set_status(Status(StatusCanonicalCode.OK, event.reply))
         span.end()
 
@@ -118,7 +122,9 @@ class CommandTracer(monitoring.CommandListener):
         if span is None:
             return
         if span.is_recording():
-            span.set_attribute("db.mongo.duration_micros", event.duration_micros)
+            span.set_attribute(
+                "db.mongo.duration_micros", event.duration_micros
+            )
             span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
         span.end()
 

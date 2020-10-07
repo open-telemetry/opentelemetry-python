@@ -96,8 +96,11 @@ class EngineTracer:
             return
 
         try:
-            if cursor and cursor.rowcount >= 0 and \
-                self.current_span.is_recording():
+            if (
+                cursor
+                and cursor.rowcount >= 0
+                and self.current_span.is_recording()
+            ):
                 self.current_span.set_attribute(_ROWS, cursor.rowcount)
         finally:
             self.current_span.end()

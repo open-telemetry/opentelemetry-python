@@ -84,7 +84,6 @@ class PymemcacheClientTestCase(
 
         self.check_spans(spans, 1, ["set key"])
 
-    
     def test_set_not_recording(self):
         mock_tracer = mock.Mock()
         mock_span = mock.Mock()

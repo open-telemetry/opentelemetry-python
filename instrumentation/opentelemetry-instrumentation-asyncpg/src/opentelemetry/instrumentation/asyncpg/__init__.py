@@ -50,7 +50,8 @@ _APPLIED = "_opentelemetry_tracer"
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
     if isinstance(
-        exc, (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
+        exc,
+        (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
     ):
         return StatusCanonicalCode.INVALID_ARGUMENT
     if isinstance(exc, exceptions.IdleInTransactionSessionTimeoutError):
@@ -121,7 +122,9 @@ class AsyncPGInstrumentor(BaseInstrumentor):
         ) as span:
             if span.is_recording():
                 span_attributes = _hydrate_span_from_args(
-                    instance, args[0], args[1:] if self.capture_parameters else None,
+                    instance,
+                    args[0],
+                    args[1:] if self.capture_parameters else None,
                 )
                 for attribute, value in span_attributes.items():
                     span.set_attribute(attribute, value)
