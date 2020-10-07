@@ -282,6 +282,7 @@ class Tracer(abc.ABC):
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        record_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -320,6 +321,8 @@ class Tracer(abc.ABC):
                 meaningful even if there is no parent.
             attributes: The span's attributes.
             links: Links span to other spans
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
 
         Yields:
             The newly-created span.
@@ -328,7 +331,10 @@ class Tracer(abc.ABC):
     @contextmanager  # type: ignore
     @abc.abstractmethod
     def use_span(
-        self, span: "Span", end_on_exit: bool = False
+        self,
+        span: "Span",
+        end_on_exit: bool = False,
+        record_exception: bool = True,
     ) -> typing.Iterator[None]:
         """Context manager for setting the passed span as the
         current span in the context, as well as resetting the
@@ -345,6 +351,8 @@ class Tracer(abc.ABC):
             span: The span to start and make current.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
         """
 
 
@@ -375,13 +383,17 @@ class DefaultTracer(Tracer):
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        record_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(
-        self, span: "Span", end_on_exit: bool = False
+        self,
+        span: "Span",
+        end_on_exit: bool = False,
+        record_exception: bool = True,
     ) -> typing.Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield
