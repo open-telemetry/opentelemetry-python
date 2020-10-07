@@ -33,8 +33,8 @@ def get_child_parent_new_carrier(old_carrier):
     ctx = FORMAT.extract(get_as_list, old_carrier)
     parent_context = trace_api.get_current_span(ctx).get_context()
 
-    parent = trace.Span("parent", parent_context)
-    child = trace.Span(
+    parent = trace._Span("parent", parent_context)
+    child = trace._Span(
         "child",
         trace_api.SpanContext(
             parent_context.trace_id,

@@ -45,7 +45,11 @@ from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import (
+    EXCEPTION_STATUS_FIELD,
+    Status,
+    StatusCanonicalCode,
+)
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
@@ -357,6 +361,11 @@ class Span(trace_api.Span):
             this `Span`.
     """
 
+    def __new__(cls, *args, **kwargs):
+        if cls is Span:
+            raise TypeError("Span must be instantiated via a tracer.")
+        return super().__new__(cls)
+
     def __init__(
         self,
         name: str,
@@ -663,6 +672,13 @@ class Span(trace_api.Span):
         )
 
 
+class _Span(Span):
+    """Protected implementation of `opentelemetry.trace.Span`.
+
+    This constructor should only be used internally.
+    """
+
+
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
 
@@ -687,9 +703,12 @@ class Tracer(trace_api.Tracer):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
+        record_exception: bool = True,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(name, context, kind, attributes, links)
-        return self.use_span(span, end_on_exit=True)
+        return self.use_span(
+            span, end_on_exit=True, record_exception=record_exception
+        )
 
     def start_span(  # pylint: disable=too-many-locals
         self,
@@ -744,7 +763,7 @@ class Tracer(trace_api.Tracer):
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
-            span = Span(
+            span = _Span(
                 name=name,
                 context=context,
                 parent=parent_context,
@@ -764,7 +783,10 @@ class Tracer(trace_api.Tracer):
 
     @contextmanager
     def use_span(
-        self, span: trace_api.Span, end_on_exit: bool = False
+        self,
+        span: trace_api.Span,
+        end_on_exit: bool = False,
+        record_exception: bool = True,
     ) -> Iterator[trace_api.Span]:
         try:
             token = context_api.attach(context_api.set_value(SPAN_KEY, span))
@@ -774,20 +796,24 @@ class Tracer(trace_api.Tracer):
                 context_api.detach(token)
 
         except Exception as error:  # pylint: disable=broad-except
-            if (
-                isinstance(span, Span)
-                and span.status is None
-                and span._set_status_on_exception  # pylint:disable=protected-access  # noqa
-            ):
-                span.set_status(
-                    Status(
-                        canonical_code=StatusCanonicalCode.UNKNOWN,
-                        description="{}: {}".format(
-                            type(error).__name__, error
-                        ),
-                    )
-                )
+            # pylint:disable=protected-access
+            if isinstance(span, Span):
+                if record_exception:
+                    span.record_exception(error)
 
+                if span.status is None and span._set_status_on_exception:
+                    span.set_status(
+                        Status(
+                            canonical_code=getattr(
+                                error,
+                                EXCEPTION_STATUS_FIELD,
+                                StatusCanonicalCode.UNKNOWN,
+                            ),
+                            description="{}: {}".format(
+                                type(error).__name__, error
+                            ),
+                        )
+                    )
             raise
 
         finally:
