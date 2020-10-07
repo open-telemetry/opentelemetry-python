@@ -289,7 +289,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_span_explicit(self):
         tracer = new_tracer()
 
-        other_parent = trace.Span(
+        other_parent = trace._Span(
             "name",
             trace_api.SpanContext(
                 trace_id=0x000000000000000000000000DEADBEEF,
@@ -370,7 +370,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_as_current_span_explicit(self):
         tracer = new_tracer()
 
-        other_parent = trace.Span(
+        other_parent = trace._Span(
             "name",
             trace_api.SpanContext(
                 trace_id=0x000000000000000000000000DEADBEEF,
