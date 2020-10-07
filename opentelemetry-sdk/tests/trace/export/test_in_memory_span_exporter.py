@@ -61,7 +61,7 @@ class TestInMemorySpanExporter(unittest.TestCase):
         self.assertEqual(len(span_list), 3)
 
     def test_return_code(self):
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
         span_list = (span,)
         memory_exporter = InMemorySpanExporter()
 

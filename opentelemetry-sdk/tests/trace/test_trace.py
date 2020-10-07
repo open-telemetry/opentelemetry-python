@@ -404,13 +404,18 @@ class TestSpanCreation(unittest.TestCase):
         span = tracer.start_span("foo")
         self.assertFalse(span.context.is_remote)
 
+    def test_disallow_direct_span_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+
 
 class TestSpan(unittest.TestCase):
     def setUp(self):
         self.tracer = new_tracer()
 
     def test_basic_span(self):
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
         self.assertEqual(span.name, "name")
 
     def test_attributes(self):
@@ -657,7 +662,7 @@ class TestSpan(unittest.TestCase):
 
     def test_start_span(self):
         """Start twice, end a not started"""
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
 
         # end not started span
         self.assertRaises(RuntimeError, span.end)
@@ -683,7 +688,7 @@ class TestSpan(unittest.TestCase):
 
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
         start_time = 123
         span.start(start_time)
         self.assertEqual(start_time, span.start_time)
@@ -782,7 +787,7 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_record_exception(self):
-        span = trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
         try:
             raise ValueError("invalid")
         except ValueError as err:
@@ -922,7 +927,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace.Span("span-name", context)
+        span = trace._Span("span-name", context)
         span.resource = Resource({})
 
         self.assertEqual(
