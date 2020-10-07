@@ -352,8 +352,7 @@ class Meter(metrics_api.Meter):
         instrumentation_info: "InstrumentationInfo",
     ):
         self.instrumentation_info = instrumentation_info
-        self.processor = Processor(source.stateful)
-        self.resource = source.resource
+        self.processor = Processor(source.stateful, source.resource)
         self.metrics = set()
         self.observers = set()
         self.metrics_lock = threading.Lock()

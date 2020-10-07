@@ -33,14 +33,12 @@ class TestMeterProvider(unittest.TestCase):
     def test_resource(self):
         resource = resources.Resource.create({})
         meter_provider = metrics.MeterProvider(resource=resource)
-        meter = meter_provider.get_meter(__name__)
-        self.assertIs(meter.resource, resource)
+        self.assertIs(meter_provider.resource, resource)
 
     def test_resource_empty(self):
         meter_provider = metrics.MeterProvider()
-        meter = meter_provider.get_meter(__name__)
         # pylint: disable=protected-access
-        self.assertEqual(meter.resource, resources._DEFAULT_RESOURCE)
+        self.assertEqual(meter_provider.resource, resources._DEFAULT_RESOURCE)
 
     def test_start_pipeline(self):
         exporter = mock.Mock()
@@ -167,7 +165,7 @@ class TestMeter(unittest.TestCase):
         self.assertIsInstance(counter, metrics.Counter)
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
-        self.assertIs(counter.meter.resource, resource)
+        self.assertIs(meter_provider.resource, resource)
         self.assertEqual(counter.meter, meter)
 
     def test_create_updowncounter(self):
