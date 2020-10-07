@@ -90,6 +90,8 @@ COMMANDS = [
 
 
 def _set_connection_attributes(span, instance):
+    if not span.is_recording():
+        return
     for key, value in _get_address_attributes(instance).items():
         span.set_attribute(key, value)
 

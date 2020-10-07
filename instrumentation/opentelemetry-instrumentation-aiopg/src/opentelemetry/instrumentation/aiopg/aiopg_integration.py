@@ -109,10 +109,12 @@ class AsyncTracedCursor(TracedCursor):
             self._populate_span(span, *args)
             try:
                 result = await query_method(*args, **kwargs)
-                span.set_status(Status(StatusCanonicalCode.OK))
+                if span.is_recording():
+                    span.set_status(Status(StatusCanonicalCode.OK))
                 return result
             except Exception as ex:  # pylint: disable=broad-except
-                span.set_status(Status(StatusCanonicalCode.UNKNOWN, str(ex)))
+                if span.is_recording():
+                    span.set_status(Status(StatusCanonicalCode.UNKNOWN, str(ex)))
                 raise ex
 
 
