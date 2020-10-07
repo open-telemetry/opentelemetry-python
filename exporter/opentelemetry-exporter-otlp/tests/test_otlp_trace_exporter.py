@@ -16,6 +16,7 @@ from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
+from unittest import mock
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
@@ -158,17 +159,12 @@ class TestOTLPSpanExporter(TestCase):
         self.server.stop(None)
 
     def test_gzip_compression(self):
-        mock_get_compression = mock.Mock()
-        patch = mock.patch(
-            "opentelemetry.exporter.otlp.trace_exporter",
-            side_effect=mock_get_compression,
-        )
-        compression = Compression.Gzip
-        with patch:
+        with mock.patch(
+            'grpc.insecure_channel'
+        ) as channel_mock:
             exporter = OTLPSpanExporter(compression="gzip")
-        
-        self.assertEqual(exporter.compression, compression)
-
+            exporter.shutdown()
+            self.assertTrue(channel_mock.assert_called_with("localhost:55680", Compression.Gzip))
 
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")
