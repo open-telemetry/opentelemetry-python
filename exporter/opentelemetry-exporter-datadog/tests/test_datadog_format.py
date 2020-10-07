@@ -79,7 +79,7 @@ class TestDatadogFormat(unittest.TestCase):
 
     def test_context_propagation(self):
         """Test the propagation of Datadog headers."""
-        parent_context = get_current_span(
+        parent_span_context = get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -92,28 +92,28 @@ class TestDatadogFormat(unittest.TestCase):
         ).get_span_context()
 
         self.assertEqual(
-            parent_context.trace_id, int(self.serialized_trace_id)
+            parent_span_context.trace_id, int(self.serialized_trace_id)
         )
         self.assertEqual(
-            parent_context.span_id, int(self.serialized_parent_id)
+            parent_span_context.span_id, int(self.serialized_parent_id)
         )
-        self.assertEqual(parent_context.trace_flags, constants.AUTO_KEEP)
+        self.assertEqual(parent_span_context.trace_flags, constants.AUTO_KEEP)
         self.assertEqual(
-            parent_context.trace_state.get(constants.DD_ORIGIN),
+            parent_span_context.trace_state.get(constants.DD_ORIGIN),
             self.serialized_origin,
         )
-        self.assertTrue(parent_context.is_remote)
+        self.assertTrue(parent_span_context.is_remote)
 
         child = trace._Span(
             "child",
             trace_api.SpanContext(
-                parent_context.trace_id,
+                parent_span_context.trace_id,
                 trace_api.RandomIdsGenerator().generate_span_id(),
                 is_remote=False,
-                trace_flags=parent_context.trace_flags,
-                trace_state=parent_context.trace_state,
+                trace_flags=parent_span_context.trace_flags,
+                trace_state=parent_span_context.trace_state,
             ),
-            parent=parent_context,
+            parent=parent_span_context,
         )
 
         child_carrier = {}
@@ -136,7 +136,7 @@ class TestDatadogFormat(unittest.TestCase):
 
     def test_sampling_priority_auto_reject(self):
         """Test sampling priority rejected."""
-        parent_context = get_current_span(
+        parent_span_context = get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -147,18 +147,20 @@ class TestDatadogFormat(unittest.TestCase):
             )
         ).get_span_context()
 
-        self.assertEqual(parent_context.trace_flags, constants.AUTO_REJECT)
+        self.assertEqual(
+            parent_span_context.trace_flags, constants.AUTO_REJECT
+        )
 
         child = trace._Span(
             "child",
             trace_api.SpanContext(
-                parent_context.trace_id,
+                parent_span_context.trace_id,
                 trace_api.RandomIdsGenerator().generate_span_id(),
                 is_remote=False,
-                trace_flags=parent_context.trace_flags,
-                trace_state=parent_context.trace_state,
+                trace_flags=parent_span_context.trace_flags,
+                trace_state=parent_span_context.trace_state,
             ),
-            parent=parent_context,
+            parent=parent_span_context,
         )
 
         child_carrier = {}

@@ -96,7 +96,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
             trace_state=trace_api.TraceState({"testKey": "testValue"}),
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
         other_context = trace_api.SpanContext(
@@ -118,19 +118,19 @@ class TestCollectorSpanExporter(unittest.TestCase):
             context=other_context, attributes=link_attributes
         )
         link_2 = trace_api.Link(
-            context=parent_context, attributes=link_attributes
+            context=parent_span_context, attributes=link_attributes
         )
         span_1 = trace._Span(
             name="test1",
             context=span_context,
-            parent=parent_context,
+            parent=parent_span_context,
             events=(event,),
             links=(link_1,),
             kind=trace_api.SpanKind.CLIENT,
         )
         span_2 = trace._Span(
             name="test2",
-            context=parent_context,
+            context=parent_span_context,
             parent=None,
             kind=trace_api.SpanKind.SERVER,
         )

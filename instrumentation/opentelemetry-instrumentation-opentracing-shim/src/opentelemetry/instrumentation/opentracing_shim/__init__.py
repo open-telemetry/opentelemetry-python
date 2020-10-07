@@ -633,7 +633,7 @@ class TracerShim(Tracer):
         if isinstance(parent, OtelSpanContext):
             parent = DefaultSpan(parent)
 
-        parent_context = set_span_in_context(parent)
+        parent_span_context = set_span_in_context(parent)
 
         links = []
         if references:
@@ -649,7 +649,7 @@ class TracerShim(Tracer):
 
         span = self._otel_tracer.start_span(
             operation_name,
-            context=parent_context,
+            context=parent_span_context,
             links=links,
             attributes=tags,
             start_time=start_time_ns,
