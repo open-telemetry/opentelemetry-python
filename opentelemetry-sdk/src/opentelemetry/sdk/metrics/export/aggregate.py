@@ -210,13 +210,10 @@ class LastValueAggregator(Aggregator):
 
     def merge(self, other):
         last = self.checkpoint
-        self.last_update_timestamp = max(
-            self.last_update_timestamp, other.last_update_timestamp
-        )
+        super().merge(other)
         if self.last_update_timestamp == other.last_update_timestamp:
             last = other.checkpoint
         self.checkpoint = last
-        super().merge(other)
 
 
 class ValueObserverAggregator(Aggregator):
