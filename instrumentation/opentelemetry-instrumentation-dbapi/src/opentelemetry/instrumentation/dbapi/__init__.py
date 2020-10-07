@@ -348,7 +348,9 @@ class TracedCursor:
                 return result
             except Exception as ex:  # pylint: disable=broad-except
                 if span.is_recording():
-                    span.set_status(Status(StatusCanonicalCode.UNKNOWN, str(ex)))
+                    span.set_status(
+                        Status(StatusCanonicalCode.UNKNOWN, str(ex))
+                    )
                 raise ex
 
 

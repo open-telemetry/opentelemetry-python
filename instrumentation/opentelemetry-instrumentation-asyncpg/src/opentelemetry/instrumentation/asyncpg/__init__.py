@@ -50,8 +50,7 @@ _APPLIED = "_opentelemetry_tracer"
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
     if isinstance(
-        exc,
-        (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
+        exc, (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
     ):
         return StatusCanonicalCode.INVALID_ARGUMENT
     if isinstance(exc, exceptions.IdleInTransactionSessionTimeoutError):
