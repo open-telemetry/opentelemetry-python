@@ -142,10 +142,12 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(child_span, trace.Span)
         self.assertTrue(root_span.context.trace_flags.sampled)
         self.assertEqual(
-            root_span.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
+            root_span.get_span_context().trace_flags,
+            trace_api.TraceFlags.SAMPLED,
         )
         self.assertEqual(
-            child_span.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
+            child_span.get_span_context().trace_flags,
+            trace_api.TraceFlags.SAMPLED,
         )
 
     def test_sampler_no_sampling(self):
@@ -160,10 +162,12 @@ class TestTracerSampling(unittest.TestCase):
         child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
         self.assertEqual(
-            root_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
+            root_span.get_span_context().trace_flags,
+            trace_api.TraceFlags.DEFAULT,
         )
         self.assertEqual(
-            child_span.get_context().trace_flags, trace_api.TraceFlags.DEFAULT
+            child_span.get_span_context().trace_flags,
+            trace_api.TraceFlags.DEFAULT,
         )
 
 
@@ -253,7 +257,7 @@ class TestSpanCreation(unittest.TestCase):
             with tracer.start_span(
                 "child", kind=trace_api.SpanKind.CLIENT
             ) as child:
-                self.assertIs(child.parent, root.get_context())
+                self.assertIs(child.parent, root.get_span_context())
                 self.assertEqual(child.kind, trace_api.SpanKind.CLIENT)
 
                 self.assertIsNotNone(child.start_time)
@@ -261,8 +265,8 @@ class TestSpanCreation(unittest.TestCase):
 
                 # The new child span should inherit the parent's context but
                 # get a new span ID.
-                root_context = root.get_context()
-                child_context = child.get_context()
+                root_context = root.get_span_context()
+                child_context = child.get_span_context()
                 self.assertEqual(root_context.trace_id, child_context.trace_id)
                 self.assertNotEqual(
                     root_context.span_id, child_context.span_id
@@ -311,26 +315,28 @@ class TestSpanCreation(unittest.TestCase):
                 # The child's parent should be the one passed in,
                 # not the current span.
                 self.assertNotEqual(child.parent, root)
-                self.assertIs(child.parent, other_parent.get_context())
+                self.assertIs(child.parent, other_parent.get_span_context())
 
                 self.assertIsNotNone(child.start_time)
                 self.assertIsNone(child.end_time)
 
                 # The child should inherit its context from the explicit
                 # parent, not the current span.
-                child_context = child.get_context()
+                child_context = child.get_span_context()
                 self.assertEqual(
-                    other_parent.get_context().trace_id, child_context.trace_id
+                    other_parent.get_span_context().trace_id,
+                    child_context.trace_id,
                 )
                 self.assertNotEqual(
-                    other_parent.get_context().span_id, child_context.span_id
+                    other_parent.get_span_context().span_id,
+                    child_context.span_id,
                 )
                 self.assertEqual(
-                    other_parent.get_context().trace_state,
+                    other_parent.get_span_context().trace_state,
                     child_context.trace_state,
                 )
                 self.assertEqual(
-                    other_parent.get_context().trace_flags,
+                    other_parent.get_span_context().trace_flags,
                     child_context.trace_flags,
                 )
 
@@ -351,7 +357,7 @@ class TestSpanCreation(unittest.TestCase):
 
             with tracer.start_as_current_span("child") as child:
                 self.assertIs(trace_api.get_current_span(), child)
-                self.assertIs(child.parent, root.get_context())
+                self.assertIs(child.parent, root.get_span_context())
 
             # After exiting the child's scope the parent should become the
             # current span again.
@@ -392,7 +398,7 @@ class TestSpanCreation(unittest.TestCase):
                 # previously-current span.
                 self.assertIs(trace_api.get_current_span(), child)
                 self.assertNotEqual(child.parent, root)
-                self.assertIs(child.parent, other_parent.get_context())
+                self.assertIs(child.parent, other_parent.get_span_context())
 
             # After exiting the child's scope the last span on the stack should
             # become current, not the child's parent.
@@ -571,7 +577,8 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["sampler-attr"], "sample-val")
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
             self.assertEqual(
-                root.get_context().trace_flags, trace_api.TraceFlags.SAMPLED
+                root.get_span_context().trace_flags,
+                trace_api.TraceFlags.SAMPLED,
             )
 
     def test_events(self):

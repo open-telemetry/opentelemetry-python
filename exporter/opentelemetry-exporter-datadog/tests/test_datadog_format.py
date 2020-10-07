@@ -51,7 +51,7 @@ class TestDatadogFormat(unittest.TestCase):
                     malformed_parent_id_key: self.serialized_parent_id,
                 },
             )
-        ).get_context()
+        ).get_span_context()
 
         self.assertNotEqual(context.trace_id, int(self.serialized_trace_id))
         self.assertNotEqual(context.span_id, int(self.serialized_parent_id))
@@ -64,7 +64,7 @@ class TestDatadogFormat(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_current_span(ctx).get_context()
+        span_context = get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     def test_missing_parent_id(self):
@@ -74,7 +74,7 @@ class TestDatadogFormat(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_current_span(ctx).get_context()
+        span_context = get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
     def test_context_propagation(self):
@@ -89,7 +89,7 @@ class TestDatadogFormat(unittest.TestCase):
                     FORMAT.ORIGIN_KEY: self.serialized_origin,
                 },
             )
-        ).get_context()
+        ).get_span_context()
 
         self.assertEqual(
             parent_context.trace_id, int(self.serialized_trace_id)
@@ -145,7 +145,7 @@ class TestDatadogFormat(unittest.TestCase):
                     FORMAT.SAMPLING_PRIORITY_KEY: str(constants.AUTO_REJECT),
                 },
             )
-        ).get_context()
+        ).get_span_context()
 
         self.assertEqual(parent_context.trace_flags, constants.AUTO_REJECT)
 

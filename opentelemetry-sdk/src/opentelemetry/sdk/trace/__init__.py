@@ -519,7 +519,7 @@ class Span(trace_api.Span):
 
         return json.dumps(f_span, indent=indent)
 
-    def get_context(self):
+    def get_span_context(self):
         return self.context
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -721,7 +721,7 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
 
-        parent_context = trace_api.get_current_span(context).get_context()
+        parent_context = trace_api.get_current_span(context).get_span_context()
 
         if parent_context is not None and not isinstance(
             parent_context, trace_api.SpanContext

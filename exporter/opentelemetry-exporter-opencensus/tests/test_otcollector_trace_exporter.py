@@ -138,7 +138,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             name="test3",
             context=other_context,
             links=(link_2,),
-            parent=span_2.get_context(),
+            parent=span_2.get_span_context(),
         )
         otel_spans = [span_1, span_2, span_3]
         otel_spans[0].start(start_time=start_times[0])

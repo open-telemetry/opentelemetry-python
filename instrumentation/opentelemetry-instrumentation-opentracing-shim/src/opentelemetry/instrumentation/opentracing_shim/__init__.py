@@ -378,7 +378,7 @@ class ScopeShim(Scope):
         """
 
         otel_span = span_cm.__enter__()
-        span_context = SpanContextShim(otel_span.get_context())
+        span_context = SpanContextShim(otel_span.get_span_context())
         span = SpanShim(manager.tracer, span_context, otel_span)
         return cls(manager, span, span_cm)
 
@@ -474,13 +474,13 @@ class ScopeManagerShim(ScopeManager):
         """
 
         span = get_current_span()
-        if span.get_context() == INVALID_SPAN_CONTEXT:
+        if span.get_span_context() == INVALID_SPAN_CONTEXT:
             return None
 
         try:
             return get_value("scope_shim")
         except KeyError:
-            span_context = SpanContextShim(span.get_context())
+            span_context = SpanContextShim(span.get_span_context())
             wrapped_span = SpanShim(self._tracer, span_context, span)
             return ScopeShim(self, span=wrapped_span)
 
@@ -655,7 +655,7 @@ class TracerShim(Tracer):
             start_time=start_time_ns,
         )
 
-        context = SpanContextShim(span.get_context())
+        context = SpanContextShim(span.get_span_context())
         return SpanShim(self, context, span)
 
     def inject(self, span_context, format: object, carrier: object):
@@ -718,7 +718,7 @@ class TracerShim(Tracer):
         ctx = propagator.extract(get_as_list, carrier)
         span = get_current_span(ctx)
         if span is not None:
-            otel_context = span.get_context()
+            otel_context = span.get_span_context()
         else:
             otel_context = INVALID_SPAN_CONTEXT
 

@@ -84,8 +84,8 @@ class MockTextMapPropagator(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context)
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, str(span.get_context().trace_id)
+            carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, str(span.get_context().span_id)
+            carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
         )
