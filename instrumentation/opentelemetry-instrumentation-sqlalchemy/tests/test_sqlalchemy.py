@@ -38,7 +38,7 @@ class TestSqlalchemyInstrumentation(TestBase):
         self.assertEqual(len(spans), 1)
         self.assertEqual(spans[0].name, "sqlite.query")
 
-    def test_trace_integration(self):
+    def test_not_recording(self):
         mock_tracer = mock.Mock()
         mock_span = mock.Mock()
         mock_span.is_recording.return_value = False
