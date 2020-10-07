@@ -12,6 +12,10 @@
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
 - Renaming metrics Batcher to Processor
   ([#1203](https://github.com/open-telemetry/opentelemetry-python/pull/1203))
+- Protect access to Span implementation
+  ([#1188](https://github.com/open-telemetry/opentelemetry-python/pull/1188))
+- `start_as_current_span` and `use_span` can now optionally auto-record any exceptions raised inside the context manager.
+  ([#1162](https://github.com/open-telemetry/opentelemetry-python/pull/1162))
 - Adding Resource to MeterRecord
   ([#1209](https://github.com/open-telemetry/opentelemetry-python/pull/1209))
 

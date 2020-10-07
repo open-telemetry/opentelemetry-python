@@ -120,7 +120,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         link_2 = trace_api.Link(
             context=parent_context, attributes=link_attributes
         )
-        span_1 = trace.Span(
+        span_1 = trace._Span(
             name="test1",
             context=span_context,
             parent=parent_context,
@@ -128,13 +128,13 @@ class TestCollectorSpanExporter(unittest.TestCase):
             links=(link_1,),
             kind=trace_api.SpanKind.CLIENT,
         )
-        span_2 = trace.Span(
+        span_2 = trace._Span(
             name="test2",
             context=parent_context,
             parent=None,
             kind=trace_api.SpanKind.SERVER,
         )
-        span_3 = trace.Span(
+        span_3 = trace._Span(
             name="test3",
             context=other_context,
             links=(link_2,),
@@ -302,7 +302,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
         otel_spans = [
-            trace.Span(
+            trace._Span(
                 name="test1",
                 context=span_context,
                 kind=trace_api.SpanKind.CLIENT,
