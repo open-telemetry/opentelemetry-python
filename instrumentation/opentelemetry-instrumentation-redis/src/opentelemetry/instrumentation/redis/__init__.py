@@ -94,7 +94,7 @@ def _traced_execute_pipeline(func, instance, args, kwargs):
     with tracer.start_as_current_span(
         _CMD, kind=trace.SpanKind.CLIENT
     ) as span:
-        if not span.is_recording():
+        if span.is_recording():
             span.set_attribute("service", tracer.instrumentation_info.name)
             span.set_attribute(_RAWCMD, resource)
             _set_connection_attributes(span, instance)
