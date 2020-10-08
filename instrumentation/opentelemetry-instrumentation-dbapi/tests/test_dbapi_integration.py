@@ -87,7 +87,7 @@ class TestDBApiIntegration(TestBase):
         mock_span.is_recording.return_value = False
         mock_tracer.start_span.return_value = mock_span
         mock_tracer.use_span.return_value.__enter__ = mock_span
-        mock_tracer.use_span.return_value.__exit__ = mock_span
+        mock_tracer.use_span.return_value.__exit__ = True
         db_integration = dbapi.DatabaseApiIntegration(
             mock_tracer, "testcomponent", "testtype", connection_attributes
         )
