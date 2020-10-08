@@ -125,7 +125,7 @@ def wrap_connect(
 
 
 def unwrap_connect():
-    """ "Disable integration with aiopg library.
+    """Disable integration with aiopg library.
     https://github.com/aio-libs/aiopg
     """
 
