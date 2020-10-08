@@ -485,6 +485,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
     def test_batch_span_processor_reset_timeout(self):
         """Test that the scheduled timeout is reset on cycles without spans"""
         delay = 50
+        # pylint: disable=protected-access
         exporter = MockDatadogSpanExporter()
         exporter._agent_writer.write.side_effect = lambda spans: time.sleep(
             0.05
