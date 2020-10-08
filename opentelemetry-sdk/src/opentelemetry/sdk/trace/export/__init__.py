@@ -210,7 +210,8 @@ class BatchExportSpanProcessor(SpanProcessor):
                     self.condition.wait(timeout)
                     flush_request = self._get_and_unset_flush_request()
                     if not self.queue:
-                        # spurious notification, let's wait again
+                        # spurious notification, let's wait again, reset timeout
+                        timeout = self.schedule_delay_millis / 1e3
                         self._notify_flush_request_finished(flush_request)
                         flush_request = None
                         continue
