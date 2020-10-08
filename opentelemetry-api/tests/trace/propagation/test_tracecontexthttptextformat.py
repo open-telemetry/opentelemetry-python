@@ -252,4 +252,3 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(
             span.get_span_context().trace_state["foo-_*/bar"], "bar4"
         )
-
