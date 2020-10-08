@@ -118,7 +118,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         See `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
         """
         span = trace.get_current_span(context)
-        span_context = span.get_context()
+        span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(

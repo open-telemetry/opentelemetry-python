@@ -65,7 +65,7 @@ Example::
 
 
 .. _Propagation API Specification:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
+    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md
 """
 
 import typing

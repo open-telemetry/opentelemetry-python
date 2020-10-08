@@ -49,8 +49,11 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    # Explicit parent span assignment
-    child = tracer.start_span("child", parent=parent)
+    # Explicit parent span assignment is done via the Context
+    from opentelemetry.trace import set_span_in_context
+
+    context = set_span_in_context(parent)
+    child = tracer.start_span("child", context=context)
 
     try:
         do_work(span=child)
@@ -77,6 +80,7 @@ import typing
 from contextlib import contextmanager
 from logging import getLogger
 
+from opentelemetry.context.context import Context
 from opentelemetry.trace.ids_generator import IdsGenerator, RandomIdsGenerator
 from opentelemetry.trace.propagation import (
     get_current_span,
@@ -101,9 +105,6 @@ from opentelemetry.trace.status import Status
 from opentelemetry.util import _load_trace_provider, types
 
 logger = getLogger(__name__)
-
-# TODO: quarantine
-ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
 class LinkBase(abc.ABC):
@@ -228,7 +229,7 @@ class Tracer(abc.ABC):
     def start_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -242,8 +243,9 @@ class Tracer(abc.ABC):
         method, see :meth:`start_as_current_span`.
 
         By default the current span in the context will be used as parent, but an
-        explicit parent can also be specified, either a `Span` or a `opentelemetry.trace.SpanContext`.
-        If the specified value is `None`, the created span will be a root span.
+        explicit context can also be specified, by passing in a `Context` containing
+        a current `Span`. If there is no current span in the global `Context` or in
+        the specified context, the created span will be a root span.
 
         The span can be used as a context manager. On exiting the context manager,
         the span's end() method will be called.
@@ -257,7 +259,8 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
+            context: An optional Context containing the span's parent. Defaults to the
+                global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
@@ -278,10 +281,11 @@ class Tracer(abc.ABC):
     def start_as_current_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        record_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -315,11 +319,14 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
+            context: An optional Context containing the span's parent. Defaults to the
+                global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
             links: Links span to other spans
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
 
         Yields:
             The newly-created span.
@@ -328,7 +335,10 @@ class Tracer(abc.ABC):
     @contextmanager  # type: ignore
     @abc.abstractmethod
     def use_span(
-        self, span: "Span", end_on_exit: bool = False
+        self,
+        span: "Span",
+        end_on_exit: bool = False,
+        record_exception: bool = True,
     ) -> typing.Iterator[None]:
         """Context manager for setting the passed span as the
         current span in the context, as well as resetting the
@@ -345,6 +355,8 @@ class Tracer(abc.ABC):
             span: The span to start and make current.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
         """
 
 
@@ -357,7 +369,7 @@ class DefaultTracer(Tracer):
     def start_span(
         self,
         name: str,
-        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -371,17 +383,21 @@ class DefaultTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        record_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(
-        self, span: "Span", end_on_exit: bool = False
+        self,
+        span: "Span",
+        end_on_exit: bool = False,
+        record_exception: bool = True,
     ) -> typing.Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield
@@ -447,7 +463,6 @@ __all__ = [
     "DefaultTracerProvider",
     "Link",
     "LinkBase",
-    "ParentSpan",
     "RandomIdsGenerator",
     "Span",
     "SpanContext",

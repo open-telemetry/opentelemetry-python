@@ -52,7 +52,7 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         baggage_entries = baggage.get_all(context=ctx)
         expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(baggage_entries, expected)
-        span_context = get_current_span(context=ctx).get_context()
+        span_context = get_current_span(context=ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
