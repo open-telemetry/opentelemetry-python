@@ -350,7 +350,7 @@ class Span(trace_api.Span):
         name: The name of the operation this span represents
         context: The immutable span context
         parent: This span's parent's `opentelemetry.trace.SpanContext`, or
-            null if this is a root span
+            None if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
         resource: Entity producing telemetry
@@ -519,7 +519,7 @@ class Span(trace_api.Span):
 
         return json.dumps(f_span, indent=indent)
 
-    def get_context(self):
+    def get_span_context(self):
         return self.context
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -699,13 +699,13 @@ class Tracer(trace_api.Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         record_exception: bool = True,
     ) -> Iterator[trace_api.Span]:
-        span = self.start_span(name, parent, kind, attributes, links,)
+        span = self.start_span(name, context, kind, attributes, links)
         return self.use_span(
             span, end_on_exit=True, record_exception=record_exception
         )
@@ -713,34 +713,34 @@ class Tracer(trace_api.Tracer):
     def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        if parent is Tracer.CURRENT_SPAN:
-            parent = trace_api.get_current_span()
 
-        parent_context = parent
-        if isinstance(parent_context, trace_api.Span):
-            parent_context = parent.get_context()
+        parent_span_context = trace_api.get_current_span(
+            context
+        ).get_span_context()
 
-        if parent_context is not None and not isinstance(
-            parent_context, trace_api.SpanContext
+        if parent_span_context is not None and not isinstance(
+            parent_span_context, trace_api.SpanContext
         ):
-            raise TypeError("parent must be a Span, SpanContext or None.")
+            raise TypeError(
+                "parent_span_context must be a SpanContext or None."
+            )
 
-        if parent_context is None or not parent_context.is_valid:
-            parent = parent_context = None
+        if parent_span_context is None or not parent_span_context.is_valid:
+            parent_span_context = None
             trace_id = self.source.ids_generator.generate_trace_id()
             trace_flags = None
             trace_state = None
         else:
-            trace_id = parent_context.trace_id
-            trace_flags = parent_context.trace_flags
-            trace_state = parent_context.trace_state
+            trace_id = parent_span_context.trace_id
+            trace_flags = parent_span_context.trace_flags
+            trace_state = parent_span_context.trace_state
 
         # The sampler decides whether to create a real or no-op span at the
         # time of span creation. No-op spans do not record events, and are not
@@ -748,7 +748,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.source.sampler.should_sample(
-            parent_context, trace_id, name, attributes, links,
+            parent_span_context, trace_id, name, attributes, links,
         )
 
         trace_flags = (
@@ -770,7 +770,7 @@ class Tracer(trace_api.Tracer):
             span = _Span(
                 name=name,
                 context=context,
-                parent=parent_context,
+                parent=parent_span_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=sampling_result.attributes.copy(),

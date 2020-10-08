@@ -27,9 +27,9 @@ class TestDefaultSpan(unittest.TestCase):
             trace_state=trace.DEFAULT_TRACE_STATE,
         )
         span = trace.DefaultSpan(context)
-        self.assertEqual(context, span.get_context())
+        self.assertEqual(context, span.get_span_context())
 
     def test_invalid_span(self):
         self.assertIsNotNone(trace.INVALID_SPAN)
-        self.assertIsNotNone(trace.INVALID_SPAN.get_context())
-        self.assertFalse(trace.INVALID_SPAN.get_context().is_valid)
+        self.assertIsNotNone(trace.INVALID_SPAN.get_span_context())
+        self.assertFalse(trace.INVALID_SPAN.get_span_context().is_valid)
