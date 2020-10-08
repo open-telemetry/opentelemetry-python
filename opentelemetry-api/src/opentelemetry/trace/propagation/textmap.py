@@ -22,6 +22,20 @@ TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
 Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
 
 
+def default_get(carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
+    return [carrier.get(key)] if carrier.get(key) else []
+
+
+def default_keys(carrier: TextMapPropagatorT) -> typing.List[str]:
+    return list(carrier.keys())
+
+
+GetterGetFunction = typing.Callable[
+    [TextMapPropagatorT, str], typing.List[str]
+]
+GetterKeysFunction = typing.Callable[[TextMapPropagatorT], typing.List[str]]
+
+
 class Getter:
     """This class implements a Getter that enables extracting propagated
     fields from a carrier
@@ -30,10 +44,8 @@ class Getter:
 
     def __init__(
         self,
-        get=lambda carrier, key: [carrier.get(key)]
-        if carrier.get(key)
-        else [],
-        keys=lambda carrier: list(carrier.keys()),
+        get: GetterGetFunction[TextMapPropagatorT] = default_get,
+        keys: GetterKeysFunction[TextMapPropagatorT] = default_keys,
     ):
         self._get = get
         self._keys = keys

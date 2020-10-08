@@ -113,9 +113,7 @@ def _before_request():
     span_name = flask.request.endpoint or otel_wsgi.get_default_span_name(
         environ
     )
-    token = context.attach(
-        propagators.extract(otel_wsgi.get_header_from_environ, environ)
-    )
+    token = context.attach(propagators.extract(otel_wsgi.getter, environ))
 
     tracer = trace.get_tracer(__name__, __version__)
 

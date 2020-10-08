@@ -21,7 +21,7 @@ from opentelemetry.instrumentation.utils import extract_attributes_from_object
 from opentelemetry.instrumentation.wsgi import (
     add_response_attributes,
     collect_request_attributes,
-    get_header_from_environ,
+    getter,
 )
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
@@ -98,7 +98,7 @@ class _DjangoMiddleware(MiddlewareMixin):
 
         environ = request.META
 
-        token = attach(extract(get_header_from_environ, environ))
+        token = attach(extract(getter, environ))
 
         tracer = get_tracer(__name__, __version__)
 
