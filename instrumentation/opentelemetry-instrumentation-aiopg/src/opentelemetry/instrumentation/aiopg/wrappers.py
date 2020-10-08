@@ -217,7 +217,7 @@ def wrap_create_pool(
 
 
 def unwrap_create_pool():
-    """ "Disable integration with aiopg library.
+    """Disable integration with aiopg library.
     https://github.com/aio-libs/aiopg
     """
     unwrap(aiopg, "create_pool")
