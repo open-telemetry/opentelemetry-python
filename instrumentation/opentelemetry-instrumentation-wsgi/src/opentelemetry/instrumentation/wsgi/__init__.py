@@ -61,36 +61,28 @@ import wsgiref.util as wsgiref_util
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.instrumentation.wsgi.version import __version__
+from opentelemetry.trace.propagation.textmap import Getter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
 
 
-class Getter:
-    @staticmethod
-    def get(environ: dict, header_name: str) -> typing.List[str]:
-        """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
+def get_header_from_environ(
+    environ: dict, header_name: str
+) -> typing.List[str]:
+    """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
 
-        Returns:
-            A list with a single string with the header value if it exists, else an empty list.
-        """
-        environ_key = "HTTP_" + header_name.upper().replace("-", "_")
-        value = environ.get(environ_key)
-        if value is not None:
-            return [value]
-        return []
-
-    @staticmethod
-    def keys(environ: dict) -> typing.List[str]:
-        """Retrieve all the  HTTP header keys for an PEP3333-conforming WSGI environ.
-
-        Returns:
-            A list with all the keys in environ.
-        """
-        return environ.keys()
+    Returns:
+        A list with a single string with the header value if it exists, else an empty list.
+    """
+    environ_key = "HTTP_" + header_name.upper().replace("-", "_")
+    value = environ.get(environ_key)
+    if value is not None:
+        return [value]
+    return []
 
 
-get_header_from_environ = Getter()
+getter = Getter(get_header_from_environ)
 
 
 def setifnotnone(dic, key, value):
@@ -207,9 +199,7 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        token = context.attach(
-            propagators.extract(get_header_from_environ, environ)
-        )
+        token = context.attach(propagators.extract(getter, environ))
         span_name = self.name_callback(environ)
 
         span = self.tracer.start_span(

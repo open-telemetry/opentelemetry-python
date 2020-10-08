@@ -68,6 +68,7 @@ from opentelemetry.instrumentation.celery import utils
 from opentelemetry.instrumentation.celery.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace.propagation import get_current_span
+from opentelemetry.trace.propagation.textmap import Getter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
@@ -118,8 +119,8 @@ class CeleryInstrumentor(BaseInstrumentor):
             return
 
         request = task.request
-        carrier_extractor = Getter()
-        tracectx = propagators.extract(carrier_extractor, request) or {}
+        getter = Getter(carrier_extractor)
+        tracectx = propagators.extract(getter, request) or {}
         parent = get_current_span(tracectx)
 
         logger.debug("prerun signal start task_id=%s", task_id)
@@ -249,14 +250,8 @@ class CeleryInstrumentor(BaseInstrumentor):
         span.set_attribute(_TASK_RETRY_REASON_KEY, str(reason))
 
 
-class Getter:
-    @staticmethod
-    def get(carrier, key):
-        value = getattr(carrier, key, [])
-        if isinstance(value, str) or not isinstance(value, Iterable):
-            value = (value,)
-        return value
-
-    @staticmethod
-    def keys(carrier):
-        return carrier.keys()
+def carrier_extractor(carrier, key):
+    value = getattr(carrier, key, [])
+    if isinstance(value, str) or not isinstance(value, Iterable):
+        value = (value,)
+    return value

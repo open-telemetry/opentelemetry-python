@@ -22,15 +22,23 @@ TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
 Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
 
 
-class Getter(abc.ABC):
-    """This class provides an interface that enables extracting propagated
+class Getter:
+    """This class implements a Getter that enables extracting propagated
     fields from a carrier
 
     """
 
-    @staticmethod
-    @abc.abstractmethod
-    def get(carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
+    def __init__(
+        self,
+        get=lambda carrier, key: [carrier.get(key)]
+        if carrier.get(key)
+        else [],
+        keys=lambda carrier: list(carrier.keys()),
+    ):
+        self._get = get
+        self._keys = keys
+
+    def get(self, carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
         """Function that can retrieve zero
         or more values from the carrier. In the case that
         the value does not exist, returns an empty list.
@@ -44,10 +52,9 @@ class Getter(abc.ABC):
         Returns:
             first value of the propagation key or an empty list if the key doesn't exist.
         """
+        return self._get(carrier, key)
 
-    @staticmethod
-    @abc.abstractmethod
-    def keys(carrier: TextMapPropagatorT) -> typing.List[str]:
+    def keys(self, carrier: TextMapPropagatorT) -> typing.List[str]:
         """Function that can retrieve all the keys in a carrier object.
 
         Args:
@@ -58,6 +65,7 @@ class Getter(abc.ABC):
         Returns:
             list of keys from the carrier.
         """
+        return self._keys(carrier)
 
 
 class TextMapPropagator(abc.ABC):

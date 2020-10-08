@@ -10,6 +10,8 @@
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
 - Update baggage propagation header
   ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
+- Add keys method to TextMap propagator Getter
+  ([#1196](https://github.com/open-telemetry/opentelemetry-python/issues/1196))
 
 ## Version 0.13b0
 

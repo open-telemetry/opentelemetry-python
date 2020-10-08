@@ -11,7 +11,7 @@
 - Allow for Custom Trace and Span IDs Generation - `IdsGenerator` for TracerProvider
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
 - Add keys method to TextMap propagator Getter
-  ([#1084](https://github.com/open-telemetry/opentelemetry-python/issues/1084))
+  ([#1196](https://github.com/open-telemetry/opentelemetry-python/issues/1196))
 
 ## Version 0.13b0
 

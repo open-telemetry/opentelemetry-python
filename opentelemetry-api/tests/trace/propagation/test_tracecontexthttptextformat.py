@@ -17,22 +17,19 @@ import unittest
 
 from opentelemetry import trace
 from opentelemetry.trace.propagation import tracecontext
+from opentelemetry.trace.propagation.textmap import Getter
 
 FORMAT = tracecontext.TraceContextTextMapPropagator()
 
 
-class Getter:
-    @staticmethod
-    def get(dict_object, key):
-        value = dict_object.get(key)
-        return value if value is not None else []
-
-    @staticmethod
-    def keys(dict_object):
-        return dict_object.keys()
+def get_as_list(
+    dict_object: typing.Dict[str, typing.List[str]], key: str
+) -> typing.List[str]:
+    value = dict_object.get(key)
+    return value if value is not None else []
 
 
-get_as_list = Getter()
+getter = Getter(get_as_list)
 
 
 class TestTraceContextFormat(unittest.TestCase):
@@ -49,7 +46,7 @@ class TestTraceContextFormat(unittest.TestCase):
         trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span = trace.get_current_span(FORMAT.extract(get_as_list, output))
+        span = trace.get_current_span(FORMAT.extract(getter, output))
         self.assertIsInstance(span.get_context(), trace.SpanContext)
 
     def test_headers_with_tracestate(self):
@@ -63,7 +60,7 @@ class TestTraceContextFormat(unittest.TestCase):
         tracestate_value = "foo=1,bar=2,baz=3"
         span_context = trace.get_current_span(
             FORMAT.extract(
-                get_as_list,
+                getter,
                 {
                     "traceparent": [traceparent_value],
                     "tracestate": [tracestate_value],
@@ -107,7 +104,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                get_as_list,
+                getter,
                 {
                     "traceparent": [
                         "00-00000000000000000000000000000000-1234567890123456-00"
@@ -138,7 +135,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                get_as_list,
+                getter,
                 {
                     "traceparent": [
                         "00-00000000000000000000000000000000-0000000000000000-00"
@@ -176,7 +173,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                get_as_list,
+                getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-"
@@ -200,7 +197,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                get_as_list,
+                getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-1234567890123456-00"
@@ -216,7 +213,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                get_as_list,
+                getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-1234567890123456-00"
@@ -240,7 +237,7 @@ class TestTraceContextFormat(unittest.TestCase):
         )
         span = trace.get_current_span(
             FORMAT.extract(
-                get_as_list,
+                getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-1234567890123456-00"

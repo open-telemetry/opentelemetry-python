@@ -29,35 +29,25 @@ from asgiref.compatibility import guarantee_single_callable
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.asgi.version import __version__  # noqa
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+from opentelemetry.trace.propagation.textmap import Getter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
-class Getter:
-    @staticmethod
-    def get(scope: dict, header_name: str) -> typing.List[str]:
-        """Retrieve a HTTP header value from the ASGI scope.
+def get_header_from_scope(scope: dict, header_name: str) -> typing.List[str]:
+    """Retrieve a HTTP header value from the ASGI scope.
 
-        Returns:
-            A list with a single string with the header value if it exists, else an empty list.
-        """
-        headers = scope.get("headers")
-        return [
-            value.decode("utf8")
-            for (key, value) in headers
-            if key.decode("utf8") == header_name
-        ]
-
-    @staticmethod
-    def keys(scope: dict) -> typing.List[str]:
-        """Retrieve all the  HTTP header keys for an ASGI scope..
-
-        Returns:
-            A list with all the keys in scope.
-        """
-        return scope.keys()
+    Returns:
+        A list with a single string with the header value if it exists, else an empty list.
+    """
+    headers = scope.get("headers")
+    return [
+        value.decode("utf8")
+        for (key, value) in headers
+        if key.decode("utf8") == header_name
+    ]
 
 
-get_header_from_scope = Getter()
+getter = Getter(get_header_from_scope)
 
 
 def collect_request_attributes(scope):
@@ -86,10 +76,10 @@ def collect_request_attributes(scope):
     http_method = scope.get("method")
     if http_method:
         result["http.method"] = http_method
-    http_host_value = ",".join(get_header_from_scope.get(scope, "host"))
+    http_host_value = ",".join(getter.get(scope, "host"))
     if http_host_value:
         result["http.server_name"] = http_host_value
-    http_user_agent = get_header_from_scope.get(scope, "user-agent")
+    http_user_agent = getter.get(scope, "user-agent")
     if len(http_user_agent) > 0:
         result["http.user_agent"] = http_user_agent[0]
 
@@ -168,9 +158,7 @@ class OpenTelemetryMiddleware:
         if scope["type"] not in ("http", "websocket"):
             return await self.app(scope, receive, send)
 
-        token = context.attach(
-            propagators.extract(get_header_from_scope, scope)
-        )
+        token = context.attach(propagators.extract(getter, scope))
         span_name, additional_attributes = self.span_details_callback(scope)
 
         try:
