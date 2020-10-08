@@ -29,19 +29,21 @@ class TestTracerImplementation(unittest.TestCase):
     def test_tracer(self):
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_span("test") as span:
-            self.assertNotEqual(span.get_context(), INVALID_SPAN_CONTEXT)
+            self.assertNotEqual(span.get_span_context(), INVALID_SPAN_CONTEXT)
             self.assertNotEqual(span, INVALID_SPAN)
             self.assertIs(span.is_recording(), True)
             with tracer.start_span("test2") as span2:
-                self.assertNotEqual(span2.get_context(), INVALID_SPAN_CONTEXT)
+                self.assertNotEqual(
+                    span2.get_span_context(), INVALID_SPAN_CONTEXT
+                )
                 self.assertNotEqual(span2, INVALID_SPAN)
                 self.assertIs(span2.is_recording(), True)
 
     def test_span(self):
         with self.assertRaises(Exception):
             # pylint: disable=no-value-for-parameter
-            span = trace.Span()
+            span = trace._Span()
 
-        span = trace.Span("name", INVALID_SPAN_CONTEXT)
-        self.assertEqual(span.get_context(), INVALID_SPAN_CONTEXT)
+        span = trace._Span("name", INVALID_SPAN_CONTEXT)
+        self.assertEqual(span.get_span_context(), INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), True)

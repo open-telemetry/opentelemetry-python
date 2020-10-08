@@ -31,19 +31,19 @@ def get_as_list(dict_object, key):
 def get_child_parent_new_carrier(old_carrier):
 
     ctx = FORMAT.extract(get_as_list, old_carrier)
-    parent_context = trace_api.get_current_span(ctx).get_context()
+    parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
-    parent = trace.Span("parent", parent_context)
-    child = trace.Span(
+    parent = trace._Span("parent", parent_span_context)
+    child = trace._Span(
         "child",
         trace_api.SpanContext(
-            parent_context.trace_id,
+            parent_span_context.trace_id,
             trace_api.RandomIdsGenerator().generate_span_id(),
             is_remote=False,
-            trace_flags=parent_context.trace_flags,
-            trace_state=parent_context.trace_state,
+            trace_flags=parent_span_context.trace_flags,
+            trace_state=parent_span_context.trace_state,
         ),
-        parent=parent.get_context(),
+        parent=parent.get_span_context(),
     )
 
     new_carrier = {}
@@ -232,7 +232,7 @@ class TestB3Format(unittest.TestCase):
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
@@ -244,7 +244,7 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     @patch(
@@ -268,7 +268,7 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
@@ -294,7 +294,7 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
@@ -307,7 +307,7 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
     @staticmethod
