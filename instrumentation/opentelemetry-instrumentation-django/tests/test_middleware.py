@@ -85,9 +85,7 @@ class TestMiddleware(WsgiTestBase):
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/traced/"
         )
-        self.assertEqual(
-            span.attributes["http.route"], "tests.views.traced"
-        )
+        self.assertEqual(span.attributes["http.route"], "tests.views.traced")
         self.assertEqual(span.attributes["http.scheme"], "http")
         self.assertEqual(span.attributes["http.status_code"], 200)
         self.assertEqual(span.attributes["http.status_text"], "OK")
@@ -124,9 +122,7 @@ class TestMiddleware(WsgiTestBase):
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/traced/"
         )
-        self.assertEqual(
-            span.attributes["http.route"], "tests.views.traced"
-        )
+        self.assertEqual(span.attributes["http.route"], "tests.views.traced")
         self.assertEqual(span.attributes["http.scheme"], "http")
         self.assertEqual(span.attributes["http.status_code"], 200)
         self.assertEqual(span.attributes["http.status_text"], "OK")
@@ -151,9 +147,7 @@ class TestMiddleware(WsgiTestBase):
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/error/"
         )
-        self.assertEqual(
-            span.attributes["http.route"], "tests.views.error"
-        )
+        self.assertEqual(span.attributes["http.route"], "tests.views.error")
         self.assertEqual(span.attributes["http.scheme"], "http")
 
     @patch(

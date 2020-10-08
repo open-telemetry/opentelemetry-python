@@ -87,7 +87,7 @@ class _DjangoMiddleware(MiddlewareMixin):
 
         except Resolver404:
             return "HTTP {}".format(request.method)
-    
+
     @staticmethod
     def _set_http_route(span, request):
         # Use the resolved fuction path for the http.route
