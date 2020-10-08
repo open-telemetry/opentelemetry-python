@@ -346,7 +346,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         export_event = threading.Event()
         my_exporter = MySpanExporter(
-            destination=spans_names_list, export_event=export_event, export_timeout_millis=50
+            destination=spans_names_list,
+            export_event=export_event,
+            export_timeout_millis=50,
         )
 
         span_processor = export.BatchExportSpanProcessor(
@@ -359,17 +361,19 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
             # give some time for exporter to loop
             # since wait is mocked it should return immediately
-            time.sleep(0.05)  
+            time.sleep(0.05)
             mock_wait_calls = list(mock_wait.mock_calls)
 
             # find the index of the call that processed the singular span
             for idx, wait_call in enumerate(mock_wait_calls):
                 _, args, __ = wait_call
                 if args[0] <= 0:
-                    after_calls = mock_wait_calls[idx+1:]
+                    after_calls = mock_wait_calls[idx + 1 :]
                     break
 
-            self.assertTrue(all(args[0] >= 0.05 for _, args, __ in after_calls))
+            self.assertTrue(
+                all(args[0] >= 0.05 for _, args, __ in after_calls)
+            )
 
         span_processor.shutdown()
 
