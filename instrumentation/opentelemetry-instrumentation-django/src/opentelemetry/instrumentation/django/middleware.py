@@ -87,6 +87,13 @@ class _DjangoMiddleware(MiddlewareMixin):
 
         except Resolver404:
             return "HTTP {}".format(request.method)
+    
+    @staticmethod
+    def _set_http_route(span, request):
+        # Use the resolved fuction path for the http.route
+        # Note: resolved_match is not available during the process_request phase.
+        if request.resolver_match is not None:
+            span.set_attribute("http.route", request.resolver_match._func_path)
 
     def process_request(self, request):
         # request.META is a dictionary containing all available HTTP headers
@@ -133,6 +140,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             return
 
         if self._environ_activation_key in request.META.keys():
+            self._set_http_route(request.META[self._environ_span_key], request)
             request.META[self._environ_activation_key].__exit__(
                 type(exception),
                 exception,
@@ -151,6 +159,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             self._environ_activation_key in request.META.keys()
             and self._environ_span_key in request.META.keys()
         ):
+            self._set_http_route(request.META[self._environ_span_key], request)
             add_response_attributes(
                 request.META[self._environ_span_key],
                 "{} {}".format(response.status_code, response.reason_phrase),
