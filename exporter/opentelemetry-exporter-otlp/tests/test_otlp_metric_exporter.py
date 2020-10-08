@@ -44,20 +44,19 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
         self.exporter = OTLPMetricsExporter()
-
+        resource = SDKResource(OrderedDict([("a", 1), ("b", False)]))
         self.counter_metric_record = MetricRecord(
             Counter(
                 "a",
                 "b",
                 "c",
                 int,
-                MeterProvider(
-                    resource=SDKResource(OrderedDict([("a", 1), ("b", False)]))
-                ).get_meter(__name__),
+                MeterProvider(resource=resource,).get_meter(__name__),
                 ("d",),
             ),
             OrderedDict([("e", "f")]),
             SumAggregator(),
+            resource,
         )
 
     def test_translate_metrics(self):

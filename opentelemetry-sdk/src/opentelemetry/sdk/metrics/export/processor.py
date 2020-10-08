@@ -15,6 +15,7 @@
 from typing import Sequence
 
 from opentelemetry.sdk.metrics.export import MetricRecord
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import get_dict_as_key
 
 
@@ -26,13 +27,14 @@ class Processor:
     will be sent to an exporter for exporting.
     """
 
-    def __init__(self, stateful: bool):
+    def __init__(self, stateful: bool, resource: Resource):
         self._batch_map = {}
         # stateful=True indicates the processor computes checkpoints from over
         # the process lifetime. False indicates the processor computes
         # checkpoints which describe the updates of a single collection period
         # (deltas)
         self.stateful = stateful
+        self._resource = resource
 
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
@@ -46,7 +48,9 @@ class Processor:
             (instrument, aggregator_type, _, labels),
             aggregator,
         ) in self._batch_map.items():
-            metric_records.append(MetricRecord(instrument, labels, aggregator))
+            metric_records.append(
+                MetricRecord(instrument, labels, aggregator, self._resource)
+            )
         return metric_records
 
     def finished_collection(self):
