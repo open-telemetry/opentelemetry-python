@@ -108,4 +108,4 @@ class TestAsyncio(unittest.TestCase):
         for span in span_list:
             if span is expected_parent:
                 continue
-            self.assertEqual(span.parent, expected_parent.get_context())
+            self.assertEqual(span.parent, expected_parent.get_span_context())

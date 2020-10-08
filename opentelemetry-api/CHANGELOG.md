@@ -12,6 +12,8 @@
   ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
 - Make instances of SpanContext immutable
   ([#1134](https://github.com/open-telemetry/opentelemetry-python/pull/1134))
+- Parent is now always passed in via Context, intead of Span or SpanContext
+  ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
 
 ## Version 0.13b0
 

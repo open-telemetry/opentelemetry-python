@@ -113,7 +113,7 @@ class Sampler(abc.ABC):
     @abc.abstractmethod
     def should_sample(
         self,
-        parent_context: Optional["SpanContext"],
+        parent_span_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
         attributes: Attributes = None,
@@ -134,7 +134,7 @@ class StaticSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["SpanContext"],
+        parent_span_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
         attributes: Attributes = None,
@@ -188,7 +188,7 @@ class TraceIdRatioBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["SpanContext"],
+        parent_span_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
         attributes: Attributes = None,  # TODO
@@ -220,22 +220,22 @@ class ParentBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["SpanContext"],
+        parent_span_context: Optional["SpanContext"],
         trace_id: int,
         name: str,
         attributes: Attributes = None,  # TODO
         links: Sequence["Link"] = (),
     ) -> "SamplingResult":
-        if parent_context is not None:
+        if parent_span_context is not None:
             if (
-                not parent_context.is_valid
-                or not parent_context.trace_flags.sampled
+                not parent_span_context.is_valid
+                or not parent_span_context.trace_flags.sampled
             ):
                 return SamplingResult(Decision.DROP)
             return SamplingResult(Decision.RECORD_AND_SAMPLE, attributes)
 
         return self._delegate.should_sample(
-            parent_context=parent_context,
+            parent_span_context=parent_span_context,
             trace_id=trace_id,
             name=name,
             attributes=attributes,
