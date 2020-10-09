@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-Released 2020-09-17
-
 - Bumped version from 0.9.3 to 0.10.1
   ([#1228](https://github.com/open-telemetry/opentelemetry-python/pull/1228))
 
