@@ -18,12 +18,11 @@ import atexit
 import concurrent.futures
 import json
 import logging
-import random
 import threading
 import traceback
 from collections import OrderedDict
 from contextlib import contextmanager
-from types import TracebackType
+from types import MappingProxyType, TracebackType
 from typing import (
     Any,
     Callable,
@@ -340,6 +339,10 @@ def _filter_attribute_values(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
+def _create_immutable_attributes(attributes):
+    return MappingProxyType(attributes.copy() if attributes else {})
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -408,6 +411,10 @@ class Span(trace_api.Span):
         if events:
             for event in events:
                 _filter_attribute_values(event.attributes)
+                # pylint: disable=protected-access
+                event._attributes = _create_immutable_attributes(
+                    event.attributes
+                )
                 self.events.append(event)
 
         if links is None:
@@ -566,8 +573,7 @@ class Span(trace_api.Span):
         timestamp: Optional[int] = None,
     ) -> None:
         _filter_attribute_values(attributes)
-        if not attributes:
-            attributes = self._new_attributes()
+        attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(
                 name=name,
