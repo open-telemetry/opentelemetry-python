@@ -25,18 +25,15 @@ from opentelemetry.proto.common.v1.common_pb2 import (
     StringKeyValue,
 )
 from opentelemetry.proto.metrics.v1.metrics_pb2 import (
+    AggregationTemporality,
     InstrumentationLibraryMetrics,
-    Int64DataPoint,
+    IntDataPoint,
+    IntSum,
 )
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
-    Metric as CollectorMetric,
-)
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
-    MetricDescriptor,
-    ResourceMetrics,
-)
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as OTLPMetric
+from opentelemetry.proto.metrics.v1.metrics_pb2 import ResourceMetrics
 from opentelemetry.proto.resource.v1.resource_pb2 import (
-    Resource as CollectorResource,
+    Resource as OTLPResource,
 )
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import MetricRecord
@@ -47,20 +44,19 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
         self.exporter = OTLPMetricsExporter()
-
+        resource = SDKResource(OrderedDict([("a", 1), ("b", False)]))
         self.counter_metric_record = MetricRecord(
             Counter(
                 "a",
                 "b",
                 "c",
                 int,
-                MeterProvider(
-                    resource=SDKResource(OrderedDict([("a", 1), ("b", False)]))
-                ).get_meter(__name__),
+                MeterProvider(resource=resource,).get_meter(__name__),
                 ("d",),
             ),
             OrderedDict([("e", "f")]),
             SumAggregator(),
+            resource,
         )
 
     def test_translate_metrics(self):
@@ -71,7 +67,7 @@ class TestOTLPMetricExporter(TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=CollectorResource(
+                    resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
                             KeyValue(
@@ -82,26 +78,26 @@ class TestOTLPMetricExporter(TestCase):
                     instrumentation_library_metrics=[
                         InstrumentationLibraryMetrics(
                             metrics=[
-                                CollectorMetric(
-                                    metric_descriptor=MetricDescriptor(
-                                        name="a",
-                                        description="b",
-                                        unit="c",
-                                        type=MetricDescriptor.Type.INT64,
-                                        temporality=(
-                                            MetricDescriptor.Temporality.DELTA
+                                OTLPMetric(
+                                    name="a",
+                                    description="b",
+                                    unit="c",
+                                    int_sum=IntSum(
+                                        data_points=[
+                                            IntDataPoint(
+                                                labels=[
+                                                    StringKeyValue(
+                                                        key="a", value="b"
+                                                    )
+                                                ],
+                                                value=1,
+                                            )
+                                        ],
+                                        aggregation_temporality=(
+                                            AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
                                         ),
+                                        is_monotonic=True,
                                     ),
-                                    int64_data_points=[
-                                        Int64DataPoint(
-                                            labels=[
-                                                StringKeyValue(
-                                                    key="a", value="b"
-                                                )
-                                            ],
-                                            value=1,
-                                        )
-                                    ],
                                 )
                             ]
                         )

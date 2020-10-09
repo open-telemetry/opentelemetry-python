@@ -17,16 +17,15 @@ from re import compile as re_compile
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace import generate_span_id, generate_trace_id
-from opentelemetry.trace.propagation.httptextformat import (
+from opentelemetry.trace.propagation.textmap import (
     Getter,
-    HTTPTextFormat,
-    HTTPTextFormatT,
     Setter,
+    TextMapPropagator,
+    TextMapPropagatorT,
 )
 
 
-class B3Format(HTTPTextFormat):
+class B3Format(TextMapPropagator):
     """Propagator for the B3 HTTP header format.
 
     See: https://github.com/openzipkin/b3-propagation
@@ -44,8 +43,8 @@ class B3Format(HTTPTextFormat):
 
     def extract(
         self,
-        get_from_carrier: Getter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        get_from_carrier: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
@@ -103,8 +102,9 @@ class B3Format(HTTPTextFormat):
             self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            trace_id = generate_trace_id()
-            span_id = generate_span_id()
+            ids_generator = trace.get_tracer_provider().ids_generator
+            trace_id = ids_generator.generate_trace_id()
+            span_id = ids_generator.generate_span_id()
             sampled = "0"
 
         else:
@@ -134,27 +134,29 @@ class B3Format(HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: Setter[HTTPTextFormatT],
-        carrier: HTTPTextFormatT,
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        if span.get_context() == trace.INVALID_SPAN_CONTEXT:
+        span_context = span.get_span_context()
+        if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
-        sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
+        sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
+            carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, format_span_id(span.context.span_id)
+            carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
         )
-        if span.parent is not None:
+        span_parent = getattr(span, "parent", None)
+        if span_parent is not None:
             set_in_carrier(
                 carrier,
                 self.PARENT_SPAN_ID_KEY,
-                format_span_id(span.parent.span_id),
+                format_span_id(span_parent.span_id),
             )
         set_in_carrier(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
@@ -170,8 +172,8 @@ def format_span_id(span_id: int) -> str:
 
 
 def _extract_first_element(
-    items: typing.Iterable[HTTPTextFormatT],
-) -> typing.Optional[HTTPTextFormatT]:
+    items: typing.Iterable[TextMapPropagatorT],
+) -> typing.Optional[TextMapPropagatorT]:
     if items is None:
         return None
     return next(iter(items), None)

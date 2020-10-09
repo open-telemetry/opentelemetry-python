@@ -17,6 +17,7 @@ from logging import getLogger
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import attach, detach
 from opentelemetry.instrumentation.django.version import __version__
+from opentelemetry.instrumentation.utils import extract_attributes_from_object
 from opentelemetry.instrumentation.wsgi import (
     add_response_attributes,
     collect_request_attributes,
@@ -25,6 +26,14 @@ from opentelemetry.instrumentation.wsgi import (
 from opentelemetry.propagators import extract
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.util import ExcludeList
+
+try:
+    from django.core.urlresolvers import (  # pylint: disable=no-name-in-module
+        resolve,
+        Resolver404,
+    )
+except ImportError:
+    from django.urls import resolve, Resolver404
 
 try:
     from django.utils.deprecation import MiddlewareMixin
@@ -50,17 +59,40 @@ class _DjangoMiddleware(MiddlewareMixin):
     else:
         _excluded_urls = ExcludeList(_excluded_urls)
 
-    def process_view(
-        self, request, view_func, view_args, view_kwargs
-    ):  # pylint: disable=unused-argument
+    _traced_request_attrs = [
+        attr.strip()
+        for attr in (Configuration().DJANGO_TRACED_REQUEST_ATTRS or "").split(
+            ","
+        )
+    ]
+
+    @staticmethod
+    def _get_span_name(request):
+        try:
+            if getattr(request, "resolver_match"):
+                match = request.resolver_match
+            else:
+                match = resolve(request.get_full_path())
+
+            if hasattr(match, "route"):
+                return match.route
+
+            # Instead of using `view_name`, better to use `_func_name` as some applications can use similar
+            # view names in different modules
+            if hasattr(match, "_func_name"):
+                return match._func_name  # pylint: disable=protected-access
+
+            # Fallback for safety as `_func_name` private field
+            return match.view_name
+
+        except Resolver404:
+            return "HTTP {}".format(request.method)
+
+    def process_request(self, request):
         # request.META is a dictionary containing all available HTTP headers
         # Read more about request.META here:
         # https://docs.djangoproject.com/en/3.0/ref/request-response/#django.http.HttpRequest.META
 
-        # environ = {
-        #     key.lower().replace('_', '-').replace("http-", "", 1): value
-        #     for key, value in request.META.items()
-        # }
         if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
             return
 
@@ -70,16 +102,21 @@ class _DjangoMiddleware(MiddlewareMixin):
 
         tracer = get_tracer(__name__, __version__)
 
-        attributes = collect_request_attributes(environ)
-
         span = tracer.start_span(
-            view_func.__name__,
+            self._get_span_name(request),
             kind=SpanKind.SERVER,
-            attributes=attributes,
             start_time=environ.get(
                 "opentelemetry-instrumentor-django.starttime_key"
             ),
         )
+
+        if span.is_recording():
+            attributes = collect_request_attributes(environ)
+            attributes = extract_attributes_from_object(
+                request, self._traced_request_attrs, attributes
+            )
+            for key, value in attributes.items():
+                span.set_attribute(key, value)
 
         activation = tracer.use_span(span, end_on_exit=True)
         activation.__enter__()

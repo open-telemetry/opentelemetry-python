@@ -25,7 +25,7 @@ Usage
     import opentelemetry.instrumentation.requests
 
     # You can optionally pass a custom TracerProvider to
-    RequestInstrumentor.instrument()
+    # RequestInstrumentor.instrument()
     opentelemetry.instrumentation.requests.RequestsInstrumentor().instrument()
     response = requests.get(url="https://www.example.org/")
 
@@ -43,10 +43,18 @@ from requests.structures import CaseInsensitiveDict
 
 from opentelemetry import context, propagators
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.metric import (
+    HTTPMetricRecorder,
+    MetricMixin,
+)
 from opentelemetry.instrumentation.requests.version import __version__
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind, get_tracer
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import (
+    EXCEPTION_STATUS_FIELD,
+    Status,
+    StatusCanonicalCode,
+)
 
 # A key to a context variable to avoid creating duplicate spans when instrumenting
 # both, Session.request and Session.send, since Session.request calls into Session.send
@@ -54,10 +62,11 @@ _SUPPRESS_REQUESTS_INSTRUMENTATION_KEY = "suppress_requests_instrumentation"
 
 
 # pylint: disable=unused-argument
+# pylint: disable=R0915
 def _instrument(tracer_provider=None, span_callback=None):
     """Enables tracing of all requests calls that go through
-      :code:`requests.session.Session.request` (this includes
-      :code:`requests.get`, etc.)."""
+    :code:`requests.session.Session.request` (this includes
+    :code:`requests.get`, etc.)."""
 
     # Since
     # https://github.com/psf/requests/commit/d72d1162142d1bf8b1b5711c664fbbd674f349d1
@@ -116,47 +125,69 @@ def _instrument(tracer_provider=None, span_callback=None):
         method = method.upper()
         span_name = "HTTP {}".format(method)
 
-        exception = None
+        recorder = RequestsInstrumentor().metric_recorder
+
+        labels = {}
+        labels["http.method"] = method
+        labels["http.url"] = url
 
         with get_tracer(
             __name__, __version__, tracer_provider
         ).start_as_current_span(span_name, kind=SpanKind.CLIENT) as span:
-            span.set_attribute("component", "http")
-            span.set_attribute("http.method", method.upper())
-            span.set_attribute("http.url", url)
+            exception = None
+            with recorder.record_duration(labels):
+                if span.is_recording():
+                    span.set_attribute("component", "http")
+                    span.set_attribute("http.method", method)
+                    span.set_attribute("http.url", url)
 
-            headers = get_or_create_headers()
-            propagators.inject(type(headers).__setitem__, headers)
+                headers = get_or_create_headers()
+                propagators.inject(type(headers).__setitem__, headers)
 
-            token = context.attach(
-                context.set_value(_SUPPRESS_REQUESTS_INSTRUMENTATION_KEY, True)
-            )
-            try:
-                result = call_wrapped()  # *** PROCEED
-            except Exception as exc:  # pylint: disable=W0703
-                exception = exc
-                result = getattr(exc, "response", None)
-            finally:
-                context.detach(token)
+                token = context.attach(
+                    context.set_value(
+                        _SUPPRESS_REQUESTS_INSTRUMENTATION_KEY, True
+                    )
+                )
+                try:
+                    result = call_wrapped()  # *** PROCEED
+                except Exception as exc:  # pylint: disable=W0703
+                    exception = exc
+                    setattr(
+                        exception,
+                        EXCEPTION_STATUS_FIELD,
+                        _exception_to_canonical_code(exception),
+                    )
+                    result = getattr(exc, "response", None)
+                finally:
+                    context.detach(token)
+
+                if result is not None:
+                    if span.is_recording():
+                        span.set_attribute(
+                            "http.status_code", result.status_code
+                        )
+                        span.set_attribute("http.status_text", result.reason)
+                        span.set_status(
+                            Status(
+                                http_status_to_canonical_code(
+                                    result.status_code
+                                )
+                            )
+                        )
+                    labels["http.status_code"] = str(result.status_code)
+                    labels["http.status_text"] = result.reason
+                    if result.raw and result.raw.version:
+                        labels["http.flavor"] = (
+                            str(result.raw.version)[:1]
+                            + "."
+                            + str(result.raw.version)[:-1]
+                        )
+                if span_callback is not None:
+                    span_callback(span, result)
 
             if exception is not None:
-                span.set_status(
-                    Status(_exception_to_canonical_code(exception))
-                )
-                span.record_exception(exception)
-
-            if result is not None:
-                span.set_attribute("http.status_code", result.status_code)
-                span.set_attribute("http.status_text", result.reason)
-                span.set_status(
-                    Status(http_status_to_canonical_code(result.status_code))
-                )
-
-            if span_callback is not None:
-                span_callback(span, result)
-
-        if exception is not None:
-            raise exception.with_traceback(exception.__traceback__)
+                raise exception.with_traceback(exception.__traceback__)
 
         return result
 
@@ -201,7 +232,7 @@ def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
     return StatusCanonicalCode.UNKNOWN
 
 
-class RequestsInstrumentor(BaseInstrumentor):
+class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
     """An instrumentor for requests
     See `BaseInstrumentor`
     """
@@ -218,6 +249,11 @@ class RequestsInstrumentor(BaseInstrumentor):
             tracer_provider=kwargs.get("tracer_provider"),
             span_callback=kwargs.get("span_callback"),
         )
+        self.init_metrics(
+            __name__, __version__,
+        )
+        # pylint: disable=W0201
+        self.metric_recorder = HTTPMetricRecorder(self.meter, SpanKind.CLIENT)
 
     def _uninstrument(self, **kwargs):
         _uninstrument()

@@ -30,7 +30,7 @@ In addition, there are several extension packages which can be installed separat
     pip install opentelemetry-instrumentation-{instrumentation}
 
 These are for exporter and instrumentation packages respectively.
-The packages can be found in :scm_web:`instrumentation/ directory of the repository <ext/>`.
+The packages can be found in :scm_web:`instrumentation/ directory of the repository <exporter/>`.
 
 Extensions
 ----------
@@ -62,6 +62,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     :name: getting-started
 
     getting-started
+    faq-and-cookbook
 
 .. toctree::
     :maxdepth: 1

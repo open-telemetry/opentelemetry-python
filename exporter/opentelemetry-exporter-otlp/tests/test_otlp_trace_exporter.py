@@ -30,23 +30,27 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
     add_TraceServiceServicer_to_server,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    InstrumentationLibrary,
+    KeyValue,
+)
 from opentelemetry.proto.resource.v1.resource_pb2 import (
-    Resource as CollectorResource,
+    Resource as OTLPResource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
     InstrumentationLibrarySpans,
     ResourceSpans,
 )
-from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
+from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.trace import Span, TracerProvider
+from opentelemetry.sdk.trace import TracerProvider, _Span
 from opentelemetry.sdk.trace.export import (
     SimpleExportSpanProcessor,
     SpanExportResult,
 )
-from opentelemetry.trace import SpanKind
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
 class TraceServiceServicerUNAVAILABLEDelay(TraceServiceServicer):
@@ -119,7 +123,7 @@ class TestOTLPSpanExporter(TestCase):
 
         type(event_mock).name = PropertyMock(return_value="a")
 
-        self.span = Span(
+        self.span = _Span(
             "a",
             context=Mock(
                 **{
@@ -138,10 +142,13 @@ class TestOTLPSpanExporter(TestCase):
                         "context.trace_id": 1,
                         "context.span_id": 2,
                         "attributes": OrderedDict([("a", 1), ("b", False)]),
-                        "kind": SpanKind.INTERNAL,
+                        "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )
             ],
+            instrumentation_info=InstrumentationInfo(
+                name="name", version="version"
+            ),
         )
 
         self.span.start()
@@ -199,7 +206,7 @@ class TestOTLPSpanExporter(TestCase):
         expected = ExportTraceServiceRequest(
             resource_spans=[
                 ResourceSpans(
-                    resource=CollectorResource(
+                    resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
                             KeyValue(
@@ -209,8 +216,11 @@ class TestOTLPSpanExporter(TestCase):
                     ),
                     instrumentation_library_spans=[
                         InstrumentationLibrarySpans(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name", version="version"
+                            ),
                             spans=[
-                                CollectorSpan(
+                                OTLPSpan(
                                     # pylint: disable=no-member
                                     name="a",
                                     start_time_unix_nano=self.span.start_time,
@@ -227,7 +237,9 @@ class TestOTLPSpanExporter(TestCase):
                                     parent_span_id=(
                                         b"\000\000\000\000\000\00009"
                                     ),
-                                    kind=CollectorSpan.SpanKind.INTERNAL,
+                                    kind=(
+                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
+                                    ),
                                     attributes=[
                                         KeyValue(
                                             key="a",
@@ -239,7 +251,7 @@ class TestOTLPSpanExporter(TestCase):
                                         ),
                                     ],
                                     events=[
-                                        CollectorSpan.Event(
+                                        OTLPSpan.Event(
                                             name="a",
                                             time_unix_nano=1591240820506462784,
                                             attributes=[
@@ -260,7 +272,7 @@ class TestOTLPSpanExporter(TestCase):
                                     ],
                                     status=Status(code=0, message=""),
                                     links=[
-                                        CollectorSpan.Link(
+                                        OTLPSpan.Link(
                                             trace_id=int.to_bytes(
                                                 1, 16, "big"
                                             ),
@@ -282,7 +294,7 @@ class TestOTLPSpanExporter(TestCase):
                                         )
                                     ],
                                 )
-                            ]
+                            ],
                         )
                     ],
                 ),

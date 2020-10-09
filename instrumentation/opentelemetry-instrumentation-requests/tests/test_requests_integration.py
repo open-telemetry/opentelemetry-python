@@ -22,7 +22,8 @@ import opentelemetry.instrumentation.requests
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
-from opentelemetry.test.mock_httptextformat import MockHTTPTextFormat
+from opentelemetry.sdk.util import get_dict_as_key
+from opentelemetry.test.mock_textmap import MockTextMapPropagator
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCanonicalCode
 
@@ -88,6 +89,27 @@ class RequestsIntegrationTestBase(abc.ABC):
             span, opentelemetry.instrumentation.requests
         )
 
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        match_key = get_dict_as_key(
+            {
+                "http.flavor": "1.1",
+                "http.method": "GET",
+                "http.status_code": "200",
+                "http.status_text": "OK",
+                "http.url": "http://httpbin.org/status/200",
+            }
+        )
+        for key in recorder.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
+                self.assertGreater(view_data.aggregator.current.sum, 0)
+
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"
         httpretty.register_uri(
@@ -147,29 +169,46 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         self.assert_span(num_spans=0)
 
+    def test_not_recording(self):
+        with mock.patch("opentelemetry.trace.INVALID_SPAN") as mock_span:
+            RequestsInstrumentor().uninstrument()
+            # original_tracer_provider returns a default tracer provider, which
+            # in turn will return an INVALID_SPAN, which is always not recording
+            RequestsInstrumentor().instrument(
+                tracer_provider=self.original_tracer_provider
+            )
+            mock_span.is_recording.return_value = False
+            result = self.perform_request(self.URL)
+            self.assertEqual(result.text, "Hello!")
+            self.assert_span(None, 0)
+            self.assertFalse(mock_span.is_recording())
+            self.assertTrue(mock_span.is_recording.called)
+            self.assertFalse(mock_span.set_attribute.called)
+            self.assertFalse(mock_span.set_status.called)
+
     def test_distributed_context(self):
-        previous_propagator = propagators.get_global_httptextformat()
+        previous_propagator = propagators.get_global_textmap()
         try:
-            propagators.set_global_httptextformat(MockHTTPTextFormat())
+            propagators.set_global_textmap(MockTextMapPropagator())
             result = self.perform_request(self.URL)
             self.assertEqual(result.text, "Hello!")
 
             span = self.assert_span()
 
             headers = dict(httpretty.last_request().headers)
-            self.assertIn(MockHTTPTextFormat.TRACE_ID_KEY, headers)
+            self.assertIn(MockTextMapPropagator.TRACE_ID_KEY, headers)
             self.assertEqual(
-                str(span.get_context().trace_id),
-                headers[MockHTTPTextFormat.TRACE_ID_KEY],
+                str(span.get_span_context().trace_id),
+                headers[MockTextMapPropagator.TRACE_ID_KEY],
             )
-            self.assertIn(MockHTTPTextFormat.SPAN_ID_KEY, headers)
+            self.assertIn(MockTextMapPropagator.SPAN_ID_KEY, headers)
             self.assertEqual(
-                str(span.get_context().span_id),
-                headers[MockHTTPTextFormat.SPAN_ID_KEY],
+                str(span.get_span_context().span_id),
+                headers[MockTextMapPropagator.SPAN_ID_KEY],
             )
 
         finally:
-            propagators.set_global_httptextformat(previous_propagator)
+            propagators.set_global_textmap(previous_propagator)
 
     def test_span_callback(self):
         RequestsInstrumentor().uninstrument()
@@ -229,6 +268,23 @@ class RequestsIntegrationTestBase(abc.ABC):
             span.status.canonical_code, StatusCanonicalCode.UNKNOWN
         )
 
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        match_key = get_dict_as_key(
+            {
+                "http.method": "GET",
+                "http.url": "http://httpbin.org/status/200",
+            }
+        )
+        for key in recorder.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
+
     mocked_response = requests.Response()
     mocked_response.status_code = 500
     mocked_response.reason = "Internal Server Error"
@@ -255,6 +311,24 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertEqual(
             span.status.canonical_code, StatusCanonicalCode.INTERNAL
         )
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        match_key = get_dict_as_key(
+            {
+                "http.method": "GET",
+                "http.status_code": "500",
+                "http.status_text": "Internal Server Error",
+                "http.url": "http://httpbin.org/status/200",
+            }
+        )
+        for key in recorder.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
 
     @mock.patch("requests.adapters.HTTPAdapter.send", side_effect=Exception)
     def test_requests_basic_exception(self, *_, **__):

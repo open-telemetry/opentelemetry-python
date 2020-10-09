@@ -28,19 +28,17 @@ class TestMeterProvider(unittest.TestCase):
     def test_stateful(self):
         meter_provider = metrics.MeterProvider(stateful=False)
         meter = meter_provider.get_meter(__name__)
-        self.assertIs(meter.batcher.stateful, False)
+        self.assertIs(meter.processor.stateful, False)
 
     def test_resource(self):
         resource = resources.Resource.create({})
         meter_provider = metrics.MeterProvider(resource=resource)
-        meter = meter_provider.get_meter(__name__)
-        self.assertIs(meter.resource, resource)
+        self.assertIs(meter_provider.resource, resource)
 
     def test_resource_empty(self):
         meter_provider = metrics.MeterProvider()
-        meter = meter_provider.get_meter(__name__)
         # pylint: disable=protected-access
-        self.assertIs(meter.resource, resources._DEFAULT_RESOURCE)
+        self.assertEqual(meter_provider.resource, resources._DEFAULT_RESOURCE)
 
     def test_start_pipeline(self):
         exporter = mock.Mock()
@@ -74,8 +72,8 @@ class TestMeter(unittest.TestCase):
 
     def test_collect_metrics(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        processor_mock = mock.Mock()
+        meter.processor = processor_mock
         counter = meter.create_metric(
             "name", "desc", "unit", float, metrics.Counter
         )
@@ -83,40 +81,40 @@ class TestMeter(unittest.TestCase):
         meter.register_view(View(counter, SumAggregator))
         counter.add(1.0, labels)
         meter.collect()
-        self.assertTrue(batcher_mock.process.called)
+        self.assertTrue(processor_mock.process.called)
 
     def test_collect_no_metrics(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        processor_mock = mock.Mock()
+        meter.processor = processor_mock
         meter.collect()
-        self.assertFalse(batcher_mock.process.called)
+        self.assertFalse(processor_mock.process.called)
 
     def test_collect_not_registered(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        processor_mock = mock.Mock()
+        meter.processor = processor_mock
         counter = metrics.Counter("name", "desc", "unit", float, meter)
         labels = {"key1": "value1"}
         counter.add(1.0, labels)
         meter.collect()
-        self.assertFalse(batcher_mock.process.called)
+        self.assertFalse(processor_mock.process.called)
 
     def test_collect_disabled_metric(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        processor_mock = mock.Mock()
+        meter.processor = processor_mock
         counter = metrics.Counter("name", "desc", "unit", float, meter, False)
         labels = {"key1": "value1"}
         meter.register_view(View(counter, SumAggregator))
         counter.add(1.0, labels)
         meter.collect()
-        self.assertFalse(batcher_mock.process.called)
+        self.assertFalse(processor_mock.process.called)
 
     def test_collect_observers(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        batcher_mock = mock.Mock()
-        meter.batcher = batcher_mock
+        processor_mock = mock.Mock()
+        meter.processor = processor_mock
 
         def callback(observer):
             self.assertIsInstance(observer, metrics_api.Observer)
@@ -128,7 +126,7 @@ class TestMeter(unittest.TestCase):
 
         meter.observers.add(observer)
         meter.collect()
-        self.assertTrue(batcher_mock.process.called)
+        self.assertTrue(processor_mock.process.called)
 
     def test_record_batch(self):
         meter = metrics.MeterProvider().get_meter(__name__)
@@ -167,7 +165,7 @@ class TestMeter(unittest.TestCase):
         self.assertIsInstance(counter, metrics.Counter)
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
-        self.assertIs(counter.meter.resource, resource)
+        self.assertIs(meter_provider.resource, resource)
         self.assertEqual(counter.meter, meter)
 
     def test_create_updowncounter(self):

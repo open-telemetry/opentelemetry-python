@@ -23,6 +23,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
@@ -35,7 +36,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        self._test_span = trace.Span("test_span", context=context)
+        self._test_span = trace._Span("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
 
@@ -143,7 +144,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         span_context = trace_api.SpanContext(
             trace_id, span_id, is_remote=False
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
         other_context = trace_api.SpanContext(
@@ -186,18 +187,20 @@ class TestJaegerSpanExporter(unittest.TestCase):
         ]
 
         otel_spans = [
-            trace.Span(
+            trace._Span(
                 name=span_names[0],
                 context=span_context,
-                parent=parent_context,
+                parent=parent_span_context,
                 events=(event,),
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
             ),
-            trace.Span(
-                name=span_names[1], context=parent_context, parent=None
+            trace._Span(
+                name=span_names[1], context=parent_span_context, parent=None
             ),
-            trace.Span(name=span_names[2], context=other_context, parent=None),
+            trace._Span(
+                name=span_names[2], context=other_context, parent=None
+            ),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
@@ -207,7 +210,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_attribute("key_tuple", ("tuple_element",))
         otel_spans[0].resource = Resource(
-            labels={"key_resource": "some_resource"}
+            attributes={"key_resource": "some_resource"}
         )
         otel_spans[0].set_status(
             Status(StatusCanonicalCode.UNKNOWN, "Example description")
@@ -221,6 +224,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].resource = Resource({})
         otel_spans[2].end(end_time=end_times[2])
+        otel_spans[2].instrumentation_info = InstrumentationInfo(
+            name="name", version="version"
+        )
 
         # pylint: disable=protected-access
         spans = jaeger_exporter._translate_to_jaeger(otel_spans)
@@ -334,7 +340,33 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 startTime=start_times[2] // 10 ** 3,
                 duration=durations[2] // 10 ** 3,
                 flags=0,
-                tags=default_tags,
+                tags=[
+                    jaeger.Tag(
+                        key="status.code",
+                        vType=jaeger.TagType.LONG,
+                        vLong=StatusCanonicalCode.OK.value,
+                    ),
+                    jaeger.Tag(
+                        key="status.message",
+                        vType=jaeger.TagType.STRING,
+                        vStr=None,
+                    ),
+                    jaeger.Tag(
+                        key="span.kind",
+                        vType=jaeger.TagType.STRING,
+                        vStr=trace_api.SpanKind.INTERNAL.name,
+                    ),
+                    jaeger.Tag(
+                        key="otel.instrumentation_library.name",
+                        vType=jaeger.TagType.STRING,
+                        vStr="name",
+                    ),
+                    jaeger.Tag(
+                        key="otel.instrumentation_library.version",
+                        vType=jaeger.TagType.STRING,
+                        vStr="version",
+                    ),
+                ],
             ),
         ]
 

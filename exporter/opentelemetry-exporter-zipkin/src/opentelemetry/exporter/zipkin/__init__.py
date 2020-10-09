@@ -24,6 +24,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 
 .. _Zipkin: https://zipkin.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
+.. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
 
 .. code:: python
 
@@ -39,10 +40,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     zipkin_exporter = zipkin.ZipkinSpanExporter(
         service_name="my-helloworld-service",
         # optional:
-        # host_name="localhost",
-        # port=9411,
-        # endpoint="/api/v2/spans",
-        # protocol="http",
+        # url="http://localhost:9411/api/v2/spans",
         # ipv4="",
         # ipv6="",
         # retry=False,
@@ -57,24 +55,26 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
 
+The exporter supports endpoint configuration via the OTEL_EXPORTER_ZIPKIN_ENDPOINT environment variables as defined in the `Specification`_
+
 API
 ---
 """
 
 import json
 import logging
+import os
 from typing import Optional, Sequence
+from urllib.parse import urlparse
 
 import requests
 
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
 
-DEFAULT_ENDPOINT = "/api/v2/spans"
-DEFAULT_HOST_NAME = "localhost"
-DEFAULT_PORT = 9411
-DEFAULT_PROTOCOL = "http"
 DEFAULT_RETRY = False
+DEFAULT_URL = "http://localhost:9411/api/v2/spans"
+DEFAULT_MAX_TAG_VALUE_LENGTH = 128
 ZIPKIN_HEADERS = {"Content-Type": "application/json"}
 
 SPAN_KIND_MAP = {
@@ -96,10 +96,7 @@ class ZipkinSpanExporter(SpanExporter):
     Args:
         service_name: Service that logged an annotation in a trace.Classifier
             when query for spans.
-        host_name: The host name of the Zipkin server
-        port: The port of the Zipkin server
-        endpoint: The endpoint of the Zipkin server
-        protocol: The protocol used for the request.
+        url: The Zipkin endpoint URL
         ipv4: Primary IPv4 address associated with this connection.
         ipv6: Primary IPv6 address associated with this connection.
         retry: Set to True to configure the exporter to retry on failure.
@@ -108,25 +105,26 @@ class ZipkinSpanExporter(SpanExporter):
     def __init__(
         self,
         service_name: str,
-        host_name: str = DEFAULT_HOST_NAME,
-        port: int = DEFAULT_PORT,
-        endpoint: str = DEFAULT_ENDPOINT,
-        protocol: str = DEFAULT_PROTOCOL,
+        url: str = None,
         ipv4: Optional[str] = None,
         ipv6: Optional[str] = None,
         retry: Optional[str] = DEFAULT_RETRY,
+        max_tag_value_length: Optional[int] = DEFAULT_MAX_TAG_VALUE_LENGTH,
     ):
         self.service_name = service_name
-        self.host_name = host_name
-        self.port = port
-        self.endpoint = endpoint
-        self.protocol = protocol
-        self.url = "{}://{}:{}{}".format(
-            self.protocol, self.host_name, self.port, self.endpoint
-        )
+        if url is None:
+            self.url = os.environ.get(
+                "OTEL_EXPORTER_ZIPKIN_ENDPOINT", DEFAULT_URL
+            )
+        else:
+            self.url = url
+
+        self.port = urlparse(self.url).port
+
         self.ipv4 = ipv4
         self.ipv6 = ipv6
         self.retry = retry
+        self.max_tag_value_length = max_tag_value_length
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         zipkin_spans = self._translate_to_zipkin(spans)
@@ -146,6 +144,9 @@ class ZipkinSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
         return SpanExportResult.SUCCESS
 
+    def shutdown(self) -> None:
+        pass
+
     def _translate_to_zipkin(self, spans: Sequence[Span]):
 
         local_endpoint = {"serviceName": self.service_name, "port": self.port}
@@ -158,7 +159,7 @@ class ZipkinSpanExporter(SpanExporter):
 
         zipkin_spans = []
         for span in spans:
-            context = span.get_context()
+            context = span.get_span_context()
             trace_id = context.trace_id
             span_id = context.span_id
 
@@ -176,16 +177,35 @@ class ZipkinSpanExporter(SpanExporter):
                 "duration": duration_mus,
                 "localEndpoint": local_endpoint,
                 "kind": SPAN_KIND_MAP[span.kind],
-                "tags": _extract_tags_from_span(span),
-                "annotations": _extract_annotations_from_events(span.events),
+                "tags": self._extract_tags_from_span(span),
+                "annotations": self._extract_annotations_from_events(
+                    span.events
+                ),
             }
+
+            if span.instrumentation_info is not None:
+                zipkin_span["tags"][
+                    "otel.instrumentation_library.name"
+                ] = span.instrumentation_info.name
+                zipkin_span["tags"][
+                    "otel.instrumentation_library.version"
+                ] = span.instrumentation_info.version
+
+            if span.status is not None:
+                zipkin_span["tags"]["otel.status_code"] = str(
+                    span.status.canonical_code.value
+                )
+                if span.status.description is not None:
+                    zipkin_span["tags"][
+                        "otel.status_description"
+                    ] = span.status.description
 
             if context.trace_flags.sampled:
                 zipkin_span["debug"] = True
 
             if isinstance(span.parent, Span):
                 zipkin_span["parentId"] = format(
-                    span.parent.get_context().span_id, "016x"
+                    span.parent.get_span_context().span_id, "016x"
                 )
             elif isinstance(span.parent, SpanContext):
                 zipkin_span["parentId"] = format(span.parent.span_id, "016x")
@@ -193,42 +213,49 @@ class ZipkinSpanExporter(SpanExporter):
             zipkin_spans.append(zipkin_span)
         return zipkin_spans
 
-    def shutdown(self) -> None:
-        pass
+    def _extract_tags_from_dict(self, tags_dict):
+        tags = {}
+        if not tags_dict:
+            return tags
+        for attribute_key, attribute_value in tags_dict.items():
+            if isinstance(attribute_value, (int, bool, float)):
+                value = str(attribute_value)
+            elif isinstance(attribute_value, str):
+                value = attribute_value
+            else:
+                logger.warning("Could not serialize tag %s", attribute_key)
+                continue
 
-
-def _extract_tags_from_dict(tags_dict):
-    tags = {}
-    if not tags_dict:
+            if self.max_tag_value_length > 0:
+                value = value[: self.max_tag_value_length]
+            tags[attribute_key] = value
         return tags
-    for attribute_key, attribute_value in tags_dict.items():
-        if isinstance(attribute_value, (int, bool, float)):
-            value = str(attribute_value)
-        elif isinstance(attribute_value, str):
-            value = attribute_value[:128]
-        else:
-            logger.warning("Could not serialize tag %s", attribute_key)
-            continue
-        tags[attribute_key] = value
-    return tags
 
+    def _extract_tags_from_span(self, span: Span):
+        tags = self._extract_tags_from_dict(getattr(span, "attributes", None))
+        if span.resource:
+            tags.update(self._extract_tags_from_dict(span.resource.attributes))
+        return tags
 
-def _extract_tags_from_span(span: Span):
-    tags = _extract_tags_from_dict(getattr(span, "attributes", None))
-    if span.resource:
-        tags.update(_extract_tags_from_dict(span.resource.labels))
-    return tags
+    def _extract_annotations_from_events(self, events):
+        if not events:
+            return None
 
+        annotations = []
+        for event in events:
+            attrs = {}
+            for key, value in event.attributes.items():
+                if isinstance(value, str):
+                    value = value[: self.max_tag_value_length]
+                attrs[key] = value
 
-def _extract_annotations_from_events(events):
-    return (
-        [
-            {"timestamp": _nsec_to_usec_round(e.timestamp), "value": e.name}
-            for e in events
-        ]
-        if events
-        else None
-    )
+            annotations.append(
+                {
+                    "timestamp": _nsec_to_usec_round(event.timestamp),
+                    "value": json.dumps({event.name: attrs}),
+                }
+            )
+        return annotations
 
 
 def _nsec_to_usec_round(nsec):

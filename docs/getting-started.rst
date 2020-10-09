@@ -194,7 +194,7 @@ an example using Zipkin's `b3 propagation <https://github.com/openzipkin/b3-prop
     from opentelemetry import propagators
     from opentelemetry.sdk.trace.propagation.b3_format import B3Format
 
-    propagators.set_global_httptextformat(B3Format())
+    propagators.set_global_textmap(B3Format())
 
 
 Adding Metrics

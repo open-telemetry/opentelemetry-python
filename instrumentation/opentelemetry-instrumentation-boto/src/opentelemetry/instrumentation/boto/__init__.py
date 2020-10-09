@@ -126,35 +126,41 @@ class BotoInstrumentor(BaseInstrumentor):
             if args:
                 http_method = args[0]
                 span.resource = Resource(
-                    labels={
+                    attributes={
                         "endpoint": endpoint_name,
                         "http_method": http_method.lower(),
                     }
                 )
             else:
-                span.resource = Resource(labels={"endpoint": endpoint_name})
-
-            add_span_arg_tags(
-                span, endpoint_name, args, args_name, traced_args,
-            )
-
-            # Obtaining region name
-            region_name = _get_instance_region_name(instance)
-
-            meta = {
-                "aws.agent": "boto",
-                "aws.operation": operation_name,
-            }
-            if region_name:
-                meta["aws.region"] = region_name
-
-            for key, value in meta.items():
-                span.set_attribute(key, value)
+                span.resource = Resource(
+                    attributes={"endpoint": endpoint_name}
+                )
 
             # Original func returns a boto.connection.HTTPResponse object
             result = original_func(*args, **kwargs)
-            span.set_attribute("http.status_code", getattr(result, "status"))
-            span.set_attribute("http.method", getattr(result, "_method"))
+
+            if span.is_recording():
+                add_span_arg_tags(
+                    span, endpoint_name, args, args_name, traced_args,
+                )
+
+                # Obtaining region name
+                region_name = _get_instance_region_name(instance)
+
+                meta = {
+                    "aws.agent": "boto",
+                    "aws.operation": operation_name,
+                }
+                if region_name:
+                    meta["aws.region"] = region_name
+
+                for key, value in meta.items():
+                    span.set_attribute(key, value)
+
+                span.set_attribute(
+                    "http.status_code", getattr(result, "status")
+                )
+                span.set_attribute("http.method", getattr(result, "_method"))
 
             return result
 

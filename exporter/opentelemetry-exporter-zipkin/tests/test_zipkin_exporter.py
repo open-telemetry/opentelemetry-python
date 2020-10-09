@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import os
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -21,7 +22,9 @@ from opentelemetry.exporter.zipkin import ZipkinSpanExporter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import TraceFlags
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
 class MockResponse:
@@ -39,63 +42,64 @@ class TestZipkinSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        self._test_span = trace.Span("test_span", context=context)
+        self._test_span = trace._Span("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
+
+    def tearDown(self):
+        if "OTEL_EXPORTER_ZIPKIN_ENDPOINT" in os.environ:
+            del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
+
+    def test_constructor_env_var(self):
+        """Test the default values assigned by constructor."""
+        url = "https://foo:9911/path"
+        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = url
+        service_name = "my-service-name"
+        port = 9911
+        exporter = ZipkinSpanExporter(service_name)
+        ipv4 = None
+        ipv6 = None
+
+        self.assertEqual(exporter.service_name, service_name)
+        self.assertEqual(exporter.ipv4, ipv4)
+        self.assertEqual(exporter.ipv6, ipv6)
+        self.assertEqual(exporter.url, url)
+        self.assertEqual(exporter.port, port)
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
         service_name = "my-service-name"
-        host_name = "localhost"
         port = 9411
-        endpoint = "/api/v2/spans"
         exporter = ZipkinSpanExporter(service_name)
         ipv4 = None
         ipv6 = None
-        protocol = "http"
         url = "http://localhost:9411/api/v2/spans"
 
         self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.host_name, host_name)
         self.assertEqual(exporter.port, port)
-        self.assertEqual(exporter.endpoint, endpoint)
         self.assertEqual(exporter.ipv4, ipv4)
         self.assertEqual(exporter.ipv6, ipv6)
-        self.assertEqual(exporter.protocol, protocol)
         self.assertEqual(exporter.url, url)
 
     def test_constructor_explicit(self):
         """Test the constructor passing all the options."""
         service_name = "my-opentelemetry-zipkin"
-        host_name = "opentelemetry.io"
         port = 15875
-        endpoint = "/myapi/traces?format=zipkin"
         ipv4 = "1.2.3.4"
         ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-        protocol = "https"
         url = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
         exporter = ZipkinSpanExporter(
-            service_name=service_name,
-            host_name=host_name,
-            port=port,
-            endpoint=endpoint,
-            ipv4=ipv4,
-            ipv6=ipv6,
-            protocol=protocol,
+            service_name=service_name, url=url, ipv4=ipv4, ipv6=ipv6,
         )
 
         self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.host_name, host_name)
         self.assertEqual(exporter.port, port)
-        self.assertEqual(exporter.endpoint, endpoint)
         self.assertEqual(exporter.ipv4, ipv4)
         self.assertEqual(exporter.ipv6, ipv6)
-        self.assertEqual(exporter.protocol, protocol)
         self.assertEqual(exporter.url, url)
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-statements
     def test_export(self):
-
         span_names = ("test1", "test2", "test3", "test4")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
@@ -123,7 +127,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
         other_context = trace_api.SpanContext(
@@ -150,18 +154,22 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         otel_spans = [
-            trace.Span(
+            trace._Span(
                 name=span_names[0],
                 context=span_context,
-                parent=parent_context,
+                parent=parent_span_context,
                 events=(event,),
                 links=(link,),
             ),
-            trace.Span(
-                name=span_names[1], context=parent_context, parent=None
+            trace._Span(
+                name=span_names[1], context=parent_span_context, parent=None
             ),
-            trace.Span(name=span_names[2], context=other_context, parent=None),
-            trace.Span(name=span_names[3], context=other_context, parent=None),
+            trace._Span(
+                name=span_names[2], context=other_context, parent=None
+            ),
+            trace._Span(
+                name=span_names[3], context=other_context, parent=None
+            ),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
@@ -170,30 +178,36 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
+        otel_spans[0].set_status(
+            Status(StatusCanonicalCode.UNKNOWN, "Example description")
+        )
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
         otel_spans[1].resource = Resource(
-            labels={"key_resource": "some_resource"}
+            attributes={"key_resource": "some_resource"}
         )
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].set_attribute("key_string", "hello_world")
         otel_spans[2].resource = Resource(
-            labels={"key_resource": "some_resource"}
+            attributes={"key_resource": "some_resource"}
         )
         otel_spans[2].end(end_time=end_times[2])
 
         otel_spans[3].start(start_time=start_times[3])
         otel_spans[3].resource = Resource({})
         otel_spans[3].end(end_time=end_times[3])
+        otel_spans[3].instrumentation_info = InstrumentationInfo(
+            name="name", version="version"
+        )
 
         service_name = "test-service"
         local_endpoint = {"serviceName": service_name, "port": 9411}
 
         exporter = ZipkinSpanExporter(service_name)
-        expected = [
+        expected_spans = [
             {
                 "traceId": format(trace_id, "x"),
                 "id": format(span_id, "x"),
@@ -206,15 +220,23 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "key_bool": "False",
                     "key_string": "hello_world",
                     "key_float": "111.22",
+                    "otel.status_code": "2",
+                    "otel.status_description": "Example description",
                 },
+                "debug": True,
+                "parentId": format(parent_id, "x"),
                 "annotations": [
                     {
                         "timestamp": event_timestamp // 10 ** 3,
-                        "value": "event0",
+                        "value": {
+                            "event0": {
+                                "annotation_bool": True,
+                                "annotation_string": "annotation_test",
+                                "key_float": 0.3,
+                            }
+                        },
                     }
                 ],
-                "debug": True,
-                "parentId": format(parent_id, "x"),
             },
             {
                 "traceId": format(trace_id, "x"),
@@ -224,7 +246,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[1] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {"key_resource": "some_resource"},
+                "tags": {
+                    "key_resource": "some_resource",
+                    "otel.status_code": "0",
+                },
                 "annotations": None,
             },
             {
@@ -238,6 +263,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "tags": {
                     "key_string": "hello_world",
                     "key_resource": "some_resource",
+                    "otel.status_code": "0",
                 },
                 "annotations": None,
             },
@@ -249,7 +275,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {},
+                "tags": {
+                    "otel.instrumentation_library.name": "name",
+                    "otel.instrumentation_library.version": "version",
+                    "otel.status_code": "0",
+                },
                 "annotations": None,
             },
         ]
@@ -260,11 +290,21 @@ class TestZipkinSpanExporter(unittest.TestCase):
             status = exporter.export(otel_spans)
             self.assertEqual(SpanExportResult.SUCCESS, status)
 
-        mock_post.assert_called_with(
-            url="http://localhost:9411/api/v2/spans",
-            data=json.dumps(expected),
-            headers={"Content-Type": "application/json"},
+        # pylint: disable=unsubscriptable-object
+        kwargs = mock_post.call_args[1]
+
+        self.assertEqual(kwargs["url"], "http://localhost:9411/api/v2/spans")
+        actual_spans = sorted(
+            json.loads(kwargs["data"]), key=lambda span: span["timestamp"]
         )
+        for expected, actual in zip(expected_spans, actual_spans):
+            expected_annotations = expected.pop("annotations", None)
+            actual_annotations = actual.pop("annotations", None)
+            if actual_annotations:
+                for annotation in actual_annotations:
+                    annotation["value"] = json.loads(annotation["value"])
+            self.assertEqual(expected, actual)
+            self.assertEqual(expected_annotations, actual_annotations)
 
     # pylint: disable=too-many-locals
     def test_zero_padding(self):
@@ -288,12 +328,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
 
-        otel_span = trace.Span(
-            name=span_names[0], context=span_context, parent=parent_context,
+        otel_span = trace._Span(
+            name=span_names[0],
+            context=span_context,
+            parent=parent_span_context,
         )
 
         otel_span.start(start_time=start_time)
@@ -314,7 +356,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": duration // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": None,
-                "tags": {},
+                "tags": {"otel.status_code": "0"},
                 "annotations": None,
                 "debug": True,
                 "parentId": "0aaaaaaaaaaaaaaa",
@@ -340,3 +382,50 @@ class TestZipkinSpanExporter(unittest.TestCase):
         exporter = ZipkinSpanExporter("test-service")
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
+
+    def test_max_tag_length(self):
+        service_name = "test-service"
+
+        span_context = trace_api.SpanContext(
+            0x0E0C63257DE34C926F9EFCD03927272E,
+            0x04BF92DEEFC58C92,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        )
+
+        span = trace._Span(name="test-span", context=span_context,)
+
+        span.start()
+        span.resource = Resource({})
+        # added here to preserve order
+        span.set_attribute("k1", "v" * 500)
+        span.set_attribute("k2", "v" * 50)
+        span.set_status(
+            Status(StatusCanonicalCode.UNKNOWN, "Example description")
+        )
+        span.end()
+
+        exporter = ZipkinSpanExporter(service_name)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["k1"]), 128)
+        self.assertEqual(len(tags["k2"]), 50)
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=2)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["k1"]), 2)
+        self.assertEqual(len(tags["k2"]), 2)

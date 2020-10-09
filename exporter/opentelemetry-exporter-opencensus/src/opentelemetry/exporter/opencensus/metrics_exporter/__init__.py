@@ -139,7 +139,7 @@ def translate_to_collector(
 
         # If cumulative and stateful, explicitly set the start_timestamp to
         # exporter start time.
-        if metric_record.instrument.meter.batcher.stateful:
+        if metric_record.instrument.meter.processor.stateful:
             start_timestamp = exporter_start_timestamp
         else:
             start_timestamp = None
@@ -191,19 +191,19 @@ def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
 
 
 def get_resource(metric_record: MetricRecord) -> resource_pb2.Resource:
-    resource_labels = metric_record.instrument.meter.resource.labels
+    resource_attributes = metric_record.resource.attributes
     return resource_pb2.Resource(
-        type=infer_oc_resource_type(resource_labels),
-        labels={k: str(v) for k, v in resource_labels.items()},
+        type=infer_oc_resource_type(resource_attributes),
+        labels={k: str(v) for k, v in resource_attributes.items()},
     )
 
 
-def infer_oc_resource_type(resource_labels: Dict[str, str]) -> str:
+def infer_oc_resource_type(resource_attributes: Dict[str, str]) -> str:
     """Convert from OT resource labels to OC resource type"""
     for (
         ot_resource_key,
         oc_resource_type,
     ) in _OT_LABEL_PRESENCE_TO_RESOURCE_TYPE:
-        if ot_resource_key in resource_labels:
+        if ot_resource_key in resource_attributes:
             return oc_resource_type
     return ""

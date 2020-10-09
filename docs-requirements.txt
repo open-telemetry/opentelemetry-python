@@ -2,6 +2,11 @@ sphinx~=2.4
 sphinx-rtd-theme~=0.4
 sphinx-autodoc-typehints~=1.10.2
 
+# Need to install the api/sdk in the venv for autodoc. Modifying sys.path
+# doesn't work for pkg_resources.
+./opentelemetry-api
+./opentelemetry-sdk
+
 # Required by ext packages
 asgiref~=3.0
 asyncpg>=0.12.0

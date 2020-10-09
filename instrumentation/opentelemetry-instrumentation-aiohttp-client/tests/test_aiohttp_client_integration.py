@@ -18,6 +18,7 @@ import typing
 import unittest
 import urllib.parse
 from http import HTTPStatus
+from unittest import mock
 
 import aiohttp
 import aiohttp.test_utils
@@ -144,6 +145,22 @@ class TestAioHttpIntegration(TestBase):
                 )
 
                 self.memory_exporter.clear()
+
+    def test_not_recording(self):
+        mock_tracer = mock.Mock()
+        mock_span = mock.Mock()
+        mock_span.is_recording.return_value = False
+        mock_tracer.start_span.return_value = mock_span
+        with mock.patch("opentelemetry.trace.get_tracer"):
+            # pylint: disable=W0612
+            host, port = self._http_request(
+                trace_config=aiohttp_client.create_trace_config(),
+                url="/test-path?query=param#foobar",
+            )
+            self.assertFalse(mock_span.is_recording())
+            self.assertTrue(mock_span.is_recording.called)
+            self.assertFalse(mock_span.set_attribute.called)
+            self.assertFalse(mock_span.set_status.called)
 
     def test_span_name_option(self):
         for span_name, method, path, expected in (

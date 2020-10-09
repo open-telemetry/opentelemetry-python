@@ -100,7 +100,12 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testName", "testDescription", "unit", float, ValueRecorder
         )
         result = metrics_exporter.get_collector_point(
-            MetricRecord(int_counter, self._key_labels, aggregator)
+            MetricRecord(
+                int_counter,
+                self._key_labels,
+                aggregator,
+                metrics.get_meter_provider().resource,
+            )
         )
         self.assertIsInstance(result, metrics_pb2.Point)
         self.assertIsInstance(result.timestamp, Timestamp)
@@ -108,13 +113,23 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator.update(123.5)
         aggregator.take_checkpoint()
         result = metrics_exporter.get_collector_point(
-            MetricRecord(float_counter, self._key_labels, aggregator)
+            MetricRecord(
+                float_counter,
+                self._key_labels,
+                aggregator,
+                metrics.get_meter_provider().resource,
+            )
         )
         self.assertEqual(result.double_value, 123.5)
         self.assertRaises(
             TypeError,
             metrics_exporter.get_collector_point(
-                MetricRecord(valuerecorder, self._key_labels, aggregator)
+                MetricRecord(
+                    valuerecorder,
+                    self._key_labels,
+                    aggregator,
+                    metrics.get_meter_provider().resource,
+                )
             ),
         )
 
@@ -130,7 +145,10 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testname", "testdesc", "unit", int, Counter, self._labels.keys(),
         )
         record = MetricRecord(
-            test_metric, self._key_labels, aggregate.SumAggregator(),
+            test_metric,
+            self._key_labels,
+            aggregate.SumAggregator(),
+            metrics.get_meter_provider().resource,
         )
 
         result = collector_exporter.export([record])
@@ -155,7 +173,12 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(test_metric, self._key_labels, aggregator,)
+        record = MetricRecord(
+            test_metric,
+            self._key_labels,
+            aggregator,
+            metrics.get_meter_provider().resource,
+        )
         start_timestamp = Timestamp()
         output_metrics = metrics_exporter.translate_to_collector(
             [record], start_timestamp,

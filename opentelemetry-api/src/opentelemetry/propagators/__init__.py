@@ -15,6 +15,21 @@
 """
 API for propagation of context.
 
+The propagators for the
+``opentelemetry.propagators.composite.CompositeHTTPPropagator`` can be defined
+via configuration in the ``OTEL_PROPAGATORS`` environment variable. This
+variable should be set to a comma-separated string of names of values for the
+``opentelemetry_propagator`` entry point. For example, setting
+``OTEL_PROPAGATORS`` to ``tracecontext,baggage`` (which is the default value)
+would instantiate
+``opentelemetry.propagators.composite.CompositeHTTPPropagator`` with 2
+propagators, one of type
+``opentelemetry.trace.propagation.tracecontext.TraceContextTextMapPropagator``
+and other of type ``opentelemetry.baggage.propagation.BaggagePropagator``.
+Notice that these propagator classes are defined as
+``opentelemetry_propagator`` entry points in the ``setup.cfg`` file of
+``opentelemetry``.
+
 Example::
 
     import flask
@@ -22,7 +37,7 @@ Example::
     from opentelemetry import propagators
 
 
-    PROPAGATOR = propagators.get_global_httptextformat()
+    PROPAGATOR = propagators.get_global_textmap()
 
 
     def get_header_from_flask_request(request, key):
@@ -50,23 +65,25 @@ Example::
 
 
 .. _Propagation API Specification:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
+    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md
 """
 
 import typing
+from logging import getLogger
 
-from opentelemetry.baggage.propagation import BaggagePropagator
+from pkg_resources import iter_entry_points
+
+from opentelemetry.configuration import Configuration
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import composite
-from opentelemetry.trace.propagation import httptextformat
-from opentelemetry.trace.propagation.tracecontexthttptextformat import (
-    TraceContextHTTPTextFormat,
-)
+from opentelemetry.trace.propagation import textmap
+
+logger = getLogger(__name__)
 
 
 def extract(
-    get_from_carrier: httptextformat.Getter[httptextformat.HTTPTextFormatT],
-    carrier: httptextformat.HTTPTextFormatT,
+    get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+    carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> Context:
     """ Uses the configured propagator to extract a Context from the carrier.
@@ -82,14 +99,12 @@ def extract(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_httptextformat().extract(
-        get_from_carrier, carrier, context
-    )
+    return get_global_textmap().extract(get_from_carrier, carrier, context)
 
 
 def inject(
-    set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
-    carrier: httptextformat.HTTPTextFormatT,
+    set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+    carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> None:
     """ Uses the configured propagator to inject a Context into the carrier.
@@ -103,20 +118,34 @@ def inject(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    get_global_httptextformat().inject(set_in_carrier, carrier, context)
+    get_global_textmap().inject(set_in_carrier, carrier, context)
 
 
-_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(
-    [TraceContextHTTPTextFormat(), BaggagePropagator()],
-)  # type: httptextformat.HTTPTextFormat
+try:
+
+    propagators = []
+
+    for propagator in (  # type: ignore
+        Configuration().get("PROPAGATORS", "tracecontext,baggage").split(",")  # type: ignore
+    ):
+
+        propagators.append(  # type: ignore
+            next(  # type: ignore
+                iter_entry_points("opentelemetry_propagator", propagator)  # type: ignore
+            ).load()()
+        )
+
+except Exception:  # pylint: disable=broad-except
+    logger.exception("Failed to load configured propagators")
+    raise
+
+_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)  # type: ignore
 
 
-def get_global_httptextformat() -> httptextformat.HTTPTextFormat:
+def get_global_textmap() -> textmap.TextMapPropagator:
     return _HTTP_TEXT_FORMAT
 
 
-def set_global_httptextformat(
-    http_text_format: httptextformat.HTTPTextFormat,
-) -> None:
+def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format
+    _HTTP_TEXT_FORMAT = http_text_format  # type: ignore
