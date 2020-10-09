@@ -21,12 +21,8 @@ if [[ ! "${VERSION}" =~ ^([0-9])(\.*[0-9]{1,5}[a-b]*){1,3}$ ]]; then
     exit 1
 fi
 
-# create the release branch
-git fetch origin master
-git checkout master
-git reset --hard origin/master
-git checkout -b release/${VERSION}
-git push origin release/${VERSION}
+git fetch origin release/${VERSION}
+git checkout release/${VERSION}
 
 # create a temporary branch to create a PR for updated version and changelogs
 git checkout -b release/${VERSION}-auto
@@ -37,7 +33,7 @@ if [ $rc != 0 ]; then
     exit 0
 fi
 
-git add **/version.py **/setup.cfg **/CHANGELOG.md
+git add .
 
 git commit -m "updating changelogs and version to ${VERSION}"
 
