@@ -136,7 +136,7 @@ class MinMaxSumCountAggregator(Aggregator):
 
 
 class HistogramAggregator(Aggregator):
-    """Agregator for ValueRecorder metrics that keeps a histogram of values."""
+    """Aggregator for ValueRecorder metrics that keeps a histogram of values."""
 
     def __init__(self, config=None):
         super().__init__(config=config)
