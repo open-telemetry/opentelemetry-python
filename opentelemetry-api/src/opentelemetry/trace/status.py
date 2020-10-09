@@ -19,6 +19,9 @@ import typing
 logger = logging.getLogger(__name__)
 
 
+EXCEPTION_STATUS_FIELD = "_otel_status_code"
+
+
 class StatusCanonicalCode(enum.Enum):
     """Represents the canonical set of status codes of a finished Span."""
 

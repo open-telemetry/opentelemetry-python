@@ -12,6 +12,16 @@
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
 - Event attributes are now immutable
   ([#1195](https://github.com/open-telemetry/opentelemetry-python/pull/1195))
+- Renaming metrics Batcher to Processor
+  ([#1203](https://github.com/open-telemetry/opentelemetry-python/pull/1203))
+- Protect access to Span implementation
+  ([#1188](https://github.com/open-telemetry/opentelemetry-python/pull/1188))
+- `start_as_current_span` and `use_span` can now optionally auto-record any exceptions raised inside the context manager.
+  ([#1162](https://github.com/open-telemetry/opentelemetry-python/pull/1162))
+- Adding Resource to MeterRecord
+  ([#1209](https://github.com/open-telemetry/opentelemetry-python/pull/1209))
+- Parent is now always passed in via Context, intead of Span or SpanContext
+  ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
 
 ## Version 0.13b0
 
