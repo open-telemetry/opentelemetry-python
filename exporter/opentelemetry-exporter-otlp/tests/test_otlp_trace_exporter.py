@@ -12,16 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from collections import OrderedDict
+from opentelemetry.configuration import Configuration
+
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
-from grpc import StatusCode, server
+from grpc import StatusCode, server, ChannelCredentials
 
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.exporter import OTLPExporterMixin
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
@@ -154,8 +158,26 @@ class TestOTLPSpanExporter(TestCase):
         self.span.start()
         self.span.end()
 
+        Configuration._reset()  # pylint: disable=protected-access
+
     def tearDown(self):
         self.server.stop(None)
+        Configuration._reset()  # pylint: disable=protected-access
+
+    @patch.dict("os.environ", {
+        "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:55680",
+        "OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1:value1;key2:value2",
+        "OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE": "fixtures/test.cert",
+    })
+    @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
+    def test_env_variables(self, mock_exporter_mixin):
+        OTLPSpanExporter()
+        kwargs = mock_exporter_mixin.call_args.kwargs
+
+        self.assertEqual(kwargs["endpoint"], "collector:55680")
+        self.assertEqual(kwargs["metadata"], "key1:value1;key2:value2")
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")

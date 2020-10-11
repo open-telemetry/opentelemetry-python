@@ -55,6 +55,7 @@ class OTLPSpanExporter(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
         credentials: Credentials object for server authentication
         metadata: Metadata to send when exporting
     """
@@ -71,7 +72,8 @@ class OTLPSpanExporter(
     ):
         if insecure is None:
             insecure = Configuration().EXPORTER_OTLP_SPAN_INSECURE
-        if insecure is False:
+
+        if not insecure and Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE is not None:
             credentials = credentials or _load_credential_from_file(
                 Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE
             )

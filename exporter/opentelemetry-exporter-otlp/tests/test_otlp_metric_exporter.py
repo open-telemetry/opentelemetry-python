@@ -15,6 +15,11 @@
 from collections import OrderedDict
 from unittest import TestCase
 from unittest.mock import patch
+<<<<<<< HEAD
+=======
+from opentelemetry.configuration import Configuration
+from grpc import ChannelCredentials
+>>>>>>> f2dd93b... Add env variables tests
 
 from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
@@ -60,6 +65,26 @@ class TestOTLPMetricExporter(TestCase):
             SumAggregator(),
             resource,
         )
+
+        Configuration._reset()  # pylint: disable=protected-access
+
+    def tearDown(self):
+        Configuration._reset()  # pylint: disable=protected-access
+
+    @patch.dict("os.environ", {
+        "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
+        "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
+        "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": "fixtures/test.cert",
+    })
+    @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
+    def test_env_variables(self, mock_exporter_mixin):
+        OTLPMetricsExporter()
+        kwargs = mock_exporter_mixin.call_args.kwargs
+
+        self.assertEqual(kwargs["endpoint"], "collector:55680")
+        self.assertEqual(kwargs["metadata"], "key1:value1;key2:value2")
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
     @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_translate_metrics(self, mock_time_ns):

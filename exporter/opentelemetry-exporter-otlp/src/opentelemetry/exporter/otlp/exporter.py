@@ -117,9 +117,8 @@ def _get_resource_data(
 
 
 def _load_credential_from_file(filepath) -> ChannelCredentials:
-    real_path = os.path.join(os.path.dirname(__file__), filepath)
     try:
-        with open(real_path, "rb") as f:
+        with open(filepath, "rb") as f:
             credential = f.read()
             return ssl_channel_credentials(credential)
     except FileNotFoundError:
@@ -135,6 +134,7 @@ class OTLPExporterMixin(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         metadata: Metadata to send when exporting
     """
