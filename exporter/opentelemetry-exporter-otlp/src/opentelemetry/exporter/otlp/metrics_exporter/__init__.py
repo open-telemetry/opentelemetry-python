@@ -132,7 +132,10 @@ class OTLPMetricsExporter(
         if insecure is None:
             insecure = Configuration().EXPORTER_OTLP_METRIC_INSECURE
 
-        if not insecure and Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE is not None:
+        if (
+            not insecure
+            and Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE is not None
+        ):
             credentials = credentials or _load_credential_from_file(
                 Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE
             )

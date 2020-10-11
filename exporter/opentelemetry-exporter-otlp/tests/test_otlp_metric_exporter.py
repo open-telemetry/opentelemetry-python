@@ -15,12 +15,9 @@
 from collections import OrderedDict
 from unittest import TestCase
 from unittest.mock import patch
-<<<<<<< HEAD
-=======
-from opentelemetry.configuration import Configuration
 from grpc import ChannelCredentials
->>>>>>> f2dd93b... Add env variables tests
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -71,11 +68,14 @@ class TestOTLPMetricExporter(TestCase):
     def tearDown(self):
         Configuration._reset()  # pylint: disable=protected-access
 
-    @patch.dict("os.environ", {
-        "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
-        "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
-        "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": "fixtures/test.cert",
-    })
+    @patch.dict(
+        "os.environ",
+        {
+            "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
+            "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
+            "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": "fixtures/test.cert",
+        },
+    )
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
     def test_env_variables(self, mock_exporter_mixin):
         OTLPMetricsExporter()
