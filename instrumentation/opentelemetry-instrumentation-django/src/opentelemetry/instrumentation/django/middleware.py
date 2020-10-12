@@ -93,17 +93,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         # Use the resolved fuction path for the http.route
         # Note: resolved_match is not available during the process_request phase.
         if request.resolver_match is not None:
-            func = request.resolver_match.func
-            func_path = None
-            if not hasattr(func, "__name__"):
-                # A class-based view
-                func_path = (
-                    func.__class__.__module__ + "." + func.__class__.__name__
-                )
-            else:
-                # A function-based view
-                func_path = func.__module__ + "." + func.__name__
-            span.set_attribute("http.route", func_path)
+            span.set_attribute("http.route", request.resolver_match.route)
 
     def process_request(self, request):
         # request.META is a dictionary containing all available HTTP headers
