@@ -85,15 +85,21 @@ class HTTPMetricRecorder(MetricRecorder):
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/metrics/semantic_conventions/http-metrics.md
     @contextmanager
     def record_client_duration(self, labels: Dict[str, str]):
-        if self._client_duration:
-            start_time = time()
-            try:
-                yield start_time
-            finally:
-                if self._meter:
-                    elapsed_time = (time() - start_time) * 1000
-                    self._client_duration.record(elapsed_time, labels)
+        start_time = time()
+        try:
+            yield start_time
+        finally:
+            self.record_client_duration_range(start_time, time(), labels)
 
+    def record_client_duration_range(
+        self, 
+        start_time,
+        end_time,
+        labels: Dict[str, str]
+    ):
+        if self._client_duration:
+            elapsed_time = (end_time - start_time) * 1000
+            self._client_duration.record(elapsed_time, labels)
 
     @contextmanager
     def record_server_duration(self, labels: Dict[str, str]):
@@ -102,7 +108,6 @@ class HTTPMetricRecorder(MetricRecorder):
             yield start_time
         finally:
             self.record_server_duration_range(start_time, time(), labels)
-
 
     def record_server_duration_range(
         self, 

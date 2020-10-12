@@ -45,7 +45,7 @@ from opentelemetry import context, propagators
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.metric import (
     HTTPMetricRecorder,
-    HTTPMetricType
+    HTTPMetricType,
     MetricMixin,
 )
 from opentelemetry.instrumentation.requests.version import __version__
