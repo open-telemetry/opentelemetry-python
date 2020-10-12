@@ -186,7 +186,6 @@ class TestMiddleware(TestBase, WsgiTestBase):
                 self.assertEqual(view_data.labels, key)
                 self.assertEqual(view_data.aggregator.current.count, 1)
 
-
     @patch(
         "opentelemetry.instrumentation.django.middleware._DjangoMiddleware._excluded_urls",
         ExcludeList(["http://testserver/excluded_arg/123", "excluded_noarg"]),

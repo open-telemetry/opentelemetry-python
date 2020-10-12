@@ -54,8 +54,7 @@ class DjangoInstrumentor(BaseInstrumentor, MetricMixin):
 
         settings_middleware.insert(0, self._opentelemetry_middleware)
         self.init_metrics(
-            __name__,
-            __version__,
+            __name__, __version__,
         )
         metric_recorder = HTTPMetricRecorder(self.meter, HTTPMetricType.SERVER)
         setattr(settings, "OTEL_METRIC_RECORDER", metric_recorder)

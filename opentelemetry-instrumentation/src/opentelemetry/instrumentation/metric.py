@@ -53,9 +53,7 @@ class HTTPMetricRecorder(MetricRecorder):
     """Metric recorder for http instrumentations. Tracks duration."""
 
     def __init__(
-        self,
-        meter: Optional[metrics.Meter],
-        http_type: HTTPMetricType,
+        self, meter: Optional[metrics.Meter], http_type: HTTPMetricType,
     ):
         super().__init__(meter)
         self._http_type = http_type

@@ -61,8 +61,12 @@ class TestHTTPMetricRecorder(TestCase):
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         # pylint: disable=protected-access
         self.assertEqual(recorder._http_type, HTTPMetricType.CLIENT)
-        self.assertTrue(isinstance(recorder._client_duration, metrics.ValueRecorder))
-        self.assertEqual(recorder._client_duration.name, "http.client.duration")
+        self.assertTrue(
+            isinstance(recorder._client_duration, metrics.ValueRecorder)
+        )
+        self.assertEqual(
+            recorder._client_duration.name, "http.client.duration"
+        )
         self.assertEqual(
             recorder._client_duration.description,
             "measures the duration of the outbound HTTP request",
@@ -72,18 +76,26 @@ class TestHTTPMetricRecorder(TestCase):
         meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         self.assertEqual(recorder._http_type, HTTPMetricType.CLIENT)
-        self.assertTrue(isinstance(recorder._client_duration, metrics.ValueRecorder))
+        self.assertTrue(
+            isinstance(recorder._client_duration, metrics.ValueRecorder)
+        )
         self.assertIsNone(recorder._server_duration)
 
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.SERVER)
         self.assertEqual(recorder._http_type, HTTPMetricType.SERVER)
-        self.assertTrue(isinstance(recorder._server_duration, metrics.ValueRecorder))
+        self.assertTrue(
+            isinstance(recorder._server_duration, metrics.ValueRecorder)
+        )
         self.assertIsNone(recorder._client_duration)
 
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.BOTH)
         self.assertEqual(recorder._http_type, HTTPMetricType.BOTH)
-        self.assertTrue(isinstance(recorder._client_duration, metrics.ValueRecorder))
-        self.assertTrue(isinstance(recorder._server_duration, metrics.ValueRecorder))
+        self.assertTrue(
+            isinstance(recorder._client_duration, metrics.ValueRecorder)
+        )
+        self.assertTrue(
+            isinstance(recorder._server_duration, metrics.ValueRecorder)
+        )
 
     def test_record_client_duration(self):
         meter = metrics_api.get_meter(__name__)
