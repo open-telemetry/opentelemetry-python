@@ -253,7 +253,9 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
             __name__, __version__,
         )
         # pylint: disable=W0201
-        self.metric_recorder = HTTPMetricRecorder(self.meter, HTTPMetricType.CLIENT)
+        self.metric_recorder = HTTPMetricRecorder(
+            self.meter, HTTPMetricType.CLIENT
+        )
 
     def _uninstrument(self, **kwargs):
         _uninstrument()

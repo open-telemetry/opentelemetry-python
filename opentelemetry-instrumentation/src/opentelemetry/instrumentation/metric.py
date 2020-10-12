@@ -53,7 +53,9 @@ class HTTPMetricRecorder(MetricRecorder):
     """Metric recorder for http instrumentations. Tracks duration."""
 
     def __init__(
-        self, meter: Optional[metrics.Meter], http_type: HTTPMetricType,
+        self,
+        meter: Optional[metrics.Meter],
+        http_type: HTTPMetricType,
     ):
         super().__init__(meter)
         self._http_type = http_type
@@ -62,9 +64,7 @@ class HTTPMetricRecorder(MetricRecorder):
         if self._meter:
             if http_type in (HTTPMetricType.CLIENT, HTTPMetricType.BOTH):
                 self._client_duration = self._meter.create_metric(
-                    name="{}.{}.duration".format(
-                        "http", "client"
-                    ),
+                    name="{}.{}.duration".format("http", "client"),
                     description="measures the duration of the outbound HTTP request",
                     unit="ms",
                     value_type=float,
@@ -72,9 +72,7 @@ class HTTPMetricRecorder(MetricRecorder):
                 )
             if http_type is not HTTPMetricType.CLIENT:
                 self._server_duration = self._meter.create_metric(
-                    name="{}.{}.duration".format(
-                        "http", "server"
-                    ),
+                    name="{}.{}.duration".format("http", "server"),
                     description="measures the duration of the inbound HTTP request",
                     unit="ms",
                     value_type=float,
@@ -92,10 +90,7 @@ class HTTPMetricRecorder(MetricRecorder):
             self.record_client_duration_range(start_time, time(), labels)
 
     def record_client_duration_range(
-        self, 
-        start_time,
-        end_time,
-        labels: Dict[str, str]
+        self, start_time, end_time, labels: Dict[str, str]
     ):
         if self._client_duration:
             elapsed_time = (end_time - start_time) * 1000
@@ -110,10 +105,7 @@ class HTTPMetricRecorder(MetricRecorder):
             self.record_server_duration_range(start_time, time(), labels)
 
     def record_server_duration_range(
-        self, 
-        start_time,
-        end_time,
-        labels: Dict[str, str]
+        self, start_time, end_time, labels: Dict[str, str]
     ):
         if self._server_duration:
             elapsed_time = (end_time - start_time) * 1000

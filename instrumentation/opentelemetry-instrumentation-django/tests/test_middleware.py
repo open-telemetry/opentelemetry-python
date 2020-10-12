@@ -24,6 +24,7 @@ from django.test.utils import setup_test_environment, teardown_test_environment
 from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.sdk.util import get_dict_as_key
+from opentelemetry.test.test_base import TestBase
 from opentelemetry.test.wsgitestutil import WsgiTestBase
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
@@ -52,7 +53,7 @@ urlpatterns = [
 _django_instrumentor = DjangoInstrumentor()
 
 
-class TestMiddleware(WsgiTestBase):
+class TestMiddleware(TestBase, WsgiTestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

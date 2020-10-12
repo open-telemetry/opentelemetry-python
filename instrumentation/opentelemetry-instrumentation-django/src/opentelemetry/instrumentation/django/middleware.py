@@ -48,8 +48,7 @@ _logger = getLogger(__name__)
 
 
 class _DjangoMiddleware(MiddlewareMixin):
-    """Django Middleware for OpenTelemetry
-    """
+    """Django Middleware for OpenTelemetry"""
 
     _environ_activation_key = (
         "opentelemetry-instrumentor-django.activation_key"
@@ -107,9 +106,13 @@ class _DjangoMiddleware(MiddlewareMixin):
                 elif attributes.get("net.host.port"):
                     labels["net.host.port"] = attributes.get("net.host.port")
                     if attributes.get("http.server_name"):
-                        labels["http.server_name"] = attributes.get("http.server_name")
+                        labels["http.server_name"] = attributes.get(
+                            "http.server_name"
+                        )
                     elif attributes.get("http.host.name"):
-                        labels["http.host.name"] = attributes.get("http.host.name")
+                        labels["http.host.name"] = attributes.get(
+                            "http.host.name"
+                        )
         if attributes.get("http.flavor"):
             labels["http.flavor"] = attributes.get("http.flavor")
         return labels
@@ -202,7 +205,8 @@ class _DjangoMiddleware(MiddlewareMixin):
             metric_recorder = getattr(settings, "OTEL_METRIC_RECORDER", None)
             if metric_recorder:
                 metric_recorder.record_server_duration_range(
-                    request.start_time, time.time(), request.labels)
+                    request.start_time, time.time(), request.labels
+                )
         except Exception as ex:  # pylint: disable=W0703
             _logger.warning("Error recording duration metrics: {}", ex)
 

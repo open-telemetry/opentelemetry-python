@@ -15,9 +15,10 @@
 import io
 import wsgiref.util as wsgiref_util
 
-from opentelemetry.test.test_base import TestBase
+from opentelemetry.test.spantestutil import SpanTestBase
 
-class WsgiTestBase(TestBase):
+
+class WsgiTestBase(SpanTestBase):
     def setUp(self):
         super().setUp()
 
