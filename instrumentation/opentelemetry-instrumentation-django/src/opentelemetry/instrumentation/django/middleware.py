@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import time
-
 from logging import getLogger
 
 from django.conf import settings
