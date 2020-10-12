@@ -327,9 +327,6 @@ class TracedCursor:
         ) in self._db_api_integration.span_attributes.items():
             span.set_attribute(attribute_key, attribute_value)
 
-        if len(args) > 1:
-            span.set_attribute("db.statement.parameters", str(args[1]))
-
     def traced_execution(
         self,
         query_method: typing.Callable[..., typing.Any],
