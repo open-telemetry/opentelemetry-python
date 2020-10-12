@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Stop capturing db.statement.parameters
+  ([#1231](https://github.com/open-telemetry/opentelemetry-python/pull/1231))
+
 ## Version 0.13b0
 
 Released 2020-09-17
