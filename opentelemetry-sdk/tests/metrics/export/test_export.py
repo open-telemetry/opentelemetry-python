@@ -15,6 +15,7 @@
 import concurrent.futures
 import random
 import unittest
+from math import inf
 from unittest import mock
 
 from opentelemetry.context import get_value
@@ -324,36 +325,58 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
         mmsc1.merge(mmsc2)
 
-        self.assertEqual(
-            mmsc1.checkpoint,
-            MinMaxSumCountAggregator._merge_checkpoint(
-                checkpoint1, checkpoint2
-            ),
-        )
+        mmsc1_checkpoint = mmsc1.checkpoint
+        mmsc1.checkpoint = checkpoint1
+        mmsc2.checkpoint = checkpoint2
+
+        mmsc1.merge(mmsc2)
+
+        self.assertEqual(mmsc1_checkpoint, mmsc1.checkpoint)
+
         self.assertEqual(mmsc1.last_update_timestamp, 123)
 
     def test_merge_checkpoint(self):
-        func = MinMaxSumCountAggregator._merge_checkpoint
-        _type = MinMaxSumCountAggregator._TYPE
+        type_ = MinMaxSumCountAggregator._TYPE
         empty = MinMaxSumCountAggregator._EMPTY
 
-        ret = func(empty, empty)
-        self.assertEqual(ret, empty)
+        mmsc0 = MinMaxSumCountAggregator()
+        mmsc1 = MinMaxSumCountAggregator()
 
-        ret = func(empty, _type(0, 0, 0, 0))
-        self.assertEqual(ret, _type(0, 0, 0, 0))
+        mmsc0.checkpoint = empty
+        mmsc1.checkpoint = empty
 
-        ret = func(_type(0, 0, 0, 0), empty)
-        self.assertEqual(ret, _type(0, 0, 0, 0))
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, mmsc1.checkpoint)
 
-        ret = func(_type(0, 0, 0, 0), _type(0, 0, 0, 0))
-        self.assertEqual(ret, _type(0, 0, 0, 0))
+        mmsc0.checkpoint = empty
+        mmsc1.checkpoint = type_(0, 0, 0, 0)
 
-        ret = func(_type(44, 23, 55, 86), empty)
-        self.assertEqual(ret, _type(44, 23, 55, 86))
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, mmsc1.checkpoint)
 
-        ret = func(_type(3, 150, 101, 3), _type(1, 33, 44, 2))
-        self.assertEqual(ret, _type(1, 150, 101 + 44, 2 + 3))
+        mmsc0.checkpoint = type_(0, 0, 0, 0)
+        mmsc1.checkpoint = empty
+
+        mmsc1.merge(mmsc0)
+        self.assertEqual(mmsc1.checkpoint, mmsc0.checkpoint)
+
+        mmsc0.checkpoint = type_(0, 0, 0, 0)
+        mmsc1.checkpoint = type_(0, 0, 0, 0)
+
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc1.checkpoint, mmsc0.checkpoint)
+
+        mmsc0.checkpoint = type_(44, 23, 55, 86)
+        mmsc1.checkpoint = empty
+
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, type_(44, 23, 55, 86))
+
+        mmsc0.checkpoint = type_(3, 150, 101, 3)
+        mmsc1.checkpoint = type_(1, 33, 44, 2)
+
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, type_(1, 150, 101 + 44, 2 + 3))
 
     def test_merge_with_empty(self):
         mmsc1 = MinMaxSumCountAggregator()
@@ -367,40 +390,39 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         self.assertEqual(mmsc1.checkpoint, checkpoint1)
 
     def test_concurrent_update(self):
-        mmsc = MinMaxSumCountAggregator()
+        mmsc0 = MinMaxSumCountAggregator()
+        mmsc1 = MinMaxSumCountAggregator()
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
-            fut1 = ex.submit(self.call_update, mmsc)
-            fut2 = ex.submit(self.call_update, mmsc)
+            mmsc0.checkpoint = ex.submit(self.call_update, mmsc0).result()
+            mmsc1.checkpoint = ex.submit(self.call_update, mmsc0).result()
 
-            ret1 = fut1.result()
-            ret2 = fut2.result()
+            mmsc0.merge(mmsc1)
 
-            update_total = MinMaxSumCountAggregator._merge_checkpoint(
-                ret1, ret2
-            )
-            mmsc.take_checkpoint()
+            mmsc0_checkpoint = mmsc0.checkpoint
 
-            self.assertEqual(update_total, mmsc.checkpoint)
+            mmsc0.take_checkpoint()
+
+            self.assertEqual(mmsc0_checkpoint, mmsc0.checkpoint)
+            self.assertIsNot(mmsc0_checkpoint, mmsc0.checkpoint)
 
     def test_concurrent_update_and_checkpoint(self):
-        mmsc = MinMaxSumCountAggregator()
-        checkpoint_total = MinMaxSumCountAggregator._TYPE(2 ** 32, 0, 0, 0)
+        mmsc0 = MinMaxSumCountAggregator()
+        mmsc1 = MinMaxSumCountAggregator()
+        mmsc1.checkpoint = MinMaxSumCountAggregator._TYPE(2 ** 32, 0, 0, 0)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(self.call_update, mmsc)
+            fut = ex.submit(self.call_update, mmsc0)
 
             while not fut.done():
-                mmsc.take_checkpoint()
-                checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
-                    checkpoint_total, mmsc.checkpoint
-                )
+                mmsc0.take_checkpoint()
+                mmsc0.merge(mmsc1)
+                mmsc1.checkpoint = mmsc0.checkpoint
 
-            mmsc.take_checkpoint()
-            checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
-                checkpoint_total, mmsc.checkpoint
-            )
+            mmsc0.take_checkpoint()
+            mmsc0.merge(mmsc1)
 
-            self.assertEqual(checkpoint_total, fut.result())
+            self.assertEqual(mmsc0.checkpoint, fut.result())
 
 
 class TestValueObserverAggregator(unittest.TestCase):
@@ -409,7 +431,7 @@ class TestValueObserverAggregator(unittest.TestCase):
         time_mock.return_value = 123
         observer = ValueObserverAggregator()
         # test current values without any update
-        self.assertEqual(observer.mmsc.current, (None, None, None, 0))
+        self.assertEqual(observer.mmsc.current, (inf, -inf, 0, 0))
         self.assertIsNone(observer.current)
 
         # call update with some values
@@ -430,7 +452,7 @@ class TestValueObserverAggregator(unittest.TestCase):
 
         # take checkpoint wihtout any update
         observer.take_checkpoint()
-        self.assertEqual(observer.checkpoint, (None, None, None, 0, None))
+        self.assertEqual(observer.checkpoint, (inf, -inf, 0, 0, None))
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -537,7 +559,7 @@ class TestValueObserverAggregator(unittest.TestCase):
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer2.mmsc.checkpoint = mmsc_checkpoint2
 
-        observer1.last_update_timestamp = None
+        observer1.last_update_timestamp = 0
         observer2.last_update_timestamp = 100
 
         observer1.checkpoint = checkpoint1
@@ -643,7 +665,7 @@ class TestLastValueAggregator(unittest.TestCase):
         observer1.checkpoint = 23
         observer2.checkpoint = 47
 
-        observer1.last_update_timestamp = None
+        observer1.last_update_timestamp = 0
         observer2.last_update_timestamp = 100
 
         observer1.merge(observer2)
