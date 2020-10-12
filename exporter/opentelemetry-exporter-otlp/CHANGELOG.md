@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add timestamps to OTLP exporter
+  ([#1199](https://github.com/open-telemetry/opentelemetry-python/pull/1199))
 - Update OpenTelemetry protos to v0.5.0
   ([#1143](https://github.com/open-telemetry/opentelemetry-python/pull/1143))
 
