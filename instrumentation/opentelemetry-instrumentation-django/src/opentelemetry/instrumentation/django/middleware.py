@@ -207,6 +207,6 @@ class _DjangoMiddleware(MiddlewareMixin):
                     request.start_time, time.time(), request.labels
                 )
         except Exception as ex:  # pylint: disable=W0703
-            _logger.warning("Error recording duration metrics: {}", ex)
+            _logger.warning("Error recording duration metrics: %s", ex)
 
         return response
