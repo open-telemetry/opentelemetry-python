@@ -117,7 +117,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             )
             for key, value in attributes.items():
                 span.set_attribute(key, value)
-            span.set_attribute("http.route", request.path)
+            span.set_attribute("http.path", request.path)
 
         activation = tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
@@ -125,6 +125,26 @@ class _DjangoMiddleware(MiddlewareMixin):
         request.META[self._environ_activation_key] = activation
         request.META[self._environ_span_key] = span
         request.META[self._environ_token] = token
+
+    def process_view(self, request, view_func, *args, **kwargs):
+        # Process view is executed before the view function, here we get the
+        # route template from request.resolver_match.  It is not set yet in process_request
+        if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
+            return
+
+        if (
+            self._environ_activation_key in request.META.keys()
+            and self._environ_span_key in request.META.keys()
+        ):
+            span = request.META[self._environ_span_key]
+
+            if span.is_recording():
+                if getattr(request, "resolver_match") and getattr(
+                    request.resolver_match, "route"
+                ):
+                    span.set_attribute(
+                        "http.route", request.resolver_match.route
+                    )
 
     def process_exception(self, request, exception):
         # Django can call this method and process_response later. In order
