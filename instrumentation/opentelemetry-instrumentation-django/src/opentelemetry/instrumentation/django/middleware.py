@@ -44,6 +44,12 @@ except ImportError:
     MiddlewareMixin = object
 
 _logger = getLogger(__name__)
+_ATTRIBUTES_BY_PREFERENCE = [
+    ['http.scheme', 'http.host', 'http.target'],
+    ['http.scheme', 'http.server_name', 'net.host.port', 'http.target'],
+    ['http.scheme', 'net.host.name', 'net.host.port', 'http.target'],
+    ['http.url'],
+]
 
 
 class _DjangoMiddleware(MiddlewareMixin):
@@ -90,19 +96,14 @@ class _DjangoMiddleware(MiddlewareMixin):
         except Resolver404:
             return "HTTP {}".format(request.method)
 
-    _attributes_by_preference = [
-        ['http.scheme', 'http.host', 'http.target'],
-        ['http.scheme', 'http.server_name', 'net.host.port', 'http.target'],
-        ['http.scheme', 'net.host.name', 'net.host.port', 'http.target'],
-        ['http.url']
-    ]
-
     @staticmethod
     def _get_metric_labels_from_attributes(attributes):
         labels = {}
         labels["http.method"] = attributes.get("http.method", "")
-        for attrs in _attributes_by_preference:
-            labels_from_attributes = {attr: attributes.get(attr, None) for attr in attrs}
+        for attrs in _ATTRIBUTES_BY_PREFERENCE:
+            labels_from_attributes = {
+                attr: attributes.get(attr, None) for attr in attrs
+            }
             if all(labels_from_attributes.values()):
                 labels.update(labels_from_attributes)
                 break
@@ -135,7 +136,9 @@ class _DjangoMiddleware(MiddlewareMixin):
         )
 
         attributes = collect_request_attributes(environ)
-        request._otel_labels = self._get_metric_labels_from_attributes(attributes)
+        request._otel_labels = self._get_metric_labels_from_attributes(
+            attributes
+        )
 
         if span.is_recording():
             attributes = extract_attributes_from_object(
@@ -182,7 +185,9 @@ class _DjangoMiddleware(MiddlewareMixin):
                 "{} {}".format(response.status_code, response.reason_phrase),
                 response,
             )
-            request._otel_labels["http.status_code"] = str(response.status_code)
+            request._otel_labels["http.status_code"] = str(
+                response.status_code
+            )
             request.META.pop(self._environ_span_key)
 
             request.META[self._environ_activation_key].__exit__(
