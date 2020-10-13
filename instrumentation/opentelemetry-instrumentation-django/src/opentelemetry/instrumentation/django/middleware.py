@@ -119,6 +119,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         if self._excluded_urls.url_disabled(request.build_absolute_uri("?")):
             return
 
+        # pylint:disable=W0212
         request._otel_start_time = time.time()
 
         environ = request.META
@@ -136,6 +137,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         )
 
         attributes = collect_request_attributes(environ)
+        # pylint:disable=W0212
         request._otel_labels = self._get_metric_labels_from_attributes(
             attributes
         )
@@ -185,6 +187,7 @@ class _DjangoMiddleware(MiddlewareMixin):
                 "{} {}".format(response.status_code, response.reason_phrase),
                 response,
             )
+            # pylint:disable=W0212
             request._otel_labels["http.status_code"] = str(
                 response.status_code
             )
@@ -202,6 +205,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         try:
             metric_recorder = getattr(settings, "OTEL_METRIC_RECORDER", None)
             if metric_recorder:
+                # pylint:disable=W0212
                 metric_recorder.record_server_duration_range(
                     request._otel_start_time, time.time(), request._otel_labels
                 )
