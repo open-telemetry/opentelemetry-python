@@ -117,7 +117,7 @@ class _DjangoMiddleware(MiddlewareMixin):
             )
             for key, value in attributes.items():
                 span.set_attribute(key, value)
-            span.set_attribute("http.path", request.path)
+            span.set_attribute("http.target", request.path)
 
         activation = tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
