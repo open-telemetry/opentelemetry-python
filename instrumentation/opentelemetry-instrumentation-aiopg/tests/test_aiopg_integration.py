@@ -218,10 +218,6 @@ class TestAiopgIntegration(TestBase):
         self.assertEqual(span.attributes["db.type"], "testtype")
         self.assertEqual(span.attributes["db.instance"], "testdatabase")
         self.assertEqual(span.attributes["db.statement"], "Test query")
-        self.assertEqual(
-            span.attributes["db.statement.parameters"],
-            "('param1Value', False)",
-        )
         self.assertEqual(span.attributes["db.user"], "testuser")
         self.assertEqual(span.attributes["net.peer.name"], "testhost")
         self.assertEqual(span.attributes["net.peer.port"], 123)
