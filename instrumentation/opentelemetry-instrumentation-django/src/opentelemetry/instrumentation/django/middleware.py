@@ -126,6 +126,7 @@ class _DjangoMiddleware(MiddlewareMixin):
         request.META[self._environ_span_key] = span
         request.META[self._environ_token] = token
 
+    # pylint: disable=unused-argument
     def process_view(self, request, view_func, *args, **kwargs):
         # Process view is executed before the view function, here we get the
         # route template from request.resolver_match.  It is not set yet in process_request
@@ -139,12 +140,11 @@ class _DjangoMiddleware(MiddlewareMixin):
             span = request.META[self._environ_span_key]
 
             if span.is_recording():
-                if getattr(request, "resolver_match") and getattr(
-                    request.resolver_match, "route"
-                ):
-                    span.set_attribute(
-                        "http.route", request.resolver_match.route
-                    )
+                match = getattr(request, "resolver_match")
+                if match:
+                    route = getattr(match, "route")
+                    if route:
+                        span.set_attribute("http.route", route)
 
     def process_exception(self, request, exception):
         # Django can call this method and process_response later. In order
