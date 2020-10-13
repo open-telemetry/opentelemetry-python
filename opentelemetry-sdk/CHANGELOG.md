@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.14b0
+
+Released 2020-10-13
+
 - Add timestamps to aggregators
   ([#1199](https://github.com/open-telemetry/opentelemetry-python/pull/1199))
 - Add Global Error Handler
