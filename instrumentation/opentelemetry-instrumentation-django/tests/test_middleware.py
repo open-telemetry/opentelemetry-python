@@ -95,7 +95,9 @@ class TestMiddleware(WsgiTestBase):
             span.attributes["http.route"],
             "^route/(?P<year>[0-9]{4})/template/$",
         )
-        self.assertEqual(span.attributes["http.target"], "/route/2020/template/")
+        self.assertEqual(
+            span.attributes["http.target"], "/route/2020/template/"
+        )
         self.assertEqual(span.attributes["http.scheme"], "http")
         self.assertEqual(span.attributes["http.status_code"], 200)
         self.assertEqual(span.attributes["http.status_text"], "OK")
