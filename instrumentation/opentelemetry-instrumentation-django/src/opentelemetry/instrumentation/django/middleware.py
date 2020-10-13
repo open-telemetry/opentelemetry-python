@@ -45,10 +45,10 @@ except ImportError:
 
 _logger = getLogger(__name__)
 _ATTRIBUTES_BY_PREFERENCE = [
-    ['http.scheme', 'http.host', 'http.target'],
-    ['http.scheme', 'http.server_name', 'net.host.port', 'http.target'],
-    ['http.scheme', 'net.host.name', 'net.host.port', 'http.target'],
-    ['http.url'],
+    ["http.scheme", "http.host", "http.target"],
+    ["http.scheme", "http.server_name", "net.host.port", "http.target"],
+    ["http.scheme", "net.host.name", "net.host.port", "http.target"],
+    ["http.url"],
 ]
 
 
