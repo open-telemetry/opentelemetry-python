@@ -661,8 +661,8 @@ class Span(trace_api.Span):
     def record_exception(
         self,
         exception: Exception,
-        attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        attributes: util.types.Attributes = None,
+        timestamp: Optional[int] = None,
     ) -> None:
         """Records an exception as a span event."""
         try:
