@@ -268,7 +268,12 @@ class DefaultSpan(Span):
     def set_status(self, status: Status) -> None:
         pass
 
-    def record_exception(self, exception: Exception) -> None:
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         pass
 
 
