@@ -44,7 +44,7 @@ except ImportError:
     MiddlewareMixin = object
 
 _logger = getLogger(__name__)
-_ATTRIBUTES_BY_PREFERENCE = [
+_attributes_by_preference = [
     ["http.scheme", "http.host", "http.target"],
     ["http.scheme", "http.server_name", "net.host.port", "http.target"],
     ["http.scheme", "net.host.name", "net.host.port", "http.target"],
@@ -100,11 +100,11 @@ class _DjangoMiddleware(MiddlewareMixin):
     def _get_metric_labels_from_attributes(attributes):
         labels = {}
         labels["http.method"] = attributes.get("http.method", "")
-        for attrs in _ATTRIBUTES_BY_PREFERENCE:
+        for attrs in _attributes_by_preference:
             labels_from_attributes = {
                 attr: attributes.get(attr, None) for attr in attrs
             }
-            if all(labels_from_attributes.values()):
+            if set(attrs).issubset(attributes.keys()):
                 labels.update(labels_from_attributes)
                 break
         if attributes.get("http.flavor"):
@@ -204,7 +204,7 @@ class _DjangoMiddleware(MiddlewareMixin):
 
         try:
             metric_recorder = getattr(settings, "OTEL_METRIC_RECORDER", None)
-            if metric_recorder:
+            if metric_recorder is not None:
                 # pylint:disable=W0212
                 metric_recorder.record_server_duration_range(
                     request._otel_start_time, time.time(), request._otel_labels

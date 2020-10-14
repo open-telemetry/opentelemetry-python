@@ -59,7 +59,7 @@ class HTTPMetricRecorder(MetricRecorder):
         self._http_type = http_type
         self._client_duration = None
         self._server_duration = None
-        if self._meter:
+        if self._meter is not None:
             if http_type in (HTTPMetricType.CLIENT, HTTPMetricType.BOTH):
                 self._client_duration = self._meter.create_metric(
                     name="{}.{}.duration".format("http", "client"),
@@ -90,7 +90,7 @@ class HTTPMetricRecorder(MetricRecorder):
     def record_client_duration_range(
         self, start_time, end_time, labels: Dict[str, str]
     ):
-        if self._client_duration:
+        if self._client_duration is not None:
             elapsed_time = (end_time - start_time) * 1000
             self._client_duration.record(elapsed_time, labels)
 
@@ -105,6 +105,6 @@ class HTTPMetricRecorder(MetricRecorder):
     def record_server_duration_range(
         self, start_time, end_time, labels: Dict[str, str]
     ):
-        if self._server_duration:
+        if self._server_duration is not None:
             elapsed_time = (end_time - start_time) * 1000
             self._server_duration.record(elapsed_time, labels)
