@@ -14,6 +14,7 @@
 
 from collections import OrderedDict
 from unittest import TestCase
+from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
@@ -59,8 +60,11 @@ class TestOTLPMetricExporter(TestCase):
             resource,
         )
 
-    def test_translate_metrics(self):
+    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def test_translate_metrics(self, mock_time_ns):
         # pylint: disable=no-member
+
+        mock_time_ns.configure_mock(**{"return_value": 1})
 
         self.counter_metric_record.instrument.add(1, OrderedDict([("a", "b")]))
 
@@ -91,6 +95,7 @@ class TestOTLPMetricExporter(TestCase):
                                                     )
                                                 ],
                                                 value=1,
+                                                time_unix_nano=1,
                                             )
                                         ],
                                         aggregation_temporality=(

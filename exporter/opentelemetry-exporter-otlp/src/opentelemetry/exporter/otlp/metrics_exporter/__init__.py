@@ -85,6 +85,12 @@ def _get_data_points(
                     data_point_class(
                         labels=string_key_values,
                         value=view_data.aggregator.current,
+                        start_time_unix_nano=(
+                            view_data.aggregator.last_checkpoint_timestamp
+                        ),
+                        time_unix_nano=(
+                            view_data.aggregator.last_update_timestamp
+                        ),
                     )
                 )
                 break
