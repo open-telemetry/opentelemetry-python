@@ -658,7 +658,12 @@ class Span(trace_api.Span):
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
-    def record_exception(self, exception: Exception) -> None:
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         """Records an exception as a span event."""
         try:
             stacktrace = traceback.format_exc()
