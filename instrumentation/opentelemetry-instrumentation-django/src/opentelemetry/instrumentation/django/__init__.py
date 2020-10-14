@@ -40,6 +40,16 @@ class DjangoInstrumentor(BaseInstrumentor, MetricMixin):
     )
 
     def _instrument(self, **kwargs):
+
+        # FIXME this is probably a pattern that will show up in the rest of the
+        # ext. Find a better way of implementing this.
+        # FIXME Probably the evaluation of strings into boolean values can be
+        # built inside the Configuration class itself with the magic method
+        # __bool__
+
+        if Configuration().DJANGO_INSTRUMENT is False:
+            return
+
         # This can not be solved, but is an inherent problem of this approach:
         # the order of middleware entries matters, and here you have no control
         # on that:
