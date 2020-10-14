@@ -110,7 +110,7 @@ class ElasticsearchInstrumentor(BaseInstrumentor):
 
 
 def _wrap_perform_request(tracer, span_name_prefix):
-    #pylint: disable=R0912
+    # pylint: disable=R0912
     def wrapper(wrapped, _, args, kwargs):
         method = url = None
         try:
