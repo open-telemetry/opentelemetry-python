@@ -98,7 +98,7 @@ class TestElasticsearchIntegration(TestBase):
         mock_tracer.use_span.return_value.__exit__ = mock_span
         with mock.patch("opentelemetry.trace.get_tracer") as tracer:
             tracer.return_value = mock_tracer
-            es = Elasticsearch()
+            Elasticsearch()
             self.assertFalse(mock_span.is_recording())
             self.assertTrue(mock_span.is_recording.called)
             self.assertFalse(mock_span.set_attribute.called)

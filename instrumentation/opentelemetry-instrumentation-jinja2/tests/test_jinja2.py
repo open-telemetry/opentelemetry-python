@@ -63,7 +63,7 @@ class TestJinja2Instrumentor(TestBase):
         mock_tracer.use_span.return_value.__exit__ = mock_span
         with mock.patch("opentelemetry.trace.get_tracer") as tracer:
             tracer.return_value = mock_tracer
-            template = jinja2.environment.Template("Hello {{name}}!")
+            jinja2.environment.Template("Hello {{name}}!")
             self.assertFalse(mock_span.is_recording())
             self.assertTrue(mock_span.is_recording.called)
             self.assertFalse(mock_span.set_attribute.called)
