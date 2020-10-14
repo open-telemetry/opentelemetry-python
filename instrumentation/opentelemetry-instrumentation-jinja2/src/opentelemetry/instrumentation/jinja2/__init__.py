@@ -83,8 +83,7 @@ def _wrap_render(tracer, wrapped, instance, args, kwargs):
     ) as span:
         if span.is_recording():
             template_name = instance.name or DEFAULT_TEMPLATE_NAME
-            span.set_attribute(
-                ATTRIBUTE_JINJA2_TEMPLATE_NAME, template_name)
+            span.set_attribute(ATTRIBUTE_JINJA2_TEMPLATE_NAME, template_name)
         return wrapped(*args, **kwargs)
 
 
@@ -95,10 +94,11 @@ def _wrap_compile(tracer, wrapped, _, args, kwargs):
     ) as span:
         if span.is_recording():
             template_name = (
-                args[1] if len(args) > 1 else kwargs.get("name", DEFAULT_TEMPLATE_NAME)
+                args[1]
+                if len(args) > 1
+                else kwargs.get("name", DEFAULT_TEMPLATE_NAME)
             )
-            span.set_attribute(
-                ATTRIBUTE_JINJA2_TEMPLATE_NAME, template_name)
+            span.set_attribute(ATTRIBUTE_JINJA2_TEMPLATE_NAME, template_name)
         return wrapped(*args, **kwargs)
 
 
@@ -109,8 +109,7 @@ def _wrap_load_template(tracer, wrapped, _, args, kwargs):
     ) as span:
         if span.is_recording():
             template_name = kwargs.get("name", args[0])
-            span.set_attribute(
-                ATTRIBUTE_JINJA2_TEMPLATE_NAME, template_name)
+            span.set_attribute(ATTRIBUTE_JINJA2_TEMPLATE_NAME, template_name)
         template = None
         try:
             template = wrapped(*args, **kwargs)

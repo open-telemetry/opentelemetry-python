@@ -88,7 +88,8 @@ class TestElasticsearchIntegration(TestBase):
         spans_list = self.get_ordered_finished_spans()
         self.assertEqual(len(spans_list), 1)
 
-    def test_span_not_recording(self):
+    def test_span_not_recording(self, request_mock):
+        request_mock.return_value = (1, {}, {})
         mock_tracer = mock.Mock()
         mock_span = mock.Mock()
         mock_span.is_recording.return_value = False
