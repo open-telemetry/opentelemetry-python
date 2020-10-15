@@ -139,14 +139,14 @@ class OTLPExporterMixin(
         endpoint: str = "localhost:55680",
         credentials: ChannelCredentials = None,
         metadata: Optional[Tuple[Any]] = None,
-        compression: OTLPCompression = OTLPCompression.NO_COMPRESSION,
+        compression: str = None,
     ):
         super().__init__()
 
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        if compression == OTLPCompression.GZIP:
+        if compression is OTLPCompression.GZIP:
             compression_algorithm = Compression.Gzip
         else:
             compression_str = os.environ.get(
@@ -158,9 +158,13 @@ class OTLPExporterMixin(
                 compression_algorithm = Compression.NoCompression
 
         if credentials is None:
+            self.channel = insecure_channel(endpoint, compression=compression_algorithm)
             self._client = self._stub(
-                insecure_channel(endpoint, compression=compression_algorithm)
+                channel=self.channel
             )
+            print("=========")
+            print(repr(self._client))
+            print("=========")
         else:
             self._client = self._stub(
                 secure_channel(

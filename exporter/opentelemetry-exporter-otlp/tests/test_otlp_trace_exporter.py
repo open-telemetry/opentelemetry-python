@@ -20,7 +20,7 @@ from unittest import mock
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
-from grpc import Compression, StatusCode, server
+from grpc import Compression, StatusCode, server, insecure_channel
 
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -159,12 +159,24 @@ class TestOTLPSpanExporter(TestCase):
         self.server.stop(None)
 
     def test_gzip_compression(self):
-        with mock.patch(
-            'grpc.insecure_channel'
-        ) as channel_mock:
-            exporter = OTLPSpanExporter(compression="gzip")
-            exporter.shutdown()
-            self.assertTrue(channel_mock.assert_called_with("localhost:55680", Compression.Gzip))
+        # with mock.patch(
+        #     'grpc.insecure_channel'
+        # ) as channel_mock:
+        #     exporter = OTLPSpanExporter(compression="gzip")
+        #     exporter.shutdown()
+        #     self.assertTrue(channel_mock.assert_called_with("localhost:55680", Compression.Gzip))
+        mock_get_compression = mock.Mock()
+        patch = mock.patch(
+            "grpc.insecure_channel",
+            side_effect=mock_get_compression,
+        )
+        endpoint = "localhost:55680"
+        channel = insecure_channel("")
+        with patch:
+            exporter = OTLPSpanExporter()
+        # mock_get_compression.assert_called_with(channel)
+        self.assertEqual.__self__.maxDiff = None
+        self.assertEqual(vars(exporter.channel), vars(channel))
 
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")
