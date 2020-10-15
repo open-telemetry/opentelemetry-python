@@ -178,7 +178,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         span_context = trace_api.SpanContext(
             trace_id, span_id, is_remote=False
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
         other_context = trace_api.SpanContext(
@@ -188,22 +188,22 @@ class TestDatadogSpanExporter(unittest.TestCase):
         instrumentation_info = InstrumentationInfo(__name__, "0")
 
         otel_spans = [
-            trace.Span(
+            trace._Span(
                 name=span_names[0],
                 context=span_context,
-                parent=parent_context,
+                parent=parent_span_context,
                 kind=trace_api.SpanKind.CLIENT,
                 instrumentation_info=instrumentation_info,
                 resource=Resource({}),
             ),
-            trace.Span(
+            trace._Span(
                 name=span_names[1],
-                context=parent_context,
+                context=parent_span_context,
                 parent=None,
                 instrumentation_info=instrumentation_info,
                 resource=resource_without_service,
             ),
-            trace.Span(
+            trace._Span(
                 name=span_names[2],
                 context=other_context,
                 parent=None,
@@ -289,7 +289,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        test_span = trace.Span("test_span", context=context)
+        test_span = trace._Span("test_span", context=context)
         test_span.start()
         test_span.end()
 
@@ -492,8 +492,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
             ),
         )
 
-        root_span = trace.Span(name="root", context=context, parent=None)
-        child_span = trace.Span(
+        root_span = trace._Span(name="root", context=context, parent=None)
+        child_span = trace._Span(
             name="child", context=context, parent=root_span
         )
         root_span.start()
@@ -528,7 +528,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         )
         sampler = sampling.TraceIdRatioBased(0.5)
 
-        span = trace.Span(
+        span = trace._Span(
             name="sampled", context=context, parent=None, sampler=sampler
         )
         span.start()

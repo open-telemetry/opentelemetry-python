@@ -85,6 +85,12 @@ def _get_data_points(
                     data_point_class(
                         labels=string_key_values,
                         value=view_data.aggregator.current,
+                        start_time_unix_nano=(
+                            view_data.aggregator.last_checkpoint_timestamp
+                        ),
+                        time_unix_nano=(
+                            view_data.aggregator.last_update_timestamp
+                        ),
                     )
                 )
                 break
@@ -137,11 +143,11 @@ class OTLPMetricsExporter(
         #   ValueObserver      Gauge()
         for sdk_metric in data:
 
-            if sdk_metric.instrument.meter.resource not in (
+            if sdk_metric.resource not in (
                 sdk_resource_instrumentation_library_metrics.keys()
             ):
                 sdk_resource_instrumentation_library_metrics[
-                    sdk_metric.instrument.meter.resource
+                    sdk_metric.resource
                 ] = InstrumentationLibraryMetrics()
 
             type_class = {
@@ -217,7 +223,7 @@ class OTLPMetricsExporter(
                 argument = type_class[value_type]["gauge"]["argument"]
 
             sdk_resource_instrumentation_library_metrics[
-                sdk_metric.instrument.meter.resource
+                sdk_metric.resource
             ].metrics.append(
                 OTLPMetric(
                     **{

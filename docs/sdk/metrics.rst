@@ -7,7 +7,7 @@ Submodules
 .. toctree::
 
    metrics.export.aggregate
-   metrics.export.batcher
+   metrics.export.processor
    util.instrumentation
 
 .. automodule:: opentelemetry.sdk.metrics

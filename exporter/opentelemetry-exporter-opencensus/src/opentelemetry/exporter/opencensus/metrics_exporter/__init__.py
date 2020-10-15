@@ -139,7 +139,7 @@ def translate_to_collector(
 
         # If cumulative and stateful, explicitly set the start_timestamp to
         # exporter start time.
-        if metric_record.instrument.meter.batcher.stateful:
+        if metric_record.instrument.meter.processor.stateful:
             start_timestamp = exporter_start_timestamp
         else:
             start_timestamp = None
@@ -191,7 +191,7 @@ def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
 
 
 def get_resource(metric_record: MetricRecord) -> resource_pb2.Resource:
-    resource_attributes = metric_record.instrument.meter.resource.attributes
+    resource_attributes = metric_record.resource.attributes
     return resource_pb2.Resource(
         type=infer_oc_resource_type(resource_attributes),
         labels={k: str(v) for k, v in resource_attributes.items()},

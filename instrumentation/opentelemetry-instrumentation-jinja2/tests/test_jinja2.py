@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+from unittest import mock
 
 import jinja2
 
@@ -49,9 +50,24 @@ class TestJinja2Instrumentor(TestBase):
         # pylint:disable=unbalanced-tuple-unpacking
         render, template, root = spans[:3]
 
-        self.assertIs(render.parent, root.get_context())
-        self.assertIs(template.parent, root.get_context())
+        self.assertIs(render.parent, root.get_span_context())
+        self.assertIs(template.parent, root.get_span_context())
         self.assertIsNone(root.parent)
+
+    def test_render_not_recording(self):
+        mock_tracer = mock.Mock()
+        mock_span = mock.Mock()
+        mock_span.is_recording.return_value = False
+        mock_tracer.start_span.return_value = mock_span
+        mock_tracer.use_span.return_value.__enter__ = mock_span
+        mock_tracer.use_span.return_value.__exit__ = mock_span
+        with mock.patch("opentelemetry.trace.get_tracer") as tracer:
+            tracer.return_value = mock_tracer
+            jinja2.environment.Template("Hello {{name}}!")
+            self.assertFalse(mock_span.is_recording())
+            self.assertTrue(mock_span.is_recording.called)
+            self.assertFalse(mock_span.set_attribute.called)
+            self.assertFalse(mock_span.set_status.called)
 
     def test_render_inline_template(self):
         template = jinja2.environment.Template("Hello {{name}}!")
@@ -88,8 +104,8 @@ class TestJinja2Instrumentor(TestBase):
         # pylint:disable=unbalanced-tuple-unpacking
         template, generate, root = spans
 
-        self.assertIs(generate.parent, root.get_context())
-        self.assertIs(template.parent, root.get_context())
+        self.assertIs(generate.parent, root.get_span_context())
+        self.assertIs(template.parent, root.get_span_context())
         self.assertIsNone(root.parent)
 
     def test_generate_inline_template(self):
@@ -131,11 +147,11 @@ class TestJinja2Instrumentor(TestBase):
         # pylint:disable=unbalanced-tuple-unpacking
         compile2, load2, compile1, load1, render, root = spans
 
-        self.assertIs(compile2.parent, load2.get_context())
-        self.assertIs(load2.parent, root.get_context())
-        self.assertIs(compile1.parent, load1.get_context())
-        self.assertIs(load1.parent, render.get_context())
-        self.assertIs(render.parent, root.get_context())
+        self.assertIs(compile2.parent, load2.get_span_context())
+        self.assertIs(load2.parent, root.get_span_context())
+        self.assertIs(compile1.parent, load1.get_span_context())
+        self.assertIs(load1.parent, render.get_span_context())
+        self.assertIs(render.parent, root.get_span_context())
         self.assertIsNone(root.parent)
 
     def test_file_template(self):
