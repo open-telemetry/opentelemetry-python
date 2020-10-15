@@ -211,6 +211,7 @@ class DatabaseApiIntegration:
         connection_attributes=None,
         version: str = "",
         tracer_provider: typing.Optional[TracerProvider] = None,
+        capture_parameters: bool = False,
     ):
         self.connection_attributes = connection_attributes
         if self.connection_attributes is None:
@@ -223,6 +224,7 @@ class DatabaseApiIntegration:
         self._name = name
         self._version = version
         self._tracer_provider = tracer_provider
+        self.capture_parameters = capture_parameters
         self.database_component = database_component
         self.database_type = database_type
         self.connection_props = {}
@@ -327,7 +329,7 @@ class TracedCursor:
         ) in self._db_api_integration.span_attributes.items():
             span.set_attribute(attribute_key, attribute_value)
 
-        if len(args) > 1:
+        if self._db_api_integration.capture_parameters and len(args) > 1:
             span.set_attribute("db.statement.parameters", str(args[1]))
 
     def traced_execution(
