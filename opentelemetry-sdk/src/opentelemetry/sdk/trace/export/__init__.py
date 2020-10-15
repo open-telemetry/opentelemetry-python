@@ -22,9 +22,8 @@ from enum import Enum
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import attach, detach, set_value
+from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.util import time_ns
-
-from .. import Span, SpanProcessor
 
 logger = logging.getLogger(__name__)
 

@@ -15,8 +15,8 @@
 import threading
 import typing
 
-from .. import Span
-from . import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 
 class InMemorySpanExporter(SpanExporter):
