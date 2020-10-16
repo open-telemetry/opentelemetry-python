@@ -45,12 +45,12 @@ class TestMetrics(unittest.TestCase):
         counter.add(1, {})
         counter.add(-1, {})
 
-    def test_valuerecorder(self):
-        valuerecorder = metrics.ValueRecorder()
+    def test_default_valuerecorder(self):
+        valuerecorder = metrics.DefaultValueRecorder()
         bound_valuerecorder = valuerecorder.bind({})
-        self.assertIsInstance(bound_valuerecorder, metrics.BoundValueRecorder)
+        self.assertIsInstance(bound_valuerecorder, metrics.DefaultBoundValueRecorder)
 
-    def test_valuerecorder_record(self):
+    def test_default_valuerecorder_record(self):
         valuerecorder = metrics.ValueRecorder()
         valuerecorder.record(1, {})
 
@@ -62,8 +62,8 @@ class TestMetrics(unittest.TestCase):
         bound_counter = metrics.BoundCounter()
         bound_counter.add(1)
 
-    def test_bound_valuerecorder(self):
-        bound_valuerecorder = metrics.BoundValueRecorder()
+    def test_default_bound_valuerecorder(self):
+        bound_valuerecorder = metrics.DefaultBoundValueRecorder()
         bound_valuerecorder.record(1)
 
     def test_default_observer(self):

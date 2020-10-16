@@ -80,7 +80,8 @@ class BoundUpDownCounter:
         """
 
 
-class BoundValueRecorder:
+class BoundValueRecorder(abc.ABC):
+
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this bound valuerecorder.
 
@@ -90,11 +91,13 @@ class BoundValueRecorder:
 
 
 class DefaultBoundValueRecorder:
-    def record(self, value: ValueT) -> None:
-        """The default bound valuerecorder instrument.
+    """The default bound valuerecorder instrument.
 
-        Used when no bound valuerecorder implementation is available.
-        """
+    Used when no bound valuerecorder implementation is available.
+    """
+
+    def record(self, value: ValueT) -> None:
+        pass
 
 
 class Metric(abc.ABC):
