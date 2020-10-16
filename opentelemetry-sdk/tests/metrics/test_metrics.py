@@ -166,7 +166,7 @@ class TestMeter(unittest.TestCase):
 
     def test_create_updowncounter(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        updowncounter = meter.test_create_updowncounter(
+        updowncounter = meter.create_updowncounter(
             "name", "desc", "unit", float,
         )
         self.assertIsInstance(updowncounter, metrics.UpDownCounter)
@@ -221,8 +221,8 @@ class TestMetric(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric_types = [
             metrics.Counter,
-            metric.UpDownCounter,
-            metrics.ValueRecorder
+            metrics.UpDownCounter,
+            metrics.ValueRecorder,
         ]
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
