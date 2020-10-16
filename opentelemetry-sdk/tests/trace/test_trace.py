@@ -112,7 +112,7 @@ tracer_provider.add_span_processor(mock_processor)
         class TestUseSpanException(Exception):
             pass
 
-        default_span = trace_api.DefaultSpan(trace_api.INVALID_SPAN_CONTEXT)
+        default_span = trace_api.DefaultSpan(trace_api.INVALID_SPAN_REFERENCE)
         tracer = new_tracer()
         with self.assertRaises(TestUseSpanException):
             with tracer.use_span(default_span):
@@ -141,13 +141,13 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(root_span, trace.Span)
         child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace.Span)
-        self.assertTrue(root_span.context.trace_flags.sampled)
+        self.assertTrue(root_span.get_span_reference().trace_flags.sampled)
         self.assertEqual(
-            root_span.get_span_context().trace_flags,
+            root_span.get_span_reference().trace_flags,
             trace_api.TraceFlags.SAMPLED,
         )
         self.assertEqual(
-            child_span.get_span_context().trace_flags,
+            child_span.get_span_reference().trace_flags,
             trace_api.TraceFlags.SAMPLED,
         )
 
@@ -163,11 +163,11 @@ class TestTracerSampling(unittest.TestCase):
         child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace_api.DefaultSpan)
         self.assertEqual(
-            root_span.get_span_context().trace_flags,
+            root_span.get_span_reference().trace_flags,
             trace_api.TraceFlags.DEFAULT,
         )
         self.assertEqual(
-            child_span.get_span_context().trace_flags,
+            child_span.get_span_reference().trace_flags,
             trace_api.TraceFlags.DEFAULT,
         )
 
@@ -182,10 +182,10 @@ class TestSpanCreation(unittest.TestCase):
         """
         tracer = new_tracer()
         parent_context = trace_api.set_span_in_context(
-            trace_api.INVALID_SPAN_CONTEXT
+            trace_api.INVALID_SPAN_REFERENCE
         )
         new_span = tracer.start_span("root", context=parent_context)
-        self.assertTrue(new_span.context.is_valid)
+        self.assertTrue(new_span.get_span_reference().is_valid)
         self.assertIsNone(new_span.parent)
 
     def test_instrumentation_info(self):
@@ -258,7 +258,7 @@ class TestSpanCreation(unittest.TestCase):
             with tracer.start_span(
                 "child", kind=trace_api.SpanKind.CLIENT
             ) as child:
-                self.assertIs(child.parent, root.get_span_context())
+                self.assertIs(child.parent, root.get_span_reference())
                 self.assertEqual(child.kind, trace_api.SpanKind.CLIENT)
 
                 self.assertIsNotNone(child.start_time)
@@ -266,8 +266,8 @@ class TestSpanCreation(unittest.TestCase):
 
                 # The new child span should inherit the parent's context but
                 # get a new span ID.
-                root_context = root.get_span_context()
-                child_context = child.get_span_context()
+                root_context = root.get_span_reference()
+                child_context = child.get_span_reference()
                 self.assertEqual(root_context.trace_id, child_context.trace_id)
                 self.assertNotEqual(
                     root_context.span_id, child_context.span_id
@@ -292,7 +292,7 @@ class TestSpanCreation(unittest.TestCase):
 
         other_parent = trace._Span(
             "name",
-            trace_api.SpanContext(
+            trace_api.SpanReference(
                 trace_id=0x000000000000000000000000DEADBEEF,
                 span_id=0x00000000DEADBEF0,
                 is_remote=False,
@@ -316,28 +316,28 @@ class TestSpanCreation(unittest.TestCase):
                 # The child's parent should be the one passed in,
                 # not the current span.
                 self.assertNotEqual(child.parent, root)
-                self.assertIs(child.parent, other_parent.get_span_context())
+                self.assertIs(child.parent, other_parent.get_span_reference())
 
                 self.assertIsNotNone(child.start_time)
                 self.assertIsNone(child.end_time)
 
                 # The child should inherit its context from the explicit
                 # parent, not the current span.
-                child_context = child.get_span_context()
+                child_context = child.get_span_reference()
                 self.assertEqual(
-                    other_parent.get_span_context().trace_id,
+                    other_parent.get_span_reference().trace_id,
                     child_context.trace_id,
                 )
                 self.assertNotEqual(
-                    other_parent.get_span_context().span_id,
+                    other_parent.get_span_reference().span_id,
                     child_context.span_id,
                 )
                 self.assertEqual(
-                    other_parent.get_span_context().trace_state,
+                    other_parent.get_span_reference().trace_state,
                     child_context.trace_state,
                 )
                 self.assertEqual(
-                    other_parent.get_span_context().trace_flags,
+                    other_parent.get_span_reference().trace_flags,
                     child_context.trace_flags,
                 )
 
@@ -358,7 +358,7 @@ class TestSpanCreation(unittest.TestCase):
 
             with tracer.start_as_current_span("child") as child:
                 self.assertIs(trace_api.get_current_span(), child)
-                self.assertIs(child.parent, root.get_span_context())
+                self.assertIs(child.parent, root.get_span_reference())
 
             # After exiting the child's scope the parent should become the
             # current span again.
@@ -373,7 +373,7 @@ class TestSpanCreation(unittest.TestCase):
 
         other_parent = trace._Span(
             "name",
-            trace_api.SpanContext(
+            trace_api.SpanReference(
                 trace_id=0x000000000000000000000000DEADBEEF,
                 span_id=0x00000000DEADBEF0,
                 is_remote=False,
@@ -399,7 +399,7 @@ class TestSpanCreation(unittest.TestCase):
                 # previously-current span.
                 self.assertIs(trace_api.get_current_span(), child)
                 self.assertNotEqual(child.parent, root)
-                self.assertIs(child.parent, other_parent.get_span_context())
+                self.assertIs(child.parent, other_parent.get_span_reference())
 
             # After exiting the child's scope the last span on the stack should
             # become current, not the child's parent.
@@ -421,16 +421,16 @@ class TestSpanCreation(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertEqual(span.resource, resources._DEFAULT_RESOURCE)
 
-    def test_span_context_remote_flag(self):
+    def test_span_reference_remote_flag(self):
         tracer = new_tracer()
 
         span = tracer.start_span("foo")
-        self.assertFalse(span.context.is_remote)
+        self.assertFalse(span.get_span_reference().is_remote)
 
     def test_disallow_direct_span_creation(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
-            trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+            trace.Span("name", mock.Mock(spec=trace_api.SpanReference))
 
 
 class TestSpan(unittest.TestCase):
@@ -438,7 +438,7 @@ class TestSpan(unittest.TestCase):
         self.tracer = new_tracer()
 
     def test_basic_span(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanReference))
         self.assertEqual(span.name, "name")
 
     def test_attributes(self):
@@ -578,7 +578,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["sampler-attr"], "sample-val")
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
             self.assertEqual(
-                root.get_span_context().trace_flags,
+                root.get_span_reference().trace_flags,
                 trace_api.TraceFlags.SAMPLED,
             )
 
@@ -668,36 +668,36 @@ class TestSpan(unittest.TestCase):
 
     def test_links(self):
         ids_generator = trace_api.RandomIdsGenerator()
-        other_context1 = trace_api.SpanContext(
+        other_reference1 = trace_api.SpanReference(
             trace_id=ids_generator.generate_trace_id(),
             span_id=ids_generator.generate_span_id(),
             is_remote=False,
         )
-        other_context2 = trace_api.SpanContext(
+        other_reference2 = trace_api.SpanReference(
             trace_id=ids_generator.generate_trace_id(),
             span_id=ids_generator.generate_span_id(),
             is_remote=False,
         )
 
         links = (
-            trace_api.Link(other_context1),
-            trace_api.Link(other_context2, {"name": "neighbor"}),
+            trace_api.Link(other_reference1),
+            trace_api.Link(other_reference2, {"name": "neighbor"}),
         )
         with self.tracer.start_as_current_span("root", links=links) as root:
 
             self.assertEqual(len(root.links), 2)
             self.assertEqual(
-                root.links[0].context.trace_id, other_context1.trace_id
+                root.links[0].reference.trace_id, other_reference1.trace_id,
             )
             self.assertEqual(
-                root.links[0].context.span_id, other_context1.span_id
+                root.links[0].reference.span_id, other_reference1.span_id,
             )
             self.assertEqual(root.links[0].attributes, None)
             self.assertEqual(
-                root.links[1].context.trace_id, other_context2.trace_id
+                root.links[1].reference.trace_id, other_reference2.trace_id,
             )
             self.assertEqual(
-                root.links[1].context.span_id, other_context2.span_id
+                root.links[1].reference.span_id, other_reference2.span_id,
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
 
@@ -709,7 +709,7 @@ class TestSpan(unittest.TestCase):
 
     def test_start_span(self):
         """Start twice, end a not started"""
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanReference))
 
         # end not started span
         self.assertRaises(RuntimeError, span.end)
@@ -735,7 +735,7 @@ class TestSpan(unittest.TestCase):
 
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanReference))
         start_time = 123
         span.start(start_time)
         self.assertEqual(start_time, span.start_time)
@@ -834,7 +834,7 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_record_exception(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanReference))
         try:
             raise ValueError("invalid")
         except ValueError as err:
@@ -1000,20 +1000,20 @@ class TestSpanProcessor(unittest.TestCase):
         self.assertListEqual(spans_calls_list, expected_list)
 
     def test_to_json(self):
-        context = trace_api.SpanContext(
+        reference = trace_api.SpanReference(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
+        span = trace._Span("span-name", reference)
         span.resource = Resource({})
 
         self.assertEqual(
             span.to_json(),
             """{
     "name": "span-name",
-    "context": {
+    "reference": {
         "trace_id": "0x000000000000000000000000deadbeef",
         "span_id": "0x00000000deadbef0",
         "trace_state": "{}"
@@ -1030,5 +1030,5 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "reference": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )

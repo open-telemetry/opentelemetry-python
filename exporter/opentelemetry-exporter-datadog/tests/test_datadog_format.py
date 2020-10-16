@@ -51,7 +51,7 @@ class TestDatadogFormat(unittest.TestCase):
                     malformed_parent_id_key: self.serialized_parent_id,
                 },
             )
-        ).get_span_context()
+        ).get_span_reference()
 
         self.assertNotEqual(context.trace_id, int(self.serialized_trace_id))
         self.assertNotEqual(context.span_id, int(self.serialized_parent_id))
@@ -64,8 +64,8 @@ class TestDatadogFormat(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        span_reference = get_current_span(ctx).get_span_reference()
+        self.assertEqual(span_reference.trace_id, trace_api.INVALID_TRACE_ID)
 
     def test_missing_parent_id(self):
         """If a parent id is missing, populate an invalid trace id."""
@@ -74,12 +74,12 @@ class TestDatadogFormat(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        span_reference = get_current_span(ctx).get_span_reference()
+        self.assertEqual(span_reference.span_id, trace_api.INVALID_SPAN_ID)
 
     def test_context_propagation(self):
         """Test the propagation of Datadog headers."""
-        parent_span_context = get_current_span(
+        parent_span_reference = get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -89,31 +89,33 @@ class TestDatadogFormat(unittest.TestCase):
                     FORMAT.ORIGIN_KEY: self.serialized_origin,
                 },
             )
-        ).get_span_context()
+        ).get_span_reference()
 
         self.assertEqual(
-            parent_span_context.trace_id, int(self.serialized_trace_id)
+            parent_span_reference.trace_id, int(self.serialized_trace_id)
         )
         self.assertEqual(
-            parent_span_context.span_id, int(self.serialized_parent_id)
+            parent_span_reference.span_id, int(self.serialized_parent_id)
         )
-        self.assertEqual(parent_span_context.trace_flags, constants.AUTO_KEEP)
         self.assertEqual(
-            parent_span_context.trace_state.get(constants.DD_ORIGIN),
+            parent_span_reference.trace_flags, constants.AUTO_KEEP
+        )
+        self.assertEqual(
+            parent_span_reference.trace_state.get(constants.DD_ORIGIN),
             self.serialized_origin,
         )
-        self.assertTrue(parent_span_context.is_remote)
+        self.assertTrue(parent_span_reference.is_remote)
 
         child = trace._Span(
             "child",
-            trace_api.SpanContext(
-                parent_span_context.trace_id,
+            trace_api.SpanReference(
+                parent_span_reference.trace_id,
                 trace_api.RandomIdsGenerator().generate_span_id(),
                 is_remote=False,
-                trace_flags=parent_span_context.trace_flags,
-                trace_state=parent_span_context.trace_state,
+                trace_flags=parent_span_reference.trace_flags,
+                trace_state=parent_span_reference.trace_state,
             ),
-            parent=parent_span_context,
+            parent=parent_span_reference,
         )
 
         child_carrier = {}
@@ -124,7 +126,8 @@ class TestDatadogFormat(unittest.TestCase):
             child_carrier[FORMAT.TRACE_ID_KEY], self.serialized_trace_id
         )
         self.assertEqual(
-            child_carrier[FORMAT.PARENT_ID_KEY], str(child.context.span_id)
+            child_carrier[FORMAT.PARENT_ID_KEY],
+            str(child.get_span_reference().span_id),
         )
         self.assertEqual(
             child_carrier[FORMAT.SAMPLING_PRIORITY_KEY],
@@ -136,7 +139,7 @@ class TestDatadogFormat(unittest.TestCase):
 
     def test_sampling_priority_auto_reject(self):
         """Test sampling priority rejected."""
-        parent_span_context = get_current_span(
+        parent_span_reference = get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -145,22 +148,22 @@ class TestDatadogFormat(unittest.TestCase):
                     FORMAT.SAMPLING_PRIORITY_KEY: str(constants.AUTO_REJECT),
                 },
             )
-        ).get_span_context()
+        ).get_span_reference()
 
         self.assertEqual(
-            parent_span_context.trace_flags, constants.AUTO_REJECT
+            parent_span_reference.trace_flags, constants.AUTO_REJECT
         )
 
         child = trace._Span(
             "child",
-            trace_api.SpanContext(
-                parent_span_context.trace_id,
+            trace_api.SpanReference(
+                parent_span_reference.trace_id,
                 trace_api.RandomIdsGenerator().generate_span_id(),
                 is_remote=False,
-                trace_flags=parent_span_context.trace_flags,
-                trace_state=parent_span_context.trace_state,
+                trace_flags=parent_span_reference.trace_flags,
+                trace_state=parent_span_reference.trace_state,
             ),
-            parent=parent_span_context,
+            parent=parent_span_reference,
         )
 
         child_carrier = {}

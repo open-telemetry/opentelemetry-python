@@ -220,8 +220,14 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         span1, span2 = active_spans_in_handler
         # Spans should belong to separate traces, and each should be a root
         # span
-        self.assertNotEqual(span1.context.span_id, span2.context.span_id)
-        self.assertNotEqual(span1.context.trace_id, span2.context.trace_id)
+        self.assertNotEqual(
+            span1.get_span_reference().span_id,
+            span2.get_span_reference().span_id,
+        )
+        self.assertNotEqual(
+            span1.get_span_reference().trace_id,
+            span2.get_span_reference().trace_id,
+        )
         self.assertIsNone(span1.parent)
         self.assertIsNone(span1.parent)
 
@@ -271,8 +277,14 @@ class TestOpenTelemetryServerInterceptor(TestBase):
         span1, span2 = active_spans_in_handler
         # Spans should belong to separate traces, and each should be a root
         # span
-        self.assertNotEqual(span1.context.span_id, span2.context.span_id)
-        self.assertNotEqual(span1.context.trace_id, span2.context.trace_id)
+        self.assertNotEqual(
+            span1.get_span_reference().span_id,
+            span2.get_span_reference().span_id,
+        )
+        self.assertNotEqual(
+            span1.get_span_reference().trace_id,
+            span2.get_span_reference().trace_id,
+        )
         self.assertIsNone(span1.parent)
         self.assertIsNone(span1.parent)
 

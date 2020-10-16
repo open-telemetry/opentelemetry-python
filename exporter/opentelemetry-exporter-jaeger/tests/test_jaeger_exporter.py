@@ -31,13 +31,13 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 class TestJaegerSpanExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
-        context = trace_api.SpanContext(
+        reference = trace_api.SpanReference(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
 
-        self._test_span = trace._Span("test_span", context=context)
+        self._test_span = trace._Span("test_span", reference=reference)
         self._test_span.start()
         self._test_span.end()
 
@@ -177,13 +177,13 @@ class TestJaegerSpanExporter(unittest.TestCase):
             start_times[2] + durations[2],
         )
 
-        span_context = trace_api.SpanContext(
+        span_reference = trace_api.SpanReference(
             trace_id, span_id, is_remote=False
         )
-        parent_span_context = trace_api.SpanContext(
+        parent_span_reference = trace_api.SpanReference(
             trace_id, parent_id, is_remote=False
         )
-        other_context = trace_api.SpanContext(
+        other_reference = trace_api.SpanReference(
             trace_id, other_id, is_remote=False
         )
 
@@ -203,7 +203,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         link_attributes = {"key_bool": True}
 
         link = trace_api.Link(
-            context=other_context, attributes=link_attributes
+            reference=other_reference, attributes=link_attributes
         )
 
         default_tags = [
@@ -225,17 +225,19 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans = [
             trace._Span(
                 name=span_names[0],
-                context=span_context,
-                parent=parent_span_context,
+                reference=span_reference,
+                parent=parent_span_reference,
                 events=(event,),
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                reference=parent_span_reference,
+                parent=None,
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2], reference=other_reference, parent=None
             ),
         ]
 

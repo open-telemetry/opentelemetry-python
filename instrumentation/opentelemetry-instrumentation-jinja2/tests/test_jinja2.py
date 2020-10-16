@@ -50,8 +50,8 @@ class TestJinja2Instrumentor(TestBase):
         # pylint:disable=unbalanced-tuple-unpacking
         render, template, root = spans[:3]
 
-        self.assertIs(render.parent, root.get_span_context())
-        self.assertIs(template.parent, root.get_span_context())
+        self.assertIs(render.parent, root.get_span_reference())
+        self.assertIs(template.parent, root.get_span_reference())
         self.assertIsNone(root.parent)
 
     def test_render_not_recording(self):
@@ -104,8 +104,8 @@ class TestJinja2Instrumentor(TestBase):
         # pylint:disable=unbalanced-tuple-unpacking
         template, generate, root = spans
 
-        self.assertIs(generate.parent, root.get_span_context())
-        self.assertIs(template.parent, root.get_span_context())
+        self.assertIs(generate.parent, root.get_span_reference())
+        self.assertIs(template.parent, root.get_span_reference())
         self.assertIsNone(root.parent)
 
     def test_generate_inline_template(self):
@@ -147,11 +147,11 @@ class TestJinja2Instrumentor(TestBase):
         # pylint:disable=unbalanced-tuple-unpacking
         compile2, load2, compile1, load1, render, root = spans
 
-        self.assertIs(compile2.parent, load2.get_span_context())
-        self.assertIs(load2.parent, root.get_span_context())
-        self.assertIs(compile1.parent, load1.get_span_context())
-        self.assertIs(load1.parent, render.get_span_context())
-        self.assertIs(render.parent, root.get_span_context())
+        self.assertIs(compile2.parent, load2.get_span_reference())
+        self.assertIs(load2.parent, root.get_span_reference())
+        self.assertIs(compile1.parent, load1.get_span_reference())
+        self.assertIs(load1.parent, render.get_span_reference())
+        self.assertIs(render.parent, root.get_span_reference())
         self.assertIsNone(root.parent)
 
     def test_file_template(self):

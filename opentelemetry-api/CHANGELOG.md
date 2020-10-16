@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Rename SpanContext to SpanReference
+  ([]())
+
 ## Version 0.14b0
 
 Released 2020-10-13

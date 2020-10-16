@@ -93,14 +93,22 @@ class TestTornadoInstrumentation(TornadoTest):
         manual, server, client = self.sorted_spans(spans)
 
         self.assertEqual(manual.name, "manual")
-        self.assertEqual(manual.parent, server.context)
-        self.assertEqual(manual.context.trace_id, client.context.trace_id)
+        self.assertEqual(manual.parent, server.reference)
+        self.assertEqual(
+            manual.get_span_reference().trace_id,
+            client.get_span_reference().trace_id,
+        )
 
         self.assertEqual(server.name, "MainHandler." + method.lower())
         self.assertTrue(server.parent.is_remote)
-        self.assertNotEqual(server.parent, client.context)
-        self.assertEqual(server.parent.span_id, client.context.span_id)
-        self.assertEqual(server.context.trace_id, client.context.trace_id)
+        self.assertNotEqual(server.parent, client.reference)
+        self.assertEqual(
+            server.parent.span_id, client.get_span_reference().span_id
+        )
+        self.assertEqual(
+            server.get_span_reference().trace_id,
+            client.get_span_reference().trace_id,
+        )
         self.assertEqual(server.kind, SpanKind.SERVER)
         self.assert_span_has_attributes(
             server,
@@ -117,7 +125,7 @@ class TestTornadoInstrumentation(TornadoTest):
         )
 
         self.assertEqual(client.name, method)
-        self.assertFalse(client.context.is_remote)
+        self.assertFalse(client.get_span_reference().is_remote)
         self.assertIsNone(client.parent)
         self.assertEqual(client.kind, SpanKind.CLIENT)
         self.assert_span_has_attributes(
@@ -162,22 +170,36 @@ class TestTornadoInstrumentation(TornadoTest):
         sub2, sub1, sub_wrapper, server, client = self.sorted_spans(spans)
 
         self.assertEqual(sub2.name, "sub-task-2")
-        self.assertEqual(sub2.parent, sub_wrapper.context)
-        self.assertEqual(sub2.context.trace_id, client.context.trace_id)
+        self.assertEqual(sub2.parent, sub_wrapper.get_span_reference())
+        self.assertEqual(
+            sub2.get_span_reference().trace_id,
+            client.get_span_reference().trace_id,
+        )
 
         self.assertEqual(sub1.name, "sub-task-1")
-        self.assertEqual(sub1.parent, sub_wrapper.context)
-        self.assertEqual(sub1.context.trace_id, client.context.trace_id)
+        self.assertEqual(sub1.parent, sub_wrapper.get_span_reference())
+        self.assertEqual(
+            sub1.get_span_reference().trace_id,
+            client.get_span_reference().trace_id,
+        )
 
         self.assertEqual(sub_wrapper.name, "sub-task-wrapper")
-        self.assertEqual(sub_wrapper.parent, server.context)
-        self.assertEqual(sub_wrapper.context.trace_id, client.context.trace_id)
+        self.assertEqual(sub_wrapper.parent, server.get_span_reference())
+        self.assertEqual(
+            sub_wrapper.get_span_reference().trace_id,
+            client.get_span_reference().trace_id,
+        )
 
         self.assertEqual(server.name, handler_name + ".get")
         self.assertTrue(server.parent.is_remote)
-        self.assertNotEqual(server.parent, client.context)
-        self.assertEqual(server.parent.span_id, client.context.span_id)
-        self.assertEqual(server.context.trace_id, client.context.trace_id)
+        self.assertNotEqual(server.parent, client.get_span_reference())
+        self.assertEqual(
+            server.parent.span_id, client.get_span_reference().span_id
+        )
+        self.assertEqual(
+            server.get_span_reference().trace_id,
+            client.get_span_reference().trace_id,
+        )
         self.assertEqual(server.kind, SpanKind.SERVER)
         self.assert_span_has_attributes(
             server,
@@ -194,7 +216,7 @@ class TestTornadoInstrumentation(TornadoTest):
         )
 
         self.assertEqual(client.name, "GET")
-        self.assertFalse(client.context.is_remote)
+        self.assertFalse(client.get_span_reference().is_remote)
         self.assertIsNone(client.parent)
         self.assertEqual(client.kind, SpanKind.CLIENT)
         self.assert_span_has_attributes(
@@ -294,9 +316,14 @@ class TestTornadoInstrumentation(TornadoTest):
 
         self.assertEqual(server.name, "DynamicHandler.get")
         self.assertTrue(server.parent.is_remote)
-        self.assertNotEqual(server.parent, client.context)
-        self.assertEqual(server.parent.span_id, client.context.span_id)
-        self.assertEqual(server.context.trace_id, client.context.trace_id)
+        self.assertNotEqual(server.parent, client.get_span_reference())
+        self.assertEqual(
+            server.parent.span_id, client.get_span_reference().span_id
+        )
+        self.assertEqual(
+            server.get_span_reference().trace_id,
+            client.get_span_reference().trace_id,
+        )
         self.assertEqual(server.kind, SpanKind.SERVER)
         self.assert_span_has_attributes(
             server,
@@ -313,7 +340,7 @@ class TestTornadoInstrumentation(TornadoTest):
         )
 
         self.assertEqual(client.name, "GET")
-        self.assertFalse(client.context.is_remote)
+        self.assertFalse(client.get_span_reference().is_remote)
         self.assertIsNone(client.parent)
         self.assertEqual(client.kind, SpanKind.CLIENT)
         self.assert_span_has_attributes(

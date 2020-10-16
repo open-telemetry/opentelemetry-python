@@ -16,7 +16,7 @@ class RequestHandler:
     def before_request(self, request, request_context):
         logger.info("Before request %s", request)
 
-        # If we should ignore the active Span, use any passed SpanContext
+        # If we should ignore the active Span, use any passed SpanReference
         # as the parent. Else, use the active one.
         if self.ignore_active_span:
             span = self.tracer.start_span(

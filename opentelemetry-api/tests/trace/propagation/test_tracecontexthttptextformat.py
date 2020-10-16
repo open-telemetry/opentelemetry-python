@@ -33,7 +33,7 @@ class TestTraceContextFormat(unittest.TestCase):
     SPAN_ID = int("1234567890123456", 16)  # type:int
 
     def test_no_traceparent_header(self):
-        """When tracecontext headers are not present, a new SpanContext
+        """When tracecontext headers are not present, a new SpanReference
         should be created.
 
         RFC 4.2.2:
@@ -43,18 +43,18 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
         span = trace.get_current_span(FORMAT.extract(get_as_list, output))
-        self.assertIsInstance(span.get_span_context(), trace.SpanContext)
+        self.assertIsInstance(span.get_span_reference(), trace.SpanReference)
 
     def test_headers_with_tracestate(self):
         """When there is a traceparent and tracestate header, data from
-        both should be addded to the SpanContext.
+        both should be addded to the SpanReference.
         """
         traceparent_value = "00-{trace_id}-{span_id}-00".format(
             trace_id=format(self.TRACE_ID, "032x"),
             span_id=format(self.SPAN_ID, "016x"),
         )
         tracestate_value = "foo=1,bar=2,baz=3"
-        span_context = trace.get_current_span(
+        span_reference = trace.get_current_span(
             FORMAT.extract(
                 get_as_list,
                 {
@@ -62,15 +62,15 @@ class TestTraceContextFormat(unittest.TestCase):
                     "tracestate": [tracestate_value],
                 },
             )
-        ).get_span_context()
-        self.assertEqual(span_context.trace_id, self.TRACE_ID)
-        self.assertEqual(span_context.span_id, self.SPAN_ID)
+        ).get_span_reference()
+        self.assertEqual(span_reference.trace_id, self.TRACE_ID)
+        self.assertEqual(span_reference.span_id, self.SPAN_ID)
         self.assertEqual(
-            span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
+            span_reference.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
-        self.assertTrue(span_context.is_remote)
+        self.assertTrue(span_reference.is_remote)
         output = {}  # type:typing.Dict[str, str]
-        span = trace.DefaultSpan(span_context)
+        span = trace.DefaultSpan(span_reference)
 
         ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
@@ -109,7 +109,9 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(
+            span.get_span_reference(), trace.INVALID_SPAN_REFERENCE
+        )
 
     def test_invalid_parent_id(self):
         """If the parent id is invalid, we must ignore the full traceparent
@@ -140,7 +142,9 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(
+            span.get_span_reference(), trace.INVALID_SPAN_REFERENCE
+        )
 
     def test_no_send_empty_tracestate(self):
         """If the tracestate is empty, do not set the header.
@@ -152,7 +156,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, str]
         span = trace.DefaultSpan(
-            trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
+            trace.SpanReference(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
         ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
@@ -179,7 +183,9 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(
+            span.get_span_reference(), trace.INVALID_SPAN_REFERENCE
+        )
 
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context."""
@@ -202,7 +208,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context().trace_state["foo"], "1")
+        self.assertEqual(span.get_span_reference().trace_state["foo"], "1")
 
     def test_tracestate_header_with_trailing_comma(self):
         """Do not propagate invalid trace context.
@@ -218,7 +224,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context().trace_state["foo"], "1")
+        self.assertEqual(span.get_span_reference().trace_state["foo"], "1")
 
     def test_tracestate_keys(self):
         """Test for valid key patterns in the tracestate
@@ -243,12 +249,12 @@ class TestTraceContextFormat(unittest.TestCase):
             )
         )
         self.assertEqual(
-            span.get_span_context().trace_state["1a-2f@foo"], "bar1"
+            span.get_span_reference().trace_state["1a-2f@foo"], "bar1"
         )
         self.assertEqual(
-            span.get_span_context().trace_state["1a-_*/2b@foo"], "bar2"
+            span.get_span_reference().trace_state["1a-_*/2b@foo"], "bar2"
         )
-        self.assertEqual(span.get_span_context().trace_state["foo"], "bar3")
+        self.assertEqual(span.get_span_reference().trace_state["foo"], "bar3")
         self.assertEqual(
-            span.get_span_context().trace_state["foo-_*/bar"], "bar4"
+            span.get_span_reference().trace_state["foo-_*/bar"], "bar4"
         )

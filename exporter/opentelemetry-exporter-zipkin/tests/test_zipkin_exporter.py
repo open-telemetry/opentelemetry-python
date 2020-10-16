@@ -36,13 +36,13 @@ class MockResponse:
 class TestZipkinSpanExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
-        context = trace_api.SpanContext(
+        reference = trace_api.SpanReference(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
 
-        self._test_span = trace._Span("test_span", context=context)
+        self._test_span = trace._Span("test_span", reference=reference)
         self._test_span.start()
         self._test_span.end()
 
@@ -121,16 +121,16 @@ class TestZipkinSpanExporter(unittest.TestCase):
             start_times[3] + durations[3],
         )
 
-        span_context = trace_api.SpanContext(
+        span_reference = trace_api.SpanReference(
             trace_id,
             span_id,
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
-        parent_span_context = trace_api.SpanContext(
+        parent_span_reference = trace_api.SpanReference(
             trace_id, parent_id, is_remote=False
         )
-        other_context = trace_api.SpanContext(
+        other_reference = trace_api.SpanReference(
             trace_id, other_id, is_remote=False
         )
 
@@ -150,25 +150,27 @@ class TestZipkinSpanExporter(unittest.TestCase):
         link_attributes = {"key_bool": True}
 
         link = trace_api.Link(
-            context=other_context, attributes=link_attributes
+            reference=other_reference, attributes=link_attributes
         )
 
         otel_spans = [
             trace._Span(
                 name=span_names[0],
-                context=span_context,
-                parent=parent_span_context,
+                reference=span_reference,
+                parent=parent_span_reference,
                 events=(event,),
                 links=(link,),
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                reference=parent_span_reference,
+                parent=None,
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2], reference=other_reference, parent=None
             ),
             trace._Span(
-                name=span_names[3], context=other_context, parent=None
+                name=span_names[3], reference=other_reference, parent=None
             ),
         ]
 
@@ -322,20 +324,20 @@ class TestZipkinSpanExporter(unittest.TestCase):
         duration = 50 * 10 ** 6
         end_time = start_time + duration
 
-        span_context = trace_api.SpanContext(
+        span_reference = trace_api.SpanReference(
             trace_id,
             span_id,
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
-        parent_span_context = trace_api.SpanContext(
+        parent_span_reference = trace_api.SpanReference(
             trace_id, parent_id, is_remote=False
         )
 
         otel_span = trace._Span(
             name=span_names[0],
-            context=span_context,
-            parent=parent_span_context,
+            reference=span_reference,
+            parent=parent_span_reference,
         )
 
         otel_span.start(start_time=start_time)
@@ -386,14 +388,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_max_tag_length(self):
         service_name = "test-service"
 
-        span_context = trace_api.SpanContext(
+        span_reference = trace_api.SpanReference(
             0x0E0C63257DE34C926F9EFCD03927272E,
             0x04BF92DEEFC58C92,
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
+        span = trace._Span(name="test-span", reference=span_reference,)
 
         span.start()
         span.resource = Resource({})

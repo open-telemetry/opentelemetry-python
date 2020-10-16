@@ -100,8 +100,8 @@ def translate_to_collector(spans: Sequence[Span]):
         collector_span = trace_pb2.Span(
             name=trace_pb2.TruncatableString(value=span.name),
             kind=utils.get_collector_span_kind(span.kind),
-            trace_id=span.context.trace_id.to_bytes(16, "big"),
-            span_id=span.context.span_id.to_bytes(8, "big"),
+            trace_id=span.get_span_reference().trace_id.to_bytes(16, "big"),
+            span_id=span.get_span_reference().span_id.to_bytes(8, "big"),
             start_time=utils.proto_timestamp_from_time_ns(span.start_time),
             end_time=utils.proto_timestamp_from_time_ns(span.end_time),
             status=status,
@@ -113,8 +113,8 @@ def translate_to_collector(spans: Sequence[Span]):
 
         collector_span.parent_span_id = parent_id.to_bytes(8, "big")
 
-        if span.context.trace_state is not None:
-            for (key, value) in span.context.trace_state.items():
+        if span.get_span_reference().trace_state is not None:
+            for (key, value) in span.get_span_reference().trace_state.items():
                 collector_span.tracestate.entries.add(key=key, value=value)
 
         if span.attributes:
@@ -144,10 +144,10 @@ def translate_to_collector(spans: Sequence[Span]):
         if span.links:
             for link in span.links:
                 collector_span_link = collector_span.links.link.add()
-                collector_span_link.trace_id = link.context.trace_id.to_bytes(
+                collector_span_link.trace_id = link.reference.trace_id.to_bytes(
                     16, "big"
                 )
-                collector_span_link.span_id = link.context.span_id.to_bytes(
+                collector_span_link.span_id = link.reference.span_id.to_bytes(
                     8, "big"
                 )
 
@@ -156,8 +156,8 @@ def translate_to_collector(spans: Sequence[Span]):
                 )
                 if span.parent is not None:
                     if (
-                        link.context.span_id == span.parent.span_id
-                        and link.context.trace_id == span.parent.trace_id
+                        link.reference.span_id == span.parent.span_id
+                        and link.reference.trace_id == span.parent.trace_id
                     ):
                         collector_span_link.type = (
                             trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN

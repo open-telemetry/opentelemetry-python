@@ -64,7 +64,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        """Extracts SpanContext from the carrier.
+        """Extracts SpanReference from the carrier.
 
         See `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
@@ -96,7 +96,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         )
         tracestate = _parse_tracestate(tracestate_headers)
 
-        span_context = trace.SpanContext(
+        span_reference = trace.SpanReference(
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),
             is_remote=True,
@@ -104,7 +104,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_state=tracestate,
         )
         return trace.set_span_in_context(
-            trace.DefaultSpan(span_context), context
+            trace.DefaultSpan(span_reference), context
         )
 
     def inject(
@@ -113,24 +113,24 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
-        """Injects SpanContext into the carrier.
+        """Injects SpanReference into the carrier.
 
         See `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
         """
         span = trace.get_current_span(context)
-        span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        span_reference = span.get_span_reference()
+        if span_reference == trace.INVALID_SPAN_REFERENCE:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
-            span_context.trace_id,
-            span_context.span_id,
-            span_context.trace_flags,
+            span_reference.trace_id,
+            span_reference.span_id,
+            span_reference.trace_flags,
         )
         set_in_carrier(
             carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
         )
-        if span_context.trace_state:
-            tracestate_string = _format_tracestate(span_context.trace_state)
+        if span_reference.trace_state:
+            tracestate_string = _format_tracestate(span_reference.trace_state)
             set_in_carrier(
                 carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )

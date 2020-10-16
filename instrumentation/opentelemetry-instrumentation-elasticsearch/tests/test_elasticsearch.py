@@ -190,7 +190,9 @@ class TestElasticsearchIntegration(TestBase):
         self.assertEqual(spans[0].name, "parent")
         self.assertEqual(spans[1].name, "Elasticsearch/sw/people/1")
         self.assertIsNotNone(spans[1].parent)
-        self.assertEqual(spans[1].parent.span_id, spans[0].context.span_id)
+        self.assertEqual(
+            spans[1].parent.span_id, spans[0].get_span_reference().span_id
+        )
 
     def test_multithread(self, request_mock):
         request_mock.return_value = (1, {}, {})
@@ -228,7 +230,7 @@ class TestElasticsearchIntegration(TestBase):
 
         self.assertEqual(s2.name, "Elasticsearch/test-index/tweet/1")
         self.assertIsNotNone(s2.parent)
-        self.assertEqual(s2.parent.span_id, s1.context.span_id)
+        self.assertEqual(s2.parent.span_id, s1.get_span_reference().span_id)
         self.assertEqual(s3.name, "Elasticsearch/test-index/tweet/2")
         self.assertIsNone(s3.parent)
 

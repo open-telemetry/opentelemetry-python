@@ -73,6 +73,11 @@ class TestCeleryInstrumentation(TestBase):
             },
         )
 
-        self.assertNotEqual(consumer.parent, producer.context)
-        self.assertEqual(consumer.parent.span_id, producer.context.span_id)
-        self.assertEqual(consumer.context.trace_id, producer.context.trace_id)
+        self.assertNotEqual(consumer.parent, producer.get_span_reference())
+        self.assertEqual(
+            consumer.parent.span_id, producer.get_span_reference().span_id
+        )
+        self.assertEqual(
+            consumer.get_span_reference().trace_id,
+            producer.get_span_reference().trace_id,
+        )

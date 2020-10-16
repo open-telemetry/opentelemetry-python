@@ -89,17 +89,17 @@ class TestCollectorSpanExporter(unittest.TestCase):
             start_times[1] + durations[1],
             start_times[2] + durations[2],
         )
-        span_context = trace_api.SpanContext(
+        span_reference = trace_api.SpanReference(
             trace_id,
             span_id,
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
             trace_state=trace_api.TraceState({"testKey": "testValue"}),
         )
-        parent_span_context = trace_api.SpanContext(
+        parent_span_reference = trace_api.SpanReference(
             trace_id, parent_id, is_remote=False
         )
-        other_context = trace_api.SpanContext(
+        other_reference = trace_api.SpanReference(
             trace_id, span_id, is_remote=False
         )
         event_attributes = {
@@ -115,30 +115,30 @@ class TestCollectorSpanExporter(unittest.TestCase):
         )
         link_attributes = {"key_bool": True}
         link_1 = trace_api.Link(
-            context=other_context, attributes=link_attributes
+            reference=other_reference, attributes=link_attributes
         )
         link_2 = trace_api.Link(
-            context=parent_span_context, attributes=link_attributes
+            reference=parent_span_reference, attributes=link_attributes
         )
         span_1 = trace._Span(
             name="test1",
-            context=span_context,
-            parent=parent_span_context,
+            reference=span_reference,
+            parent=parent_span_reference,
             events=(event,),
             links=(link_1,),
             kind=trace_api.SpanKind.CLIENT,
         )
         span_2 = trace._Span(
             name="test2",
-            context=parent_span_context,
+            reference=parent_span_reference,
             parent=None,
             kind=trace_api.SpanKind.SERVER,
         )
         span_3 = trace._Span(
             name="test3",
-            context=other_context,
+            reference=other_reference,
             links=(link_2,),
-            parent=span_2.get_span_context(),
+            parent=span_2.get_span_reference(),
         )
         otel_spans = [span_1, span_2, span_3]
         otel_spans[0].start(start_time=start_times[0])
@@ -295,7 +295,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
 
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
-        span_context = trace_api.SpanContext(
+        span_reference = trace_api.SpanReference(
             trace_id,
             span_id,
             is_remote=False,
@@ -304,7 +304,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans = [
             trace._Span(
                 name="test1",
-                context=span_context,
+                reference=span_reference,
                 kind=trace_api.SpanKind.CLIENT,
             )
         ]

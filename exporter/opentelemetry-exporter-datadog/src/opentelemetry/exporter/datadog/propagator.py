@@ -69,7 +69,7 @@ class DatadogFormat(TextMapPropagator):
         if trace_id is None or span_id is None:
             return set_span_in_context(trace.INVALID_SPAN, context)
 
-        span_context = trace.SpanContext(
+        span_reference = trace.SpanReference(
             trace_id=int(trace_id),
             span_id=int(span_id),
             is_remote=True,
@@ -77,7 +77,7 @@ class DatadogFormat(TextMapPropagator):
             trace_state=trace.TraceState({constants.DD_ORIGIN: origin}),
         )
 
-        return set_span_in_context(trace.DefaultSpan(span_context), context)
+        return set_span_in_context(trace.DefaultSpan(span_reference), context)
 
     def inject(
         self,
@@ -86,26 +86,32 @@ class DatadogFormat(TextMapPropagator):
         context: typing.Optional[Context] = None,
     ) -> None:
         span = get_current_span(context)
-        span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        span_reference = span.get_span_reference()
+        if span_reference == trace.INVALID_SPAN_REFERENCE:
             return
-        sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
+        sampled = (
+            trace.TraceFlags.SAMPLED & span.get_span_reference().trace_flags
+        ) != 0
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
+            carrier,
+            self.TRACE_ID_KEY,
+            format_trace_id(span.get_span_reference().trace_id),
         )
         set_in_carrier(
-            carrier, self.PARENT_ID_KEY, format_span_id(span.context.span_id)
+            carrier,
+            self.PARENT_ID_KEY,
+            format_span_id(span.get_span_reference().span_id),
         )
         set_in_carrier(
             carrier,
             self.SAMPLING_PRIORITY_KEY,
             str(constants.AUTO_KEEP if sampled else constants.AUTO_REJECT),
         )
-        if constants.DD_ORIGIN in span.context.trace_state:
+        if constants.DD_ORIGIN in span.get_span_reference().trace_state:
             set_in_carrier(
                 carrier,
                 self.ORIGIN_KEY,
-                span.context.trace_state[constants.DD_ORIGIN],
+                span.get_span_reference().trace_state[constants.DD_ORIGIN],
             )
 
 

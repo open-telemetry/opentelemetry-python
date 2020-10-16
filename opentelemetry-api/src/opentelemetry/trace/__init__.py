@@ -90,12 +90,12 @@ from opentelemetry.trace.span import (
     DEFAULT_TRACE_OPTIONS,
     DEFAULT_TRACE_STATE,
     INVALID_SPAN,
-    INVALID_SPAN_CONTEXT,
     INVALID_SPAN_ID,
+    INVALID_SPAN_REFERENCE,
     INVALID_TRACE_ID,
     DefaultSpan,
     Span,
-    SpanContext,
+    SpanReference,
     TraceFlags,
     TraceState,
     format_span_id,
@@ -108,12 +108,12 @@ logger = getLogger(__name__)
 
 
 class LinkBase(abc.ABC):
-    def __init__(self, context: "SpanContext") -> None:
-        self._context = context
+    def __init__(self, reference: "SpanReference") -> None:
+        self._reference = reference
 
     @property
-    def context(self) -> "SpanContext":
-        return self._context
+    def reference(self) -> "SpanReference":
+        return self._reference
 
     @property
     @abc.abstractmethod
@@ -125,14 +125,14 @@ class Link(LinkBase):
     """A link to a `Span`.
 
     Args:
-        context: `SpanContext` of the `Span` to link to.
+        reference: `SpanReference` of the `Span` to link to.
         attributes: Link's attributes.
     """
 
     def __init__(
-        self, context: "SpanContext", attributes: types.Attributes = None,
+        self, reference: "SpanReference", attributes: types.Attributes = None,
     ) -> None:
-        super().__init__(context)
+        super().__init__(reference)
         self._attributes = attributes
 
     @property
@@ -223,7 +223,7 @@ class Tracer(abc.ABC):
 
     # Constant used to represent the current span being used as a parent.
     # This is the default behavior when creating spans.
-    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
+    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_REFERENCE)
 
     @abc.abstractmethod
     def start_span(
@@ -455,7 +455,7 @@ __all__ = [
     "DEFAULT_TRACE_STATE",
     "IdsGenerator",
     "INVALID_SPAN",
-    "INVALID_SPAN_CONTEXT",
+    "INVALID_SPAN_REFERENCE",
     "INVALID_SPAN_ID",
     "INVALID_TRACE_ID",
     "DefaultSpan",
@@ -465,7 +465,7 @@ __all__ = [
     "LinkBase",
     "RandomIdsGenerator",
     "Span",
-    "SpanContext",
+    "SpanReference",
     "SpanKind",
     "TraceFlags",
     "TraceState",

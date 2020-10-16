@@ -42,7 +42,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace import SpanContext
+from opentelemetry.trace import SpanReference
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import (
     EXCEPTION_STATUS_FIELD,
@@ -351,8 +351,8 @@ class Span(trace_api.Span):
 
     Args:
         name: The name of the operation this span represents
-        context: The immutable span context
-        parent: This span's parent's `opentelemetry.trace.SpanContext`, or
+        reference: The immutable span reference
+        parent: This span's parent's `opentelemetry.trace.SpanReference`, or
             None if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
@@ -372,8 +372,8 @@ class Span(trace_api.Span):
     def __init__(
         self,
         name: str,
-        context: trace_api.SpanContext,
-        parent: Optional[trace_api.SpanContext] = None,
+        reference: trace_api.SpanReference,
+        parent: Optional[trace_api.SpanReference] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
         resource: Resource = Resource.create({}),
@@ -387,7 +387,7 @@ class Span(trace_api.Span):
     ) -> None:
 
         self.name = name
-        self.context = context
+        self.reference = reference
         self.parent = parent
         self.sampler = sampler
         self.trace_config = trace_config
@@ -435,8 +435,8 @@ class Span(trace_api.Span):
         return self._end_time
 
     def __repr__(self):
-        return '{}(name="{}", context={})'.format(
-            type(self).__name__, self.name, self.context
+        return '{}(name="{}", reference={})'.format(
+            type(self).__name__, self.name, self.reference
         )
 
     @staticmethod
@@ -452,11 +452,11 @@ class Span(trace_api.Span):
         return BoundedList(MAX_NUM_LINKS)
 
     @staticmethod
-    def _format_context(context):
+    def _format_context(reference):
         x_ctx = OrderedDict()
-        x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
-        x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
-        x_ctx["trace_state"] = repr(context.trace_state)
+        x_ctx["trace_id"] = trace_api.format_trace_id(reference.trace_id)
+        x_ctx["span_id"] = trace_api.format_span_id(reference.span_id)
+        x_ctx["trace_state"] = repr(reference.trace_state)
         return x_ctx
 
     @staticmethod
@@ -481,7 +481,7 @@ class Span(trace_api.Span):
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(link.context)
+            f_link["reference"] = Span._format_context(link.reference)
             f_link["attributes"] = Span._format_attributes(link.attributes)
             f_links.append(f_link)
         return f_links
@@ -490,9 +490,9 @@ class Span(trace_api.Span):
         parent_id = None
         if self.parent is not None:
             if isinstance(self.parent, Span):
-                ctx = self.parent.context
-                parent_id = trace_api.format_span_id(ctx.span_id)
-            elif isinstance(self.parent, SpanContext):
+                ref = self.parent.reference
+                parent_id = trace_api.format_span_id(ref.span_id)
+            elif isinstance(self.parent, SpanReference):
                 parent_id = trace_api.format_span_id(self.parent.span_id)
 
         start_time = None
@@ -512,7 +512,7 @@ class Span(trace_api.Span):
         f_span = OrderedDict()
 
         f_span["name"] = self.name
-        f_span["context"] = self._format_context(self.context)
+        f_span["reference"] = self._format_context(self.reference)
         f_span["kind"] = str(self.kind)
         f_span["parent_id"] = parent_id
         f_span["start_time"] = start_time
@@ -526,8 +526,8 @@ class Span(trace_api.Span):
 
         return json.dumps(f_span, indent=indent)
 
-    def get_span_context(self):
-        return self.context
+    def get_span_reference(self):
+        return self.reference
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
@@ -727,26 +727,26 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
 
-        parent_span_context = trace_api.get_current_span(
+        parent_span_reference = trace_api.get_current_span(
             context
-        ).get_span_context()
+        ).get_span_reference()
 
-        if parent_span_context is not None and not isinstance(
-            parent_span_context, trace_api.SpanContext
+        if parent_span_reference is not None and not isinstance(
+            parent_span_reference, trace_api.SpanReference
         ):
             raise TypeError(
-                "parent_span_context must be a SpanContext or None."
+                "parent_span_reference must be a SpanReference or None."
             )
 
-        if parent_span_context is None or not parent_span_context.is_valid:
-            parent_span_context = None
+        if parent_span_reference is None or not parent_span_reference.is_valid:
+            parent_span_reference = None
             trace_id = self.source.ids_generator.generate_trace_id()
             trace_flags = None
             trace_state = None
         else:
-            trace_id = parent_span_context.trace_id
-            trace_flags = parent_span_context.trace_flags
-            trace_state = parent_span_context.trace_state
+            trace_id = parent_span_reference.trace_id
+            trace_flags = parent_span_reference.trace_flags
+            trace_state = parent_span_reference.trace_state
 
         # The sampler decides whether to create a real or no-op span at the
         # time of span creation. No-op spans do not record events, and are not
@@ -754,7 +754,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.source.sampler.should_sample(
-            parent_span_context, trace_id, name, attributes, links,
+            parent_span_reference, trace_id, name, attributes, links,
         )
 
         trace_flags = (
@@ -762,7 +762,7 @@ class Tracer(trace_api.Tracer):
             if sampling_result.decision.is_sampled()
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
-        context = trace_api.SpanContext(
+        reference = trace_api.SpanReference(
             trace_id,
             self.source.ids_generator.generate_span_id(),
             is_remote=False,
@@ -775,8 +775,8 @@ class Tracer(trace_api.Tracer):
             # pylint:disable=protected-access
             span = _Span(
                 name=name,
-                context=context,
-                parent=parent_span_context,
+                reference=reference,
+                parent=parent_span_reference,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=sampling_result.attributes.copy(),
@@ -788,7 +788,7 @@ class Tracer(trace_api.Tracer):
             )
             span.start(start_time=start_time)
         else:
-            span = trace_api.DefaultSpan(context=context)
+            span = trace_api.DefaultSpan(reference=reference)
         return span
 
     @contextmanager

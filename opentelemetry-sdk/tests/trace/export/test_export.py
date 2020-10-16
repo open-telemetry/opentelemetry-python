@@ -123,7 +123,7 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
 def _create_start_and_end_span(name, span_processor):
     span = trace._Span(
         name,
-        trace_api.SpanContext(
+        trace_api.SpanReference(
             0xDEADBEEF,
             0xDEADBEEF,
             is_remote=False,
@@ -403,7 +403,7 @@ class TestConsoleSpanExporter(unittest.TestCase):
 
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
-        span = trace._Span("span name", trace_api.INVALID_SPAN_CONTEXT)
+        span = trace._Span("span name", trace_api.INVALID_SPAN_REFERENCE)
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
         mock_stdout.write.assert_called_once_with(span.to_json() + os.linesep)

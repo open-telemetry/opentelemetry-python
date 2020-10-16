@@ -15,7 +15,7 @@
 import unittest
 
 from opentelemetry.sdk import trace
-from opentelemetry.trace import INVALID_SPAN, INVALID_SPAN_CONTEXT
+from opentelemetry.trace import INVALID_SPAN, INVALID_SPAN_REFERENCE
 
 
 class TestTracerImplementation(unittest.TestCase):
@@ -29,12 +29,14 @@ class TestTracerImplementation(unittest.TestCase):
     def test_tracer(self):
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_span("test") as span:
-            self.assertNotEqual(span.get_span_context(), INVALID_SPAN_CONTEXT)
+            self.assertNotEqual(
+                span.get_span_reference(), INVALID_SPAN_REFERENCE
+            )
             self.assertNotEqual(span, INVALID_SPAN)
             self.assertIs(span.is_recording(), True)
             with tracer.start_span("test2") as span2:
                 self.assertNotEqual(
-                    span2.get_span_context(), INVALID_SPAN_CONTEXT
+                    span2.get_span_reference(), INVALID_SPAN_REFERENCE
                 )
                 self.assertNotEqual(span2, INVALID_SPAN)
                 self.assertIs(span2.is_recording(), True)
@@ -44,6 +46,6 @@ class TestTracerImplementation(unittest.TestCase):
             # pylint: disable=no-value-for-parameter
             span = trace._Span()
 
-        span = trace._Span("name", INVALID_SPAN_CONTEXT)
-        self.assertEqual(span.get_span_context(), INVALID_SPAN_CONTEXT)
+        span = trace._Span("name", INVALID_SPAN_REFERENCE)
+        self.assertEqual(span.get_span_reference(), INVALID_SPAN_REFERENCE)
         self.assertIs(span.is_recording(), True)

@@ -104,8 +104,8 @@ from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.instrumentation.opentracing_shim import util
 from opentelemetry.instrumentation.opentracing_shim.version import __version__
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, DefaultSpan, Link
-from opentelemetry.trace import SpanContext as OtelSpanContext
+from opentelemetry.trace import INVALID_SPAN_REFERENCE, DefaultSpan, Link
+from opentelemetry.trace import SpanReference as OtelSpanReference
 from opentelemetry.trace import Tracer as OtelTracer
 from opentelemetry.trace import (
     TracerProvider,
@@ -139,28 +139,28 @@ def create_tracer(otel_tracer_provider: TracerProvider) -> "TracerShim":
 
 class SpanContextShim(SpanContext):
     """Implements :class:`opentracing.SpanContext` by wrapping a
-    :class:`opentelemetry.trace.SpanContext` object.
+    :class:`opentelemetry.trace.SpanReference` object.
 
     Args:
-        otel_context: A :class:`opentelemetry.trace.SpanContext` to be used for
+        otel_reference: A :class:`opentelemetry.trace.SpanReference` to be used for
             constructing the :class:`SpanContextShim`.
     """
 
-    def __init__(self, otel_context: OtelSpanContext):
-        self._otel_context = otel_context
+    def __init__(self, otel_reference: OtelSpanReference):
+        self._otel_reference = otel_reference
         # Context is being used here since it must be immutable.
         self._baggage = Context()
 
-    def unwrap(self) -> OtelSpanContext:
-        """Returns the wrapped :class:`opentelemetry.trace.SpanContext`
+    def unwrap(self) -> OtelSpanReference:
+        """Returns the wrapped :class:`opentelemetry.trace.SpanReference`
         object.
 
         Returns:
-            The :class:`opentelemetry.trace.SpanContext` object wrapped by this
+            The :class:`opentelemetry.trace.SpanReference` object wrapped by this
             :class:`SpanContextShim`.
         """
 
-        return self._otel_context
+        return self._otel_reference
 
     @property
     def baggage(self) -> Context:
@@ -378,7 +378,7 @@ class ScopeShim(Scope):
         """
 
         otel_span = span_cm.__enter__()
-        span_context = SpanContextShim(otel_span.get_span_context())
+        span_context = SpanContextShim(otel_span.get_span_reference())
         span = SpanShim(manager.tracer, span_context, otel_span)
         return cls(manager, span, span_cm)
 
@@ -474,13 +474,13 @@ class ScopeManagerShim(ScopeManager):
         """
 
         span = get_current_span()
-        if span.get_span_context() == INVALID_SPAN_CONTEXT:
+        if span.get_span_reference() == INVALID_SPAN_REFERENCE:
             return None
 
         try:
             return get_value("scope_shim")
         except KeyError:
-            span_context = SpanContextShim(span.get_span_context())
+            span_context = SpanContextShim(span.get_span_reference())
             wrapped_span = SpanShim(self._tracer, span_context, span)
             return ScopeShim(self, span=wrapped_span)
 
@@ -576,7 +576,7 @@ class TracerShim(Tracer):
 
         current_span = get_current_span()
 
-        if child_of is None and current_span is not INVALID_SPAN_CONTEXT:
+        if child_of is None and current_span is not INVALID_SPAN_REFERENCE:
             child_of = SpanShim(None, None, current_span)
 
         span = self.start_span(
@@ -630,10 +630,10 @@ class TracerShim(Tracer):
         # Use the specified parent or the active span if possible. Otherwise,
         # use a `None` parent, which triggers the creation of a new trace.
         parent = child_of.unwrap() if child_of else None
-        if isinstance(parent, OtelSpanContext):
+        if isinstance(parent, OtelSpanReference):
             parent = DefaultSpan(parent)
 
-        parent_span_context = set_span_in_context(parent)
+        parent_context = set_span_in_context(parent)
 
         links = []
         if references:
@@ -649,13 +649,13 @@ class TracerShim(Tracer):
 
         span = self._otel_tracer.start_span(
             operation_name,
-            context=parent_span_context,
+            context=parent_context,
             links=links,
             attributes=tags,
             start_time=start_time_ns,
         )
 
-        context = SpanContextShim(span.get_span_context())
+        context = SpanContextShim(span.get_span_reference())
         return SpanShim(self, context, span)
 
     def inject(self, span_context, format: object, carrier: object):
@@ -718,8 +718,8 @@ class TracerShim(Tracer):
         ctx = propagator.extract(get_as_list, carrier)
         span = get_current_span(ctx)
         if span is not None:
-            otel_context = span.get_span_context()
+            otel_context = span.get_span_reference()
         else:
-            otel_context = INVALID_SPAN_CONTEXT
+            otel_context = INVALID_SPAN_REFERENCE
 
         return SpanContextShim(otel_context)

@@ -70,7 +70,7 @@ from urllib.parse import urlparse
 import requests
 
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace import Span, SpanContext, SpanKind
+from opentelemetry.trace import Span, SpanKind, SpanReference
 
 DEFAULT_RETRY = False
 DEFAULT_URL = "http://localhost:9411/api/v2/spans"
@@ -159,7 +159,7 @@ class ZipkinSpanExporter(SpanExporter):
 
         zipkin_spans = []
         for span in spans:
-            context = span.get_span_context()
+            context = span.get_span_reference()
             trace_id = context.trace_id
             span_id = context.span_id
 
@@ -205,9 +205,9 @@ class ZipkinSpanExporter(SpanExporter):
 
             if isinstance(span.parent, Span):
                 zipkin_span["parentId"] = format(
-                    span.parent.get_span_context().span_id, "016x"
+                    span.parent.get_span_reference().span_id, "016x"
                 )
-            elif isinstance(span.parent, SpanContext):
+            elif isinstance(span.parent, SpanReference):
                 zipkin_span["parentId"] = format(span.parent.span_id, "016x")
 
             zipkin_spans.append(zipkin_span)

@@ -175,13 +175,13 @@ class TestDatadogSpanExporter(unittest.TestCase):
             start_times[2] + durations[2],
         )
 
-        span_context = trace_api.SpanContext(
+        span_reference = trace_api.SpanReference(
             trace_id, span_id, is_remote=False
         )
-        parent_span_context = trace_api.SpanContext(
+        parent_span_reference = trace_api.SpanReference(
             trace_id, parent_id, is_remote=False
         )
-        other_context = trace_api.SpanContext(
+        other_reference = trace_api.SpanReference(
             trace_id, other_id, is_remote=False
         )
 
@@ -190,22 +190,22 @@ class TestDatadogSpanExporter(unittest.TestCase):
         otel_spans = [
             trace._Span(
                 name=span_names[0],
-                context=span_context,
-                parent=parent_span_context,
+                reference=span_reference,
+                parent=parent_span_reference,
                 kind=trace_api.SpanKind.CLIENT,
                 instrumentation_info=instrumentation_info,
                 resource=Resource({}),
             ),
             trace._Span(
                 name=span_names[1],
-                context=parent_span_context,
+                reference=parent_span_reference,
                 parent=None,
                 instrumentation_info=instrumentation_info,
                 resource=resource_without_service,
             ),
             trace._Span(
                 name=span_names[2],
-                context=other_context,
+                reference=other_reference,
                 parent=None,
                 resource=resource,
             ),
@@ -283,13 +283,13 @@ class TestDatadogSpanExporter(unittest.TestCase):
     def test_export(self):
         """Test that agent and/or collector are invoked"""
         # create and save span to be used in tests
-        context = trace_api.SpanContext(
+        reference = trace_api.SpanReference(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
 
-        test_span = trace._Span("test_span", context=context)
+        test_span = trace._Span("test_span", reference=reference)
         test_span.start()
         test_span.end()
 
@@ -483,7 +483,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         tracer_provider.shutdown()
 
     def test_origin(self):
-        context = trace_api.SpanContext(
+        reference = trace_api.SpanReference(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=trace_api.INVALID_SPAN,
             is_remote=True,
@@ -492,9 +492,9 @@ class TestDatadogSpanExporter(unittest.TestCase):
             ),
         )
 
-        root_span = trace._Span(name="root", context=context, parent=None)
+        root_span = trace._Span(name="root", reference=reference, parent=None)
         child_span = trace._Span(
-            name="child", context=context, parent=root_span
+            name="child", reference=reference, parent=root_span
         )
         root_span.start()
         child_span.start()
@@ -520,7 +520,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         self.assertListEqual(actual, expected)
 
     def test_sampling_rate(self):
-        context = trace_api.SpanContext(
+        reference = trace_api.SpanReference(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x34BF92DEEFC58C92,
             is_remote=False,
@@ -529,7 +529,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         sampler = sampling.TraceIdRatioBased(0.5)
 
         span = trace._Span(
-            name="sampled", context=context, parent=None, sampler=sampler
+            name="sampled", reference=reference, parent=None, sampler=sampler
         )
         span.start()
         span.end()

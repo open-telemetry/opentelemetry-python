@@ -23,14 +23,14 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_span_context(self) -> "SpanContext":
-        """Gets the span's SpanContext.
+    def get_span_reference(self) -> "SpanReference":
+        """Gets the span's SpanReference.
 
         Get an immutable, serializable identifier for this span that can be
         used to create new child spans.
 
         Returns:
-            A :class:`opentelemetry.trace.SpanContext` with a copy of this span's immutable state.
+            A :class:`opentelemetry.trace.SpanReference` with a copy of this span's immutable state.
         """
 
     @abc.abstractmethod
@@ -146,7 +146,7 @@ class TraceState(typing.Dict[str, str]):
 DEFAULT_TRACE_STATE = TraceState.get_default()
 
 
-class SpanContext(
+class SpanReference(
     typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
 ):
     """The state of a Span to propagate between processes.
@@ -169,7 +169,7 @@ class SpanContext(
         is_remote: bool,
         trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
         trace_state: "TraceState" = DEFAULT_TRACE_STATE,
-    ) -> "SpanContext":
+    ) -> "SpanReference":
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
@@ -234,11 +234,11 @@ class DefaultSpan(Span):
     All operations are no-op except context propagation.
     """
 
-    def __init__(self, context: "SpanContext") -> None:
-        self._context = context
+    def __init__(self, reference: "SpanReference") -> None:
+        self._reference = reference
 
-    def get_span_context(self) -> "SpanContext":
-        return self._context
+    def get_span_reference(self) -> "SpanReference":
+        return self._reference
 
     def is_recording(self) -> bool:
         return False
@@ -269,14 +269,14 @@ class DefaultSpan(Span):
 
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
-INVALID_SPAN_CONTEXT = SpanContext(
+INVALID_SPAN_REFERENCE = SpanReference(
     trace_id=INVALID_TRACE_ID,
     span_id=INVALID_SPAN_ID,
     is_remote=False,
     trace_flags=DEFAULT_TRACE_OPTIONS,
     trace_state=DEFAULT_TRACE_STATE,
 )
-INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
+INVALID_SPAN = DefaultSpan(INVALID_SPAN_REFERENCE)
 
 
 def format_trace_id(trace_id: int) -> str:

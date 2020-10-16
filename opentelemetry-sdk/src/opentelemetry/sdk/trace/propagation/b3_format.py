@@ -58,7 +58,7 @@ class B3Format(TextMapPropagator):
         if single_header:
             # The b3 spec calls for the sampling state to be
             # "deferred", which is unspecified. This concept does not
-            # translate to SpanContext, so we set it as recorded.
+            # translate to SpanReference, so we set it as recorded.
             sampled = "1"
             fields = single_header.split("-", 4)
 
@@ -121,7 +121,7 @@ class B3Format(TextMapPropagator):
 
         return trace.set_span_in_context(
             trace.DefaultSpan(
-                trace.SpanContext(
+                trace.SpanReference(
                     # trace an span ids are encoded in hex, so must be converted
                     trace_id=trace_id,
                     span_id=span_id,
@@ -140,16 +140,18 @@ class B3Format(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        span_reference = span.get_span_reference()
+        if span_reference == trace.INVALID_SPAN_REFERENCE:
             return
 
-        sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
+        sampled = (trace.TraceFlags.SAMPLED & span_reference.trace_flags) != 0
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
+            carrier,
+            self.TRACE_ID_KEY,
+            format_trace_id(span_reference.trace_id),
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
+            carrier, self.SPAN_ID_KEY, format_span_id(span_reference.span_id)
         )
         span_parent = getattr(span, "parent", None)
         if span_parent is not None:

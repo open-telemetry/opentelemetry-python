@@ -18,9 +18,9 @@ from opentelemetry import trace
 from opentelemetry.trace import TraceFlags, TraceState
 
 
-class TestImmutableSpanContext(unittest.TestCase):
+class TestImmutableSpanReference(unittest.TestCase):
     def test_ctor(self):
-        context = trace.SpanContext(
+        context = trace.SpanReference(
             1,
             1,
             is_remote=False,
@@ -35,7 +35,7 @@ class TestImmutableSpanContext(unittest.TestCase):
         self.assertEqual(context.trace_state, trace.DEFAULT_TRACE_STATE)
 
     def test_attempt_change_attributes(self):
-        context = trace.SpanContext(
+        context = trace.SpanReference(
             1,
             2,
             is_remote=False,

@@ -285,16 +285,16 @@ class TestShim(TestCase):
 
                 # Verify parent-child relationship.
                 parent_trace_id = (
-                    parent.span.unwrap().get_span_context().trace_id
+                    parent.span.unwrap().get_span_reference().trace_id
                 )
                 child_trace_id = (
-                    child.span.unwrap().get_span_context().trace_id
+                    child.span.unwrap().get_span_reference().trace_id
                 )
 
                 self.assertEqual(parent_trace_id, child_trace_id)
                 self.assertEqual(
                     child.span.unwrap().parent,
-                    parent.span.unwrap().get_span_context(),
+                    parent.span.unwrap().get_span_reference(),
                 )
 
             # Verify parent span becomes the active span again.
@@ -318,55 +318,55 @@ class TestShim(TestCase):
             with self.shim.start_active_span(
                 "ChildSpan", child_of=parent
             ) as child:
-                parent_trace_id = parent.unwrap().get_span_context().trace_id
+                parent_trace_id = parent.unwrap().get_span_reference().trace_id
                 child_trace_id = (
-                    child.span.unwrap().get_span_context().trace_id
+                    child.span.unwrap().get_span_reference().trace_id
                 )
 
                 self.assertEqual(child_trace_id, parent_trace_id)
                 self.assertEqual(
                     child.span.unwrap().parent,
-                    parent.unwrap().get_span_context(),
+                    parent.unwrap().get_span_reference(),
                 )
 
         with self.shim.start_span("ParentSpan") as parent:
             child = self.shim.start_span("ChildSpan", child_of=parent)
 
-            parent_trace_id = parent.unwrap().get_span_context().trace_id
-            child_trace_id = child.unwrap().get_span_context().trace_id
+            parent_trace_id = parent.unwrap().get_span_reference().trace_id
+            child_trace_id = child.unwrap().get_span_reference().trace_id
 
             self.assertEqual(child_trace_id, parent_trace_id)
             self.assertEqual(
-                child.unwrap().parent, parent.unwrap().get_span_context()
+                child.unwrap().parent, parent.unwrap().get_span_reference()
             )
 
             child.finish()
 
-    def test_parent_child_explicit_span_context(self):
+    def test_parent_child_explicit_span_reference(self):
         """Test parent-child relationship of spans when specifying a
-        `SpanContext` object as a parent upon creation.
+        `SpanReference` object as a parent upon creation.
         """
 
         with self.shim.start_span("ParentSpan") as parent:
             with self.shim.start_active_span(
                 "ChildSpan", child_of=parent.context
             ) as child:
-                parent_trace_id = parent.unwrap().get_span_context().trace_id
+                parent_trace_id = parent.unwrap().get_span_reference().trace_id
                 child_trace_id = (
-                    child.span.unwrap().get_span_context().trace_id
+                    child.span.unwrap().get_span_reference().trace_id
                 )
 
                 self.assertEqual(child_trace_id, parent_trace_id)
                 self.assertEqual(
-                    child.span.unwrap().parent, parent.context.unwrap()
+                    child.span.unwrap().parent, parent.context.unwrap(),
                 )
 
         with self.shim.start_span("ParentSpan") as parent:
             with self.shim.start_span(
                 "SpanWithContextParent", child_of=parent.context
             ) as child:
-                parent_trace_id = parent.unwrap().get_span_context().trace_id
-                child_trace_id = child.unwrap().get_span_context().trace_id
+                parent_trace_id = parent.unwrap().get_span_reference().trace_id
+                child_trace_id = child.unwrap().get_span_reference().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
                 self.assertEqual(
@@ -383,7 +383,7 @@ class TestShim(TestCase):
                 "ChildSpan", references=[ref]
             ) as child:
                 self.assertEqual(
-                    child.span.unwrap().links[0].context,
+                    child.span.unwrap().links[0].reference,
                     parent.context.unwrap(),
                 )
 
@@ -458,10 +458,10 @@ class TestShim(TestCase):
         self.assertEqual(span.unwrap().events[0].attributes["payload"], "bar")
         self.assertIsNotNone(span.unwrap().events[0].timestamp)
 
-    def test_span_context(self):
+    def test_span_reference(self):
         """Test construction of `SpanContextShim` objects."""
 
-        otel_context = trace.SpanContext(1234, 5678, is_remote=False)
+        otel_context = trace.SpanReference(1234, 5678, is_remote=False)
         context = SpanContextShim(otel_context)
 
         self.assertIsInstance(context, opentracing.SpanContext)
@@ -484,7 +484,7 @@ class TestShim(TestCase):
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""
 
-        otel_context = trace.SpanContext(
+        otel_context = trace.SpanReference(
             trace_id=1220, span_id=7478, is_remote=False
         )
         context = SpanContextShim(otel_context)
@@ -499,7 +499,7 @@ class TestShim(TestCase):
     def test_inject_text_map(self):
         """Test `inject()` method for Format.TEXT_MAP."""
 
-        otel_context = trace.SpanContext(
+        otel_context = trace.SpanReference(
             trace_id=1220, span_id=7478, is_remote=False
         )
         context = SpanContextShim(otel_context)
@@ -517,7 +517,7 @@ class TestShim(TestCase):
     def test_inject_binary(self):
         """Test `inject()` method for Format.BINARY."""
 
-        otel_context = trace.SpanContext(
+        otel_context = trace.SpanReference(
             trace_id=1220, span_id=7478, is_remote=False
         )
         context = SpanContextShim(otel_context)
@@ -540,7 +540,7 @@ class TestShim(TestCase):
 
     def test_extract_empty_context_returns_invalid_context(self):
         """In the case where the propagator cannot extract a
-        SpanContext, extract should return and invalid span context.
+        SpanReference, extract should return and invalid span context.
         """
         _old_propagator = propagators.get_global_textmap()
         propagators.set_global_textmap(NOOPTextMapPropagator())
@@ -548,7 +548,7 @@ class TestShim(TestCase):
             carrier = {}
 
             ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
-            self.assertEqual(ctx.unwrap(), trace.INVALID_SPAN_CONTEXT)
+            self.assertEqual(ctx.unwrap(), trace.INVALID_SPAN_REFERENCE)
         finally:
             propagators.set_global_textmap(_old_propagator)
 
@@ -573,16 +573,16 @@ class TestShim(TestCase):
 
     def test_baggage(self):
 
-        span_context_shim = SpanContextShim(
-            trace.SpanContext(1234, 5678, is_remote=False)
+        span_reference_shim = SpanContextShim(
+            trace.SpanReference(1234, 5678, is_remote=False)
         )
 
-        baggage = span_context_shim.baggage
+        baggage = span_reference_shim.baggage
 
         with self.assertRaises(ValueError):
             baggage[1] = 3
 
-        span_shim = SpanShim(Mock(), span_context_shim, Mock())
+        span_shim = SpanShim(Mock(), span_reference_shim, Mock())
 
         span_shim.set_baggage_item(1, 2)
 
@@ -622,7 +622,8 @@ class TestShim(TestCase):
             ) as opentelemetry_span:
 
                 self.assertIs(
-                    span_shim.unwrap().context, opentelemetry_span.parent,
+                    span_shim.unwrap().get_span_reference(),
+                    opentelemetry_span.parent,
                 )
 
         with (
@@ -632,5 +633,6 @@ class TestShim(TestCase):
             with self.shim.start_active_span("TestSpan17") as scope:
 
                 self.assertIs(
-                    scope.span.unwrap().parent, opentelemetry_span.context,
+                    scope.span.unwrap().parent,
+                    opentelemetry_span.get_span_reference(),
                 )

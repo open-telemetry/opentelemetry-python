@@ -46,9 +46,12 @@ def test_instrumentation_info(celery_app, memory_exporter):
 
     async_span, run_span = spans
 
-    assert run_span.parent == async_span.context
-    assert run_span.parent.span_id == async_span.context.span_id
-    assert run_span.context.trace_id == async_span.context.trace_id
+    assert run_span.parent == async_span.get_span_reference()
+    assert run_span.parent.span_id == async_span.get_span_reference().span_id
+    assert (
+        run_span.get_span_reference().trace_id
+        == async_span.get_span_reference().trace_id
+    )
 
     assert async_span.instrumentation_info.name == "apply_async/{0}".format(
         opentelemetry.instrumentation.celery.__name__
@@ -154,7 +157,10 @@ def test_fn_task_apply_async(celery_app, memory_exporter):
 
     async_span, run_span = spans
 
-    assert run_span.context.trace_id != async_span.context.trace_id
+    assert (
+        run_span.get_span_reference().trace_id
+        != async_span.get_span_reference().trace_id
+    )
 
     assert async_span.status.is_ok is True
     assert (
@@ -209,7 +215,10 @@ def test_fn_task_delay(celery_app, memory_exporter):
 
     async_span, run_span = spans
 
-    assert run_span.context.trace_id != async_span.context.trace_id
+    assert (
+        run_span.get_span_reference().trace_id
+        != async_span.get_span_reference().trace_id
+    )
 
     assert async_span.status.is_ok is True
     assert (

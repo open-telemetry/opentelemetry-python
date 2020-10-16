@@ -60,7 +60,7 @@ class TestSamplingResult(unittest.TestCase):
 class TestSampler(unittest.TestCase):
     def test_always_on(self):
         no_record_always_on = sampling.ALWAYS_ON.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
@@ -73,7 +73,7 @@ class TestSampler(unittest.TestCase):
         )
 
         sampled_always_on = sampling.ALWAYS_ON.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
@@ -87,7 +87,7 @@ class TestSampler(unittest.TestCase):
 
     def test_always_off(self):
         no_record_always_off = sampling.ALWAYS_OFF.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
@@ -98,7 +98,7 @@ class TestSampler(unittest.TestCase):
         self.assertEqual(no_record_always_off.attributes, {})
 
         sampled_always_on = sampling.ALWAYS_OFF.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
@@ -110,7 +110,7 @@ class TestSampler(unittest.TestCase):
 
     def test_default_on(self):
         no_record_default_on = sampling.DEFAULT_ON.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
@@ -121,7 +121,7 @@ class TestSampler(unittest.TestCase):
         self.assertEqual(no_record_default_on.attributes, {})
 
         sampled_default_on = sampling.DEFAULT_ON.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
@@ -143,7 +143,7 @@ class TestSampler(unittest.TestCase):
 
     def test_default_off(self):
         no_record_default_off = sampling.DEFAULT_OFF.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_DEFAULT
             ),
             0xDEADBEF1,
@@ -154,7 +154,7 @@ class TestSampler(unittest.TestCase):
         self.assertEqual(no_record_default_off.attributes, {})
 
         sampled_default_off = sampling.DEFAULT_OFF.should_sample(
-            trace.SpanContext(
+            trace.SpanReference(
                 0xDEADBEEF, 0xDEADBEF0, is_remote=False, trace_flags=TO_SAMPLED
             ),
             0xDEADBEF1,
@@ -278,7 +278,7 @@ class TestSampler(unittest.TestCase):
         # Check that the sampling decision matches the parent context if given
         self.assertFalse(
             sampler.should_sample(
-                trace.SpanContext(
+                trace.SpanReference(
                     0xDEADBEF0,
                     0xDEADBEF1,
                     is_remote=False,
@@ -293,7 +293,7 @@ class TestSampler(unittest.TestCase):
         sampler2 = sampling.ParentBased(sampling.ALWAYS_OFF)
         self.assertTrue(
             sampler2.should_sample(
-                trace.SpanContext(
+                trace.SpanReference(
                     0xDEADBEF0,
                     0xDEADBEF1,
                     is_remote=False,

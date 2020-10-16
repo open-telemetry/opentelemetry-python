@@ -31,19 +31,21 @@ def get_as_list(dict_object, key):
 def get_child_parent_new_carrier(old_carrier):
 
     ctx = FORMAT.extract(get_as_list, old_carrier)
-    parent_span_context = trace_api.get_current_span(ctx).get_span_context()
+    parent_span_reference = trace_api.get_current_span(
+        ctx
+    ).get_span_reference()
 
-    parent = trace._Span("parent", parent_span_context)
+    parent = trace._Span("parent", parent_span_reference)
     child = trace._Span(
         "child",
-        trace_api.SpanContext(
-            parent_span_context.trace_id,
+        trace_api.SpanReference(
+            parent_span_reference.trace_id,
             trace_api.RandomIdsGenerator().generate_span_id(),
             is_remote=False,
-            trace_flags=parent_span_context.trace_flags,
-            trace_state=parent_span_context.trace_state,
+            trace_flags=parent_span_reference.trace_flags,
+            trace_state=parent_span_reference.trace_state,
         ),
-        parent=parent.get_span_context(),
+        parent=parent.get_span_reference(),
     )
 
     new_carrier = {}
@@ -80,17 +82,17 @@ class TestB3Format(unittest.TestCase):
 
         self.assertEqual(
             new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            b3_format.format_trace_id(child.get_span_reference().trace_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            b3_format.format_span_id(child.get_span_reference().span_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
+            b3_format.format_span_id(parent.get_span_reference().span_id),
         )
-        self.assertTrue(parent.context.is_remote)
+        self.assertTrue(parent.get_span_reference().is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_single_header(self):
@@ -105,14 +107,14 @@ class TestB3Format(unittest.TestCase):
 
         self.assertEqual(
             new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            b3_format.format_trace_id(child.get_span_reference().trace_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            b3_format.format_span_id(child.get_span_reference().span_id),
         )
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
-        self.assertTrue(parent.context.is_remote)
+        self.assertTrue(parent.get_span_reference().is_remote)
 
         child, parent, new_carrier = get_child_parent_new_carrier(
             {
@@ -126,17 +128,17 @@ class TestB3Format(unittest.TestCase):
 
         self.assertEqual(
             new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            b3_format.format_trace_id(child.get_span_reference().trace_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            b3_format.format_span_id(child.get_span_reference().span_id),
         )
         self.assertEqual(
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
+            b3_format.format_span_id(parent.get_span_reference().span_id),
         )
-        self.assertTrue(parent.context.is_remote)
+        self.assertTrue(parent.get_span_reference().is_remote)
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
     def test_extract_header_precedence(self):
@@ -228,13 +230,13 @@ class TestB3Format(unittest.TestCase):
 
     def test_invalid_single_header(self):
         """If an invalid single header is passed, return an
-        invalid SpanContext.
+        invalid SpanReference.
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        span_reference = trace_api.get_current_span(ctx).get_span_reference()
+        self.assertEqual(span_reference.trace_id, trace_api.INVALID_TRACE_ID)
+        self.assertEqual(span_reference.span_id, trace_api.INVALID_SPAN_ID)
 
     def test_missing_trace_id(self):
         """If a trace id is missing, populate an invalid trace id."""
@@ -244,8 +246,8 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        span_reference = trace_api.get_current_span(ctx).get_span_reference()
+        self.assertEqual(span_reference.trace_id, trace_api.INVALID_TRACE_ID)
 
     @patch(
         "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_trace_id"
@@ -268,10 +270,10 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
+        span_reference = trace_api.get_current_span(ctx).get_span_reference()
 
-        self.assertEqual(span_context.trace_id, 1)
-        self.assertEqual(span_context.span_id, 2)
+        self.assertEqual(span_reference.trace_id, 1)
+        self.assertEqual(span_reference.span_id, 2)
 
     @patch(
         "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_trace_id"
@@ -294,10 +296,10 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
+        span_reference = trace_api.get_current_span(ctx).get_span_reference()
 
-        self.assertEqual(span_context.trace_id, 1)
-        self.assertEqual(span_context.span_id, 2)
+        self.assertEqual(span_reference.trace_id, 1)
+        self.assertEqual(span_reference.span_id, 2)
 
     def test_missing_span_id(self):
         """If a trace id is missing, populate an invalid trace id."""
@@ -307,8 +309,8 @@ class TestB3Format(unittest.TestCase):
         }
 
         ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        span_reference = trace_api.get_current_span(ctx).get_span_reference()
+        self.assertEqual(span_reference.span_id, trace_api.INVALID_SPAN_ID)
 
     @staticmethod
     def test_inject_empty_context():

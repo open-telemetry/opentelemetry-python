@@ -53,7 +53,7 @@ class _GuardedSpan:
         return self.span
 
 
-def _inject_span_context(metadata: MutableMapping[str, str]) -> None:
+def _inject_span_reference(metadata: MutableMapping[str, str]) -> None:
     # pylint:disable=unused-argument
     def append_metadata(
         carrier: MutableMapping[str, str], key: str, value: str
@@ -150,7 +150,7 @@ class OpenTelemetryClientInterceptor(
             with self._metrics_recorder.record_latency(
                 client_info.full_method
             ):
-                _inject_span_context(mutable_metadata)
+                _inject_span_reference(mutable_metadata)
                 metadata = tuple(mutable_metadata.items())
 
                 # If protobuf is used, we can record the bytes in/out. Otherwise, we have no way
@@ -194,7 +194,7 @@ class OpenTelemetryClientInterceptor(
             with self._metrics_recorder.record_latency(
                 client_info.full_method
             ):
-                _inject_span_context(mutable_metadata)
+                _inject_span_reference(mutable_metadata)
                 metadata = tuple(mutable_metadata.items())
                 rpc_info = RpcInfo(
                     full_method=client_info.full_method,
@@ -247,7 +247,7 @@ class OpenTelemetryClientInterceptor(
             with self._metrics_recorder.record_latency(
                 client_info.full_method
             ):
-                _inject_span_context(mutable_metadata)
+                _inject_span_reference(mutable_metadata)
                 metadata = tuple(mutable_metadata.items())
                 rpc_info = RpcInfo(
                     full_method=client_info.full_method,

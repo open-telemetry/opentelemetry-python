@@ -28,7 +28,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
     """A propagator that does not extract nor inject.
 
     This class is useful for catching edge cases assuming
-    a SpanContext will always be present.
+    a SpanReference will always be present.
     """
 
     def extract(
@@ -68,7 +68,7 @@ class MockTextMapPropagator(TextMapPropagator):
 
         return trace.set_span_in_context(
             trace.DefaultSpan(
-                trace.SpanContext(
+                trace.SpanReference(
                     trace_id=int(trace_id_list[0]),
                     span_id=int(span_id_list[0]),
                     is_remote=True,
@@ -84,8 +84,8 @@ class MockTextMapPropagator(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context)
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
+            carrier, self.TRACE_ID_KEY, str(span.get_span_reference().trace_id)
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
+            carrier, self.SPAN_ID_KEY, str(span.get_span_reference().span_id)
         )

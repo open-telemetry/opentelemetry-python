@@ -71,12 +71,12 @@ class OTLPSpanExporter(
     def _translate_span_id(self, sdk_span: SDKSpan) -> None:
         self._collector_span_kwargs[
             "span_id"
-        ] = sdk_span.context.span_id.to_bytes(8, "big")
+        ] = sdk_span.get_span_reference().span_id.to_bytes(8, "big")
 
     def _translate_trace_id(self, sdk_span: SDKSpan) -> None:
         self._collector_span_kwargs[
             "trace_id"
-        ] = sdk_span.context.trace_id.to_bytes(16, "big")
+        ] = sdk_span.get_span_reference().trace_id.to_bytes(16, "big")
 
     def _translate_parent(self, sdk_span: SDKSpan) -> None:
         if sdk_span.parent is not None:
@@ -85,11 +85,13 @@ class OTLPSpanExporter(
             ] = sdk_span.parent.span_id.to_bytes(8, "big")
 
     def _translate_context_trace_state(self, sdk_span: SDKSpan) -> None:
-        if sdk_span.context.trace_state is not None:
+        if sdk_span.get_span_reference().trace_state is not None:
             self._collector_span_kwargs["trace_state"] = ",".join(
                 [
                     "{}={}".format(key, value)
-                    for key, value in (sdk_span.context.trace_state.items())
+                    for key, value in (
+                        sdk_span.get_span_reference().trace_state.items()
+                    )
                 ]
             )
 
@@ -139,9 +141,11 @@ class OTLPSpanExporter(
 
                 collector_span_link = CollectorSpan.Link(
                     trace_id=(
-                        sdk_span_link.context.trace_id.to_bytes(16, "big")
+                        sdk_span_link.reference.trace_id.to_bytes(16, "big")
                     ),
-                    span_id=(sdk_span_link.context.span_id.to_bytes(8, "big")),
+                    span_id=(
+                        sdk_span_link.reference.span_id.to_bytes(8, "big")
+                    ),
                 )
 
                 for key, value in sdk_span_link.attributes.items():

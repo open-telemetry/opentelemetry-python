@@ -125,7 +125,7 @@ class TestOTLPSpanExporter(TestCase):
 
         self.span = _Span(
             "a",
-            context=Mock(
+            reference=Mock(
                 **{
                     "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
                     "span_id": 10217189687419569865,
@@ -139,8 +139,8 @@ class TestOTLPSpanExporter(TestCase):
             links=[
                 Mock(
                     **{
-                        "context.trace_id": 1,
-                        "context.span_id": 2,
+                        "reference.trace_id": 1,
+                        "reference.span_id": 2,
                         "attributes": OrderedDict([("a", 1), ("b", False)]),
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
