@@ -181,7 +181,7 @@ class UpDownCounter(Metric):
         """
 
 
-class ValueRecorder(abc.ABC, Metric):
+class ValueRecorder(Metric):
     """A valuerecorder type metric that represent raw stats."""
 
     @abc.abstractmethod
