@@ -89,6 +89,14 @@ class BoundValueRecorder:
         """
 
 
+class DefaultBoundValueRecorder:
+    def record(self, value: ValueT) -> None:
+        """The default bound valuerecorder instrument.
+
+        Used when no bound valuerecorder implementation is available.
+        """
+
+
 class Metric(abc.ABC):
     """Base class for various types of metrics.
 
@@ -173,13 +181,10 @@ class UpDownCounter(Metric):
         """
 
 
-class ValueRecorder(Metric):
+class ValueRecorder(abc.ABC, Metric):
     """A valuerecorder type metric that represent raw stats."""
 
-    def bind(self, labels: Dict[str, str]) -> "BoundValueRecorder":
-        """Gets a `BoundValueRecorder`."""
-        return BoundValueRecorder()
-
+    @abc.abstractmethod
     def record(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Records the ``value`` to the valuerecorder.
 
@@ -187,6 +192,19 @@ class ValueRecorder(Metric):
             value: The value to record to this valuerecorder metric.
             labels: Labels to associate with the bound instrument.
         """
+
+
+class DefaultValueRecorder(ValueRecorder):
+    """The default valuerecorder instrument.
+
+    Used when no valuerecorder implementation is available.
+    """
+
+    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
+
+    def bind(self, labels: Dict[str, str]) -> "DefaultBoundValueRecorder":
+        return DefaultBoundValueRecorder()
 
 
 class Observer(abc.ABC):
@@ -358,6 +376,26 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
+    def create_value_recorder(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "ValueRecorder":
+        """Creates a `ValueRecorder` metric with type ``value_type``.
+
+        Args:
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            enabled: Whether to report the metric by default.
+        """
+
+    @abc.abstractmethod
     def register_observer(
         self,
         callback: ObserverCallbackT,
@@ -415,6 +453,17 @@ class DefaultMeter(Meter):
     ) -> "Metric":
         # pylint: disable=no-self-use
         return DefaultMetric()
+
+    def create_value_recorder(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "ValueRecorder":
+        # pylint: disable=no-self-use
+        return DefaultValueRecorder()
 
     def register_observer(
         self,
