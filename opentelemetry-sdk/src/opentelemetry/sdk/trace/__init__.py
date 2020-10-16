@@ -481,6 +481,8 @@ class Span(trace_api.Span):
     def _format_attributes(attributes):
         if isinstance(attributes, BoundedDict):
             return attributes._dict  # pylint: disable=protected-access
+        if isinstance(attributes, MappingProxyType):
+            return attributes.copy()
         return attributes
 
     @staticmethod
