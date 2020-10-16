@@ -61,26 +61,73 @@ class TestHTTPMetricRecorder(TestCase):
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         # pylint: disable=protected-access
         self.assertEqual(recorder._http_type, HTTPMetricType.CLIENT)
-        self.assertTrue(isinstance(recorder._duration, metrics.ValueRecorder))
-        self.assertEqual(recorder._duration.name, "http.client.duration")
+        self.assertTrue(
+            isinstance(recorder._client_duration, metrics.ValueRecorder)
+        )
         self.assertEqual(
-            recorder._duration.description,
+            recorder._client_duration.name, "http.client.duration"
+        )
+        self.assertEqual(
+            recorder._client_duration.description,
             "measures the duration of the outbound HTTP request",
         )
 
-    def test_record_duration(self):
+    def test_ctor_types(self):
+        meter = metrics_api.get_meter(__name__)
+        recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
+        self.assertEqual(recorder._http_type, HTTPMetricType.CLIENT)
+        self.assertTrue(
+            isinstance(recorder._client_duration, metrics.ValueRecorder)
+        )
+        self.assertIsNone(recorder._server_duration)
+
+        recorder = HTTPMetricRecorder(meter, HTTPMetricType.SERVER)
+        self.assertEqual(recorder._http_type, HTTPMetricType.SERVER)
+        self.assertTrue(
+            isinstance(recorder._server_duration, metrics.ValueRecorder)
+        )
+        self.assertIsNone(recorder._client_duration)
+
+        recorder = HTTPMetricRecorder(meter, HTTPMetricType.BOTH)
+        self.assertEqual(recorder._http_type, HTTPMetricType.BOTH)
+        self.assertTrue(
+            isinstance(recorder._client_duration, metrics.ValueRecorder)
+        )
+        self.assertTrue(
+            isinstance(recorder._server_duration, metrics.ValueRecorder)
+        )
+
+    def test_record_client_duration(self):
         meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         labels = {"test": "asd"}
         with mock.patch("time.time") as time_patch:
             time_patch.return_value = 5.0
-            with recorder.record_duration(labels):
+            with recorder.record_client_duration(labels):
                 labels["test2"] = "asd2"
         match_key = get_dict_as_key({"test": "asd", "test2": "asd2"})
-        for key in recorder._duration.bound_instruments.keys():
+        for key in recorder._client_duration.bound_instruments.keys():
             self.assertEqual(key, match_key)
             # pylint: disable=protected-access
-            bound = recorder._duration.bound_instruments.get(key)
+            bound = recorder._client_duration.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
+                self.assertGreaterEqual(view_data.aggregator.current.sum, 0)
+
+    def test_record_server_duration(self):
+        meter = metrics_api.get_meter(__name__)
+        recorder = HTTPMetricRecorder(meter, HTTPMetricType.SERVER)
+        labels = {"test": "asd"}
+        with mock.patch("time.time") as time_patch:
+            time_patch.return_value = 5.0
+            with recorder.record_server_duration(labels):
+                labels["test2"] = "asd2"
+        match_key = get_dict_as_key({"test": "asd", "test2": "asd2"})
+        for key in recorder._server_duration.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder._server_duration.bound_instruments.get(key)
             for view_data in bound.view_datas:
                 self.assertEqual(view_data.labels, key)
                 self.assertEqual(view_data.aggregator.current.count, 1)
