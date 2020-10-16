@@ -84,7 +84,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_create_value_recorder(self):
         meter = metrics.DefaultMeter()
-        metric = meter.create_counter("", "", "", float)
+        metric = meter.create_value_recorder("", "", "", float)
         self.assertIsInstance(metric, metrics.DefaultValueRecorder)
 
     def test_register_observer(self):
