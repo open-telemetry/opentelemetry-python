@@ -205,7 +205,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self,
         func: Callable[[SpanProcessor], Callable[..., None]],
         *args: Any,
-        **kwargs: Any,
+        **kwargs: Any
     ):
         futures = []
         for sp in self._span_processors:
