@@ -162,7 +162,11 @@ class OTLPExporterMixin(
             insecure = False
 
         self._headers = headers or Configuration().EXPORTER_OTLP_HEADERS
-        self._timeout = timeout or Configuration().EXPORTER_OTLP_TIMEOUT or 10 # 10 seconds
+        self._timeout = (
+            timeout
+            or Configuration().EXPORTER_OTLP_TIMEOUT
+            or 10  # default: 10 seconds
+        )
         self._collector_span_kwargs = None
 
         if insecure:
@@ -195,7 +199,8 @@ class OTLPExporterMixin(
 
             try:
                 self._client.Export(
-                    request=self._translate_data(data), metadata=self._headers,
+                    request=self._translate_data(data),
+                    metadata=self._headers,
                     timeout=self._timeout,
                 )
 
