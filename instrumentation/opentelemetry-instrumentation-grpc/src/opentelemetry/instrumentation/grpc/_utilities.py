@@ -19,7 +19,7 @@ from time import time
 
 import grpc
 
-from opentelemetry.sdk.metrics import Counter, ValueRecorder
+from opentelemetry.sdk.metrics import Counter
 
 
 class RpcInfo:
@@ -47,12 +47,11 @@ class TimedMetricRecorder:
         self._span_kind = span_kind
 
         if self._meter:
-            self._duration = self._meter.create_metric(
+            self._duration = self._meter.create_value_recorder(
                 name="{}/{}/duration".format(service_name, span_kind),
                 description="Duration of grpc requests to the server",
                 unit="ms",
                 value_type=float,
-                metric_type=ValueRecorder,
             )
             self._error_count = self._meter.create_metric(
                 name="{}/{}/errors".format(service_name, span_kind),

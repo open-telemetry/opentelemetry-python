@@ -25,7 +25,7 @@ import sys
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider, ValueRecorder
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
 print(
@@ -60,12 +60,11 @@ requests_counter = meter.create_metric(
     metric_type=Counter,
 )
 
-requests_size = meter.create_metric(
+requests_size = meter.create_value_recorder(
     name="requests_size",
     description="size of requests",
     unit="1",
     value_type=int,
-    metric_type=ValueRecorder,
 )
 
 # Labels are used to identify key-values that are associated with a specific

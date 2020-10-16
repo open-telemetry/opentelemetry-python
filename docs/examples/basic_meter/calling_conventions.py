@@ -19,7 +19,7 @@ It shows the usage of the direct, bound and batch calling conventions.
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider, ValueRecorder
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
 # Use the meter type provided by the SDK package
@@ -33,14 +33,6 @@ requests_counter = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Counter,
-)
-
-requests_size = meter.create_metric(
-    name="requests_size",
-    description="size of requests",
-    unit="1",
-    value_type=int,
-    metric_type=ValueRecorder,
 )
 
 clicks_counter = meter.create_metric(

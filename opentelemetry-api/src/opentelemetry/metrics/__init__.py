@@ -81,7 +81,6 @@ class BoundUpDownCounter:
 
 
 class BoundValueRecorder(abc.ABC):
-
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this bound valuerecorder.
 

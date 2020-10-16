@@ -48,7 +48,9 @@ class TestMetrics(unittest.TestCase):
     def test_default_valuerecorder(self):
         valuerecorder = metrics.DefaultValueRecorder()
         bound_valuerecorder = valuerecorder.bind({})
-        self.assertIsInstance(bound_valuerecorder, metrics.DefaultBoundValueRecorder)
+        self.assertIsInstance(
+            bound_valuerecorder, metrics.DefaultBoundValueRecorder
+        )
 
     def test_default_valuerecorder_record(self):
         valuerecorder = metrics.DefaultValueRecorder()

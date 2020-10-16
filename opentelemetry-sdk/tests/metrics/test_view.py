@@ -193,12 +193,11 @@ class TestHistogramView(unittest.TestCase):
         exporter = InMemoryMetricsExporter()
         controller = PushController(meter, exporter, 30)
 
-        requests_size = meter.create_metric(
+        requests_size = meter.create_value_recorder(
             name="requests_size",
             description="size of requests",
             unit="1",
             value_type=int,
-            metric_type=ValueRecorder,
         )
 
         size_view = View(
@@ -248,12 +247,11 @@ class TestHistogramView(unittest.TestCase):
         exporter = InMemoryMetricsExporter()
         controller = PushController(meter, exporter, 30)
 
-        requests_size = meter.create_metric(
+        requests_size = meter.create_value_recorder(
             name="requests_size",
             description="size of requests",
             unit="1",
             value_type=int,
-            metric_type=ValueRecorder,
         )
 
         size_view = View(

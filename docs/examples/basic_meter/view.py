@@ -20,7 +20,6 @@ from opentelemetry import metrics
 from opentelemetry.sdk.metrics import (
     MeterProvider,
     UpDownCounter,
-    ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.aggregate import (
@@ -44,12 +43,11 @@ requests_counter = meter.create_metric(
     metric_type=UpDownCounter,
 )
 
-requests_size = meter.create_metric(
+requests_size = meter.create_value_recorder(
     name="requests_size",
     description="size of requests",
     unit="1",
     value_type=int,
-    metric_type=ValueRecorder,
 )
 
 # Views are used to define an aggregation type and label keys to aggregate by

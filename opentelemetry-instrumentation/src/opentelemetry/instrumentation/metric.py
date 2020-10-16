@@ -22,7 +22,6 @@ from time import time
 from typing import Dict, Optional
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import ValueRecorder
 
 
 class HTTPMetricType(enum.Enum):
@@ -61,20 +60,18 @@ class HTTPMetricRecorder(MetricRecorder):
         self._server_duration = None
         if self._meter is not None:
             if http_type in (HTTPMetricType.CLIENT, HTTPMetricType.BOTH):
-                self._client_duration = self._meter.create_metric(
+                self._client_duration = self._meter.create_value_recorder(
                     name="{}.{}.duration".format("http", "client"),
                     description="measures the duration of the outbound HTTP request",
                     unit="ms",
                     value_type=float,
-                    metric_type=ValueRecorder,
                 )
             if http_type is not HTTPMetricType.CLIENT:
-                self._server_duration = self._meter.create_metric(
+                self._server_duration = self._meter.create_value_recorder(
                     name="{}.{}.duration".format("http", "server"),
                     description="measures the duration of the inbound HTTP request",
                     unit="ms",
                     value_type=float,
-                    metric_type=ValueRecorder,
                 )
 
     # Conventions for recording duration can be found at:
