@@ -80,8 +80,7 @@ class SpanProcessor:
 
         Args:
             span: The :class:`opentelemetry.trace.Span` that just started.
-            parent_context: The parent :class:`opentelemetry.context.Context`
-                of the span that just started
+            parent_context: The parent context of the span that just started.
         """
 
     def on_end(self, span: "Span") -> None:
