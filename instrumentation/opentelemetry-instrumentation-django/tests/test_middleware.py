@@ -38,12 +38,14 @@ from .views import (
     excluded_noarg2,
     route_span_name,
     traced,
+    traced_template,
 )
 
 DJANGO_2_2 = VERSION >= (2, 2)
 
 urlpatterns = [
     url(r"^traced/", traced),
+    url(r"^route/(?P<year>[0-9]{4})/template/$", traced_template),
     url(r"^error/", error),
     url(r"^excluded_arg/", excluded),
     url(r"^excluded_noarg/", excluded_noarg),
@@ -70,6 +72,35 @@ class TestMiddleware(TestBase, WsgiTestBase):
         teardown_test_environment()
         _django_instrumentor.uninstrument()
 
+    def test_templated_route_get(self):
+        Client().get("/route/2020/template/")
+
+        spans = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
+
+        span = spans[0]
+
+        self.assertEqual(
+            span.name,
+            "^route/(?P<year>[0-9]{4})/template/$"
+            if DJANGO_2_2
+            else "tests.views.traced",
+        )
+        self.assertEqual(span.kind, SpanKind.SERVER)
+        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
+        self.assertEqual(span.attributes["http.method"], "GET")
+        self.assertEqual(
+            span.attributes["http.url"],
+            "http://testserver/route/2020/template/",
+        )
+        self.assertEqual(
+            span.attributes["http.route"],
+            "^route/(?P<year>[0-9]{4})/template/$",
+        )
+        self.assertEqual(span.attributes["http.scheme"], "http")
+        self.assertEqual(span.attributes["http.status_code"], 200)
+        self.assertEqual(span.attributes["http.status_text"], "OK")
+
     def test_traced_get(self):
         Client().get("/traced/")
 
@@ -87,6 +118,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/traced/"
         )
+        self.assertEqual(span.attributes["http.route"], "^traced/")
         self.assertEqual(span.attributes["http.scheme"], "http")
         self.assertEqual(span.attributes["http.status_code"], 200)
         self.assertEqual(span.attributes["http.status_text"], "OK")
@@ -143,6 +175,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/traced/"
         )
+        self.assertEqual(span.attributes["http.route"], "^traced/")
         self.assertEqual(span.attributes["http.scheme"], "http")
         self.assertEqual(span.attributes["http.status_code"], 200)
         self.assertEqual(span.attributes["http.status_text"], "OK")
@@ -167,6 +200,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/error/"
         )
+        self.assertEqual(span.attributes["http.route"], "^error/")
         self.assertEqual(span.attributes["http.scheme"], "http")
         self.assertIsNotNone(_django_instrumentor.meter)
         self.assertEqual(len(_django_instrumentor.meter.metrics), 1)
