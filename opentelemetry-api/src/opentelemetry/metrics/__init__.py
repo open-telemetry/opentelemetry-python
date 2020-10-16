@@ -37,30 +37,6 @@ logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
-class DefaultBoundInstrument:
-    """The default bound metric instrument.
-
-    Used when no bound instrument implementation is available.
-    """
-
-    def add(self, value: ValueT) -> None:
-        """No-op implementation of `BoundCounter` add.
-
-        Args:
-            value: The value to add to the bound metric instrument.
-        """
-
-    def record(self, value: ValueT) -> None:
-        """No-op implementation of `BoundValueRecorder` record.
-
-        Args:
-            value: The value to record to the bound metric instrument.
-        """
-
-    def release(self) -> None:
-        """No-op implementation of release."""
-
-
 class BoundCounter(abc.ABC):
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound counter by ``value``.
@@ -82,12 +58,22 @@ class DefaultBoundCounter:
 
 class BoundUpDownCounter:
     def add(self, value: ValueT) -> None:
-        """Increases the value of the bound counter by ``value``.
+        """Increases the value of the bound updowncounter by ``value``.
 
         Args:
-            value: The value to add to the bound counter. Can be positive or
-                negative.
+            value: The value to add to the bound updowncounter. Can be positive
+                or negative.
         """
+
+
+class DefaultBoundUpDownCounter:
+    """The default bound updowncounter instrument.
+
+    Used when no bound updowncounter implementation is available.
+    """
+
+    def add(self, value: ValueT) -> None:
+        pass
 
 
 class BoundValueRecorder(abc.ABC):
@@ -128,34 +114,6 @@ class Metric(abc.ABC):
         """
 
 
-class DefaultMetric(Metric):
-    """The default Metric used when no Metric implementation is available."""
-
-    def bind(self, labels: Dict[str, str]) -> "DefaultBoundInstrument":
-        """Gets a `DefaultBoundInstrument`.
-
-        Args:
-            labels: Labels to associate with the bound instrument.
-        """
-        return DefaultBoundInstrument()
-
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """No-op implementation of `Counter` add.
-
-        Args:
-            value: The value to add to the counter metric.
-            labels: Labels to associate with the bound instrument.
-        """
-
-    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """No-op implementation of `ValueRecorder` record.
-
-        Args:
-            value: The value to record to this valuerecorder metric.
-            labels: Labels to associate with the bound instrument.
-        """
-
-
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
@@ -188,10 +146,6 @@ class UpDownCounter(Metric):
     """A counter type metric that expresses the computation of a sum,
     allowing negative increments."""
 
-    def bind(self, labels: Dict[str, str]) -> "BoundUpDownCounter":
-        """Gets a `BoundUpDownCounter`."""
-        return BoundUpDownCounter()
-
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
@@ -201,6 +155,16 @@ class UpDownCounter(Metric):
                 `Counter`.
             labels: Labels to associate with the bound instrument.
         """
+
+
+class DefaultUpDownCounter(Metric):
+    """The default updowncounter instrument.
+
+    Used when no `UpDownCounter` implementation is available.
+    """
+
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
 
 
 class ValueRecorder(Metric):
@@ -375,29 +339,6 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def create_metric(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[ValueT],
-        metric_type: Type[MetricT],
-        enabled: bool = True,
-    ) -> "Metric":
-        """Creates a ``metric_kind`` metric with type ``value_type``.
-
-        Args:
-            name: The name of the metric.
-            description: Human-readable description of the metric.
-            unit: Unit of the metric values following the UCUM convention
-                (https://unitsofmeasure.org/ucum.html).
-            value_type: The type of values being recorded by the metric.
-            metric_type: The type of metric being created.
-            enabled: Whether to report the metric by default.
-        Returns: A new ``metric_type`` metric with values of ``value_type``.
-        """
-
-    @abc.abstractmethod
     def create_counter(
         self,
         name: str,
@@ -407,6 +348,26 @@ class Meter(abc.ABC):
         enabled: bool = True,
     ) -> "Counter":
         """Creates a `Counter` metric with type ``value_type``.
+
+        Args:
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            enabled: Whether to report the metric by default.
+        """
+
+    @abc.abstractmethod
+    def create_updowncounter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "UpDownCounter":
+        """Creates a `UpDownCounter` metric with type ``value_type``.
 
         Args:
             name: The name of the metric.
@@ -484,18 +445,6 @@ class DefaultMeter(Meter):
     ) -> None:
         pass
 
-    def create_metric(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[ValueT],
-        metric_type: Type[MetricT],
-        enabled: bool = True,
-    ) -> "Metric":
-        # pylint: disable=no-self-use
-        return DefaultMetric()
-
     def create_counter(
         self,
         name: str,
@@ -506,6 +455,17 @@ class DefaultMeter(Meter):
     ) -> "Counter":
         # pylint: disable=no-self-use
         return DefaultCounter()
+
+    def create_updowncounter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "Counter":
+        # pylint: disable=no-self-use
+        return DefaultUpDownCounter()
 
     def create_value_recorder(
         self,

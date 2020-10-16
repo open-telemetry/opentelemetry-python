@@ -19,13 +19,6 @@ from opentelemetry import metrics
 
 # pylint: disable=no-self-use
 class TestMetrics(unittest.TestCase):
-    def test_default(self):
-        default = metrics.DefaultMetric()
-        bound_metric_instr = default.bind({})
-        self.assertIsInstance(
-            bound_metric_instr, metrics.DefaultBoundInstrument
-        )
-
     def test_default_counter(self):
         counter = metrics.DefaultCounter()
         bound_counter = counter.bind({})
@@ -35,13 +28,13 @@ class TestMetrics(unittest.TestCase):
         counter = metrics.DefaultCounter()
         counter.add(1, {})
 
-    def test_updowncounter(self):
-        counter = metrics.UpDownCounter()
+    def test_default_updowncounter(self):
+        counter = metrics.DefaultUpDownCounter()
         bound_counter = counter.bind({})
-        self.assertIsInstance(bound_counter, metrics.BoundUpDownCounter)
+        self.assertIsInstance(bound_counter, metrics.DefaultBoundUpDownCounter)
 
-    def test_updowncounter_add(self):
-        counter = metrics.UpDownCounter()
+    def test_default_updowncounter_add(self):
+        counter = metrics.DefaultUpDownCounter()
         counter.add(1, {})
         counter.add(-1, {})
 
@@ -56,12 +49,12 @@ class TestMetrics(unittest.TestCase):
         valuerecorder = metrics.DefaultValueRecorder()
         valuerecorder.record(1, {})
 
-    def test_default_bound_metric(self):
-        bound_instrument = metrics.DefaultBoundInstrument()
-        bound_instrument.release()
-
     def test_default_bound_counter(self):
         bound_counter = metrics.DefaultBoundCounter()
+        bound_counter.add(1)
+
+    def test_default_bound_updowncounter(self):
+        bound_counter = metrics.DefaultBoundUpDownCounter()
         bound_counter.add(1)
 
     def test_default_bound_valuerecorder(self):

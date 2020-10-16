@@ -417,24 +417,6 @@ class Meter(metrics_api.Meter):
         for metric, value in record_tuples:
             metric.UPDATE_FUNCTION(value, labels)
 
-    def create_metric(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type: Type[metrics_api.ValueT],
-        metric_type: Type[metrics_api.MetricT],
-        enabled: bool = True,
-    ) -> metrics_api.MetricT:
-        """See `opentelemetry.metrics.Meter.create_metric`."""
-        # Ignore type b/c of mypy bug in addition to missing annotations
-        metric = metric_type(  # type: ignore
-            name, description, unit, value_type, self, enabled=enabled
-        )
-        with self.metrics_lock:
-            self.metrics.add(metric)
-        return metric
-
     def create_counter(
         self,
         name: str,
@@ -445,6 +427,22 @@ class Meter(metrics_api.Meter):
     ) -> metrics_api.Counter:
         """See `opentelemetry.metrics.Meter.create_counter`."""
         counter = Counter(
+            name, description, unit, value_type, self, enabled=enabled
+        )
+        with self.metrics_lock:
+            self.metrics.add(counter)
+        return counter
+
+    def create_updowncounter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[metrics_api.ValueT],
+        enabled: bool = True,
+    ) -> metrics_api.UpDownCounter:
+        """See `opentelemetry.metrics.Meter.create_updowncounter`."""
+        counter = UpDownCounter(
             name, description, unit, value_type, self, enabled=enabled
         )
         with self.metrics_lock:

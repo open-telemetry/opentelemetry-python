@@ -166,8 +166,8 @@ class TestMeter(unittest.TestCase):
 
     def test_create_updowncounter(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        updowncounter = meter.create_metric(
-            "name", "desc", "unit", float, metrics.UpDownCounter, ()
+        updowncounter = meter.test_create_updowncounter(
+            "name", "desc", "unit", float,
         )
         self.assertIsInstance(updowncounter, metrics.UpDownCounter)
         self.assertEqual(updowncounter.value_type, float)
@@ -219,7 +219,11 @@ class TestMeter(unittest.TestCase):
 class TestMetric(unittest.TestCase):
     def test_bind(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric_types = [metrics.Counter, metrics.ValueRecorder]
+        metric_types = [
+            metrics.Counter,
+            metric.UpDownCounter,
+            metrics.ValueRecorder
+        ]
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
         for _type in metric_types:

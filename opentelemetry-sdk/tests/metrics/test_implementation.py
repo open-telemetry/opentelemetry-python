@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry.metrics import DefaultMeter, DefaultMetric
+from opentelemetry.metrics import DefaultCounter, DefaultMeter
 from opentelemetry.sdk import metrics
 
 
@@ -30,4 +30,4 @@ class TestMeterImplementation(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = meter.create_counter("", "", "", float)
         self.assertNotIsInstance(meter, DefaultMeter)
-        self.assertNotIsInstance(metric, DefaultMetric)
+        self.assertNotIsInstance(metric, DefaultCounter)
