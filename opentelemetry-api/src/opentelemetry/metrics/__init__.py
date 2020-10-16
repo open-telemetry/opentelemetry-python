@@ -163,6 +163,9 @@ class DefaultUpDownCounter(Metric):
     Used when no `UpDownCounter` implementation is available.
     """
 
+    def bind(self, labels: Dict[str, str]) -> "DefaultBoundUpDownCounter":
+        return DefaultBoundUpDownCounter()
+
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
 
@@ -463,7 +466,7 @@ class DefaultMeter(Meter):
         unit: str,
         value_type: Type[ValueT],
         enabled: bool = True,
-    ) -> "Counter":
+    ) -> "UpDownCounter":
         # pylint: disable=no-self-use
         return DefaultUpDownCounter()
 
