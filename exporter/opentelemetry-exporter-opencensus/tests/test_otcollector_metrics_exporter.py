@@ -90,11 +90,11 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     def test_get_collector_point(self):
         aggregator = aggregate.SumAggregator()
-        int_counter = self._meter.create_metric(
-            "testName", "testDescription", "unit", int, Counter
+        int_counter = self._meter.create_counter(
+            "testName", "testDescription", "unit", int,
         )
-        float_counter = self._meter.create_metric(
-            "testName", "testDescription", "unit", float, Counter
+        float_counter = self._meter.create_counter(
+            "testName", "testDescription", "unit", float,
         )
         valuerecorder = self._meter.create_value_recorder(
             "testName", "testDescription", "unit", float,
@@ -141,8 +141,8 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         collector_exporter = metrics_exporter.OpenCensusMetricsExporter(
             client=mock_client, host_name=host_name
         )
-        test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, self._labels.keys(),
+        test_metric = self._meter.create_counter(
+            "testname", "testdesc", "unit", int, self._labels.keys(),
         )
         record = MetricRecord(
             test_metric,
@@ -167,8 +167,8 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         )
 
     def test_translate_to_collector(self):
-        test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, self._labels.keys()
+        test_metric = self._meter.create_counter(
+            "testname", "testdesc", "unit", int, self._labels.keys()
         )
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)

@@ -61,13 +61,23 @@ class DefaultBoundInstrument:
         """No-op implementation of release."""
 
 
-class BoundCounter:
+class BoundCounter(abc.ABC):
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound counter by ``value``.
 
         Args:
             value: The value to add to the bound counter. Must be positive.
         """
+
+
+class DefaultBoundCounter:
+    """The default bound counter instrument.
+
+    Used when no bound counter implementation is available.
+    """
+
+    def add(self, value: ValueT) -> None:
+        pass
 
 
 class BoundUpDownCounter:
@@ -149,10 +159,7 @@ class DefaultMetric(Metric):
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def bind(self, labels: Dict[str, str]) -> "BoundCounter":
-        """Gets a `BoundCounter`."""
-        return BoundCounter()
-
+    @abc.abstractmethod
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
@@ -162,6 +169,19 @@ class Counter(Metric):
                 `UpDownCounter`.
             labels: Labels to associate with the bound instrument.
         """
+
+
+class DefaultCounter(Counter):
+    """The default counter instrument.
+
+    Used when no `Counter` implementation is available.
+    """
+
+    def bind(self, labels: Dict[str, str]) -> "DefaultBoundCounter":
+        return DefaultBoundCounter()
+
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
 
 
 class UpDownCounter(Metric):
@@ -199,14 +219,14 @@ class ValueRecorder(Metric):
 class DefaultValueRecorder(ValueRecorder):
     """The default valuerecorder instrument.
 
-    Used when no valuerecorder implementation is available.
+    Used when no `ValueRecorder` implementation is available.
     """
-
-    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
-        pass
 
     def bind(self, labels: Dict[str, str]) -> "DefaultBoundValueRecorder":
         return DefaultBoundValueRecorder()
+
+    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
 
 
 class Observer(abc.ABC):
@@ -375,6 +395,26 @@ class Meter(abc.ABC):
             metric_type: The type of metric being created.
             enabled: Whether to report the metric by default.
         Returns: A new ``metric_type`` metric with values of ``value_type``.
+        """
+
+    @abc.abstractmethod
+    def create_counter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "Counter":
+        """Creates a `Counter` metric with type ``value_type``.
+
+        Args:
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            enabled: Whether to report the metric by default.
         """
 
     @abc.abstractmethod

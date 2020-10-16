@@ -25,7 +25,7 @@ import sys
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
 print(
@@ -52,12 +52,11 @@ exporter = ConsoleMetricsExporter()
 metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
 # Metric instruments allow to capture measurements
-requests_counter = meter.create_metric(
+requests_counter = meter.create_counter(
     name="requests",
     description="number of requests",
     unit="1",
     value_type=int,
-    metric_type=Counter,
 )
 
 requests_size = meter.create_value_recorder(

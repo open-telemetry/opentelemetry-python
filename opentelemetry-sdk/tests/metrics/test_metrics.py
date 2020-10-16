@@ -74,8 +74,8 @@ class TestMeter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         processor_mock = mock.Mock()
         meter.processor = processor_mock
-        counter = meter.create_metric(
-            "name", "desc", "unit", float, metrics.Counter
+        counter = meter.create_counter(
+            "name", "desc", "unit", float,
         )
         labels = {"key1": "value1"}
         meter.register_view(View(counter, SumAggregator))
@@ -155,12 +155,12 @@ class TestMeter(unittest.TestCase):
             (3.0, 3.0, 3.0, 1),
         )
 
-    def test_create_metric(self):
+    def test_create_counter(self):
         resource = mock.Mock(spec=resources.Resource)
         meter_provider = metrics.MeterProvider(resource=resource)
         meter = meter_provider.get_meter(__name__)
         counter = meter.create_metric(
-            "name", "desc", "unit", int, metrics.Counter
+            "name", "desc", "unit", int,
         )
         self.assertIsInstance(counter, metrics.Counter)
         self.assertEqual(counter.value_type, int)

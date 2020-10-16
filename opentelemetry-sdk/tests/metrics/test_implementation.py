@@ -28,6 +28,6 @@ class TestMeterImplementation(unittest.TestCase):
 
     def test_meter(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        metric = meter.create_metric("", "", "", float, metrics.Counter)
+        metric = meter.create_counter("", "", "", float)
         self.assertNotIsInstance(meter, DefaultMeter)
         self.assertNotIsInstance(metric, DefaultMetric)

@@ -77,10 +77,15 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         counter = metrics.Counter()
         meter.record_batch({}, ((counter, 1),))
 
-    def test_create_metric(self):
+    def test_create_counter(Self):
         meter = metrics.DefaultMeter()
-        metric = meter.create_metric("", "", "", float, metrics.Counter)
-        self.assertIsInstance(metric, metrics.DefaultMetric)
+        metric = meter.create_counter("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultCounter)
+
+    def test_create_value_recorder(Self):
+        meter = metrics.DefaultMeter()
+        metric = meter.create_counter("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultValueRecorder)
 
     def test_register_observer(self):
         meter = metrics.DefaultMeter()

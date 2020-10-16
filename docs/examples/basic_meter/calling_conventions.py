@@ -19,7 +19,7 @@ It shows the usage of the direct, bound and batch calling conventions.
 import time
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
 # Use the meter type provided by the SDK package
@@ -27,20 +27,18 @@ metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 metrics.get_meter_provider().start_pipeline(meter, ConsoleMetricsExporter(), 5)
 
-requests_counter = meter.create_metric(
+requests_counter = meter.create_counter(
     name="requests",
     description="number of requests",
     unit="1",
     value_type=int,
-    metric_type=Counter,
 )
 
-clicks_counter = meter.create_metric(
+clicks_counter = meter.create_counter(
     name="clicks",
     description="number of clicks",
     unit="1",
     value_type=int,
-    metric_type=Counter,
 )
 
 labels = {"environment": "staging"}

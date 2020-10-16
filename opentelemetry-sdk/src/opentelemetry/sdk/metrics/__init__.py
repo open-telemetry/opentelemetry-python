@@ -435,6 +435,22 @@ class Meter(metrics_api.Meter):
             self.metrics.add(metric)
         return metric
 
+    def create_counter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[metrics_api.ValueT],
+        enabled: bool = True,
+    ) -> metrics_api.Counter:
+        """See `opentelemetry.metrics.Meter.create_counter`."""
+        counter = Counter(
+            name, description, unit, value_type, self, enabled=enabled
+        )
+        with self.metrics_lock:
+            self.metrics.add(counter)
+        return counter
+
     def create_value_recorder(
         self,
         name: str,
@@ -444,8 +460,7 @@ class Meter(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.ValueRecorder:
         """See `opentelemetry.metrics.Meter.create_value_recorder`."""
-        # Ignore type b/c of mypy bug in addition to missing annotations
-        recorder = ValueRecorder(  # type: ignore
+        recorder = ValueRecorder(
             name, description, unit, value_type, self, enabled=enabled
         )
         with self.metrics_lock:

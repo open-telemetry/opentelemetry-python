@@ -79,12 +79,11 @@ class TestStateless(unittest.TestCase):
         self.controller.shutdown()
 
     def test_label_keys(self):
-        test_counter = self.meter.create_metric(
+        test_counter = self.meter.create_counter(
             name="test_counter",
             description="description",
             unit="By",
             value_type=int,
-            metric_type=Counter,
         )
         counter_view = View(
             test_counter,
@@ -107,12 +106,11 @@ class TestStateless(unittest.TestCase):
         self.assertEqual(metric_data[0].aggregator.checkpoint, 11)
 
     def test_ungrouped(self):
-        test_counter = self.meter.create_metric(
+        test_counter = self.meter.create_counter(
             name="test_counter",
             description="description",
             unit="By",
             value_type=int,
-            metric_type=Counter,
         )
         counter_view = View(
             test_counter,
@@ -138,12 +136,11 @@ class TestStateless(unittest.TestCase):
         self.assertTrue((label2, 5) in data_set)
 
     def test_multiple_views(self):
-        test_counter = self.meter.create_metric(
+        test_counter = self.meter.create_counter(
             name="test_counter",
             description="description",
             unit="By",
             value_type=int,
-            metric_type=Counter,
         )
 
         counter_view = View(

@@ -26,13 +26,16 @@ class TestMetrics(unittest.TestCase):
             bound_metric_instr, metrics.DefaultBoundInstrument
         )
 
-    def test_counter(self):
-        counter = metrics.Counter()
+    def test_default_counter(self):
+        counter = metrics.DefaultCounter()
         bound_counter = counter.bind({})
-        self.assertIsInstance(bound_counter, metrics.BoundCounter)
+        self.assertIsInstance(
+            bound_counter,
+            metrics.DefaultBoundCounter
+        )
 
-    def test_counter_add(self):
-        counter = metrics.Counter()
+    def test_default_counter_add(self):
+        counter = metrics.DefaultCounter()
         counter.add(1, {})
 
     def test_updowncounter(self):
@@ -60,8 +63,8 @@ class TestMetrics(unittest.TestCase):
         bound_instrument = metrics.DefaultBoundInstrument()
         bound_instrument.release()
 
-    def test_bound_counter(self):
-        bound_counter = metrics.BoundCounter()
+    def test_default_bound_counter(self):
+        bound_counter = metrics.DefaultBoundCounter()
         bound_counter.add(1)
 
     def test_default_bound_valuerecorder(self):

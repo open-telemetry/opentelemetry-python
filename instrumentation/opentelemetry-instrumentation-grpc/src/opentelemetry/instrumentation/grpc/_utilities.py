@@ -19,8 +19,6 @@ from time import time
 
 import grpc
 
-from opentelemetry.sdk.metrics import Counter
-
 
 class RpcInfo:
     def __init__(
@@ -53,26 +51,23 @@ class TimedMetricRecorder:
                 unit="ms",
                 value_type=float,
             )
-            self._error_count = self._meter.create_metric(
+            self._error_count = self._meter.create_counter(
                 name="{}/{}/errors".format(service_name, span_kind),
                 description="Number of errors that were returned from the server",
                 unit="1",
                 value_type=int,
-                metric_type=Counter,
             )
-            self._bytes_in = self._meter.create_metric(
+            self._bytes_in = self._meter.create_counter(
                 name="{}/{}/bytes_in".format(service_name, span_kind),
                 description="Number of bytes received from the server",
                 unit="by",
                 value_type=int,
-                metric_type=Counter,
             )
-            self._bytes_out = self._meter.create_metric(
+            self._bytes_out = self._meter.create_counter(
                 name="{}/{}/bytes_out".format(service_name, span_kind),
                 description="Number of bytes sent out through gRPC",
                 unit="by",
                 value_type=int,
-                metric_type=Counter,
             )
 
     def record_bytes_in(self, bytes_in, method):
