@@ -74,15 +74,15 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_record_batch(self):
         meter = metrics.DefaultMeter()
-        counter = metrics.Counter()
+        counter = metrics.DefaultCounter()
         meter.record_batch({}, ((counter, 1),))
 
-    def test_create_counter(Self):
+    def test_create_counter(self):
         meter = metrics.DefaultMeter()
         metric = meter.create_counter("", "", "", float)
         self.assertIsInstance(metric, metrics.DefaultCounter)
 
-    def test_create_value_recorder(Self):
+    def test_create_value_recorder(self):
         meter = metrics.DefaultMeter()
         metric = meter.create_counter("", "", "", float)
         self.assertIsInstance(metric, metrics.DefaultValueRecorder)

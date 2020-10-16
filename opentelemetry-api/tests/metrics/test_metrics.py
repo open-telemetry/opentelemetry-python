@@ -29,7 +29,7 @@ class TestMetrics(unittest.TestCase):
     def test_default_counter(self):
         counter = metrics.DefaultCounter()
         bound_counter = counter.bind({})
-        self.assertIsInstance(bound_counter,metrics.DefaultBoundCounter)
+        self.assertIsInstance(bound_counter, metrics.DefaultBoundCounter)
 
     def test_default_counter_add(self):
         counter = metrics.DefaultCounter()
@@ -41,7 +41,7 @@ class TestMetrics(unittest.TestCase):
         self.assertIsInstance(bound_counter, metrics.BoundUpDownCounter)
 
     def test_updowncounter_add(self):
-        counter = metrics.Counter()
+        counter = metrics.UpDownCounter()
         counter.add(1, {})
         counter.add(-1, {})
 
