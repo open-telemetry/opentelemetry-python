@@ -17,7 +17,7 @@ from math import inf
 from unittest import mock
 
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics import Counter, ValueRecorder, view
+from opentelemetry.sdk.metrics import view
 from opentelemetry.sdk.metrics.export import aggregate
 from opentelemetry.sdk.metrics.export.aggregate import (
     HistogramAggregator,

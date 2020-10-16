@@ -146,6 +146,7 @@ class UpDownCounter(Metric):
     """A counter type metric that expresses the computation of a sum,
     allowing negative increments."""
 
+    @abc.abstractmethod
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
@@ -157,7 +158,7 @@ class UpDownCounter(Metric):
         """
 
 
-class DefaultUpDownCounter(Metric):
+class DefaultUpDownCounter(UpDownCounter):
     """The default updowncounter instrument.
 
     Used when no `UpDownCounter` implementation is available.
