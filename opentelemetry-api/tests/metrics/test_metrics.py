@@ -51,7 +51,7 @@ class TestMetrics(unittest.TestCase):
         self.assertIsInstance(bound_valuerecorder, metrics.DefaultBoundValueRecorder)
 
     def test_default_valuerecorder_record(self):
-        valuerecorder = metrics.ValueRecorder()
+        valuerecorder = metrics.DefaultValueRecorder()
         valuerecorder.record(1, {})
 
     def test_default_bound_metric(self):
