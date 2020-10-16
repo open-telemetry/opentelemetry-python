@@ -192,8 +192,7 @@ class OTLPExporterMixin(
 
             try:
                 self._client.Export(
-                    request=self._translate_data(data),
-                    metadata=self._headers,
+                    request=self._translate_data(data), metadata=self._headers,
                 )
 
                 return self._result.SUCCESS
