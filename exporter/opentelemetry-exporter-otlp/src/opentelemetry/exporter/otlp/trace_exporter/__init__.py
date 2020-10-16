@@ -68,7 +68,7 @@ class OTLPSpanExporter(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: ChannelCredentials = None,
-        metadata: tuple = None,
+        headers: str = None,
     ):
         if insecure is None:
             insecure = Configuration().EXPORTER_OTLP_SPAN_INSECURE
@@ -87,7 +87,7 @@ class OTLPSpanExporter(
                 or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
                 "insecure": insecure,
                 "credentials": credentials,
-                "metadata": metadata
+                "headers": headers
                 or Configuration().EXPORTER_OTLP_SPAN_HEADERS,
             }
         )

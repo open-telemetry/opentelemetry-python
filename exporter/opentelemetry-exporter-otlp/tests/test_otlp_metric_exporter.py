@@ -83,7 +83,7 @@ class TestOTLPMetricExporter(TestCase):
         kwargs = mock_exporter_mixin.call_args.kwargs
 
         self.assertEqual(kwargs["endpoint"], "collector:55680")
-        self.assertEqual(kwargs["metadata"], "key1:value1;key2:value2")
+        self.assertEqual(kwargs["headers"], "key1:value1;key2:value2")
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 

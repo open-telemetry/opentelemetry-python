@@ -144,7 +144,7 @@ class OTLPExporterMixin(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: ChannelCredentials = None,
-        metadata: Optional[Tuple[Any]] = None,
+        headers: Optional[str] = None,
     ):
         super().__init__()
 
@@ -159,7 +159,7 @@ class OTLPExporterMixin(
         if insecure is None:
             insecure = False
 
-        self._metadata = metadata or Configuration().EXPORTER_OTLP_HEADERS
+        self._headers = headers or Configuration().EXPORTER_OTLP_HEADERS
         self._collector_span_kwargs = None
 
         if insecure:
@@ -193,7 +193,7 @@ class OTLPExporterMixin(
             try:
                 self._client.Export(
                     request=self._translate_data(data),
-                    metadata=self._metadata,
+                    metadata=self._headers,
                 )
 
                 return self._result.SUCCESS
