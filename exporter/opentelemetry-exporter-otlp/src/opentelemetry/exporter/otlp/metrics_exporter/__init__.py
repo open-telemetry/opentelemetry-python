@@ -127,8 +127,8 @@ class OTLPMetricsExporter(
         self,
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
-        credentials: ChannelCredentials = None,
-        headers: str = None,
+        credentials: Optional[ChannelCredentials] = None,
+        headers: Optional[str] = None,
     ):
         if insecure is None:
             insecure = Configuration().EXPORTER_OTLP_METRIC_INSECURE

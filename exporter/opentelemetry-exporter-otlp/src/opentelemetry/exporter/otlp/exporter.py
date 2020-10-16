@@ -143,7 +143,7 @@ class OTLPExporterMixin(
         self,
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
-        credentials: ChannelCredentials = None,
+        credentials: Optional[ChannelCredentials] = None,
         headers: Optional[str] = None,
     ):
         super().__init__()
