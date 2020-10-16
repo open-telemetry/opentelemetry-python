@@ -496,6 +496,17 @@ class DefaultMeter(Meter):
         # pylint: disable=no-self-use
         return DefaultMetric()
 
+    def create_counter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "Counter":
+        # pylint: disable=no-self-use
+        return DefaultCounter()
+
     def create_value_recorder(
         self,
         name: str,

@@ -35,10 +35,7 @@ requests_counter = meter.create_counter(
 )
 
 clicks_counter = meter.create_counter(
-    name="clicks",
-    description="number of clicks",
-    unit="1",
-    value_type=int,
+    name="clicks", description="number of clicks", unit="1", value_type=int,
 )
 
 labels = {"environment": "staging"}

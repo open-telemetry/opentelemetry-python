@@ -101,9 +101,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
 
     def test_counter_to_prometheus(self):
         meter = get_meter_provider().get_meter(__name__)
-        metric = meter.create_counter(
-            "test@name", "testdesc", "unit", int,
-        )
+        metric = meter.create_counter("test@name", "testdesc", "unit", int,)
         labels = {"environment@": "staging", "os": "Windows"}
         key_labels = get_dict_as_key(labels)
         aggregator = SumAggregator()
@@ -134,9 +132,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
 
     def test_invalid_metric(self):
         meter = get_meter_provider().get_meter(__name__)
-        metric = StubMetric(
-            "tesname", "testdesc", "unit", int, meter
-        )
+        metric = StubMetric("tesname", "testdesc", "unit", int, meter)
         labels = {"environment": "staging"}
         key_labels = get_dict_as_key(labels)
         record = MetricRecord(
