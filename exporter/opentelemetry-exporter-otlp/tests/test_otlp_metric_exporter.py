@@ -15,6 +15,7 @@
 from collections import OrderedDict
 from unittest import TestCase
 from unittest.mock import patch
+
 from grpc import ChannelCredentials
 
 from opentelemetry.configuration import Configuration
