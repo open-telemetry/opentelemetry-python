@@ -25,7 +25,8 @@ from opentelemetry.sdk.error_handler import (
 
 
 class TestErrorHandler(TestCase):
-    def test_default_error_handler(self):
+    @patch("opentelemetry.sdk.error_handler.iter_entry_points")
+    def test_default_error_handler(self, mock_iter_entry_points):
 
         with self.assertLogs(logger, ERROR):
             with GlobalErrorHandler():
