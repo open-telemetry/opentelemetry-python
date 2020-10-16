@@ -137,6 +137,7 @@ class OTLPExporterMixin(
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         metadata: Metadata to send when exporting
+        timeout: Backend request timeout in seconds
     """
 
     def __init__(
@@ -145,6 +146,7 @@ class OTLPExporterMixin(
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[str] = None,
+        timeout: Optional[int] = None,
     ):
         super().__init__()
 
@@ -160,6 +162,7 @@ class OTLPExporterMixin(
             insecure = False
 
         self._headers = headers or Configuration().EXPORTER_OTLP_HEADERS
+        self._timeout = timeout or Configuration().EXPORTER_OTLP_TIMEOUT or 10 # 10 seconds
         self._collector_span_kwargs = None
 
         if insecure:
@@ -193,6 +196,7 @@ class OTLPExporterMixin(
             try:
                 self._client.Export(
                     request=self._translate_data(data), metadata=self._headers,
+                    timeout=self._timeout,
                 )
 
                 return self._result.SUCCESS

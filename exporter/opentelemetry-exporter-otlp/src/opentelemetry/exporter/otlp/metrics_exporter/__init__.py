@@ -116,6 +116,7 @@ class OTLPMetricsExporter(
         insecure: Connection type
         credentials: Credentials object for server authentication
         metadata: Metadata to send when exporting
+        timeout: Backend request timeout in seconds
     """
 
     _stub = MetricsServiceStub
@@ -127,6 +128,7 @@ class OTLPMetricsExporter(
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[str] = None,
+        timeout: Optional[int] = None,
     ):
         if insecure is None:
             insecure = Configuration().EXPORTER_OTLP_METRIC_INSECURE
@@ -147,6 +149,8 @@ class OTLPMetricsExporter(
                 "credentials": credentials,
                 "headers": headers
                 or Configuration().EXPORTER_OTLP_METRIC_HEADERS,
+                "timeout": timeout
+                or Configuration().EXPORTER_OTLP_METRIC_TIMEOUT,
             }
         )
 

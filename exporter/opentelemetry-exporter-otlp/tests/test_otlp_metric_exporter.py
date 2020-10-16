@@ -73,8 +73,9 @@ class TestOTLPMetricExporter(TestCase):
         "os.environ",
         {
             "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
-            "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
             "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": "fixtures/test.cert",
+            "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
+            "OTEL_EXPORTER_OTLP_METRIC_TIMEOUT": "10",
         },
     )
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
@@ -84,6 +85,7 @@ class TestOTLPMetricExporter(TestCase):
 
         self.assertEqual(kwargs["endpoint"], "collector:55680")
         self.assertEqual(kwargs["headers"], "key1:value1;key2:value2")
+        self.assertEqual(kwargs["timeout"], 10)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 

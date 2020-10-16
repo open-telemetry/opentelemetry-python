@@ -58,6 +58,7 @@ class OTLPSpanExporter(
         insecure: Connection type
         credentials: Credentials object for server authentication
         metadata: Metadata to send when exporting
+        timeout: Backend request timeout in seconds
     """
 
     _result = SpanExportResult
@@ -69,6 +70,7 @@ class OTLPSpanExporter(
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[str] = None,
+        timeout: Optional[int] = None,
     ):
         if insecure is None:
             insecure = Configuration().EXPORTER_OTLP_SPAN_INSECURE
@@ -89,6 +91,8 @@ class OTLPSpanExporter(
                 "credentials": credentials,
                 "headers": headers
                 or Configuration().EXPORTER_OTLP_SPAN_HEADERS,
+                "timeout": timeout
+                or Configuration().EXPORTER_OTLP_SPAN_TIMEOUT,
             }
         )
 
