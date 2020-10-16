@@ -1035,7 +1035,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
 
     def test_attributes_to_json(self):
-        context = trace_api.SpanContext(
+        context = trace_api.SpanReference(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
