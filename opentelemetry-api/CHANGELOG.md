@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Rename SpanContext to SpanReference
-  ([]())
+  ([#1248](https://github.com/open-telemetry/opentelemetry-python/pull/1248))
 
 ## Version 0.14b0
 
