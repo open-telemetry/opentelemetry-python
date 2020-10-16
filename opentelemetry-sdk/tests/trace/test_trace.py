@@ -1048,7 +1048,7 @@ class TestSpanProcessor(unittest.TestCase):
         date_str = ns_to_iso_str(123)
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            '{"name": "span-name", "reference": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )
