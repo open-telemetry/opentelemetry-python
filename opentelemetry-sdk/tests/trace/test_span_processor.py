@@ -17,9 +17,11 @@ import time
 import typing
 import unittest
 from threading import Event
+from typing import Optional
 from unittest import mock
 
 from opentelemetry import trace as trace_api
+from opentelemetry.context import Context
 from opentelemetry.sdk import trace
 
 
@@ -36,7 +38,9 @@ class MySpanProcessor(trace.SpanProcessor):
         self.name = name
         self.span_list = span_list
 
-    def on_start(self, span: "trace.Span") -> None:
+    def on_start(
+        self, span: "trace.Span", parent_context: Optional[Context] = None
+    ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
     def on_end(self, span: "trace.Span") -> None:
@@ -160,10 +164,13 @@ class MultiSpanProcessorTestBase(abc.ABC):
             multi_processor.add_span_processor(mock_processor)
 
         span = self.create_default_span()
-        multi_processor.on_start(span)
+        context = Context()
+        multi_processor.on_start(span, parent_context=context)
 
         for mock_processor in mocks:
-            mock_processor.on_start.assert_called_once_with(span)
+            mock_processor.on_start.assert_called_once_with(
+                span, parent_context=context
+            )
         multi_processor.shutdown()
 
     def test_on_end(self):
