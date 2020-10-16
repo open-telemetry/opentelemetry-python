@@ -53,9 +53,9 @@ from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
 
-MAX_NUM_ATTRIBUTES = 32
-MAX_NUM_EVENTS = 128
-MAX_NUM_LINKS = 32
+MAX_NUM_ATTRIBUTES = 1000
+MAX_NUM_EVENTS = 1000
+MAX_NUM_LINKS = 1000
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 
 
