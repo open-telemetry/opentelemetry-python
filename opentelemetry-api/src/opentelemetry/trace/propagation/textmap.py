@@ -21,6 +21,9 @@ TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
 
 Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
 
+GetterGet = typing.Callable[[TextMapPropagatorT, str], typing.List[str]]
+GetterKeys = typing.Callable[[TextMapPropagatorT], typing.List[str]]
+
 
 def default_get(carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
     return [carrier.get(key)] if carrier.get(key) else []
@@ -28,12 +31,6 @@ def default_get(carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
 
 def default_keys(carrier: TextMapPropagatorT) -> typing.List[str]:
     return list(carrier.keys())
-
-
-GetterGetFunction = typing.Callable[
-    [TextMapPropagatorT, str], typing.List[str]
-]
-GetterKeysFunction = typing.Callable[[TextMapPropagatorT], typing.List[str]]
 
 
 class Getter:
@@ -44,8 +41,8 @@ class Getter:
 
     def __init__(
         self,
-        get: GetterGetFunction[TextMapPropagatorT] = default_get,
-        keys: GetterKeysFunction[TextMapPropagatorT] = default_keys,
+        get: GetterGet[TextMapPropagatorT] = default_get,
+        keys: GetterKeys[TextMapPropagatorT] = default_keys,
     ):
         self._get = get
         self._keys = keys
