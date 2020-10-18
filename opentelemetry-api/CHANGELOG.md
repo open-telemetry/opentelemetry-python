@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.14b0
+
+Released 2020-10-13
+
 - Add support for `OTEL_PROPAGATORS`
   ([#1123](https://github.com/open-telemetry/opentelemetry-python/pull/1123))
 - Store `int`s as `int`s in the global Configuration object

@@ -18,12 +18,11 @@ import atexit
 import concurrent.futures
 import json
 import logging
-import random
 import threading
 import traceback
 from collections import OrderedDict
 from contextlib import contextmanager
-from types import TracebackType
+from types import MappingProxyType, TracebackType
 from typing import (
     Any,
     Callable,
@@ -54,9 +53,9 @@ from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
 
-MAX_NUM_ATTRIBUTES = 32
-MAX_NUM_EVENTS = 128
-MAX_NUM_LINKS = 32
+MAX_NUM_ATTRIBUTES = 1000
+MAX_NUM_EVENTS = 1000
+MAX_NUM_LINKS = 1000
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 
 
@@ -69,7 +68,11 @@ class SpanProcessor:
     in the same order as they were registered.
     """
 
-    def on_start(self, span: "Span") -> None:
+    def on_start(
+        self,
+        span: "Span",
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
         """Called when a :class:`opentelemetry.trace.Span` is started.
 
         This method is called synchronously on the thread that starts the
@@ -77,6 +80,7 @@ class SpanProcessor:
 
         Args:
             span: The :class:`opentelemetry.trace.Span` that just started.
+            parent_context: The parent context of the span that just started.
         """
 
     def on_end(self, span: "Span") -> None:
@@ -125,9 +129,13 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         with self._lock:
             self._span_processors = self._span_processors + (span_processor,)
 
-    def on_start(self, span: "Span") -> None:
+    def on_start(
+        self,
+        span: "Span",
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
         for sp in self._span_processors:
-            sp.on_start(span)
+            sp.on_start(span, parent_context=parent_context)
 
     def on_end(self, span: "Span") -> None:
         for sp in self._span_processors:
@@ -193,17 +201,26 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             self._span_processors = self._span_processors + (span_processor,)
 
     def _submit_and_await(
-        self, func: Callable[[SpanProcessor], Callable[..., None]], *args: Any
+        self,
+        func: Callable[[SpanProcessor], Callable[..., None]],
+        *args: Any,
+        **kwargs: Any
     ):
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args)
+            future = self._executor.submit(func(sp), *args, **kwargs)
             futures.append(future)
         for future in futures:
             future.result()
 
-    def on_start(self, span: "Span") -> None:
-        self._submit_and_await(lambda sp: sp.on_start, span)
+    def on_start(
+        self,
+        span: "Span",
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
+        self._submit_and_await(
+            lambda sp: sp.on_start, span, parent_context=parent_context
+        )
 
     def on_end(self, span: "Span") -> None:
         self._submit_and_await(lambda sp: sp.on_end, span)
@@ -340,6 +357,10 @@ def _filter_attribute_values(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
+def _create_immutable_attributes(attributes):
+    return MappingProxyType(attributes.copy() if attributes else {})
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -408,6 +429,10 @@ class Span(trace_api.Span):
         if events:
             for event in events:
                 _filter_attribute_values(event.attributes)
+                # pylint: disable=protected-access
+                event._attributes = _create_immutable_attributes(
+                    event.attributes
+                )
                 self.events.append(event)
 
         if links is None:
@@ -456,6 +481,8 @@ class Span(trace_api.Span):
     def _format_attributes(attributes):
         if isinstance(attributes, BoundedDict):
             return attributes._dict  # pylint: disable=protected-access
+        if isinstance(attributes, MappingProxyType):
+            return attributes.copy()
         return attributes
 
     @staticmethod
@@ -566,8 +593,7 @@ class Span(trace_api.Span):
         timestamp: Optional[int] = None,
     ) -> None:
         _filter_attribute_values(attributes)
-        if not attributes:
-            attributes = self._new_attributes()
+        attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(
                 name=name,
@@ -576,7 +602,11 @@ class Span(trace_api.Span):
             )
         )
 
-    def start(self, start_time: Optional[int] = None) -> None:
+    def start(
+        self,
+        start_time: Optional[int] = None,
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
         with self._lock:
             if not self.is_recording():
                 return
@@ -588,7 +618,7 @@ class Span(trace_api.Span):
         if has_started:
             logger.warning("Calling start() on a started span.")
             return
-        self.span_processor.on_start(self)
+        self.span_processor.on_start(self, parent_context=parent_context)
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
@@ -756,7 +786,7 @@ class Tracer(trace_api.Tracer):
             if sampling_result.decision.is_sampled()
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
-        context = trace_api.SpanContext(
+        span_context = trace_api.SpanContext(
             trace_id,
             self.source.ids_generator.generate_span_id(),
             is_remote=False,
@@ -769,7 +799,7 @@ class Tracer(trace_api.Tracer):
             # pylint:disable=protected-access
             span = _Span(
                 name=name,
-                context=context,
+                context=span_context,
                 parent=parent_span_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
@@ -780,9 +810,9 @@ class Tracer(trace_api.Tracer):
                 instrumentation_info=self.instrumentation_info,
                 set_status_on_exception=set_status_on_exception,
             )
-            span.start(start_time=start_time)
+            span.start(start_time=start_time, parent_context=context)
         else:
-            span = trace_api.DefaultSpan(context=context)
+            span = trace_api.DefaultSpan(context=span_context)
         return span
 
     @contextmanager

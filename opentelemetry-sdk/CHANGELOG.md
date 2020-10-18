@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Make `SpanProcessor.on_start` accept parent Context
+  ([#1251](https://github.com/open-telemetry/opentelemetry-python/pull/1251))
+
+## Version 0.14b0
+
+Released 2020-10-13
+
+- Add timestamps to aggregators
+  ([#1199](https://github.com/open-telemetry/opentelemetry-python/pull/1199))
 - Add Global Error Handler
   ([#1080](https://github.com/open-telemetry/opentelemetry-python/pull/1080))
 - Update sampling result names
@@ -10,6 +19,8 @@
   ([#1105](https://github.com/open-telemetry/opentelemetry-python/pull/1120))
 - Allow for Custom Trace and Span IDs Generation - `IdsGenerator` for TracerProvider
   ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
+- Event attributes are now immutable
+  ([#1195](https://github.com/open-telemetry/opentelemetry-python/pull/1195))
 - Renaming metrics Batcher to Processor
   ([#1203](https://github.com/open-telemetry/opentelemetry-python/pull/1203))
 - Protect access to Span implementation

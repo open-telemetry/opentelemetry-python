@@ -17,11 +17,14 @@ import shutil
 import subprocess
 import unittest
 from logging import ERROR, WARNING
+from typing import Optional
 from unittest import mock
 
 from opentelemetry import trace as trace_api
+from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
+from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCanonicalCode
 from opentelemetry.util import time_ns
@@ -434,6 +437,8 @@ class TestSpanCreation(unittest.TestCase):
 
 
 class TestSpan(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         self.tracer = new_tracer()
 
@@ -590,7 +595,6 @@ class TestSpan(unittest.TestCase):
             root.add_event("event0")
 
             # event name and attributes
-            now = time_ns()
             root.add_event(
                 "event1", {"name": "pluto", "some_bools": [True, False]}
             )
@@ -627,6 +631,30 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.events[3].attributes, {"name": ("original_contents",)}
             )
+
+    def test_events_are_immutable(self):
+        event_properties = [
+            prop for prop in dir(trace.EventBase) if not prop.startswith("_")
+        ]
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_event("event0", {"name": ["birthday"]})
+            event = root.events[0]
+
+            for prop in event_properties:
+                with self.assertRaises(AttributeError):
+                    setattr(event, prop, "something")
+
+    def test_event_attributes_are_immutable(self):
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_event("event0", {"name": ["birthday"]})
+            event = root.events[0]
+
+            with self.assertRaises(TypeError):
+                event.attributes["name"][0] = "happy"
+
+            with self.assertRaises(TypeError):
+                event.attributes["name"] = "hello"
 
     def test_invalid_event_attributes(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
@@ -709,6 +737,20 @@ class TestSpan(unittest.TestCase):
             trace_api.status.StatusCanonicalCode.CANCELLED,
         )
         self.assertIs(span.status.description, "Test description")
+
+    def test_start_accepts_context(self):
+        # pylint: disable=no-self-use
+        span_processor = mock.Mock(spec=trace.SpanProcessor)
+        span = trace._Span(
+            "name",
+            mock.Mock(spec=trace_api.SpanContext),
+            span_processor=span_processor,
+        )
+        context = Context()
+        span.start(parent_context=context)
+        span_processor.on_start.assert_called_once_with(
+            span, parent_context=context
+        )
 
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""
@@ -875,7 +917,9 @@ class MySpanProcessor(trace.SpanProcessor):
         self.name = name
         self.span_list = span_list
 
-    def on_start(self, span: "trace.Span") -> None:
+    def on_start(
+        self, span: "trace.Span", parent_context: Optional[Context] = None
+    ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
     def on_end(self, span: "trace.Span") -> None:
@@ -1008,4 +1052,23 @@ class TestSpanProcessor(unittest.TestCase):
         self.assertEqual(
             span.to_json(indent=None),
             '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": [], "resource": {}}',
+        )
+
+    def test_attributes_to_json(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+            trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+        )
+        span = trace._Span("span-name", context)
+        span.resource = Resource({})
+        span.set_attribute("key", "value")
+        span.add_event("event", {"key2": "value2"}, 123)
+        date_str = ns_to_iso_str(123)
+        self.assertEqual(
+            span.to_json(indent=None),
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            + date_str
+            + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )
