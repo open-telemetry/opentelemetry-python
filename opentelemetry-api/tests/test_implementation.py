@@ -92,15 +92,25 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         metric = meter.create_value_recorder("", "", "", float)
         self.assertIsInstance(metric, metrics.DefaultValueRecorder)
 
-    def test_register_observer(self):
+    def test_register_sumobserver(self):
         meter = metrics.DefaultMeter()
         callback = mock.Mock()
-        observer = meter.register_observer(
-            callback, "", "", "", int, metrics.ValueObserver
-        )
+        observer = meter.register_sumobserver(callback, "", "", "", int)
         self.assertIsInstance(observer, metrics.DefaultObserver)
 
-    def test_unregister_observer(self):
+    def test_register_updownsumobserver(self):
+        meter = metrics.DefaultMeter()
+        callback = mock.Mock()
+        observer = meter.register_updownsumobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultObserver)
+
+    def test_register_valueobserver(self):
+        meter = metrics.DefaultMeter()
+        callback = mock.Mock()
+        observer = meter.register_valueobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultObserver)
+
+    def test_unregister_observer(self): 
         meter = metrics.DefaultMeter()
         observer = metrics.DefaultObserver()
         meter.unregister_observer(observer)

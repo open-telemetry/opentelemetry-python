@@ -466,18 +466,51 @@ class Meter(metrics_api.Meter):
             self.metrics.add(recorder)
         return recorder
 
-    def register_observer(
+    def register_sumobserver(
         self,
         callback: metrics_api.ObserverCallbackT,
         name: str,
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        observer_type=Type[metrics_api.ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> metrics_api.Observer:
-        ob = observer_type(
+    ) -> metrics_api.SumObserver:
+        ob = SumObserver(
+            callback, name, description, unit, value_type, label_keys, enabled
+        )
+        with self.observers_lock:
+            self.observers.add(ob)
+        return ob
+
+    def register_updownsumobserver(
+        self,
+        callback: metrics_api.ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[metrics_api.ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> metrics_api.UpDownSumObserver:
+        ob = UpDownSumObserver(
+            callback, name, description, unit, value_type, label_keys, enabled
+        )
+        with self.observers_lock:
+            self.observers.add(ob)
+        return ob
+
+    def register_valueobserver(
+        self,
+        callback: metrics_api.ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[metrics_api.ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> metrics_api.ValueObserver:
+        ob = ValueObserver(
             callback, name, description, unit, value_type, label_keys, enabled
         )
         with self.observers_lock:

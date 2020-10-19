@@ -183,16 +183,68 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(valuerecorder.name, "name")
         self.assertEqual(valuerecorder.meter, meter)
 
-    def test_register_observer(self):
+    def test_register_sumobserver(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
         callback = mock.Mock()
 
-        observer = meter.register_observer(
-            callback, "name", "desc", "unit", int, metrics.ValueObserver
+        observer = meter.register_sumobserver(
+            callback,
+            "name",
+            "desc",
+            "unit",
+            int,
         )
 
-        self.assertIsInstance(observer, metrics_api.Observer)
+        self.assertIsInstance(observer, metrics.SumObserver)
+        self.assertEqual(len(meter.observers), 1)
+
+        self.assertEqual(observer.callback, callback)
+        self.assertEqual(observer.name, "name")
+        self.assertEqual(observer.description, "desc")
+        self.assertEqual(observer.unit, "unit")
+        self.assertEqual(observer.value_type, int)
+        self.assertEqual(observer.label_keys, ())
+        self.assertTrue(observer.enabled)
+    
+    def test_register_updownsumobserver(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+
+        callback = mock.Mock()
+
+        observer = meter.register_updownsumobserver(
+            callback,
+            "name",
+            "desc",
+            "unit",
+            int,
+        )
+
+        self.assertIsInstance(observer, metrics.UpDownSumObserver)
+        self.assertEqual(len(meter.observers), 1)
+
+        self.assertEqual(observer.callback, callback)
+        self.assertEqual(observer.name, "name")
+        self.assertEqual(observer.description, "desc")
+        self.assertEqual(observer.unit, "unit")
+        self.assertEqual(observer.value_type, int)
+        self.assertEqual(observer.label_keys, ())
+        self.assertTrue(observer.enabled)
+
+    def test_register_valueobserver(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+
+        callback = mock.Mock()
+
+        observer = meter.register_valueobserver(
+            callback,
+            "name",
+            "desc",
+            "unit",
+            int,
+        )
+
+        self.assertIsInstance(observer, metrics.ValueObserver)
         self.assertEqual(len(meter.observers), 1)
 
         self.assertEqual(observer.callback, callback)
@@ -208,7 +260,7 @@ class TestMeter(unittest.TestCase):
 
         callback = mock.Mock()
 
-        observer = meter.register_observer(
+        observer = meter.register_valueobserver(
             callback, "name", "desc", "unit", int, metrics.ValueObserver
         )
 

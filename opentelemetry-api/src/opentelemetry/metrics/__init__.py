@@ -408,18 +408,17 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def register_observer(
+    def register_sumobserver(
         self,
         callback: ObserverCallbackT,
         name: str,
         description: str,
         unit: str,
         value_type: Type[ValueT],
-        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> "Observer":
-        """Registers an ``Observer`` metric instrument.
+    ) -> "SumObserver":
+        """Registers an ``SumObserver`` metric instrument.
 
         Args:
             callback: Callback invoked each collection interval with the
@@ -429,10 +428,61 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
-            observer_type: The type of observer being registered.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
-        Returns: A new ``Observer`` metric instrument.
+        Returns: A new ``SumObserver`` metric instrument.
+        """
+
+    @abc.abstractmethod
+    def register_updownsumobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "UpDownSumObserver":
+        """Registers an ``UpDownSumObserver`` metric instrument.
+
+        Args:
+            callback: Callback invoked each collection interval with the
+                observer as argument.
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            label_keys: The keys for the labels with dynamic values.
+            enabled: Whether to report the metric by default.
+        Returns: A new ``UpDownSumObserver`` metric instrument.
+        """
+
+    @abc.abstractmethod
+    def register_valueobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "ValueObserver":
+        """Registers an ``ValueObserver`` metric instrument.
+
+        Args:
+            callback: Callback invoked each collection interval with the
+                observer as argument.
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            label_keys: The keys for the labels with dynamic values.
+            enabled: Whether to report the metric by default.
+        Returns: A new ``ValueObserver`` metric instrument.
         """
 
     @abc.abstractmethod
@@ -487,14 +537,37 @@ class DefaultMeter(Meter):
         # pylint: disable=no-self-use
         return DefaultValueRecorder()
 
-    def register_observer(
+    def register_sumobserver(
         self,
         callback: ObserverCallbackT,
         name: str,
         description: str,
         unit: str,
         value_type: Type[ValueT],
-        observer_type: Type[ObserverT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "Observer":
+        return DefaultObserver()
+
+    def register_updownobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "Observer":
+        return DefaultObserver()
+
+    def register_valueobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "Observer":
