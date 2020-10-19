@@ -306,7 +306,6 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, ValueRecorder)
 InstrumentT = TypeVar(
     "InstrumentT", Counter, UpDownCounter, Observer, ValueRecorder
 )

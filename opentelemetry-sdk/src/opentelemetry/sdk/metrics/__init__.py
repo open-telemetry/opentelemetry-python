@@ -35,6 +35,7 @@ from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 logger = logging.getLogger(__name__)
+MetricT = TypeVar("MetricT", Counter, UpDownCounter, ValueRecorder)
 
 
 class BaseBoundInstrument:
@@ -49,7 +50,7 @@ class BaseBoundInstrument:
     """
 
     def __init__(
-        self, labels: Tuple[Tuple[str, str]], metric: metrics_api.MetricT
+        self, labels: Tuple[Tuple[str, str]], metric: MetricT
     ):
         self._labels = labels
         self._metric = metric
