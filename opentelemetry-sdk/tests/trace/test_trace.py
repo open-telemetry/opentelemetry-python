@@ -17,9 +17,11 @@ import shutil
 import subprocess
 import unittest
 from logging import ERROR, WARNING
+from typing import Optional
 from unittest import mock
 
 from opentelemetry import trace as trace_api
+from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -435,6 +437,8 @@ class TestSpanCreation(unittest.TestCase):
 
 
 class TestSpan(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         self.tracer = new_tracer()
 
@@ -734,6 +738,20 @@ class TestSpan(unittest.TestCase):
         )
         self.assertIs(span.status.description, "Test description")
 
+    def test_start_accepts_context(self):
+        # pylint: disable=no-self-use
+        span_processor = mock.Mock(spec=trace.SpanProcessor)
+        span = trace._Span(
+            "name",
+            mock.Mock(spec=trace_api.SpanContext),
+            span_processor=span_processor,
+        )
+        context = Context()
+        span.start(parent_context=context)
+        span_processor.on_start.assert_called_once_with(
+            span, parent_context=context
+        )
+
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
@@ -899,7 +917,9 @@ class MySpanProcessor(trace.SpanProcessor):
         self.name = name
         self.span_list = span_list
 
-    def on_start(self, span: "trace.Span") -> None:
+    def on_start(
+        self, span: "trace.Span", parent_context: Optional[Context] = None
+    ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
     def on_end(self, span: "trace.Span") -> None:
