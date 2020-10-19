@@ -343,6 +343,20 @@ def _create_immutable_attributes(attributes):
     return MappingProxyType(attributes.copy() if attributes else {})
 
 
+def _check_span_ended(func):
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            has_ended = self.end_time is not None
+            if has_ended:
+                logger.warning(
+                    "Calling {} on an ended span.".format(func.__name__)
+                )
+                return
+            func(self, *args, **kwargs)
+
+    return wrapper
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -557,15 +571,8 @@ class Span(trace_api.Span):
             with self._lock:
                 self.attributes[key] = value
 
+    @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
-        with self._lock:
-            if not self.is_recording():
-                return
-            has_ended = self.end_time is not None
-
-        if has_ended:
-            logger.warning("Calling add_event() on an ended span.")
-            return
         self.events.append(event)
 
     def add_event(
@@ -588,14 +595,13 @@ class Span(trace_api.Span):
         with self._lock:
             if not self.is_recording():
                 return
-            has_started = self.start_time is not None
-            if not has_started:
-                self._start_time = (
-                    start_time if start_time is not None else time_ns()
-                )
-        if has_started:
-            logger.warning("Calling start() on a started span.")
-            return
+            if self.start_time is not None:
+                logger.warning("Calling start() on a started span.")
+                return
+            self._start_time = (
+                start_time if start_time is not None else time_ns()
+            )
+
         self.span_processor.on_start(self)
 
     def end(self, end_time: Optional[int] = None) -> None:
@@ -604,38 +610,26 @@ class Span(trace_api.Span):
                 return
             if self.start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
-            has_ended = self.end_time is not None
-            if not has_ended:
-                if self.status is None:
-                    self.status = Status(canonical_code=StatusCanonicalCode.OK)
+            if self.end_time is not None:
+                logger.warning("Calling end() on an ended span.")
+                return
 
-                self._end_time = (
-                    end_time if end_time is not None else time_ns()
-                )
+            if self.status is None:
+                self.status = Status(canonical_code=StatusCanonicalCode.OK)
 
-        if has_ended:
-            logger.warning("Calling end() on an ended span.")
-            return
+            self._end_time = end_time if end_time is not None else time_ns()
 
         self.span_processor.on_end(self)
 
+    @_check_span_ended
     def update_name(self, name: str) -> None:
-        with self._lock:
-            has_ended = self.end_time is not None
-        if has_ended:
-            logger.warning("Calling update_name() on an ended span.")
-            return
         self.name = name
 
     def is_recording(self) -> bool:
         return True
 
+    @_check_span_ended
     def set_status(self, status: trace_api.Status) -> None:
-        with self._lock:
-            has_ended = self.end_time is not None
-        if has_ended:
-            logger.warning("Calling set_status() on an ended span.")
-            return
         self.status = status
 
     def __exit__(
