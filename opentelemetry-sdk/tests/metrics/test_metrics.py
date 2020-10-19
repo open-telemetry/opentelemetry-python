@@ -202,7 +202,7 @@ class TestMeter(unittest.TestCase):
         self.assertEqual(observer.value_type, int)
         self.assertEqual(observer.label_keys, ())
         self.assertTrue(observer.enabled)
-    
+
     def test_register_updownsumobserver(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
