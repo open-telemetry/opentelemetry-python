@@ -48,9 +48,7 @@ class BaseBoundInstrument:
         metric: The metric that created this bound instrument.
     """
 
-    def __init__(
-        self, labels: Tuple[Tuple[str, str]], metric: "MetricT"
-    ):
+    def __init__(self, labels: Tuple[Tuple[str, str]], metric: "MetricT"):
         self._labels = labels
         self._metric = metric
         self.view_datas = metric.meter.view_manager.get_view_datas(
@@ -222,6 +220,7 @@ class ValueRecorder(Metric, metrics_api.ValueRecorder):
         bound_intrument.release()
 
     UPDATE_FUNCTION = record
+
 
 MetricT = TypeVar("MetricT", Counter, UpDownCounter, ValueRecorder)
 

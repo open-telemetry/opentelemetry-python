@@ -313,7 +313,7 @@ InstrumentT = TypeVar(
     SumObserver,
     UpDownSumObserver,
     ValueObserver,
-    ValueRecorder
+    ValueRecorder,
 )
 ObserverT = TypeVar("ObserverT", bound=Observer)
 ObserverCallbackT = Callable[[Observer], None]
