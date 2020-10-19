@@ -218,6 +218,7 @@ class Observer(abc.ABC):
 
 class SumObserver(Observer):
     """Asynchronous instrument used to capture a monotonic sum."""
+    # pylint: disable=W0223
 
 
 class DefaultSumObserver(SumObserver):
@@ -229,6 +230,7 @@ class DefaultSumObserver(SumObserver):
 
 class UpDownSumObserver(Observer):
     """Asynchronous instrument used to capture a non-monotonic count."""
+    # pylint: disable=W0223
 
 
 class DefaultUpDownSumObserver(UpDownSumObserver):
@@ -240,6 +242,7 @@ class DefaultUpDownSumObserver(UpDownSumObserver):
 
 class ValueObserver(Observer):
     """Asynchronous instrument used to capture grouping measurements."""
+    # pylint: disable=W0223
 
 
 class DefaultValueObserver(ValueObserver):
