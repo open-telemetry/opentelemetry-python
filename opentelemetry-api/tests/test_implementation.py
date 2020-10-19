@@ -110,7 +110,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         observer = meter.register_valueobserver(callback, "", "", "", int)
         self.assertIsInstance(observer, metrics.DefaultValueObserver)
 
-    def test_unregister_observer(self): 
+    def test_unregister_observer(self):
         meter = metrics.DefaultMeter()
         observer = metrics.DefaultSumObserver()
         meter.unregister_observer(observer)

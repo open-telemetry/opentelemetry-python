@@ -189,11 +189,7 @@ class TestMeter(unittest.TestCase):
         callback = mock.Mock()
 
         observer = meter.register_sumobserver(
-            callback,
-            "name",
-            "desc",
-            "unit",
-            int,
+            callback, "name", "desc", "unit", int,
         )
 
         self.assertIsInstance(observer, metrics.SumObserver)
@@ -213,11 +209,7 @@ class TestMeter(unittest.TestCase):
         callback = mock.Mock()
 
         observer = meter.register_updownsumobserver(
-            callback,
-            "name",
-            "desc",
-            "unit",
-            int,
+            callback, "name", "desc", "unit", int,
         )
 
         self.assertIsInstance(observer, metrics.UpDownSumObserver)
@@ -237,11 +229,7 @@ class TestMeter(unittest.TestCase):
         callback = mock.Mock()
 
         observer = meter.register_valueobserver(
-            callback,
-            "name",
-            "desc",
-            "unit",
-            int,
+            callback, "name", "desc", "unit", int,
         )
 
         self.assertIsInstance(observer, metrics.ValueObserver)

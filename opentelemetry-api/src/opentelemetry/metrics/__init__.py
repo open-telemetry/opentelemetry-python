@@ -533,7 +533,7 @@ class DefaultMeter(Meter):
     ) -> "DefaultSumObserver":
         return DefaultSumObserver()
 
-    def register_updownobserver(
+    def register_updownsumobserver(
         self,
         callback: ObserverCallbackT,
         name: str,
