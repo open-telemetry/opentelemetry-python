@@ -15,7 +15,7 @@
 import atexit
 import logging
 import threading
-from typing import Dict, Sequence, Tuple, Type
+from typing import Dict, Sequence, Tuple, Type, TypeVar
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export import (
