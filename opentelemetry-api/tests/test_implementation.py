@@ -96,21 +96,21 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         meter = metrics.DefaultMeter()
         callback = mock.Mock()
         observer = meter.register_sumobserver(callback, "", "", "", int)
-        self.assertIsInstance(observer, metrics.DefaultObserver)
+        self.assertIsInstance(observer, metrics.DefaultSumObserver)
 
     def test_register_updownsumobserver(self):
         meter = metrics.DefaultMeter()
         callback = mock.Mock()
         observer = meter.register_updownsumobserver(callback, "", "", "", int)
-        self.assertIsInstance(observer, metrics.DefaultObserver)
+        self.assertIsInstance(observer, metrics.DefaultUpDownSumObserver)
 
     def test_register_valueobserver(self):
         meter = metrics.DefaultMeter()
         callback = mock.Mock()
         observer = meter.register_valueobserver(callback, "", "", "", int)
-        self.assertIsInstance(observer, metrics.DefaultObserver)
+        self.assertIsInstance(observer, metrics.DefaultValueObserver)
 
     def test_unregister_observer(self): 
         meter = metrics.DefaultMeter()
-        observer = metrics.DefaultObserver()
+        observer = metrics.DefaultSumObserver()
         meter.unregister_observer(observer)

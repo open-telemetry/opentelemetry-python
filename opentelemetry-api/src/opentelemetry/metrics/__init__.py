@@ -216,52 +216,37 @@ class Observer(abc.ABC):
         """
 
 
-class DefaultObserver(Observer):
-    """No-op implementation of ``Observer``."""
-
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the observer.
-
-        Args:
-            value: The value to capture to this observer metric.
-            labels: Labels associated to ``value``.
-        """
-
-
 class SumObserver(Observer):
+    """Asynchronous instrument used to capture a monotonic sum."""
+
+
+class DefaultSumObserver(SumObserver):
     """No-op implementation of ``SumObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the sumobserver.
-
-        Args:
-            value: The value to capture to this sumobserver metric.
-            labels: Labels associated to ``value``.
-        """
+        pass
 
 
 class UpDownSumObserver(Observer):
+    """Asynchronous instrument used to capture a non-monotonic count."""
+
+
+class DefaultUpDownSumObserver(UpDownSumObserver):
     """No-op implementation of ``UpDownSumObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the updownsumobserver.
-
-        Args:
-            value: The value to capture to this updownsumobserver metric.
-            labels: Labels associated to ``value``.
-        """
+        pass
 
 
 class ValueObserver(Observer):
+    """Asynchronous instrument used to capture grouping measurements."""
+
+
+class DefaultValueObserver(ValueObserver):
     """No-op implementation of ``ValueObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the valueobserver.
-
-        Args:
-            value: The value to capture to this valueobserver metric.
-            labels: Labels associated to ``value``.
-        """
+        pass
 
 
 class MeterProvider(abc.ABC):
@@ -315,7 +300,6 @@ InstrumentT = TypeVar(
     ValueObserver,
     ValueRecorder,
 )
-ObserverT = TypeVar("ObserverT", bound=Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -546,8 +530,8 @@ class DefaultMeter(Meter):
         value_type: Type[ValueT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> "Observer":
-        return DefaultObserver()
+    ) -> "DefaultSumObserver":
+        return DefaultSumObserver()
 
     def register_updownobserver(
         self,
@@ -558,8 +542,8 @@ class DefaultMeter(Meter):
         value_type: Type[ValueT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> "Observer":
-        return DefaultObserver()
+    ) -> "DefaultUpDownSumObserver":
+        return DefaultUpDownSumObserver()
 
     def register_valueobserver(
         self,
@@ -570,8 +554,8 @@ class DefaultMeter(Meter):
         value_type: Type[ValueT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> "Observer":
-        return DefaultObserver()
+    ) -> "DefaultValueObserver":
+        return DefaultValueObserver()
 
     def unregister_observer(self, observer: "Observer") -> None:
         pass
