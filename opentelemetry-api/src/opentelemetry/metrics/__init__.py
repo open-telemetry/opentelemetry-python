@@ -306,9 +306,6 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-InstrumentT = TypeVar(
-    "InstrumentT", Counter, UpDownCounter, Observer, ValueRecorder
-)
 ObserverT = TypeVar("ObserverT", bound=Observer)
 ObserverCallbackT = Callable[[Observer], None]
 
