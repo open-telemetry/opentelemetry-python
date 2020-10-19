@@ -19,6 +19,7 @@ from typing import Optional, Sequence, Tuple
 
 from opentelemetry.metrics import (
     Counter,
+    InstrumentT,
     SumObserver,
     UpDownCounter,
     UpDownSumObserver,
@@ -28,7 +29,6 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.sdk.metrics.export.aggregate import (
     Aggregator,
-    InstrumentT,
     LastValueAggregator,
     MinMaxSumCountAggregator,
     SumAggregator,

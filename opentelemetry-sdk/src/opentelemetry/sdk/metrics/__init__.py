@@ -223,7 +223,6 @@ class ValueRecorder(Metric, metrics_api.ValueRecorder):
 
     UPDATE_FUNCTION = record
 
-
 MetricT = TypeVar("MetricT", Counter, UpDownCounter, ValueRecorder)
 
 
@@ -327,15 +326,12 @@ class ValueObserver(Observer, metrics_api.ValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
 
 
-InstrumentT = TypeVar("InstrumentT", Metric, Observer)
-
-
 class Record:
     """Container class used for processing in the `Processor`"""
 
     def __init__(
         self,
-        instrument: InstrumentT,
+        instrument: metrics_api.InstrumentT,
         labels: Tuple[Tuple[str, str]],
         aggregator: Aggregator,
     ):

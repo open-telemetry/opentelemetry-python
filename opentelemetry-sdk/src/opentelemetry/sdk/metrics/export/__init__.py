@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Sequence, Tuple
 
-from opentelemetry.sdk.metrics import InstrumentT
+from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.resources import Resource
 
@@ -28,7 +28,7 @@ class MetricsExportResult(Enum):
 class MetricRecord:
     def __init__(
         self,
-        instrument: InstrumentT,
+        instrument: metrics_api.InstrumentT,
         labels: Tuple[Tuple[str, str]],
         aggregator: Aggregator,
         resource: Resource,
