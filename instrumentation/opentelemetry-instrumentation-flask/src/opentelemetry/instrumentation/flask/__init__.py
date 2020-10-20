@@ -110,7 +110,7 @@ def _before_request():
         return
 
     environ = flask.request.environ
-    span_name = flask.request.endpoint or otel_wsgi.get_default_span_name(
+    span_name = flask.request.url_rule.rule or otel_wsgi.get_default_span_name(
         environ
     )
     token = context.attach(
