@@ -110,6 +110,7 @@ def _before_request():
         return
 
     environ = flask.request.environ
+    span_name = None
     try:
         span_name = flask.request.url_rule.rule
     except AttributeError:
