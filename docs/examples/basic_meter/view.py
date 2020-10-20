@@ -39,7 +39,7 @@ requests_counter = meter.create_counter(
     value_type=int,
 )
 
-requests_size = meter.create_value_recorder(
+requests_size = meter.create_valuerecorder(
     name="requests_size",
     description="size of requests",
     unit="1",

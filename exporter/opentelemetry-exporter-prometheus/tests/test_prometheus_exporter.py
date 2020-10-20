@@ -80,7 +80,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
 
     def test_min_max_sum_aggregator_to_prometheus(self):
         meter = get_meter_provider().get_meter(__name__)
-        metric = meter.create_value_recorder(
+        metric = meter.create_valuerecorder(
             "test@name", "testdesc", "unit", int, []
         )
         labels = {}

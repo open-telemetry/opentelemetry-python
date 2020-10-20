@@ -45,7 +45,7 @@ class TimedMetricRecorder:
         self._span_kind = span_kind
 
         if self._meter:
-            self._duration = self._meter.create_value_recorder(
+            self._duration = self._meter.create_valuerecorder(
                 name="{}/{}/duration".format(service_name, span_kind),
                 description="Duration of grpc requests to the server",
                 unit="ms",

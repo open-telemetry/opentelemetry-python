@@ -450,7 +450,7 @@ class Meter(metrics_api.Meter):
             self.metrics.add(counter)
         return counter
 
-    def create_value_recorder(
+    def create_valuerecorder(
         self,
         name: str,
         description: str,
@@ -458,7 +458,7 @@ class Meter(metrics_api.Meter):
         value_type: Type[metrics_api.ValueT],
         enabled: bool = True,
     ) -> metrics_api.ValueRecorder:
-        """See `opentelemetry.metrics.Meter.create_value_recorder`."""
+        """See `opentelemetry.metrics.Meter.create_valuerecorder`."""
         recorder = ValueRecorder(
             name, description, unit, value_type, self, enabled=enabled
         )

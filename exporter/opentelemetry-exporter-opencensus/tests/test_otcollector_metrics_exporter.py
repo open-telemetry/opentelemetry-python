@@ -96,7 +96,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         float_counter = self._meter.create_counter(
             "testName", "testDescription", "unit", float,
         )
-        valuerecorder = self._meter.create_value_recorder(
+        valuerecorder = self._meter.create_valuerecorder(
             "testName", "testDescription", "unit", float,
         )
         result = metrics_exporter.get_collector_point(

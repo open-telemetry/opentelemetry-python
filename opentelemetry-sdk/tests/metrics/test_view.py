@@ -190,7 +190,7 @@ class TestHistogramView(unittest.TestCase):
         exporter = InMemoryMetricsExporter()
         controller = PushController(meter, exporter, 30)
 
-        requests_size = meter.create_value_recorder(
+        requests_size = meter.create_valuerecorder(
             name="requests_size",
             description="size of requests",
             unit="1",
@@ -244,7 +244,7 @@ class TestHistogramView(unittest.TestCase):
         exporter = InMemoryMetricsExporter()
         controller = PushController(meter, exporter, 30)
 
-        requests_size = meter.create_value_recorder(
+        requests_size = meter.create_valuerecorder(
             name="requests_size",
             description="size of requests",
             unit="1",

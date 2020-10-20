@@ -175,7 +175,7 @@ class TestMeter(unittest.TestCase):
 
     def test_create_valuerecorder(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        valuerecorder = meter.create_value_recorder(
+        valuerecorder = meter.create_valuerecorder(
             "name", "desc", "unit", float,
         )
         self.assertIsInstance(valuerecorder, metrics.ValueRecorder)

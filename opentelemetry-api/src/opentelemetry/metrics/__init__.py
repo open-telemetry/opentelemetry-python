@@ -38,6 +38,8 @@ ValueT = TypeVar("ValueT", int, float)
 
 
 class BoundCounter(abc.ABC):
+
+    @abc.abstractmethod
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound counter by ``value``.
 
@@ -46,7 +48,7 @@ class BoundCounter(abc.ABC):
         """
 
 
-class DefaultBoundCounter:
+class DefaultBoundCounter(BoundCounter):
     """The default bound counter instrument.
 
     Used when no bound counter implementation is available.
@@ -56,7 +58,9 @@ class DefaultBoundCounter:
         pass
 
 
-class BoundUpDownCounter:
+class BoundUpDownCounter(abc.ABC):
+
+    @abc.abstractmethod
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound updowncounter by ``value``.
 
@@ -66,7 +70,7 @@ class BoundUpDownCounter:
         """
 
 
-class DefaultBoundUpDownCounter:
+class DefaultBoundUpDownCounter(BoundUpDownCounter):
     """The default bound updowncounter instrument.
 
     Used when no bound updowncounter implementation is available.
@@ -77,6 +81,8 @@ class DefaultBoundUpDownCounter:
 
 
 class BoundValueRecorder(abc.ABC):
+
+    @abc.abstractmethod
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this bound valuerecorder.
 
@@ -85,7 +91,7 @@ class BoundValueRecorder(abc.ABC):
         """
 
 
-class DefaultBoundValueRecorder:
+class DefaultBoundValueRecorder(BoundValueRecorder):
     """The default bound valuerecorder instrument.
 
     Used when no bound valuerecorder implementation is available.
@@ -216,10 +222,9 @@ class Observer(abc.ABC):
         """
 
 
+# pylint: disable=W0223
 class SumObserver(Observer):
     """Asynchronous instrument used to capture a monotonic sum."""
-
-    # pylint: disable=W0223
 
 
 class DefaultSumObserver(SumObserver):
@@ -229,10 +234,9 @@ class DefaultSumObserver(SumObserver):
         pass
 
 
+# pylint: disable=W0223
 class UpDownSumObserver(Observer):
     """Asynchronous instrument used to capture a non-monotonic count."""
-
-    # pylint: disable=W0223
 
 
 class DefaultUpDownSumObserver(UpDownSumObserver):
@@ -242,10 +246,9 @@ class DefaultUpDownSumObserver(UpDownSumObserver):
         pass
 
 
+# pylint: disable=W0223
 class ValueObserver(Observer):
     """Asynchronous instrument used to capture grouping measurements."""
-
-    # pylint: disable=W0223
 
 
 class DefaultValueObserver(ValueObserver):
@@ -297,15 +300,7 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-InstrumentT = TypeVar(
-    "InstrumentT",
-    Counter,
-    UpDownCounter,
-    SumObserver,
-    UpDownSumObserver,
-    ValueObserver,
-    ValueRecorder,
-)
+InstrumentT = TypeVar("InstrumentT", bound=[Metric, Observer])
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -378,7 +373,7 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def create_value_recorder(
+    def create_valuerecorder(
         self,
         name: str,
         description: str,
@@ -516,7 +511,7 @@ class DefaultMeter(Meter):
         # pylint: disable=no-self-use
         return DefaultUpDownCounter()
 
-    def create_value_recorder(
+    def create_valuerecorder(
         self,
         name: str,
         description: str,
