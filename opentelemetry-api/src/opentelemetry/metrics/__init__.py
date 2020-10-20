@@ -47,7 +47,6 @@ ValueT = TypeVar("ValueT", int, float)
 
 
 class BoundCounter(abc.ABC):
-
     @abc.abstractmethod
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound counter by ``value``.
@@ -68,7 +67,6 @@ class DefaultBoundCounter(BoundCounter):
 
 
 class BoundUpDownCounter(abc.ABC):
-
     @abc.abstractmethod
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound updowncounter by ``value``.
@@ -90,7 +88,6 @@ class DefaultBoundUpDownCounter(BoundUpDownCounter):
 
 
 class BoundValueRecorder(abc.ABC):
-
     @abc.abstractmethod
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this bound valuerecorder.
