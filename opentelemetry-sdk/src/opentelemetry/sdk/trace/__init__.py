@@ -363,12 +363,9 @@ def _create_immutable_attributes(attributes):
 
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
-        with self._lock:
-            has_ended = self.end_time is not None
-            if has_ended:
-                logger.warning(
-                    "Calling {} on an ended span.".format(func.__name__)
-                )
+        with self._lock:  # pylint: disable=protected-access
+            if self.end_time is not None:
+                logger.warning("Calling %s on an ended span.", func.__name__)
                 return
             func(self, *args, **kwargs)
 
