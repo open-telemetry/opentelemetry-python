@@ -29,7 +29,16 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 import abc
 from logging import getLogger
-from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
+from typing import (
+    Callable,
+    Dict,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from opentelemetry.util import _load_meter_provider
 
@@ -300,7 +309,7 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-InstrumentT = TypeVar("InstrumentT", bound=[Metric, Observer])
+InstrumentT = TypeVar("InstrumentT", bound=Union[Metric, Observer])
 ObserverCallbackT = Callable[[Observer], None]
 
 
