@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Support for using channels as a context manager
+  ([#1263](https://github.com/open-telemetry/opentelemetry-python/pull/1263))
+  
 ## Version 0.13b0
 
 Released 2020-09-17
