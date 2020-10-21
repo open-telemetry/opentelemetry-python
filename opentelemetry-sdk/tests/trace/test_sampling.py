@@ -120,10 +120,7 @@ class TestSampler(unittest.TestCase):
             )
         )
         no_record_default_on = sampling.DEFAULT_ON.should_sample(
-            context,
-            0xDEADBEF1,
-            0xDEADBEF2,
-            "unsampled parent, sampling on",
+            context, 0xDEADBEF1, 0xDEADBEF2, "unsampled parent, sampling on",
         )
         self.assertFalse(no_record_default_on.decision.is_sampled())
         self.assertEqual(no_record_default_on.attributes, {})
@@ -139,10 +136,7 @@ class TestSampler(unittest.TestCase):
             )
         )
         sampled_default_on = sampling.DEFAULT_ON.should_sample(
-            context,
-            0xDEADBEF1,
-            0xDEADBEF2,
-            {"sampled parent": "sampling on"},
+            context, 0xDEADBEF1, 0xDEADBEF2, {"sampled parent": "sampling on"},
         )
         self.assertTrue(sampled_default_on.decision.is_sampled())
         self.assertEqual(
@@ -169,10 +163,7 @@ class TestSampler(unittest.TestCase):
             )
         )
         no_record_default_off = sampling.DEFAULT_OFF.should_sample(
-            context,
-            0xDEADBEF1,
-            0xDEADBEF2,
-            "unsampled parent, sampling off",
+            context, 0xDEADBEF1, 0xDEADBEF2, "unsampled parent, sampling off",
         )
         self.assertFalse(no_record_default_off.decision.is_sampled())
         self.assertEqual(no_record_default_off.attributes, {})
@@ -188,10 +179,7 @@ class TestSampler(unittest.TestCase):
             )
         )
         sampled_default_off = sampling.DEFAULT_OFF.should_sample(
-            context,
-            0xDEADBEF1,
-            0xDEADBEF2,
-            {"sampled parent": "sampling on"},
+            context, 0xDEADBEF1, 0xDEADBEF2, {"sampled parent": "sampling on"},
         )
         self.assertTrue(sampled_default_off.decision.is_sampled())
         self.assertEqual(
@@ -320,10 +308,7 @@ class TestSampler(unittest.TestCase):
         # Check that the sampling decision matches the parent context if given
         self.assertFalse(
             sampler.should_sample(
-                context,
-                0x7FFFFFFFFFFFFFFF,
-                0xDEADBEEF,
-                "span name",
+                context, 0x7FFFFFFFFFFFFFFF, 0xDEADBEEF, "span name",
             ).decision.is_sampled()
         )
 
@@ -340,10 +325,7 @@ class TestSampler(unittest.TestCase):
         sampler2 = sampling.ParentBased(sampling.ALWAYS_OFF)
         self.assertTrue(
             sampler2.should_sample(
-                context,
-                0x8000000000000000,
-                0xDEADBEEF,
-                "span name",
+                context, 0x8000000000000000, 0xDEADBEEF, "span name",
             ).decision.is_sampled()
         )
 
@@ -352,9 +334,6 @@ class TestSampler(unittest.TestCase):
         sampler3 = sampling.ParentBased(sampling.ALWAYS_OFF)
         self.assertTrue(
             sampler3.should_sample(
-                context,
-                0x8000000000000000,
-                0xDEADBEEF,
-                "span name",
+                context, 0x8000000000000000, 0xDEADBEEF, "span name",
             ).decision.is_sampled()
         )

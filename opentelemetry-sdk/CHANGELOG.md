@@ -4,6 +4,8 @@
 
 - Make `SpanProcessor.on_start` accept parent Context
   ([#1251](https://github.com/open-telemetry/opentelemetry-python/pull/1251))
+- Samplers to accept parent Context
+  ([#1267](https://github.com/open-telemetry/opentelemetry-python/pull/1267))
 
 ## Version 0.14b0
 
