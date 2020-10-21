@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from unittest import mock
 
 import grpc
 
@@ -267,6 +268,28 @@ class TestClientProto(TestBase):
             span.status.canonical_code.value,
             grpc.StatusCode.INVALID_ARGUMENT.value[0],
         )
+
+    def test_channel_context_manager(self):
+        with mock.patch.object(self.channel, 'close', wraps=self.channel.close) as close_spy:
+            with self.channel as channel:
+                stub = test_server_pb2_grpc.GRPCTestServerStub(channel)
+                simple_method(stub)
+                spans = self.memory_exporter.get_finished_spans()
+                self.assertEqual(len(spans), 1)
+                span = spans[0]
+
+                self.assertEqual(span.name, "/GRPCTestServer/SimpleMethod")
+                self.assertIs(span.kind, trace.SpanKind.CLIENT)
+
+                # Check version and name in span's instrumentation info
+                self.check_span_instrumentation_info(
+                    span, opentelemetry.instrumentation.grpc
+                )
+
+                self._verify_success_records(8, 8, "/GRPCTestServer/SimpleMethod")
+
+            # ensure close() was called on context exit
+            close_spy.assert_called_once()
 
 
 class TestClientNoMetrics(TestBase):
