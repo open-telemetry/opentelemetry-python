@@ -1,0 +1,17 @@
+name: Trigger Tests on Contrib 1
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rest_api_trigger_contrib:
+    runs-on: ubuntu-latest
+    steps:
+      - run: >
+          curl 
+          -X POST 
+          -u "${{ secrets.PAT_USERNAME }}:${{ secrets.PAT_TOKEN }}"
+          -H "Accept: application/vnd.github.everest-preview+json" 
+          -H "Content-Type: application/json" https://api.github.com/repos/NathanielRN/clone-opentelemetry-python-contrib/actions/workflows/core-repo-pr.yml/dispatches
+          --data '{"ref": "master", "inputs": { "fork_repository": "${{ github.repository }}", "fork_ref":"${{ github.ref }}"} }'
