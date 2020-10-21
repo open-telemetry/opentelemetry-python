@@ -30,7 +30,7 @@ async def async_span(span):
 
 
 async def main():
-    span = tracer.start_span(name="span", parent=None)
+    span = tracer.start_span(name="span")
     ctx = await async_span(span)
     print(baggage.get_all(context=ctx))
 
