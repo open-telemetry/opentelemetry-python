@@ -561,19 +561,18 @@ class Span(trace_api.Span):
         return self.context
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        with self._lock:
-            if not self.is_recording():
-                return
-            has_ended = self.end_time is not None
-        if has_ended:
-            logger.warning("Setting attribute on ended span.")
+        if not _is_valid_attribute_value(value):
             return
 
         if not key:
             logger.warning("invalid key (empty or null)")
             return
 
-        if _is_valid_attribute_value(value):
+        with self._lock:
+            if self.end_time is not None:
+                logger.warning("Setting attribute on ended span.")
+                return
+
             # Freeze mutable sequences defensively
             if isinstance(value, MutableSequence):
                 value = tuple(value)
@@ -583,8 +582,7 @@ class Span(trace_api.Span):
                 except ValueError:
                     logger.warning("Byte attribute could not be decoded.")
                     return
-            with self._lock:
-                self.attributes[key] = value
+            self.attributes[key] = value
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
@@ -612,8 +610,6 @@ class Span(trace_api.Span):
         parent_context: Optional[context_api.Context] = None,
     ) -> None:
         with self._lock:
-            if not self.is_recording():
-                return
             if self.start_time is not None:
                 logger.warning("Calling start() on a started span.")
                 return
@@ -625,8 +621,6 @@ class Span(trace_api.Span):
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
-            if not self.is_recording():
-                return
             if self.start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
             if self.end_time is not None:
