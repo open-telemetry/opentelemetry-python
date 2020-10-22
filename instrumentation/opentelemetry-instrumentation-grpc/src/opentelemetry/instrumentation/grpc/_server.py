@@ -25,10 +25,13 @@ from contextlib import contextmanager
 from typing import List
 
 import grpc
+import logging
 
 from opentelemetry import propagators, trace
 from opentelemetry.context import attach, detach
 from opentelemetry.trace.status import Status, StatusCanonicalCode
+
+_log = logging.getLogger(__name__)
 
 
 # wrap an RPC call
@@ -200,14 +203,21 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
             attributes["grpc.user_agent"] = metadata["user-agent"]
 
         # Split up the peer to keep with how other telemetry sources
-        # do it.  This looks like ipv6:[::1]:57284 or ipv4:127.0.0.1:57284.
-        host, port = context.peer().split(":", 1)[1].rsplit(":", 1)
+        # do it.  This looks like:
+        # * ipv6:[::1]:57284
+        # * ipv4:127.0.0.1:57284
+        # * ipv4:10.2.1.1:57284,127.0.0.1:57284
+        #
+        try:
+            host, port = context.peer().split(',')[0].split(":", 1)[1].rsplit(":", 1)
 
-        # other telemetry sources convert this, so we will too
-        if host in ("[::1]", "127.0.0.1"):
-            host = "localhost"
+            # other telemetry sources convert this, so we will too
+            if host in ("[::1]", "127.0.0.1"):
+                host = "localhost"
 
-        attributes.update({"net.peer.name": host, "net.peer.port": port})
+            attributes.update({"net.peer.name": host, "net.peer.port": port})
+        except IndexError:
+            _log.warning("Failed to parse peer address '%s'", context.peer())
 
         return self._tracer.start_as_current_span(
             name=handler_call_details.method,
