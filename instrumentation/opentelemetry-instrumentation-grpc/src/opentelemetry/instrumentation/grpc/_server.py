@@ -235,7 +235,7 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
                             # Here, we're interested in uncaught exceptions.
                             # pylint:disable=unidiomatic-typecheck
                             if type(error) != Exception:
-                                span.set_attribute("error", repr(error))
+                                span.record_exception(error)
                             raise error
 
             return telemetry_interceptor
