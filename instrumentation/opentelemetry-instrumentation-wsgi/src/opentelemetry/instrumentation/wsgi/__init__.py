@@ -50,6 +50,17 @@ Modify the application's ``wsgi.py`` file as shown below.
     application = get_wsgi_application()
     application = OpenTelemetryMiddleware(application)
 
+
+Usage in Production Server (gunicorn)
+------------------------------------
+
+Modify the ``gunicorn.config.py`` file as shown below.
+
+.. code-block:: python
+
+    def post_fork(server, worker):
+        worker(DjangoInstrumentor().instrument())
+
 API
 ---
 """
