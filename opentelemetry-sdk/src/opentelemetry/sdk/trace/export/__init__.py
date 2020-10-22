@@ -21,7 +21,7 @@ import typing
 from enum import Enum
 
 from opentelemetry.configuration import Configuration
-from opentelemetry.context import attach, detach, set_value
+from opentelemetry.context import Context, attach, detach, set_value
 from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.util import time_ns
 
@@ -70,7 +70,9 @@ class SimpleExportSpanProcessor(SpanProcessor):
     def __init__(self, span_exporter: SpanExporter):
         self.span_exporter = span_exporter
 
-    def on_start(self, span: Span) -> None:
+    def on_start(
+        self, span: Span, parent_context: typing.Optional[Context] = None
+    ) -> None:
         pass
 
     def on_end(self, span: Span) -> None:
@@ -172,7 +174,9 @@ class BatchExportSpanProcessor(SpanProcessor):
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
 
-    def on_start(self, span: Span) -> None:
+    def on_start(
+        self, span: Span, parent_context: typing.Optional[Context] = None
+    ) -> None:
         pass
 
     def on_end(self, span: Span) -> None:
