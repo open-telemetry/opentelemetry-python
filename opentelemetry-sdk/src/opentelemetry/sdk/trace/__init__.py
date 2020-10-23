@@ -637,7 +637,9 @@ class Span(trace_api.Span):
                     raise RuntimeError("Calling end() on a not started span.")
                 if not has_ended:
                     if self.status is None:
-                        self.status = Status(canonical_code=StatusCanonicalCode.OK)
+                        self.status = Status(
+                            canonical_code=StatusCanonicalCode.OK
+                        )
 
                     self._end_time = (
                         end_time if end_time is not None else time_ns()
