@@ -61,28 +61,31 @@ import wsgiref.util as wsgiref_util
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.instrumentation.wsgi.version import __version__
-from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
+from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
 
 
-def get_header_from_environ(
-    environ: dict, header_name: str
-) -> typing.List[str]:
-    """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
+# pylint:disable=arguments-differ
+class CarrierGetter(DictGetter):
+    def get(self, environ: dict, header_name: str) -> typing.List[str]:
+        """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
 
-    Returns:
-        A list with a single string with the header value if it exists, else an empty list.
-    """
-    environ_key = "HTTP_" + header_name.upper().replace("-", "_")
-    value = environ.get(environ_key)
-    if value is not None:
-        return [value]
-    return []
+        Returns:
+            A list with a single string with the header value if it exists, else an empty list.
+        """
+        environ_key = "HTTP_" + header_name.upper().replace("-", "_")
+        value = environ.get(environ_key)
+        if value is not None:
+            return [value]
+        return []
+
+    def keys(self, carrier):
+        return []
 
 
-getter = HelperGetter(get_header_from_environ, DictGetter.keys)
+carrier_getter = CarrierGetter()
 
 
 def setifnotnone(dic, key, value):
@@ -199,7 +202,7 @@ class OpenTelemetryMiddleware:
             start_response: The WSGI start_response callable.
         """
 
-        token = context.attach(propagators.extract(getter, environ))
+        token = context.attach(propagators.extract(carrier_getter, environ))
         span_name = self.name_callback(environ)
 
         span = self.tracer.start_span(

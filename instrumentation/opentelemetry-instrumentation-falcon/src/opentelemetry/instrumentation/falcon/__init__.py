@@ -114,7 +114,9 @@ class _InstrumentedFalconAPI(falcon.API):
 
         start_time = time_ns()
 
-        token = context.attach(propagators.extract(otel_wsgi.getter, env))
+        token = context.attach(
+            propagators.extract(otel_wsgi.carrier_getter, env)
+        )
         span = self._tracer.start_span(
             otel_wsgi.get_default_span_name(env),
             kind=trace.SpanKind.SERVER,

@@ -24,13 +24,12 @@ https://github.com/opentracing-contrib/python-grpc
 """
 
 from contextlib import contextmanager
-from typing import List
 
 import grpc
 
 from opentelemetry import propagators, trace
 from opentelemetry.context import attach, detach
-from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
+from opentelemetry.trace.propagation.textmap import DictGetter
 
 from . import grpcext
 from ._utilities import RpcInfo
@@ -116,6 +115,7 @@ class OpenTelemetryServerInterceptor(
 ):
     def __init__(self, tracer):
         self._tracer = tracer
+        self._carrier_getter = DictGetter()
 
     @contextmanager
     # pylint:disable=no-self-use
@@ -123,13 +123,7 @@ class OpenTelemetryServerInterceptor(
         metadata = servicer_context.invocation_metadata()
         if metadata:
             md_dict = {md.key: md.value for md in metadata}
-
-            def get_from_grpc_metadata(metadata, key) -> List[str]:
-                return [md_dict[key]] if key in md_dict else []
-
-            getter = HelperGetter(get_from_grpc_metadata, DictGetter.keys)
-            # Update the context with the traceparent from the RPC metadata.
-            ctx = propagators.extract(getter, metadata)
+            ctx = propagators.extract(self._carrier_getter, md_dict)
             token = attach(ctx)
             try:
                 yield

@@ -18,16 +18,9 @@ import unittest
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
+from opentelemetry.trace.propagation.textmap import DictGetter
 
-
-def get_as_list(
-    dict_object: typing.Dict[str, typing.List[str]], key: str
-) -> typing.List[str]:
-    return dict_object.get(key, [])
-
-
-getter = HelperGetter(get_as_list, DictGetter.keys)
+carrier_getter = DictGetter()
 
 
 class TestBaggagePropagation(unittest.TestCase):
@@ -37,7 +30,7 @@ class TestBaggagePropagation(unittest.TestCase):
     def _extract(self, header_value):
         """Test helper"""
         header = {"baggage": [header_value]}
-        return baggage.get_all(self.propagator.extract(getter, header))
+        return baggage.get_all(self.propagator.extract(carrier_getter, header))
 
     def _inject(self, values):
         """Test helper"""
@@ -49,7 +42,9 @@ class TestBaggagePropagation(unittest.TestCase):
         return output.get("baggage")
 
     def test_no_context_header(self):
-        baggage_entries = baggage.get_all(self.propagator.extract(getter, {}))
+        baggage_entries = baggage.get_all(
+            self.propagator.extract(carrier_getter, {})
+        )
         self.assertEqual(baggage_entries, {})
 
     def test_empty_context_header(self):
