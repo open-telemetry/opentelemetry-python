@@ -442,6 +442,7 @@ class Span(trace_api.Span):
 
         self._end_time = None  # type: Optional[int]
         self._start_time = None  # type: Optional[int]
+        self._is_recording = True  # type: bool
         self.instrumentation_info = instrumentation_info
 
     @property
@@ -535,6 +536,7 @@ class Span(trace_api.Span):
         f_span["context"] = self._format_context(self.context)
         f_span["kind"] = str(self.kind)
         f_span["parent_id"] = parent_id
+        f_span["is_recording"] = self.is_recording()
         f_span["start_time"] = start_time
         f_span["end_time"] = end_time
         if self.status is not None:
@@ -551,11 +553,14 @@ class Span(trace_api.Span):
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
-            if not self.is_recording():
-                return
+            is_recording = self.is_recording()
             has_ended = self.end_time is not None
+
         if has_ended:
             logger.warning("Setting attribute on ended span.")
+            return
+
+        if not is_recording:
             return
 
         if not key:
@@ -577,13 +582,16 @@ class Span(trace_api.Span):
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
-            if not self.is_recording():
-                return
+            is_recording = self.is_recording()
             has_ended = self.end_time is not None
 
         if has_ended:
             logger.warning("Calling add_event() on an ended span.")
             return
+
+        if not is_recording:
+            return
+
         self.events.append(event)
 
     def add_event(
@@ -622,21 +630,26 @@ class Span(trace_api.Span):
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
-            if not self.is_recording():
-                return
-            if self.start_time is None:
-                raise RuntimeError("Calling end() on a not started span.")
+            is_recording = self.is_recording()
             has_ended = self.end_time is not None
-            if not has_ended:
-                if self.status is None:
-                    self.status = Status(canonical_code=StatusCanonicalCode.OK)
+            if is_recording:
+                if self.start_time is None:
+                    raise RuntimeError("Calling end() on a not started span.")
+                if not has_ended:
+                    if self.status is None:
+                        self.status = Status(canonical_code=StatusCanonicalCode.OK)
 
-                self._end_time = (
-                    end_time if end_time is not None else time_ns()
-                )
+                    self._end_time = (
+                        end_time if end_time is not None else time_ns()
+                    )
+
+                    self._is_recording = False
 
         if has_ended:
             logger.warning("Calling end() on an ended span.")
+            return
+
+        if not is_recording:
             return
 
         self.span_processor.on_end(self)
@@ -650,7 +663,7 @@ class Span(trace_api.Span):
         self.name = name
 
     def is_recording(self) -> bool:
-        return True
+        return self._is_recording
 
     def set_status(self, status: trace_api.Status) -> None:
         with self._lock:
