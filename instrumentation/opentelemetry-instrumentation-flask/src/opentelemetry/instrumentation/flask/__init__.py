@@ -117,9 +117,7 @@ def _before_request():
         pass
     if span_name is None:
         span_name = otel_wsgi.get_default_span_name(environ)
-    token = context.attach(
-        propagators.extract(otel_wsgi.getter, environ)
-    )
+    token = context.attach(propagators.extract(otel_wsgi.getter, environ))
 
     tracer = trace.get_tracer(__name__, __version__)
 

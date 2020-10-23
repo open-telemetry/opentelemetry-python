@@ -18,11 +18,11 @@ from opentelemetry import trace as trace_api
 from opentelemetry.exporter.datadog import constants, propagator
 from opentelemetry.sdk import trace
 from opentelemetry.trace import get_current_span, set_span_in_context
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter
 
 FORMAT = propagator.DatadogFormat()
 
-getter = Getter()
+getter = DictGetter()
 
 
 class TestDatadogFormat(unittest.TestCase):
