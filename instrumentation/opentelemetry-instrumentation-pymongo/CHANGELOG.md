@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.0.11
+
+Released 2020-10-23
+
 - Cast PyMongo commands as strings
   ([#1132](https://github.com/open-telemetry/opentelemetry-python/pull/1132))
 

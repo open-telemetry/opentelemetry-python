@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.0.11
+
+Released 2020-10-23
+
 - Add Global Error Handler
   ([#1080](https://github.com/open-telemetry/opentelemetry-python/pull/1080))
 - Update sampling result names
