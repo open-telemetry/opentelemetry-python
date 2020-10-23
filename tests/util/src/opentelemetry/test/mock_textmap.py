@@ -33,7 +33,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter,
+        get_from_carrier: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -56,7 +56,7 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter,
+        get_from_carrier: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:

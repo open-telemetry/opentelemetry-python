@@ -17,7 +17,7 @@ import unittest
 
 from opentelemetry import trace
 from opentelemetry.trace.propagation import tracecontext
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 
 FORMAT = tracecontext.TraceContextTextMapPropagator()
 
@@ -29,7 +29,7 @@ def get_as_list(
     return value if value is not None else []
 
 
-getter = Getter(get_as_list)
+getter = HelperGetter(get_as_list, DictGetter.keys)
 
 
 class TestTraceContextFormat(unittest.TestCase):

@@ -18,14 +18,13 @@ import typing
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
 from opentelemetry.trace.propagation import textmap
-
 #    Keys and values are strings of up to 256 printable US-ASCII characters.
 #    Implementations should conform to the `W3C Trace Context - Tracestate`_
 #    spec, which describes additional restrictions on valid field values.
 #
 #    .. _W3C Trace Context - Tracestate:
 #        https://www.w3.org/TR/trace-context/#tracestate-field
-
+from opentelemetry.trace.propagation.textmap import TextMapPropagatorT
 
 _KEY_WITHOUT_VENDOR_FORMAT = r"[a-z][_0-9a-z\-\*\/]{0,255}"
 _KEY_WITH_VENDOR_FORMAT = (
@@ -60,7 +59,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: textmap.Getter,
+        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:

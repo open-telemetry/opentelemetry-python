@@ -68,7 +68,7 @@ from opentelemetry.instrumentation.celery import utils
 from opentelemetry.instrumentation.celery.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace.propagation import get_current_span
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ class CeleryInstrumentor(BaseInstrumentor):
             return
 
         request = task.request
-        getter = Getter(carrier_extractor)
+        getter = HelperGetter(carrier_extractor, DictGetter.keys)
         tracectx = propagators.extract(getter, request) or None
 
         logger.debug("prerun signal start task_id=%s", task_id)

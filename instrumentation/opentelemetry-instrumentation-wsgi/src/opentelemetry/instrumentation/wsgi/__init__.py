@@ -61,7 +61,7 @@ import wsgiref.util as wsgiref_util
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.instrumentation.wsgi.version import __version__
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
@@ -82,7 +82,7 @@ def get_header_from_environ(
     return []
 
 
-getter = Getter(get_header_from_environ)
+getter = HelperGetter(get_header_from_environ, DictGetter.keys)
 
 
 def setifnotnone(dic, key, value):

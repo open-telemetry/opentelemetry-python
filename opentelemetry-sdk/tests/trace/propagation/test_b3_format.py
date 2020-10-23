@@ -19,12 +19,12 @@ import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 
 FORMAT = b3_format.B3Format()
 
 
-getter = Getter()
+getter = DictGetter()
 
 
 def get_child_parent_new_carrier(old_carrier):
@@ -326,5 +326,7 @@ class TestB3Format(unittest.TestCase):
         def setter(carrier, key, value):
             carrier[key] = value
 
-        ctx = FORMAT.extract(Getter(default_span_getter), {})
+        ctx = FORMAT.extract(
+            HelperGetter(default_span_getter, DictGetter.keys), {}
+        )
         FORMAT.inject(setter, {}, ctx)

@@ -30,7 +30,7 @@ import grpc
 
 from opentelemetry import propagators, trace
 from opentelemetry.context import attach, detach
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 
 from . import grpcext
 from ._utilities import RpcInfo
@@ -127,7 +127,7 @@ class OpenTelemetryServerInterceptor(
             def get_from_grpc_metadata(metadata, key) -> List[str]:
                 return [md_dict[key]] if key in md_dict else []
 
-            getter = Getter(get_from_grpc_metadata)
+            getter = HelperGetter(get_from_grpc_metadata, DictGetter.keys)
             # Update the context with the traceparent from the RPC metadata.
             ctx = propagators.extract(getter, metadata)
             token = attach(ctx)

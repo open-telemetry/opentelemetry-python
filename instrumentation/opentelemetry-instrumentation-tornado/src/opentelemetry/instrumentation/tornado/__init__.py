@@ -54,7 +54,7 @@ from opentelemetry.instrumentation.utils import (
     http_status_to_canonical_code,
     unwrap,
 )
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 from opentelemetry.trace.status import Status
 from opentelemetry.util import ExcludeList, time_ns
 
@@ -218,7 +218,7 @@ def _get_operation_name(handler, request):
 
 
 def _start_span(tracer, handler, start_time) -> _TraceContext:
-    getter = Getter(_get_header_from_request_headers)
+    getter = HelperGetter(_get_header_from_request_headers, DictGetter.keys)
     token = context.attach(
         propagators.extract(getter, handler.request.headers,)
     )

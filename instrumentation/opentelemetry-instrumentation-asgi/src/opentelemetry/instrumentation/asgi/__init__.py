@@ -29,7 +29,7 @@ from asgiref.compatibility import guarantee_single_callable
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.asgi.version import __version__  # noqa
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
@@ -47,7 +47,7 @@ def get_header_from_scope(scope: dict, header_name: str) -> typing.List[str]:
     ]
 
 
-getter = Getter(get_header_from_scope)
+getter = HelperGetter(get_header_from_scope, DictGetter.keys)
 
 
 def collect_request_attributes(scope):

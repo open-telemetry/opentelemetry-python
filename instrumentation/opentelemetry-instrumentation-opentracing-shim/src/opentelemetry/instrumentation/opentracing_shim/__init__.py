@@ -112,7 +112,7 @@ from opentelemetry.trace import (
     get_current_span,
     set_span_in_context,
 )
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 from opentelemetry.util.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
@@ -715,7 +715,7 @@ class TracerShim(Tracer):
             value = dict_object.get(key)
             return [value] if value is not None else []
 
-        getter = Getter(get_as_list)
+        getter = HelperGetter(get_as_list, DictGetter.keys)
 
         propagator = propagators.get_global_textmap()
         ctx = propagator.extract(getter, carrier)

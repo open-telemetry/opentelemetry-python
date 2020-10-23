@@ -18,7 +18,7 @@ import unittest
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import BaggagePropagator
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 
 
 def get_as_list(
@@ -27,7 +27,7 @@ def get_as_list(
     return dict_object.get(key, [])
 
 
-getter = Getter(get_as_list)
+getter = HelperGetter(get_as_list, DictGetter.keys)
 
 
 class TestBaggagePropagation(unittest.TestCase):

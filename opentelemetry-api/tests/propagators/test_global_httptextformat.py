@@ -18,7 +18,7 @@ import unittest
 from opentelemetry import baggage, trace
 from opentelemetry.propagators import extract, inject
 from opentelemetry.trace import get_current_span, set_span_in_context
-from opentelemetry.trace.propagation.textmap import Getter
+from opentelemetry.trace.propagation.textmap import DictGetter, HelperGetter
 
 
 def get_as_list(
@@ -28,7 +28,7 @@ def get_as_list(
     return value if value is not None else []
 
 
-getter = Getter(get_as_list)
+getter = HelperGetter(get_as_list, DictGetter.keys)
 
 
 class TestDefaultGlobalPropagator(unittest.TestCase):
