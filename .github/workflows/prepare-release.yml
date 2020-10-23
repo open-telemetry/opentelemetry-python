@@ -28,7 +28,7 @@ jobs:
       id: create-pr
       uses: peter-evans/create-pull-request@v3.4.1
       with:
-        branch: ${{ steps.get_version.outputs.VERSION }}
-        base: ${{ steps.get_version.outputs.VERSION }}-auto
+        branch: ${{ steps.get_version.outputs.VERSION }}-auto
+        base: ${{ steps.get_version.outputs.VERSION }}
         title: '[pre-release] Update changelogs, version [${{ steps.get_version.outputs.VERSION }}]'
       if: ${{ steps.update.outputs.version_updated == 1 }}
