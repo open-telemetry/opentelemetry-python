@@ -21,11 +21,11 @@
 Implementation of the service-side open-telemetry interceptor.
 """
 
+import logging
 from contextlib import contextmanager
 from typing import List
 
 import grpc
-import logging
 
 from opentelemetry import propagators, trace
 from opentelemetry.context import attach, detach
@@ -209,7 +209,9 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
         # * ipv4:10.2.1.1:57284,127.0.0.1:57284
         #
         try:
-            host, port = context.peer().split(',')[0].split(":", 1)[1].rsplit(":", 1)
+            host, port = (
+                context.peer().split(",")[0].split(":", 1)[1].rsplit(":", 1)
+            )
 
             # other telemetry sources convert this, so we will too
             if host in ("[::1]", "127.0.0.1"):
