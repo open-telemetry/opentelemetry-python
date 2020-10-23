@@ -39,3 +39,4 @@ git commit -m "updating changelogs and version to ${VERSION}"
 
 echo "Time to create a release, here's a sample title:"
 echo "[pre-release] Update changelogs, version [${VERSION}]"
+echo "::set-output name=version_updated::1"
