@@ -16,6 +16,8 @@ jobs:
     - name: Prepare the release
       id: update
       run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
         ./scripts/prepare_release.sh ${{ steps.get_version.outputs.VERSION }}
     - name: Create Pull Request
       id: create-pr
