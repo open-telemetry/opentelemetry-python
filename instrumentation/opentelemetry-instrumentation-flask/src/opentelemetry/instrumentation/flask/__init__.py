@@ -47,6 +47,7 @@ API
 ---
 """
 
+import types
 from logging import getLogger
 
 import flask
@@ -162,6 +163,11 @@ def _teardown_request(exc):
     context.detach(flask.request.environ.get(_ENVIRON_TOKEN))
 
 
+def _handle_user_exception(self, exc):
+    _teardown_request(exc)
+    return self._original_handle_user_exception(exc)
+
+
 class _InstrumentedFlask(flask.Flask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -171,6 +177,11 @@ class _InstrumentedFlask(flask.Flask):
 
         self.before_request(_before_request)
         self.teardown_request(_teardown_request)
+
+        self._original_handle_user_exception = super(_InstrumentedFlask, self).handle_user_exception
+
+    def handle_user_exception(self, exc):
+        return _handle_user_exception(self, exc)
 
 
 class FlaskInstrumentor(BaseInstrumentor):
@@ -194,6 +205,10 @@ class FlaskInstrumentor(BaseInstrumentor):
 
             app.before_request(_before_request)
             app.teardown_request(_teardown_request)
+
+            app._original_handle_user_exception = app.handle_user_exception
+            app.handle_user_exception = types.MethodType(_handle_user_exception, app)
+
             app._is_instrumented = True
         else:
             _logger.warning(
@@ -214,6 +229,9 @@ class FlaskInstrumentor(BaseInstrumentor):
             app.before_request_funcs[None].remove(_before_request)
             app.teardown_request_funcs[None].remove(_teardown_request)
             del app._original_wsgi_app
+
+            app.handle_user_exception = app._original_handle_user_exception
+            del app._original_handle_user_exception
 
             app._is_instrumented = False
         else:
