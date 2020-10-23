@@ -19,6 +19,11 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         ./scripts/prepare_release.sh ${{ steps.get_version.outputs.VERSION }}
+    - name: Push changes
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        branch: ${{ steps.get_version.outputs.VERSION }}-auto
+        github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Pull Request
       id: create-pr
       uses: peter-evans/create-pull-request@v3.4.1
