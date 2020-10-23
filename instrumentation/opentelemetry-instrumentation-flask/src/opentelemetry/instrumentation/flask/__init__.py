@@ -178,7 +178,9 @@ class _InstrumentedFlask(flask.Flask):
         self.before_request(_before_request)
         self.teardown_request(_teardown_request)
 
-        self._original_handle_user_exception = super(_InstrumentedFlask, self).handle_user_exception
+        self._original_handle_user_exception = super(
+            _InstrumentedFlask, self
+        ).handle_user_exception
 
     def handle_user_exception(self, exc):
         return _handle_user_exception(self, exc)
@@ -207,7 +209,9 @@ class FlaskInstrumentor(BaseInstrumentor):
             app.teardown_request(_teardown_request)
 
             app._original_handle_user_exception = app.handle_user_exception
-            app.handle_user_exception = types.MethodType(_handle_user_exception, app)
+            app.handle_user_exception = types.MethodType(
+                _handle_user_exception, app
+            )
 
             app._is_instrumented = True
         else:
