@@ -21,7 +21,7 @@ jobs:
         ./scripts/prepare_release.sh ${{ steps.get_version.outputs.VERSION }}
     - name: Create Pull Request
       id: create-pr
-      uses: peter-evans/create-pull-request@v2.7.0
+      uses: peter-evans/create-pull-request@v3.4.1
       with:
         branch: ${{ steps.get_version.outputs.VERSION }}-auto
         title: '[pre-release] Update changelogs, version [${{ steps.get_version.outputs.VERSION }}]'
