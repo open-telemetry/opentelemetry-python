@@ -34,11 +34,12 @@ class Getter(typing.Generic[TextMapPropagatorT]):
         or more values from the carrier. In the case that
         the value does not exist, returns an empty list.
 
-        Args: carrier: and object which contains values that are used to
-        construct a Context. This object must be paired with an appropriate
-        getter which understands how to extract a value from it.
-        key: key of a field in carrier. Returns: first value of the
-        propagation key or an empty list if the key doesn't exist.
+        Args:
+            carrier: An object which contains values that are used to
+                    construct a Context.
+            key: key of a field in carrier.
+        Returns: first value of the propagation key or an empty list if the
+                key doesn't exist.
         """
         raise NotImplementedError()
 
@@ -46,10 +47,8 @@ class Getter(typing.Generic[TextMapPropagatorT]):
         """Function that can retrieve all the keys in a carrier object.
 
         Args:
-            carrier: and object which contains values that are
-                used to construct a Context. This object
-                must be paired with an appropriate getter
-                which understands how to extract a value from it.
+            carrier: An object which contains values that are
+                used to construct a Context.
         Returns:
             list of keys from the carrier.
         """
@@ -60,29 +59,13 @@ class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
     def get(
         self, carrier: typing.Dict[str, CarrierValT], key: str
     ) -> typing.List[str]:
-        val = carrier.get(key, None)
-        if not val:
-            return []
-        return val if isinstance(val, typing.List) else [val]
+        val = carrier.get(key, [])
+        if isinstance(val, typing.Iterable) and not isinstance(val, str):
+            return list(val)
+        return [val]
 
     def keys(self, carrier: typing.Dict[str, CarrierValT]) -> typing.List[str]:
         return list(carrier.keys())
-
-
-class CustomGetter(Getter[TextMapPropagatorT]):
-    def __init__(
-        self,
-        get: typing.Callable[[TextMapPropagatorT, str], typing.List[str]],
-        keys: typing.Callable[[TextMapPropagatorT], typing.List[str]],
-    ):
-        self._get = get
-        self._keys = keys
-
-    def get(self, carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
-        return self._get(carrier, key)
-
-    def keys(self, carrier: TextMapPropagatorT) -> typing.List[str]:
-        return self._keys(carrier)
 
 
 class TextMapPropagator(abc.ABC):

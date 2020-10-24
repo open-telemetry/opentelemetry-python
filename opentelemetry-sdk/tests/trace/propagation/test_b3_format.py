@@ -19,7 +19,7 @@ import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation.textmap import CustomGetter, DictGetter
+from opentelemetry.trace.propagation.textmap import DictGetter
 
 FORMAT = b3_format.B3Format()
 
@@ -320,13 +320,12 @@ class TestB3Format(unittest.TestCase):
     def test_default_span():
         """Make sure propagator does not crash when working with DefaultSpan"""
 
-        def default_span_getter(carrier, key):
-            return carrier.get(key, None)
+        class CarrierGetter(DictGetter):
+            def get(self, carrier, key):
+                return carrier.get(key, None)
 
         def setter(carrier, key, value):
             carrier[key] = value
 
-        ctx = FORMAT.extract(
-            CustomGetter(default_span_getter, DictGetter().keys), {}
-        )
+        ctx = FORMAT.extract(CarrierGetter(), {})
         FORMAT.inject(setter, {}, ctx)
