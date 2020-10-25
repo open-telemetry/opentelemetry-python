@@ -97,7 +97,6 @@ class RequestsIntegrationTestBase(abc.ABC):
                 "http.flavor": "1.1",
                 "http.method": "GET",
                 "http.status_code": "200",
-                "http.status_text": "OK",
                 "http.url": "http://httpbin.org/status/200",
             }
         )
@@ -108,7 +107,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             for view_data in bound.view_datas:
                 self.assertEqual(view_data.labels, key)
                 self.assertEqual(view_data.aggregator.current.count, 1)
-                self.assertGreater(view_data.aggregator.current.sum, 0)
+                self.assertGreaterEqual(view_data.aggregator.current.sum, 0)
 
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"
@@ -198,12 +197,12 @@ class RequestsIntegrationTestBase(abc.ABC):
             headers = dict(httpretty.last_request().headers)
             self.assertIn(MockTextMapPropagator.TRACE_ID_KEY, headers)
             self.assertEqual(
-                str(span.get_context().trace_id),
+                str(span.get_span_context().trace_id),
                 headers[MockTextMapPropagator.TRACE_ID_KEY],
             )
             self.assertIn(MockTextMapPropagator.SPAN_ID_KEY, headers)
             self.assertEqual(
-                str(span.get_context().span_id),
+                str(span.get_span_context().span_id),
                 headers[MockTextMapPropagator.SPAN_ID_KEY],
             )
 
@@ -318,7 +317,6 @@ class RequestsIntegrationTestBase(abc.ABC):
             {
                 "http.method": "GET",
                 "http.status_code": "500",
-                "http.status_text": "Internal Server Error",
                 "http.url": "http://httpbin.org/status/200",
             }
         )

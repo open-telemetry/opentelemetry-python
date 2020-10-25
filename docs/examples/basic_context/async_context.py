@@ -12,8 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import environ
+import asyncio
+
+from opentelemetry import baggage, trace
+from opentelemetry.sdk.trace import TracerProvider
+
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer(__name__)
+
+loop = asyncio.get_event_loop()
 
 
-def pytest_sessionstart(session):  # pylint: disable=unused-argument
-    environ.setdefault("OTEL_PYTHON_DJANGO_INSTRUMENT", "True")
+async def async_span(span):
+    with tracer.use_span(span):
+        ctx = baggage.set_baggage("foo", "bar")
+    return ctx
+
+
+async def main():
+    span = tracer.start_span(name="span")
+    ctx = await async_span(span)
+    print(baggage.get_all(context=ctx))
+
+
+loop.run_until_complete(main())

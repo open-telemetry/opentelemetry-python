@@ -45,12 +45,17 @@ from opentelemetry import context, propagators
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.metric import (
     HTTPMetricRecorder,
+    HTTPMetricType,
     MetricMixin,
 )
 from opentelemetry.instrumentation.requests.version import __version__
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.trace import SpanKind, get_tracer
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import (
+    EXCEPTION_STATUS_FIELD,
+    Status,
+    StatusCanonicalCode,
+)
 
 # A key to a context variable to avoid creating duplicate spans when instrumenting
 # both, Session.request and Session.send, since Session.request calls into Session.send
@@ -121,8 +126,6 @@ def _instrument(tracer_provider=None, span_callback=None):
         method = method.upper()
         span_name = "HTTP {}".format(method)
 
-        exception = None
-
         recorder = RequestsInstrumentor().metric_recorder
 
         labels = {}
@@ -132,7 +135,8 @@ def _instrument(tracer_provider=None, span_callback=None):
         with get_tracer(
             __name__, __version__, tracer_provider
         ).start_as_current_span(span_name, kind=SpanKind.CLIENT) as span:
-            with recorder.record_duration(labels):
+            exception = None
+            with recorder.record_client_duration(labels):
                 if span.is_recording():
                     span.set_attribute("component", "http")
                     span.set_attribute("http.method", method)
@@ -150,15 +154,14 @@ def _instrument(tracer_provider=None, span_callback=None):
                     result = call_wrapped()  # *** PROCEED
                 except Exception as exc:  # pylint: disable=W0703
                     exception = exc
+                    setattr(
+                        exception,
+                        EXCEPTION_STATUS_FIELD,
+                        _exception_to_canonical_code(exception),
+                    )
                     result = getattr(exc, "response", None)
                 finally:
                     context.detach(token)
-
-                if exception is not None and span.is_recording():
-                    span.set_status(
-                        Status(_exception_to_canonical_code(exception))
-                    )
-                    span.record_exception(exception)
 
                 if result is not None:
                     if span.is_recording():
@@ -174,7 +177,6 @@ def _instrument(tracer_provider=None, span_callback=None):
                             )
                         )
                     labels["http.status_code"] = str(result.status_code)
-                    labels["http.status_text"] = result.reason
                     if result.raw and result.raw.version:
                         labels["http.flavor"] = (
                             str(result.raw.version)[:1]
@@ -184,8 +186,8 @@ def _instrument(tracer_provider=None, span_callback=None):
                 if span_callback is not None:
                     span_callback(span, result)
 
-        if exception is not None:
-            raise exception.with_traceback(exception.__traceback__)
+            if exception is not None:
+                raise exception.with_traceback(exception.__traceback__)
 
         return result
 
@@ -251,7 +253,9 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
             __name__, __version__,
         )
         # pylint: disable=W0201
-        self.metric_recorder = HTTPMetricRecorder(self.meter, SpanKind.CLIENT)
+        self.metric_recorder = HTTPMetricRecorder(
+            self.meter, HTTPMetricType.CLIENT
+        )
 
     def _uninstrument(self, **kwargs):
         _uninstrument()

@@ -25,7 +25,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
     MAX_HEADER_LENGTH = 8192
     MAX_PAIR_LENGTH = 4096
     MAX_PAIRS = 180
-    _BAGGAGE_HEADER_NAME = "otcorrelations"
+    _BAGGAGE_HEADER_NAME = "baggage"
 
     def extract(
         self,
@@ -85,9 +85,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
             return
 
         baggage_string = _format_baggage(baggage_entries)
-        set_in_carrier(
-            carrier, self._BAGGAGE_HEADER_NAME, baggage_string,
-        )
+        set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
 
 def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:

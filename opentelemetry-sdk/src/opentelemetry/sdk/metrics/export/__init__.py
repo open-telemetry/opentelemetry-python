@@ -17,6 +17,7 @@ from typing import Sequence, Tuple
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export.aggregate import Aggregator
+from opentelemetry.sdk.resources import Resource
 
 
 class MetricsExportResult(Enum):
@@ -30,10 +31,12 @@ class MetricRecord:
         instrument: metrics_api.InstrumentT,
         labels: Tuple[Tuple[str, str]],
         aggregator: Aggregator,
+        resource: Resource,
     ):
         self.instrument = instrument
         self.labels = labels
         self.aggregator = aggregator
+        self.resource = resource
 
 
 class MetricsExporter:
@@ -77,11 +80,12 @@ class ConsoleMetricsExporter(MetricsExporter):
     ) -> "MetricsExportResult":
         for record in metric_records:
             print(
-                '{}(data="{}", labels="{}", value={})'.format(
+                '{}(data="{}", labels="{}", value={}, resource={})'.format(
                     type(self).__name__,
                     record.instrument,
                     record.labels,
                     record.aggregator.checkpoint,
+                    record.resource.attributes,
                 )
             )
         return MetricsExportResult.SUCCESS

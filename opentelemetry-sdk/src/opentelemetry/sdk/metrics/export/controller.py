@@ -57,7 +57,7 @@ class PushController(threading.Thread):
         self.meter.collect()
         # Export the collected metrics
         token = attach(set_value("suppress_instrumentation", True))
-        self.exporter.export(self.meter.batcher.checkpoint_set())
+        self.exporter.export(self.meter.processor.checkpoint_set())
         detach(token)
         # Perform post-exporting logic
-        self.meter.batcher.finished_collection()
+        self.meter.processor.finished_collection()

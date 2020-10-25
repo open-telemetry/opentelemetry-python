@@ -1,11 +1,11 @@
-opentelemetry.sdk.metrics.export.batcher
+opentelemetry.sdk.metrics.export.processor
 ==========================================
 
 .. toctree::
 
    metrics.export
 
-.. automodule:: opentelemetry.sdk.metrics.export.batcher
+.. automodule:: opentelemetry.sdk.metrics.export.processor
     :members:
     :undoc-members:
     :show-inheritance:
