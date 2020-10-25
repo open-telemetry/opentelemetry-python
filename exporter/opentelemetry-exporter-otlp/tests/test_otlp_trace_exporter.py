@@ -158,26 +158,6 @@ class TestOTLPSpanExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
-    def test_gzip_compression(self):
-        # with mock.patch(
-        #     'grpc.insecure_channel'
-        # ) as channel_mock:
-        #     exporter = OTLPSpanExporter(compression="gzip")
-        #     exporter.shutdown()
-        #     self.assertTrue(channel_mock.assert_called_with("localhost:55680", Compression.Gzip))
-        mock_get_compression = mock.Mock()
-        patch = mock.patch(
-            "grpc.insecure_channel",
-            side_effect=mock_get_compression,
-        )
-        endpoint = "localhost:55680"
-        channel = insecure_channel("")
-        with patch:
-            exporter = OTLPSpanExporter()
-        # mock_get_compression.assert_called_with(channel)
-        self.assertEqual.__self__.maxDiff = None
-        self.assertEqual(vars(exporter.channel), vars(channel))
-
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
