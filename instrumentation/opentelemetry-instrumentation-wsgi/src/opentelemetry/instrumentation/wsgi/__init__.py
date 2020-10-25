@@ -67,16 +67,20 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 _HTTP_VERSION_PREFIX = "HTTP/"
 
 
-# pylint:disable=arguments-differ
 class CarrierGetter(DictGetter):
-    def get(self, environ: dict, header_name: str) -> typing.List[str]:
-        """Retrieve a HTTP header value from the PEP3333-conforming WSGI environ.
+    def get(self, carrier: dict, key: str) -> typing.List[str]:
+        """Getter implementation to retrieve a HTTP header value from the
+            PEP3333-conforming WSGI environ
 
+        Args:
+            carrier: WSGI environ object
+            key: header name in environ object
         Returns:
-            A list with a single string with the header value if it exists, else an empty list.
+            A list with a single string with the header value if it exists,
+            else an empty list.
         """
-        environ_key = "HTTP_" + header_name.upper().replace("-", "_")
-        value = environ.get(environ_key)
+        environ_key = "HTTP_" + key.upper().replace("-", "_")
+        value = carrier.get(environ_key)
         if value is not None:
             return [value]
         return []

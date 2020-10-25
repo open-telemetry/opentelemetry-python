@@ -33,14 +33,23 @@ from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 
-# pylint:disable=arguments-differ
 class CarrierGetter(DictGetter):
-    def get(self, scope: dict, header_name: str) -> typing.List[str]:
-        headers = scope.get("headers")
+    def get(self, carrier: dict, key: str) -> typing.List[str]:
+        """Getter implementation to retrieve a HTTP header value from the ASGI
+        scope.
+
+        Args:
+            carrier: ASGI scope object
+            key: header name in scope
+        Returns:
+            A list with a single string with the header value if it exists,
+             else an empty list.
+        """
+        headers = carrier.get("headers")
         return [
-            value.decode("utf8")
-            for (key, value) in headers
-            if key.decode("utf8") == header_name
+            _value.decode("utf8")
+            for (_key, _value) in headers
+            if _key.decode("utf8") == key
         ]
 
 
