@@ -145,9 +145,12 @@ class OTLPExporterMixin(
         self._metadata = metadata
         self._collector_span_kwargs = None
 
-        if compression is None: 
+        if compression is None:
             compression_algorithm = Compression.NoCompression
-        elif compression in OTLPCompression._value2member_map_ and OTLPCompression(compression) is OTLPCompression.gzip:
+        elif (
+            compression in OTLPCompression._value2member_map_
+            and OTLPCompression(compression) is OTLPCompression.gzip
+        ):
             compression_algorithm = Compression.Gzip
         else:
             compression_str = os.environ.get(
@@ -155,14 +158,21 @@ class OTLPExporterMixin(
             )
             if compression_str is None:
                 compression_algorithm = Compression.NoCompression
-            elif compression_str in OTLPCompression._value2member_map_ and OTLPCompression(compression_str) is OTLPCompression.gzip:
-                compression_algorithm = Compression.Gzip 
+            elif (
+                compression_str in OTLPCompression._value2member_map_
+                and OTLPCompression(compression_str) is OTLPCompression.gzip
+            ):
+                compression_algorithm = Compression.Gzip
             else:
-                raise ValueError("OTEL_EXPORTER_OTLP_COMPRESSION environment variable does not match gzip.")
+                raise ValueError(
+                    "OTEL_EXPORTER_OTLP_COMPRESSION environment variable does not match gzip."
+                )
 
         if credentials is None:
             self._client = self._stub(
-                channel=insecure_channel(endpoint, compression=compression_algorithm)
+                channel=insecure_channel(
+                    endpoint, compression=compression_algorithm
+                )
             )
         else:
             self._client = self._stub(
