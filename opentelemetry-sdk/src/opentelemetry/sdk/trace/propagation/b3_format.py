@@ -17,7 +17,6 @@ from re import compile as re_compile
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace import generate_span_id, generate_trace_id
 from opentelemetry.trace.propagation.textmap import (
     Getter,
     Setter,
@@ -103,8 +102,9 @@ class B3Format(TextMapPropagator):
             self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            trace_id = generate_trace_id()
-            span_id = generate_span_id()
+            ids_generator = trace.get_tracer_provider().ids_generator
+            trace_id = ids_generator.generate_trace_id()
+            span_id = ids_generator.generate_span_id()
             sampled = "0"
 
         else:
@@ -140,7 +140,7 @@ class B3Format(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        span_context = span.get_context()
+        span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 

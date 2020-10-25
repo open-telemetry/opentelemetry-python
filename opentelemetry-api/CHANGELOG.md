@@ -2,10 +2,22 @@
 
 ## Unreleased
 
+## Version 0.14b0
+
+Released 2020-10-13
+
 - Add support for `OTEL_PROPAGATORS`
   ([#1123](https://github.com/open-telemetry/opentelemetry-python/pull/1123))
 - Store `int`s as `int`s in the global Configuration object
   ([#1118](https://github.com/open-telemetry/opentelemetry-python/pull/1118))
+- Allow for Custom Trace and Span IDs Generation - `IdsGenerator` for TracerProvider
+  ([#1153](https://github.com/open-telemetry/opentelemetry-python/pull/1153))
+- Update baggage propagation header
+  ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
+- Make instances of SpanContext immutable
+  ([#1134](https://github.com/open-telemetry/opentelemetry-python/pull/1134))
+- Parent is now always passed in via Context, intead of Span or SpanContext
+  ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
 
 ## Version 0.13b0
 
