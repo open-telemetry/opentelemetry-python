@@ -757,6 +757,7 @@ class Tracer(trace_api.Tracer):
                 "parent_span_context must be a SpanContext or None."
             )
 
+        # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
             parent_span_context = None
             trace_id = self.source.ids_generator.generate_trace_id()
@@ -773,7 +774,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.source.sampler.should_sample(
-            parent_span_context, trace_id, name, attributes, links,
+            context, trace_id, name, attributes, links,
         )
 
         trace_flags = (
