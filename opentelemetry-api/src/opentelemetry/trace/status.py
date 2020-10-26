@@ -163,7 +163,7 @@ class Status:
 
     def __init__(
         self,
-        canonical_code: StatusCode.OK,
+        canonical_code: StatusCode = StatusCode.OK,
         description: typing.Optional[str] = None,
     ):
         self._canonical_code = canonical_code
