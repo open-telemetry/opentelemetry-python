@@ -77,7 +77,7 @@ Usage Server
     import grpc
 
     from opentelemetry import trace
-    from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer, server_interceptor
+    from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
