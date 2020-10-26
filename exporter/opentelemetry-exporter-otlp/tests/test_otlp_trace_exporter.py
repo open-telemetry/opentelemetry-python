@@ -14,12 +14,12 @@
 
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from unittest import TestCase, mock
+from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
-from grpc import Compression, StatusCode, insecure_channel, server
+from grpc import StatusCode, server
 
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
