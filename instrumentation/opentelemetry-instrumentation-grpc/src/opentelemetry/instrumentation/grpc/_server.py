@@ -195,12 +195,13 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
     def _start_span(self, handler_call_details, context):
 
         attributes = {
-            "grpc.method": handler_call_details.method,
+            "rpc.method": handler_call_details.method,
+            "rpc.system": "grpc",
         }
 
         metadata = dict(context.invocation_metadata())
         if "user-agent" in metadata:
-            attributes["grpc.user_agent"] = metadata["user-agent"]
+            attributes["rpc.user_agent"] = metadata["user-agent"]
 
         # Split up the peer to keep with how other telemetry sources
         # do it.  This looks like:
