@@ -26,7 +26,7 @@ import grpc
 
 from opentelemetry import metrics, propagators, trace
 from opentelemetry.sdk.metrics.export.controller import PushController
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 from . import grpcext
 from ._utilities import RpcInfo, TimedMetricRecorder
@@ -171,7 +171,7 @@ class OpenTelemetryClientInterceptor(
                     result = invoker(request, metadata)
                 except grpc.RpcError as exc:
                     guarded_span.generated_span.set_status(
-                        Status(StatusCanonicalCode(exc.code().value[0]))
+                        Status(StatusCode(exc.code().value[0]))
                     )
                     raise
 
@@ -226,7 +226,7 @@ class OpenTelemetryClientInterceptor(
                         yield response
                 except grpc.RpcError as exc:
                     span.set_status(
-                        Status(StatusCanonicalCode(exc.code().value[0]))
+                        Status(StatusCode(exc.code().value[0]))
                     )
                     raise
 
@@ -266,7 +266,7 @@ class OpenTelemetryClientInterceptor(
                     result = invoker(request_or_iterator, metadata)
                 except grpc.RpcError as exc:
                     guarded_span.generated_span.set_status(
-                        Status(StatusCanonicalCode(exc.code().value[0]))
+                        Status(StatusCode(exc.code().value[0]))
                     )
                     raise
 

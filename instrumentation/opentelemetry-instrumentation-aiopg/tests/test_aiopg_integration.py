@@ -227,7 +227,7 @@ class TestAiopgIntegration(TestBase):
         self.assertEqual(span.attributes["net.peer.port"], 123)
         self.assertIs(
             span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.OK,
+            trace_api.status.StatusCode.OK,
         )
 
     def test_span_not_recording(self):
@@ -279,7 +279,7 @@ class TestAiopgIntegration(TestBase):
         self.assertEqual(span.attributes["db.statement"], "Test query")
         self.assertIs(
             span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.UNKNOWN,
+            trace_api.status.StatusCode.UNKNOWN,
         )
         self.assertEqual(span.status.description, "Test Exception")
 

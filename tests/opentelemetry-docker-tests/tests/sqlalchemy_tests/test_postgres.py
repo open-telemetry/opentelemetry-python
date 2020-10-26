@@ -79,7 +79,7 @@ class PostgresTestCase(SQLAlchemyTestMixin):
         # check the error
         self.assertIs(
             span.status.canonical_code,
-            trace.status.StatusCanonicalCode.UNKNOWN,
+            trace.status.StatusCode.UNKNOWN,
         )
         self.assertIn("a_wrong_table", span.status.description)
 

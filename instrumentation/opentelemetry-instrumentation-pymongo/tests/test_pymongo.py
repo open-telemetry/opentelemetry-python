@@ -86,7 +86,7 @@ class TestPymongo(TestBase):
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
         self.assertIs(
-            span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
+            span.status.canonical_code, trace_api.status.StatusCode.OK
         )
         self.assertEqual(span.status.description, "reply")
         self.assertIsNotNone(span.end_time)
@@ -122,7 +122,7 @@ class TestPymongo(TestBase):
         )
         self.assertIs(
             span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.UNKNOWN,
+            trace_api.status.StatusCode.UNKNOWN,
         )
         self.assertEqual(span.status.description, "failure")
         self.assertIsNotNone(span.end_time)
@@ -144,14 +144,14 @@ class TestPymongo(TestBase):
         self.assertEqual(first_span.attributes["db.mongo.request_id"], "first")
         self.assertIs(
             first_span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.OK,
+            trace_api.status.StatusCode.OK,
         )
         self.assertEqual(
             second_span.attributes["db.mongo.request_id"], "second"
         )
         self.assertIs(
             second_span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.UNKNOWN,
+            trace_api.status.StatusCode.UNKNOWN,
         )
 
     def test_int_command(self):

@@ -25,7 +25,7 @@ from opentelemetry.sdk import resources
 from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.test.mock_textmap import MockTextMapPropagator
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 
 class RequestsIntegrationTestBase(abc.ABC):
@@ -82,7 +82,7 @@ class RequestsIntegrationTestBase(abc.ABC):
         )
 
         self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
+            span.status.canonical_code, trace.status.StatusCode.OK
         )
 
         self.check_span_instrumentation_info(
@@ -124,7 +124,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         self.assertIs(
             span.status.canonical_code,
-            trace.status.StatusCanonicalCode.NOT_FOUND,
+            trace.status.StatusCode.NOT_FOUND,
         )
 
     def test_uninstrument(self):
@@ -264,7 +264,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             {"component": "http", "http.method": "GET", "http.url": self.URL},
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.UNKNOWN
+            span.status.canonical_code, StatusCode.UNKNOWN
         )
 
         self.assertIsNotNone(RequestsInstrumentor().meter)
@@ -308,7 +308,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             },
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.INTERNAL
+            span.status.canonical_code, StatusCode.INTERNAL
         )
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
@@ -335,7 +335,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         span = self.assert_span()
         self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.UNKNOWN
+            span.status.canonical_code, StatusCode.UNKNOWN
         )
 
     @mock.patch(
@@ -347,7 +347,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         span = self.assert_span()
         self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.DEADLINE_EXCEEDED
+            span.status.canonical_code, StatusCode.DEADLINE_EXCEEDED
         )
 
 
@@ -372,7 +372,7 @@ class TestRequestsIntegration(RequestsIntegrationTestBase, TestBase):
             {"component": "http", "http.method": "POST", "http.url": url},
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.INVALID_ARGUMENT
+            span.status.canonical_code, StatusCode.INVALID_ARGUMENT
         )
 
     def test_if_headers_equals_none(self):

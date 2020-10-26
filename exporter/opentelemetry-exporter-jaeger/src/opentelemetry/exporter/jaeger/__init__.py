@@ -70,7 +70,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
@@ -245,7 +245,7 @@ def _translate_to_jaeger(spans: Span):
             )
 
         # Ensure that if Status.Code is not OK, that we set the "error" tag on the Jaeger span.
-        if status.canonical_code is not StatusCanonicalCode.OK:
+        if status.canonical_code is not StatusCode.OK:
             tags.append(_get_bool_tag("error", True))
 
         refs = _extract_refs_from_span(span)

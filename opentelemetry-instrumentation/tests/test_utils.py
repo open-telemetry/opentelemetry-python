@@ -16,40 +16,40 @@ from http import HTTPStatus
 
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 
 class TestUtils(TestBase):
     def test_http_status_to_canonical_code(self):
         for status_code, expected in (
-            (HTTPStatus.OK, StatusCanonicalCode.OK),
-            (HTTPStatus.ACCEPTED, StatusCanonicalCode.OK),
-            (HTTPStatus.IM_USED, StatusCanonicalCode.OK),
-            (HTTPStatus.MULTIPLE_CHOICES, StatusCanonicalCode.OK),
-            (HTTPStatus.BAD_REQUEST, StatusCanonicalCode.INVALID_ARGUMENT),
-            (HTTPStatus.UNAUTHORIZED, StatusCanonicalCode.UNAUTHENTICATED),
-            (HTTPStatus.FORBIDDEN, StatusCanonicalCode.PERMISSION_DENIED),
-            (HTTPStatus.NOT_FOUND, StatusCanonicalCode.NOT_FOUND),
+            (HTTPStatus.OK, StatusCode.OK),
+            (HTTPStatus.ACCEPTED, StatusCode.OK),
+            (HTTPStatus.IM_USED, StatusCode.OK),
+            (HTTPStatus.MULTIPLE_CHOICES, StatusCode.OK),
+            (HTTPStatus.BAD_REQUEST, StatusCode.INVALID_ARGUMENT),
+            (HTTPStatus.UNAUTHORIZED, StatusCode.UNAUTHENTICATED),
+            (HTTPStatus.FORBIDDEN, StatusCode.PERMISSION_DENIED),
+            (HTTPStatus.NOT_FOUND, StatusCode.NOT_FOUND),
             (
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                StatusCanonicalCode.INVALID_ARGUMENT,
+                StatusCode.INVALID_ARGUMENT,
             ),
             (
                 HTTPStatus.TOO_MANY_REQUESTS,
-                StatusCanonicalCode.RESOURCE_EXHAUSTED,
+                StatusCode.RESOURCE_EXHAUSTED,
             ),
-            (HTTPStatus.NOT_IMPLEMENTED, StatusCanonicalCode.UNIMPLEMENTED),
-            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCanonicalCode.UNAVAILABLE),
+            (HTTPStatus.NOT_IMPLEMENTED, StatusCode.UNIMPLEMENTED),
+            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.UNAVAILABLE),
             (
                 HTTPStatus.GATEWAY_TIMEOUT,
-                StatusCanonicalCode.DEADLINE_EXCEEDED,
+                StatusCode.DEADLINE_EXCEEDED,
             ),
             (
                 HTTPStatus.HTTP_VERSION_NOT_SUPPORTED,
-                StatusCanonicalCode.INTERNAL,
+                StatusCode.INTERNAL,
             ),
-            (600, StatusCanonicalCode.UNKNOWN),
-            (99, StatusCanonicalCode.UNKNOWN),
+            (600, StatusCode.UNKNOWN),
+            (99, StatusCode.UNKNOWN),
         ):
             with self.subTest(status_code=status_code):
                 actual = http_status_to_canonical_code(int(status_code))

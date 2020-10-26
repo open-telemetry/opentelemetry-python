@@ -46,7 +46,7 @@ from opentelemetry import trace
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.pymongo.version import __version__
 from opentelemetry.trace import SpanKind, get_tracer
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 DATABASE_TYPE = "mongodb"
 COMMAND_ATTRIBUTES = ["filter", "sort", "skip", "limit", "pipeline"]
@@ -95,7 +95,7 @@ class CommandTracer(monitoring.CommandListener):
             if span is not None:
                 if span.is_recording():
                     span.set_status(
-                        Status(StatusCanonicalCode.INTERNAL, str(ex))
+                        Status(StatusCode.INTERNAL, str(ex))
                     )
                 span.end()
                 self._pop_span(event)
@@ -111,7 +111,7 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            span.set_status(Status(StatusCanonicalCode.OK, event.reply))
+            span.set_status(Status(StatusCode.OK, event.reply))
         span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):
@@ -125,7 +125,7 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            span.set_status(Status(StatusCanonicalCode.UNKNOWN, event.failure))
+            span.set_status(Status(StatusCode.UNKNOWN, event.failure))
         span.end()
 
     def _pop_span(self, event):

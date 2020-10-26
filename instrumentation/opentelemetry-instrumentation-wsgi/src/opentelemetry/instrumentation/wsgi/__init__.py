@@ -61,7 +61,7 @@ import wsgiref.util as wsgiref_util
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
 from opentelemetry.instrumentation.wsgi.version import __version__
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 _HTTP_VERSION_PREFIX = "HTTP/"
 
@@ -146,7 +146,7 @@ def add_response_attributes(
     except ValueError:
         span.set_status(
             Status(
-                StatusCanonicalCode.UNKNOWN,
+                StatusCode.UNKNOWN,
                 "Non-integer HTTP status: " + repr(status_code),
             )
         )
@@ -217,7 +217,7 @@ class OpenTelemetryMiddleware:
                 )
         except Exception as ex:
             if span.is_recording():
-                span.set_status(Status(StatusCanonicalCode.INTERNAL, str(ex)))
+                span.set_status(Status(StatusCode.INTERNAL, str(ex)))
             span.end()
             context.detach(token)
             raise

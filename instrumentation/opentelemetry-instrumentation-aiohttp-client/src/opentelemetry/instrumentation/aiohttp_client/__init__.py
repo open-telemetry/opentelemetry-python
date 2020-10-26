@@ -78,7 +78,7 @@ from opentelemetry.instrumentation.utils import (
     unwrap,
 )
 from opentelemetry.trace import SpanKind, TracerProvider, get_tracer
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 _UrlFilterT = typing.Optional[typing.Callable[[str], str]]
 _SpanNameT = typing.Optional[
@@ -219,15 +219,15 @@ def create_trace_config(
                 params.exception,
                 (aiohttp.ServerTimeoutError, aiohttp.TooManyRedirects),
             ):
-                status = StatusCanonicalCode.DEADLINE_EXCEEDED
+                status = StatusCode.ERROR
             # Assume any getaddrinfo error is a DNS failure.
             elif isinstance(
                 params.exception, aiohttp.ClientConnectorError
             ) and isinstance(params.exception.os_error, socket.gaierror):
                 # DNS resolution failed
-                status = StatusCanonicalCode.UNKNOWN
+                status = StatusCode.ERROR
             else:
-                status = StatusCanonicalCode.UNAVAILABLE
+                status = StatusCode.ERROR
 
             trace_config_ctx.span.set_status(Status(status))
             trace_config_ctx.span.record_exception(params.exception)

@@ -29,7 +29,7 @@ from asgiref.compatibility import guarantee_single_callable
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.asgi.version import __version__  # noqa
 from opentelemetry.instrumentation.utils import http_status_to_canonical_code
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 
 def get_header_from_scope(scope: dict, header_name: str) -> typing.List[str]:
@@ -98,7 +98,7 @@ def set_status_code(span, status_code):
     except ValueError:
         span.set_status(
             Status(
-                StatusCanonicalCode.UNKNOWN,
+                StatusCode.UNKNOWN,
                 "Non-integer HTTP status: " + repr(status_code),
             )
         )

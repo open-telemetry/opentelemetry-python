@@ -148,7 +148,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_int", 333)
         otel_spans[0].set_status(
             trace_api.Status(
-                trace_api.status.StatusCanonicalCode.INTERNAL,
+                trace_api.status.StatusCode.INTERNAL,
                 "test description",
             )
         )
@@ -156,7 +156,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[1].start(start_time=start_times[1])
         otel_spans[1].set_status(
             trace_api.Status(
-                trace_api.status.StatusCanonicalCode.INTERNAL, {"test", "val"},
+                trace_api.status.StatusCode.INTERNAL, {"test", "val"},
             )
         )
         otel_spans[1].end(end_time=end_times[1])
@@ -198,7 +198,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             output_spans[0].status.code,
-            trace_api.status.StatusCanonicalCode.INTERNAL.value,
+            trace_api.status.StatusCode.INTERNAL.value,
         )
         self.assertEqual(output_spans[0].status.message, "test description")
         self.assertEqual(len(output_spans[0].tracestate.entries), 1)
@@ -270,7 +270,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             output_spans[1].status.code,
-            trace_api.status.StatusCanonicalCode.INTERNAL.value,
+            trace_api.status.StatusCode.INTERNAL.value,
         )
         self.assertEqual(
             output_spans[2].links.link[0].type,

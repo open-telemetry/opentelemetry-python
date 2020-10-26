@@ -5,7 +5,7 @@ import asyncpg
 
 from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 POSTGRES_HOST = os.getenv("POSTGRESQL_HOST ", "localhost")
 POSTGRES_PORT = int(os.getenv("POSTGRESQL_PORT ", "5432"))
@@ -46,7 +46,7 @@ class TestFunctionalAsyncPG(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[0].status.canonical_code
+            StatusCode.OK, spans[0].status.canonical_code
         )
         self.assertEqual(
             spans[0].attributes,
@@ -91,7 +91,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[0].attributes,
         )
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[0].status.canonical_code
+            StatusCode.OK, spans[0].status.canonical_code
         )
         self.assertEqual(
             {
@@ -103,7 +103,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[1].attributes,
         )
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[1].status.canonical_code
+            StatusCode.OK, spans[1].status.canonical_code
         )
         self.assertEqual(
             {
@@ -115,7 +115,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[2].attributes,
         )
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[2].status.canonical_code
+            StatusCode.OK, spans[2].status.canonical_code
         )
 
     def test_instrumented_failed_transaction_method(self, *_, **__):
@@ -138,7 +138,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[0].attributes,
         )
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[0].status.canonical_code
+            StatusCode.OK, spans[0].status.canonical_code
         )
         self.assertEqual(
             {
@@ -150,7 +150,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[1].attributes,
         )
         self.assertEqual(
-            StatusCanonicalCode.INVALID_ARGUMENT,
+            StatusCode.INVALID_ARGUMENT,
             spans[1].status.canonical_code,
         )
         self.assertEqual(
@@ -163,7 +163,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[2].attributes,
         )
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[2].status.canonical_code
+            StatusCode.OK, spans[2].status.canonical_code
         )
 
     def test_instrumented_method_doesnt_capture_parameters(self, *_, **__):
@@ -171,7 +171,7 @@ class TestFunctionalAsyncPG(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[0].status.canonical_code
+            StatusCode.OK, spans[0].status.canonical_code
         )
         self.assertEqual(
             spans[0].attributes,
@@ -217,7 +217,7 @@ class TestFunctionalAsyncPG_CaptureParameters(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         self.assertEqual(
-            StatusCanonicalCode.OK, spans[0].status.canonical_code
+            StatusCode.OK, spans[0].status.canonical_code
         )
         self.assertEqual(
             spans[0].attributes,

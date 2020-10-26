@@ -15,21 +15,21 @@
 import unittest
 from logging import WARNING
 
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 
 class TestStatus(unittest.TestCase):
     def test_constructor(self):
         status = Status()
-        self.assertIs(status.canonical_code, StatusCanonicalCode.OK)
+        self.assertIs(status.canonical_code, StatusCode.OK)
         self.assertIsNone(status.description)
 
-        status = Status(StatusCanonicalCode.UNAVAILABLE, "unavailable")
-        self.assertIs(status.canonical_code, StatusCanonicalCode.UNAVAILABLE)
+        status = Status(StatusCode.UNAVAILABLE, "unavailable")
+        self.assertIs(status.canonical_code, StatusCode.UNAVAILABLE)
         self.assertEqual(status.description, "unavailable")
 
     def test_invalid_description(self):
         with self.assertLogs(level=WARNING):
             status = Status(description={"test": "val"})  # type: ignore
-            self.assertIs(status.canonical_code, StatusCanonicalCode.OK)
+            self.assertIs(status.canonical_code, StatusCode.OK)
             self.assertEqual(status.description, None)

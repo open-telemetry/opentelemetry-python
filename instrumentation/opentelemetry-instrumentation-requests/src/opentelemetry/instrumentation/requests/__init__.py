@@ -54,7 +54,7 @@ from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import (
     EXCEPTION_STATUS_FIELD,
     Status,
-    StatusCanonicalCode,
+    StatusCode,
 )
 
 # A key to a context variable to avoid creating duplicate spans when instrumenting
@@ -221,15 +221,15 @@ def _uninstrument_from(instr_root, restore_as_bound_func=False):
         setattr(instr_root, instr_func_name, original)
 
 
-def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
+def _exception_to_canonical_code(exc: Exception) -> StatusCode:
     if isinstance(
         exc,
         (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError),
     ):
-        return StatusCanonicalCode.INVALID_ARGUMENT
+        return StatusCode.INVALID_ARGUMENT
     if isinstance(exc, Timeout):
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
-    return StatusCanonicalCode.UNKNOWN
+        return StatusCode.DEADLINE_EXCEEDED
+    return StatusCode.UNKNOWN
 
 
 class RequestsInstrumentor(BaseInstrumentor, MetricMixin):

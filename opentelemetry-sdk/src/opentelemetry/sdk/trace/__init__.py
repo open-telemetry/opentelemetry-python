@@ -47,7 +47,7 @@ from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import (
     EXCEPTION_STATUS_FIELD,
     Status,
-    StatusCanonicalCode,
+    StatusCode,
 )
 from opentelemetry.util import time_ns, types
 
@@ -638,7 +638,7 @@ class Span(trace_api.Span):
                 return
 
             if self.status is None:
-                self.status = Status(canonical_code=StatusCanonicalCode.OK)
+                self.status = Status(canonical_code=StatusCode.OK)
 
             self._end_time = end_time if end_time is not None else time_ns()
 
@@ -670,7 +670,7 @@ class Span(trace_api.Span):
         ):
             self.set_status(
                 Status(
-                    canonical_code=StatusCanonicalCode.UNKNOWN,
+                    canonical_code=StatusCode.ERROR,
                     description="{}: {}".format(exc_type.__name__, exc_val),
                 )
             )
@@ -837,7 +837,7 @@ class Tracer(trace_api.Tracer):
                             canonical_code=getattr(
                                 error,
                                 EXCEPTION_STATUS_FIELD,
-                                StatusCanonicalCode.UNKNOWN,
+                                StatusCode.ERROR,
                             ),
                             description="{}: {}".format(
                                 type(error).__name__, error

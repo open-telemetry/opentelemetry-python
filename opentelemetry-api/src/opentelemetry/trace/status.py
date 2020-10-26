@@ -22,23 +22,17 @@ logger = logging.getLogger(__name__)
 EXCEPTION_STATUS_FIELD = "_otel_status_code"
 
 
-class StatusCanonicalCode(enum.Enum):
+class StatusCode(enum.Enum):
     """Represents the canonical set of status codes of a finished Span."""
 
     OK = 0
-    """Not an error, returned on success."""
+    """The operation has been validated by an Application developer or Operator to have completed successfully."""
 
-    CANCELLED = 1
-    """The operation was cancelled, typically by the caller."""
+    UNSET = 1
+    """The default status."""
 
-    UNKNOWN = 2
-    """Unknown error.
-
-    For example, this error may be returned when a Status value received from
-    another address space belongs to an error space that is not known in this
-    address space. Also errors raised by APIs that do not return enough error
-    information may be converted to this error.
-    """
+    ERROR = 2
+    """The operation contains an error."""
 
     INVALID_ARGUMENT = 3
     """The client specified an invalid argument.
@@ -169,7 +163,7 @@ class Status:
 
     def __init__(
         self,
-        canonical_code: StatusCanonicalCode = StatusCanonicalCode.OK,
+        canonical_code: StatusCode.OK,
         description: typing.Optional[str] = None,
     ):
         self._canonical_code = canonical_code
@@ -180,7 +174,7 @@ class Status:
             self._description = description
 
     @property
-    def canonical_code(self) -> StatusCanonicalCode:
+    def canonical_code(self) -> StatusCode:
         """Represents the canonical status code of a finished Span."""
         return self._canonical_code
 
@@ -192,4 +186,9 @@ class Status:
     @property
     def is_ok(self) -> bool:
         """Returns false if this represents an error, true otherwise."""
-        return self._canonical_code is StatusCanonicalCode.OK
+        return self.is_unset or self._canonical_code is StatusCode.OK
+
+    @property
+    def is_unset(Self) -> bool:
+        """Returns true if unset, false otherwise."""
+        return self._canonical_code is StatusCode.UNSET

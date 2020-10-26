@@ -8,7 +8,7 @@ from opentelemetry.instrumentation.dbapi import (
     TracedCursor,
 )
 from opentelemetry.trace import SpanKind
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 
 # pylint: disable=abstract-method
@@ -109,12 +109,12 @@ class AsyncTracedCursor(TracedCursor):
             try:
                 result = await query_method(*args, **kwargs)
                 if span.is_recording():
-                    span.set_status(Status(StatusCanonicalCode.OK))
+                    span.set_status(Status(StatusCode.OK))
                 return result
             except Exception as ex:  # pylint: disable=broad-except
                 if span.is_recording():
                     span.set_status(
-                        Status(StatusCanonicalCode.UNKNOWN, str(ex))
+                        Status(StatusCode.UNKNOWN, str(ex))
                     )
                 raise ex
 

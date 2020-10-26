@@ -16,7 +16,7 @@ from typing import Dict, Sequence
 
 from wrapt import ObjectProxy
 
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 
 def extract_attributes_from_object(
@@ -34,7 +34,7 @@ def extract_attributes_from_object(
 
 def http_status_to_canonical_code(
     status: int, allow_redirect: bool = True
-) -> StatusCanonicalCode:
+) -> StatusCode:
     """Converts an HTTP status code to an OpenTelemetry canonical status code
 
     Args:
@@ -42,32 +42,32 @@ def http_status_to_canonical_code(
     """
     # pylint:disable=too-many-branches,too-many-return-statements
     if status < 100:
-        return StatusCanonicalCode.UNKNOWN
+        return StatusCode.UNKNOWN
     if status <= 299:
-        return StatusCanonicalCode.OK
+        return StatusCode.OK
     if status <= 399:
         if allow_redirect:
-            return StatusCanonicalCode.OK
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
+            return StatusCode.OK
+        return StatusCode.DEADLINE_EXCEEDED
     if status <= 499:
         if status == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCanonicalCode.UNAUTHENTICATED
+            return StatusCode.UNAUTHENTICATED
         if status == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCanonicalCode.PERMISSION_DENIED
+            return StatusCode.PERMISSION_DENIED
         if status == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCanonicalCode.NOT_FOUND
+            return StatusCode.NOT_FOUND
         if status == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCanonicalCode.RESOURCE_EXHAUSTED
-        return StatusCanonicalCode.INVALID_ARGUMENT
+            return StatusCode.RESOURCE_EXHAUSTED
+        return StatusCode.INVALID_ARGUMENT
     if status <= 599:
         if status == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCanonicalCode.UNIMPLEMENTED
+            return StatusCode.UNIMPLEMENTED
         if status == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCanonicalCode.UNAVAILABLE
+            return StatusCode.UNAVAILABLE
         if status == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCanonicalCode.DEADLINE_EXCEEDED
-        return StatusCanonicalCode.INTERNAL
-    return StatusCanonicalCode.UNKNOWN
+            return StatusCode.DEADLINE_EXCEEDED
+        return StatusCode.INTERNAL
+    return StatusCode.UNKNOWN
 
 
 def unwrap(obj, attr: str):

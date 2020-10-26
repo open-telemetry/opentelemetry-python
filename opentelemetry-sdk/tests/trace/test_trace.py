@@ -26,7 +26,7 @@ from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import time_ns
 
 
@@ -737,12 +737,12 @@ class TestSpan(unittest.TestCase):
 
         # status
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description"
+            trace_api.status.StatusCode.ERROR, "Test description"
         )
         span.set_status(new_status)
         self.assertIs(
             span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.CANCELLED,
+            trace_api.status.StatusCode.ERROR,
         )
         self.assertIs(span.status.description, "Test description")
 
@@ -803,13 +803,13 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(root.name, "root")
 
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description"
+            trace_api.status.StatusCode.ERROR, "Test description"
         )
 
         with self.assertLogs(level=WARNING):
             root.set_status(new_status)
         self.assertEqual(
-            root.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
+            root.status.canonical_code, trace_api.status.StatusCode.OK
         )
 
     def test_error_status(self):
@@ -819,7 +819,7 @@ class TestSpan(unittest.TestCase):
                     raise AssertionError("unknown")
 
             self.assertIs(
-                root.status.canonical_code, StatusCanonicalCode.UNKNOWN
+                root.status.canonical_code, StatusCode.ERROR
             )
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
@@ -840,16 +840,16 @@ class TestSpan(unittest.TestCase):
                 with context as root:
                     root.set_status(
                         trace_api.status.Status(
-                            StatusCanonicalCode.UNAVAILABLE,
-                            "Error: Unavailable",
+                            StatusCode.OK,
+                            "OK",
                         )
                     )
                     raise AssertionError("unknown")
 
             self.assertIs(
-                root.status.canonical_code, StatusCanonicalCode.UNAVAILABLE
+                root.status.canonical_code, StatusCode.OK
             )
-            self.assertEqual(root.status.description, "Error: Unavailable")
+            self.assertEqual(root.status.description, "OK")
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")

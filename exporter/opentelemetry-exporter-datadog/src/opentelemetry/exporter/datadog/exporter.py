@@ -23,7 +23,7 @@ from ddtrace.span import Span as DatadogSpan
 import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 # pylint:disable=relative-beyond-top-level
 from .constants import (
@@ -145,7 +145,7 @@ class DatadogSpanExporter(SpanExporter):
             datadog_span.start_ns = span.start_time
             datadog_span.duration_ns = span.end_time - span.start_time
 
-            if span.status.canonical_code is not StatusCanonicalCode.OK:
+            if span.status.canonical_code is not StatusCode.OK:
                 datadog_span.error = 1
                 if span.status.description:
                     exc_type, exc_val = _get_exc_info(span)

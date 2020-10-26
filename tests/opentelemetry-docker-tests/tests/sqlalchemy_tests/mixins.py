@@ -114,7 +114,7 @@ class SQLAlchemyTestMixin(TestBase):
         self.assertEqual(span.attributes.get("service"), self.SERVICE)
         self.assertEqual(span.attributes.get(_DB), self.SQL_DB)
         self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
+            span.status.canonical_code, trace.status.StatusCode.OK
         )
         self.assertGreater((span.end_time - span.start_time), 0)
 
