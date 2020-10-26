@@ -223,7 +223,9 @@ class ZipkinSpanExporter(SpanExporter):
             elif isinstance(attribute_value, str):
                 value = attribute_value
             elif isinstance(attribute_value, Sequence):
-                value = self._extract_tag_value_string_from_sequence(attribute_value)
+                value = self._extract_tag_value_string_from_sequence(
+                    attribute_value
+                )
                 if not value:
                     logger.warning("Could not serialize tag %s", attribute_key)
                     continue
@@ -244,7 +246,9 @@ class ZipkinSpanExporter(SpanExporter):
             return None
 
         tag_value_elements = []
-        running_string_length = 2  # accounts for array brackets in output string
+        running_string_length = (
+            2  # accounts for array brackets in output string
+        )
         defined_max_tag_value_length = self.max_tag_value_length > 0
 
         if isinstance(sequence, (list, tuple, range)):
@@ -257,9 +261,13 @@ class ZipkinSpanExporter(SpanExporter):
                     return None
 
                 if defined_max_tag_value_length:
-                    running_string_length += len(tag_value_element) + 2  # +2 accounts for surrounding quotes
+                    running_string_length += (
+                        len(tag_value_element) + 2
+                    )  # +2 accounts for surrounding quotes
                     if tag_value_elements:
-                        running_string_length += 2  # accounts for ', ' connector
+                        running_string_length += (
+                            2  # accounts for ', ' connector
+                        )
                     if running_string_length > self.max_tag_value_length:
                         break
 

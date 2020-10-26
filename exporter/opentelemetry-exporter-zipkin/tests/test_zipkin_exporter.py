@@ -433,20 +433,62 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         self.assertEqual(len(tags["string1"]), 128)
         self.assertEqual(len(tags["string2"]), 50)
-        self.assertEqual(tags["list1"], '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]')
-        self.assertEqual(tags["list2"], '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]')
-        self.assertEqual(tags["list3"], '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]')
-        self.assertEqual(tags["list4"], '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]')
-        self.assertEqual(tags["list5"], '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]')
-        self.assertEqual(tags["list6"], '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]')
-        self.assertEqual(tags["tuple1"], '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]')
-        self.assertEqual(tags["tuple2"], '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]')
-        self.assertEqual(tags["tuple3"], '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]')
-        self.assertEqual(tags["tuple4"], '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]')
-        self.assertEqual(tags["tuple5"], '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]')
-        self.assertEqual(tags["tuple6"], '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]')
-        self.assertEqual(tags["range1"], '["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"]')
-        self.assertEqual(tags["range2"], '["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]')
+        self.assertEqual(
+            tags["list1"],
+            '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]',
+        )
+        self.assertEqual(
+            tags["list2"],
+            '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]',
+        )
+        self.assertEqual(
+            tags["list3"],
+            '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]',
+        )
+        self.assertEqual(
+            tags["list4"],
+            '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]',
+        )
+        self.assertEqual(
+            tags["list5"],
+            '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]',
+        )
+        self.assertEqual(
+            tags["list6"],
+            '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]',
+        )
+        self.assertEqual(
+            tags["tuple1"],
+            '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]',
+        )
+        self.assertEqual(
+            tags["tuple2"],
+            '["a", "a", "a", "a", "a", "a", "a", "a", "a", "a"]',
+        )
+        self.assertEqual(
+            tags["tuple3"],
+            '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]',
+        )
+        self.assertEqual(
+            tags["tuple4"],
+            '["2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]',
+        )
+        self.assertEqual(
+            tags["tuple5"],
+            '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]',
+        )
+        self.assertEqual(
+            tags["tuple6"],
+            '["True", "True", "True", "True", "True", "True", "True", "True", "True", "True"]',
+        )
+        self.assertEqual(
+            tags["range1"],
+            '["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"]',
+        )
+        self.assertEqual(
+            tags["range2"],
+            '["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]',
+        )
 
         exporter = ZipkinSpanExporter(service_name, max_tag_value_length=2)
         mock_post = MagicMock()
@@ -459,20 +501,20 @@ class TestZipkinSpanExporter(unittest.TestCase):
         tags = json.loads(kwargs["data"])[0]["tags"]
         self.assertEqual(len(tags["string1"]), 2)
         self.assertEqual(len(tags["string2"]), 2)
-        self.assertEqual(tags["list1"], '[]')
-        self.assertEqual(tags["list2"], '[]')
-        self.assertEqual(tags["list3"], '[]')
-        self.assertEqual(tags["list4"], '[]')
-        self.assertEqual(tags["list5"], '[]')
-        self.assertEqual(tags["list6"], '[]')
-        self.assertEqual(tags["tuple1"], '[]')
-        self.assertEqual(tags["tuple2"], '[]')
-        self.assertEqual(tags["tuple3"], '[]')
-        self.assertEqual(tags["tuple4"], '[]')
-        self.assertEqual(tags["tuple5"], '[]')
-        self.assertEqual(tags["tuple6"], '[]')
-        self.assertEqual(tags["range1"], '[]')
-        self.assertEqual(tags["range2"], '[]')
+        self.assertEqual(tags["list1"], "[]")
+        self.assertEqual(tags["list2"], "[]")
+        self.assertEqual(tags["list3"], "[]")
+        self.assertEqual(tags["list4"], "[]")
+        self.assertEqual(tags["list5"], "[]")
+        self.assertEqual(tags["list6"], "[]")
+        self.assertEqual(tags["tuple1"], "[]")
+        self.assertEqual(tags["tuple2"], "[]")
+        self.assertEqual(tags["tuple3"], "[]")
+        self.assertEqual(tags["tuple4"], "[]")
+        self.assertEqual(tags["tuple5"], "[]")
+        self.assertEqual(tags["tuple6"], "[]")
+        self.assertEqual(tags["range1"], "[]")
+        self.assertEqual(tags["range2"], "[]")
 
         exporter = ZipkinSpanExporter(service_name, max_tag_value_length=5)
         mock_post = MagicMock()
@@ -489,14 +531,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(tags["list2"], '["a"]')
         self.assertEqual(tags["list3"], '["2"]')
         self.assertEqual(tags["list4"], '["2"]')
-        self.assertEqual(tags["list5"], '[]')
-        self.assertEqual(tags["list6"], '[]')
+        self.assertEqual(tags["list5"], "[]")
+        self.assertEqual(tags["list6"], "[]")
         self.assertEqual(tags["tuple1"], '["a"]')
         self.assertEqual(tags["tuple2"], '["a"]')
         self.assertEqual(tags["tuple3"], '["2"]')
         self.assertEqual(tags["tuple4"], '["2"]')
-        self.assertEqual(tags["tuple5"], '[]')
-        self.assertEqual(tags["tuple6"], '[]')
+        self.assertEqual(tags["tuple5"], "[]")
+        self.assertEqual(tags["tuple6"], "[]")
         self.assertEqual(tags["range1"], '["0"]')
         self.assertEqual(tags["range2"], '["0"]')
 
