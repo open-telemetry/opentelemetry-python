@@ -8,6 +8,8 @@
   ([#1265](https://github.com/open-telemetry/opentelemetry-python/pull/1265))
 - Allow None in sequence attributes values
   ([#998](https://github.com/open-telemetry/opentelemetry-python/pull/998))
+- Samplers to accept parent Context
+  ([#1267](https://github.com/open-telemetry/opentelemetry-python/pull/1267))
 
 ## Version 0.14b0
 
