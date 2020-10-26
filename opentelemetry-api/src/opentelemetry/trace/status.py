@@ -189,6 +189,6 @@ class Status:
         return self.is_unset or self._canonical_code is StatusCode.OK
 
     @property
-    def is_unset(Self) -> bool:
+    def is_unset(self) -> bool:
         """Returns true if unset, false otherwise."""
         return self._canonical_code is StatusCode.UNSET
