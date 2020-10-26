@@ -536,7 +536,7 @@ class Span(trace_api.Span):
         f_span["context"] = self._format_context(self.context)
         f_span["kind"] = str(self.kind)
         f_span["parent_id"] = parent_id
-        f_span["is_recording"] = self.is_recording()
+        f_span["is_recording"] = self._is_recording
         f_span["start_time"] = start_time
         f_span["end_time"] = end_time
         if self.status is not None:
@@ -553,7 +553,7 @@ class Span(trace_api.Span):
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
-            is_recording = self.is_recording()
+            is_recording = self._is_recording
             has_ended = self.end_time is not None
 
         if has_ended:
@@ -582,7 +582,7 @@ class Span(trace_api.Span):
 
     def _add_event(self, event: EventBase) -> None:
         with self._lock:
-            is_recording = self.is_recording()
+            is_recording = self._is_recording
             has_ended = self.end_time is not None
 
         if has_ended:
@@ -616,7 +616,7 @@ class Span(trace_api.Span):
         parent_context: Optional[context_api.Context] = None,
     ) -> None:
         with self._lock:
-            if not self.is_recording():
+            if not self._is_recording:
                 return
             has_started = self.start_time is not None
             if not has_started:
@@ -630,7 +630,7 @@ class Span(trace_api.Span):
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
-            is_recording = self.is_recording()
+            is_recording = self._is_recording
             has_ended = self.end_time is not None
             if is_recording:
                 if self.start_time is None:
