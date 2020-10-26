@@ -23,7 +23,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_context(self) -> "SpanContext":
+    def get_span_context(self) -> "SpanContext":
         """Gets the span's SpanContext.
 
         Get an immutable, serializable identifier for this span that can be
@@ -237,7 +237,7 @@ class DefaultSpan(Span):
     def __init__(self, context: "SpanContext") -> None:
         self._context = context
 
-    def get_context(self) -> "SpanContext":
+    def get_span_context(self) -> "SpanContext":
         return self._context
 
     def is_recording(self) -> bool:

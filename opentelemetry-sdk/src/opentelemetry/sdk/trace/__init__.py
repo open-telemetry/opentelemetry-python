@@ -18,12 +18,11 @@ import atexit
 import concurrent.futures
 import json
 import logging
-import random
 import threading
 import traceback
 from collections import OrderedDict
 from contextlib import contextmanager
-from types import TracebackType
+from types import MappingProxyType, TracebackType
 from typing import (
     Any,
     Callable,
@@ -54,9 +53,9 @@ from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
 
-MAX_NUM_ATTRIBUTES = 32
-MAX_NUM_EVENTS = 128
-MAX_NUM_LINKS = 32
+MAX_NUM_ATTRIBUTES = 1000
+MAX_NUM_EVENTS = 1000
+MAX_NUM_LINKS = 1000
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 
 
@@ -69,7 +68,11 @@ class SpanProcessor:
     in the same order as they were registered.
     """
 
-    def on_start(self, span: "Span") -> None:
+    def on_start(
+        self,
+        span: "Span",
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
         """Called when a :class:`opentelemetry.trace.Span` is started.
 
         This method is called synchronously on the thread that starts the
@@ -77,6 +80,7 @@ class SpanProcessor:
 
         Args:
             span: The :class:`opentelemetry.trace.Span` that just started.
+            parent_context: The parent context of the span that just started.
         """
 
     def on_end(self, span: "Span") -> None:
@@ -125,9 +129,13 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         with self._lock:
             self._span_processors = self._span_processors + (span_processor,)
 
-    def on_start(self, span: "Span") -> None:
+    def on_start(
+        self,
+        span: "Span",
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
         for sp in self._span_processors:
-            sp.on_start(span)
+            sp.on_start(span, parent_context=parent_context)
 
     def on_end(self, span: "Span") -> None:
         for sp in self._span_processors:
@@ -193,17 +201,26 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             self._span_processors = self._span_processors + (span_processor,)
 
     def _submit_and_await(
-        self, func: Callable[[SpanProcessor], Callable[..., None]], *args: Any
+        self,
+        func: Callable[[SpanProcessor], Callable[..., None]],
+        *args: Any,
+        **kwargs: Any
     ):
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args)
+            future = self._executor.submit(func(sp), *args, **kwargs)
             futures.append(future)
         for future in futures:
             future.result()
 
-    def on_start(self, span: "Span") -> None:
-        self._submit_and_await(lambda sp: sp.on_start, span)
+    def on_start(
+        self,
+        span: "Span",
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
+        self._submit_and_await(
+            lambda sp: sp.on_start, span, parent_context=parent_context
+        )
 
     def on_end(self, span: "Span") -> None:
         self._submit_and_await(lambda sp: sp.on_end, span)
@@ -291,34 +308,44 @@ class Event(EventBase):
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
-    An attribute value is valid if it is one of the valid types. If the value
-    is a sequence, it is only valid if all items in the sequence are of valid
-    type, not a sequence, and are of the same type.
+    An attribute value is valid if it is one of the valid types.
+    If the value is a sequence, it is only valid if all items in the sequence:
+      - are of the same valid type or None
+      - are not a sequence
     """
 
     if isinstance(value, Sequence):
         if len(value) == 0:
             return True
 
-        first_element_type = type(value[0])
-
-        if first_element_type not in VALID_ATTR_VALUE_TYPES:
-            logger.warning(
-                "Invalid type %s in attribute value sequence. Expected one of "
-                "%s or a sequence of those types",
-                first_element_type.__name__,
-                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
-            )
-            return False
-
-        for element in list(value)[1:]:
-            if not isinstance(element, first_element_type):
+        sequence_first_valid_type = None
+        for element in value:
+            if element is None:
+                continue
+            element_type = type(element)
+            if element_type not in VALID_ATTR_VALUE_TYPES:
+                logger.warning(
+                    "Invalid type %s in attribute value sequence. Expected one of "
+                    "%s or None",
+                    element_type.__name__,
+                    [
+                        valid_type.__name__
+                        for valid_type in VALID_ATTR_VALUE_TYPES
+                    ],
+                )
+                return False
+            # The type of the sequence must be homogeneous. The first non-None
+            # element determines the type of the sequence
+            if sequence_first_valid_type is None:
+                sequence_first_valid_type = element_type
+            elif not isinstance(element, sequence_first_valid_type):
                 logger.warning(
                     "Mixed types %s and %s in attribute value sequence",
-                    first_element_type.__name__,
+                    sequence_first_valid_type.__name__,
                     type(element).__name__,
                 )
                 return False
+
     elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
         logger.warning(
             "Invalid type %s for attribute value. Expected one of %s or a "
@@ -340,6 +367,10 @@ def _filter_attribute_values(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
+def _create_immutable_attributes(attributes):
+    return MappingProxyType(attributes.copy() if attributes else {})
+
+
 class Span(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
@@ -350,7 +381,7 @@ class Span(trace_api.Span):
         name: The name of the operation this span represents
         context: The immutable span context
         parent: This span's parent's `opentelemetry.trace.SpanContext`, or
-            null if this is a root span
+            None if this is a root span
         sampler: The sampler used to create this span
         trace_config: TODO
         resource: Entity producing telemetry
@@ -408,6 +439,10 @@ class Span(trace_api.Span):
         if events:
             for event in events:
                 _filter_attribute_values(event.attributes)
+                # pylint: disable=protected-access
+                event._attributes = _create_immutable_attributes(
+                    event.attributes
+                )
                 self.events.append(event)
 
         if links is None:
@@ -456,6 +491,8 @@ class Span(trace_api.Span):
     def _format_attributes(attributes):
         if isinstance(attributes, BoundedDict):
             return attributes._dict  # pylint: disable=protected-access
+        if isinstance(attributes, MappingProxyType):
+            return attributes.copy()
         return attributes
 
     @staticmethod
@@ -519,7 +556,7 @@ class Span(trace_api.Span):
 
         return json.dumps(f_span, indent=indent)
 
-    def get_context(self):
+    def get_span_context(self):
         return self.context
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -566,8 +603,7 @@ class Span(trace_api.Span):
         timestamp: Optional[int] = None,
     ) -> None:
         _filter_attribute_values(attributes)
-        if not attributes:
-            attributes = self._new_attributes()
+        attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(
                 name=name,
@@ -576,7 +612,11 @@ class Span(trace_api.Span):
             )
         )
 
-    def start(self, start_time: Optional[int] = None) -> None:
+    def start(
+        self,
+        start_time: Optional[int] = None,
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
         with self._lock:
             if not self.is_recording():
                 return
@@ -588,7 +628,7 @@ class Span(trace_api.Span):
         if has_started:
             logger.warning("Calling start() on a started span.")
             return
-        self.span_processor.on_start(self)
+        self.span_processor.on_start(self, parent_context=parent_context)
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
@@ -699,13 +739,13 @@ class Tracer(trace_api.Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         record_exception: bool = True,
     ) -> Iterator[trace_api.Span]:
-        span = self.start_span(name, parent, kind, attributes, links,)
+        span = self.start_span(name, context, kind, attributes, links)
         return self.use_span(
             span, end_on_exit=True, record_exception=record_exception
         )
@@ -713,34 +753,34 @@ class Tracer(trace_api.Tracer):
     def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
-        parent: trace_api.ParentSpan = trace_api.Tracer.CURRENT_SPAN,
+        context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        if parent is Tracer.CURRENT_SPAN:
-            parent = trace_api.get_current_span()
 
-        parent_context = parent
-        if isinstance(parent_context, trace_api.Span):
-            parent_context = parent.get_context()
+        parent_span_context = trace_api.get_current_span(
+            context
+        ).get_span_context()
 
-        if parent_context is not None and not isinstance(
-            parent_context, trace_api.SpanContext
+        if parent_span_context is not None and not isinstance(
+            parent_span_context, trace_api.SpanContext
         ):
-            raise TypeError("parent must be a Span, SpanContext or None.")
+            raise TypeError(
+                "parent_span_context must be a SpanContext or None."
+            )
 
-        if parent_context is None or not parent_context.is_valid:
-            parent = parent_context = None
+        if parent_span_context is None or not parent_span_context.is_valid:
+            parent_span_context = None
             trace_id = self.source.ids_generator.generate_trace_id()
             trace_flags = None
             trace_state = None
         else:
-            trace_id = parent_context.trace_id
-            trace_flags = parent_context.trace_flags
-            trace_state = parent_context.trace_state
+            trace_id = parent_span_context.trace_id
+            trace_flags = parent_span_context.trace_flags
+            trace_state = parent_span_context.trace_state
 
         # The sampler decides whether to create a real or no-op span at the
         # time of span creation. No-op spans do not record events, and are not
@@ -748,7 +788,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.source.sampler.should_sample(
-            parent_context, trace_id, name, attributes, links,
+            parent_span_context, trace_id, name, attributes, links,
         )
 
         trace_flags = (
@@ -756,7 +796,7 @@ class Tracer(trace_api.Tracer):
             if sampling_result.decision.is_sampled()
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
-        context = trace_api.SpanContext(
+        span_context = trace_api.SpanContext(
             trace_id,
             self.source.ids_generator.generate_span_id(),
             is_remote=False,
@@ -769,8 +809,8 @@ class Tracer(trace_api.Tracer):
             # pylint:disable=protected-access
             span = _Span(
                 name=name,
-                context=context,
-                parent=parent_context,
+                context=span_context,
+                parent=parent_span_context,
                 sampler=self.source.sampler,
                 resource=self.source.resource,
                 attributes=sampling_result.attributes.copy(),
@@ -780,9 +820,9 @@ class Tracer(trace_api.Tracer):
                 instrumentation_info=self.instrumentation_info,
                 set_status_on_exception=set_status_on_exception,
             )
-            span.start(start_time=start_time)
+            span.start(start_time=start_time, parent_context=context)
         else:
-            span = trace_api.DefaultSpan(context=context)
+            span = trace_api.DefaultSpan(context=span_context)
         return span
 
     @contextmanager

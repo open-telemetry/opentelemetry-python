@@ -15,7 +15,11 @@
 import threading
 from typing import Sequence
 
-from . import MetricRecord, MetricsExporter, MetricsExportResult
+from opentelemetry.sdk.metrics.export import (
+    MetricRecord,
+    MetricsExporter,
+    MetricsExportResult,
+)
 
 
 class InMemoryMetricsExporter(MetricsExporter):

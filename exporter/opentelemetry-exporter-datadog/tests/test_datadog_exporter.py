@@ -21,6 +21,7 @@ from unittest import mock
 from ddtrace.internal.writer import AgentWriter
 
 from opentelemetry import trace as trace_api
+from opentelemetry.context import Context
 from opentelemetry.exporter import datadog
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource, sampling
@@ -178,7 +179,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         span_context = trace_api.SpanContext(
             trace_id, span_id, is_remote=False
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
         other_context = trace_api.SpanContext(
@@ -191,14 +192,14 @@ class TestDatadogSpanExporter(unittest.TestCase):
             trace._Span(
                 name=span_names[0],
                 context=span_context,
-                parent=parent_context,
+                parent=parent_span_context,
                 kind=trace_api.SpanKind.CLIENT,
                 instrumentation_info=instrumentation_info,
                 resource=Resource({}),
             ),
             trace._Span(
                 name=span_names[1],
-                context=parent_context,
+                context=parent_span_context,
                 parent=None,
                 instrumentation_info=instrumentation_info,
                 resource=resource_without_service,
@@ -496,7 +497,6 @@ class TestDatadogSpanExporter(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         tracer_provider.add_span_processor(span_processor)
         tracer = tracer_provider.get_tracer(__name__)
-
         with mock.patch.object(span_processor.condition, "wait") as mock_wait:
             with tracer.start_span("foo"):
                 pass
@@ -518,6 +518,21 @@ class TestDatadogSpanExporter(unittest.TestCase):
             )
 
         span_processor.shutdown()
+
+    def test_span_processor_accepts_parent_context(self):
+        span_processor = mock.Mock(
+            wraps=datadog.DatadogExportSpanProcessor(self.exporter)
+        )
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(span_processor)
+        tracer = tracer_provider.get_tracer(__name__)
+
+        context = Context()
+        span = tracer.start_span("foo", context=context)
+
+        span_processor.on_start.assert_called_once_with(
+            span, parent_context=context
+        )
 
     def test_origin(self):
         context = trace_api.SpanContext(

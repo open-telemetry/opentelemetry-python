@@ -90,13 +90,14 @@ COMMANDS = [
 
 
 def _set_connection_attributes(span, instance):
+    if not span.is_recording():
+        return
     for key, value in _get_address_attributes(instance).items():
         span.set_attribute(key, value)
 
 
 def _with_tracer_wrapper(func):
-    """Helper for providing tracer for wrapper functions.
-    """
+    """Helper for providing tracer for wrapper functions."""
 
     def _with_tracer(tracer, cmd):
         def wrapper(wrapped, instance, args, kwargs):
@@ -117,15 +118,16 @@ def _wrap_cmd(tracer, cmd, wrapped, instance, args, kwargs):
         _CMD, kind=SpanKind.INTERNAL, attributes={}
     ) as span:
         try:
-            if not args:
-                vals = ""
-            else:
-                vals = _get_query_string(args[0])
+            if span.is_recording():
+                if not args:
+                    vals = ""
+                else:
+                    vals = _get_query_string(args[0])
 
-            query = "{}{}{}".format(cmd, " " if vals else "", vals)
-            span.set_attribute(_RAWCMD, query)
+                query = "{}{}{}".format(cmd, " " if vals else "", vals)
+                span.set_attribute(_RAWCMD, query)
 
-            _set_connection_attributes(span, instance)
+                _set_connection_attributes(span, instance)
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning(
                 "Failed to set attributes for pymemcache span %s", str(ex)
