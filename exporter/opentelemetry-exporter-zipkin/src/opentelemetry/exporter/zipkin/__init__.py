@@ -222,6 +222,11 @@ class ZipkinSpanExporter(SpanExporter):
                 value = str(attribute_value)
             elif isinstance(attribute_value, str):
                 value = attribute_value
+            elif isinstance(attribute_value, Sequence):
+                value = self._extract_tag_value_string_from_sequence(attribute_value)
+                if not value:
+                    logger.warning("Could not serialize tag %s", attribute_key)
+                    continue
             else:
                 logger.warning("Could not serialize tag %s", attribute_key)
                 continue
@@ -230,6 +235,39 @@ class ZipkinSpanExporter(SpanExporter):
                 value = value[: self.max_tag_value_length]
             tags[attribute_key] = value
         return tags
+
+    def _extract_tag_value_string_from_sequence(self, sequence):
+        if not sequence:
+            return None
+
+        if self.max_tag_value_length == 1:
+            return None
+
+        tag_value_elements = []
+        running_string_length = 2  # accounts for array brackets in output string
+        defined_max_tag_value_length = self.max_tag_value_length > 0
+
+        if isinstance(sequence, (list, tuple, range)):
+            for element in sequence:
+                if isinstance(element, (int, bool, float)):
+                    tag_value_element = str(element)
+                elif isinstance(element, str):
+                    tag_value_element = element
+                else:
+                    return None
+
+                if defined_max_tag_value_length:
+                    running_string_length += len(tag_value_element) + 2  # +2 accounts for surrounding quotes
+                    if tag_value_elements:
+                        running_string_length += 2  # accounts for ', ' connector
+                    if running_string_length > self.max_tag_value_length:
+                        break
+
+                tag_value_elements.append(tag_value_element)
+        else:
+            return None
+
+        return json.dumps(tag_value_elements)
 
     def _extract_tags_from_span(self, span: Span):
         tags = self._extract_tags_from_dict(getattr(span, "attributes", None))
