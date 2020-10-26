@@ -31,7 +31,7 @@ from opentelemetry import propagators, trace
 from opentelemetry.context import attach, detach
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-_log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # wrap an RPC call
@@ -219,7 +219,7 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
 
             attributes.update({"net.peer.name": host, "net.peer.port": port})
         except IndexError:
-            _log.warning("Failed to parse peer address '%s'", context.peer())
+            logger.warning("Failed to parse peer address '%s'", context.peer())
 
         return self._tracer.start_as_current_span(
             name=handler_call_details.method,
