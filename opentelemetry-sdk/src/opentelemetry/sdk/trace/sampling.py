@@ -66,7 +66,8 @@ from types import MappingProxyType
 from typing import Optional, Sequence
 
 # pylint: disable=unused-import
-from opentelemetry.trace import Link, SpanContext
+from opentelemetry.context import Context
+from opentelemetry.trace import Link, get_current_span
 from opentelemetry.util.types import Attributes
 
 
@@ -113,11 +114,11 @@ class Sampler(abc.ABC):
     @abc.abstractmethod
     def should_sample(
         self,
-        parent_span_context: Optional["SpanContext"],
+        parent_context: Optional["Context"],
         trace_id: int,
         name: str,
         attributes: Attributes = None,
-        links: Sequence["Link"] = (),
+        links: Sequence["Link"] = None,
     ) -> "SamplingResult":
         pass
 
@@ -134,11 +135,11 @@ class StaticSampler(Sampler):
 
     def should_sample(
         self,
-        parent_span_context: Optional["SpanContext"],
+        parent_context: Optional["Context"],
         trace_id: int,
         name: str,
         attributes: Attributes = None,
-        links: Sequence["Link"] = (),
+        links: Sequence["Link"] = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             return SamplingResult(self._decision)
@@ -188,11 +189,11 @@ class TraceIdRatioBased(Sampler):
 
     def should_sample(
         self,
-        parent_span_context: Optional["SpanContext"],
+        parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        attributes: Attributes = None,  # TODO
-        links: Sequence["Link"] = (),
+        attributes: Attributes = None,
+        links: Sequence["Link"] = None,
     ) -> "SamplingResult":
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
@@ -220,22 +221,27 @@ class ParentBased(Sampler):
 
     def should_sample(
         self,
-        parent_span_context: Optional["SpanContext"],
+        parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        attributes: Attributes = None,  # TODO
-        links: Sequence["Link"] = (),
+        attributes: Attributes = None,
+        links: Sequence["Link"] = None,
     ) -> "SamplingResult":
-        if parent_span_context is not None:
+        if parent_context is not None:
+            parent_span_context = get_current_span(
+                parent_context
+            ).get_span_context()
+            # only drop if parent exists and is not a root span
             if (
-                not parent_span_context.is_valid
-                or not parent_span_context.trace_flags.sampled
+                parent_span_context is not None
+                and parent_span_context.is_valid
+                and not parent_span_context.trace_flags.sampled
             ):
                 return SamplingResult(Decision.DROP)
             return SamplingResult(Decision.RECORD_AND_SAMPLE, attributes)
 
         return self._delegate.should_sample(
-            parent_span_context=parent_span_context,
+            parent_context=parent_context,
             trace_id=trace_id,
             name=name,
             attributes=attributes,
