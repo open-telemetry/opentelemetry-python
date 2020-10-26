@@ -26,30 +26,30 @@ class TestUtils(TestBase):
             (HTTPStatus.ACCEPTED, StatusCode.OK),
             (HTTPStatus.IM_USED, StatusCode.OK),
             (HTTPStatus.MULTIPLE_CHOICES, StatusCode.OK),
-            (HTTPStatus.BAD_REQUEST, StatusCode.INVALID_ARGUMENT),
-            (HTTPStatus.UNAUTHORIZED, StatusCode.UNAUTHENTICATED),
-            (HTTPStatus.FORBIDDEN, StatusCode.PERMISSION_DENIED),
-            (HTTPStatus.NOT_FOUND, StatusCode.NOT_FOUND),
+            (HTTPStatus.BAD_REQUEST, StatusCode.OK),
+            (HTTPStatus.UNAUTHORIZED, StatusCode.OK),
+            (HTTPStatus.FORBIDDEN, StatusCode.OK),
+            (HTTPStatus.NOT_FOUND, StatusCode.OK),
             (
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                StatusCode.INVALID_ARGUMENT,
+                StatusCode.OK,
             ),
             (
                 HTTPStatus.TOO_MANY_REQUESTS,
-                StatusCode.RESOURCE_EXHAUSTED,
+                StatusCode.OK,
             ),
-            (HTTPStatus.NOT_IMPLEMENTED, StatusCode.UNIMPLEMENTED),
-            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.UNAVAILABLE),
+            (HTTPStatus.NOT_IMPLEMENTED, StatusCode.OK),
+            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.OK),
             (
                 HTTPStatus.GATEWAY_TIMEOUT,
-                StatusCode.DEADLINE_EXCEEDED,
+                StatusCode.OK,
             ),
             (
                 HTTPStatus.HTTP_VERSION_NOT_SUPPORTED,
-                StatusCode.INTERNAL,
+                StatusCode.OK,
             ),
-            (600, StatusCode.UNKNOWN),
-            (99, StatusCode.UNKNOWN),
+            (600, StatusCode.OK),
+            (99, StatusCode.OK),
         ):
             with self.subTest(status_code=status_code):
                 actual = http_status_to_canonical_code(int(status_code))
