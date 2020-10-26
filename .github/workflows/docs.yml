@@ -7,7 +7,7 @@ on:
     paths:
     - 'docs/**'
     - 'exporter/**'
-    - 'ext/**'
+    - 'instrumentation/**'
     - 'opentelemetry-python/opentelemetry-api/src/opentelemetry/**'
     - 'opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/**'
     
@@ -15,8 +15,11 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v2
+    - name: Set up Python py38
+      uses: actions/setup-python@v2
+      with:
+        python-version: py38
     - name: Build docs
       run: |
         pip install --upgrade tox
