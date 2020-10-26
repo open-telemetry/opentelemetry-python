@@ -308,34 +308,44 @@ class Event(EventBase):
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
-    An attribute value is valid if it is one of the valid types. If the value
-    is a sequence, it is only valid if all items in the sequence are of valid
-    type, not a sequence, and are of the same type.
+    An attribute value is valid if it is one of the valid types.
+    If the value is a sequence, it is only valid if all items in the sequence:
+      - are of the same valid type or None
+      - are not a sequence
     """
 
     if isinstance(value, Sequence):
         if len(value) == 0:
             return True
 
-        first_element_type = type(value[0])
-
-        if first_element_type not in VALID_ATTR_VALUE_TYPES:
-            logger.warning(
-                "Invalid type %s in attribute value sequence. Expected one of "
-                "%s or a sequence of those types",
-                first_element_type.__name__,
-                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
-            )
-            return False
-
-        for element in list(value)[1:]:
-            if not isinstance(element, first_element_type):
+        sequence_first_valid_type = None
+        for element in value:
+            if element is None:
+                continue
+            element_type = type(element)
+            if element_type not in VALID_ATTR_VALUE_TYPES:
+                logger.warning(
+                    "Invalid type %s in attribute value sequence. Expected one of "
+                    "%s or None",
+                    element_type.__name__,
+                    [
+                        valid_type.__name__
+                        for valid_type in VALID_ATTR_VALUE_TYPES
+                    ],
+                )
+                return False
+            # The type of the sequence must be homogeneous. The first non-None
+            # element determines the type of the sequence
+            if sequence_first_valid_type is None:
+                sequence_first_valid_type = element_type
+            elif not isinstance(element, sequence_first_valid_type):
                 logger.warning(
                     "Mixed types %s and %s in attribute value sequence",
-                    first_element_type.__name__,
+                    sequence_first_valid_type.__name__,
                     type(element).__name__,
                 )
                 return False
+
     elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
         logger.warning(
             "Invalid type %s for attribute value. Expected one of %s or a "
