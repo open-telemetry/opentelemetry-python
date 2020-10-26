@@ -6,6 +6,8 @@
   ([#1251](https://github.com/open-telemetry/opentelemetry-python/pull/1251))
 - Fix b3 propagator entrypoint
   ([#1265](https://github.com/open-telemetry/opentelemetry-python/pull/1265))
+- Span.is_recording() returns false after span has ended
+  ([#1243](https://github.com/open-telemetry/opentelemetry-python/pull/1243))
 
 ## Version 0.14b0
 
