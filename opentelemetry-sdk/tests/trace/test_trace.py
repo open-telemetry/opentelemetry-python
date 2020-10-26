@@ -564,6 +564,14 @@ class TestSpan(unittest.TestCase):
         self.assertTrue(trace._is_valid_attribute_value("hi"))
         self.assertTrue(trace._is_valid_attribute_value(3.4))
         self.assertTrue(trace._is_valid_attribute_value(15))
+        # None in sequences are valid
+        self.assertTrue(trace._is_valid_attribute_value(["A", None, None]))
+        self.assertTrue(
+            trace._is_valid_attribute_value(["A", None, None, "B"])
+        )
+        self.assertTrue(trace._is_valid_attribute_value([None, None]))
+        self.assertFalse(trace._is_valid_attribute_value(["A", None, 1]))
+        self.assertFalse(trace._is_valid_attribute_value([None, "A", None, 1]))
 
     def test_sampling_attributes(self):
         sampling_attributes = {
