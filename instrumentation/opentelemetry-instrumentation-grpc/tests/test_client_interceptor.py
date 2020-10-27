@@ -220,9 +220,9 @@ class TestClientProto(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(
-            span.status.canonical_code.value,
-            grpc.StatusCode.INVALID_ARGUMENT.value[0],
+        self.assertIs(
+            span.status.canonical_code,
+            trace.status.StatusCode.ERROR,
         )
 
     def test_error_stream_unary(self):
@@ -233,9 +233,9 @@ class TestClientProto(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(
-            span.status.canonical_code.value,
-            grpc.StatusCode.INVALID_ARGUMENT.value[0],
+        self.assertIs(
+            span.status.canonical_code,
+            trace.status.StatusCode.ERROR,
         )
 
     def test_error_unary_stream(self):
@@ -247,9 +247,9 @@ class TestClientProto(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(
-            span.status.canonical_code.value,
-            grpc.StatusCode.INVALID_ARGUMENT.value[0],
+        self.assertIs(
+            span.status.canonical_code,
+            trace.status.StatusCode.ERROR,
         )
 
     def test_error_stream_stream(self):
@@ -263,9 +263,9 @@ class TestClientProto(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(
-            span.status.canonical_code.value,
-            grpc.StatusCode.INVALID_ARGUMENT.value[0],
+        self.assertIs(
+            span.status.canonical_code,
+            trace.status.StatusCode.ERROR,
         )
 
 
