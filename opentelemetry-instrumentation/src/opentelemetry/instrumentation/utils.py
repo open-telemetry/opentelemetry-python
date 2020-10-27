@@ -41,34 +41,34 @@ def http_status_to_canonical_code(
         status (int): HTTP status code
     """
     # pylint:disable=too-many-branches,too-many-return-statements
-    # if status < 100:
-    #     return StatusCode.UNKNOWN
-    # if status <= 299:
-    #     return StatusCode.OK
-    # if status <= 399:
-    #     if allow_redirect:
-    #         return StatusCode.OK
-    #     return StatusCode.DEADLINE_EXCEEDED
-    # if status <= 499:
-    #     if status == 401:  # HTTPStatus.UNAUTHORIZED:
-    #         return StatusCode.UNAUTHENTICATED
-    #     if status == 403:  # HTTPStatus.FORBIDDEN:
-    #         return StatusCode.PERMISSION_DENIED
-    #     if status == 404:  # HTTPStatus.NOT_FOUND:
-    #         return StatusCode.NOT_FOUND
-    #     if status == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-    #         return StatusCode.RESOURCE_EXHAUSTED
-    #     return StatusCode.INVALID_ARGUMENT
-    # if status <= 599:
-    #     if status == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-    #         return StatusCode.UNIMPLEMENTED
-    #     if status == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-    #         return StatusCode.UNAVAILABLE
-    #     if status == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-    #         return StatusCode.DEADLINE_EXCEEDED
-    #     return StatusCode.INTERNAL
-    # return StatusCode.UNKNOWN
-    return StatusCode.OK
+    # See: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
+    if status < 100:
+        return StatusCode.ERROR
+    if status <= 299:
+        return StatusCode.UNSET
+    if status <= 399:
+        if allow_redirect:
+            return StatusCode.UNSET
+        return StatusCode.ERROR
+    if status <= 499:
+        if status == 401:  # HTTPStatus.UNAUTHORIZED:
+            return StatusCode.ERROR
+        if status == 403:  # HTTPStatus.FORBIDDEN:
+            return StatusCode.ERROR
+        if status == 404:  # HTTPStatus.NOT_FOUND:
+            return StatusCode.ERROR
+        if status == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
+            return StatusCode.ERROR
+        return StatusCode.ERROR
+    if status <= 599:
+        if status == 501:  # HTTPStatus.NOT_IMPLEMENTED:
+            return StatusCode.ERROR
+        if status == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
+            return StatusCode.ERROR
+        if status == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
+            return StatusCode.ERROR
+        return StatusCode.ERROR
+    return StatusCode.ERROR
 
 
 def unwrap(obj, attr: str):

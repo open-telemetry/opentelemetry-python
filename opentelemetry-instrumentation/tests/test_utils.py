@@ -20,36 +20,37 @@ from opentelemetry.trace.status import StatusCode
 
 
 class TestUtils(TestBase):
+    # See https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     def test_http_status_to_canonical_code(self):
         for status_code, expected in (
-            (HTTPStatus.OK, StatusCode.OK),
-            (HTTPStatus.ACCEPTED, StatusCode.OK),
-            (HTTPStatus.IM_USED, StatusCode.OK),
-            (HTTPStatus.MULTIPLE_CHOICES, StatusCode.OK),
-            (HTTPStatus.BAD_REQUEST, StatusCode.OK),
-            (HTTPStatus.UNAUTHORIZED, StatusCode.OK),
-            (HTTPStatus.FORBIDDEN, StatusCode.OK),
-            (HTTPStatus.NOT_FOUND, StatusCode.OK),
+            (HTTPStatus.OK, StatusCode.UNSET),
+            (HTTPStatus.ACCEPTED, StatusCode.UNSET),
+            (HTTPStatus.IM_USED, StatusCode.UNSET),
+            (HTTPStatus.MULTIPLE_CHOICES, StatusCode.UNSET),
+            (HTTPStatus.BAD_REQUEST, StatusCode.ERROR),
+            (HTTPStatus.UNAUTHORIZED, StatusCode.ERROR),
+            (HTTPStatus.FORBIDDEN, StatusCode.ERROR),
+            (HTTPStatus.NOT_FOUND, StatusCode.ERROR),
             (
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                StatusCode.OK,
+                StatusCode.ERROR,
             ),
             (
                 HTTPStatus.TOO_MANY_REQUESTS,
-                StatusCode.OK,
+                StatusCode.ERROR,
             ),
-            (HTTPStatus.NOT_IMPLEMENTED, StatusCode.OK),
-            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.OK),
+            (HTTPStatus.NOT_IMPLEMENTED, StatusCode.ERROR),
+            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.ERROR),
             (
                 HTTPStatus.GATEWAY_TIMEOUT,
-                StatusCode.OK,
+                StatusCode.ERROR,
             ),
             (
                 HTTPStatus.HTTP_VERSION_NOT_SUPPORTED,
-                StatusCode.OK,
+                StatusCode.ERROR,
             ),
-            (600, StatusCode.OK),
-            (99, StatusCode.OK),
+            (600, StatusCode.ERROR),
+            (99, StatusCode.ERROR),
         ):
             with self.subTest(status_code=status_code):
                 actual = http_status_to_canonical_code(int(status_code))

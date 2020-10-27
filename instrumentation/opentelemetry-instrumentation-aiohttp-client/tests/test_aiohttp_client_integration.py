@@ -113,10 +113,10 @@ class TestAioHttpIntegration(TestBase):
         for status_code, span_status in (
             (HTTPStatus.OK, StatusCode.OK),
             (HTTPStatus.TEMPORARY_REDIRECT, StatusCode.OK),
-            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.UNAVAILABLE),
+            (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.ERROR),
             (
                 HTTPStatus.GATEWAY_TIMEOUT,
-                StatusCode.DEADLINE_EXCEEDED,
+                StatusCode.ERROR,
             ),
         ):
             with self.subTest(status_code=status_code):
@@ -286,7 +286,7 @@ class TestAioHttpIntegration(TestBase):
             [
                 (
                     "HTTP GET",
-                    (StatusCode.DEADLINE_EXCEEDED, None),
+                    (StatusCode.ERROR, None),
                     {
                         "component": "http",
                         "http.method": "GET",
@@ -316,7 +316,7 @@ class TestAioHttpIntegration(TestBase):
             [
                 (
                     "HTTP GET",
-                    (StatusCode.DEADLINE_EXCEEDED, None),
+                    (StatusCode.ERROR, None),
                     {
                         "component": "http",
                         "http.method": "GET",

@@ -124,7 +124,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         self.assertIs(
             span.status.canonical_code,
-            trace.status.StatusCode.NOT_FOUND,
+            trace.status.StatusCode.ERROR,
         )
 
     def test_uninstrument(self):
@@ -308,7 +308,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             },
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCode.INTERNAL
+            span.status.canonical_code, StatusCode.ERROR
         )
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)

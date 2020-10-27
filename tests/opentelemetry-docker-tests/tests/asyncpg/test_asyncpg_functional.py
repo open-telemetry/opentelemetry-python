@@ -150,7 +150,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[1].attributes,
         )
         self.assertEqual(
-            StatusCode.INVALID_ARGUMENT,
+            StatusCode.ERROR,
             spans[1].status.canonical_code,
         )
         self.assertEqual(
