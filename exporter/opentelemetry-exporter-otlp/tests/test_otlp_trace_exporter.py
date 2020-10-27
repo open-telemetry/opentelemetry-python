@@ -175,7 +175,9 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
     def test_env_variables(self, mock_exporter_mixin):
         OTLPSpanExporter()
-        kwargs = mock_exporter_mixin.call_args.kwargs
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
 
         self.assertEqual(kwargs["endpoint"], "collector:55680")
         self.assertEqual(kwargs["headers"], "key1:value1;key2:value2")
