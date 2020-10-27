@@ -45,7 +45,7 @@ class TestFunctionalAsyncPG(TestBase):
         async_call(self._connection.execute("SELECT 42;"))
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
-        self.assertIs
+        self.assertIs(
             StatusCode.UNSET, spans[0].status.canonical_code
         )
         self.assertEqual(
