@@ -37,18 +37,76 @@ Usage (Flask)
 Usage (Django)
 --------------
 
-Modify the application's ``wsgi.py`` file as shown below.
+Create a ``tracing.py`` file in your Django app as shown below.
 
 .. code-block:: python
 
+    from logging import getLogger
+    from pkg_resources import iter_entry_points
+
+    from opentelemetry import trace
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        ConsoleSpanExporter,
+        BatchExportSpanProcessor,
+        SimpleExportSpanProcessor,
+    )
+
+    logger = getLogger(__file__)
+
+    def init_tracing():
+        tracer = TracerProvider()
+        trace.set_tracer_provider(tracer)
+
+        provider.add_span_processor(BatchExportSpanProcessor(ConsoleSpanExporter()))
+        auto_instrument()
+
+    def auto_instrument():
+      for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+          try:
+              entry_point.load()().instrument()
+          except Exception:
+              logger.exception("Instrumenting of %s failed", entry_point.name)
+
+Then import and call init_tracing() from both manage.py and gunicorn.config.py:
+
+.. code-block:: python
+
+    #!/usr/bin/env python
+    # Django's command-line utility for administrative tasks.
     import os
-    from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
-    from django.core.wsgi import get_wsgi_application
+    import sys
+    
+    from djtest.tracing import init_tracing  # change 1
+    
+    def main():
+        """Run administrative tasks."""
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djtest.settings')
+        try:
+            from django.core.management import execute_from_command_line
+        except ImportError as exc:
+            raise ImportError(
+                "Couldn't import Django. Are you sure it's installed and "
+                "available on your PYTHONPATH environment variable? Did you "
+                "forget to activate a virtual environment?"
+            ) from exc
+        init_tracing()  # change 2
+        execute_from_command_line(sys.argv)
 
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'application.settings')
 
-    application = get_wsgi_application()
-    application = OpenTelemetryMiddleware(application)
+    if __name__ == '__main__':
+        main()
+
+Also, modify the ``gunicorn.config.py`` file as shown below.
+
+.. code-block:: python
+
+    from djtest.tracing import init_tracing
+
+    def post_fork(server, worker):
+        init_tracing()
+ 
 
 API
 ---
