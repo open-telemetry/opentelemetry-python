@@ -91,6 +91,7 @@ def collect_request_attributes(scope):
 
 def set_status_code(span, status_code):
     """Adds HTTP response attributes to span using the status_code argument."""
+    # TODO: Remove setting status in instrumentation
     if not span.is_recording():
         return
     try:
@@ -98,7 +99,7 @@ def set_status_code(span, status_code):
     except ValueError:
         span.set_status(
             Status(
-                StatusCode.UNKNOWN,
+                StatusCode.ERROR,
                 "Non-integer HTTP status: " + repr(status_code),
             )
         )

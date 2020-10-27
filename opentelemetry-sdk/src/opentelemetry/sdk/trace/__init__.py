@@ -662,7 +662,9 @@ class Span(trace_api.Span):
         exc_tb: Optional[TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
-
+        # Records status if span is used as context manager
+        # i.e. with tracer.start_span() as span:
+        # TODO: Record exception
         if (
             self.status is None
             and self._set_status_on_exception
@@ -831,6 +833,8 @@ class Tracer(trace_api.Tracer):
                 if record_exception:
                     span.record_exception(error)
 
+                # Records status if use_span is used
+                # i.e. with tracer.start_as_current_span() as span:
                 if span.status is None and span._set_status_on_exception:
                     span.set_status(
                         Status(

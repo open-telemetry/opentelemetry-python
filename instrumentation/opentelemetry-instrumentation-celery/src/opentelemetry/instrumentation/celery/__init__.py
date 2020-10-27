@@ -214,7 +214,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         if span is None or not span.is_recording():
             return
 
-        status_kwargs = {"canonical_code": StatusCode.UNKNOWN}
+        status_kwargs = {"canonical_code": StatusCode.ERROR}
 
         ex = kwargs.get("einfo")
 
@@ -227,7 +227,7 @@ class CeleryInstrumentor(BaseInstrumentor):
 
         if ex is not None:
             status_kwargs["description"] = str(ex)
-
+        # TODO: Remove setting status in instrumentation
         span.set_status(Status(**status_kwargs))
 
     @staticmethod

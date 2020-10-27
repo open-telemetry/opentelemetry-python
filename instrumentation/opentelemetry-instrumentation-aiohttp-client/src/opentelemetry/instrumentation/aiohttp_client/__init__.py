@@ -229,6 +229,7 @@ def create_trace_config(
             else:
                 status = StatusCode.ERROR
 
+            # TODO: Remove setting status in instrumentation
             trace_config_ctx.span.set_status(Status(status))
             trace_config_ctx.span.record_exception(params.exception)
         _end_trace(trace_config_ctx)

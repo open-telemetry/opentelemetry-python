@@ -222,14 +222,15 @@ def _uninstrument_from(instr_root, restore_as_bound_func=False):
 
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCode:
-    if isinstance(
-        exc,
-        (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError),
-    ):
-        return StatusCode.INVALID_ARGUMENT
-    if isinstance(exc, Timeout):
-        return StatusCode.DEADLINE_EXCEEDED
-    return StatusCode.UNKNOWN
+    # if isinstance(
+    #     exc,
+    #     (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError),
+    # ):
+    #     return StatusCode.INVALID_ARGUMENT
+    # if isinstance(exc, Timeout):
+    #     return StatusCode.DEADLINE_EXCEEDED
+    # TODO: Remove setting status in instrumentation
+    return StatusCode.ERROR
 
 
 class RequestsInstrumentor(BaseInstrumentor, MetricMixin):

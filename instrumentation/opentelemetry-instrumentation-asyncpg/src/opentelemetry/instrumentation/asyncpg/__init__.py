@@ -49,13 +49,14 @@ _APPLIED = "_opentelemetry_tracer"
 
 
 def _exception_to_canonical_code(exc: Exception) -> StatusCode:
-    if isinstance(
-        exc, (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
-    ):
-        return StatusCode.INVALID_ARGUMENT
-    if isinstance(exc, exceptions.IdleInTransactionSessionTimeoutError):
-        return StatusCode.DEADLINE_EXCEEDED
-    return StatusCode.UNKNOWN
+    # TODO: Remove setting status in instrumentation
+    # if isinstance(
+    #     exc, (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
+    # ):
+    #     return StatusCode.INVALID_ARGUMENT
+    # if isinstance(exc, exceptions.IdleInTransactionSessionTimeoutError):
+    #     return StatusCode.DEADLINE_EXCEEDED
+    return StatusCode.ERROR
 
 
 def _hydrate_span_from_args(connection, query, parameters) -> dict:

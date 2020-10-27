@@ -144,9 +144,10 @@ def add_response_attributes(
     try:
         status_code = int(status_code)
     except ValueError:
+        # TODO: Remove setting status in instrumentation
         span.set_status(
             Status(
-                StatusCode.UNKNOWN,
+                StatusCode.ERROR,
                 "Non-integer HTTP status: " + repr(status_code),
             )
         )

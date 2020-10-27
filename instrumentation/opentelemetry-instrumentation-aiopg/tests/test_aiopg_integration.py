@@ -279,7 +279,7 @@ class TestAiopgIntegration(TestBase):
         self.assertEqual(span.attributes["db.statement"], "Test query")
         self.assertIs(
             span.status.canonical_code,
-            trace_api.status.StatusCode.UNKNOWN,
+            trace_api.status.StatusCode.ERROR,
         )
         self.assertEqual(span.status.description, "Test Exception")
 

@@ -122,7 +122,7 @@ class TestPymongo(TestBase):
         )
         self.assertIs(
             span.status.canonical_code,
-            trace_api.status.StatusCode.UNKNOWN,
+            trace_api.status.StatusCode.ERROR,
         )
         self.assertEqual(span.status.description, "failure")
         self.assertIsNotNone(span.end_time)
@@ -151,7 +151,7 @@ class TestPymongo(TestBase):
         )
         self.assertIs(
             second_span.status.canonical_code,
-            trace_api.status.StatusCode.UNKNOWN,
+            trace_api.status.StatusCode.ERROR,
         )
 
     def test_int_command(self):

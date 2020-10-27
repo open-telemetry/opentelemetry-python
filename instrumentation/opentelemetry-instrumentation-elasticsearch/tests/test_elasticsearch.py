@@ -153,7 +153,7 @@ class TestElasticsearchIntegration(TestBase):
     def test_trace_error_unknown(self, request_mock):
         exc = RuntimeError("custom error")
         request_mock.side_effect = exc
-        self._test_trace_error(StatusCode.UNKNOWN, exc)
+        self._test_trace_error(StatusCode.ERROR, exc)
 
     def test_trace_error_not_found(self, request_mock):
         msg = "record not found"

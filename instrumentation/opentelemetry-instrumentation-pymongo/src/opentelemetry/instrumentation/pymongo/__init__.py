@@ -125,7 +125,8 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            span.set_status(Status(StatusCode.UNKNOWN, event.failure))
+            # TODO: Remove setting status in instrumentation
+            span.set_status(Status(StatusCode.ERROR, event.failure))
         span.end()
 
     def _pop_span(self, event):

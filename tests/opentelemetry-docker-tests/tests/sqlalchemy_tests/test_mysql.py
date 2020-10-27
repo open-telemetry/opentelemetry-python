@@ -78,6 +78,6 @@ class MysqlConnectorTestCase(SQLAlchemyTestMixin):
         # check the error
         self.assertIs(
             span.status.canonical_code,
-            trace.status.StatusCode.UNKNOWN,
+            trace.status.StatusCode.ERROR,
         )
         self.assertIn("a_wrong_table", span.status.description)

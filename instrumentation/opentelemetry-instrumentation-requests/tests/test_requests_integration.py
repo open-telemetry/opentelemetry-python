@@ -264,7 +264,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             {"component": "http", "http.method": "GET", "http.url": self.URL},
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCode.UNKNOWN
+            span.status.canonical_code, StatusCode.ERROR
         )
 
         self.assertIsNotNone(RequestsInstrumentor().meter)
@@ -335,7 +335,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         span = self.assert_span()
         self.assertEqual(
-            span.status.canonical_code, StatusCode.UNKNOWN
+            span.status.canonical_code, StatusCode.ERROR
         )
 
     @mock.patch(
@@ -347,7 +347,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         span = self.assert_span()
         self.assertEqual(
-            span.status.canonical_code, StatusCode.DEADLINE_EXCEEDED
+            span.status.canonical_code, StatusCode.ERROR
         )
 
 
@@ -372,7 +372,7 @@ class TestRequestsIntegration(RequestsIntegrationTestBase, TestBase):
             {"component": "http", "http.method": "POST", "http.url": url},
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCode.INVALID_ARGUMENT
+            span.status.canonical_code, StatusCode.ERROR
         )
 
     def test_if_headers_equals_none(self):

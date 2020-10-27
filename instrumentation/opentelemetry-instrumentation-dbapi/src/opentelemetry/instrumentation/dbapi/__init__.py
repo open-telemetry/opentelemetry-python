@@ -344,12 +344,13 @@ class TracedCursor:
             try:
                 result = query_method(*args, **kwargs)
                 if span.is_recording():
+                    # TODO: Remove setting status in instrumentation
                     span.set_status(Status(StatusCode.OK))
                 return result
             except Exception as ex:  # pylint: disable=broad-except
                 if span.is_recording():
                     span.set_status(
-                        Status(StatusCode.UNKNOWN, str(ex))
+                        Status(StatusCode.ERROR, str(ex))
                     )
                 raise ex
 
