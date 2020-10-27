@@ -585,16 +585,16 @@ class Span(trace_api.Span):
                 logger.warning("Setting attribute on ended span.")
                 return
 
-        # Freeze mutable sequences defensively
-        if isinstance(value, MutableSequence):
-            value = tuple(value)
-        if isinstance(value, bytes):
-            try:
-                value = value.decode()
-            except ValueError:
-                logger.warning("Byte attribute could not be decoded.")
-                return
-        self.attributes[key] = value
+            # Freeze mutable sequences defensively
+            if isinstance(value, MutableSequence):
+                value = tuple(value)
+            if isinstance(value, bytes):
+                try:
+                    value = value.decode()
+                except ValueError:
+                    logger.warning("Byte attribute could not be decoded.")
+                    return
+            self.attributes[key] = value
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
