@@ -54,12 +54,43 @@ Modify the application's ``wsgi.py`` file as shown below.
 Usage in Production Server (gunicorn)
 ------------------------------------
 
+Installation
+------------
+
+.. code-block:: python
+
+    $ pip install opentelemetry-instrumentation-otcollector
+    $ pip install opentelemetry-api
+    $ pip install opentelemetry-sdk
+
+Execution
+---------
+
 Modify the ``gunicorn.config.py`` file as shown below.
 
 .. code-block:: python
 
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry.ext.otcollector.trace_exporter import CollectorSpanExporter
+
+    span_exporter = CollectorSpanExporter(
+    # optional:
+    # endpoint="myCollectorUrl:55678",
+    # service_name="test_service",
+    # host_name="machine/container name",
+    )
+
+    tracer_provider = TracerProvider()
+    trace.set_tracer_provider(tracer_provider)
+    span_processor = BatchExportSpanProcessor(span_exporter)
+    tracer_provider.add_span_processor(span_processor)
+
     def post_fork(server, worker):
-        worker(DjangoInstrumentor().instrument())
+        "pipeline" : [
+            tracer_provider,
+            span_processor,
+            span_exporter ]
 
 API
 ---
