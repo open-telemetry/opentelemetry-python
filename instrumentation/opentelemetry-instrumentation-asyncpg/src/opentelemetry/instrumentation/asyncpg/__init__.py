@@ -141,6 +141,7 @@ class AsyncPGInstrumentor(BaseInstrumentor):
                             Status(_exception_to_canonical_code(exception))
                         )
                     else:
-                        span.set_status(Status(StatusCode.OK))
+                        # TODO: Remove setting status in instrumentation
+                        span.set_status(Status(StatusCode.UNSET))
 
         return result

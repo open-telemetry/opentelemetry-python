@@ -86,7 +86,7 @@ class TestPymongo(TestBase):
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
         self.assertIs(
-            span.status.canonical_code, trace_api.status.StatusCode.OK
+            span.status.canonical_code, trace_api.status.StatusCode.UNSET
         )
         self.assertEqual(span.status.description, "reply")
         self.assertIsNotNone(span.end_time)
@@ -144,7 +144,7 @@ class TestPymongo(TestBase):
         self.assertEqual(first_span.attributes["db.mongo.request_id"], "first")
         self.assertIs(
             first_span.status.canonical_code,
-            trace_api.status.StatusCode.OK,
+            trace_api.status.StatusCode.UNSET,
         )
         self.assertEqual(
             second_span.attributes["db.mongo.request_id"], "second"

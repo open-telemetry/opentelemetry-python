@@ -111,7 +111,8 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            span.set_status(Status(StatusCode.OK, event.reply))
+            # TODO: Remove setting status in instrumentation
+            span.set_status(Status(StatusCode.UNSET, event.reply))
         span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):

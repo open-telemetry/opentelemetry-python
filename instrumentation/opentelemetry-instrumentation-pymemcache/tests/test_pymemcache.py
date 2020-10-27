@@ -278,7 +278,7 @@ class PymemcacheClientTestCase(
 
         span = spans[0]
 
-        self.assertNotEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertFalse(span.status.is_ok)
 
         self.check_spans(spans, 1, ["delete key"])
 
@@ -304,7 +304,7 @@ class PymemcacheClientTestCase(
 
         span = spans[0]
 
-        self.assertNotEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertFalse(span.status.is_ok)
 
         self.check_spans(spans, 1, ["incr key"])
 
@@ -321,7 +321,7 @@ class PymemcacheClientTestCase(
 
         span = spans[0]
 
-        self.assertNotEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertFalse(span.status.is_ok)
 
         self.check_spans(spans, 1, ["get key"])
 
@@ -338,7 +338,7 @@ class PymemcacheClientTestCase(
 
         span = spans[0]
 
-        self.assertNotEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertFalse(span.status.is_ok)
 
         self.check_spans(spans, 1, ["get key"])
 
@@ -373,7 +373,7 @@ class PymemcacheClientTestCase(
 
         span = spans[0]
 
-        self.assertNotEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertFalse(span.status.is_ok)
 
         self.check_spans(spans, 1, ["set key"])
 
@@ -390,7 +390,7 @@ class PymemcacheClientTestCase(
 
         span = spans[0]
 
-        self.assertNotEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertFalse(span.status.is_ok)
 
         self.check_spans(spans, 1, ["set key"])
 
@@ -407,7 +407,7 @@ class PymemcacheClientTestCase(
 
         span = spans[0]
 
-        self.assertNotEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertFalse(span.status.is_ok)
 
         self.check_spans(spans, 1, ["set key has space"])
 

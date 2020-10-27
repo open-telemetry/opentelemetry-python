@@ -66,7 +66,7 @@ class TestDBApiIntegration(TestBase):
         self.assertEqual(span.attributes["net.peer.port"], 123)
         self.assertIs(
             span.status.canonical_code,
-            trace_api.status.StatusCode.OK,
+            trace_api.status.StatusCode.UNSET,
         )
 
     def test_span_not_recording(self):

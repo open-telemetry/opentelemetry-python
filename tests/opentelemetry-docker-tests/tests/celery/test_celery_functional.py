@@ -278,7 +278,7 @@ def test_fn_exception_expected(celery_app, memory_exporter):
     span = spans[0]
 
     assert span.status.is_ok is True
-    assert span.status.canonical_code == StatusCode.OK
+    assert span.status.canonical_code == StatusCode.UNSET
     assert span.name == "run/test_celery_functional.fn_exception"
     assert span.attributes.get("celery.action") == "run"
     assert span.attributes.get("celery.state") == "FAILURE"
@@ -305,7 +305,7 @@ def test_fn_retry_exception(celery_app, memory_exporter):
     span = spans[0]
 
     assert span.status.is_ok is True
-    assert span.status.canonical_code == StatusCode.OK
+    assert span.status.canonical_code == StatusCode.UNSET
     assert span.name == "run/test_celery_functional.fn_exception"
     assert span.attributes.get("celery.action") == "run"
     assert span.attributes.get("celery.state") == "RETRY"
@@ -406,7 +406,7 @@ def test_class_task_exception_excepted(celery_app, memory_exporter):
     span = spans[0]
 
     assert span.status.is_ok is True
-    assert span.status.canonical_code == StatusCode.OK
+    assert span.status.canonical_code == StatusCode.UNSET
     assert span.name == "run/test_celery_functional.BaseTask"
     assert span.attributes.get("celery.action") == "run"
     assert span.attributes.get("celery.state") == "FAILURE"

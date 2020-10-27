@@ -67,6 +67,6 @@ class SQLAlchemyInstrumentTestCase(TestBase):
         self.assertEqual(span.name, "postgres.query")
         self.assertEqual(span.attributes.get("service"), "postgres")
         self.assertIs(
-            span.status.canonical_code, trace.status.StatusCode.OK
+            span.status.canonical_code, trace.status.StatusCode.UNSET
         )
         self.assertGreater((span.end_time - span.start_time), 0)
