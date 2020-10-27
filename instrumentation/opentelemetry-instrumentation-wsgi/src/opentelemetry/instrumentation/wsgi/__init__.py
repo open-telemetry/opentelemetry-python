@@ -218,7 +218,8 @@ class OpenTelemetryMiddleware:
                 )
         except Exception as ex:
             if span.is_recording():
-                span.set_status(Status(StatusCode.INTERNAL, str(ex)))
+                # TODO: Remove setting status in instrumentation
+                span.set_status(Status(StatusCode.ERROR, str(ex)))
             span.end()
             context.detach(token)
             raise
