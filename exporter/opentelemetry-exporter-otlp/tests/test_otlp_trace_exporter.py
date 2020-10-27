@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
@@ -23,7 +22,6 @@ from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, StatusCode, server
 
 from opentelemetry.configuration import Configuration
-from opentelemetry.exporter.otlp.exporter import OTLPExporterMixin
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
