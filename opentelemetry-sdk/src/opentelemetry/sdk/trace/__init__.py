@@ -581,15 +581,9 @@ class Span(trace_api.Span):
             return
 
         with self._lock:
-            is_recording = self._is_recording
-            has_ended = self.end_time is not None
-
-        if has_ended:
-            logger.warning("Setting attribute on ended span.")
-            return
-
-        if not is_recording:
-            return
+            if self.end_time is not None:
+                logger.warning("Setting attribute on ended span.")
+                return
 
         # Freeze mutable sequences defensively
         if isinstance(value, MutableSequence):
@@ -604,10 +598,6 @@ class Span(trace_api.Span):
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
-        with self._lock:
-            if not self._is_recording:
-                return
-
         self.events.append(event)
 
     def add_event(
