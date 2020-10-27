@@ -10,6 +10,8 @@
   ([#998](https://github.com/open-telemetry/opentelemetry-python/pull/998))
 - Samplers to accept parent Context
   ([#1267](https://github.com/open-telemetry/opentelemetry-python/pull/1267))
+- Span.is_recording() returns false after span has ended
+  ([#1289](https://github.com/open-telemetry/opentelemetry-python/pull/1289))
 
 ## Version 0.14b0
 
