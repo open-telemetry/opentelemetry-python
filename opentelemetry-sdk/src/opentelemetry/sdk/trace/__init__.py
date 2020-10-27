@@ -649,7 +649,7 @@ class Span(trace_api.Span):
         self.name = name
 
     def is_recording(self) -> bool:
-        return True
+        return self._end_time is None
 
     @_check_span_ended
     def set_status(self, status: trace_api.Status) -> None:
