@@ -95,7 +95,7 @@ class CommandTracer(monitoring.CommandListener):
             if span is not None:
                 if span.is_recording():
                     span.set_status(
-                        Status(StatusCode.INTERNAL, str(ex))
+                        Status(StatusCode.ERROR, str(ex))
                     )
                 span.end()
                 self._pop_span(event)

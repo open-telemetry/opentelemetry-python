@@ -245,7 +245,7 @@ def _translate_to_jaeger(spans: Span):
             )
 
         # Ensure that if Status.Code is not OK, that we set the "error" tag on the Jaeger span.
-        if status.canonical_code is not StatusCode.OK:
+        if not status.is_ok:
             tags.append(_get_bool_tag("error", True))
 
         refs = _extract_refs_from_span(span)

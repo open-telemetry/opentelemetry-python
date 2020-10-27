@@ -145,7 +145,7 @@ class DatadogSpanExporter(SpanExporter):
             datadog_span.start_ns = span.start_time
             datadog_span.duration_ns = span.end_time - span.start_time
 
-            if span.status.canonical_code is not StatusCode.OK:
+            if not span.status.is_ok:
                 datadog_span.error = 1
                 if span.status.description:
                     exc_type, exc_val = _get_exc_info(span)

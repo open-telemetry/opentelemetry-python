@@ -435,7 +435,7 @@ class Span(trace_api.Span):
         self._set_status_on_exception = set_status_on_exception
 
         self.span_processor = span_processor
-        self.status = None
+        self.status = Status(StatusCode.UNSET)
         self._lock = threading.Lock()
 
         _filter_attribute_values(attributes)
@@ -636,9 +636,6 @@ class Span(trace_api.Span):
             if self.end_time is not None:
                 logger.warning("Calling end() on an ended span.")
                 return
-
-            if self.status is None:
-                self.status = Status(canonical_code=StatusCode.OK)
 
             self._end_time = end_time if end_time is not None else time_ns()
 
