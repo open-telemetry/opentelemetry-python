@@ -160,7 +160,7 @@ class TestElasticsearchIntegration(TestBase):
         exc = elasticsearch.exceptions.NotFoundError(404, msg)
         request_mock.return_value = (1, {}, {})
         request_mock.side_effect = exc
-        self._test_trace_error(StatusCode.NOT_FOUND, exc)
+        self._test_trace_error(StatusCode.ERROR, exc)
 
     def _test_trace_error(self, code, exc):
         es = Elasticsearch()

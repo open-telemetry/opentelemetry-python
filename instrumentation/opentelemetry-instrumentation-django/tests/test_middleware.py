@@ -87,7 +87,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
             else "tests.views.traced",
         )
         self.assertEqual(span.kind, SpanKind.SERVER)
-        self.assertEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertEqual(span.status.canonical_code, StatusCode.UNSET)
         self.assertEqual(span.attributes["http.method"], "GET")
         self.assertEqual(
             span.attributes["http.url"],
@@ -113,7 +113,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
             span.name, "^traced/" if DJANGO_2_2 else "tests.views.traced"
         )
         self.assertEqual(span.kind, SpanKind.SERVER)
-        self.assertEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertEqual(span.status.canonical_code, StatusCode.UNSET)
         self.assertEqual(span.attributes["http.method"], "GET")
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/traced/"
@@ -170,7 +170,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
             span.name, "^traced/" if DJANGO_2_2 else "tests.views.traced"
         )
         self.assertEqual(span.kind, SpanKind.SERVER)
-        self.assertEqual(span.status.canonical_code, StatusCode.OK)
+        self.assertEqual(span.status.canonical_code, StatusCode.UNSET)
         self.assertEqual(span.attributes["http.method"], "POST")
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/traced/"
@@ -194,7 +194,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
         )
         self.assertEqual(span.kind, SpanKind.SERVER)
         self.assertEqual(
-            span.status.canonical_code, StatusCode.INTERNAL
+            span.status.canonical_code, StatusCode.ERROR
         )
         self.assertEqual(span.attributes["http.method"], "GET")
         self.assertEqual(

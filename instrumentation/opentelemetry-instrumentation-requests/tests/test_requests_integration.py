@@ -82,7 +82,7 @@ class RequestsIntegrationTestBase(abc.ABC):
         )
 
         self.assertIs(
-            span.status.canonical_code, trace.status.StatusCode.OK
+            span.status.canonical_code, trace.status.StatusCode.UNSET
         )
 
         self.check_span_instrumentation_info(

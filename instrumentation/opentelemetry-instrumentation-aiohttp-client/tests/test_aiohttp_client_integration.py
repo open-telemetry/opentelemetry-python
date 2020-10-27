@@ -111,8 +111,8 @@ class TestAioHttpIntegration(TestBase):
 
     def test_status_codes(self):
         for status_code, span_status in (
-            (HTTPStatus.OK, StatusCode.OK),
-            (HTTPStatus.TEMPORARY_REDIRECT, StatusCode.OK),
+            (HTTPStatus.OK, StatusCode.UNSET),
+            (HTTPStatus.TEMPORARY_REDIRECT, StatusCode.UNSET),
             (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.ERROR),
             (
                 HTTPStatus.GATEWAY_TIMEOUT,
@@ -188,7 +188,7 @@ class TestAioHttpIntegration(TestBase):
                     [
                         (
                             expected,
-                            (StatusCode.OK, None),
+                            (StatusCode.UNSET, None),
                             {
                                 "component": "http",
                                 "http.method": method,
@@ -220,7 +220,7 @@ class TestAioHttpIntegration(TestBase):
             [
                 (
                     "HTTP GET",
-                    (StatusCode.OK, None),
+                    (StatusCode.UNSET, None),
                     {
                         "component": "http",
                         "http.method": "GET",
@@ -239,7 +239,7 @@ class TestAioHttpIntegration(TestBase):
 
         for url, expected_status in (
             ("http://this-is-unknown.local/", StatusCode.ERROR),
-            ("http://127.0.0.1:1/", StatusCode.UNAVAILABLE),
+            ("http://127.0.0.1:1/", StatusCode.ERROR),
         ):
             with self.subTest(expected_status=expected_status):
 
