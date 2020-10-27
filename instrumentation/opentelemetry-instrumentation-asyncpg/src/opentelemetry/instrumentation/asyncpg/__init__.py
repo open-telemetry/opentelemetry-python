@@ -47,6 +47,7 @@ from opentelemetry.trace.status import Status, StatusCode
 
 _APPLIED = "_opentelemetry_tracer"
 
+
 # pylint: disable=unused-argument
 def _exception_to_canonical_code(exc: Exception) -> StatusCode:
     # TODO: Remove setting status in instrumentation

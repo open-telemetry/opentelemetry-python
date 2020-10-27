@@ -210,7 +210,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             jaeger.Tag(
                 key="status.code",
                 vType=jaeger.TagType.LONG,
-                vLong=StatusCode.OK.value,
+                vLong=StatusCode.UNSET.value,
             ),
             jaeger.Tag(
                 key="status.message", vType=jaeger.TagType.STRING, vStr=None
@@ -259,6 +259,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].resource = Resource({})
+        otel_spans[0].set_status(
+            Status(StatusCode.OK, "Example description")
+        )
         otel_spans[2].end(end_time=end_times[2])
         otel_spans[2].instrumentation_info = InstrumentationInfo(
             name="name", version="version"
@@ -385,7 +388,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="status.message",
                         vType=jaeger.TagType.STRING,
-                        vStr=None,
+                        vStr="Example description",
                     ),
                     jaeger.Tag(
                         key="span.kind",

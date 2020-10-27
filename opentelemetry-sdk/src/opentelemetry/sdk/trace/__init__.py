@@ -663,7 +663,7 @@ class Span(trace_api.Span):
         # i.e. with tracer.start_span() as span:
         # TODO: Record exception
         if (
-            self.status is None
+            self.status.canonical_code is StatusCode.UNSET
             and self._set_status_on_exception
             and exc_val is not None
         ):
@@ -832,7 +832,10 @@ class Tracer(trace_api.Tracer):
 
                 # Records status if use_span is used
                 # i.e. with tracer.start_as_current_span() as span:
-                if span.status is None and span._set_status_on_exception:
+                if (
+                    span.status.canonical_code is StatusCode.UNSET
+                    and span._set_status_on_exception
+                ):
                     span.set_status(
                         Status(
                             canonical_code=getattr(
