@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Remove grpc status codes ([#1123](https://github.com/open-telemetry/opentelemetry-python/pull/1123))
+- Remove grpc status codes ([#1282](https://github.com/open-telemetry/opentelemetry-python/pull/1282))
 
 ## Version 0.14b0
 

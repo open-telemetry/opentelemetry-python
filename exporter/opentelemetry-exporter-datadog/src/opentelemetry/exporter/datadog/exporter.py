@@ -23,7 +23,6 @@ from ddtrace.span import Span as DatadogSpan
 import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace.status import StatusCode
 
 # pylint:disable=relative-beyond-top-level
 from .constants import (

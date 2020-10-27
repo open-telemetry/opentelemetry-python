@@ -259,7 +259,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].resource = Resource({})
-        otel_spans[0].set_status(
+        otel_spans[2].set_status(
             Status(StatusCode.OK, "Example description")
         )
         otel_spans[2].end(end_time=end_times[2])
