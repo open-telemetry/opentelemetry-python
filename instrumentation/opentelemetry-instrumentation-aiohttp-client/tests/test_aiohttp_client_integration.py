@@ -61,7 +61,7 @@ class TestAioHttpIntegration(TestBase):
             [
                 (
                     span.name,
-                    (span.status.canonical_code, span.status.description),
+                    (span.status.status_code, span.status.description),
                     dict(span.attributes),
                 )
                 for span in self.memory_exporter.get_finished_spans()

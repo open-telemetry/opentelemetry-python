@@ -59,7 +59,7 @@ import typing
 import wsgiref.util as wsgiref_util
 
 from opentelemetry import context, propagators, trace
-from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+from opentelemetry.instrumentation.utils import http_status_to_status_code
 from opentelemetry.instrumentation.wsgi.version import __version__
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -152,7 +152,7 @@ def add_response_attributes(
         )
     else:
         span.set_attribute("http.status_code", status_code)
-        span.set_status(Status(http_status_to_canonical_code(status_code)))
+        span.set_status(Status(http_status_to_status_code(status_code)))
 
 
 def get_default_span_name(environ):

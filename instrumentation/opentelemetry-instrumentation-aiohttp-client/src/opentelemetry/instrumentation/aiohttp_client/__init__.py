@@ -74,7 +74,7 @@ from opentelemetry import propagators, trace
 from opentelemetry.instrumentation.aiohttp_client.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import (
-    http_status_to_canonical_code,
+    http_status_to_status_code,
     unwrap,
 )
 from opentelemetry.trace import SpanKind, TracerProvider, get_tracer
@@ -195,7 +195,7 @@ def create_trace_config(
         if trace_config_ctx.span.is_recording():
             trace_config_ctx.span.set_status(
                 Status(
-                    http_status_to_canonical_code(int(params.response.status))
+                    http_status_to_status_code(int(params.response.status))
                 )
             )
             trace_config_ctx.span.set_attribute(

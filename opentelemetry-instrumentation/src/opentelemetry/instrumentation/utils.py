@@ -32,7 +32,7 @@ def extract_attributes_from_object(
     return extracted
 
 
-def http_status_to_canonical_code(
+def http_status_to_status_code(
     status: int, allow_redirect: bool = True
 ) -> StatusCode:
     """Converts an HTTP status code to an OpenTelemetry canonical status code

@@ -82,7 +82,7 @@ class RequestsIntegrationTestBase(abc.ABC):
         )
 
         self.assertIs(
-            span.status.canonical_code, trace.status.StatusCode.UNSET
+            span.status.status_code, trace.status.StatusCode.UNSET
         )
 
         self.check_span_instrumentation_info(
@@ -123,7 +123,7 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertEqual(span.attributes.get("http.status_text"), "Not Found")
 
         self.assertIs(
-            span.status.canonical_code,
+            span.status.status_code,
             trace.status.StatusCode.ERROR,
         )
 
@@ -264,7 +264,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             {"component": "http", "http.method": "GET", "http.url": self.URL},
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCode.ERROR
+            span.status.status_code, StatusCode.ERROR
         )
 
         self.assertIsNotNone(RequestsInstrumentor().meter)
@@ -308,7 +308,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             },
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCode.ERROR
+            span.status.status_code, StatusCode.ERROR
         )
         self.assertIsNotNone(RequestsInstrumentor().meter)
         self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
@@ -335,7 +335,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         span = self.assert_span()
         self.assertEqual(
-            span.status.canonical_code, StatusCode.ERROR
+            span.status.status_code, StatusCode.ERROR
         )
 
     @mock.patch(
@@ -347,7 +347,7 @@ class RequestsIntegrationTestBase(abc.ABC):
 
         span = self.assert_span()
         self.assertEqual(
-            span.status.canonical_code, StatusCode.ERROR
+            span.status.status_code, StatusCode.ERROR
         )
 
 
@@ -372,7 +372,7 @@ class TestRequestsIntegration(RequestsIntegrationTestBase, TestBase):
             {"component": "http", "http.method": "POST", "http.url": url},
         )
         self.assertEqual(
-            span.status.canonical_code, StatusCode.ERROR
+            span.status.status_code, StatusCode.ERROR
         )
 
     def test_if_headers_equals_none(self):

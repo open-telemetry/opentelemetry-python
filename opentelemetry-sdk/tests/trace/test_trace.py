@@ -735,7 +735,7 @@ class TestSpan(unittest.TestCase):
 
         self.assertIsNotNone(span.status)
         self.assertIs(
-            span.status.canonical_code,
+            span.status.status_code,
             trace_api.status.StatusCode.UNSET
         )
 
@@ -745,7 +745,7 @@ class TestSpan(unittest.TestCase):
         )
         span.set_status(new_status)
         self.assertIs(
-            span.status.canonical_code,
+            span.status.status_code,
             trace_api.status.StatusCode.ERROR,
         )
         self.assertIs(span.status.description, "Test description")
@@ -813,7 +813,7 @@ class TestSpan(unittest.TestCase):
         with self.assertLogs(level=WARNING):
             root.set_status(new_status)
         self.assertEqual(
-            root.status.canonical_code, trace_api.status.StatusCode.UNSET
+            root.status.status_code, trace_api.status.StatusCode.UNSET
         )
 
     def test_error_status(self):
@@ -823,7 +823,7 @@ class TestSpan(unittest.TestCase):
                     raise AssertionError("unknown")
 
             self.assertIs(
-                root.status.canonical_code, StatusCode.ERROR
+                root.status.status_code, StatusCode.ERROR
             )
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
@@ -851,7 +851,7 @@ class TestSpan(unittest.TestCase):
                     raise AssertionError("unknown")
 
             self.assertIs(
-                root.status.canonical_code, StatusCode.OK
+                root.status.status_code, StatusCode.OK
             )
             self.assertEqual(root.status.description, "OK")
 
@@ -1056,7 +1056,7 @@ class TestSpanProcessor(unittest.TestCase):
     "start_time": null,
     "end_time": null,
     "status": {
-        "canonical_code": "UNSET"
+        "status_code": "UNSET"
     },
     "attributes": {},
     "events": [],
@@ -1066,7 +1066,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"canonical_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )
 
     def test_attributes_to_json(self):
@@ -1083,7 +1083,7 @@ class TestSpanProcessor(unittest.TestCase):
         date_str = ns_to_iso_str(123)
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"canonical_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )

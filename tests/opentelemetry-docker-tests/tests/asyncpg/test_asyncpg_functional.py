@@ -46,7 +46,7 @@ class TestFunctionalAsyncPG(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         self.assertIs(
-            StatusCode.UNSET, spans[0].status.canonical_code
+            StatusCode.UNSET, spans[0].status.status_code
         )
         self.assertEqual(
             spans[0].attributes,
@@ -91,7 +91,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[0].attributes,
         )
         self.assertIs(
-            StatusCode.UNSET, spans[0].status.canonical_code
+            StatusCode.UNSET, spans[0].status.status_code
         )
         self.assertEqual(
             {
@@ -103,7 +103,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[1].attributes,
         )
         self.assertIs(
-            StatusCode.UNSET, spans[1].status.canonical_code
+            StatusCode.UNSET, spans[1].status.status_code
         )
         self.assertEqual(
             {
@@ -115,7 +115,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[2].attributes,
         )
         self.assertIs(
-            StatusCode.UNSET, spans[2].status.canonical_code
+            StatusCode.UNSET, spans[2].status.status_code
         )
 
     def test_instrumented_failed_transaction_method(self, *_, **__):
@@ -138,7 +138,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[0].attributes,
         )
         self.assertIs(
-            StatusCode.UNSET, spans[0].status.canonical_code
+            StatusCode.UNSET, spans[0].status.status_code
         )
         self.assertEqual(
             {
@@ -151,7 +151,7 @@ class TestFunctionalAsyncPG(TestBase):
         )
         self.assertEqual(
             StatusCode.ERROR,
-            spans[1].status.canonical_code,
+            spans[1].status.status_code,
         )
         self.assertEqual(
             {
@@ -163,7 +163,7 @@ class TestFunctionalAsyncPG(TestBase):
             spans[2].attributes,
         )
         self.assertIs(
-            StatusCode.UNSET, spans[2].status.canonical_code
+            StatusCode.UNSET, spans[2].status.status_code
         )
 
     def test_instrumented_method_doesnt_capture_parameters(self, *_, **__):
@@ -171,7 +171,7 @@ class TestFunctionalAsyncPG(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         self.assertIs(
-            StatusCode.UNSET, spans[0].status.canonical_code
+            StatusCode.UNSET, spans[0].status.status_code
         )
         self.assertEqual(
             spans[0].attributes,
@@ -217,7 +217,7 @@ class TestFunctionalAsyncPG_CaptureParameters(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(spans), 1)
         self.assertIs(
-            StatusCode.UNSET, spans[0].status.canonical_code
+            StatusCode.UNSET, spans[0].status.status_code
         )
         self.assertEqual(
             spans[0].attributes,

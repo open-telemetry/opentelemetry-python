@@ -64,7 +64,7 @@ class TestFalconInstrumentation(TestBase):
         self.assertEqual(
             span.name, "HelloWorldResource.on_{0}".format(method.lower())
         )
-        self.assertEqual(span.status.canonical_code, StatusCode.UNSET)
+        self.assertEqual(span.status.status_code, StatusCode.UNSET)
         self.assert_span_has_attributes(
             span,
             {
@@ -92,7 +92,7 @@ class TestFalconInstrumentation(TestBase):
         span = spans[0]
         self.assertEqual(span.name, "HTTP GET")
         self.assertEqual(
-            span.status.canonical_code, StatusCode.ERROR
+            span.status.status_code, StatusCode.ERROR
         )
         self.assert_span_has_attributes(
             span,
@@ -123,7 +123,7 @@ class TestFalconInstrumentation(TestBase):
         self.assertEqual(span.name, "ErrorResource.on_get")
         self.assertFalse(span.status.is_ok)
         self.assertEqual(
-            span.status.canonical_code, StatusCode.ERROR
+            span.status.status_code, StatusCode.ERROR
         )
         self.assertEqual(
             span.status.description,

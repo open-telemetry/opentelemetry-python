@@ -162,7 +162,7 @@ class OTLPSpanExporter(
         if sdk_span.status is not None:
             # TODO: Update this when the proto definitions are updated to include UNSET and ERROR
             proto_status_code = Status.STATUS_CODE_OK
-            if sdk_span.status.canonical_code is StatusCode.ERROR:
+            if sdk_span.status.status_code is StatusCode.ERROR:
                 proto_status_code = Status.STATUS_CODE_UNKNOWN_ERROR
             self._collector_span_kwargs["status"] = Status(
                 code=proto_status_code,

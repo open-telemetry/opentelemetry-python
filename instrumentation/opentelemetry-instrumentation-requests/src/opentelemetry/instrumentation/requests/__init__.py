@@ -49,7 +49,7 @@ from opentelemetry.instrumentation.metric import (
     MetricMixin,
 )
 from opentelemetry.instrumentation.requests.version import __version__
-from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+from opentelemetry.instrumentation.utils import http_status_to_status_code
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import (
     EXCEPTION_STATUS_FIELD,
@@ -171,7 +171,7 @@ def _instrument(tracer_provider=None, span_callback=None):
                         span.set_attribute("http.status_text", result.reason)
                         span.set_status(
                             Status(
-                                http_status_to_canonical_code(
+                                http_status_to_status_code(
                                     result.status_code
                                 )
                             )

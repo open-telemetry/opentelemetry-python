@@ -39,17 +39,17 @@ class Status:
     """Represents the status of a finished Span.
 
     Args:
-        canonical_code: The canonical status code that describes the result
+        status_code: The canonical status code that describes the result
             status of the operation.
         description: An optional description of the status.
     """
 
     def __init__(
         self,
-        canonical_code: StatusCode = StatusCode.UNSET,
+        status_code: StatusCode = StatusCode.UNSET,
         description: typing.Optional[str] = None,
     ):
-        self._canonical_code = canonical_code
+        self._status_code = status_code
         self._description = None
         if description is not None and not isinstance(description, str):
             logger.warning("Invalid status description type, expected str")
@@ -57,9 +57,9 @@ class Status:
             self._description = description
 
     @property
-    def canonical_code(self) -> StatusCode:
+    def status_code(self) -> StatusCode:
         """Represents the canonical status code of a finished Span."""
-        return self._canonical_code
+        return self._status_code
 
     @property
     def description(self) -> typing.Optional[str]:
@@ -69,9 +69,9 @@ class Status:
     @property
     def is_ok(self) -> bool:
         """Returns false if this represents an error, true otherwise."""
-        return self.is_unset or self._canonical_code is StatusCode.OK
+        return self.is_unset or self._status_code is StatusCode.OK
 
     @property
     def is_unset(self) -> bool:
         """Returns true if unset, false otherwise."""
-        return self._canonical_code is StatusCode.UNSET
+        return self._status_code is StatusCode.UNSET

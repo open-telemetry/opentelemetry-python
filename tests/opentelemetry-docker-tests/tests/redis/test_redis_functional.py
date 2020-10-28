@@ -37,7 +37,7 @@ class TestRedisInstrument(TestBase):
         self.assertEqual(span.attributes["service"], self.test_service)
         self.assertEqual(span.name, "redis.command")
         self.assertIs(
-            span.status.canonical_code, trace.status.StatusCode.UNSET
+            span.status.status_code, trace.status.StatusCode.UNSET
         )
         self.assertEqual(span.attributes.get("db.instance"), 0)
         self.assertEqual(

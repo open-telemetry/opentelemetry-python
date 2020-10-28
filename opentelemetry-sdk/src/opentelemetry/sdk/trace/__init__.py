@@ -546,7 +546,7 @@ class Span(trace_api.Span):
 
         if self.status is not None:
             status = OrderedDict()
-            status["canonical_code"] = str(self.status.canonical_code.name)
+            status["status_code"] = str(self.status.status_code.name)
             if self.status.description:
                 status["description"] = self.status.description
 
@@ -663,13 +663,13 @@ class Span(trace_api.Span):
         # i.e. with tracer.start_span() as span:
         # TODO: Record exception
         if (
-            self.status.canonical_code is StatusCode.UNSET
+            self.status.status_code is StatusCode.UNSET
             and self._set_status_on_exception
             and exc_val is not None
         ):
             self.set_status(
                 Status(
-                    canonical_code=StatusCode.ERROR,
+                    status_code=StatusCode.ERROR,
                     description="{}: {}".format(exc_type.__name__, exc_val),
                 )
             )
@@ -833,12 +833,12 @@ class Tracer(trace_api.Tracer):
                 # Records status if use_span is used
                 # i.e. with tracer.start_as_current_span() as span:
                 if (
-                    span.status.canonical_code is StatusCode.UNSET
+                    span.status.status_code is StatusCode.UNSET
                     and span._set_status_on_exception
                 ):
                     span.set_status(
                         Status(
-                            canonical_code=getattr(
+                            status_code=getattr(
                                 error,
                                 EXCEPTION_STATUS_FIELD,
                                 StatusCode.ERROR,

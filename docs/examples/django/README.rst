@@ -77,7 +77,7 @@ output similar to this one:
         "start_time": "2020-04-26T01:49:57.205833Z",
         "end_time": "2020-04-26T01:49:57.206214Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {
             "component": "http",

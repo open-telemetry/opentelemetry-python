@@ -221,7 +221,7 @@ class TestClientProto(TestBase):
         self.assertEqual(len(spans), 1)
         span = spans[0]
         self.assertIs(
-            span.status.canonical_code,
+            span.status.status_code,
             trace.status.StatusCode.ERROR,
         )
 
@@ -234,7 +234,7 @@ class TestClientProto(TestBase):
         self.assertEqual(len(spans), 1)
         span = spans[0]
         self.assertIs(
-            span.status.canonical_code,
+            span.status.status_code,
             trace.status.StatusCode.ERROR,
         )
 
@@ -248,7 +248,7 @@ class TestClientProto(TestBase):
         self.assertEqual(len(spans), 1)
         span = spans[0]
         self.assertIs(
-            span.status.canonical_code,
+            span.status.status_code,
             trace.status.StatusCode.ERROR,
         )
 
@@ -264,7 +264,7 @@ class TestClientProto(TestBase):
         self.assertEqual(len(spans), 1)
         span = spans[0]
         self.assertIs(
-            span.status.canonical_code,
+            span.status.status_code,
             trace.status.StatusCode.ERROR,
         )
 

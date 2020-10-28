@@ -14,14 +14,14 @@
 
 from http import HTTPStatus
 
-from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+from opentelemetry.instrumentation.utils import http_status_to_status_code
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.status import StatusCode
 
 
 class TestUtils(TestBase):
     # See https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
-    def test_http_status_to_canonical_code(self):
+    def test_http_status_to_status_code(self):
         for status_code, expected in (
             (HTTPStatus.OK, StatusCode.UNSET),
             (HTTPStatus.ACCEPTED, StatusCode.UNSET),
@@ -53,5 +53,5 @@ class TestUtils(TestBase):
             (99, StatusCode.ERROR),
         ):
             with self.subTest(status_code=status_code):
-                actual = http_status_to_canonical_code(int(status_code))
+                actual = http_status_to_status_code(int(status_code))
                 self.assertEqual(actual, expected, status_code)
