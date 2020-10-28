@@ -95,7 +95,7 @@ class BotocoreInstrumentor(BaseInstrumentor):
 
         if context_api.get_value("suppress_instrumentation"):
             result = original_func(*args, **kwargs)
-            return
+            return result
 
         with self._tracer.start_as_current_span(
             "{}.command".format(endpoint_name), kind=SpanKind.CONSUMER,
