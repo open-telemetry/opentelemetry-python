@@ -90,12 +90,10 @@ class BotocoreInstrumentor(BaseInstrumentor):
         unwrap(BaseClient, "_make_api_call")
 
     def _patched_api_call(self, original_func, instance, args, kwargs):
+        if context_api.get_value("suppress_instrumentation"):
+            return original_func(*args, **kwargs)
 
         endpoint_name = deep_getattr(instance, "_endpoint._endpoint_prefix")
-
-        if context_api.get_value("suppress_instrumentation"):
-            result = original_func(*args, **kwargs)
-            return result
 
         with self._tracer.start_as_current_span(
             "{}.command".format(endpoint_name), kind=SpanKind.CONSUMER,

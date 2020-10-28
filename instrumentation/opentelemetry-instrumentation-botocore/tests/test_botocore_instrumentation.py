@@ -279,7 +279,7 @@ class TestBotocoreInstrumentor(TestBase):
         self.assertTrue("params" not in span.attributes.keys())
 
     @mock_xray
-    def test_xray_client(self):
+    def test_suppress_instrumentation_xray_client(self):
         xray_client = self.session.create_client(
             "xray", region_name="us-east-1"
         )
@@ -289,4 +289,4 @@ class TestBotocoreInstrumentor(TestBase):
         detach(token)
 
         spans = self.memory_exporter.get_finished_spans()
-        assert not spans, spans
+        self.assertEqual(0, len(spans))
