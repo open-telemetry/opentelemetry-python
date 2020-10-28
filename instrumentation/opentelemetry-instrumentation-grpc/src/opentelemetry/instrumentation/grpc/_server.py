@@ -111,8 +111,8 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         return self._servicer_context.set_trailing_metadata(*args, **kwargs)
 
     def abort(self, code, details):
-        self._active_span.set_attribute("rpc.status_code", code.name)
-        self._active_span.set_attribute("rpc.details", details)
+        self.code = code
+        self.details = details
         self._active_span.set_status(
             Status(
                 canonical_code=StatusCanonicalCode(code.value[0]),
@@ -128,7 +128,6 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.code = code
         # use details if we already have it, otherwise the status description
         details = self.details or code.value[1]
-        self._active_span.set_attribute("rpc.status_code", code.name)
         self._active_span.set_status(
             Status(
                 canonical_code=StatusCanonicalCode(code.value[0]),
@@ -139,7 +138,6 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
 
     def set_details(self, details):
         self.details = details
-        self._active_span.set_attribute("rpc.details", details)
         self._active_span.set_status(
             Status(
                 canonical_code=StatusCanonicalCode(self.code.value[0]),
