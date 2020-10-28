@@ -29,7 +29,16 @@ See the `metrics api`_ spec for terminology and context clarification.
 """
 import abc
 from logging import getLogger
-from typing import Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar
+from typing import (
+    Callable,
+    Dict,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from opentelemetry.util import _load_meter_provider
 
@@ -37,31 +46,8 @@ logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
-class DefaultBoundInstrument:
-    """The default bound metric instrument.
-
-    Used when no bound instrument implementation is available.
-    """
-
-    def add(self, value: ValueT) -> None:
-        """No-op implementation of `BoundCounter` add.
-
-        Args:
-            value: The value to add to the bound metric instrument.
-        """
-
-    def record(self, value: ValueT) -> None:
-        """No-op implementation of `BoundValueRecorder` record.
-
-        Args:
-            value: The value to record to the bound metric instrument.
-        """
-
-    def release(self) -> None:
-        """No-op implementation of release."""
-
-
-class BoundCounter:
+class BoundCounter(abc.ABC):
+    @abc.abstractmethod
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound counter by ``value``.
 
@@ -70,23 +56,55 @@ class BoundCounter:
         """
 
 
-class BoundUpDownCounter:
+class DefaultBoundCounter(BoundCounter):
+    """The default bound counter instrument.
+
+    Used when no bound counter implementation is available.
+    """
+
     def add(self, value: ValueT) -> None:
-        """Increases the value of the bound counter by ``value``.
+        pass
+
+
+class BoundUpDownCounter(abc.ABC):
+    @abc.abstractmethod
+    def add(self, value: ValueT) -> None:
+        """Increases the value of the bound updowncounter by ``value``.
 
         Args:
-            value: The value to add to the bound counter. Can be positive or
-                negative.
+            value: The value to add to the bound updowncounter. Can be positive
+                or negative.
         """
 
 
-class BoundValueRecorder:
+class DefaultBoundUpDownCounter(BoundUpDownCounter):
+    """The default bound updowncounter instrument.
+
+    Used when no bound updowncounter implementation is available.
+    """
+
+    def add(self, value: ValueT) -> None:
+        pass
+
+
+class BoundValueRecorder(abc.ABC):
+    @abc.abstractmethod
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this bound valuerecorder.
 
         Args:
             value: The value to record to the bound valuerecorder.
         """
+
+
+class DefaultBoundValueRecorder(BoundValueRecorder):
+    """The default bound valuerecorder instrument.
+
+    Used when no bound valuerecorder implementation is available.
+    """
+
+    def record(self, value: ValueT) -> None:
+        pass
 
 
 class Metric(abc.ABC):
@@ -108,41 +126,10 @@ class Metric(abc.ABC):
         """
 
 
-class DefaultMetric(Metric):
-    """The default Metric used when no Metric implementation is available."""
-
-    def bind(self, labels: Dict[str, str]) -> "DefaultBoundInstrument":
-        """Gets a `DefaultBoundInstrument`.
-
-        Args:
-            labels: Labels to associate with the bound instrument.
-        """
-        return DefaultBoundInstrument()
-
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """No-op implementation of `Counter` add.
-
-        Args:
-            value: The value to add to the counter metric.
-            labels: Labels to associate with the bound instrument.
-        """
-
-    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """No-op implementation of `ValueRecorder` record.
-
-        Args:
-            value: The value to record to this valuerecorder metric.
-            labels: Labels to associate with the bound instrument.
-        """
-
-
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    def bind(self, labels: Dict[str, str]) -> "BoundCounter":
-        """Gets a `BoundCounter`."""
-        return BoundCounter()
-
+    @abc.abstractmethod
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
@@ -154,14 +141,24 @@ class Counter(Metric):
         """
 
 
+class DefaultCounter(Counter):
+    """The default counter instrument.
+
+    Used when no `Counter` implementation is available.
+    """
+
+    def bind(self, labels: Dict[str, str]) -> "DefaultBoundCounter":
+        return DefaultBoundCounter()
+
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
+
+
 class UpDownCounter(Metric):
     """A counter type metric that expresses the computation of a sum,
     allowing negative increments."""
 
-    def bind(self, labels: Dict[str, str]) -> "BoundUpDownCounter":
-        """Gets a `BoundUpDownCounter`."""
-        return BoundUpDownCounter()
-
+    @abc.abstractmethod
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
@@ -173,13 +170,23 @@ class UpDownCounter(Metric):
         """
 
 
+class DefaultUpDownCounter(UpDownCounter):
+    """The default updowncounter instrument.
+
+    Used when no `UpDownCounter` implementation is available.
+    """
+
+    def bind(self, labels: Dict[str, str]) -> "DefaultBoundUpDownCounter":
+        return DefaultBoundUpDownCounter()
+
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
+
+
 class ValueRecorder(Metric):
     """A valuerecorder type metric that represent raw stats."""
 
-    def bind(self, labels: Dict[str, str]) -> "BoundValueRecorder":
-        """Gets a `BoundValueRecorder`."""
-        return BoundValueRecorder()
-
+    @abc.abstractmethod
     def record(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Records the ``value`` to the valuerecorder.
 
@@ -187,6 +194,19 @@ class ValueRecorder(Metric):
             value: The value to record to this valuerecorder metric.
             labels: Labels to associate with the bound instrument.
         """
+
+
+class DefaultValueRecorder(ValueRecorder):
+    """The default valuerecorder instrument.
+
+    Used when no `ValueRecorder` implementation is available.
+    """
+
+    def bind(self, labels: Dict[str, str]) -> "DefaultBoundValueRecorder":
+        return DefaultBoundValueRecorder()
+
+    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
 
 
 class Observer(abc.ABC):
@@ -208,52 +228,40 @@ class Observer(abc.ABC):
         """
 
 
-class DefaultObserver(Observer):
-    """No-op implementation of ``Observer``."""
-
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the observer.
-
-        Args:
-            value: The value to capture to this observer metric.
-            labels: Labels associated to ``value``.
-        """
-
-
+# pylint: disable=W0223
 class SumObserver(Observer):
+    """Asynchronous instrument used to capture a monotonic sum."""
+
+
+class DefaultSumObserver(SumObserver):
     """No-op implementation of ``SumObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the sumobserver.
-
-        Args:
-            value: The value to capture to this sumobserver metric.
-            labels: Labels associated to ``value``.
-        """
+        pass
 
 
+# pylint: disable=W0223
 class UpDownSumObserver(Observer):
+    """Asynchronous instrument used to capture a non-monotonic count."""
+
+
+class DefaultUpDownSumObserver(UpDownSumObserver):
     """No-op implementation of ``UpDownSumObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the updownsumobserver.
-
-        Args:
-            value: The value to capture to this updownsumobserver metric.
-            labels: Labels associated to ``value``.
-        """
+        pass
 
 
+# pylint: disable=W0223
 class ValueObserver(Observer):
+    """Asynchronous instrument used to capture grouping measurements."""
+
+
+class DefaultValueObserver(ValueObserver):
     """No-op implementation of ``ValueObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the valueobserver.
-
-        Args:
-            value: The value to capture to this valueobserver metric.
-            labels: Labels associated to ``value``.
-        """
+        pass
 
 
 class MeterProvider(abc.ABC):
@@ -298,11 +306,7 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-MetricT = TypeVar("MetricT", Counter, ValueRecorder)
-InstrumentT = TypeVar(
-    "InstrumentT", Counter, UpDownCounter, Observer, ValueRecorder
-)
-ObserverT = TypeVar("ObserverT", bound=Observer)
+InstrumentT = TypeVar("InstrumentT", bound=Union[Metric, Observer])
 ObserverCallbackT = Callable[[Observer], None]
 
 
@@ -335,16 +339,15 @@ class Meter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def create_metric(
+    def create_counter(
         self,
         name: str,
         description: str,
         unit: str,
         value_type: Type[ValueT],
-        metric_type: Type[MetricT],
         enabled: bool = True,
-    ) -> "Metric":
-        """Creates a ``metric_kind`` metric with type ``value_type``.
+    ) -> "Counter":
+        """Creates a `Counter` metric with type ``value_type``.
 
         Args:
             name: The name of the metric.
@@ -352,24 +355,61 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
-            metric_type: The type of metric being created.
             enabled: Whether to report the metric by default.
-        Returns: A new ``metric_type`` metric with values of ``value_type``.
         """
 
     @abc.abstractmethod
-    def register_observer(
+    def create_updowncounter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "UpDownCounter":
+        """Creates a `UpDownCounter` metric with type ``value_type``.
+
+        Args:
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            enabled: Whether to report the metric by default.
+        """
+
+    @abc.abstractmethod
+    def create_valuerecorder(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "ValueRecorder":
+        """Creates a `ValueRecorder` metric with type ``value_type``.
+
+        Args:
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            enabled: Whether to report the metric by default.
+        """
+
+    @abc.abstractmethod
+    def register_sumobserver(
         self,
         callback: ObserverCallbackT,
         name: str,
         description: str,
         unit: str,
         value_type: Type[ValueT],
-        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> "Observer":
-        """Registers an ``Observer`` metric instrument.
+    ) -> "SumObserver":
+        """Registers an ``SumObserver`` metric instrument.
 
         Args:
             callback: Callback invoked each collection interval with the
@@ -379,10 +419,61 @@ class Meter(abc.ABC):
             unit: Unit of the metric values following the UCUM convention
                 (https://unitsofmeasure.org/ucum.html).
             value_type: The type of values being recorded by the metric.
-            observer_type: The type of observer being registered.
             label_keys: The keys for the labels with dynamic values.
             enabled: Whether to report the metric by default.
-        Returns: A new ``Observer`` metric instrument.
+        Returns: A new ``SumObserver`` metric instrument.
+        """
+
+    @abc.abstractmethod
+    def register_updownsumobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "UpDownSumObserver":
+        """Registers an ``UpDownSumObserver`` metric instrument.
+
+        Args:
+            callback: Callback invoked each collection interval with the
+                observer as argument.
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            label_keys: The keys for the labels with dynamic values.
+            enabled: Whether to report the metric by default.
+        Returns: A new ``UpDownSumObserver`` metric instrument.
+        """
+
+    @abc.abstractmethod
+    def register_valueobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "ValueObserver":
+        """Registers an ``ValueObserver`` metric instrument.
+
+        Args:
+            callback: Callback invoked each collection interval with the
+                observer as argument.
+            name: The name of the metric.
+            description: Human-readable description of the metric.
+            unit: Unit of the metric values following the UCUM convention
+                (https://unitsofmeasure.org/ucum.html).
+            value_type: The type of values being recorded by the metric.
+            label_keys: The keys for the labels with dynamic values.
+            enabled: Whether to report the metric by default.
+        Returns: A new ``ValueObserver`` metric instrument.
         """
 
     @abc.abstractmethod
@@ -404,30 +495,74 @@ class DefaultMeter(Meter):
     ) -> None:
         pass
 
-    def create_metric(
+    def create_counter(
         self,
         name: str,
         description: str,
         unit: str,
         value_type: Type[ValueT],
-        metric_type: Type[MetricT],
         enabled: bool = True,
-    ) -> "Metric":
+    ) -> "Counter":
         # pylint: disable=no-self-use
-        return DefaultMetric()
+        return DefaultCounter()
 
-    def register_observer(
+    def create_updowncounter(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "UpDownCounter":
+        # pylint: disable=no-self-use
+        return DefaultUpDownCounter()
+
+    def create_valuerecorder(
+        self,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        enabled: bool = True,
+    ) -> "ValueRecorder":
+        # pylint: disable=no-self-use
+        return DefaultValueRecorder()
+
+    def register_sumobserver(
         self,
         callback: ObserverCallbackT,
         name: str,
         description: str,
         unit: str,
         value_type: Type[ValueT],
-        observer_type: Type[ObserverT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> "Observer":
-        return DefaultObserver()
+    ) -> "DefaultSumObserver":
+        return DefaultSumObserver()
+
+    def register_updownsumobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "DefaultUpDownSumObserver":
+        return DefaultUpDownSumObserver()
+
+    def register_valueobserver(
+        self,
+        callback: ObserverCallbackT,
+        name: str,
+        description: str,
+        unit: str,
+        value_type: Type[ValueT],
+        label_keys: Sequence[str] = (),
+        enabled: bool = True,
+    ) -> "DefaultValueObserver":
+        return DefaultValueObserver()
 
     def unregister_observer(self, observer: "Observer") -> None:
         pass
