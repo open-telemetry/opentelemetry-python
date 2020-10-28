@@ -10,7 +10,7 @@ on:
     - 'instrumentation/**'
     - 'opentelemetry-python/opentelemetry-api/src/opentelemetry/**'
     - 'opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/**'
-    
+
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python py38
       uses: actions/setup-python@v2
       with:
-        python-version: py38
+        python-version: '3.8'
     - name: Build docs
       run: |
         pip install --upgrade tox
