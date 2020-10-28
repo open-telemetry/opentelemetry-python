@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add Env variables in OTLP exporter
+  ([#1101](https://github.com/open-telemetry/opentelemetry-python/pull/1101))
+
 ## Version 0.14b0
 
 Released 2020-10-13
