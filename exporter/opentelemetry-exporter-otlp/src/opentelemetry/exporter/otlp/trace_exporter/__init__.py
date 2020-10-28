@@ -165,8 +165,7 @@ class OTLPSpanExporter(
             if sdk_span.status.status_code is StatusCode.ERROR:
                 proto_status_code = Status.STATUS_CODE_UNKNOWN_ERROR
             self._collector_span_kwargs["status"] = Status(
-                code=proto_status_code,
-                message=sdk_span.status.description,
+                code=proto_status_code, message=sdk_span.status.description,
             )
 
     def _translate_data(

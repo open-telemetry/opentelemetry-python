@@ -735,8 +735,7 @@ class TestSpan(unittest.TestCase):
 
         self.assertIsNotNone(span.status)
         self.assertIs(
-            span.status.status_code,
-            trace_api.status.StatusCode.UNSET
+            span.status.status_code, trace_api.status.StatusCode.UNSET
         )
 
         # status
@@ -745,8 +744,7 @@ class TestSpan(unittest.TestCase):
         )
         span.set_status(new_status)
         self.assertIs(
-            span.status.status_code,
-            trace_api.status.StatusCode.ERROR,
+            span.status.status_code, trace_api.status.StatusCode.ERROR,
         )
         self.assertIs(span.status.description, "Test description")
 
@@ -822,9 +820,7 @@ class TestSpan(unittest.TestCase):
                 with context as root:
                     raise AssertionError("unknown")
 
-            self.assertIs(
-                root.status.status_code, StatusCode.ERROR
-            )
+            self.assertIs(root.status.status_code, StatusCode.ERROR)
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
             )
@@ -843,16 +839,11 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 with context as root:
                     root.set_status(
-                        trace_api.status.Status(
-                            StatusCode.OK,
-                            "OK",
-                        )
+                        trace_api.status.Status(StatusCode.OK, "OK",)
                     )
                     raise AssertionError("unknown")
 
-            self.assertIs(
-                root.status.status_code, StatusCode.OK
-            )
+            self.assertIs(root.status.status_code, StatusCode.OK)
             self.assertEqual(root.status.description, "OK")
 
         error_status_test(

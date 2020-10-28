@@ -193,9 +193,7 @@ class TestMiddleware(TestBase, WsgiTestBase):
             span.name, "^error/" if DJANGO_2_2 else "tests.views.error"
         )
         self.assertEqual(span.kind, SpanKind.SERVER)
-        self.assertEqual(
-            span.status.status_code, StatusCode.ERROR
-        )
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
         self.assertEqual(span.attributes["http.method"], "GET")
         self.assertEqual(
             span.attributes["http.url"], "http://testserver/error/"

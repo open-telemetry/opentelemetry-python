@@ -114,10 +114,7 @@ class TestAioHttpIntegration(TestBase):
             (HTTPStatus.OK, StatusCode.UNSET),
             (HTTPStatus.TEMPORARY_REDIRECT, StatusCode.UNSET),
             (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.ERROR),
-            (
-                HTTPStatus.GATEWAY_TIMEOUT,
-                StatusCode.ERROR,
-            ),
+            (HTTPStatus.GATEWAY_TIMEOUT, StatusCode.ERROR,),
         ):
             with self.subTest(status_code=status_code):
                 host, port = self._http_request(

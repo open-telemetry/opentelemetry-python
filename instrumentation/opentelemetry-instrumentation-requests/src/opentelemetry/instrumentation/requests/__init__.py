@@ -155,9 +155,7 @@ def _instrument(tracer_provider=None, span_callback=None):
                 except Exception as exc:  # pylint: disable=W0703
                     exception = exc
                     setattr(
-                        exception,
-                        EXCEPTION_STATUS_FIELD,
-                        StatusCode.ERROR,
+                        exception, EXCEPTION_STATUS_FIELD, StatusCode.ERROR,
                     )
                     result = getattr(exc, "response", None)
                 finally:
@@ -171,9 +169,7 @@ def _instrument(tracer_provider=None, span_callback=None):
                         span.set_attribute("http.status_text", result.reason)
                         span.set_status(
                             Status(
-                                http_status_to_status_code(
-                                    result.status_code
-                                )
+                                http_status_to_status_code(result.status_code)
                             )
                         )
                     labels["http.status_code"] = str(result.status_code)

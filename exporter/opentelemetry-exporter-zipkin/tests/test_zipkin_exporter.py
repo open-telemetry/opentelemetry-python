@@ -400,9 +400,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         # added here to preserve order
         span.set_attribute("k1", "v" * 500)
         span.set_attribute("k2", "v" * 50)
-        span.set_status(
-            Status(StatusCode.ERROR, "Example description")
-        )
+        span.set_status(Status(StatusCode.ERROR, "Example description"))
         span.end()
 
         exporter = ZipkinSpanExporter(service_name)
