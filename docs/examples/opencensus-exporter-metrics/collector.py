@@ -30,12 +30,11 @@ metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
-requests_counter = meter.create_metric(
+requests_counter = meter.create_counter(
     name="requests",
     description="number of requests",
     unit="1",
     value_type=int,
-    metric_type=Counter,
     label_keys=("environment",),
 )
 

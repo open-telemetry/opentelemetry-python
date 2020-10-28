@@ -34,7 +34,7 @@ def get_cpu_usage_callback(observer):
         observer.observe(percent, labels)
 
 
-meter.register_observer(
+meter.register_valueobserver(
     callback=get_cpu_usage_callback,
     name="cpu_percent",
     description="per-cpu usage",
@@ -50,7 +50,7 @@ def get_ram_usage_callback(observer):
     observer.observe(ram_percent, {})
 
 
-meter.register_observer(
+meter.register_valueobserver(
     callback=get_ram_usage_callback,
     name="ram_percent",
     description="RAM memory usage",
