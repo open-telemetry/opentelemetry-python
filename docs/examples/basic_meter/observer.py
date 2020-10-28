@@ -40,7 +40,6 @@ meter.register_valueobserver(
     description="per-cpu usage",
     unit="1",
     value_type=float,
-    observer_type=ValueObserver,
 )
 
 
@@ -56,7 +55,6 @@ meter.register_valueobserver(
     description="RAM memory usage",
     unit="1",
     value_type=float,
-    observer_type=ValueObserver,
 )
 
 input("Metrics will be printed soon. Press a key to finish...\n")
