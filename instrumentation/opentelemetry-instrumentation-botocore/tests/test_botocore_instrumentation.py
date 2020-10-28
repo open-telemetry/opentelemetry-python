@@ -26,6 +26,7 @@ from moto import (  # pylint: disable=import-error
     mock_xray,
 )
 
+from opentelemetry.context import attach, detach, set_value
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.test_base import TestBase
@@ -282,8 +283,10 @@ class TestBotocoreInstrumentor(TestBase):
         xray_client = self.session.create_client(
             "xray", region_name="us-east-1"
         )
+        token = attach(set_value("suppress_instrumentation", True))
         xray_client.put_trace_segments(TraceSegmentDocuments=["str1"])
         xray_client.put_trace_segments(TraceSegmentDocuments=["str2"])
+        detach(token)
 
         spans = self.memory_exporter.get_finished_spans()
         assert not spans, spans

@@ -56,6 +56,7 @@ import logging
 from botocore.client import BaseClient
 from wrapt import ObjectProxy, wrap_function_wrapper
 
+from opentelemetry import context as context_api
 from opentelemetry.instrumentation.botocore.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.sdk.trace import Resource
@@ -91,7 +92,8 @@ class BotocoreInstrumentor(BaseInstrumentor):
     def _patched_api_call(self, original_func, instance, args, kwargs):
 
         endpoint_name = deep_getattr(instance, "_endpoint._endpoint_prefix")
-        if endpoint_name == "xray" and "PutTraceSegments" in args:
+
+        if context_api.get_value("suppress_instrumentation"):
             result = original_func(*args, **kwargs)
             return
 
