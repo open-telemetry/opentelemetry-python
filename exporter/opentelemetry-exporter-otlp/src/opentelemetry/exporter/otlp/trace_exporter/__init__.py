@@ -14,11 +14,16 @@
 """OTLP Span Exporter"""
 
 import logging
-from typing import Sequence
+import os
+from typing import Optional, Sequence
 
+from grpc import ChannelCredentials
+
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
+    _load_credential_from_file,
     _translate_key_values,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -50,12 +55,46 @@ class OTLPSpanExporter(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
         credentials: Credentials object for server authentication
         metadata: Metadata to send when exporting
+        timeout: Backend request timeout in seconds
     """
 
     _result = SpanExportResult
     _stub = TraceServiceStub
+
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
+        credentials: Optional[ChannelCredentials] = None,
+        headers: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ):
+        if insecure is None:
+            insecure = Configuration().EXPORTER_OTLP_SPAN_INSECURE
+
+        if (
+            not insecure
+            and Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE is not None
+        ):
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE
+            )
+
+        super().__init__(
+            **{
+                "endpoint": endpoint
+                or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
+                "insecure": insecure,
+                "credentials": credentials,
+                "headers": headers
+                or Configuration().EXPORTER_OTLP_SPAN_HEADERS,
+                "timeout": timeout
+                or Configuration().EXPORTER_OTLP_SPAN_TIMEOUT,
+            }
+        )
 
     def _translate_name(self, sdk_span: SDKSpan) -> None:
         self._collector_span_kwargs["name"] = sdk_span.name
