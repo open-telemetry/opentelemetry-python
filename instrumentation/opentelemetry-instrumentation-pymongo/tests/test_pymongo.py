@@ -88,7 +88,6 @@ class TestPymongo(TestBase):
         self.assertIs(
             span.status.canonical_code, trace_api.status.StatusCode.UNSET
         )
-        self.assertEqual(span.status.description, "reply")
         self.assertIsNotNone(span.end_time)
 
     def test_not_recording(self):
