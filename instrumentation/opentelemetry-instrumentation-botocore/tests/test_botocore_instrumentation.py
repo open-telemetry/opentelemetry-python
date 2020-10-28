@@ -23,6 +23,7 @@ from moto import (  # pylint: disable=import-error
     mock_lambda,
     mock_s3,
     mock_sqs,
+    mock_xray,
 )
 
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
@@ -275,3 +276,14 @@ class TestBotocoreInstrumentor(TestBase):
 
         # checking for protection on sts against security leak
         self.assertTrue("params" not in span.attributes.keys())
+
+    @mock_xray
+    def test_xray_client(self):
+        xray_client = self.session.create_client(
+            "xray", region_name="us-east-1"
+        )
+        xray_client.put_trace_segments(TraceSegmentDocuments=["str1"])
+        xray_client.put_trace_segments(TraceSegmentDocuments=["str2"])
+
+        spans = self.memory_exporter.get_finished_spans()
+        assert not spans, spans

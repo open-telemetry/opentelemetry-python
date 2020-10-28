@@ -91,6 +91,9 @@ class BotocoreInstrumentor(BaseInstrumentor):
     def _patched_api_call(self, original_func, instance, args, kwargs):
 
         endpoint_name = deep_getattr(instance, "_endpoint._endpoint_prefix")
+        if endpoint_name == "xray" and "PutTraceSegments" in args:
+            result = original_func(*args, **kwargs)
+            return
 
         with self._tracer.start_as_current_span(
             "{}.command".format(endpoint_name), kind=SpanKind.CONSUMER,
