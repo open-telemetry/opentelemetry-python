@@ -111,7 +111,6 @@ class EngineTracer:
 
         try:
             if self.current_span.is_recording():
-                # TODO: Remove setting non-ERROR status in instrumentation
                 self.current_span.set_status(
                     Status(
                         StatusCode.ERROR,

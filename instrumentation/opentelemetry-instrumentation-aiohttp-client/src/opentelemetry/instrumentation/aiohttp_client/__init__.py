@@ -214,23 +214,8 @@ def create_trace_config(
         if trace_config_ctx.span is None:
             return
 
-        if trace_config_ctx.span.is_recording():
-            if isinstance(
-                params.exception,
-                (aiohttp.ServerTimeoutError, aiohttp.TooManyRedirects),
-            ):
-                status = StatusCode.ERROR
-            # Assume any getaddrinfo error is a DNS failure.
-            elif isinstance(
-                params.exception, aiohttp.ClientConnectorError
-            ) and isinstance(params.exception.os_error, socket.gaierror):
-                # DNS resolution failed
-                status = StatusCode.ERROR
-            else:
-                status = StatusCode.ERROR
-
-            # TODO: Remove setting non-ERROR status in instrumentation
-            trace_config_ctx.span.set_status(Status(status))
+        if trace_config_ctx.span.is_recording() and params.exception:
+            trace_config_ctx.span.set_status(Status(StatusCode.ERROR))
             trace_config_ctx.span.record_exception(params.exception)
         _end_trace(trace_config_ctx)
 

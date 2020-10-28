@@ -92,11 +92,8 @@ class CommandTracer(monitoring.CommandListener):
             # Add Span to dictionary
             self._span_dict[_get_span_dict_key(event)] = span
         except Exception as ex:  # noqa pylint: disable=broad-except
-            if span is not None:
-                if span.is_recording():
-                    span.set_status(
-                        Status(StatusCode.ERROR, str(ex))
-                    )
+            if span is not None and span.is_recording():
+                span.set_status(Status(StatusCode.ERROR, str(ex)))
                 span.end()
                 self._pop_span(event)
 
@@ -111,8 +108,6 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            # TODO: Remove setting non-ERROR status in instrumentation
-            span.set_status(Status(StatusCode.UNSET, event.reply))
         span.end()
 
     def failed(self, event: monitoring.CommandFailedEvent):
@@ -126,7 +121,6 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            # TODO: Remove setting non-ERROR status in instrumentation
             span.set_status(Status(StatusCode.ERROR, event.failure))
         span.end()
 

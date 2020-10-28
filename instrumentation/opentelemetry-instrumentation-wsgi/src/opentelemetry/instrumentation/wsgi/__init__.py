@@ -144,7 +144,6 @@ def add_response_attributes(
     try:
         status_code = int(status_code)
     except ValueError:
-        # TODO: Remove setting non-ERROR status in instrumentation
         span.set_status(
             Status(
                 StatusCode.ERROR,
@@ -218,7 +217,6 @@ class OpenTelemetryMiddleware:
                 )
         except Exception as ex:
             if span.is_recording():
-                # TODO: Remove setting non-ERROR status in instrumentation
                 span.set_status(Status(StatusCode.ERROR, str(ex)))
             span.end()
             context.detach(token)
