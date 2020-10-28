@@ -10,6 +10,8 @@
   ([#998](https://github.com/open-telemetry/opentelemetry-python/pull/998))
 - Samplers to accept parent Context
   ([#1267](https://github.com/open-telemetry/opentelemetry-python/pull/1267))
+- Remove TracerProvider coupling from Tracer init
+  ([#1295](https://github.com/open-telemetry/opentelemetry-python/pull/1295))
 
 ## Version 0.14b0
 
