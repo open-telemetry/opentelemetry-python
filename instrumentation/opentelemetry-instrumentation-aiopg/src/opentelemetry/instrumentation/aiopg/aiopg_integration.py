@@ -109,7 +109,7 @@ class AsyncTracedCursor(TracedCursor):
             try:
                 result = await query_method(*args, **kwargs)
                 if span.is_recording():
-                    # TODO: Remove setting status in instrumentation
+                    # TODO: Remove setting non-ERROR status in instrumentation
                     span.set_status(Status(StatusCode.UNSET))
                 return result
             except Exception as ex:  # pylint: disable=broad-except

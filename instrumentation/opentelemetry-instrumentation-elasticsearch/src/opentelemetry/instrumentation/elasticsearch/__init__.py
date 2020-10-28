@@ -156,12 +156,7 @@ def _wrap_perform_request(tracer, span_name_prefix):
                 return rv
             except Exception as ex:  # pylint: disable=broad-except
                 if span.is_recording():
-                    if isinstance(ex, elasticsearch.exceptions.NotFoundError):
-                        status = StatusCode.ERROR
-                    else:
-                        status = StatusCode.ERROR
-                    # TODO: Remove setting status in instrumentation
-                    span.set_status(Status(status, str(ex)))
+                    span.set_status(Status(StatusCode.ERROR, str(ex)))
                 raise ex
 
     return wrapper

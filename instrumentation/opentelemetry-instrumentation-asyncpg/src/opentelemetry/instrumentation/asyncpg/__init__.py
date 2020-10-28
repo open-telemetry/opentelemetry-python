@@ -48,18 +48,6 @@ from opentelemetry.trace.status import Status, StatusCode
 _APPLIED = "_opentelemetry_tracer"
 
 
-# pylint: disable=unused-argument
-def _exception_to_canonical_code(exc: Exception) -> StatusCode:
-    # TODO: Remove setting status in instrumentation
-    # if isinstance(
-    #     exc, (exceptions.InterfaceError, exceptions.SyntaxOrAccessError),
-    # ):
-    #     return StatusCode.INVALID_ARGUMENT
-    # if isinstance(exc, exceptions.IdleInTransactionSessionTimeoutError):
-    #     return StatusCode.DEADLINE_EXCEEDED
-    return StatusCode.ERROR
-
-
 def _hydrate_span_from_args(connection, query, parameters) -> dict:
     span_attributes = {"db.type": "sql"}
 
@@ -136,13 +124,7 @@ class AsyncPGInstrumentor(BaseInstrumentor):
                 exception = exc
                 raise
             finally:
-                if span.is_recording():
-                    if exception is not None:
-                        span.set_status(
-                            Status(_exception_to_canonical_code(exception))
-                        )
-                    else:
-                        # TODO: Remove setting status in instrumentation
-                        span.set_status(Status(StatusCode.UNSET))
+                if span.is_recording() and exception is not None:
+                    span.set_status(Status(StatusCode.ERROR))
 
         return result

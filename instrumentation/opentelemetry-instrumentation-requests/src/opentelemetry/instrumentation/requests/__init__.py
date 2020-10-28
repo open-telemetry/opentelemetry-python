@@ -157,7 +157,7 @@ def _instrument(tracer_provider=None, span_callback=None):
                     setattr(
                         exception,
                         EXCEPTION_STATUS_FIELD,
-                        _exception_to_canonical_code(exception),
+                        StatusCode.ERROR,
                     )
                     result = getattr(exc, "response", None)
                 finally:
@@ -219,18 +219,6 @@ def _uninstrument_from(instr_root, restore_as_bound_func=False):
         if restore_as_bound_func:
             original = types.MethodType(original, instr_root)
         setattr(instr_root, instr_func_name, original)
-
-
-def _exception_to_canonical_code(exc: Exception) -> StatusCode:
-    # if isinstance(
-    #     exc,
-    #     (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError),
-    # ):
-    #     return StatusCode.INVALID_ARGUMENT
-    # if isinstance(exc, Timeout):
-    #     return StatusCode.DEADLINE_EXCEEDED
-    # TODO: Remove setting status in instrumentation
-    return StatusCode.ERROR
 
 
 class RequestsInstrumentor(BaseInstrumentor, MetricMixin):

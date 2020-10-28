@@ -111,7 +111,7 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            # TODO: Remove setting status in instrumentation
+            # TODO: Remove setting non-ERROR status in instrumentation
             span.set_status(Status(StatusCode.UNSET, event.reply))
         span.end()
 
@@ -126,7 +126,7 @@ class CommandTracer(monitoring.CommandListener):
             span.set_attribute(
                 "db.mongo.duration_micros", event.duration_micros
             )
-            # TODO: Remove setting status in instrumentation
+            # TODO: Remove setting non-ERROR status in instrumentation
             span.set_status(Status(StatusCode.ERROR, event.failure))
         span.end()
 

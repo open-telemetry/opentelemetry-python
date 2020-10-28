@@ -227,7 +227,7 @@ class CeleryInstrumentor(BaseInstrumentor):
 
         if ex is not None:
             status_kwargs["description"] = str(ex)
-        # TODO: Remove setting status in instrumentation
+        # TODO: Remove setting non-ERROR status in instrumentation
         span.set_status(Status(**status_kwargs))
 
     @staticmethod
