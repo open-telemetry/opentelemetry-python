@@ -26,7 +26,7 @@ from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import time_ns
 
 
@@ -733,16 +733,18 @@ class TestSpan(unittest.TestCase):
             span.start()
         self.assertEqual(start_time, span.start_time)
 
-        self.assertIs(span.status, None)
+        self.assertIsNotNone(span.status)
+        self.assertIs(
+            span.status.status_code, trace_api.status.StatusCode.UNSET
+        )
 
         # status
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description"
+            trace_api.status.StatusCode.ERROR, "Test description"
         )
         span.set_status(new_status)
         self.assertIs(
-            span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.CANCELLED,
+            span.status.status_code, trace_api.status.StatusCode.ERROR,
         )
         self.assertIs(span.status.description, "Test description")
 
@@ -803,13 +805,13 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(root.name, "root")
 
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCanonicalCode.CANCELLED, "Test description"
+            trace_api.status.StatusCode.ERROR, "Test description"
         )
 
         with self.assertLogs(level=WARNING):
             root.set_status(new_status)
         self.assertEqual(
-            root.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
+            root.status.status_code, trace_api.status.StatusCode.UNSET
         )
 
     def test_error_status(self):
@@ -818,9 +820,7 @@ class TestSpan(unittest.TestCase):
                 with context as root:
                     raise AssertionError("unknown")
 
-            self.assertIs(
-                root.status.canonical_code, StatusCanonicalCode.UNKNOWN
-            )
+            self.assertIs(root.status.status_code, StatusCode.ERROR)
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
             )
@@ -839,17 +839,12 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 with context as root:
                     root.set_status(
-                        trace_api.status.Status(
-                            StatusCanonicalCode.UNAVAILABLE,
-                            "Error: Unavailable",
-                        )
+                        trace_api.status.Status(StatusCode.OK, "OK",)
                     )
                     raise AssertionError("unknown")
 
-            self.assertIs(
-                root.status.canonical_code, StatusCanonicalCode.UNAVAILABLE
-            )
-            self.assertEqual(root.status.description, "Error: Unavailable")
+            self.assertIs(root.status.status_code, StatusCode.OK)
+            self.assertEqual(root.status.description, "OK")
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")
@@ -1051,6 +1046,9 @@ class TestSpanProcessor(unittest.TestCase):
     "parent_id": null,
     "start_time": null,
     "end_time": null,
+    "status": {
+        "status_code": "UNSET"
+    },
     "attributes": {},
     "events": [],
     "links": [],
@@ -1059,7 +1057,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )
 
     def test_attributes_to_json(self):
@@ -1076,7 +1074,7 @@ class TestSpanProcessor(unittest.TestCase):
         date_str = ns_to_iso_str(123)
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )

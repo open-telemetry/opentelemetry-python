@@ -41,6 +41,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.trace.status import StatusCode
 
 logger = logging.getLogger(__name__)
 
@@ -198,9 +199,12 @@ class OTLPSpanExporter(
 
     def _translate_status(self, sdk_span: SDKSpan) -> None:
         if sdk_span.status is not None:
+            # TODO: Update this when the proto definitions are updated to include UNSET and ERROR
+            proto_status_code = Status.STATUS_CODE_OK
+            if sdk_span.status.status_code is StatusCode.ERROR:
+                proto_status_code = Status.STATUS_CODE_UNKNOWN_ERROR
             self._collector_span_kwargs["status"] = Status(
-                code=sdk_span.status.canonical_code.value,
-                message=sdk_span.status.description,
+                code=proto_status_code, message=sdk_span.status.description,
             )
 
     def _translate_data(
