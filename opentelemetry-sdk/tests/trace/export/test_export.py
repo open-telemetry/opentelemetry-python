@@ -381,6 +381,43 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
 
         span_processor.shutdown()
 
+    def test_batch_span_processor_reset_timeout(self):
+        """Test that the scheduled timeout is reset on cycles without spans"""
+        spans_names_list = []
+
+        export_event = threading.Event()
+        my_exporter = MySpanExporter(
+            destination=spans_names_list,
+            export_event=export_event,
+            export_timeout_millis=50,
+        )
+
+        span_processor = export.BatchExportSpanProcessor(
+            my_exporter, schedule_delay_millis=50,
+        )
+
+        with mock.patch.object(span_processor.condition, "wait") as mock_wait:
+            _create_start_and_end_span("foo", span_processor)
+            self.assertTrue(export_event.wait(2))
+
+            # give some time for exporter to loop
+            # since wait is mocked it should return immediately
+            time.sleep(0.05)
+            mock_wait_calls = list(mock_wait.mock_calls)
+
+            # find the index of the call that processed the singular span
+            for idx, wait_call in enumerate(mock_wait_calls):
+                _, args, __ = wait_call
+                if args[0] <= 0:
+                    after_calls = mock_wait_calls[idx + 1 :]
+                    break
+
+            self.assertTrue(
+                all(args[0] >= 0.05 for _, args, __ in after_calls)
+            )
+
+        span_processor.shutdown()
+
     def test_batch_span_processor_parameters(self):
         # zero max_queue_size
         self.assertRaises(
