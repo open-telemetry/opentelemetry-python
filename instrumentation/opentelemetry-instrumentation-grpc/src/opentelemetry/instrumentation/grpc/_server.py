@@ -29,7 +29,7 @@ import grpc
 
 from opentelemetry import propagators, trace
 from opentelemetry.context import attach, detach
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.details = details
         self._active_span.set_status(
             Status(
-                canonical_code=StatusCanonicalCode(code.value[0]),
+                canonical_code=StatusCode(code.value[0]),
                 description=details,
             )
         )
@@ -130,7 +130,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         details = self.details or code.value[1]
         self._active_span.set_status(
             Status(
-                canonical_code=StatusCanonicalCode(code.value[0]),
+                canonical_code=StatusCode(code.value[0]),
                 description=details,
             )
         )
@@ -140,7 +140,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.details = details
         self._active_span.set_status(
             Status(
-                canonical_code=StatusCanonicalCode(self.code.value[0]),
+                canonical_code=StatusCode(self.code.value[0]),
                 description=details,
             )
         )
