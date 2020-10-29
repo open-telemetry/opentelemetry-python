@@ -20,6 +20,7 @@ from unittest.mock import patch
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation import dbapi
+from opentelemetry.instrumentation.dbapi import TracedCursor
 from opentelemetry.test.test_base import TestBase
 
 
@@ -27,6 +28,10 @@ class TestDBApiIntegration(TestBase):
     def setUp(self):
         super().setUp()
         self.tracer = self.tracer_provider.get_tracer(__name__)
+        # Reset _capture_statement_params so it is recalculated for each test
+        TracedCursor._capture_statement_params = (  # pylint: disable=protected-access
+            None
+        )
 
     def test_span_succeeded(self):
         connection_props = {
