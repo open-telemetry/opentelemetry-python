@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DBAPI instrumentation collection of db.statement.parameters can now be turned off by setting `OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS` to `False` ([#1306](https://github.com/open-telemetry/opentelemetry-python/pull/1306))
+
 ## Version 0.13b0
 
 Released 2020-09-17
