@@ -17,7 +17,7 @@ from math import inf
 from unittest import mock
 
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics import Counter, ValueRecorder, view
+from opentelemetry.sdk.metrics import view
 from opentelemetry.sdk.metrics.export import aggregate
 from opentelemetry.sdk.metrics.export.aggregate import (
     HistogramAggregator,
@@ -79,12 +79,11 @@ class TestStateless(unittest.TestCase):
         self.controller.shutdown()
 
     def test_label_keys(self):
-        test_counter = self.meter.create_metric(
+        test_counter = self.meter.create_counter(
             name="test_counter",
             description="description",
             unit="By",
             value_type=int,
-            metric_type=Counter,
         )
         counter_view = View(
             test_counter,
@@ -107,12 +106,11 @@ class TestStateless(unittest.TestCase):
         self.assertEqual(metric_data[0].aggregator.checkpoint, 11)
 
     def test_ungrouped(self):
-        test_counter = self.meter.create_metric(
+        test_counter = self.meter.create_counter(
             name="test_counter",
             description="description",
             unit="By",
             value_type=int,
-            metric_type=Counter,
         )
         counter_view = View(
             test_counter,
@@ -138,12 +136,11 @@ class TestStateless(unittest.TestCase):
         self.assertTrue((label2, 5) in data_set)
 
     def test_multiple_views(self):
-        test_counter = self.meter.create_metric(
+        test_counter = self.meter.create_counter(
             name="test_counter",
             description="description",
             unit="By",
             value_type=int,
-            metric_type=Counter,
         )
 
         counter_view = View(
@@ -193,12 +190,11 @@ class TestHistogramView(unittest.TestCase):
         exporter = InMemoryMetricsExporter()
         controller = PushController(meter, exporter, 30)
 
-        requests_size = meter.create_metric(
+        requests_size = meter.create_valuerecorder(
             name="requests_size",
             description="size of requests",
             unit="1",
             value_type=int,
-            metric_type=ValueRecorder,
         )
 
         size_view = View(
@@ -248,12 +244,11 @@ class TestHistogramView(unittest.TestCase):
         exporter = InMemoryMetricsExporter()
         controller = PushController(meter, exporter, 30)
 
-        requests_size = meter.create_metric(
+        requests_size = meter.create_valuerecorder(
             name="requests_size",
             description="size of requests",
             unit="1",
             value_type=int,
-            metric_type=ValueRecorder,
         )
 
         size_view = View(
