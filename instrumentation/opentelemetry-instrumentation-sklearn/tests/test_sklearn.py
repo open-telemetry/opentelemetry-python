@@ -5,11 +5,52 @@ from opentelemetry.instrumentation.sklearn import (
     DEFAULT_METHODS,
     SklearnInstrumentor,
     get_base_estimators,
+    get_delegator,
 )
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace import SpanKind
 
 from .fixtures import pipeline, random_input
+
+
+def assert_instrumented(base_estimators):
+    for _, estimator in base_estimators.items():
+        for method_name in DEFAULT_METHODS:
+            original_method_name = "_otel_original_" + method_name
+            if issubclass(estimator, tuple(DEFAULT_EXCLUDE_CLASSES)):
+                assert not hasattr(estimator, original_method_name)
+                continue
+            class_attr = getattr(estimator, method_name, None)
+            if isinstance(class_attr, property):
+                assert not hasattr(estimator, original_method_name)
+                continue
+            delegator = None
+            if hasattr(estimator, method_name):
+                delegator = get_delegator(estimator, method_name)
+            if delegator is not None:
+                assert hasattr(delegator, "_otel_original_fn")
+            elif hasattr(estimator, method_name):
+                assert hasattr(estimator, original_method_name)
+
+
+def assert_uninstrumented(base_estimators):
+    for _, estimator in base_estimators.items():
+        for method_name in DEFAULT_METHODS:
+            original_method_name = "_otel_original_" + method_name
+            if issubclass(estimator, tuple(DEFAULT_EXCLUDE_CLASSES)):
+                assert not hasattr(estimator, original_method_name)
+                continue
+            class_attr = getattr(estimator, method_name, None)
+            if isinstance(class_attr, property):
+                assert not hasattr(estimator, original_method_name)
+                continue
+            delegator = None
+            if hasattr(estimator, method_name):
+                delegator = get_delegator(estimator, method_name)
+            if delegator is not None:
+                assert not hasattr(delegator, "_otel_original_fn")
+            elif hasattr(estimator, method_name):
+                assert not hasattr(estimator, original_method_name)
 
 
 class TestSklearn(TestBase):
@@ -21,42 +62,18 @@ class TestSklearn(TestBase):
         model = pipeline()
 
         ski.instrument()
-        # assert instrumented
-        for _, estimator in base_estimators.items():
-            for method_name in DEFAULT_METHODS:
-                if issubclass(estimator, tuple(DEFAULT_EXCLUDE_CLASSES)):
-                    assert not hasattr(estimator, "_original_" + method_name)
-                    continue
-                class_attr = getattr(estimator, method_name, None)
-                if isinstance(class_attr, property):
-                    assert not hasattr(estimator, "_original_" + method_name)
-                    continue
-                if hasattr(estimator, method_name):
-                    assert hasattr(estimator, "_original_" + method_name)
+        assert_instrumented(base_estimators)
 
         x_test = random_input()
 
         model.predict(x_test)
 
         spans = self.memory_exporter.get_finished_spans()
-        for span in spans:
-            print(span)
         self.assertEqual(len(spans), 8)
         self.memory_exporter.clear()
 
         ski.uninstrument()
-        # assert uninstrumented
-        for _, estimator in base_estimators.items():
-            for method_name in DEFAULT_METHODS:
-                if issubclass(estimator, tuple(DEFAULT_EXCLUDE_CLASSES)):
-                    assert not hasattr(estimator, "_original_" + method_name)
-                    continue
-                class_attr = getattr(estimator, method_name, None)
-                if isinstance(class_attr, property):
-                    assert not hasattr(estimator, "_original_" + method_name)
-                    continue
-                if hasattr(estimator, method_name):
-                    assert not hasattr(estimator, "_original_" + method_name)
+        assert_uninstrumented(base_estimators)
 
         model = pipeline()
         x_test = random_input()

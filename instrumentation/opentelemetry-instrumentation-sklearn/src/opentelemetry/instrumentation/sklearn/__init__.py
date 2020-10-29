@@ -68,6 +68,7 @@ from typing import Callable, Dict, List, MutableMapping, Sequence, Type, Union
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.tree import BaseDecisionTree
+from sklearn.utils.metaestimators import _IffHasAttrDescriptor
 
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.sklearn.version import __version__
@@ -102,6 +103,55 @@ def implement_spans(
             return func(*args, **kwargs)
 
     return wrapper
+
+
+def implement_spans_delegator(obj: _IffHasAttrDescriptor):
+    """Wrap the descriptor's fn with a span.
+
+    Args:
+        obj: An instance of _IffHasAttrDescriptor
+    """
+    # Don't instrument inherited delegators
+    if hasattr(obj, "_otel_original_fn"):
+        logger.debug("Already instrumented: %s", obj.fn.__qualname__)
+        return
+
+    def implement_spans_get(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            with get_tracer(__name__, __version__).start_as_current_span(
+                name=func.__qualname__
+            ):
+                return func(*args, **kwargs)
+
+        return wrapper
+
+    logger.debug("Instrumenting: %s", obj.fn.__qualname__)
+
+    setattr(obj, "_otel_original_fn", getattr(obj, "fn"))
+    setattr(obj, "fn", implement_spans_get(obj.fn))
+
+
+def get_delegator(
+    estimator: Type[BaseEstimator], method_name: str
+) -> Union[_IffHasAttrDescriptor, None]:
+    """Get the delegator from a class method or None.
+
+    Args:
+        estimator (BaseEstimator): A class derived from ``sklearn``'s
+          ``BaseEstimator``.
+        method_name (str): The method name of the estimator on which to
+          check for delegation.
+
+    Returns:
+        The delegator, if one exists, otherwise None.
+    """
+    class_attr = getattr(estimator, method_name)
+    if getattr(class_attr, "__closure__", None) is not None:
+        for cell in class_attr.__closure__:
+            if isinstance(cell.cell_contents, _IffHasAttrDescriptor):
+                return cell.cell_contents
+    return None
 
 
 def get_base_estimators(packages: List[str]) -> Dict[str, Type[BaseEstimator]]:
@@ -389,7 +439,7 @@ class SklearnInstrumentor(BaseInstrumentor):
             method_name (str): The method name of the estimator on which to
               check for instrumentation.
         """
-        orig_method_name = "_original_" + method_name
+        orig_method_name = "_otel_original_" + method_name
         has_original = hasattr(estimator, orig_method_name)
         orig_class, orig_method = getattr(
             estimator, orig_method_name, (None, None)
@@ -419,11 +469,12 @@ class SklearnInstrumentor(BaseInstrumentor):
             method_name (str): The method name of the estimator on which to
               apply a span.
        """
-        orig_method_name = "_original_" + method_name
+        orig_method_name = "_otel_original_" + method_name
         if isclass(estimator):
             qualname = estimator.__qualname__
         else:
             qualname = estimator.__class__.__qualname__
+        delegator = get_delegator(estimator, method_name)
         if self._check_instrumented(estimator, method_name):
             logger.debug(
                 "Uninstrumenting: %s.%s", qualname, method_name,
@@ -433,6 +484,16 @@ class SklearnInstrumentor(BaseInstrumentor):
                 estimator, method_name, orig_method,
             )
             delattr(estimator, orig_method_name)
+        elif delegator is not None:
+            if not hasattr(delegator, "_otel_original_fn"):
+                logger.debug(
+                    "Already uninstrumented: %s.%s", qualname, method_name,
+                )
+                return
+            setattr(
+                delegator, "fn", getattr(delegator, "_otel_original_fn"),
+            )
+            delattr(delegator, "_otel_original_fn")
         else:
             logger.debug(
                 "Already uninstrumented: %s.%s", qualname, method_name,
@@ -452,7 +513,7 @@ class SklearnInstrumentor(BaseInstrumentor):
             method_name (str): The method name of the estimator on which to
               apply a span.
        """
-        orig_method_name = "_original_" + method_name
+        orig_method_name = "_otel_original_" + method_name
         if isclass(estimator):
             qualname = estimator.__qualname__
         else:
@@ -496,36 +557,24 @@ class SklearnInstrumentor(BaseInstrumentor):
             )
             return
         class_attr = getattr(estimator, method_name)
+        delegator = get_delegator(estimator, method_name)
         if isinstance(class_attr, property):
             logger.debug(
                 "Not instrumenting found property: %s.%s",
                 estimator.__qualname__,
                 method_name,
             )
+        elif delegator is not None:
+            implement_spans_delegator(delegator)
         else:
             setattr(
-                estimator, "_original_" + method_name, (estimator, class_attr),
+                estimator,
+                "_otel_original_" + method_name,
+                (estimator, class_attr),
             )
             setattr(
                 estimator, method_name, self.spanner(class_attr, estimator),
             )
-
-    def _function_wrapper(self, function):
-        """Get the inner-most decorator of a function."""
-        if hasattr(function, "__wrapped__"):
-            if hasattr(function.__wrapped__, "__wrapped__"):
-                return self._function_wrapper(function.__wrapped__)
-            return function
-        return None
-
-    def _function_wrapper_wrapper(self, function):
-        """Get the second inner-most decorator of a function"""
-        if hasattr(function, "__wrapped__"):
-            if hasattr(function.__wrapped__, "__wrapped__"):
-                if hasattr(function.__wrapped__.__wrapped__, "__wrapped__"):
-                    return self._function_wrapper_wrapper(function.__wrapped__)
-                return function
-        return None
 
     def _unwrap_function(self, function):
         """Fetch the function underlying any decorators"""
@@ -564,7 +613,9 @@ class SklearnInstrumentor(BaseInstrumentor):
             )
         else:
             method = getattr(estimator, method_name)
-            setattr(estimator, "_original_" + method_name, (estimator, method))
+            setattr(
+                estimator, "_otel_original_" + method_name, (estimator, method)
+            )
             setattr(
                 estimator, method_name, self.spanner(method, estimator),
             )

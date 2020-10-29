@@ -113,6 +113,7 @@ nitpick_ignore = [
         "opentelemetry.trace.propagation.textmap.TextMapPropagator.inject",
     ),
     ("py:class", "sklearn.base.BaseEstimator"),
+    ("py:class", "sklearn.utils.metaestimators._IffHasAttrDescriptor"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
