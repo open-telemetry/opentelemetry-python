@@ -12,18 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from typing import Callable, Mapping, Optional, Sequence, Union
-
-AttributeValue = Union[
-    str,
-    bool,
-    int,
-    float,
-    Sequence[Union[None, str]],
-    Sequence[Union[None, bool]],
-    Sequence[Union[None, int]],
-    Sequence[Union[None, float]],
-]
-Attributes = Optional[Mapping[str, AttributeValue]]
-AttributesFormatter = Callable[[], Attributes]
+"""
+The OpenTelemetry SDK package is an implementation of the OpenTelemetry
+API
+"""

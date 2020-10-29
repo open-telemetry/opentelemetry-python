@@ -17,7 +17,7 @@ import logging
 import threading
 import typing
 
-from opentelemetry.context import attach, detach, set_value
+from opentelemetry.context import Context, attach, detach, set_value
 from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.trace import INVALID_TRACE_ID
@@ -81,7 +81,9 @@ class DatadogExportSpanProcessor(SpanProcessor):
         self.done = False
         self.worker_thread.start()
 
-    def on_start(self, span: Span) -> None:
+    def on_start(
+        self, span: Span, parent_context: typing.Optional[Context] = None
+    ) -> None:
         ctx = span.get_span_context()
         trace_id = ctx.trace_id
 
@@ -117,7 +119,8 @@ class DatadogExportSpanProcessor(SpanProcessor):
                 with self.condition:
                     self.condition.wait(timeout)
                     if not self.check_traces_queue:
-                        # spurious notification, let's wait again
+                        # spurious notification, let's wait again, reset timeout
+                        timeout = self.schedule_delay_millis / 1e3
                         continue
                     if self.done:
                         # missing spans will be sent when calling flush

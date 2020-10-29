@@ -43,12 +43,11 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
     # Starts the collect/export pipeline for metrics
     metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
-    counter = meter.create_metric(
+    counter = meter.create_counter(
         "requests",
         "number of requests",
         "requests",
         int,
-        Counter,
         ("environment",),
     )
 

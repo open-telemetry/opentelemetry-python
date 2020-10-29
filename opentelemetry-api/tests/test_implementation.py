@@ -74,23 +74,43 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_record_batch(self):
         meter = metrics.DefaultMeter()
-        counter = metrics.Counter()
+        counter = metrics.DefaultCounter()
         meter.record_batch({}, ((counter, 1),))
 
-    def test_create_metric(self):
+    def test_create_counter(self):
         meter = metrics.DefaultMeter()
-        metric = meter.create_metric("", "", "", float, metrics.Counter)
-        self.assertIsInstance(metric, metrics.DefaultMetric)
+        metric = meter.create_counter("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultCounter)
 
-    def test_register_observer(self):
+    def test_create_updowncounter(self):
+        meter = metrics.DefaultMeter()
+        metric = meter.create_updowncounter("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultUpDownCounter)
+
+    def test_create_valuerecorder(self):
+        meter = metrics.DefaultMeter()
+        metric = meter.create_valuerecorder("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultValueRecorder)
+
+    def test_register_sumobserver(self):
         meter = metrics.DefaultMeter()
         callback = mock.Mock()
-        observer = meter.register_observer(
-            callback, "", "", "", int, metrics.ValueObserver
-        )
-        self.assertIsInstance(observer, metrics.DefaultObserver)
+        observer = meter.register_sumobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultSumObserver)
+
+    def test_register_updownsumobserver(self):
+        meter = metrics.DefaultMeter()
+        callback = mock.Mock()
+        observer = meter.register_updownsumobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultUpDownSumObserver)
+
+    def test_register_valueobserver(self):
+        meter = metrics.DefaultMeter()
+        callback = mock.Mock()
+        observer = meter.register_valueobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultValueObserver)
 
     def test_unregister_observer(self):
         meter = metrics.DefaultMeter()
-        observer = metrics.DefaultObserver()
+        observer = metrics.DefaultSumObserver()
         meter.unregister_observer(observer)

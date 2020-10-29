@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Updating status codes to adhere to specs ([#1282](https://github.com/open-telemetry/opentelemetry-python/pull/1282))
+
 ## Version 0.14b0
 
 Released 2020-10-13

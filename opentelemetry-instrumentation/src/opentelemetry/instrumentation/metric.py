@@ -22,13 +22,12 @@ from time import time
 from typing import Dict, Optional
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import ValueRecorder
 
 
 class HTTPMetricType(enum.Enum):
     CLIENT = 0
     SERVER = 1
-    # TODO: Add both
+    BOTH = 2
 
 
 class MetricMixin:
@@ -57,29 +56,52 @@ class HTTPMetricRecorder(MetricRecorder):
     ):
         super().__init__(meter)
         self._http_type = http_type
-        if self._meter:
-            self._duration = self._meter.create_metric(
-                name="{}.{}.duration".format(
-                    "http", self._http_type.name.lower()
-                ),
-                description="measures the duration of the {} HTTP request".format(
-                    "inbound"
-                    if self._http_type is HTTPMetricType.SERVER
-                    else "outbound"
-                ),
-                unit="ms",
-                value_type=float,
-                metric_type=ValueRecorder,
-            )
+        self._client_duration = None
+        self._server_duration = None
+        if self._meter is not None:
+            if http_type in (HTTPMetricType.CLIENT, HTTPMetricType.BOTH):
+                self._client_duration = self._meter.create_valuerecorder(
+                    name="{}.{}.duration".format("http", "client"),
+                    description="measures the duration of the outbound HTTP request",
+                    unit="ms",
+                    value_type=float,
+                )
+            if http_type is not HTTPMetricType.CLIENT:
+                self._server_duration = self._meter.create_valuerecorder(
+                    name="{}.{}.duration".format("http", "server"),
+                    description="measures the duration of the inbound HTTP request",
+                    unit="ms",
+                    value_type=float,
+                )
 
     # Conventions for recording duration can be found at:
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/metrics/semantic_conventions/http-metrics.md
     @contextmanager
-    def record_duration(self, labels: Dict[str, str]):
+    def record_client_duration(self, labels: Dict[str, str]):
         start_time = time()
         try:
             yield start_time
         finally:
-            if self._meter:
-                elapsed_time = (time() - start_time) * 1000
-                self._duration.record(elapsed_time, labels)
+            self.record_client_duration_range(start_time, time(), labels)
+
+    def record_client_duration_range(
+        self, start_time, end_time, labels: Dict[str, str]
+    ):
+        if self._client_duration is not None:
+            elapsed_time = (end_time - start_time) * 1000
+            self._client_duration.record(elapsed_time, labels)
+
+    @contextmanager
+    def record_server_duration(self, labels: Dict[str, str]):
+        start_time = time()
+        try:
+            yield start_time
+        finally:
+            self.record_server_duration_range(start_time, time(), labels)
+
+    def record_server_duration_range(
+        self, start_time, end_time, labels: Dict[str, str]
+    ):
+        if self._server_duration is not None:
+            elapsed_time = (end_time - start_time) * 1000
+            self._server_duration.record(elapsed_time, labels)

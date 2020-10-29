@@ -16,6 +16,9 @@ from collections import OrderedDict
 from unittest import TestCase
 from unittest.mock import patch
 
+from grpc import ChannelCredentials
+
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -44,8 +47,9 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
-        self.exporter = OTLPMetricsExporter()
+        self.exporter = OTLPMetricsExporter(insecure=True)
         resource = SDKResource(OrderedDict([("a", 1), ("b", False)]))
+
         self.counter_metric_record = MetricRecord(
             Counter(
                 "a",
@@ -59,6 +63,33 @@ class TestOTLPMetricExporter(TestCase):
             SumAggregator(),
             resource,
         )
+
+        Configuration._reset()  # pylint: disable=protected-access
+
+    def tearDown(self):
+        Configuration._reset()  # pylint: disable=protected-access
+
+    @patch.dict(
+        "os.environ",
+        {
+            "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
+            "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": "fixtures/test.cert",
+            "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
+            "OTEL_EXPORTER_OTLP_METRIC_TIMEOUT": "10",
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
+    def test_env_variables(self, mock_exporter_mixin):
+        OTLPMetricsExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+
+        self.assertEqual(kwargs["endpoint"], "collector:55680")
+        self.assertEqual(kwargs["headers"], "key1:value1;key2:value2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
     @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_translate_metrics(self, mock_time_ns):
