@@ -15,8 +15,10 @@
 
 import logging
 from unittest import mock
+from unittest.mock import patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation import dbapi
 from opentelemetry.test.test_base import TestBase
 
@@ -61,6 +63,52 @@ class TestDBApiIntegration(TestBase):
             span.attributes["db.statement.parameters"],
             "('param1Value', False)",
         )
+        self.assertEqual(span.attributes["db.user"], "testuser")
+        self.assertEqual(span.attributes["net.peer.name"], "testhost")
+        self.assertEqual(span.attributes["net.peer.port"], 123)
+        self.assertIs(
+            span.status.status_code, trace_api.status.StatusCode.UNSET,
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            "OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS": "False",
+        },
+    )
+    def test_span_succeeded_with_capturing_statement_params_disabled(self):
+        Configuration._reset()  # pylint: disable=protected-access
+        connection_props = {
+            "database": "testdatabase",
+            "server_host": "testhost",
+            "server_port": 123,
+            "user": "testuser",
+        }
+        connection_attributes = {
+            "database": "database",
+            "port": "server_port",
+            "host": "server_host",
+            "user": "user",
+        }
+        db_integration = dbapi.DatabaseApiIntegration(
+            self.tracer, "testcomponent", "testtype", connection_attributes
+        )
+        mock_connection = db_integration.wrapped_connection(
+            mock_connect, {}, connection_props
+        )
+        cursor = mock_connection.cursor()
+        cursor.execute("Test query", ("param1Value", False))
+        spans_list = self.memory_exporter.get_finished_spans()
+        self.assertEqual(len(spans_list), 1)
+        span = spans_list[0]
+        self.assertEqual(span.name, "testcomponent.testdatabase")
+        self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
+
+        self.assertEqual(span.attributes["component"], "testcomponent")
+        self.assertEqual(span.attributes["db.type"], "testtype")
+        self.assertEqual(span.attributes["db.instance"], "testdatabase")
+        self.assertEqual(span.attributes["db.statement"], "Test query")
+        self.assertFalse("db.statement.parameters" in span.attributes)
         self.assertEqual(span.attributes["db.user"], "testuser")
         self.assertEqual(span.attributes["net.peer.name"], "testhost")
         self.assertEqual(span.attributes["net.peer.port"], 123)

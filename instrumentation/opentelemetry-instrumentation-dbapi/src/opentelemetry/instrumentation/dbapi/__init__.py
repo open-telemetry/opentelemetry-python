@@ -17,6 +17,11 @@ The trace integration with Database API supports libraries that follow the
 Python Database API Specification v2.0.
 `<https://www.python.org/dev/peps/pep-0249/>`_
 
+.. envvar:: OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS
+
+The :envvar:`OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS` environment variable allows the user
+to turn off the collection of `db.statement.parameters` by setting the value to "False"
+
 Usage
 -----
 
@@ -43,6 +48,7 @@ API
 import functools
 import logging
 import typing
+from opentelemetry.configuration import Configuration
 
 import wrapt
 
@@ -305,8 +311,20 @@ def get_traced_connection_proxy(
 
 
 class TracedCursor:
+
+    _capture_statement_params = None
+
     def __init__(self, db_api_integration: DatabaseApiIntegration):
         self._db_api_integration = db_api_integration
+
+        if TracedCursor._capture_statement_params is None:
+            # Capture of statement parameters is enabled by default
+            # Setting OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS to False will
+            # disable this feature
+            TracedCursor._capture_statement_params = Configuration().DBAPI_CAPTURE_STATEMENT_PARAMS
+            if TracedCursor._capture_statement_params is None:
+                # Configuration was not set.  We will default to True.
+                TracedCursor._capture_statement_params = True
 
     def _populate_span(
         self, span: trace_api.Span, *args: typing.Tuple[typing.Any, typing.Any]
@@ -327,7 +345,7 @@ class TracedCursor:
         ) in self._db_api_integration.span_attributes.items():
             span.set_attribute(attribute_key, attribute_value)
 
-        if len(args) > 1:
+        if TracedCursor._capture_statement_params and len(args) > 1:
             span.set_attribute("db.statement.parameters", str(args[1]))
 
     def traced_execution(
