@@ -47,7 +47,7 @@ from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import (
     EXCEPTION_STATUS_FIELD,
     Status,
-    StatusCanonicalCode,
+    StatusCode,
 )
 from opentelemetry.util import time_ns, types
 
@@ -308,34 +308,44 @@ class Event(EventBase):
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
-    An attribute value is valid if it is one of the valid types. If the value
-    is a sequence, it is only valid if all items in the sequence are of valid
-    type, not a sequence, and are of the same type.
+    An attribute value is valid if it is one of the valid types.
+    If the value is a sequence, it is only valid if all items in the sequence:
+      - are of the same valid type or None
+      - are not a sequence
     """
 
     if isinstance(value, Sequence):
         if len(value) == 0:
             return True
 
-        first_element_type = type(value[0])
-
-        if first_element_type not in VALID_ATTR_VALUE_TYPES:
-            logger.warning(
-                "Invalid type %s in attribute value sequence. Expected one of "
-                "%s or a sequence of those types",
-                first_element_type.__name__,
-                [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
-            )
-            return False
-
-        for element in list(value)[1:]:
-            if not isinstance(element, first_element_type):
+        sequence_first_valid_type = None
+        for element in value:
+            if element is None:
+                continue
+            element_type = type(element)
+            if element_type not in VALID_ATTR_VALUE_TYPES:
+                logger.warning(
+                    "Invalid type %s in attribute value sequence. Expected one of "
+                    "%s or None",
+                    element_type.__name__,
+                    [
+                        valid_type.__name__
+                        for valid_type in VALID_ATTR_VALUE_TYPES
+                    ],
+                )
+                return False
+            # The type of the sequence must be homogeneous. The first non-None
+            # element determines the type of the sequence
+            if sequence_first_valid_type is None:
+                sequence_first_valid_type = element_type
+            elif not isinstance(element, sequence_first_valid_type):
                 logger.warning(
                     "Mixed types %s and %s in attribute value sequence",
-                    first_element_type.__name__,
+                    sequence_first_valid_type.__name__,
                     type(element).__name__,
                 )
                 return False
+
     elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
         logger.warning(
             "Invalid type %s for attribute value. Expected one of %s or a "
@@ -359,6 +369,17 @@ def _filter_attribute_values(attributes: types.Attributes):
 
 def _create_immutable_attributes(attributes):
     return MappingProxyType(attributes.copy() if attributes else {})
+
+
+def _check_span_ended(func):
+    def wrapper(self, *args, **kwargs):
+        with self._lock:  # pylint: disable=protected-access
+            if self.end_time is not None:
+                logger.warning("Calling %s on an ended span.", func.__name__)
+                return
+            func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Span(trace_api.Span):
@@ -414,7 +435,7 @@ class Span(trace_api.Span):
         self._set_status_on_exception = set_status_on_exception
 
         self.span_processor = span_processor
-        self.status = None
+        self.status = Status(StatusCode.UNSET)
         self._lock = threading.Lock()
 
         _filter_attribute_values(attributes)
@@ -525,7 +546,7 @@ class Span(trace_api.Span):
 
         if self.status is not None:
             status = OrderedDict()
-            status["canonical_code"] = str(self.status.canonical_code.name)
+            status["status_code"] = str(self.status.status_code.name)
             if self.status.description:
                 status["description"] = self.status.description
 
@@ -550,19 +571,18 @@ class Span(trace_api.Span):
         return self.context
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        with self._lock:
-            if not self.is_recording():
-                return
-            has_ended = self.end_time is not None
-        if has_ended:
-            logger.warning("Setting attribute on ended span.")
+        if not _is_valid_attribute_value(value):
             return
 
         if not key:
             logger.warning("invalid key (empty or null)")
             return
 
-        if _is_valid_attribute_value(value):
+        with self._lock:
+            if self.end_time is not None:
+                logger.warning("Setting attribute on ended span.")
+                return
+
             # Freeze mutable sequences defensively
             if isinstance(value, MutableSequence):
                 value = tuple(value)
@@ -572,18 +592,10 @@ class Span(trace_api.Span):
                 except ValueError:
                     logger.warning("Byte attribute could not be decoded.")
                     return
-            with self._lock:
-                self.attributes[key] = value
+            self.attributes[key] = value
 
+    @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
-        with self._lock:
-            if not self.is_recording():
-                return
-            has_ended = self.end_time is not None
-
-        if has_ended:
-            logger.warning("Calling add_event() on an ended span.")
-            return
         self.events.append(event)
 
     def add_event(
@@ -608,56 +620,36 @@ class Span(trace_api.Span):
         parent_context: Optional[context_api.Context] = None,
     ) -> None:
         with self._lock:
-            if not self.is_recording():
+            if self.start_time is not None:
+                logger.warning("Calling start() on a started span.")
                 return
-            has_started = self.start_time is not None
-            if not has_started:
-                self._start_time = (
-                    start_time if start_time is not None else time_ns()
-                )
-        if has_started:
-            logger.warning("Calling start() on a started span.")
-            return
+            self._start_time = (
+                start_time if start_time is not None else time_ns()
+            )
+
         self.span_processor.on_start(self, parent_context=parent_context)
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
-            if not self.is_recording():
-                return
             if self.start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
-            has_ended = self.end_time is not None
-            if not has_ended:
-                if self.status is None:
-                    self.status = Status(canonical_code=StatusCanonicalCode.OK)
+            if self.end_time is not None:
+                logger.warning("Calling end() on an ended span.")
+                return
 
-                self._end_time = (
-                    end_time if end_time is not None else time_ns()
-                )
-
-        if has_ended:
-            logger.warning("Calling end() on an ended span.")
-            return
+            self._end_time = end_time if end_time is not None else time_ns()
 
         self.span_processor.on_end(self)
 
+    @_check_span_ended
     def update_name(self, name: str) -> None:
-        with self._lock:
-            has_ended = self.end_time is not None
-        if has_ended:
-            logger.warning("Calling update_name() on an ended span.")
-            return
         self.name = name
 
     def is_recording(self) -> bool:
-        return True
+        return self._end_time is None
 
+    @_check_span_ended
     def set_status(self, status: trace_api.Status) -> None:
-        with self._lock:
-            has_ended = self.end_time is not None
-        if has_ended:
-            logger.warning("Calling set_status() on an ended span.")
-            return
         self.status = status
 
     def __exit__(
@@ -667,15 +659,17 @@ class Span(trace_api.Span):
         exc_tb: Optional[TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
-
+        # Records status if span is used as context manager
+        # i.e. with tracer.start_span() as span:
+        # TODO: Record exception
         if (
-            self.status is None
+            self.status.status_code is StatusCode.UNSET
             and self._set_status_on_exception
             and exc_val is not None
         ):
             self.set_status(
                 Status(
-                    canonical_code=StatusCanonicalCode.UNKNOWN,
+                    status_code=StatusCode.ERROR,
                     description="{}: {}".format(exc_type.__name__, exc_val),
                 )
             )
@@ -762,6 +756,7 @@ class Tracer(trace_api.Tracer):
                 "parent_span_context must be a SpanContext or None."
             )
 
+        # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
             parent_span_context = None
             trace_id = self.source.ids_generator.generate_trace_id()
@@ -778,7 +773,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.source.sampler.should_sample(
-            parent_span_context, trace_id, name, attributes, links,
+            context, trace_id, name, attributes, links,
         )
 
         trace_flags = (
@@ -835,13 +830,18 @@ class Tracer(trace_api.Tracer):
                 if record_exception:
                     span.record_exception(error)
 
-                if span.status is None and span._set_status_on_exception:
+                # Records status if use_span is used
+                # i.e. with tracer.start_as_current_span() as span:
+                if (
+                    span.status.status_code is StatusCode.UNSET
+                    and span._set_status_on_exception
+                ):
                     span.set_status(
                         Status(
-                            canonical_code=getattr(
+                            status_code=getattr(
                                 error,
                                 EXCEPTION_STATUS_FIELD,
-                                StatusCanonicalCode.UNKNOWN,
+                                StatusCode.ERROR,
                             ),
                             description="{}: {}".format(
                                 type(error).__name__, error

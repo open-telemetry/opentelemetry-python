@@ -15,12 +15,16 @@
 """OTLP Metrics Exporter"""
 
 import logging
-from typing import List, Sequence, Type, TypeVar
+import os
+from typing import List, Optional, Sequence, Type, TypeVar, Union
 
-# pylint: disable=duplicate-code
+from grpc import ChannelCredentials
+
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
+    _load_credential_from_file,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -109,12 +113,46 @@ class OTLPMetricsExporter(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
         credentials: Credentials object for server authentication
         metadata: Metadata to send when exporting
+        timeout: Backend request timeout in seconds
     """
 
     _stub = MetricsServiceStub
     _result = MetricsExportResult
+
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
+        credentials: Optional[ChannelCredentials] = None,
+        headers: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ):
+        if insecure is None:
+            insecure = Configuration().EXPORTER_OTLP_METRIC_INSECURE
+
+        if (
+            not insecure
+            and Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE is not None
+        ):
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE
+            )
+
+        super().__init__(
+            **{
+                "endpoint": endpoint
+                or Configuration().EXPORTER_OTLP_METRIC_ENDPOINT,
+                "insecure": insecure,
+                "credentials": credentials,
+                "headers": headers
+                or Configuration().EXPORTER_OTLP_METRIC_HEADERS,
+                "timeout": timeout
+                or Configuration().EXPORTER_OTLP_METRIC_TIMEOUT,
+            }
+        )
 
     # pylint: disable=no-self-use
     def _translate_data(

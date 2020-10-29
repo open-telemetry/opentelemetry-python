@@ -68,7 +68,7 @@ from opentelemetry.instrumentation.celery import utils
 from opentelemetry.instrumentation.celery.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace.propagation.textmap import DictGetter
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCode
 
 logger = logging.getLogger(__name__)
 
@@ -228,7 +228,7 @@ class CeleryInstrumentor(BaseInstrumentor):
         if span is None or not span.is_recording():
             return
 
-        status_kwargs = {"canonical_code": StatusCanonicalCode.UNKNOWN}
+        status_kwargs = {"status_code": StatusCode.ERROR}
 
         ex = kwargs.get("einfo")
 
@@ -241,7 +241,6 @@ class CeleryInstrumentor(BaseInstrumentor):
 
         if ex is not None:
             status_kwargs["description"] = str(ex)
-
         span.set_status(Status(**status_kwargs))
 
     @staticmethod
