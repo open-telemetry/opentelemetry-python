@@ -20,7 +20,7 @@ Python Database API Specification v2.0.
 .. envvar:: OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS
 
 The :envvar:`OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS` environment variable allows the user
-to turn off the collection of `db.statement.parameters` by setting the value to "False"
+to turn off the collection of db.statement.parameters by setting the value to "False"
 
 Usage
 -----
