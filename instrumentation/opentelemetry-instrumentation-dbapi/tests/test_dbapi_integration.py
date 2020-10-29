@@ -71,10 +71,7 @@ class TestDBApiIntegration(TestBase):
         )
 
     @patch.dict(
-        "os.environ",
-        {
-            "OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS": "False",
-        },
+        "os.environ", {"OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS": "False"}
     )
     def test_span_succeeded_with_capturing_statement_params_disabled(self):
         Configuration._reset()  # pylint: disable=protected-access

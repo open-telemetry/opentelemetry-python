@@ -48,11 +48,11 @@ API
 import functools
 import logging
 import typing
-from opentelemetry.configuration import Configuration
 
 import wrapt
 
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation.dbapi.version import __version__
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.trace import SpanKind, TracerProvider, get_tracer
@@ -321,7 +321,9 @@ class TracedCursor:
             # Capture of statement parameters is enabled by default
             # Setting OTEL_PYTHON_DBAPI_CAPTURE_STATEMENT_PARAMS to False will
             # disable this feature
-            TracedCursor._capture_statement_params = Configuration().DBAPI_CAPTURE_STATEMENT_PARAMS
+            TracedCursor._capture_statement_params = (
+                Configuration().DBAPI_CAPTURE_STATEMENT_PARAMS
+            )
             if TracedCursor._capture_statement_params is None:
                 # Configuration was not set.  We will default to True.
                 TracedCursor._capture_statement_params = True
