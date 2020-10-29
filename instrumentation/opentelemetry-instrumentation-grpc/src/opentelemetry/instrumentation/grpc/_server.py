@@ -114,10 +114,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.code = code
         self.details = details
         self._active_span.set_status(
-            Status(
-                canonical_code=StatusCode(code.value[0]),
-                description=details,
-            )
+            Status(status_code=StatusCode(code.value[0]), description=details)
         )
         return self._servicer_context.abort(code, details)
 
@@ -129,10 +126,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         # use details if we already have it, otherwise the status description
         details = self.details or code.value[1]
         self._active_span.set_status(
-            Status(
-                canonical_code=StatusCode(code.value[0]),
-                description=details,
-            )
+            Status(status_code=StatusCode(code.value[0]), description=details)
         )
         return self._servicer_context.set_code(code)
 
@@ -140,7 +134,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.details = details
         self._active_span.set_status(
             Status(
-                canonical_code=StatusCode(self.code.value[0]),
+                status_code=StatusCode(self.code.value[0]),
                 description=details,
             )
         )
