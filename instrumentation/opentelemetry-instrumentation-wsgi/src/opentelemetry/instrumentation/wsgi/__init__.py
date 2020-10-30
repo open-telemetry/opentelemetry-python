@@ -56,8 +56,8 @@ Create a ``tracing.py`` file in your Django app as shown below.
     logger = getLogger(__file__)
 
     def init_tracing():
-        tracer = TracerProvider()
-        trace.set_tracer_provider(tracer)
+        provider = TracerProvider()
+        trace.set_tracer_provider(provider)
 
         provider.add_span_processor(BatchExportSpanProcessor(ConsoleSpanExporter()))
         auto_instrument()
@@ -74,7 +74,7 @@ Then import and call init_tracing() from both manage.py and gunicorn.config.py:
 .. code-block:: python
 
     #!/usr/bin/env python
-    # Django's command-line utility for administrative tasks.
+    """ Django's command-line utility for administrative tasks."""
     import os
     import sys
     
