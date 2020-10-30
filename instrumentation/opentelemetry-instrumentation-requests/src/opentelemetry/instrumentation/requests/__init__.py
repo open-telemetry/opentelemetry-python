@@ -45,15 +45,16 @@ from opentelemetry import context, propagators
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.metric import (
     HTTPMetricRecorder,
+    HTTPMetricType,
     MetricMixin,
 )
 from opentelemetry.instrumentation.requests.version import __version__
-from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+from opentelemetry.instrumentation.utils import http_status_to_status_code
 from opentelemetry.trace import SpanKind, get_tracer
 from opentelemetry.trace.status import (
     EXCEPTION_STATUS_FIELD,
     Status,
-    StatusCanonicalCode,
+    StatusCode,
 )
 
 # A key to a context variable to avoid creating duplicate spans when instrumenting
@@ -135,7 +136,7 @@ def _instrument(tracer_provider=None, span_callback=None):
             __name__, __version__, tracer_provider
         ).start_as_current_span(span_name, kind=SpanKind.CLIENT) as span:
             exception = None
-            with recorder.record_duration(labels):
+            with recorder.record_client_duration(labels):
                 if span.is_recording():
                     span.set_attribute("component", "http")
                     span.set_attribute("http.method", method)
@@ -154,9 +155,7 @@ def _instrument(tracer_provider=None, span_callback=None):
                 except Exception as exc:  # pylint: disable=W0703
                     exception = exc
                     setattr(
-                        exception,
-                        EXCEPTION_STATUS_FIELD,
-                        _exception_to_canonical_code(exception),
+                        exception, EXCEPTION_STATUS_FIELD, StatusCode.ERROR,
                     )
                     result = getattr(exc, "response", None)
                 finally:
@@ -170,13 +169,10 @@ def _instrument(tracer_provider=None, span_callback=None):
                         span.set_attribute("http.status_text", result.reason)
                         span.set_status(
                             Status(
-                                http_status_to_canonical_code(
-                                    result.status_code
-                                )
+                                http_status_to_status_code(result.status_code)
                             )
                         )
                     labels["http.status_code"] = str(result.status_code)
-                    labels["http.status_text"] = result.reason
                     if result.raw and result.raw.version:
                         labels["http.flavor"] = (
                             str(result.raw.version)[:1]
@@ -221,17 +217,6 @@ def _uninstrument_from(instr_root, restore_as_bound_func=False):
         setattr(instr_root, instr_func_name, original)
 
 
-def _exception_to_canonical_code(exc: Exception) -> StatusCanonicalCode:
-    if isinstance(
-        exc,
-        (InvalidURL, InvalidSchema, MissingSchema, URLRequired, ValueError),
-    ):
-        return StatusCanonicalCode.INVALID_ARGUMENT
-    if isinstance(exc, Timeout):
-        return StatusCanonicalCode.DEADLINE_EXCEEDED
-    return StatusCanonicalCode.UNKNOWN
-
-
 class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
     """An instrumentor for requests
     See `BaseInstrumentor`
@@ -253,7 +238,9 @@ class RequestsInstrumentor(BaseInstrumentor, MetricMixin):
             __name__, __version__,
         )
         # pylint: disable=W0201
-        self.metric_recorder = HTTPMetricRecorder(self.meter, SpanKind.CLIENT)
+        self.metric_recorder = HTTPMetricRecorder(
+            self.meter, HTTPMetricType.CLIENT
+        )
 
     def _uninstrument(self, **kwargs):
         _uninstrument()

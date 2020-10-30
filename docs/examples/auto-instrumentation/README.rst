@@ -112,7 +112,7 @@ similar to:
         "start_time": "2020-04-30T17:28:57.886397Z",
         "end_time": "2020-04-30T17:28:57.886490Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {
             "component": "http",
@@ -164,7 +164,7 @@ similar to:
         "start_time": "2020-04-30T17:10:02.400604Z",
         "end_time": "2020-04-30T17:10:02.401858Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {
             "component": "http",
