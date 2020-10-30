@@ -23,17 +23,11 @@ from moto import (  # pylint: disable=import-error
     mock_lambda,
     mock_s3,
     mock_sqs,
+    mock_sts,
 )
 
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.test_base import TestBase
-
-
-def assert_span_http_status_code(span, code):
-    """Assert on the span"s "http.status_code" tag"""
-    tag = span.attributes["http.status_code"]
-    assert tag == code, "%r != %r" % (tag, code)
 
 
 class TestBotocoreInstrumentor(TestBase):
@@ -62,20 +56,16 @@ class TestBotocoreInstrumentor(TestBase):
         assert spans
         span = spans[0]
         self.assertEqual(len(spans), 1)
-        self.assertEqual(span.attributes["aws.agent"], "botocore")
-        self.assertEqual(span.attributes["aws.region"], "us-west-2")
-        self.assertEqual(span.attributes["aws.operation"], "DescribeInstances")
-        assert_span_http_status_code(span, 200)
         self.assertEqual(
-            span.resource,
-            Resource(
-                attributes={
-                    "endpoint": "ec2",
-                    "operation": "describeinstances",
-                }
-            ),
+            dict(span.attributes),
+            {
+                "aws.operation": "DescribeInstances",
+                "aws.region": "us-west-2",
+                "aws.service": "ec2",
+                "http.status_code": 200,
+            },
         )
-        self.assertEqual(span.name, "ec2.command")
+        self.assertEqual(span.name, "ec2")
 
     @mock_ec2
     def test_not_recording(self):
@@ -114,12 +104,14 @@ class TestBotocoreInstrumentor(TestBase):
         span = spans[0]
         self.assertEqual(len(spans), 2)
         self.assertEqual(span.attributes["aws.operation"], "ListBuckets")
-        assert_span_http_status_code(span, 200)
         self.assertEqual(
-            span.resource,
-            Resource(
-                attributes={"endpoint": "s3", "operation": "listbuckets"}
-            ),
+            dict(span.attributes),
+            {
+                "aws.operation": "ListBuckets",
+                "aws.region": "us-west-2",
+                "aws.service": "s3",
+                "http.status_code": 200,
+            },
         )
 
         # testing for span error
@@ -130,10 +122,12 @@ class TestBotocoreInstrumentor(TestBase):
         assert spans
         span = spans[2]
         self.assertEqual(
-            span.resource,
-            Resource(
-                attributes={"endpoint": "s3", "operation": "listobjects"}
-            ),
+            dict(span.attributes),
+            {
+                "aws.operation": "ListObjects",
+                "aws.region": "us-west-2",
+                "aws.service": "s3",
+            },
         )
 
     # Comment test for issue 1088
@@ -147,24 +141,24 @@ class TestBotocoreInstrumentor(TestBase):
 
         spans = self.memory_exporter.get_finished_spans()
         assert spans
-        span = spans[0]
         self.assertEqual(len(spans), 2)
-        self.assertEqual(span.attributes["aws.operation"], "CreateBucket")
-        assert_span_http_status_code(span, 200)
         self.assertEqual(
-            span.resource,
-            Resource(
-                attributes={"endpoint": "s3", "operation": "createbucket"}
-            ),
+            spans[0].attributes,
+            {
+                "aws.operation": "CreateBucket",
+                "aws.region": "us-west-2",
+                "aws.service": "s3",
+                "http.status_code": 200,
+            },
         )
-        self.assertEqual(spans[1].attributes["aws.operation"], "PutObject")
         self.assertEqual(
-            spans[1].resource,
-            Resource(attributes={"endpoint": "s3", "operation": "putobject"}),
-        )
-        self.assertEqual(spans[1].attributes["params.Key"], str(params["Key"]))
-        self.assertEqual(
-            spans[1].attributes["params.Bucket"], str(params["Bucket"])
+            spans[1].attributes,
+            {
+                "aws.operation": "PutObject",
+                "aws.region": "us-west-2",
+                "aws.service": "s3",
+                "http.status_code": 200,
+            },
         )
         self.assertTrue("params.Body" not in spans[1].attributes.keys())
 
@@ -178,14 +172,14 @@ class TestBotocoreInstrumentor(TestBase):
         assert spans
         span = spans[0]
         self.assertEqual(len(spans), 1)
-        self.assertEqual(span.attributes["aws.region"], "us-east-1")
-        self.assertEqual(span.attributes["aws.operation"], "ListQueues")
-        assert_span_http_status_code(span, 200)
         self.assertEqual(
-            span.resource,
-            Resource(
-                attributes={"endpoint": "sqs", "operation": "listqueues"}
-            ),
+            dict(span.attributes),
+            {
+                "aws.operation": "ListQueues",
+                "aws.region": "us-east-1",
+                "aws.service": "sqs",
+                "http.status_code": 200,
+            },
         )
 
     @mock_kinesis
@@ -200,14 +194,14 @@ class TestBotocoreInstrumentor(TestBase):
         assert spans
         span = spans[0]
         self.assertEqual(len(spans), 1)
-        self.assertEqual(span.attributes["aws.region"], "us-east-1")
-        self.assertEqual(span.attributes["aws.operation"], "ListStreams")
-        assert_span_http_status_code(span, 200)
         self.assertEqual(
-            span.resource,
-            Resource(
-                attributes={"endpoint": "kinesis", "operation": "liststreams"}
-            ),
+            dict(span.attributes),
+            {
+                "aws.operation": "ListStreams",
+                "aws.region": "us-east-1",
+                "aws.service": "kinesis",
+                "http.status_code": 200,
+            },
         )
 
     @mock_kinesis
@@ -245,14 +239,14 @@ class TestBotocoreInstrumentor(TestBase):
         assert spans
         span = spans[0]
         self.assertEqual(len(spans), 1)
-        self.assertEqual(span.attributes["aws.region"], "us-east-1")
-        self.assertEqual(span.attributes["aws.operation"], "ListFunctions")
-        assert_span_http_status_code(span, 200)
         self.assertEqual(
-            span.resource,
-            Resource(
-                attributes={"endpoint": "lambda", "operation": "listfunctions"}
-            ),
+            dict(span.attributes),
+            {
+                "aws.operation": "ListFunctions",
+                "aws.region": "us-east-1",
+                "aws.service": "lambda",
+                "http.status_code": 200,
+            },
         )
 
     @mock_kms
@@ -265,12 +259,37 @@ class TestBotocoreInstrumentor(TestBase):
         assert spans
         span = spans[0]
         self.assertEqual(len(spans), 1)
-        self.assertEqual(span.attributes["aws.region"], "us-east-1")
-        self.assertEqual(span.attributes["aws.operation"], "ListKeys")
-        assert_span_http_status_code(span, 200)
         self.assertEqual(
-            span.resource,
-            Resource(attributes={"endpoint": "kms", "operation": "listkeys"}),
+            dict(span.attributes),
+            {
+                "aws.operation": "ListKeys",
+                "aws.region": "us-east-1",
+                "aws.service": "kms",
+                "http.status_code": 200,
+            },
+        )
+
+        # checking for protection on kms against security leak
+        self.assertTrue("params" not in span.attributes.keys())
+
+    @mock_sts
+    def test_sts_client(self):
+        sts = self.session.create_client("sts", region_name="us-east-1")
+
+        sts.get_caller_identity()
+
+        spans = self.memory_exporter.get_finished_spans()
+        assert spans
+        span = spans[0]
+        self.assertEqual(len(spans), 1)
+        self.assertEqual(
+            dict(span.attributes),
+            {
+                "aws.operation": "GetCallerIdentity",
+                "aws.region": "us-east-1",
+                "aws.service": "sts",
+                "http.status_code": 200,
+            },
         )
 
         # checking for protection on sts against security leak
