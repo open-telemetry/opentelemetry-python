@@ -113,7 +113,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
     def abort(self, code, details):
         self.code = code
         self.details = details
-        self._active_span.set_attribute("rpc.status_code", code.name)
+        self._active_span.set_attribute("rpc.grpc.status_code", code.name)
         self._active_span.set_status(
             Status(status_code=StatusCode.ERROR, description=details)
         )
@@ -126,7 +126,7 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.code = code
         # use details if we already have it, otherwise the status description
         details = self.details or code.value[1]
-        self._active_span.set_attribute("rpc.status_code", code.name)
+        self._active_span.set_attribute("rpc.grpc.status_code", code.name)
         self._active_span.set_status(
             Status(status_code=StatusCode.ERROR, description=details)
         )
@@ -188,6 +188,7 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
         attributes = {
             "rpc.method": handler_call_details.method,
             "rpc.system": "grpc",
+            "rpc.grpc.status_code": grpc.StatusCode.OK,
         }
 
         metadata = dict(context.invocation_metadata())
