@@ -263,7 +263,10 @@ class TestMiddleware(TestBase, WsgiTestBase):
             else "tests.views.route_span_name",
         )
 
-        # test have query_string
+    def test_span_name_for_query_string(self):
+        """
+        request not have query string
+        """
         Client().get("/span_name/1234/?query=test")
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
