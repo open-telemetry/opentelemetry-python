@@ -268,9 +268,9 @@ class Tracer(abc.ABC):
             start_time: Sets the start time of a span
             set_status_on_exception: Only relevant if the returned span is used
                 in a with/context manager. Defines wether the span status will
-                be automatically set to UNKNOWN when an uncaught exception is
+                be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
-                this mechanism if it was previousy set manually.
+                this mechanism if it was previously set manually.
 
         Returns:
             The newly-created span.
