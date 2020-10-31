@@ -58,48 +58,54 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
     MetricsExportResult,
 )
+from opentelemetry.sdk.metrics.export.aggregate import (
+    HistogramAggregator,
+    LastValueAggregator,
+    MinMaxSumCountAggregator,
+    SumAggregator,
+    ValueObserverAggregator,
+)
 
 logger = logging.getLogger(__name__)
 DataPointT = TypeVar("DataPointT", IntDataPoint, DoubleDataPoint)
 
 
 def _get_data_points(
-    sdk_metric: MetricRecord, data_point_class: Type[DataPointT]
+    sdk_metric_record: MetricRecord, data_point_class: Type[DataPointT]
 ) -> List[DataPointT]:
 
-    data_points = []
+    if isinstance(sdk_metric_record.aggregator, SumAggregator):
+        value = sdk_metric_record.aggregator.checkpoint
 
-    for (
-        label,
-        bound_counter,
-    ) in sdk_metric.instrument.bound_instruments.items():
+    elif isinstance(sdk_metric_record.aggregator, MinMaxSumCountAggregator):
+        # FIXME: How are values to be interpreted from this aggregator?
+        raise Exception("MinMaxSumCount aggregator data not supported")
 
-        string_key_values = []
+    elif isinstance(sdk_metric_record.aggregator, HistogramAggregator):
+        # FIXME: How are values to be interpreted from this aggregator?
+        raise Exception("Histogram aggregator data not supported")
 
-        for label_key, label_value in label:
-            string_key_values.append(
-                StringKeyValue(key=label_key, value=label_value)
-            )
+    elif isinstance(sdk_metric_record.aggregator, LastValueAggregator):
+        value = sdk_metric_record.aggregator.checkpoint
 
-        for view_data in bound_counter.view_datas:
+    elif isinstance(sdk_metric_record.aggregator, ValueObserverAggregator):
+        value = sdk_metric_record.aggregator.checkpoint.last
 
-            if view_data.labels == label:
-
-                data_points.append(
-                    data_point_class(
-                        labels=string_key_values,
-                        value=view_data.aggregator.current,
-                        start_time_unix_nano=(
-                            view_data.aggregator.last_checkpoint_timestamp
-                        ),
-                        time_unix_nano=(
-                            view_data.aggregator.last_update_timestamp
-                        ),
-                    )
-                )
-                break
-
-    return data_points
+    return [
+        data_point_class(
+            labels=[
+                StringKeyValue(key=str(label_key), value=str(label_value))
+                for label_key, label_value in sdk_metric_record.labels
+            ],
+            value=value,
+            start_time_unix_nano=(
+                sdk_metric_record.aggregator.initial_checkpoint_timestamp
+            ),
+            time_unix_nano=(
+                sdk_metric_record.aggregator.last_update_timestamp
+            ),
+        )
+    ]
 
 
 class OTLPMetricsExporter(
@@ -179,13 +185,13 @@ class OTLPMetricsExporter(
         #   SumObserver        Sum(aggregation_temporality=cumulative;is_monotonic=true)
         #   UpDownSumObserver  Sum(aggregation_temporality=cumulative;is_monotonic=false)
         #   ValueObserver      Gauge()
-        for sdk_metric in data:
+        for sdk_metric_record in data:
 
-            if sdk_metric.resource not in (
+            if sdk_metric_record.resource not in (
                 sdk_resource_instrumentation_library_metrics.keys()
             ):
                 sdk_resource_instrumentation_library_metrics[
-                    sdk_metric.resource
+                    sdk_metric_record.resource
                 ] = InstrumentationLibraryMetrics()
 
             type_class = {
@@ -204,15 +210,17 @@ class OTLPMetricsExporter(
                 },
             }
 
-            value_type = sdk_metric.instrument.value_type
+            value_type = sdk_metric_record.instrument.value_type
 
             sum_class = type_class[value_type]["sum"]["class"]
             gauge_class = type_class[value_type]["gauge"]["class"]
             data_point_class = type_class[value_type]["data_point_class"]
 
-            if isinstance(sdk_metric.instrument, Counter):
+            if isinstance(sdk_metric_record.instrument, Counter):
                 otlp_metric_data = sum_class(
-                    data_points=_get_data_points(sdk_metric, data_point_class),
+                    data_points=_get_data_points(
+                        sdk_metric_record, data_point_class
+                    ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
                     ),
@@ -220,9 +228,11 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric.instrument, UpDownCounter):
+            elif isinstance(sdk_metric_record.instrument, UpDownCounter):
                 otlp_metric_data = sum_class(
-                    data_points=_get_data_points(sdk_metric, data_point_class),
+                    data_points=_get_data_points(
+                        sdk_metric_record, data_point_class
+                    ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
                     ),
@@ -230,13 +240,15 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric.instrument, (ValueRecorder)):
+            elif isinstance(sdk_metric_record.instrument, (ValueRecorder)):
                 logger.warning("Skipping exporting of ValueRecorder metric")
                 continue
 
-            elif isinstance(sdk_metric.instrument, SumObserver):
+            elif isinstance(sdk_metric_record.instrument, SumObserver):
                 otlp_metric_data = sum_class(
-                    data_points=_get_data_points(sdk_metric, data_point_class),
+                    data_points=_get_data_points(
+                        sdk_metric_record, data_point_class
+                    ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                     ),
@@ -244,9 +256,11 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric.instrument, UpDownSumObserver):
+            elif isinstance(sdk_metric_record.instrument, UpDownSumObserver):
                 otlp_metric_data = sum_class(
-                    data_points=_get_data_points(sdk_metric, data_point_class),
+                    data_points=_get_data_points(
+                        sdk_metric_record, data_point_class
+                    ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                     ),
@@ -254,20 +268,24 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric.instrument, (ValueObserver)):
+            elif isinstance(sdk_metric_record.instrument, (ValueObserver)):
                 otlp_metric_data = gauge_class(
-                    data_points=_get_data_points(sdk_metric, data_point_class)
+                    data_points=_get_data_points(
+                        sdk_metric_record, data_point_class
+                    )
                 )
                 argument = type_class[value_type]["gauge"]["argument"]
 
             sdk_resource_instrumentation_library_metrics[
-                sdk_metric.resource
+                sdk_metric_record.resource
             ].metrics.append(
                 OTLPMetric(
                     **{
-                        "name": sdk_metric.instrument.name,
-                        "description": sdk_metric.instrument.description,
-                        "unit": sdk_metric.instrument.unit,
+                        "name": sdk_metric_record.instrument.name,
+                        "description": (
+                            sdk_metric_record.instrument.description
+                        ),
+                        "unit": sdk_metric_record.instrument.unit,
                         argument: otlp_metric_data,
                     }
                 )
