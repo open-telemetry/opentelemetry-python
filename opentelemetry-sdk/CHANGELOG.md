@@ -14,6 +14,8 @@
   ([#1282](https://github.com/open-telemetry/opentelemetry-python/pull/1282))
 - Span.is_recording() returns false after span has ended
   ([#1289](https://github.com/open-telemetry/opentelemetry-python/pull/1289))
+- Set initial checkpoint timestamp in aggregators
+  ([#1237](https://github.com/open-telemetry/opentelemetry-python/pull/1237))
 
 ## Version 0.14b0
 
