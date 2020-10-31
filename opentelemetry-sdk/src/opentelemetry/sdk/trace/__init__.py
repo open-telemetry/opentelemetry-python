@@ -47,7 +47,7 @@ from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import (
     EXCEPTION_STATUS_FIELD,
     Status,
-    StatusCanonicalCode,
+    StatusCode,
 )
 from opentelemetry.util import time_ns, types
 
@@ -435,7 +435,7 @@ class Span(trace_api.Span):
         self._set_status_on_exception = set_status_on_exception
 
         self.span_processor = span_processor
-        self.status = None
+        self.status = Status(StatusCode.UNSET)
         self._lock = threading.Lock()
 
         _filter_attribute_values(attributes)
@@ -546,7 +546,7 @@ class Span(trace_api.Span):
 
         if self.status is not None:
             status = OrderedDict()
-            status["canonical_code"] = str(self.status.canonical_code.name)
+            status["status_code"] = str(self.status.status_code.name)
             if self.status.description:
                 status["description"] = self.status.description
 
@@ -637,9 +637,6 @@ class Span(trace_api.Span):
                 logger.warning("Calling end() on an ended span.")
                 return
 
-            if self.status is None:
-                self.status = Status(canonical_code=StatusCanonicalCode.OK)
-
             self._end_time = end_time if end_time is not None else time_ns()
 
         self.span_processor.on_end(self)
@@ -649,7 +646,7 @@ class Span(trace_api.Span):
         self.name = name
 
     def is_recording(self) -> bool:
-        return True
+        return self._end_time is None
 
     @_check_span_ended
     def set_status(self, status: trace_api.Status) -> None:
@@ -662,15 +659,17 @@ class Span(trace_api.Span):
         exc_tb: Optional[TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
-
+        # Records status if span is used as context manager
+        # i.e. with tracer.start_span() as span:
+        # TODO: Record exception
         if (
-            self.status is None
+            self.status.status_code is StatusCode.UNSET
             and self._set_status_on_exception
             and exc_val is not None
         ):
             self.set_status(
                 Status(
-                    canonical_code=StatusCanonicalCode.UNKNOWN,
+                    status_code=StatusCode.ERROR,
                     description="{}: {}".format(exc_type.__name__, exc_val),
                 )
             )
@@ -834,13 +833,18 @@ class Tracer(trace_api.Tracer):
                 if record_exception:
                     span.record_exception(error)
 
-                if span.status is None and span._set_status_on_exception:
+                # Records status if use_span is used
+                # i.e. with tracer.start_as_current_span() as span:
+                if (
+                    span.status.status_code is StatusCode.UNSET
+                    and span._set_status_on_exception
+                ):
                     span.set_status(
                         Status(
-                            canonical_code=getattr(
+                            status_code=getattr(
                                 error,
                                 EXCEPTION_STATUS_FIELD,
-                                StatusCanonicalCode.UNKNOWN,
+                                StatusCode.ERROR,
                             ),
                             description="{}: {}".format(
                                 type(error).__name__, error

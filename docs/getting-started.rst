@@ -49,7 +49,7 @@ We can run it, and see the traces print to your console:
         "start_time": "2020-05-07T14:39:52.906272Z",
         "end_time": "2020-05-07T14:39:52.906343Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {},
         "events": [],
@@ -67,7 +67,7 @@ We can run it, and see the traces print to your console:
         "start_time": "2020-05-07T14:39:52.906230Z",
         "end_time": "2020-05-07T14:39:52.906601Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {},
         "events": [],
@@ -85,7 +85,7 @@ We can run it, and see the traces print to your console:
         "start_time": "2020-05-07T14:39:52.906157Z",
         "end_time": "2020-05-07T14:39:52.906743Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {},
         "events": [],
