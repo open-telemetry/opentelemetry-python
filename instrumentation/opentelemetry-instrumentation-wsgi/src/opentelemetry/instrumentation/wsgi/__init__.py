@@ -74,7 +74,7 @@ Then import and call init_tracing() from both manage.py and gunicorn.config.py:
 .. code-block:: python
 
     #!/usr/bin/env python
-    """ Django's command-line utility for administrative tasks."""
+    # Django's command-line utility for administrative tasks.
     import os
     import sys
     
@@ -107,6 +107,7 @@ Also, modify the ``gunicorn.config.py`` file as shown below.
     def post_fork(server, worker):
         init_tracing()
  
+"""
 
 API
 ---
