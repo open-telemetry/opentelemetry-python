@@ -52,14 +52,14 @@ class TestOTLPMetricExporter(TestCase):
 
         self.counter_metric_record = MetricRecord(
             Counter(
-                "a",
-                "b",
                 "c",
+                "d",
+                "e",
                 int,
                 MeterProvider(resource=resource,).get_meter(__name__),
-                ("d",),
+                ("f",),
             ),
-            OrderedDict([("e", "f")]),
+            [("g", "h")],
             SumAggregator(),
             resource,
         )
@@ -97,7 +97,9 @@ class TestOTLPMetricExporter(TestCase):
 
         mock_time_ns.configure_mock(**{"return_value": 1})
 
-        self.counter_metric_record.instrument.add(1, OrderedDict([("a", "b")]))
+        self.counter_metric_record.aggregator.checkpoint = 1
+        self.counter_metric_record.aggregator.initial_checkpoint_timestamp = 1
+        self.counter_metric_record.aggregator.last_update_timestamp = 1
 
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
@@ -114,19 +116,20 @@ class TestOTLPMetricExporter(TestCase):
                         InstrumentationLibraryMetrics(
                             metrics=[
                                 OTLPMetric(
-                                    name="a",
-                                    description="b",
-                                    unit="c",
+                                    name="c",
+                                    description="d",
+                                    unit="e",
                                     int_sum=IntSum(
                                         data_points=[
                                             IntDataPoint(
                                                 labels=[
                                                     StringKeyValue(
-                                                        key="a", value="b"
+                                                        key="g", value="h"
                                                     )
                                                 ],
                                                 value=1,
                                                 time_unix_nano=1,
+                                                start_time_unix_nano=1,
                                             )
                                         ],
                                         aggregation_temporality=(
