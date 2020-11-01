@@ -874,6 +874,85 @@ class TestSpan(unittest.TestCase):
             exception_event.attributes["exception.stacktrace"],
         )
 
+    def test_record_exception_with_attributes(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        try:
+            raise RuntimeError("error")
+        except RuntimeError as err:
+            attributes = {"has_additional_attributes": True}
+            span.record_exception(err, attributes)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "error", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "RuntimeError", exception_event.attributes["exception.type"]
+        )
+        self.assertIn(
+            "RuntimeError: error",
+            exception_event.attributes["exception.stacktrace"],
+        )
+        self.assertIn(
+            "has_additional_attributes", exception_event.attributes,
+        )
+        self.assertEqual(
+            True, exception_event.attributes["has_additional_attributes"],
+        )
+
+    def test_record_exception_with_timestamp(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        try:
+            raise RuntimeError("error")
+        except RuntimeError as err:
+            timestamp = 1604238587112021089
+            span.record_exception(err, timestamp=timestamp)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "error", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "RuntimeError", exception_event.attributes["exception.type"]
+        )
+        self.assertIn(
+            "RuntimeError: error",
+            exception_event.attributes["exception.stacktrace"],
+        )
+        self.assertEqual(
+            1604238587112021089, exception_event.timestamp,
+        )
+
+    def test_record_exception_with_attributes_and_timestamp(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        try:
+            raise RuntimeError("error")
+        except RuntimeError as err:
+            attributes = {"has_additional_attributes": True}
+            timestamp = 1604238587112021089
+            span.record_exception(err, attributes, timestamp)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "error", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "RuntimeError", exception_event.attributes["exception.type"]
+        )
+        self.assertIn(
+            "RuntimeError: error",
+            exception_event.attributes["exception.stacktrace"],
+        )
+        self.assertIn(
+            "has_additional_attributes", exception_event.attributes,
+        )
+        self.assertEqual(
+            True, exception_event.attributes["has_additional_attributes"],
+        )
+        self.assertEqual(
+            1604238587112021089, exception_event.timestamp,
+        )
+
     def test_record_exception_context_manager(self):
         try:
             with self.tracer.start_as_current_span("span") as span:
