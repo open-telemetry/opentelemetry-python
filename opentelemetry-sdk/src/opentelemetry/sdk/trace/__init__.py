@@ -371,10 +371,6 @@ def _create_immutable_attributes(attributes):
     return MappingProxyType(attributes.copy() if attributes else {})
 
 
-class _SpanEndedException(Exception):
-    pass
-
-
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
