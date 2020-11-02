@@ -62,7 +62,7 @@ def trace_integration(
     database_type: str = "",
     connection_attributes: typing.Dict = None,
     tracer_provider: typing.Optional[TracerProvider] = None,
-    capture_parameters: bool = True,
+    capture_parameters: bool = False,
 ):
     """Integrate with DB API library.
         https://www.python.org/dev/peps/pep-0249/
