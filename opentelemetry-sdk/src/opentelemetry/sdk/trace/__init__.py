@@ -705,19 +705,22 @@ class _Span(Span):
 
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`.
-
-    Args:
-        name: The name of the tracer.
-        shutdown_on_exit: Register an atexit hook to shut down the tracer when
-            the application exits.
     """
 
     def __init__(
         self,
-        source: "TracerProvider",
+        sampler: sampling.Sampler,
+        resource: Resource,
+        span_processor: Union[
+            SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
+        ],
+        ids_generator: trace_api.IdsGenerator,
         instrumentation_info: InstrumentationInfo,
     ) -> None:
-        self.source = source
+        self.sampler = sampler
+        self.resource = resource
+        self.span_processor = span_processor
+        self.ids_generator = ids_generator
         self.instrumentation_info = instrumentation_info
 
     def start_as_current_span(
@@ -759,7 +762,7 @@ class Tracer(trace_api.Tracer):
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
             parent_span_context = None
-            trace_id = self.source.ids_generator.generate_trace_id()
+            trace_id = self.ids_generator.generate_trace_id()
             trace_flags = None
             trace_state = None
         else:
@@ -772,7 +775,7 @@ class Tracer(trace_api.Tracer):
         # exported.
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
-        sampling_result = self.source.sampler.should_sample(
+        sampling_result = self.sampler.should_sample(
             context, trace_id, name, attributes, links, trace_state
         )
 
@@ -783,7 +786,7 @@ class Tracer(trace_api.Tracer):
         )
         span_context = trace_api.SpanContext(
             trace_id,
-            self.source.ids_generator.generate_span_id(),
+            self.ids_generator.generate_span_id(),
             is_remote=False,
             trace_flags=trace_flags,
             trace_state=sampling_result.trace_state,
@@ -796,10 +799,10 @@ class Tracer(trace_api.Tracer):
                 name=name,
                 context=span_context,
                 parent=parent_span_context,
-                sampler=self.source.sampler,
-                resource=self.source.resource,
+                sampler=self.sampler,
+                resource=self.resource,
                 attributes=sampling_result.attributes.copy(),
-                span_processor=self.source._active_span_processor,
+                span_processor=self.span_processor,
                 kind=kind,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
@@ -888,7 +891,10 @@ class TracerProvider(trace_api.TracerProvider):
             instrumenting_module_name = "ERROR:MISSING MODULE NAME"
             logger.error("get_tracer called with missing module name.")
         return Tracer(
-            self,
+            self.sampler,
+            self.resource,
+            self._active_span_processor,
+            self.ids_generator,
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
             ),
