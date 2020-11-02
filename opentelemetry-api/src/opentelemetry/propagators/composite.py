@@ -35,7 +35,7 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -47,7 +47,7 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
         See `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
         for propagator in self._propagators:
-            context = propagator.extract(get_from_carrier, carrier, context)
+            context = propagator.extract(getter, carrier, context)
         return context  # type: ignore
 
     def inject(

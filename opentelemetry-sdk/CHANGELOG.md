@@ -45,6 +45,8 @@ Released 2020-10-13
   ([#1209](https://github.com/open-telemetry/opentelemetry-python/pull/1209))
 - Parent is now always passed in via Context, intead of Span or SpanContext
   ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
+- Add keys method to TextMap propagator Getter
+  ([#1196](https://github.com/open-telemetry/opentelemetry-python/issues/1196))
 
 ## Version 0.13b0
 
