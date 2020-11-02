@@ -200,9 +200,7 @@ class OTLPExporterMixin(
 
         if insecure:
             self._client = self._stub(
-                insecure_channel(
-                    endpoint, compression=compression_algorithm
-                )
+                insecure_channel(endpoint, compression=compression_algorithm)
             )
         else:
             credentials = credentials or _load_credential_from_file(
