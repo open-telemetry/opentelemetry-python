@@ -23,7 +23,7 @@ from pkg_resources import iter_entry_points
 from opentelemetry.context.context import Context, RuntimeContext
 
 logger = logging.getLogger(__name__)
-_RUNTIME_CONTEXT: typing.Optional[RuntimeContext] = None
+_RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
 _RUNTIME_CONTEXT_LOCK = threading.Lock()
 
 _F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
@@ -49,9 +49,9 @@ def _load_runtime_context(func: _F) -> _F:
                 # to get configuration values straight from environment variables
                 default_context = "contextvars_context"
 
-                configured_context: str = environ.get(
+                configured_context = environ.get(
                     "OTEL_CONTEXT", default_context
-                )
+                )  # type: str
                 try:
                     _RUNTIME_CONTEXT = next(
                         iter_entry_points(

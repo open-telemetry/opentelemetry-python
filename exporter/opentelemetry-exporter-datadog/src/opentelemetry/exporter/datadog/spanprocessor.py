@@ -53,7 +53,9 @@ class DatadogExportSpanProcessor(SpanProcessor):
 
         # queue trace_ids for traces with recently ended spans for worker thread to check
         # for exporting
-        self.check_traces_queue: typing.Deque[int] = (collections.deque())
+        self.check_traces_queue = (
+            collections.deque()
+        )  # type: typing.Deque[int]
 
         self.traces_lock = threading.Lock()
         # dictionary of trace_ids to a list of spans where the first span is the

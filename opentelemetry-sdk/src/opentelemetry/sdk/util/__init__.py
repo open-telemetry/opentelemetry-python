@@ -54,7 +54,7 @@ class BoundedList(Sequence):
 
     def __init__(self, maxlen):
         self.dropped = 0
-        self._dq: deque = deque(maxlen=maxlen)
+        self._dq = deque(maxlen=maxlen)  # type: deque
         self._lock = threading.Lock()
 
     def __repr__(self):
@@ -110,8 +110,8 @@ class BoundedDict(MutableMapping):
             raise ValueError
         self.maxlen = maxlen
         self.dropped = 0
-        self._dict: OrderedDict = OrderedDict()
-        self._lock: threading.Lock = threading.Lock()
+        self._dict = OrderedDict()  # type: OrderedDict
+        self._lock = threading.Lock()  # type: threading.Lock
 
     def __repr__(self):
         return "{}({}, maxlen={})".format(

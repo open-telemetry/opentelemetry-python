@@ -121,7 +121,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors: Tuple[SpanProcessor, ...] = ()
+        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
@@ -189,7 +189,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     def __init__(self, num_threads: int = 2):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors: Tuple[SpanProcessor, ...] = ()
+        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=num_threads
@@ -241,7 +241,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             timeout, False otherwise.
         """
         futures = []
-        for sp in self._span_processors:
+        for sp in self._span_processors:  # type: SpanProcessor
             future = self._executor.submit(sp.force_flush, timeout_millis)
             futures.append(future)
 
@@ -465,8 +465,8 @@ class Span(trace_api.Span):
         else:
             self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
 
-        self._end_time: Optional[int] = None
-        self._start_time: Optional[int] = None
+        self._end_time = None  # type: Optional[int]
+        self._start_time = None  # type: Optional[int]
         self.instrumentation_info = instrumentation_info
 
     @property
