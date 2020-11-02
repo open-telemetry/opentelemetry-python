@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-gzip-compression-feature
 - Add Gzip compression for exporter
   ([#1141](https://github.com/open-telemetry/opentelemetry-python/pull/1141))
 ## Version 0.15b0
