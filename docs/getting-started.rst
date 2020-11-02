@@ -150,7 +150,7 @@ The above is a great example, but it's very manual. Within the telemetry space, 
 * Database calls
 
 To help instrument common scenarios, opentelemetry also has the concept of "instrumentations": packages that are designed to interface
-with a specific framework or library, such as Flask and psycopg2. A list of the currently curated extension packages can be found :scm_web:`here <instrumentation/>`.
+with a specific framework or library, such as Flask and psycopg2.
 
 We will now instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
 

@@ -10,6 +10,7 @@ exclude = '''
     opentelemetry-proto/src/opentelemetry/proto/metrics|
     opentelemetry-proto/src/opentelemetry/proto/resource|
     opentelemetry-proto/src/opentelemetry/proto/trace
+    opentelemetry-python-contrib
   )/
 )
 '''
