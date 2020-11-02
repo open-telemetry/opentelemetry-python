@@ -199,11 +199,7 @@ class TestAiopgIntegration(TestBase):
             "user": "user",
         }
         db_integration = AiopgIntegration(
-            self.tracer,
-            "testcomponent",
-            "testtype",
-            connection_attributes,
-            capture_parameters=True,
+            self.tracer, "testcomponent", "testtype", connection_attributes
         )
         mock_connection = async_call(
             db_integration.wrapped_connection(

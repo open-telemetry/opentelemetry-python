@@ -62,6 +62,7 @@ def trace_integration(
     database_type: str = "",
     connection_attributes: typing.Dict = None,
     tracer_provider: typing.Optional[TracerProvider] = None,
+    capture_parameters: bool = True,
 ):
     """Integrate with DB API library.
         https://www.python.org/dev/peps/pep-0249/
@@ -76,6 +77,7 @@ def trace_integration(
                 user in Connection object.
             tracer_provider: The :class:`opentelemetry.trace.TracerProvider` to
                 use. If ommited the current configured one is used.
+            capture_parameters: Configure if db.statement.parameters should be captured.
     """
     wrap_connect(
         __name__,
@@ -86,6 +88,7 @@ def trace_integration(
         connection_attributes,
         version=__version__,
         tracer_provider=tracer_provider,
+        capture_parameters=capture_parameters,
     )
 
 
@@ -98,6 +101,7 @@ def wrap_connect(
     connection_attributes: typing.Dict = None,
     version: str = "",
     tracer_provider: typing.Optional[TracerProvider] = None,
+    capture_parameters: bool = True,
 ):
     """Integrate with DB API library.
         https://www.python.org/dev/peps/pep-0249/
@@ -111,6 +115,8 @@ def wrap_connect(
             database_type: The Database type. For any SQL database, "sql".
             connection_attributes: Attribute names for database, port, host and
                 user in Connection object.
+            capture_parameters: Configure if db.statement.parameters should be captured.
+
     """
 
     # pylint: disable=unused-argument
@@ -127,6 +133,7 @@ def wrap_connect(
             connection_attributes=connection_attributes,
             version=version,
             tracer_provider=tracer_provider,
+            capture_parameters=capture_parameters,
         )
         return db_integration.wrapped_connection(wrapped, args, kwargs)
 
@@ -211,7 +218,7 @@ class DatabaseApiIntegration:
         connection_attributes=None,
         version: str = "",
         tracer_provider: typing.Optional[TracerProvider] = None,
-        capture_parameters: bool = False,
+        capture_parameters: bool = True,
     ):
         self.connection_attributes = connection_attributes
         if self.connection_attributes is None:
