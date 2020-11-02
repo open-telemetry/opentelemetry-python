@@ -44,9 +44,7 @@ class ThreadLocalRuntimeContext(RuntimeContext):
             setattr(
                 self._current_context, self._CONTEXT_KEY, Context(),
             )
-        context = getattr(
-            self._current_context, self._CONTEXT_KEY
-        )  # type: Context
+        context: Context = getattr(self._current_context, self._CONTEXT_KEY)
         return context
 
     def detach(self, token: object) -> None:

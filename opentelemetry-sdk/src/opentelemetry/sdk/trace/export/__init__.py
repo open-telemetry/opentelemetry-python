@@ -155,12 +155,10 @@ class BatchExportSpanProcessor(SpanProcessor):
             )
 
         self.span_exporter = span_exporter
-        self.queue = collections.deque(
-            [], max_queue_size
-        )  # type: typing.Deque[Span]
+        self.queue: typing.Deque[Span] = collections.deque([], max_queue_size)
         self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.condition = threading.Condition(threading.Lock())
-        self._flush_request = None  # type: typing.Optional[_FlushRequest]
+        self._flush_request: typing.Optional[_FlushRequest] = None
         self.schedule_delay_millis = schedule_delay_millis
         self.max_export_batch_size = max_export_batch_size
         self.max_queue_size = max_queue_size
@@ -169,9 +167,9 @@ class BatchExportSpanProcessor(SpanProcessor):
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
         # precallocated list to send spans to exporter
-        self.spans_list = [
+        self.spans_list: typing.List[typing.Optional[Span]] = [
             None
-        ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
+        ] * self.max_export_batch_size
         self.worker_thread.start()
 
     def on_start(
@@ -198,7 +196,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
-        flush_request = None  # type: typing.Optional[_FlushRequest]
+        flush_request: typing.Optional[_FlushRequest] = None
         while not self.done:
             with self.condition:
                 if self.done:

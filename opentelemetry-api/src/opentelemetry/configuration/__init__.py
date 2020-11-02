@@ -102,8 +102,8 @@ _T = TypeVar("_T", ConfigValue, Optional[ConfigValue])
 
 
 class Configuration:
-    _instance = None  # type: ClassVar[Optional[Configuration]]
-    _config_map = {}  # type: ClassVar[Dict[str, ConfigValue]]
+    _instance: ClassVar[Optional["Configuration"]] = None
+    _config_map: ClassVar[Dict[str, ConfigValue]] = {}
 
     def __new__(cls) -> "Configuration":
         if cls._instance is not None:
@@ -118,7 +118,7 @@ class Configuration:
                 if match is not None:
 
                     key = match.group(2)
-                    value = value_str  # type: ConfigValue
+                    value: ConfigValue = value_str
 
                     if value_str == "True":
                         value = True
