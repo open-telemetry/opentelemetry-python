@@ -102,6 +102,7 @@ nitpick_ignore = [
     ("py:class", "ObjectProxy"),
     # TODO: Understand why sphinx is not able to find this local class
     ("py:class", "opentelemetry.trace.propagation.textmap.TextMapPropagator",),
+    ("py:class", "opentelemetry.trace.propagation.textmap.DictGetter",),
     (
         "any",
         "opentelemetry.trace.propagation.textmap.TextMapPropagator.extract",
