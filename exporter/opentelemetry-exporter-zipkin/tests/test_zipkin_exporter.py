@@ -63,7 +63,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
         """Test the default values assigned by constructor."""
         url = "https://foo:9911/path"
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = url
-        os.environ["OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"] = TRANSPORT_FORMAT_PROTOBUF
+        os.environ[
+            "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"
+        ] = TRANSPORT_FORMAT_PROTOBUF
         service_name = "my-service-name"
         port = 9911
         exporter = ZipkinSpanExporter(service_name)
@@ -108,7 +110,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             url=url,
             ipv4=ipv4,
             ipv6=ipv6,
-            transport_format=transport_format
+            transport_format=transport_format,
         )
 
         self.assertEqual(exporter.service_name, service_name)
@@ -555,83 +557,109 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         service_name = "test-service"
-        local_endpoint = zipkin_pb2.Endpoint(service_name=service_name, port=9411)
+        local_endpoint = zipkin_pb2.Endpoint(
+            service_name=service_name, port=9411
+        )
 
-        expected_spans = zipkin_pb2.ListOfSpans(spans=[
-            zipkin_pb2.Span(
-                trace_id=trace_id.to_bytes(length=16, byteorder="big", signed=False),
-                id=ZipkinSpanExporter.format_pbuf_span_id(span_id),
-                name=span_names[0],
-                timestamp=nsec_to_usec_round(start_times[0]),
-                duration=nsec_to_usec_round(durations[0]),
-                local_endpoint=local_endpoint,
-                kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][SpanKind.INTERNAL],
-                tags={
-                    "key_bool": "False",
-                    "key_string": "hello_world",
-                    "key_float": "111.22",
-                    "otel.status_code": "2",
-                    "otel.status_description": "Example description",
-                },
-                debug=True,
-                parent_id=ZipkinSpanExporter.format_pbuf_span_id(parent_id),
-                annotations=[
-                    zipkin_pb2.Annotation(
-                        timestamp=nsec_to_usec_round(event_timestamp),
-                        value=json.dumps({
-                            "event0": {
-                                "annotation_bool": True,
-                                "annotation_string": "annotation_test",
-                                "key_float": 0.3,
-                            }
-                        })
+        expected_spans = zipkin_pb2.ListOfSpans(
+            spans=[
+                zipkin_pb2.Span(
+                    trace_id=trace_id.to_bytes(
+                        length=16, byteorder="big", signed=False
                     ),
-                ]
-            ),
-            zipkin_pb2.Span(
-                trace_id=trace_id.to_bytes(length=16, byteorder="big", signed=False),
-                id=ZipkinSpanExporter.format_pbuf_span_id(parent_id),
-                name=span_names[1],
-                timestamp=nsec_to_usec_round(start_times[1]),
-                duration=nsec_to_usec_round(durations[1]),
-                local_endpoint=local_endpoint,
-                kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][SpanKind.INTERNAL],
-                tags={
-                    "key_resource": "some_resource",
-                    "otel.status_code": "1",
-                }
-            ),
-            zipkin_pb2.Span(
-                trace_id=trace_id.to_bytes(length=16, byteorder="big", signed=False),
-                id=ZipkinSpanExporter.format_pbuf_span_id(other_id),
-                name=span_names[2],
-                timestamp=nsec_to_usec_round(start_times[2]),
-                duration=nsec_to_usec_round(durations[2]),
-                local_endpoint=local_endpoint,
-                kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][SpanKind.INTERNAL],
-                tags={
-                    "key_string": "hello_world",
-                    "key_resource": "some_resource",
-                    "otel.status_code": "1",
-                }
-            ),
-            zipkin_pb2.Span(
-                trace_id=trace_id.to_bytes(length=16, byteorder="big", signed=False),
-                id=ZipkinSpanExporter.format_pbuf_span_id(other_id),
-                name=span_names[3],
-                timestamp=nsec_to_usec_round(start_times[3]),
-                duration=nsec_to_usec_round(durations[3]),
-                local_endpoint=local_endpoint,
-                kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][SpanKind.INTERNAL],
-                tags={
-                    "otel.instrumentation_library.name": "name",
-                    "otel.instrumentation_library.version": "version",
-                    "otel.status_code": "1",
-                }
-            ),
-        ])
+                    id=ZipkinSpanExporter.format_pbuf_span_id(span_id),
+                    name=span_names[0],
+                    timestamp=nsec_to_usec_round(start_times[0]),
+                    duration=nsec_to_usec_round(durations[0]),
+                    local_endpoint=local_endpoint,
+                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
+                        SpanKind.INTERNAL
+                    ],
+                    tags={
+                        "key_bool": "False",
+                        "key_string": "hello_world",
+                        "key_float": "111.22",
+                        "otel.status_code": "2",
+                        "otel.status_description": "Example description",
+                    },
+                    debug=True,
+                    parent_id=ZipkinSpanExporter.format_pbuf_span_id(
+                        parent_id
+                    ),
+                    annotations=[
+                        zipkin_pb2.Annotation(
+                            timestamp=nsec_to_usec_round(event_timestamp),
+                            value=json.dumps(
+                                {
+                                    "event0": {
+                                        "annotation_bool": True,
+                                        "annotation_string": "annotation_test",
+                                        "key_float": 0.3,
+                                    }
+                                }
+                            ),
+                        ),
+                    ],
+                ),
+                zipkin_pb2.Span(
+                    trace_id=trace_id.to_bytes(
+                        length=16, byteorder="big", signed=False
+                    ),
+                    id=ZipkinSpanExporter.format_pbuf_span_id(parent_id),
+                    name=span_names[1],
+                    timestamp=nsec_to_usec_round(start_times[1]),
+                    duration=nsec_to_usec_round(durations[1]),
+                    local_endpoint=local_endpoint,
+                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
+                        SpanKind.INTERNAL
+                    ],
+                    tags={
+                        "key_resource": "some_resource",
+                        "otel.status_code": "1",
+                    },
+                ),
+                zipkin_pb2.Span(
+                    trace_id=trace_id.to_bytes(
+                        length=16, byteorder="big", signed=False
+                    ),
+                    id=ZipkinSpanExporter.format_pbuf_span_id(other_id),
+                    name=span_names[2],
+                    timestamp=nsec_to_usec_round(start_times[2]),
+                    duration=nsec_to_usec_round(durations[2]),
+                    local_endpoint=local_endpoint,
+                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
+                        SpanKind.INTERNAL
+                    ],
+                    tags={
+                        "key_string": "hello_world",
+                        "key_resource": "some_resource",
+                        "otel.status_code": "1",
+                    },
+                ),
+                zipkin_pb2.Span(
+                    trace_id=trace_id.to_bytes(
+                        length=16, byteorder="big", signed=False
+                    ),
+                    id=ZipkinSpanExporter.format_pbuf_span_id(other_id),
+                    name=span_names[3],
+                    timestamp=nsec_to_usec_round(start_times[3]),
+                    duration=nsec_to_usec_round(durations[3]),
+                    local_endpoint=local_endpoint,
+                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
+                        SpanKind.INTERNAL
+                    ],
+                    tags={
+                        "otel.instrumentation_library.name": "name",
+                        "otel.instrumentation_library.version": "version",
+                        "otel.status_code": "1",
+                    },
+                ),
+            ],
+        )
 
-        exporter = ZipkinSpanExporter(service_name, transport_format=TRANSPORT_FORMAT_PROTOBUF)
+        exporter = ZipkinSpanExporter(
+            service_name, transport_format=TRANSPORT_FORMAT_PROTOBUF
+        )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)
@@ -642,8 +670,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
         kwargs = mock_post.call_args[1]
 
         self.assertEqual(kwargs["url"], "http://localhost:9411/api/v2/spans")
-        self.assertEqual(kwargs["headers"]["Content-Type"], "application/x-protobuf")
-        self.assertEqual(zipkin_pb2.ListOfSpans.FromString(kwargs["data"]), expected_spans)
+        self.assertEqual(
+            kwargs["headers"]["Content-Type"], "application/x-protobuf"
+        )
+        self.assertEqual(
+            zipkin_pb2.ListOfSpans.FromString(kwargs["data"]), expected_spans
+        )
 
     def test_export_protobuf_max_tag_length(self):
         service_name = "test-service"
@@ -665,7 +697,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.set_status(Status(StatusCode.ERROR, "Example description"))
         span.end()
 
-        exporter = ZipkinSpanExporter(service_name, transport_format=TRANSPORT_FORMAT_PROTOBUF)
+        exporter = ZipkinSpanExporter(
+            service_name, transport_format=TRANSPORT_FORMAT_PROTOBUF,
+        )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)
@@ -679,7 +713,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(len(span_tags["k1"]), 128)
         self.assertEqual(len(span_tags["k2"]), 50)
 
-        exporter = ZipkinSpanExporter(service_name, transport_format=TRANSPORT_FORMAT_PROTOBUF, max_tag_value_length=2)
+        exporter = ZipkinSpanExporter(
+            service_name,
+            transport_format=TRANSPORT_FORMAT_PROTOBUF,
+            max_tag_value_length=2,
+        )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)

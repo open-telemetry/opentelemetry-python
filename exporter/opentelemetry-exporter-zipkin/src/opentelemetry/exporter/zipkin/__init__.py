@@ -94,7 +94,7 @@ SPAN_KIND_MAP = {
         SpanKind.CLIENT: zipkin_pb2.Span.Kind.CLIENT,
         SpanKind.PRODUCER: zipkin_pb2.Span.Kind.PRODUCER,
         SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
-    }
+    },
 }
 
 SUCCESS_STATUS_CODES = (200, 202)
@@ -123,7 +123,9 @@ class ZipkinSpanExporter(SpanExporter):
         ipv6: Optional[str] = None,
         retry: Optional[str] = DEFAULT_RETRY,
         max_tag_value_length: Optional[int] = DEFAULT_MAX_TAG_VALUE_LENGTH,
-        transport_format: Union[TRANSPORT_FORMAT_JSON, TRANSPORT_FORMAT_PROTOBUF, None] = None
+        transport_format: Union[
+            TRANSPORT_FORMAT_JSON, TRANSPORT_FORMAT_PROTOBUF, None
+        ] = None,
     ):
         self.service_name = service_name
         if url is None:
@@ -159,7 +161,7 @@ class ZipkinSpanExporter(SpanExporter):
         result = requests.post(
             url=self.url,
             data=self._translate_to_transport_format(spans),
-            headers={"Content-Type": content_type}
+            headers={"Content-Type": content_type},
         )
 
         if result.status_code not in SUCCESS_STATUS_CODES:
@@ -178,8 +180,11 @@ class ZipkinSpanExporter(SpanExporter):
         pass
 
     def _translate_to_transport_format(self, spans: Sequence[Span]):
-        return self._translate_to_json(spans) \
-            if self.transport_format == TRANSPORT_FORMAT_JSON else self._translate_to_protobuf(spans)
+        return (
+            self._translate_to_json(spans)
+            if self.transport_format == TRANSPORT_FORMAT_JSON
+            else self._translate_to_protobuf(spans)
+        )
 
     def _translate_to_json(self, spans: Sequence[Span]):
         local_endpoint = {"serviceName": self.service_name, "port": self.port}
@@ -249,7 +254,9 @@ class ZipkinSpanExporter(SpanExporter):
 
     def _translate_to_protobuf(self, spans: Sequence[Span]):
 
-        local_endpoint = zipkin_pb2.Endpoint(service_name=self.service_name, port=self.port)
+        local_endpoint = zipkin_pb2.Endpoint(
+            service_name=self.service_name, port=self.port
+        )
 
         if self.ipv4 is not None:
             local_endpoint.ipv4 = self.ipv4
@@ -261,7 +268,9 @@ class ZipkinSpanExporter(SpanExporter):
 
         for span in spans:
             context = span.get_span_context()
-            trace_id = context.trace_id.to_bytes(length=16, byteorder="big", signed=False)
+            trace_id = context.trace_id.to_bytes(
+                length=16, byteorder="big", signed=False,
+            )
             span_id = self.format_pbuf_span_id(context.span_id)
 
             # Timestamp in zipkin spans is int of microseconds.
@@ -277,7 +286,7 @@ class ZipkinSpanExporter(SpanExporter):
                 duration=duration_mus,
                 local_endpoint=local_endpoint,
                 kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][span.kind],
-                tags=self._extract_tags_from_span(span)
+                tags=self._extract_tags_from_span(span),
             )
 
             annotations = self._extract_annotations_from_events(span.events)
@@ -292,15 +301,21 @@ class ZipkinSpanExporter(SpanExporter):
                     )
 
             if span.instrumentation_info is not None:
-                pbuf_span.tags.update({
-                    "otel.instrumentation_library.name": span.instrumentation_info.name,
-                    "otel.instrumentation_library.version": span.instrumentation_info.version
-                })
+                pbuf_span.tags.update(
+                    {
+                        "otel.instrumentation_library.name": span.instrumentation_info.name,
+                        "otel.instrumentation_library.version": span.instrumentation_info.version,
+                    }
+                )
 
             if span.status is not None:
-                pbuf_span.tags.update({"otel.status_code": str(span.status.status_code.value)})
+                pbuf_span.tags.update(
+                    {"otel.status_code": str(span.status.status_code.value)}
+                )
                 if span.status.description is not None:
-                    pbuf_span.tags.update({"otel.status_description": span.status.description})
+                    pbuf_span.tags.update(
+                        {"otel.status_description": span.status.description}
+                    )
 
             if context.trace_flags.sampled:
                 pbuf_span.debug = True
@@ -310,7 +325,9 @@ class ZipkinSpanExporter(SpanExporter):
                     span.parent.get_span_context().span_id
                 )
             elif isinstance(span.parent, SpanContext):
-                pbuf_span.parent_id = self.format_pbuf_span_id(span.parent.span_id)
+                pbuf_span.parent_id = self.format_pbuf_span_id(
+                    span.parent.span_id
+                )
 
             pbuf_spans.spans.append(pbuf_span)
 
