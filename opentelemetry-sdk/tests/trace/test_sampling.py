@@ -47,14 +47,17 @@ class TestDecision(unittest.TestCase):
 class TestSamplingResult(unittest.TestCase):
     def test_ctr(self):
         attributes = {"asd": "test"}
+        trace_state = trace.DEFAULT_TRACE_STATE
+        trace_state["test"] = "123"
         result = sampling.SamplingResult(
-            sampling.Decision.RECORD_ONLY, attributes
+            sampling.Decision.RECORD_ONLY, attributes, trace_state
         )
         self.assertIs(result.decision, sampling.Decision.RECORD_ONLY)
         with self.assertRaises(TypeError):
             result.attributes["test"] = "mess-this-up"
         self.assertTrue(len(result.attributes), 1)
         self.assertEqual(result.attributes["asd"], "test")
+        self.assertEqual(result.trace_state["test"], "123")
 
 
 class TestSampler(unittest.TestCase):
