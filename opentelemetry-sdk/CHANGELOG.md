@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.15b0
+
+Released 2020-11-02
+
 - Make `SpanProcessor.on_start` accept parent Context
   ([#1251](https://github.com/open-telemetry/opentelemetry-python/pull/1251))
 - Fix b3 propagator entrypoint
@@ -10,7 +14,16 @@
   ([#998](https://github.com/open-telemetry/opentelemetry-python/pull/998))
 - Samplers to accept parent Context
   ([#1267](https://github.com/open-telemetry/opentelemetry-python/pull/1267))
-- Updating status codes to adhere to spec ([#1282](https://github.com/open-telemetry/opentelemetry-python/pull/1282))
+- Updating status codes to adhere to spec
+  ([#1282](https://github.com/open-telemetry/opentelemetry-python/pull/1282))
+- Span.is_recording() returns false after span has ended
+  ([#1289](https://github.com/open-telemetry/opentelemetry-python/pull/1289))
+- Set initial checkpoint timestamp in aggregators
+  ([#1237](https://github.com/open-telemetry/opentelemetry-python/pull/1237))
+- Allow samplers to modify tracestate
+  ([#1319](https://github.com/open-telemetry/opentelemetry-python/pull/1319))
+- Remove TracerProvider coupling from Tracer init
+  ([#1295](https://github.com/open-telemetry/opentelemetry-python/pull/1295))
 
 ## Version 0.14b0
 
@@ -39,6 +52,8 @@ Released 2020-10-13
   ([#1209](https://github.com/open-telemetry/opentelemetry-python/pull/1209))
 - Parent is now always passed in via Context, intead of Span or SpanContext
   ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
+- Add keys method to TextMap propagator Getter
+  ([#1196](https://github.com/open-telemetry/opentelemetry-python/issues/1196))
 
 ## Version 0.13b0
 
