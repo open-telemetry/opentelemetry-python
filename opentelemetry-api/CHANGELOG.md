@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Updating `Span.record_exception` to adhere to specs ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
+- Add optional parameter to `record_exception` method ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
 - Updating status codes to adhere to specs ([#1282](https://github.com/open-telemetry/opentelemetry-python/pull/1282))
 
 ## Version 0.14b0
