@@ -73,8 +73,8 @@ from opentelemetry.exporter.zipkin import zipkin_pb2
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
 
-TRANSPORT_FORMAT_JSON = "application/json"
-TRANSPORT_FORMAT_PROTOBUF = "application/x-protobuf"
+TRANSPORT_FORMAT_JSON = "json"
+TRANSPORT_FORMAT_PROTOBUF = "protobuf"
 
 DEFAULT_RETRY = False
 DEFAULT_URL = "http://localhost:9411/api/v2/spans"
@@ -123,7 +123,7 @@ class ZipkinSpanExporter(SpanExporter):
         ipv6: Optional[str] = None,
         retry: Optional[str] = DEFAULT_RETRY,
         max_tag_value_length: Optional[int] = DEFAULT_MAX_TAG_VALUE_LENGTH,
-        transport_format: Union[TRANSPORT_FORMAT_JSON, TRANSPORT_FORMAT_PROTOBUF, None] = TRANSPORT_FORMAT_JSON
+        transport_format: Union[TRANSPORT_FORMAT_JSON, TRANSPORT_FORMAT_PROTOBUF, None] = None
     ):
         self.service_name = service_name
         if url is None:
@@ -139,13 +139,27 @@ class ZipkinSpanExporter(SpanExporter):
         self.ipv6 = ipv6
         self.retry = retry
         self.max_tag_value_length = max_tag_value_length
-        self.transport_format = transport_format
+
+        if transport_format is None:
+            self.transport_format = os.environ.get(
+                "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT", TRANSPORT_FORMAT_JSON
+            )
+        else:
+            self.transport_format = transport_format
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
+        if self.transport_format == TRANSPORT_FORMAT_JSON:
+            content_type = "application/json"
+        elif self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
+            content_type = "application/x-protobuf"
+        else:
+            logger.error("Invalid transport format %s", self.transport_format)
+            return SpanExportResult.FAILURE
+
         result = requests.post(
             url=self.url,
             data=self._translate_to_transport_format(spans),
-            headers={"Content-Type": self.transport_format}
+            headers={"Content-Type": content_type}
         )
 
         if result.status_code not in SUCCESS_STATUS_CODES:

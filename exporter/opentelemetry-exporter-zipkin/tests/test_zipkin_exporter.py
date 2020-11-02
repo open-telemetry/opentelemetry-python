@@ -56,24 +56,26 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def tearDown(self):
         if "OTEL_EXPORTER_ZIPKIN_ENDPOINT" in os.environ:
             del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
+        if "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT" in os.environ:
+            del os.environ["OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"]
 
     def test_constructor_env_var(self):
         """Test the default values assigned by constructor."""
         url = "https://foo:9911/path"
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = url
+        os.environ["OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"] = TRANSPORT_FORMAT_PROTOBUF
         service_name = "my-service-name"
         port = 9911
         exporter = ZipkinSpanExporter(service_name)
         ipv4 = None
         ipv6 = None
-        transport_format = TRANSPORT_FORMAT_JSON
 
         self.assertEqual(exporter.service_name, service_name)
         self.assertEqual(exporter.ipv4, ipv4)
         self.assertEqual(exporter.ipv6, ipv6)
         self.assertEqual(exporter.url, url)
         self.assertEqual(exporter.port, port)
-        self.assertEqual(exporter.transport_format, transport_format)
+        self.assertEqual(exporter.transport_format, TRANSPORT_FORMAT_PROTOBUF)
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
@@ -312,7 +314,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         kwargs = mock_post.call_args[1]
 
         self.assertEqual(kwargs["url"], "http://localhost:9411/api/v2/spans")
-        self.assertEqual(kwargs["headers"]["Content-Type"], TRANSPORT_FORMAT_JSON)
+        self.assertEqual(kwargs["headers"]["Content-Type"], "application/json")
         actual_spans = sorted(
             json.loads(kwargs["data"]), key=lambda span: span["timestamp"]
         )
@@ -640,7 +642,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         kwargs = mock_post.call_args[1]
 
         self.assertEqual(kwargs["url"], "http://localhost:9411/api/v2/spans")
-        self.assertEqual(kwargs["headers"]["Content-Type"], TRANSPORT_FORMAT_PROTOBUF)
+        self.assertEqual(kwargs["headers"]["Content-Type"], "application/x-protobuf")
         self.assertEqual(zipkin_pb2.ListOfSpans.FromString(kwargs["data"]), expected_spans)
 
     def test_export_protobuf_max_tag_length(self):
