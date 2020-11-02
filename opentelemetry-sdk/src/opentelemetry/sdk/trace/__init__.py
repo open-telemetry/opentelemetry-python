@@ -780,7 +780,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.sampler.should_sample(
-            context, trace_id, name, attributes, links,
+            context, trace_id, name, attributes, links, trace_state
         )
 
         trace_flags = (
@@ -793,7 +793,7 @@ class Tracer(trace_api.Tracer):
             self.ids_generator.generate_span_id(),
             is_remote=False,
             trace_flags=trace_flags,
-            trace_state=trace_state,
+            trace_state=sampling_result.trace_state,
         )
 
         # Only record if is_recording() is true
