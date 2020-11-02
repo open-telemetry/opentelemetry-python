@@ -16,7 +16,6 @@
 
 import enum
 import logging
-import os
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
