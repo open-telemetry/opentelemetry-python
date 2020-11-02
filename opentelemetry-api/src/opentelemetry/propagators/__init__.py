@@ -82,24 +82,24 @@ logger = getLogger(__name__)
 
 
 def extract(
-    get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+    getter: textmap.Getter[textmap.TextMapPropagatorT],
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> Context:
     """ Uses the configured propagator to extract a Context from the carrier.
 
     Args:
-        get_from_carrier: a function that can retrieve zero
-            or more values from the carrier. In the case that
-            the value does not exist, return an empty list.
+        getter: an object which contains a get function that can retrieve zero
+            or more values from the carrier and a keys function that can get all the keys
+            from carrier.
         carrier: and object which contains values that are
             used to construct a Context. This object
-            must be paired with an appropriate get_from_carrier
+            must be paired with an appropriate getter
             which understands how to extract a value from it.
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_textmap().extract(get_from_carrier, carrier, context)
+    return get_global_textmap().extract(getter, carrier, context)
 
 
 def inject(
