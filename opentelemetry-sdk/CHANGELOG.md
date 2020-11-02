@@ -16,6 +16,8 @@
   ([#1289](https://github.com/open-telemetry/opentelemetry-python/pull/1289))
 - Set initial checkpoint timestamp in aggregators
   ([#1237](https://github.com/open-telemetry/opentelemetry-python/pull/1237))
+- Remove TracerProvider coupling from Tracer init
+  ([#1295](https://github.com/open-telemetry/opentelemetry-python/pull/1295))
 
 ## Version 0.14b0
 
