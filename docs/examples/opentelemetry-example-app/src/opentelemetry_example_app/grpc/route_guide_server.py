@@ -22,7 +22,7 @@ Note that you need ``opentelemetry-instrumentation-grpc`` and ``protobuf`` to be
 to run these examples. To run this script in the context of the example app,
 install ``opentelemetry-example-app``::
 
-    pip install -e ext/opentelemetry-instrumentation-grpc/
+    pip install -e instrumentation/opentelemetry-instrumentation-grpc/
     pip install -e docs/examples/opentelemetry-example-app
 
 Then run the server in one shell::
@@ -46,7 +46,6 @@ import grpc
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.grpc import server_interceptor
-from opentelemetry.instrumentation.grpc.grpcext import intercept_server
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -162,8 +161,10 @@ class RouteGuideServicer(route_guide_pb2_grpc.RouteGuideServicer):
 
 
 def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    server = intercept_server(server, server_interceptor())
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=10),
+        interceptors=[server_interceptor()],
+    )
 
     route_guide_pb2_grpc.add_RouteGuideServicer_to_server(
         RouteGuideServicer(), server

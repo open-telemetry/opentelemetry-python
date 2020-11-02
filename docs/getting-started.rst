@@ -49,7 +49,7 @@ We can run it, and see the traces print to your console:
         "start_time": "2020-05-07T14:39:52.906272Z",
         "end_time": "2020-05-07T14:39:52.906343Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {},
         "events": [],
@@ -67,7 +67,7 @@ We can run it, and see the traces print to your console:
         "start_time": "2020-05-07T14:39:52.906230Z",
         "end_time": "2020-05-07T14:39:52.906601Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {},
         "events": [],
@@ -85,7 +85,7 @@ We can run it, and see the traces print to your console:
         "start_time": "2020-05-07T14:39:52.906157Z",
         "end_time": "2020-05-07T14:39:52.906743Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {},
         "events": [],
@@ -150,7 +150,7 @@ The above is a great example, but it's very manual. Within the telemetry space, 
 * Database calls
 
 To help instrument common scenarios, opentelemetry also has the concept of "instrumentations": packages that are designed to interface
-with a specific framework or library, such as Flask and psycopg2. A list of the currently curated extension packages can be found :scm_web:`here <ext/>`.
+with a specific framework or library, such as Flask and psycopg2. A list of the currently curated extension packages can be found :scm_web:`here <instrumentation/>`.
 
 We will now instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
 
