@@ -23,12 +23,12 @@ Implementation of the service-side open-telemetry interceptor.
 
 import logging
 from contextlib import contextmanager
-from typing import List
 
 import grpc
 
 from opentelemetry import propagators, trace
 from opentelemetry.context import attach, detach
+from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.trace.status import Status, StatusCode
 
 logger = logging.getLogger(__name__)
@@ -113,8 +113,9 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
     def abort(self, code, details):
         self.code = code
         self.details = details
+        self._active_span.set_attribute("rpc.grpc.status_code", code.name)
         self._active_span.set_status(
-            Status(status_code=StatusCode(code.value[0]), description=details)
+            Status(status_code=StatusCode.ERROR, description=details)
         )
         return self._servicer_context.abort(code, details)
 
@@ -125,18 +126,16 @@ class _OpenTelemetryServicerContext(grpc.ServicerContext):
         self.code = code
         # use details if we already have it, otherwise the status description
         details = self.details or code.value[1]
+        self._active_span.set_attribute("rpc.grpc.status_code", code.name)
         self._active_span.set_status(
-            Status(status_code=StatusCode(code.value[0]), description=details)
+            Status(status_code=StatusCode.ERROR, description=details)
         )
         return self._servicer_context.set_code(code)
 
     def set_details(self, details):
         self.details = details
         self._active_span.set_status(
-            Status(
-                status_code=StatusCode(self.code.value[0]),
-                description=details,
-            )
+            Status(status_code=StatusCode.ERROR, description=details)
         )
         return self._servicer_context.set_details(details)
 
@@ -164,18 +163,14 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
 
     def __init__(self, tracer):
         self._tracer = tracer
+        self._carrier_getter = DictGetter()
 
     @contextmanager
     def _set_remote_context(self, servicer_context):
         metadata = servicer_context.invocation_metadata()
         if metadata:
             md_dict = {md.key: md.value for md in metadata}
-
-            def get_from_grpc_metadata(metadata, key) -> List[str]:
-                return [md_dict[key]] if key in md_dict else []
-
-            # Update the context with the traceparent from the RPC metadata.
-            ctx = propagators.extract(get_from_grpc_metadata, metadata)
+            ctx = propagators.extract(self._carrier_getter, md_dict)
             token = attach(ctx)
             try:
                 yield
@@ -189,6 +184,7 @@ class OpenTelemetryServerInterceptor(grpc.ServerInterceptor):
         attributes = {
             "rpc.method": handler_call_details.method,
             "rpc.system": "grpc",
+            "rpc.grpc.status_code": grpc.StatusCode.OK,
         }
 
         metadata = dict(context.invocation_metadata())

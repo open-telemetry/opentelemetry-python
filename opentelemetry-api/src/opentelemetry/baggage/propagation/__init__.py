@@ -29,7 +29,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -43,7 +43,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
             context = get_current()
 
         header = _extract_first_element(
-            get_from_carrier(carrier, self._BAGGAGE_HEADER_NAME)
+            getter.get(carrier, self._BAGGAGE_HEADER_NAME)
         )
 
         if not header or len(header) > self.MAX_HEADER_LENGTH:
