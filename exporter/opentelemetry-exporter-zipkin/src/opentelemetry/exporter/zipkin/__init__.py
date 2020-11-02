@@ -69,7 +69,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from opentelemetry.exporter.zipkin import zipkin_pb2
+from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
 

@@ -19,13 +19,13 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin import (
-    nsec_to_usec_round,
     SPAN_KIND_MAP,
     TRANSPORT_FORMAT_JSON,
     TRANSPORT_FORMAT_PROTOBUF,
-    zipkin_pb2,
     ZipkinSpanExporter,
+    nsec_to_usec_round,
 )
+from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
