@@ -371,13 +371,19 @@ def _create_immutable_attributes(attributes):
     return MappingProxyType(attributes.copy() if attributes else {})
 
 
+class _SpanEndedException(Exception):
+    pass
+
+
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
-        with self._lock:  # pylint: disable=protected-access
-            if self.end_time is not None:
-                logger.warning("Calling %s on an ended span.", func.__name__)
-                return
-            func(self, *args, **kwargs)
+        try:
+            with self._lock:  # pylint: disable=protected-access
+                if self.end_time is not None:
+                    raise _SpanEndedException
+                func(self, *args, **kwargs)
+        except _SpanEndedException:
+            logger.warning("Calling %s on an ended span.", func.__name__)
 
     return wrapper
 
