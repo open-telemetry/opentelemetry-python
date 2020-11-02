@@ -5,6 +5,14 @@
 gzip-compression-feature
 - Add Gzip compression for exporter
   ([#1141](https://github.com/open-telemetry/opentelemetry-python/pull/1141))
+## Version 0.15b0
+
+Released 2020-11-02
+
+- Add Env variables in OTLP exporter
+  ([#1101](https://github.com/open-telemetry/opentelemetry-python/pull/1101))
+- Do not use bound instruments in OTLP exporter
+  ([#1237](https://github.com/open-telemetry/opentelemetry-python/pull/1237))
 
 ## Version 0.14b0
 

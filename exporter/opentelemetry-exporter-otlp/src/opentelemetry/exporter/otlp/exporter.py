@@ -33,8 +33,10 @@ from grpc import (
     StatusCode,
     insecure_channel,
     secure_channel,
+    ssl_channel_credentials,
 )
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -120,6 +122,16 @@ def _get_resource_data(
     return resource_data
 
 
+def _load_credential_from_file(filepath) -> ChannelCredentials:
+    try:
+        with open(filepath, "rb") as f:
+            credential = f.read()
+            return ssl_channel_credentials(credential)
+    except FileNotFoundError:
+        logger.exception("Failed to read credential file")
+        return None
+
+
 # pylint: disable=no-member
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
@@ -128,22 +140,43 @@ class OTLPExporterMixin(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         metadata: Metadata to send when exporting
         compression: Compression algorithm to be used in channel
+        timeout: Backend request timeout in seconds
     """
 
     def __init__(
         self,
-        endpoint: str = "localhost:55680",
-        credentials: ChannelCredentials = None,
-        metadata: Optional[Tuple[Any]] = None,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
+        credentials: Optional[ChannelCredentials] = None,
+        headers: Optional[str] = None,
+        timeout: Optional[int] = None,
         compression: str = None,
     ):
         super().__init__()
 
-        self._metadata = metadata
+        endpoint = (
+            endpoint
+            or Configuration().EXPORTER_OTLP_ENDPOINT
+            or "localhost:55680"
+        )
+
+        if insecure is None:
+            insecure = Configuration().EXPORTER_OTLP_INSECURE
+        if insecure is None:
+            insecure = False
+
+        self._headers = headers or Configuration().EXPORTER_OTLP_HEADERS
+        self._timeout = (
+            timeout
+            or Configuration().EXPORTER_OTLP_TIMEOUT
+            or 10  # default: 10 seconds
+        )
         self._collector_span_kwargs = None
+
 
         if compression is None:
             compression_algorithm = Compression.NoCompression
@@ -168,18 +201,13 @@ class OTLPExporterMixin(
                     "OTEL_EXPORTER_OTLP_COMPRESSION environment variable does not match gzip."
                 )
 
-        if credentials is None:
-            self._client = self._stub(
-                channel=insecure_channel(
-                    endpoint, compression=compression_algorithm
-                )
-            )
+        if insecure:
+            self._client = self._stub(insecure_channel(endpoint, endpoint, compression=compression_algorithm))
         else:
-            self._client = self._stub(
-                secure_channel(
-                    endpoint, credentials, compression=compression_algorithm
-                )
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_CERTIFICATE
             )
+            self._client = self._stub(secure_channel(endpoint, credentials, compression=compression_algorithm))
 
     @abstractmethod
     def _translate_data(
@@ -204,7 +232,8 @@ class OTLPExporterMixin(
             try:
                 self._client.Export(
                     request=self._translate_data(data),
-                    metadata=self._metadata,
+                    metadata=self._headers,
+                    timeout=self._timeout,
                 )
 
                 return self._result.SUCCESS

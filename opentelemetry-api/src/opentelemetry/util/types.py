@@ -20,10 +20,10 @@ AttributeValue = Union[
     bool,
     int,
     float,
-    Sequence[str],
-    Sequence[bool],
-    Sequence[int],
-    Sequence[float],
+    Sequence[Union[None, str]],
+    Sequence[Union[None, bool]],
+    Sequence[Union[None, int]],
+    Sequence[Union[None, float]],
 ]
 Attributes = Optional[Mapping[str, AttributeValue]]
 AttributesFormatter = Callable[[], Attributes]
