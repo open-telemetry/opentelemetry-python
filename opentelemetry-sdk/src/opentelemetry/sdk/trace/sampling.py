@@ -68,6 +68,7 @@ from typing import Optional, Sequence
 # pylint: disable=unused-import
 from opentelemetry.context import Context
 from opentelemetry.trace import Link, get_current_span
+from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
 
@@ -93,6 +94,8 @@ class SamplingResult:
         decision: A sampling decision based off of whether the span is recorded
             and the sampled flag in trace flags in the span context.
         attributes: Attributes to add to the `opentelemetry.trace.Span`.
+        trace_state: The tracestate used for the `opentelemetry.trace.Span`.
+            Could possibly have been modified by the sampler.
     """
 
     def __repr__(self) -> str:
@@ -101,13 +104,17 @@ class SamplingResult:
         )
 
     def __init__(
-        self, decision: Decision, attributes: Attributes = None,
+        self,
+        decision: Decision,
+        attributes: "Attributes" = None,
+        trace_state: "TraceState" = None,
     ) -> None:
         self.decision = decision
         if attributes is None:
             self.attributes = MappingProxyType({})
         else:
             self.attributes = MappingProxyType(attributes)
+        self.trace_state = trace_state
 
 
 class Sampler(abc.ABC):
@@ -119,6 +126,7 @@ class Sampler(abc.ABC):
         name: str,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
+        trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         pass
 
@@ -140,10 +148,11 @@ class StaticSampler(Sampler):
         name: str,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
+        trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             return SamplingResult(self._decision)
-        return SamplingResult(self._decision, attributes)
+        return SamplingResult(self._decision, attributes, trace_state)
 
     def get_description(self) -> str:
         if self._decision is Decision.DROP:
@@ -194,6 +203,7 @@ class TraceIdRatioBased(Sampler):
         name: str,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
+        trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
@@ -226,6 +236,7 @@ class ParentBased(Sampler):
         name: str,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
+        trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         if parent_context is not None:
             parent_span_context = get_current_span(
@@ -246,6 +257,7 @@ class ParentBased(Sampler):
             name=name,
             attributes=attributes,
             links=links,
+            trace_state=trace_state,
         )
 
     def get_description(self):
