@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Updating `Span.record_exception` to adhere to specs
+- Add optional parameter to `record_exception` method ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
 - Make `SpanProcessor.on_start` accept parent Context
   ([#1251](https://github.com/open-telemetry/opentelemetry-python/pull/1251))
 - Fix b3 propagator entrypoint
