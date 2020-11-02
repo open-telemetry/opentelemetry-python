@@ -177,7 +177,6 @@ class OTLPExporterMixin(
         )
         self._collector_span_kwargs = None
 
-
         if compression is None:
             compression_algorithm = Compression.NoCompression
         elif (
@@ -204,7 +203,7 @@ class OTLPExporterMixin(
         if insecure:
             self._client = self._stub(
                 insecure_channel(
-                    endpoint, endpoint, compression=compression_algorithm
+                    endpoint, compression=compression_algorithm
                 )
             )
         else:
