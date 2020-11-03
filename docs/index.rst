@@ -30,6 +30,10 @@ In addition, there are several extension packages which can be installed separat
     pip install opentelemetry-instrumentation-{instrumentation}
 
 These are for exporter and instrumentation packages respectively.
+Some packages can be found in :scm_web:`instrumentation <instrumentation/>` and :scm_web:`exporter <exporter/>`
+directory of the repository. The remaining packages can be found at the 
+`Contrib repo instrumentation <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_
+and `Contrib repo exporter <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/exporter>`_ directories.
 
 Extensions
 ----------
@@ -69,6 +73,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
     api/api
     sdk/sdk
+    instrumentation/instrumentation
 
 .. toctree::
     :maxdepth: 2
@@ -77,6 +82,14 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
     :glob:
 
     exporter/**
+
+.. toctree::
+    :maxdepth: 2
+    :caption: OpenTelemetry Instrumentations
+    :name: Instrumentations
+    :glob:
+
+    instrumentation/**
 
 .. toctree::
     :maxdepth: 1
