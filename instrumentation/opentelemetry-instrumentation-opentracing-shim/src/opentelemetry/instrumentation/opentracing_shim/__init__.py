@@ -496,7 +496,7 @@ class ScopeManagerShim(ScopeManager):
             span.
 
         Warning:
-            This property is *not* a part of the OpenTracing API. It used
+            This property is *not* a part of the OpenTracing API. It is used
             internally by the current implementation of the OpenTracing shim
             and will likely be removed in future versions.
         """
