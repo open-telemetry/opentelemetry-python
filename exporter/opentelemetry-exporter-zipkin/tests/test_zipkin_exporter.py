@@ -60,7 +60,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
         if "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT" in os.environ:
             del os.environ["OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"]
-        Configuration()._reset() # pylint: disable=protected-access
+        Configuration()._reset()  # pylint: disable=protected-access
 
     def test_constructor_env_var(self):
         """Test the default values assigned by constructor."""
