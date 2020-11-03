@@ -26,6 +26,16 @@ The **OTLP Span Exporter** allows to export `OpenTelemetry`_ traces to the
 .. _OTLP: https://github.com/open-telemetry/opentelemetry-collector/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 
+.. envvar:: OTEL_EXPORTER_OTLP_COMPRESSION
+
+The :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` environment variable allows a
+compression algorithm to be passed to the OTLP exporter. The compression
+algorithms that are supported include gzip and no compression. The value should
+be in the format of a string "gzip" for gzip compression, and no value specified
+if no compression is the desired choice.
+Additional details are available `in the specification
+<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/protocol/exporter.md#opentelemetry-protocol-exporter>`_.
+
 .. code:: python
 
     from opentelemetry import trace
