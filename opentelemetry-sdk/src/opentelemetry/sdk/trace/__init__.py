@@ -694,14 +694,15 @@ class Span(trace_api.Span):
             # an AttributeError if the __context__ on
             # an exception is None
             stacktrace = "Exception occurred on stacktrace formatting"
-
+        _attributes = {
+            "exception.type": exception.__class__.__name__,
+            "exception.message": str(exception),
+            "exception.stacktrace": stacktrace,
+        }
+        if attributes:
+            _attributes.update(attributes)
         self.add_event(
-            name="exception",
-            attributes={
-                "exception.type": exception.__class__.__name__,
-                "exception.message": str(exception),
-                "exception.stacktrace": stacktrace,
-            },
+            name="exception", attributes=_attributes, timestamp=timestamp
         )
 
 
