@@ -26,6 +26,9 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 .. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
 
+.. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
+.. envvar:: OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT
+
 .. code:: python
 
     from opentelemetry import trace
@@ -55,7 +58,14 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
 
-The exporter supports endpoint configuration via the OTEL_EXPORTER_ZIPKIN_ENDPOINT environment variables as defined in the `Specification`_
+The exporter supports the following environment variables for configuration:
+
+:envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: target to which the exporter will
+send data. This may include a path (e.g. http://example.com:9411/api/v2/spans).
+
+:envvar:`OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT`: transport interchange format
+to use when sending data. Currently only Zipkin's v2 json and protobuf formats
+are supported, with v2 json being the default.
 
 API
 ---
