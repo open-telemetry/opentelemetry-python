@@ -37,10 +37,9 @@ class TestRedisInstrument(TestBase):
         self.assertEqual(span.attributes["service"], self.test_service)
         self.assertEqual(span.name, "redis.command")
         self.assertIs(span.status.status_code, trace.status.StatusCode.UNSET)
-        self.assertEqual(span.attributes.get("db.instance"), 0)
-        self.assertEqual(
-            span.attributes.get("db.url"), "redis://localhost:6379"
-        )
+        self.assertEqual(span.attributes.get("db.name"), 0)
+        self.assertEqual(span.attributes.get("net.peer.name"), "localhost")
+        self.assertEqual(span.attributes.get("net.peer.port"), 6379)
 
     def test_long_command(self):
         self.redis_client.mget(*range(1000))
