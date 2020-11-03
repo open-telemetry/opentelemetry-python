@@ -141,7 +141,7 @@ class OTLPExporterMixin(
         endpoint: OpenTelemetry Collector receiver endpoint
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
-        metadata: Metadata to send when exporting
+        headers: Headers to send when exporting
         compression: Compression algorithm to be used in channel
         timeout: Backend request timeout in seconds
     """
