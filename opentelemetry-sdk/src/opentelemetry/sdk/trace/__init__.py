@@ -680,7 +680,12 @@ class Span(trace_api.Span):
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
-    def record_exception(self, exception: Exception) -> None:
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+    ) -> None:
         """Records an exception as a span event."""
         try:
             stacktrace = traceback.format_exc()
@@ -689,14 +694,15 @@ class Span(trace_api.Span):
             # an AttributeError if the __context__ on
             # an exception is None
             stacktrace = "Exception occurred on stacktrace formatting"
-
+        _attributes = {
+            "exception.type": exception.__class__.__name__,
+            "exception.message": str(exception),
+            "exception.stacktrace": stacktrace,
+        }
+        if attributes:
+            _attributes.update(attributes)
         self.add_event(
-            name="exception",
-            attributes={
-                "exception.type": exception.__class__.__name__,
-                "exception.message": str(exception),
-                "exception.stacktrace": stacktrace,
-            },
+            name="exception", attributes=_attributes, timestamp=timestamp
         )
 
 
@@ -780,7 +786,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.sampler.should_sample(
-            context, trace_id, name, attributes, links,
+            context, trace_id, name, attributes, links, trace_state
         )
 
         trace_flags = (
@@ -793,7 +799,7 @@ class Tracer(trace_api.Tracer):
             self.ids_generator.generate_span_id(),
             is_remote=False,
             trace_flags=trace_flags,
-            trace_state=trace_state,
+            trace_state=sampling_result.trace_state,
         )
 
         # Only record if is_recording() is true
