@@ -278,6 +278,7 @@ class ZipkinSpanExporter(SpanExporter):
             start_timestamp_mus = nsec_to_usec_round(span.start_time)
             duration_mus = nsec_to_usec_round(span.end_time - span.start_time)
 
+            # pylint: disable=no-member
             pbuf_span = zipkin_pb2.Span(
                 trace_id=trace_id,
                 id=span_id,

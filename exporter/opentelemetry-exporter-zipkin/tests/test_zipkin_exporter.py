@@ -706,6 +706,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             status = exporter.export([span])
             self.assertEqual(SpanExportResult.SUCCESS, status)
 
+        # pylint: disable=unsubscriptable-object
         kwargs = mock_post.call_args[1]
         actual_spans = zipkin_pb2.ListOfSpans.FromString(kwargs["data"])
         span_tags = actual_spans.spans[0].tags
@@ -724,6 +725,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             status = exporter.export([span])
             self.assertEqual(SpanExportResult.SUCCESS, status)
 
+        # pylint: disable=unsubscriptable-object
         kwargs = mock_post.call_args[1]
         actual_spans = zipkin_pb2.ListOfSpans.FromString(kwargs["data"])
         span_tags = actual_spans.spans[0].tags
