@@ -63,14 +63,14 @@ class PymemcacheClientTestCase(
 
         for span, query in zip(spans, queries_expected):
             self.assertEqual(span.name, "memcached.command")
-            self.assertIs(span.kind, trace_api.SpanKind.INTERNAL)
+            self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
             self.assertEqual(
                 span.attributes["net.peer.name"], "{}".format(TEST_HOST)
             )
             self.assertEqual(span.attributes["net.peer.port"], TEST_PORT)
-            self.assertEqual(span.attributes["db.type"], "memcached")
+            self.assertEqual(span.attributes["db.system"], "memcached")
             self.assertEqual(
-                span.attributes["db.url"],
+                span.attributes["db.connection_string"],
                 "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
             )
             self.assertEqual(span.attributes["db.statement"], query)
@@ -215,7 +215,7 @@ class PymemcacheClientTestCase(
 
         self.assertEqual(len(spans), 2)
         self.assertEqual(
-            spans[0].attributes["db.url"],
+            spans[0].attributes["db.connection_string"],
             "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
         )
 
@@ -518,14 +518,14 @@ class PymemcacheHashClientTestCase(TestBase):
 
         for span, query in zip(spans, queries_expected):
             self.assertEqual(span.name, "memcached.command")
-            self.assertIs(span.kind, trace_api.SpanKind.INTERNAL)
+            self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
             self.assertEqual(
                 span.attributes["net.peer.name"], "{}".format(TEST_HOST)
             )
             self.assertEqual(span.attributes["net.peer.port"], TEST_PORT)
-            self.assertEqual(span.attributes["db.type"], "memcached")
+            self.assertEqual(span.attributes["db.system"], "memcached")
             self.assertEqual(
-                span.attributes["db.url"],
+                span.attributes["db.connection_string"],
                 "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
             )
             self.assertEqual(span.attributes["db.statement"], query)
