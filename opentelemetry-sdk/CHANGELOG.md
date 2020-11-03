@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.15b0
+
+Released 2020-11-02
+
 - Make `SpanProcessor.on_start` accept parent Context
   ([#1251](https://github.com/open-telemetry/opentelemetry-python/pull/1251))
 - Fix b3 propagator entrypoint
@@ -16,6 +20,10 @@
   ([#1289](https://github.com/open-telemetry/opentelemetry-python/pull/1289))
 - Set initial checkpoint timestamp in aggregators
   ([#1237](https://github.com/open-telemetry/opentelemetry-python/pull/1237))
+- Allow samplers to modify tracestate
+  ([#1319](https://github.com/open-telemetry/opentelemetry-python/pull/1319))
+- Remove TracerProvider coupling from Tracer init
+  ([#1295](https://github.com/open-telemetry/opentelemetry-python/pull/1295))
 
 ## Version 0.14b0
 

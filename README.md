@@ -84,7 +84,7 @@ install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
 ```sh
 pip install -e ./opentelemetry-api
 pip install -e ./opentelemetry-sdk
-pip install -e ./ext/opentelemetry-instrumentation-{instrumentation}
+pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 ```
 
 ## Documentation
