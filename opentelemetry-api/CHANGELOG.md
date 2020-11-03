@@ -3,6 +3,11 @@
 ## Unreleased
 
 - Add optional parameter to `record_exception` method ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
+
+## Version 0.15b0
+
+Released 2020-11-02
+
 - Updating status codes to adhere to specs ([#1282](https://github.com/open-telemetry/opentelemetry-python/pull/1282))
 
 ## Version 0.14b0
