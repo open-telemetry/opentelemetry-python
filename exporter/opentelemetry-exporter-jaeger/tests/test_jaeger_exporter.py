@@ -25,6 +25,7 @@ from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
 
 
@@ -151,6 +152,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(nsec_to_usec_round(5499), 5)
         self.assertEqual(nsec_to_usec_round(5500), 6)
 
+    def test_all_otlp_span_kinds_are_mapped(self):
+        for kind in SpanKind:
+            self.assertIn(kind, jaeger_exporter.OTLP_JAEGER_SPAN_KIND)
+
     # pylint: disable=too-many-locals
     def test_translate_to_jaeger(self):
         # pylint: disable=invalid-name
@@ -216,9 +221,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 key="status.message", vType=jaeger.TagType.STRING, vStr=None
             ),
             jaeger.Tag(
-                key="span.kind",
-                vType=jaeger.TagType.STRING,
-                vStr=trace_api.SpanKind.INTERNAL.name,
+                key="span.kind", vType=jaeger.TagType.STRING, vStr="internal",
             ),
         ]
 
@@ -315,7 +318,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="span.kind",
                         vType=jaeger.TagType.STRING,
-                        vStr=trace_api.SpanKind.CLIENT.name,
+                        vStr="client",
                     ),
                     jaeger.Tag(
                         key="error", vType=jaeger.TagType.BOOL, vBool=True
@@ -391,7 +394,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="span.kind",
                         vType=jaeger.TagType.STRING,
-                        vStr=trace_api.SpanKind.INTERNAL.name,
+                        vStr="internal",
                     ),
                     jaeger.Tag(
                         key="otel.instrumentation_library.name",
