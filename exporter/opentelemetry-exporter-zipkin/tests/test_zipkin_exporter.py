@@ -20,7 +20,8 @@ from unittest.mock import MagicMock, patch
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
-    SPAN_KIND_MAP,
+    SPAN_KIND_MAP_JSON,
+    SPAN_KIND_MAP_PROTOBUF,
     TRANSPORT_FORMAT_JSON,
     TRANSPORT_FORMAT_PROTOBUF,
     ZipkinSpanExporter,
@@ -229,6 +230,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         service_name = "test-service"
         local_endpoint = {"serviceName": service_name, "port": 9411}
+        span_kind = SPAN_KIND_MAP_JSON[SpanKind.INTERNAL]
 
         exporter = ZipkinSpanExporter(service_name)
         expected_spans = [
@@ -239,7 +241,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "timestamp": start_times[0] // 10 ** 3,
                 "duration": durations[0] // 10 ** 3,
                 "localEndpoint": local_endpoint,
-                "kind": None,
+                "kind": span_kind,
                 "tags": {
                     "key_bool": "False",
                     "key_string": "hello_world",
@@ -269,7 +271,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "timestamp": start_times[1] // 10 ** 3,
                 "duration": durations[1] // 10 ** 3,
                 "localEndpoint": local_endpoint,
-                "kind": None,
+                "kind": span_kind,
                 "tags": {
                     "key_resource": "some_resource",
                     "otel.status_code": "1",
@@ -283,7 +285,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "timestamp": start_times[2] // 10 ** 3,
                 "duration": durations[2] // 10 ** 3,
                 "localEndpoint": local_endpoint,
-                "kind": None,
+                "kind": span_kind,
                 "tags": {
                     "key_string": "hello_world",
                     "key_resource": "some_resource",
@@ -298,7 +300,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "timestamp": start_times[3] // 10 ** 3,
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
-                "kind": None,
+                "kind": span_kind,
                 "tags": {
                     "otel.instrumentation_library.name": "name",
                     "otel.instrumentation_library.version": "version",
@@ -380,7 +382,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "timestamp": start_time // 10 ** 3,
                 "duration": duration // 10 ** 3,
                 "localEndpoint": local_endpoint,
-                "kind": None,
+                "kind": SPAN_KIND_MAP_JSON[SpanKind.INTERNAL],
                 "tags": {"otel.status_code": "1"},
                 "annotations": None,
                 "debug": True,
@@ -562,6 +564,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         local_endpoint = zipkin_pb2.Endpoint(
             service_name=service_name, port=9411
         )
+        span_kind = SPAN_KIND_MAP_PROTOBUF[SpanKind.INTERNAL]
 
         expected_spans = zipkin_pb2.ListOfSpans(
             spans=[
@@ -574,9 +577,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     timestamp=nsec_to_usec_round(start_times[0]),
                     duration=nsec_to_usec_round(durations[0]),
                     local_endpoint=local_endpoint,
-                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
-                        SpanKind.INTERNAL
-                    ],
+                    kind=span_kind,
                     tags={
                         "key_bool": "False",
                         "key_string": "hello_world",
@@ -612,9 +613,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     timestamp=nsec_to_usec_round(start_times[1]),
                     duration=nsec_to_usec_round(durations[1]),
                     local_endpoint=local_endpoint,
-                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
-                        SpanKind.INTERNAL
-                    ],
+                    kind=span_kind,
                     tags={
                         "key_resource": "some_resource",
                         "otel.status_code": "1",
@@ -629,9 +628,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     timestamp=nsec_to_usec_round(start_times[2]),
                     duration=nsec_to_usec_round(durations[2]),
                     local_endpoint=local_endpoint,
-                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
-                        SpanKind.INTERNAL
-                    ],
+                    kind=span_kind,
                     tags={
                         "key_string": "hello_world",
                         "key_resource": "some_resource",
@@ -647,9 +644,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     timestamp=nsec_to_usec_round(start_times[3]),
                     duration=nsec_to_usec_round(durations[3]),
                     local_endpoint=local_endpoint,
-                    kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][
-                        SpanKind.INTERNAL
-                    ],
+                    kind=span_kind,
                     tags={
                         "otel.instrumentation_library.name": "name",
                         "otel.instrumentation_library.version": "version",

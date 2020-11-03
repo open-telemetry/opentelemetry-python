@@ -90,21 +90,20 @@ DEFAULT_RETRY = False
 DEFAULT_URL = "http://localhost:9411/api/v2/spans"
 DEFAULT_MAX_TAG_VALUE_LENGTH = 128
 
-SPAN_KIND_MAP = {
-    TRANSPORT_FORMAT_JSON: {
-        SpanKind.INTERNAL: None,
-        SpanKind.SERVER: "SERVER",
-        SpanKind.CLIENT: "CLIENT",
-        SpanKind.PRODUCER: "PRODUCER",
-        SpanKind.CONSUMER: "CONSUMER",
-    },
-    TRANSPORT_FORMAT_PROTOBUF: {
-        SpanKind.INTERNAL: zipkin_pb2.Span.Kind.SPAN_KIND_UNSPECIFIED,
-        SpanKind.SERVER: zipkin_pb2.Span.Kind.SERVER,
-        SpanKind.CLIENT: zipkin_pb2.Span.Kind.CLIENT,
-        SpanKind.PRODUCER: zipkin_pb2.Span.Kind.PRODUCER,
-        SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
-    },
+SPAN_KIND_MAP_JSON = {
+    SpanKind.INTERNAL: None,
+    SpanKind.SERVER: "SERVER",
+    SpanKind.CLIENT: "CLIENT",
+    SpanKind.PRODUCER: "PRODUCER",
+    SpanKind.CONSUMER: "CONSUMER",
+}
+
+SPAN_KIND_MAP_PROTOBUF = {
+    SpanKind.INTERNAL: zipkin_pb2.Span.Kind.SPAN_KIND_UNSPECIFIED,
+    SpanKind.SERVER: zipkin_pb2.Span.Kind.SERVER,
+    SpanKind.CLIENT: zipkin_pb2.Span.Kind.CLIENT,
+    SpanKind.PRODUCER: zipkin_pb2.Span.Kind.PRODUCER,
+    SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
 }
 
 SUCCESS_STATUS_CODES = (200, 202)
@@ -223,7 +222,7 @@ class ZipkinSpanExporter(SpanExporter):
                 "timestamp": start_timestamp_mus,
                 "duration": duration_mus,
                 "localEndpoint": local_endpoint,
-                "kind": SPAN_KIND_MAP[TRANSPORT_FORMAT_JSON][span.kind],
+                "kind": SPAN_KIND_MAP_JSON[span.kind],
                 "tags": self._extract_tags_from_span(span),
                 "annotations": self._extract_annotations_from_events(
                     span.events
@@ -295,7 +294,7 @@ class ZipkinSpanExporter(SpanExporter):
                 timestamp=start_timestamp_mus,
                 duration=duration_mus,
                 local_endpoint=local_endpoint,
-                kind=SPAN_KIND_MAP[TRANSPORT_FORMAT_PROTOBUF][span.kind],
+                kind=SPAN_KIND_MAP_PROTOBUF[span.kind],
                 tags=self._extract_tags_from_span(span),
             )
 
