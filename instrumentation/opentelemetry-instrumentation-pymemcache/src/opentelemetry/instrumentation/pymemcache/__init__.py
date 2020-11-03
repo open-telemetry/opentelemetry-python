@@ -59,7 +59,6 @@ _TRANSPORT_PROTOCOL = "net.transport"
 # Database semantic conventions here:
 # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
 _DB = "db.system"
-_URL = "db.connection_string"
 
 _DEFAULT_SERVICE = "memcached"
 _RAWCMD = "db.statement"
@@ -174,10 +173,8 @@ def _get_address_attributes(instance):
             host, port = instance.server
             address_attributes[_HOST] = host
             address_attributes[_PORT] = port
-            address_attributes[_URL] = "memcached://{}:{}".format(host, port)
             address_attributes[_TRANSPORT_PROTOCOL] = "IP.TCP"
         elif isinstance(instance.server, str):
-            address_attributes[_URL] = "memcached://{}".format(instance.server)
             address_attributes[_HOST] = instance.server
             address_attributes[_TRANSPORT_PROTOCOL] = "Unix"
 

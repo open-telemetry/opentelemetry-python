@@ -69,10 +69,6 @@ class PymemcacheClientTestCase(
             )
             self.assertEqual(span.attributes["net.peer.port"], TEST_PORT)
             self.assertEqual(span.attributes["db.system"], "memcached")
-            self.assertEqual(
-                span.attributes["db.connection_string"],
-                "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
-            )
             self.assertEqual(span.attributes["db.statement"], query)
 
     def test_set_success(self):
@@ -215,9 +211,10 @@ class PymemcacheClientTestCase(
 
         self.assertEqual(len(spans), 2)
         self.assertEqual(
-            spans[0].attributes["db.connection_string"],
-            "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
+            spans[0].attributes["net.peer.name"], "{}".format(TEST_HOST)
         )
+        self.assertEqual(spans[0].attributes["net.peer.port"], TEST_PORT)
+        self.assertEqual(spans[0].attributes["db.system"], "memcached")
 
     def test_append_stored(self):
         client = self.make_client([b"STORED\r\n"])
@@ -524,10 +521,6 @@ class PymemcacheHashClientTestCase(TestBase):
             )
             self.assertEqual(span.attributes["net.peer.port"], TEST_PORT)
             self.assertEqual(span.attributes["db.system"], "memcached")
-            self.assertEqual(
-                span.attributes["db.connection_string"],
-                "memcached://{}:{}".format(TEST_HOST, TEST_PORT),
-            )
             self.assertEqual(span.attributes["db.statement"], query)
 
     def test_delete_many_found(self):
