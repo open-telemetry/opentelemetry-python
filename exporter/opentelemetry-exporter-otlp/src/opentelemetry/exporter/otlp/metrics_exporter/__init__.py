@@ -121,7 +121,7 @@ class OTLPMetricsExporter(
         endpoint: OpenTelemetry Collector receiver endpoint
         insecure: Connection type
         credentials: Credentials object for server authentication
-        metadata: Metadata to send when exporting
+        headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
     """
 
