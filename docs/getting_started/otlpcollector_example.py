@@ -27,7 +27,7 @@ span_exporter = OTLPSpanExporter(
     # optional
     # endpoint:="myCollectorURL:55678",
     # credentials=ChannelCredentials(credentials),
-    # metadata=(("metadata", "metadata")),
+    # headers=(("metadata", "metadata")),
 )
 tracer_provider = TracerProvider()
 trace.set_tracer_provider(tracer_provider)
@@ -38,7 +38,7 @@ metric_exporter = OTLPMetricsExporter(
     # optional
     # endpoint:="myCollectorURL:55678",
     # credentials=ChannelCredentials(credentials),
-    # metadata=(("metadata", "metadata")),
+    # headers=(("metadata", "metadata")),
 )
 
 # Meter is responsible for creating and recording metrics
