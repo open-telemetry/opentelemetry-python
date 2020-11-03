@@ -57,10 +57,7 @@ class TestDBApiIntegration(TestBase):
         self.assertEqual(span.attributes["db.type"], "testtype")
         self.assertEqual(span.attributes["db.instance"], "testdatabase")
         self.assertEqual(span.attributes["db.statement"], "Test query")
-        self.assertEqual(
-            span.attributes["db.statement.parameters"],
-            "('param1Value', False)",
-        )
+        self.assertFalse("db.statement.parameters" in span.attributes)
         self.assertEqual(span.attributes["db.user"], "testuser")
         self.assertEqual(span.attributes["net.peer.name"], "testhost")
         self.assertEqual(span.attributes["net.peer.port"], 123)
@@ -86,7 +83,7 @@ class TestDBApiIntegration(TestBase):
             "testcomponent",
             "testtype",
             connection_attributes,
-            capture_parameters=False,
+            capture_parameters=True,
         )
         mock_connection = db_integration.wrapped_connection(
             mock_connect, {}, connection_props
@@ -103,7 +100,10 @@ class TestDBApiIntegration(TestBase):
         self.assertEqual(span.attributes["db.type"], "testtype")
         self.assertEqual(span.attributes["db.instance"], "testdatabase")
         self.assertEqual(span.attributes["db.statement"], "Test query")
-        self.assertFalse("db.statement.parameters" in span.attributes)
+        self.assertEqual(
+            span.attributes["db.statement.parameters"],
+            "('param1Value', False)",
+        )
         self.assertEqual(span.attributes["db.user"], "testuser")
         self.assertEqual(span.attributes["net.peer.name"], "testhost")
         self.assertEqual(span.attributes["net.peer.port"], 123)

@@ -101,7 +101,7 @@ def wrap_connect(
     connection_attributes: typing.Dict = None,
     version: str = "",
     tracer_provider: typing.Optional[TracerProvider] = None,
-    capture_parameters: bool = True,
+    capture_parameters: bool = False,
 ):
     """Integrate with DB API library.
         https://www.python.org/dev/peps/pep-0249/
@@ -166,6 +166,7 @@ def instrument_connection(
     connection_attributes: typing.Dict = None,
     version: str = "",
     tracer_provider: typing.Optional[TracerProvider] = None,
+    capture_parameters=False,
 ):
     """Enable instrumentation in a database connection.
 
@@ -177,7 +178,7 @@ def instrument_connection(
         database_type: The Database type. For any SQL database, "sql".
         connection_attributes: Attribute names for database, port, host and
             user in a connection object.
-
+        capture_parameters: Configure if db.statement.parameters should be captured.
     Returns:
         An instrumented connection.
     """
@@ -188,6 +189,7 @@ def instrument_connection(
         connection_attributes=connection_attributes,
         version=version,
         tracer_provider=tracer_provider,
+        capture_parameters=capture_parameters,
     )
     db_integration.get_connection_attributes(connection)
     return get_traced_connection_proxy(connection, db_integration)
@@ -218,7 +220,7 @@ class DatabaseApiIntegration:
         connection_attributes=None,
         version: str = "",
         tracer_provider: typing.Optional[TracerProvider] = None,
-        capture_parameters: bool = True,
+        capture_parameters: bool = False,
     ):
         self.connection_attributes = connection_attributes
         if self.connection_attributes is None:
