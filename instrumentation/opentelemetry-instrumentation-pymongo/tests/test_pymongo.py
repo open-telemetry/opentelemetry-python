@@ -57,22 +57,22 @@ class TestPymongo(TestBase):
         self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(span.name, "mongodb.command_name.find")
         self.assertEqual(span.attributes["component"], "mongodb")
-        self.assertEqual(span.attributes["db.type"], "mongodb")
-        self.assertEqual(span.attributes["db.instance"], "database_name")
+        self.assertEqual(span.attributes["db.system"], "mongodb")
+        self.assertEqual(span.attributes["db.name"], "database_name")
         self.assertEqual(span.attributes["db.statement"], "command_name find")
         self.assertEqual(span.attributes["net.peer.name"], "test.com")
         self.assertEqual(span.attributes["net.peer.port"], "1234")
         self.assertEqual(
-            span.attributes["db.mongo.operation_id"], "operation_id"
+            span.attributes["db.mongodb.operation_id"], "operation_id"
         )
         self.assertEqual(
-            span.attributes["db.mongo.request_id"], "test_request_id"
+            span.attributes["db.mongodb.request_id"], "test_request_id"
         )
 
-        self.assertEqual(span.attributes["db.mongo.filter"], "filter")
-        self.assertEqual(span.attributes["db.mongo.sort"], "sort")
-        self.assertEqual(span.attributes["db.mongo.limit"], "limit")
-        self.assertEqual(span.attributes["db.mongo.pipeline"], "pipeline")
+        self.assertEqual(span.attributes["db.mongodb.filter"], "filter")
+        self.assertEqual(span.attributes["db.mongodb.sort"], "sort")
+        self.assertEqual(span.attributes["db.mongodb.limit"], "limit")
+        self.assertEqual(span.attributes["db.mongodb.pipeline"], "pipeline")
 
     def test_succeeded(self):
         mock_event = MockEvent({})
@@ -83,7 +83,7 @@ class TestPymongo(TestBase):
         self.assertEqual(len(spans_list), 1)
         span = spans_list[0]
         self.assertEqual(
-            span.attributes["db.mongo.duration_micros"], "duration_micros"
+            span.attributes["db.mongodb.duration_micros"], "duration_micros"
         )
         self.assertIs(
             span.status.status_code, trace_api.status.StatusCode.UNSET
@@ -117,7 +117,7 @@ class TestPymongo(TestBase):
         span = spans_list[0]
 
         self.assertEqual(
-            span.attributes["db.mongo.duration_micros"], "duration_micros"
+            span.attributes["db.mongodb.duration_micros"], "duration_micros"
         )
         self.assertIs(
             span.status.status_code, trace_api.status.StatusCode.ERROR,
@@ -139,12 +139,14 @@ class TestPymongo(TestBase):
         first_span = spans_list[0]
         second_span = spans_list[1]
 
-        self.assertEqual(first_span.attributes["db.mongo.request_id"], "first")
+        self.assertEqual(
+            first_span.attributes["db.mongodb.request_id"], "first"
+        )
         self.assertIs(
             first_span.status.status_code, trace_api.status.StatusCode.UNSET,
         )
         self.assertEqual(
-            second_span.attributes["db.mongo.request_id"], "second"
+            second_span.attributes["db.mongodb.request_id"], "second"
         )
         self.assertIs(
             second_span.status.status_code, trace_api.status.StatusCode.ERROR,

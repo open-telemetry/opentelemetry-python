@@ -73,21 +73,23 @@ class CommandTracer(monitoring.CommandListener):
             span = self._tracer.start_span(name, kind=SpanKind.CLIENT)
             if span.is_recording():
                 span.set_attribute("component", DATABASE_TYPE)
-                span.set_attribute("db.type", DATABASE_TYPE)
-                span.set_attribute("db.instance", event.database_name)
+                span.set_attribute("db.system", DATABASE_TYPE)
+                span.set_attribute("db.name", event.database_name)
                 span.set_attribute("db.statement", statement)
                 if event.connection_id is not None:
                     span.set_attribute("net.peer.name", event.connection_id[0])
                     span.set_attribute("net.peer.port", event.connection_id[1])
 
                 # pymongo specific, not specified by spec
-                span.set_attribute("db.mongo.operation_id", event.operation_id)
-                span.set_attribute("db.mongo.request_id", event.request_id)
+                span.set_attribute(
+                    "db.mongodb.operation_id", event.operation_id
+                )
+                span.set_attribute("db.mongodb.request_id", event.request_id)
 
                 for attr in COMMAND_ATTRIBUTES:
                     _attr = event.command.get(attr)
                     if _attr is not None:
-                        span.set_attribute("db.mongo." + attr, str(_attr))
+                        span.set_attribute("db.mongodb." + attr, str(_attr))
 
             # Add Span to dictionary
             self._span_dict[_get_span_dict_key(event)] = span
@@ -106,7 +108,7 @@ class CommandTracer(monitoring.CommandListener):
             return
         if span.is_recording():
             span.set_attribute(
-                "db.mongo.duration_micros", event.duration_micros
+                "db.mongodb.duration_micros", event.duration_micros
             )
         span.end()
 
@@ -119,7 +121,7 @@ class CommandTracer(monitoring.CommandListener):
             return
         if span.is_recording():
             span.set_attribute(
-                "db.mongo.duration_micros", event.duration_micros
+                "db.mongodb.duration_micros", event.duration_micros
             )
             span.set_status(Status(StatusCode.ERROR, event.failure))
         span.end()
