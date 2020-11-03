@@ -18,6 +18,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
     SPAN_KIND_MAP,
     TRANSPORT_FORMAT_JSON,
@@ -58,6 +59,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
         if "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT" in os.environ:
             del os.environ["OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"]
+        Configuration()._reset()
 
     def test_constructor_env_var(self):
         """Test the default values assigned by constructor."""
