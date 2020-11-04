@@ -35,11 +35,9 @@ exp_dirs = [
     if isdir(join(exp, f))
 ]
 
-instr = "../opentelemetry-python-contrib/instrumentation"
+instr = "../instrumentation"
 instr_dirs = [
-    os.path.abspath(
-        "/".join(["../opentelemetry-python-contrib/instrumentation", f, "src"])
-    )
+    os.path.abspath("/".join(["../instrumentation", f, "src"]))
     for f in listdir(instr)
     if isdir(join(instr, f))
 ]
