@@ -104,7 +104,10 @@ def implement_spans(
         with get_tracer(__name__, __version__).start_as_current_span(
             name="{cls}.{func}".format(cls=name, func=func.__name__),
             attributes=attributes,
-        ):
+        ) as span:
+            if span.is_recording():
+                for k, v in attributes.items():
+                    span.set_attribute(k, v)
             return func(*args, **kwargs)
 
     return wrapper
@@ -553,7 +556,7 @@ class SklearnInstrumentor(BaseInstrumentor):
 
         When instrumenting we attach a tuple of (Class, method) to the
         attribute ``_otel_original_<method_name>`` for each method. This allows
-        us to replace the patched with the original in unstrumentation, but
+        us to replace the patched with the original in uninstrumentation, but
         also allows proper instrumentation of child classes without
         instrumenting inherited methods twice.
 
