@@ -10,5 +10,5 @@ pytest>=6.0
 pytest-cov>=2.8
 readme-renderer~=24.0
 grpcio-tools==1.29.0
-mypy-protobuf==1.21
-protobuf==3.12.2
+mypy-protobuf>=1.23
+protobuf>=3.13.0
