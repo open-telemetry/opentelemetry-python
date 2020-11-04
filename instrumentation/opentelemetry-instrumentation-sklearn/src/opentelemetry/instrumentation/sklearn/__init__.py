@@ -305,7 +305,8 @@ class SklearnInstrumentor(BaseInstrumentor):
           element is the estimator. Defaults include sklearn's ``Pipeline``
           and its attribute ``steps``, and the ``FeatureUnion`` and its
           attribute ``transformer_list``. Used in model instrumentation only.
-        spanner: A function with signature (func, str) which
+        spanner: A function with signature
+          (func, sklearn.base.BaseEstimator, Attributes) which
           decorates instance methods with opentelemetry spans.
         packages: A list of additional sklearn-compatible packages to
           instrument. Used with package instrumentation only.
@@ -551,7 +552,7 @@ class SklearnInstrumentor(BaseInstrumentor):
         """Instrument an estimator method with a span.
 
         When instrumenting we attach a tuple of (Class, method) to the
-        attribute ``_original_<method_name>`` for each method. This allows
+        attribute ``_otel_original_<method_name>`` for each method. This allows
         us to replace the patched with the original in unstrumentation, but
         also allows proper instrumentation of child classes without
         instrumenting inherited methods twice.
@@ -604,7 +605,7 @@ class SklearnInstrumentor(BaseInstrumentor):
         """Instrument an estimator instance method with a span.
 
         When instrumenting we attach a tuple of (Class, method) to the
-        attribute ``_original_<method_name>`` for each method. This allows
+        attribute ``_otel_original_<method_name>`` for each method. This allows
         us to replace the patched with the original in unstrumentation.
 
         Args:
