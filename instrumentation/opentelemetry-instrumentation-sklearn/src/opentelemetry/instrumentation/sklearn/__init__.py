@@ -138,8 +138,7 @@ def get_delegator(
     """Get the delegator from a class method or None.
 
     Args:
-        estimator (BaseEstimator): A class derived from ``sklearn``'s
-          ``BaseEstimator``.
+        estimator: A class derived from ``sklearn``'s ``BaseEstimator``.
         method_name (str): The method name of the estimator on which to
           check for delegation.
 
@@ -158,7 +157,7 @@ def get_base_estimators(packages: List[str]) -> Dict[str, Type[BaseEstimator]]:
     """Walk package hierarchies to get BaseEstimator-derived classes.
 
     Args:
-        packages (List[str]): A list of package names to instrument.
+        packages (list(str)): A list of package names to instrument.
 
     Returns:
         A dictionary of qualnames and classes inheriting from
@@ -374,8 +373,8 @@ class SklearnInstrumentor(BaseInstrumentor):
         """Instrument a fitted estimator and its hierarchy where configured.
 
         Args:
-            estimator (BaseEstimator): A fitted ``sklearn`` estimator,
-              typically a ``Pipeline`` instance.
+            estimator (sklearn.base.BaseEstimator): A fitted ``sklearn``
+              estimator, typically a ``Pipeline`` instance.
         """
         if isinstance(estimator, self.exclude_classes):
             logger.debug(
@@ -402,8 +401,8 @@ class SklearnInstrumentor(BaseInstrumentor):
         """Uninstrument a fitted estimator and its hierarchy where configured.
 
         Args:
-            estimator (BaseEstimator): A fitted ``sklearn`` estimator,
-              typically a ``Pipeline`` instance.
+            estimator (sklearn.base.BaseEstimator): A fitted ``sklearn``
+              estimator, typically a ``Pipeline`` instance.
         """
         if isinstance(estimator, self.exclude_classes):
             logger.debug(
