@@ -152,7 +152,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox-environment: [ "docker-tests", "lint" ]
+        tox-environment: [ "docker-tests"]
     name: ${{ matrix.tox-environment }}
     runs-on: ubuntu-latest
     steps:
