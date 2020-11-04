@@ -22,7 +22,7 @@ Note that you need ``opentelemetry-instrumentation-grpc`` and ``protobuf`` to be
 to run these examples. To run this script in the context of the example app,
 install ``opentelemetry-example-app``::
 
-    pip install -e ext/opentelemetry-instrumentation-grpc/
+    pip install -e instrumentation/opentelemetry-instrumentation-grpc/
     pip install -e docs/examples/opentelemetry-example-app
 
 Then run the server in one shell::
