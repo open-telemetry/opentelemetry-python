@@ -90,17 +90,22 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     def test_get_collector_point(self):
         aggregator = aggregate.SumAggregator()
-        int_counter = self._meter.create_metric(
-            "testName", "testDescription", "unit", int, Counter
+        int_counter = self._meter.create_counter(
+            "testName", "testDescription", "unit", int,
         )
-        float_counter = self._meter.create_metric(
-            "testName", "testDescription", "unit", float, Counter
+        float_counter = self._meter.create_counter(
+            "testName", "testDescription", "unit", float,
         )
-        valuerecorder = self._meter.create_metric(
-            "testName", "testDescription", "unit", float, ValueRecorder
+        valuerecorder = self._meter.create_valuerecorder(
+            "testName", "testDescription", "unit", float,
         )
         result = metrics_exporter.get_collector_point(
-            MetricRecord(int_counter, self._key_labels, aggregator)
+            MetricRecord(
+                int_counter,
+                self._key_labels,
+                aggregator,
+                metrics.get_meter_provider().resource,
+            )
         )
         self.assertIsInstance(result, metrics_pb2.Point)
         self.assertIsInstance(result.timestamp, Timestamp)
@@ -108,13 +113,23 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator.update(123.5)
         aggregator.take_checkpoint()
         result = metrics_exporter.get_collector_point(
-            MetricRecord(float_counter, self._key_labels, aggregator)
+            MetricRecord(
+                float_counter,
+                self._key_labels,
+                aggregator,
+                metrics.get_meter_provider().resource,
+            )
         )
         self.assertEqual(result.double_value, 123.5)
         self.assertRaises(
             TypeError,
             metrics_exporter.get_collector_point(
-                MetricRecord(valuerecorder, self._key_labels, aggregator)
+                MetricRecord(
+                    valuerecorder,
+                    self._key_labels,
+                    aggregator,
+                    metrics.get_meter_provider().resource,
+                )
             ),
         )
 
@@ -126,11 +141,14 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         collector_exporter = metrics_exporter.OpenCensusMetricsExporter(
             client=mock_client, host_name=host_name
         )
-        test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, self._labels.keys(),
+        test_metric = self._meter.create_counter(
+            "testname", "testdesc", "unit", int, self._labels.keys(),
         )
         record = MetricRecord(
-            test_metric, self._key_labels, aggregate.SumAggregator(),
+            test_metric,
+            self._key_labels,
+            aggregate.SumAggregator(),
+            metrics.get_meter_provider().resource,
         )
 
         result = collector_exporter.export([record])
@@ -149,13 +167,18 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         )
 
     def test_translate_to_collector(self):
-        test_metric = self._meter.create_metric(
-            "testname", "testdesc", "unit", int, Counter, self._labels.keys()
+        test_metric = self._meter.create_counter(
+            "testname", "testdesc", "unit", int, self._labels.keys()
         )
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(test_metric, self._key_labels, aggregator,)
+        record = MetricRecord(
+            test_metric,
+            self._key_labels,
+            aggregator,
+            metrics.get_meter_provider().resource,
+        )
         start_timestamp = Timestamp()
         output_metrics = metrics_exporter.translate_to_collector(
             [record], start_timestamp,

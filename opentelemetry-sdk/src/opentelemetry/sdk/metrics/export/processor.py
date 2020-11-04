@@ -15,30 +15,32 @@
 from typing import Sequence
 
 from opentelemetry.sdk.metrics.export import MetricRecord
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import get_dict_as_key
 
 
-class Batcher:
-    """Base class for all batcher types.
+class Processor:
+    """Base class for all processor types.
 
-    The batcher is responsible for storing the aggregators and aggregated
+    The processor is responsible for storing the aggregators and aggregated
     values received from updates from metrics in the meter. The stored values
     will be sent to an exporter for exporting.
     """
 
-    def __init__(self, stateful: bool):
+    def __init__(self, stateful: bool, resource: Resource):
         self._batch_map = {}
-        # stateful=True indicates the batcher computes checkpoints from over
-        # the process lifetime. False indicates the batcher computes
+        # stateful=True indicates the processor computes checkpoints from over
+        # the process lifetime. False indicates the processor computes
         # checkpoints which describe the updates of a single collection period
         # (deltas)
         self.stateful = stateful
+        self._resource = resource
 
     def checkpoint_set(self) -> Sequence[MetricRecord]:
         """Returns a list of MetricRecords used for exporting.
 
         The list of MetricRecords is a snapshot created from the current
-        data in all of the aggregators in this batcher.
+        data in all of the aggregators in this processor.
         """
         metric_records = []
         # pylint: disable=W0612
@@ -46,13 +48,15 @@ class Batcher:
             (instrument, aggregator_type, _, labels),
             aggregator,
         ) in self._batch_map.items():
-            metric_records.append(MetricRecord(instrument, labels, aggregator))
+            metric_records.append(
+                MetricRecord(instrument, labels, aggregator, self._resource)
+            )
         return metric_records
 
     def finished_collection(self):
         """Performs certain post-export logic.
 
-        For batchers that are stateless, resets the batch map.
+        For processors that are stateless, resets the batch map.
         """
         if not self.stateful:
             self._batch_map = {}

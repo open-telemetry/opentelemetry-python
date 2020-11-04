@@ -110,26 +110,33 @@ def _before_request():
         return
 
     environ = flask.request.environ
-    span_name = flask.request.endpoint or otel_wsgi.get_default_span_name(
-        environ
-    )
+    span_name = None
+    try:
+        span_name = flask.request.url_rule.rule
+    except AttributeError:
+        pass
+    if span_name is None:
+        span_name = otel_wsgi.get_default_span_name(environ)
     token = context.attach(
-        propagators.extract(otel_wsgi.get_header_from_environ, environ)
+        propagators.extract(otel_wsgi.carrier_getter, environ)
     )
 
     tracer = trace.get_tracer(__name__, __version__)
 
-    attributes = otel_wsgi.collect_request_attributes(environ)
-    if flask.request.url_rule:
-        # For 404 that result from no route found, etc, we
-        # don't have a url_rule.
-        attributes["http.route"] = flask.request.url_rule.rule
     span = tracer.start_span(
         span_name,
         kind=trace.SpanKind.SERVER,
-        attributes=attributes,
         start_time=environ.get(_ENVIRON_STARTTIME_KEY),
     )
+    if span.is_recording():
+        attributes = otel_wsgi.collect_request_attributes(environ)
+        if flask.request.url_rule:
+            # For 404 that result from no route found, etc, we
+            # don't have a url_rule.
+            attributes["http.route"] = flask.request.url_rule.rule
+        for key, value in attributes.items():
+            span.set_attribute(key, value)
+
     activation = tracer.use_span(span, end_on_exit=True)
     activation.__enter__()
     environ[_ENVIRON_ACTIVATION_KEY] = activation

@@ -86,10 +86,25 @@ class TestPymongo(TestBase):
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
         self.assertIs(
-            span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
+            span.status.status_code, trace_api.status.StatusCode.UNSET
         )
-        self.assertEqual(span.status.description, "reply")
         self.assertIsNotNone(span.end_time)
+
+    def test_not_recording(self):
+        mock_tracer = mock.Mock()
+        mock_span = mock.Mock()
+        mock_span.is_recording.return_value = False
+        mock_tracer.start_span.return_value = mock_span
+        mock_tracer.use_span.return_value.__enter__ = mock_span
+        mock_tracer.use_span.return_value.__exit__ = True
+        mock_event = MockEvent({})
+        command_tracer = CommandTracer(mock_tracer)
+        command_tracer.started(event=mock_event)
+        command_tracer.succeeded(event=mock_event)
+        self.assertFalse(mock_span.is_recording())
+        self.assertTrue(mock_span.is_recording.called)
+        self.assertFalse(mock_span.set_attribute.called)
+        self.assertFalse(mock_span.set_status.called)
 
     def test_failed(self):
         mock_event = MockEvent({})
@@ -105,8 +120,7 @@ class TestPymongo(TestBase):
             span.attributes["db.mongo.duration_micros"], "duration_micros"
         )
         self.assertIs(
-            span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.UNKNOWN,
+            span.status.status_code, trace_api.status.StatusCode.ERROR,
         )
         self.assertEqual(span.status.description, "failure")
         self.assertIsNotNone(span.end_time)
@@ -127,15 +141,13 @@ class TestPymongo(TestBase):
 
         self.assertEqual(first_span.attributes["db.mongo.request_id"], "first")
         self.assertIs(
-            first_span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.OK,
+            first_span.status.status_code, trace_api.status.StatusCode.UNSET,
         )
         self.assertEqual(
             second_span.attributes["db.mongo.request_id"], "second"
         )
         self.assertIs(
-            second_span.status.canonical_code,
-            trace_api.status.StatusCanonicalCode.UNKNOWN,
+            second_span.status.status_code, trace_api.status.StatusCode.ERROR,
         )
 
     def test_int_command(self):

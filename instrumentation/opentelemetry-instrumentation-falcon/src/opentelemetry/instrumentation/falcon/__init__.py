@@ -50,9 +50,13 @@ import falcon
 
 import opentelemetry.instrumentation.wsgi as otel_wsgi
 from opentelemetry import configuration, context, propagators, trace
+from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation.falcon.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+from opentelemetry.instrumentation.utils import (
+    extract_attributes_from_object,
+    http_status_to_status_code,
+)
 from opentelemetry.trace.status import Status
 from opentelemetry.util import ExcludeList, time_ns
 
@@ -92,13 +96,16 @@ class FalconInstrumentor(BaseInstrumentor):
 
 class _InstrumentedFalconAPI(falcon.API):
     def __init__(self, *args, **kwargs):
-        mw = kwargs.pop("middleware", [])
-        if not isinstance(mw, (list, tuple)):
-            mw = [mw]
+        middlewares = kwargs.pop("middleware", [])
+        if not isinstance(middlewares, (list, tuple)):
+            middlewares = [middlewares]
 
         self._tracer = trace.get_tracer(__name__, __version__)
-        mw.insert(0, _TraceMiddleware(self._tracer))
-        kwargs["middleware"] = mw
+        trace_middleware = _TraceMiddleware(
+            self._tracer, kwargs.get("traced_request_attributes")
+        )
+        middlewares.insert(0, trace_middleware)
+        kwargs["middleware"] = middlewares
         super().__init__(*args, **kwargs)
 
     def __call__(self, env, start_response):
@@ -108,15 +115,18 @@ class _InstrumentedFalconAPI(falcon.API):
         start_time = time_ns()
 
         token = context.attach(
-            propagators.extract(otel_wsgi.get_header_from_environ, env)
+            propagators.extract(otel_wsgi.carrier_getter, env)
         )
-        attributes = otel_wsgi.collect_request_attributes(env)
         span = self._tracer.start_span(
             otel_wsgi.get_default_span_name(env),
             kind=trace.SpanKind.SERVER,
-            attributes=attributes,
             start_time=start_time,
         )
+        if span.is_recording():
+            attributes = otel_wsgi.collect_request_attributes(env)
+            for key, value in attributes.items():
+                span.set_attribute(key, value)
+
         activation = self._tracer.use_span(span, end_on_exit=True)
         activation.__enter__()
         env[_ENVIRON_SPAN_KEY] = span
@@ -144,12 +154,29 @@ class _InstrumentedFalconAPI(falcon.API):
 class _TraceMiddleware:
     # pylint:disable=R0201,W0613
 
-    def __init__(self, tracer=None):
+    def __init__(self, tracer=None, traced_request_attrs=None):
         self.tracer = tracer
+        self._traced_request_attrs = traced_request_attrs or [
+            attr.strip()
+            for attr in (
+                Configuration().FALCON_TRACED_REQUEST_ATTRS or ""
+            ).split(",")
+        ]
+
+    def process_request(self, req, resp):
+        span = req.env.get(_ENVIRON_SPAN_KEY)
+        if not span or not span.is_recording():
+            return
+
+        attributes = extract_attributes_from_object(
+            req, self._traced_request_attrs
+        )
+        for key, value in attributes.items():
+            span.set_attribute(key, value)
 
     def process_resource(self, req, resp, resource, params):
         span = req.env.get(_ENVIRON_SPAN_KEY)
-        if not span:
+        if not span or not span.is_recording():
             return
 
         resource_name = resource.__class__.__name__
@@ -162,7 +189,7 @@ class _TraceMiddleware:
         self, req, resp, resource, req_succeeded=None
     ):  # pylint:disable=R0201
         span = req.env.get(_ENVIRON_SPAN_KEY)
-        if not span:
+        if not span or not span.is_recording():
             return
 
         status = resp.status
@@ -189,7 +216,7 @@ class _TraceMiddleware:
             span.set_attribute("http.status_code", status_code)
             span.set_status(
                 Status(
-                    canonical_code=http_status_to_canonical_code(status_code),
+                    status_code=http_status_to_status_code(status_code),
                     description=reason,
                 )
             )

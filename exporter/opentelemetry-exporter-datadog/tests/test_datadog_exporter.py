@@ -21,6 +21,7 @@ from unittest import mock
 from ddtrace.internal.writer import AgentWriter
 
 from opentelemetry import trace as trace_api
+from opentelemetry.context import Context
 from opentelemetry.exporter import datadog
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource, sampling
@@ -39,7 +40,7 @@ class MockDatadogSpanExporter(datadog.DatadogSpanExporter):
 
 def get_spans(tracer, exporter, shutdown=True):
     if shutdown:
-        tracer.source.shutdown()
+        tracer.span_processor.shutdown()
 
     spans = [
         call_args[-1]["spans"]
@@ -178,7 +179,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         span_context = trace_api.SpanContext(
             trace_id, span_id, is_remote=False
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
         other_context = trace_api.SpanContext(
@@ -188,22 +189,22 @@ class TestDatadogSpanExporter(unittest.TestCase):
         instrumentation_info = InstrumentationInfo(__name__, "0")
 
         otel_spans = [
-            trace.Span(
+            trace._Span(
                 name=span_names[0],
                 context=span_context,
-                parent=parent_context,
+                parent=parent_span_context,
                 kind=trace_api.SpanKind.CLIENT,
                 instrumentation_info=instrumentation_info,
                 resource=Resource({}),
             ),
-            trace.Span(
+            trace._Span(
                 name=span_names[1],
-                context=parent_context,
+                context=parent_span_context,
                 parent=None,
                 instrumentation_info=instrumentation_info,
                 resource=resource_without_service,
             ),
-            trace.Span(
+            trace._Span(
                 name=span_names[2],
                 context=other_context,
                 parent=None,
@@ -289,7 +290,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        test_span = trace.Span("test_span", context=context)
+        test_span = trace._Span("test_span", context=context)
         test_span.start()
         test_span.end()
 
@@ -482,6 +483,57 @@ class TestDatadogSpanExporter(unittest.TestCase):
 
         tracer_provider.shutdown()
 
+    def test_batch_span_processor_reset_timeout(self):
+        """Test that the scheduled timeout is reset on cycles without spans"""
+        delay = 50
+        # pylint: disable=protected-access
+        exporter = MockDatadogSpanExporter()
+        exporter._agent_writer.write.side_effect = lambda spans: time.sleep(
+            0.05
+        )
+        span_processor = datadog.DatadogExportSpanProcessor(
+            exporter, schedule_delay_millis=delay
+        )
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(span_processor)
+        tracer = tracer_provider.get_tracer(__name__)
+        with mock.patch.object(span_processor.condition, "wait") as mock_wait:
+            with tracer.start_span("foo"):
+                pass
+
+            # give some time for exporter to loop
+            # since wait is mocked it should return immediately
+            time.sleep(0.1)
+            mock_wait_calls = list(mock_wait.mock_calls)
+
+            # find the index of the call that processed the singular span
+            for idx, wait_call in enumerate(mock_wait_calls):
+                _, args, __ = wait_call
+                if args[0] <= 0:
+                    after_calls = mock_wait_calls[idx + 1 :]
+                    break
+
+            self.assertTrue(
+                all(args[0] >= 0.05 for _, args, __ in after_calls)
+            )
+
+        span_processor.shutdown()
+
+    def test_span_processor_accepts_parent_context(self):
+        span_processor = mock.Mock(
+            wraps=datadog.DatadogExportSpanProcessor(self.exporter)
+        )
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(span_processor)
+        tracer = tracer_provider.get_tracer(__name__)
+
+        context = Context()
+        span = tracer.start_span("foo", context=context)
+
+        span_processor.on_start.assert_called_once_with(
+            span, parent_context=context
+        )
+
     def test_origin(self):
         context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
@@ -492,8 +544,8 @@ class TestDatadogSpanExporter(unittest.TestCase):
             ),
         )
 
-        root_span = trace.Span(name="root", context=context, parent=None)
-        child_span = trace.Span(
+        root_span = trace._Span(name="root", context=context, parent=None)
+        child_span = trace._Span(
             name="child", context=context, parent=root_span
         )
         root_span.start()
@@ -528,7 +580,7 @@ class TestDatadogSpanExporter(unittest.TestCase):
         )
         sampler = sampling.TraceIdRatioBased(0.5)
 
-        span = trace.Span(
+        span = trace._Span(
             name="sampled", context=context, parent=None, sampler=sampler
         )
         span.start()

@@ -15,6 +15,7 @@
 import concurrent.futures
 import random
 import unittest
+from math import inf
 from unittest import mock
 
 from opentelemetry.context import get_value
@@ -29,15 +30,17 @@ from opentelemetry.sdk.metrics.export.aggregate import (
     SumAggregator,
     ValueObserverAggregator,
 )
-from opentelemetry.sdk.metrics.export.batcher import Batcher
 from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.export.processor import Processor
+from opentelemetry.sdk.resources import Resource
 
 
 # pylint: disable=protected-access
 class TestConsoleMetricsExporter(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_export(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
         exporter = ConsoleMetricsExporter()
         metric = metrics.Counter(
             "available memory",
@@ -49,22 +52,26 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         )
         labels = {"environment": "staging"}
         aggregator = SumAggregator()
-        record = MetricRecord(metric, labels, aggregator)
-        result = '{}(data="{}", labels="{}", value={})'.format(
+        record = MetricRecord(
+            metric, labels, aggregator, meter_provider.resource
+        )
+        result = '{}(data="{}", labels="{}", value={}, resource={})'.format(
             ConsoleMetricsExporter.__name__,
             metric,
             labels,
             aggregator.checkpoint,
+            meter_provider.resource.attributes,
         )
         with mock.patch("sys.stdout") as mock_stdout:
             exporter.export([record])
             mock_stdout.write.assert_any_call(result)
 
 
-class TestBatcher(unittest.TestCase):
+class TestProcessor(unittest.TestCase):
     def test_checkpoint_set(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -73,21 +80,22 @@ class TestBatcher(unittest.TestCase):
         labels = ()
         _batch_map = {}
         _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
-        batcher._batch_map = _batch_map
-        records = batcher.checkpoint_set()
+        processor._batch_map = _batch_map
+        records = processor.checkpoint_set()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].instrument, metric)
         self.assertEqual(records[0].labels, labels)
         self.assertEqual(records[0].aggregator, aggregator)
 
     def test_checkpoint_set_empty(self):
-        batcher = Batcher(True)
-        records = batcher.checkpoint_set()
+        processor = Processor(True, Resource.create_empty())
+        records = processor.checkpoint_set()
         self.assertEqual(len(records), 0)
 
     def test_finished_collection_stateless(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(False)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(False, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -96,13 +104,14 @@ class TestBatcher(unittest.TestCase):
         labels = ()
         _batch_map = {}
         _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
-        batcher._batch_map = _batch_map
-        batcher.finished_collection()
-        self.assertEqual(len(batcher._batch_map), 0)
+        processor._batch_map = _batch_map
+        processor.finished_collection()
+        self.assertEqual(len(processor._batch_map), 0)
 
     def test_finished_collection_stateful(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -111,13 +120,14 @@ class TestBatcher(unittest.TestCase):
         labels = ()
         _batch_map = {}
         _batch_map[(metric, SumAggregator, tuple(), labels)] = aggregator
-        batcher._batch_map = _batch_map
-        batcher.finished_collection()
-        self.assertEqual(len(batcher._batch_map), 1)
+        processor._batch_map = _batch_map
+        processor.finished_collection()
+        self.assertEqual(len(processor._batch_map), 1)
 
-    def test_batcher_process_exists(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+    def test_processor_process_exists(self):
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         aggregator2 = SumAggregator()
         metric = metrics.Counter(
@@ -128,17 +138,18 @@ class TestBatcher(unittest.TestCase):
         batch_key = (metric, SumAggregator, tuple(), labels)
         _batch_map[batch_key] = aggregator
         aggregator2.update(1.0)
-        batcher._batch_map = _batch_map
+        processor._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator2)
-        batcher.process(record)
-        self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get(batch_key))
-        self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
+        processor.process(record)
+        self.assertEqual(len(processor._batch_map), 1)
+        self.assertIsNotNone(processor._batch_map.get(batch_key))
+        self.assertEqual(processor._batch_map.get(batch_key).current, 0)
+        self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
-    def test_batcher_process_not_exists(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+    def test_processor_process_not_exists(self):
+        meter_provider = metrics.MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
             "available memory", "available memory", "bytes", int, meter
@@ -147,32 +158,36 @@ class TestBatcher(unittest.TestCase):
         _batch_map = {}
         batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
-        batcher._batch_map = _batch_map
+        processor._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)
-        batcher.process(record)
-        self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get(batch_key))
-        self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
+        processor.process(record)
+        self.assertEqual(len(processor._batch_map), 1)
+        self.assertIsNotNone(processor._batch_map.get(batch_key))
+        self.assertEqual(processor._batch_map.get(batch_key).current, 0)
+        self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
-    def test_batcher_process_not_stateful(self):
-        meter = metrics.MeterProvider().get_meter(__name__)
-        batcher = Batcher(True)
+    def test_processor_process_not_stateful(self):
+        meter_provider = metrics.MeterProvider()
+        processor = Processor(True, meter_provider.resource)
         aggregator = SumAggregator()
         metric = metrics.Counter(
-            "available memory", "available memory", "bytes", int, meter
+            "available memory",
+            "available memory",
+            "bytes",
+            int,
+            meter_provider.get_meter(__name__),
         )
         labels = ()
         _batch_map = {}
         batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
-        batcher._batch_map = _batch_map
+        processor._batch_map = _batch_map
         record = metrics.Record(metric, labels, aggregator)
-        batcher.process(record)
-        self.assertEqual(len(batcher._batch_map), 1)
-        self.assertIsNotNone(batcher._batch_map.get(batch_key))
-        self.assertEqual(batcher._batch_map.get(batch_key).current, 0)
-        self.assertEqual(batcher._batch_map.get(batch_key).checkpoint, 1.0)
+        processor.process(record)
+        self.assertEqual(len(processor._batch_map), 1)
+        self.assertIsNotNone(processor._batch_map.get(batch_key))
+        self.assertEqual(processor._batch_map.get(batch_key).current, 0)
+        self.assertEqual(processor._batch_map.get(batch_key).checkpoint, 1.0)
 
 
 class TestSumAggregator(unittest.TestCase):
@@ -310,36 +325,58 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
         mmsc1.merge(mmsc2)
 
-        self.assertEqual(
-            mmsc1.checkpoint,
-            MinMaxSumCountAggregator._merge_checkpoint(
-                checkpoint1, checkpoint2
-            ),
-        )
+        mmsc1_checkpoint = mmsc1.checkpoint
+        mmsc1.checkpoint = checkpoint1
+        mmsc2.checkpoint = checkpoint2
+
+        mmsc1.merge(mmsc2)
+
+        self.assertEqual(mmsc1_checkpoint, mmsc1.checkpoint)
+
         self.assertEqual(mmsc1.last_update_timestamp, 123)
 
     def test_merge_checkpoint(self):
-        func = MinMaxSumCountAggregator._merge_checkpoint
-        _type = MinMaxSumCountAggregator._TYPE
+        type_ = MinMaxSumCountAggregator._TYPE
         empty = MinMaxSumCountAggregator._EMPTY
 
-        ret = func(empty, empty)
-        self.assertEqual(ret, empty)
+        mmsc0 = MinMaxSumCountAggregator()
+        mmsc1 = MinMaxSumCountAggregator()
 
-        ret = func(empty, _type(0, 0, 0, 0))
-        self.assertEqual(ret, _type(0, 0, 0, 0))
+        mmsc0.checkpoint = empty
+        mmsc1.checkpoint = empty
 
-        ret = func(_type(0, 0, 0, 0), empty)
-        self.assertEqual(ret, _type(0, 0, 0, 0))
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, mmsc1.checkpoint)
 
-        ret = func(_type(0, 0, 0, 0), _type(0, 0, 0, 0))
-        self.assertEqual(ret, _type(0, 0, 0, 0))
+        mmsc0.checkpoint = empty
+        mmsc1.checkpoint = type_(0, 0, 0, 0)
 
-        ret = func(_type(44, 23, 55, 86), empty)
-        self.assertEqual(ret, _type(44, 23, 55, 86))
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, mmsc1.checkpoint)
 
-        ret = func(_type(3, 150, 101, 3), _type(1, 33, 44, 2))
-        self.assertEqual(ret, _type(1, 150, 101 + 44, 2 + 3))
+        mmsc0.checkpoint = type_(0, 0, 0, 0)
+        mmsc1.checkpoint = empty
+
+        mmsc1.merge(mmsc0)
+        self.assertEqual(mmsc1.checkpoint, mmsc0.checkpoint)
+
+        mmsc0.checkpoint = type_(0, 0, 0, 0)
+        mmsc1.checkpoint = type_(0, 0, 0, 0)
+
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc1.checkpoint, mmsc0.checkpoint)
+
+        mmsc0.checkpoint = type_(44, 23, 55, 86)
+        mmsc1.checkpoint = empty
+
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, type_(44, 23, 55, 86))
+
+        mmsc0.checkpoint = type_(3, 150, 101, 3)
+        mmsc1.checkpoint = type_(1, 33, 44, 2)
+
+        mmsc0.merge(mmsc1)
+        self.assertEqual(mmsc0.checkpoint, type_(1, 150, 101 + 44, 2 + 3))
 
     def test_merge_with_empty(self):
         mmsc1 = MinMaxSumCountAggregator()
@@ -353,40 +390,39 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
         self.assertEqual(mmsc1.checkpoint, checkpoint1)
 
     def test_concurrent_update(self):
-        mmsc = MinMaxSumCountAggregator()
+        mmsc0 = MinMaxSumCountAggregator()
+        mmsc1 = MinMaxSumCountAggregator()
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
-            fut1 = ex.submit(self.call_update, mmsc)
-            fut2 = ex.submit(self.call_update, mmsc)
+            mmsc0.checkpoint = ex.submit(self.call_update, mmsc0).result()
+            mmsc1.checkpoint = ex.submit(self.call_update, mmsc0).result()
 
-            ret1 = fut1.result()
-            ret2 = fut2.result()
+            mmsc0.merge(mmsc1)
 
-            update_total = MinMaxSumCountAggregator._merge_checkpoint(
-                ret1, ret2
-            )
-            mmsc.take_checkpoint()
+            mmsc0_checkpoint = mmsc0.checkpoint
 
-            self.assertEqual(update_total, mmsc.checkpoint)
+            mmsc0.take_checkpoint()
+
+            self.assertEqual(mmsc0_checkpoint, mmsc0.checkpoint)
+            self.assertIsNot(mmsc0_checkpoint, mmsc0.checkpoint)
 
     def test_concurrent_update_and_checkpoint(self):
-        mmsc = MinMaxSumCountAggregator()
-        checkpoint_total = MinMaxSumCountAggregator._TYPE(2 ** 32, 0, 0, 0)
+        mmsc0 = MinMaxSumCountAggregator()
+        mmsc1 = MinMaxSumCountAggregator()
+        mmsc1.checkpoint = MinMaxSumCountAggregator._TYPE(2 ** 32, 0, 0, 0)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(self.call_update, mmsc)
+            fut = ex.submit(self.call_update, mmsc0)
 
             while not fut.done():
-                mmsc.take_checkpoint()
-                checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
-                    checkpoint_total, mmsc.checkpoint
-                )
+                mmsc0.take_checkpoint()
+                mmsc0.merge(mmsc1)
+                mmsc1.checkpoint = mmsc0.checkpoint
 
-            mmsc.take_checkpoint()
-            checkpoint_total = MinMaxSumCountAggregator._merge_checkpoint(
-                checkpoint_total, mmsc.checkpoint
-            )
+            mmsc0.take_checkpoint()
+            mmsc0.merge(mmsc1)
 
-            self.assertEqual(checkpoint_total, fut.result())
+            self.assertEqual(mmsc0.checkpoint, fut.result())
 
 
 class TestValueObserverAggregator(unittest.TestCase):
@@ -395,7 +431,7 @@ class TestValueObserverAggregator(unittest.TestCase):
         time_mock.return_value = 123
         observer = ValueObserverAggregator()
         # test current values without any update
-        self.assertEqual(observer.mmsc.current, (None, None, None, 0))
+        self.assertEqual(observer.mmsc.current, (inf, -inf, 0, 0))
         self.assertIsNone(observer.current)
 
         # call update with some values
@@ -416,7 +452,7 @@ class TestValueObserverAggregator(unittest.TestCase):
 
         # take checkpoint wihtout any update
         observer.take_checkpoint()
-        self.assertEqual(observer.checkpoint, (None, None, None, 0, None))
+        self.assertEqual(observer.checkpoint, (inf, -inf, 0, 0, None))
 
         # call update with some values
         values = (3, 50, 3, 97)
@@ -523,7 +559,7 @@ class TestValueObserverAggregator(unittest.TestCase):
         observer1.mmsc.checkpoint = mmsc_checkpoint1
         observer2.mmsc.checkpoint = mmsc_checkpoint2
 
-        observer1.last_update_timestamp = None
+        observer1.last_update_timestamp = 0
         observer2.last_update_timestamp = 100
 
         observer1.checkpoint = checkpoint1
@@ -629,7 +665,7 @@ class TestLastValueAggregator(unittest.TestCase):
         observer1.checkpoint = 23
         observer2.checkpoint = 47
 
-        observer1.last_update_timestamp = None
+        observer1.last_update_timestamp = 0
         observer2.last_update_timestamp = 100
 
         observer1.merge(observer2)

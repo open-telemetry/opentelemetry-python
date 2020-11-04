@@ -49,8 +49,11 @@ can optionally become the new active span::
 When creating a span that's "detached" from the context the active span doesn't
 change, and the caller is responsible for managing the span's lifetime::
 
-    # Explicit parent span assignment
-    child = tracer.start_span("child", parent=parent)
+    # Explicit parent span assignment is done via the Context
+    from opentelemetry.trace import set_span_in_context
+
+    context = set_span_in_context(parent)
+    child = tracer.start_span("child", context=context)
 
     try:
         do_work(span=child)
@@ -77,6 +80,8 @@ import typing
 from contextlib import contextmanager
 from logging import getLogger
 
+from opentelemetry.context.context import Context
+from opentelemetry.trace.ids_generator import IdsGenerator, RandomIdsGenerator
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -100,9 +105,6 @@ from opentelemetry.trace.status import Status
 from opentelemetry.util import _load_trace_provider, types
 
 logger = getLogger(__name__)
-
-# TODO: quarantine
-ParentSpan = typing.Optional[typing.Union["Span", "SpanContext"]]
 
 
 class LinkBase(abc.ABC):
@@ -227,7 +229,7 @@ class Tracer(abc.ABC):
     def start_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -237,14 +239,16 @@ class Tracer(abc.ABC):
         """Starts a span.
 
         Create a new span. Start the span without setting it as the current
-        span in this tracer's context.
+        span in the context. To start the span and use the context in a single
+        method, see :meth:`start_as_current_span`.
 
-        By default the current span will be used as parent, but an explicit
-        parent can also be specified, either a `Span` or a `opentelemetry.trace.SpanContext`. If
-        the specified value is `None`, the created span will be a root span.
+        By default the current span in the context will be used as parent, but an
+        explicit context can also be specified, by passing in a `Context` containing
+        a current `Span`. If there is no current span in the global `Context` or in
+        the specified context, the created span will be a root span.
 
-        The span can be used as context manager. On exiting, the span will be
-        ended.
+        The span can be used as a context manager. On exiting the context manager,
+        the span's end() method will be called.
 
         Example::
 
@@ -253,12 +257,10 @@ class Tracer(abc.ABC):
             with tracer.start_span("one") as child:
                 child.add_event("child's event")
 
-        Applications that need to set the newly created span as the current
-        instance should use :meth:`start_as_current_span` instead.
-
         Args:
             name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
+            context: An optional Context containing the span's parent. Defaults to the
+                global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
@@ -266,9 +268,9 @@ class Tracer(abc.ABC):
             start_time: Sets the start time of a span
             set_status_on_exception: Only relevant if the returned span is used
                 in a with/context manager. Defines wether the span status will
-                be automatically set to UNKNOWN when an uncaught exception is
+                be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
-                this mechanism if it was previousy set manually.
+                this mechanism if it was previously set manually.
 
         Returns:
             The newly-created span.
@@ -279,16 +281,18 @@ class Tracer(abc.ABC):
     def start_as_current_span(
         self,
         name: str,
-        parent: ParentSpan = CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        record_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
 
-        On exiting the context manager stops the span and set its parent as the
-        current span.
+        Exiting the context manager will call the span's end method,
+        as well as return the current span to it's previous value by
+        returning to the previous context.
 
         Example::
 
@@ -315,11 +319,14 @@ class Tracer(abc.ABC):
 
         Args:
             name: The name of the span to be created.
-            parent: The span's parent. Defaults to the current span.
+            context: An optional Context containing the span's parent. Defaults to the
+                global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
             links: Links span to other spans
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
 
         Yields:
             The newly-created span.
@@ -328,9 +335,14 @@ class Tracer(abc.ABC):
     @contextmanager  # type: ignore
     @abc.abstractmethod
     def use_span(
-        self, span: "Span", end_on_exit: bool = False
+        self,
+        span: "Span",
+        end_on_exit: bool = False,
+        record_exception: bool = True,
     ) -> typing.Iterator[None]:
-        """Context manager for controlling a span's lifetime.
+        """Context manager for setting the passed span as the
+        current span in the context, as well as resetting the
+        context back upon exiting the context manager.
 
         Set the given span as the current span in this tracer's context.
 
@@ -343,6 +355,8 @@ class Tracer(abc.ABC):
             span: The span to start and make current.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
         """
 
 
@@ -355,7 +369,7 @@ class DefaultTracer(Tracer):
     def start_span(
         self,
         name: str,
-        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
@@ -369,17 +383,21 @@ class DefaultTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        parent: ParentSpan = Tracer.CURRENT_SPAN,
+        context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        record_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(
-        self, span: "Span", end_on_exit: bool = False
+        self,
+        span: "Span",
+        end_on_exit: bool = False,
+        record_exception: bool = True,
     ) -> typing.Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield
@@ -435,6 +453,7 @@ def get_tracer_provider() -> TracerProvider:
 __all__ = [
     "DEFAULT_TRACE_OPTIONS",
     "DEFAULT_TRACE_STATE",
+    "IdsGenerator",
     "INVALID_SPAN",
     "INVALID_SPAN_CONTEXT",
     "INVALID_SPAN_ID",
@@ -444,7 +463,7 @@ __all__ = [
     "DefaultTracerProvider",
     "Link",
     "LinkBase",
-    "ParentSpan",
+    "RandomIdsGenerator",
     "Span",
     "SpanContext",
     "SpanKind",

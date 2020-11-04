@@ -19,65 +19,56 @@ from opentelemetry import metrics
 
 # pylint: disable=no-self-use
 class TestMetrics(unittest.TestCase):
-    def test_default(self):
-        default = metrics.DefaultMetric()
-        bound_metric_instr = default.bind({})
-        self.assertIsInstance(
-            bound_metric_instr, metrics.DefaultBoundInstrument
-        )
-
-    def test_counter(self):
-        counter = metrics.Counter()
+    def test_default_counter(self):
+        counter = metrics.DefaultCounter()
         bound_counter = counter.bind({})
-        self.assertIsInstance(bound_counter, metrics.BoundCounter)
+        self.assertIsInstance(bound_counter, metrics.DefaultBoundCounter)
 
-    def test_counter_add(self):
-        counter = metrics.Counter()
+    def test_default_counter_add(self):
+        counter = metrics.DefaultCounter()
         counter.add(1, {})
 
-    def test_updowncounter(self):
-        counter = metrics.UpDownCounter()
+    def test_default_updowncounter(self):
+        counter = metrics.DefaultUpDownCounter()
         bound_counter = counter.bind({})
-        self.assertIsInstance(bound_counter, metrics.BoundUpDownCounter)
+        self.assertIsInstance(bound_counter, metrics.DefaultBoundUpDownCounter)
 
-    def test_updowncounter_add(self):
-        counter = metrics.Counter()
+    def test_default_updowncounter_add(self):
+        counter = metrics.DefaultUpDownCounter()
         counter.add(1, {})
         counter.add(-1, {})
 
-    def test_valuerecorder(self):
-        valuerecorder = metrics.ValueRecorder()
+    def test_default_valuerecorder(self):
+        valuerecorder = metrics.DefaultValueRecorder()
         bound_valuerecorder = valuerecorder.bind({})
-        self.assertIsInstance(bound_valuerecorder, metrics.BoundValueRecorder)
+        self.assertIsInstance(
+            bound_valuerecorder, metrics.DefaultBoundValueRecorder
+        )
 
-    def test_valuerecorder_record(self):
-        valuerecorder = metrics.ValueRecorder()
+    def test_default_valuerecorder_record(self):
+        valuerecorder = metrics.DefaultValueRecorder()
         valuerecorder.record(1, {})
 
-    def test_default_bound_metric(self):
-        bound_instrument = metrics.DefaultBoundInstrument()
-        bound_instrument.release()
-
-    def test_bound_counter(self):
-        bound_counter = metrics.BoundCounter()
+    def test_default_bound_counter(self):
+        bound_counter = metrics.DefaultBoundCounter()
         bound_counter.add(1)
 
-    def test_bound_valuerecorder(self):
-        bound_valuerecorder = metrics.BoundValueRecorder()
+    def test_default_bound_updowncounter(self):
+        bound_counter = metrics.DefaultBoundUpDownCounter()
+        bound_counter.add(1)
+
+    def test_default_bound_valuerecorder(self):
+        bound_valuerecorder = metrics.DefaultBoundValueRecorder()
         bound_valuerecorder.record(1)
 
-    def test_default_observer(self):
-        observer = metrics.DefaultObserver()
+    def test_default_sum_observer(self):
+        observer = metrics.DefaultSumObserver()
         observer.observe(1, {})
 
-    def test_sum_observer(self):
-        observer = metrics.SumObserver()
+    def test_default_updown_sum_observer(self):
+        observer = metrics.DefaultUpDownSumObserver()
         observer.observe(1, {})
 
-    def test_updown_sum_observer(self):
-        observer = metrics.UpDownSumObserver()
-        observer.observe(1, {})
-
-    def test_value_observer(self):
-        observer = metrics.ValueObserver()
+    def test_default_value_observer(self):
+        observer = metrics.DefaultValueObserver()
         observer.observe(1, {})

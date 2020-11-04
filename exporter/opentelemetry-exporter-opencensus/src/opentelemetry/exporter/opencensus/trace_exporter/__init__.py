@@ -93,7 +93,7 @@ def translate_to_collector(spans: Sequence[Span]):
         status = None
         if span.status is not None:
             status = trace_pb2.Status(
-                code=span.status.canonical_code.value,
+                code=span.status.status_code.value,
                 message=span.status.description,
             )
 

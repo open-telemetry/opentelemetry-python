@@ -76,7 +76,7 @@ class TestFunctionalAiopgConnect(TestBase):
         self.assertEqual(root_span.name, "rootSpan")
         self.assertEqual(child_span.name, "postgresql.opentelemetry-tests")
         self.assertIsNotNone(child_span.parent)
-        self.assertIs(child_span.parent, root_span.get_context())
+        self.assertIs(child_span.parent, root_span.get_span_context())
         self.assertIs(child_span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(
             child_span.attributes["db.instance"], POSTGRES_DB_NAME
@@ -85,8 +85,7 @@ class TestFunctionalAiopgConnect(TestBase):
         self.assertEqual(child_span.attributes["net.peer.port"], POSTGRES_PORT)
 
     def test_execute(self):
-        """Should create a child span for execute method
-        """
+        """Should create a child span for execute method"""
         with self._tracer.start_as_current_span("rootSpan"):
             async_call(
                 self._cursor.execute(
@@ -96,8 +95,7 @@ class TestFunctionalAiopgConnect(TestBase):
         self.validate_spans()
 
     def test_executemany(self):
-        """Should create a child span for executemany
-        """
+        """Should create a child span for executemany"""
         with pytest.raises(psycopg2.ProgrammingError):
             with self._tracer.start_as_current_span("rootSpan"):
                 data = (("1",), ("2",), ("3",))
@@ -106,8 +104,7 @@ class TestFunctionalAiopgConnect(TestBase):
             self.validate_spans()
 
     def test_callproc(self):
-        """Should create a child span for callproc
-        """
+        """Should create a child span for callproc"""
         with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
             Exception
         ):
@@ -160,7 +157,7 @@ class TestFunctionalAiopgCreatePool(TestBase):
         self.assertEqual(root_span.name, "rootSpan")
         self.assertEqual(child_span.name, "postgresql.opentelemetry-tests")
         self.assertIsNotNone(child_span.parent)
-        self.assertIs(child_span.parent, root_span.get_context())
+        self.assertIs(child_span.parent, root_span.get_span_context())
         self.assertIs(child_span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(
             child_span.attributes["db.instance"], POSTGRES_DB_NAME
@@ -169,8 +166,7 @@ class TestFunctionalAiopgCreatePool(TestBase):
         self.assertEqual(child_span.attributes["net.peer.port"], POSTGRES_PORT)
 
     def test_execute(self):
-        """Should create a child span for execute method
-        """
+        """Should create a child span for execute method"""
         with self._tracer.start_as_current_span("rootSpan"):
             async_call(
                 self._cursor.execute(
@@ -180,8 +176,7 @@ class TestFunctionalAiopgCreatePool(TestBase):
         self.validate_spans()
 
     def test_executemany(self):
-        """Should create a child span for executemany
-        """
+        """Should create a child span for executemany"""
         with pytest.raises(psycopg2.ProgrammingError):
             with self._tracer.start_as_current_span("rootSpan"):
                 data = (("1",), ("2",), ("3",))
@@ -190,8 +185,7 @@ class TestFunctionalAiopgCreatePool(TestBase):
             self.validate_spans()
 
     def test_callproc(self):
-        """Should create a child span for callproc
-        """
+        """Should create a child span for callproc"""
         with self._tracer.start_as_current_span("rootSpan"), self.assertRaises(
             Exception
         ):

@@ -22,9 +22,10 @@ import opentelemetry.instrumentation.requests
 from opentelemetry import context, propagators, trace
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk import resources
+from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.test.mock_textmap import MockTextMapPropagator
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 
 class RequestsIntegrationTestBase(abc.ABC):
@@ -80,13 +81,31 @@ class RequestsIntegrationTestBase(abc.ABC):
             },
         )
 
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
+        self.assertIs(span.status.status_code, trace.status.StatusCode.UNSET)
 
         self.check_span_instrumentation_info(
             span, opentelemetry.instrumentation.requests
         )
+
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        match_key = get_dict_as_key(
+            {
+                "http.flavor": "1.1",
+                "http.method": "GET",
+                "http.status_code": "200",
+                "http.url": "http://httpbin.org/status/200",
+            }
+        )
+        for key in recorder.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
+                self.assertGreaterEqual(view_data.aggregator.current.sum, 0)
 
     def test_not_foundbasic(self):
         url_404 = "http://httpbin.org/status/404"
@@ -102,8 +121,7 @@ class RequestsIntegrationTestBase(abc.ABC):
         self.assertEqual(span.attributes.get("http.status_text"), "Not Found")
 
         self.assertIs(
-            span.status.canonical_code,
-            trace.status.StatusCanonicalCode.NOT_FOUND,
+            span.status.status_code, trace.status.StatusCode.ERROR,
         )
 
     def test_uninstrument(self):
@@ -176,12 +194,12 @@ class RequestsIntegrationTestBase(abc.ABC):
             headers = dict(httpretty.last_request().headers)
             self.assertIn(MockTextMapPropagator.TRACE_ID_KEY, headers)
             self.assertEqual(
-                str(span.get_context().trace_id),
+                str(span.get_span_context().trace_id),
                 headers[MockTextMapPropagator.TRACE_ID_KEY],
             )
             self.assertIn(MockTextMapPropagator.SPAN_ID_KEY, headers)
             self.assertEqual(
-                str(span.get_context().span_id),
+                str(span.get_span_context().span_id),
                 headers[MockTextMapPropagator.SPAN_ID_KEY],
             )
 
@@ -242,9 +260,24 @@ class RequestsIntegrationTestBase(abc.ABC):
             span.attributes,
             {"component": "http", "http.method": "GET", "http.url": self.URL},
         )
-        self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.UNKNOWN
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
+
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        match_key = get_dict_as_key(
+            {
+                "http.method": "GET",
+                "http.url": "http://httpbin.org/status/200",
+            }
         )
+        for key in recorder.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
 
     mocked_response = requests.Response()
     mocked_response.status_code = 500
@@ -269,9 +302,24 @@ class RequestsIntegrationTestBase(abc.ABC):
                 "http.status_text": "Internal Server Error",
             },
         )
-        self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.INTERNAL
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
+        self.assertIsNotNone(RequestsInstrumentor().meter)
+        self.assertEqual(len(RequestsInstrumentor().meter.metrics), 1)
+        recorder = RequestsInstrumentor().meter.metrics.pop()
+        match_key = get_dict_as_key(
+            {
+                "http.method": "GET",
+                "http.status_code": "500",
+                "http.url": "http://httpbin.org/status/200",
+            }
         )
+        for key in recorder.bound_instruments.keys():
+            self.assertEqual(key, match_key)
+            # pylint: disable=protected-access
+            bound = recorder.bound_instruments.get(key)
+            for view_data in bound.view_datas:
+                self.assertEqual(view_data.labels, key)
+                self.assertEqual(view_data.aggregator.current.count, 1)
 
     @mock.patch("requests.adapters.HTTPAdapter.send", side_effect=Exception)
     def test_requests_basic_exception(self, *_, **__):
@@ -279,9 +327,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             self.perform_request(self.URL)
 
         span = self.assert_span()
-        self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.UNKNOWN
-        )
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
 
     @mock.patch(
         "requests.adapters.HTTPAdapter.send", side_effect=requests.Timeout
@@ -291,9 +337,7 @@ class RequestsIntegrationTestBase(abc.ABC):
             self.perform_request(self.URL)
 
         span = self.assert_span()
-        self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.DEADLINE_EXCEEDED
-        )
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
 
 
 class TestRequestsIntegration(RequestsIntegrationTestBase, TestBase):
@@ -316,9 +360,7 @@ class TestRequestsIntegration(RequestsIntegrationTestBase, TestBase):
             span.attributes,
             {"component": "http", "http.method": "POST", "http.url": url},
         )
-        self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.INVALID_ARGUMENT
-        )
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
 
     def test_if_headers_equals_none(self):
         result = requests.get(self.URL, headers=None)

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from tornado.testing import AsyncHTTPTestCase
 
@@ -131,6 +131,21 @@ class TestTornadoInstrumentation(TornadoTest):
         )
 
         self.memory_exporter.clear()
+
+    def test_not_recording(self):
+        mock_tracer = Mock()
+        mock_span = Mock()
+        mock_span.is_recording.return_value = False
+        mock_tracer.start_span.return_value = mock_span
+        mock_tracer.use_span.return_value.__enter__ = mock_span
+        mock_tracer.use_span.return_value.__exit__ = True
+        with patch("opentelemetry.trace.get_tracer") as tracer:
+            tracer.return_value = mock_tracer
+            self.fetch("/")
+            self.assertFalse(mock_span.is_recording())
+            self.assertTrue(mock_span.is_recording.called)
+            self.assertFalse(mock_span.set_attribute.called)
+            self.assertFalse(mock_span.set_status.called)
 
     def test_async_handler(self):
         self._test_async_handler("/async", "AsyncHandler")
@@ -338,6 +353,21 @@ class TestTornadoInstrumentation(TornadoTest):
 
         test_excluded("/healthz")
         test_excluded("/ping")
+
+    @patch(
+        "opentelemetry.instrumentation.tornado._traced_attrs",
+        ["uri", "full_url", "query"],
+    )
+    def test_traced_attrs(self):
+        self.fetch("/ping?q=abc&b=123")
+        spans = self.sorted_spans(self.memory_exporter.get_finished_spans())
+        self.assertEqual(len(spans), 2)
+        server_span = spans[0]
+        self.assertEqual(server_span.kind, SpanKind.SERVER)
+        self.assert_span_has_attributes(
+            server_span, {"uri": "/ping?q=abc&b=123", "query": "q=abc&b=123"}
+        )
+        self.memory_exporter.clear()
 
 
 class TestTornadoUninstrument(TornadoTest):

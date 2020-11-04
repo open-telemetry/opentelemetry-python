@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Add Gzip compression for exporter
+  ([#1141](https://github.com/open-telemetry/opentelemetry-python/pull/1141))
+## Version 0.15b0
+
+Released 2020-11-02
+
+- Add Env variables in OTLP exporter
+  ([#1101](https://github.com/open-telemetry/opentelemetry-python/pull/1101))
+- Do not use bound instruments in OTLP exporter
+  ([#1237](https://github.com/open-telemetry/opentelemetry-python/pull/1237))
+
+## Version 0.14b0
+
+Released 2020-10-13
+
+- Add timestamps to OTLP exporter
+  ([#1199](https://github.com/open-telemetry/opentelemetry-python/pull/1199))
+- Update OpenTelemetry protos to v0.5.0
+  ([#1143](https://github.com/open-telemetry/opentelemetry-python/pull/1143))
+
 ## Version 0.13b0
 
 Released 2020-09-17

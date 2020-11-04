@@ -36,9 +36,7 @@ class TestRedisInstrument(TestBase):
     def _check_span(self, span):
         self.assertEqual(span.attributes["service"], self.test_service)
         self.assertEqual(span.name, "redis.command")
-        self.assertIs(
-            span.status.canonical_code, trace.status.StatusCanonicalCode.OK
-        )
+        self.assertIs(span.status.status_code, trace.status.StatusCode.UNSET)
         self.assertEqual(span.attributes.get("db.instance"), 0)
         self.assertEqual(
             span.attributes.get("db.url"), "redis://localhost:6379"
@@ -109,7 +107,7 @@ class TestRedisInstrument(TestBase):
 
         # confirm the parenting
         self.assertIsNone(parent_span.parent)
-        self.assertIs(child_span.parent, parent_span.get_context())
+        self.assertIs(child_span.parent, parent_span.get_span_context())
 
         self.assertEqual(parent_span.name, "redis_get")
         self.assertEqual(parent_span.instrumentation_info.name, "redis_svc")

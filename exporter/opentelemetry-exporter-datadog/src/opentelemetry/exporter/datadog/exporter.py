@@ -23,7 +23,6 @@ from ddtrace.span import Span as DatadogSpan
 import opentelemetry.trace as trace_api
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint:disable=relative-beyond-top-level
 from .constants import (
@@ -145,7 +144,7 @@ class DatadogSpanExporter(SpanExporter):
             datadog_span.start_ns = span.start_time
             datadog_span.duration_ns = span.end_time - span.start_time
 
-            if span.status.canonical_code is not StatusCanonicalCode.OK:
+            if not span.status.is_ok:
                 datadog_span.error = 1
                 if span.status.description:
                     exc_type, exc_val = _get_exc_info(span)
@@ -189,12 +188,12 @@ class DatadogSpanExporter(SpanExporter):
 
 def _get_trace_ids(span):
     """Extract tracer ids from span"""
-    ctx = span.get_context()
+    ctx = span.get_span_context()
     trace_id = ctx.trace_id
     span_id = ctx.span_id
 
     if isinstance(span.parent, trace_api.Span):
-        parent_id = span.parent.get_context().span_id
+        parent_id = span.parent.get_span_context().span_id
     elif isinstance(span.parent, trace_api.SpanContext):
         parent_id = span.parent.span_id
     else:
@@ -255,13 +254,13 @@ def _get_exc_info(span):
 
 
 def _get_origin(span):
-    ctx = span.get_context()
+    ctx = span.get_span_context()
     origin = ctx.trace_state.get(DD_ORIGIN)
     return origin
 
 
 def _get_sampling_rate(span):
-    ctx = span.get_context()
+    ctx = span.get_span_context()
     return (
         span.sampler.rate
         if ctx.trace_flags.sampled

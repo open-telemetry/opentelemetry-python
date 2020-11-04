@@ -18,18 +18,13 @@ import unittest
 from opentelemetry import baggage, trace
 from opentelemetry.propagators import extract, inject
 from opentelemetry.trace import get_current_span, set_span_in_context
+from opentelemetry.trace.propagation.textmap import DictGetter
 
-
-def get_as_list(
-    dict_object: typing.Dict[str, typing.List[str]], key: str
-) -> typing.List[str]:
-    value = dict_object.get(key)
-    return value if value is not None else []
+carrier_getter = DictGetter()
 
 
 class TestDefaultGlobalPropagator(unittest.TestCase):
-    """Test ensures the default global composite propagator works as intended
-    """
+    """Test ensures the default global composite propagator works as intended"""
 
     TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
     SPAN_ID = int("1234567890123456", 16)  # type:int
@@ -41,15 +36,15 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         headers = {
-            "otcorrelations": ["key1=val1,key2=val2"],
+            "baggage": ["key1=val1,key2=val2"],
             "traceparent": [traceparent_value],
             "tracestate": [tracestate_value],
         }
-        ctx = extract(get_as_list, headers)
+        ctx = extract(carrier_getter, headers)
         baggage_entries = baggage.get_all(context=ctx)
         expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(baggage_entries, expected)
-        span_context = get_current_span(context=ctx).get_context()
+        span_context = get_current_span(context=ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
@@ -61,8 +56,8 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         output = {}
         inject(dict.__setitem__, output, context=ctx)
         self.assertEqual(traceparent_value, output["traceparent"])
-        self.assertIn("key3=val3", output["otcorrelations"])
-        self.assertIn("key4=val4", output["otcorrelations"])
+        self.assertIn("key3=val3", output["baggage"])
+        self.assertIn("key4=val4", output["baggage"])
         self.assertIn("foo=1", output["tracestate"])
         self.assertIn("bar=2", output["tracestate"])
         self.assertIn("baz=3", output["tracestate"])

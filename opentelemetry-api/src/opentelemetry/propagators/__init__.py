@@ -15,6 +15,21 @@
 """
 API for propagation of context.
 
+The propagators for the
+``opentelemetry.propagators.composite.CompositeHTTPPropagator`` can be defined
+via configuration in the ``OTEL_PROPAGATORS`` environment variable. This
+variable should be set to a comma-separated string of names of values for the
+``opentelemetry_propagator`` entry point. For example, setting
+``OTEL_PROPAGATORS`` to ``tracecontext,baggage`` (which is the default value)
+would instantiate
+``opentelemetry.propagators.composite.CompositeHTTPPropagator`` with 2
+propagators, one of type
+``opentelemetry.trace.propagation.tracecontext.TraceContextTextMapPropagator``
+and other of type ``opentelemetry.baggage.propagation.BaggagePropagator``.
+Notice that these propagator classes are defined as
+``opentelemetry_propagator`` entry points in the ``setup.cfg`` file of
+``opentelemetry``.
+
 Example::
 
     import flask
@@ -50,39 +65,41 @@ Example::
 
 
 .. _Propagation API Specification:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/api-propagators.md
+    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md
 """
 
 import typing
+from logging import getLogger
 
-from opentelemetry.baggage.propagation import BaggagePropagator
+from pkg_resources import iter_entry_points
+
+from opentelemetry.configuration import Configuration
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import composite
 from opentelemetry.trace.propagation import textmap
-from opentelemetry.trace.propagation.tracecontext import (
-    TraceContextTextMapPropagator,
-)
+
+logger = getLogger(__name__)
 
 
 def extract(
-    get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+    getter: textmap.Getter[textmap.TextMapPropagatorT],
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> Context:
     """ Uses the configured propagator to extract a Context from the carrier.
 
     Args:
-        get_from_carrier: a function that can retrieve zero
-            or more values from the carrier. In the case that
-            the value does not exist, return an empty list.
+        getter: an object which contains a get function that can retrieve zero
+            or more values from the carrier and a keys function that can get all the keys
+            from carrier.
         carrier: and object which contains values that are
             used to construct a Context. This object
-            must be paired with an appropriate get_from_carrier
+            must be paired with an appropriate getter
             which understands how to extract a value from it.
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_textmap().extract(get_from_carrier, carrier, context)
+    return get_global_textmap().extract(getter, carrier, context)
 
 
 def inject(
@@ -104,9 +121,25 @@ def inject(
     get_global_textmap().inject(set_in_carrier, carrier, context)
 
 
-_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(
-    [TraceContextTextMapPropagator(), BaggagePropagator()],
-)  # type: textmap.TextMapPropagator
+try:
+
+    propagators = []
+
+    for propagator in (  # type: ignore
+        Configuration().get("PROPAGATORS", "tracecontext,baggage").split(",")  # type: ignore
+    ):
+
+        propagators.append(  # type: ignore
+            next(  # type: ignore
+                iter_entry_points("opentelemetry_propagator", propagator)  # type: ignore
+            ).load()()
+        )
+
+except Exception:  # pylint: disable=broad-except
+    logger.exception("Failed to load configured propagators")
+    raise
+
+_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)  # type: ignore
 
 
 def get_global_textmap() -> textmap.TextMapPropagator:
@@ -115,4 +148,4 @@ def get_global_textmap() -> textmap.TextMapPropagator:
 
 def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format
+    _HTTP_TEXT_FORMAT = http_text_format  # type: ignore

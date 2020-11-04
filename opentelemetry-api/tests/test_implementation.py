@@ -37,12 +37,14 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         tracer_provider = trace.DefaultTracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
-            self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
+            self.assertEqual(
+                span.get_span_context(), trace.INVALID_SPAN_CONTEXT
+            )
             self.assertEqual(span, trace.INVALID_SPAN)
             self.assertIs(span.is_recording(), False)
             with tracer.start_span("test2") as span2:
                 self.assertEqual(
-                    span2.get_context(), trace.INVALID_SPAN_CONTEXT
+                    span2.get_span_context(), trace.INVALID_SPAN_CONTEXT
                 )
                 self.assertEqual(span2, trace.INVALID_SPAN)
                 self.assertIs(span2.is_recording(), False)
@@ -54,7 +56,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_default_span(self):
         span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
-        self.assertEqual(span.get_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), False)
 
     # METER
@@ -72,23 +74,43 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_record_batch(self):
         meter = metrics.DefaultMeter()
-        counter = metrics.Counter()
+        counter = metrics.DefaultCounter()
         meter.record_batch({}, ((counter, 1),))
 
-    def test_create_metric(self):
+    def test_create_counter(self):
         meter = metrics.DefaultMeter()
-        metric = meter.create_metric("", "", "", float, metrics.Counter)
-        self.assertIsInstance(metric, metrics.DefaultMetric)
+        metric = meter.create_counter("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultCounter)
 
-    def test_register_observer(self):
+    def test_create_updowncounter(self):
+        meter = metrics.DefaultMeter()
+        metric = meter.create_updowncounter("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultUpDownCounter)
+
+    def test_create_valuerecorder(self):
+        meter = metrics.DefaultMeter()
+        metric = meter.create_valuerecorder("", "", "", float)
+        self.assertIsInstance(metric, metrics.DefaultValueRecorder)
+
+    def test_register_sumobserver(self):
         meter = metrics.DefaultMeter()
         callback = mock.Mock()
-        observer = meter.register_observer(
-            callback, "", "", "", int, metrics.ValueObserver
-        )
-        self.assertIsInstance(observer, metrics.DefaultObserver)
+        observer = meter.register_sumobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultSumObserver)
+
+    def test_register_updownsumobserver(self):
+        meter = metrics.DefaultMeter()
+        callback = mock.Mock()
+        observer = meter.register_updownsumobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultUpDownSumObserver)
+
+    def test_register_valueobserver(self):
+        meter = metrics.DefaultMeter()
+        callback = mock.Mock()
+        observer = meter.register_valueobserver(callback, "", "", "", int)
+        self.assertIsInstance(observer, metrics.DefaultValueObserver)
 
     def test_unregister_observer(self):
         meter = metrics.DefaultMeter()
-        observer = metrics.DefaultObserver()
+        observer = metrics.DefaultSumObserver()
         meter.unregister_observer(observer)

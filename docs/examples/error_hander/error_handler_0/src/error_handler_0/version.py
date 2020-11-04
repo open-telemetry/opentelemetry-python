@@ -12,8 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import environ
-
-
-def pytest_sessionstart(session):  # pylint: disable=unused-argument
-    environ.setdefault("OTEL_PYTHON_DJANGO_INSTRUMENT", "True")
+__version__ = "0.16.dev0"

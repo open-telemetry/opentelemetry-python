@@ -50,9 +50,11 @@ from opentelemetry import configuration, context, propagators, trace
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.tornado.version import __version__
 from opentelemetry.instrumentation.utils import (
-    http_status_to_canonical_code,
+    extract_attributes_from_object,
+    http_status_to_status_code,
     unwrap,
 )
+from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.trace.status import Status
 from opentelemetry.util import ExcludeList, time_ns
 
@@ -71,7 +73,19 @@ def get_excluded_urls():
     return ExcludeList(urls)
 
 
+def get_traced_request_attrs():
+    attrs = configuration.Configuration().TORNADO_TRACED_REQUEST_ATTRS or ""
+    if attrs:
+        attrs = [attr.strip() for attr in attrs.split(",")]
+    else:
+        attrs = []
+    return attrs
+
+
 _excluded_urls = get_excluded_urls()
+_traced_attrs = get_traced_request_attrs()
+
+carrier_getter = DictGetter()
 
 
 class TornadoInstrumentor(BaseInstrumentor):
@@ -174,13 +188,6 @@ def _log_exception(tracer, func, handler, args, kwargs):
     return func(*args, **kwargs)
 
 
-def _get_header_from_request_headers(
-    headers: dict, header_name: str
-) -> typing.List[str]:
-    header = headers.get(header_name)
-    return [header] if header else []
-
-
 def _get_attributes_from_request(request):
     attrs = {
         "component": "tornado",
@@ -196,7 +203,7 @@ def _get_attributes_from_request(request):
     if request.remote_ip:
         attrs["net.peer.ip"] = request.remote_ip
 
-    return attrs
+    return extract_attributes_from_object(request, _traced_attrs, attrs)
 
 
 def _get_operation_name(handler, request):
@@ -207,16 +214,18 @@ def _get_operation_name(handler, request):
 
 def _start_span(tracer, handler, start_time) -> _TraceContext:
     token = context.attach(
-        propagators.extract(
-            _get_header_from_request_headers, handler.request.headers,
-        )
+        propagators.extract(carrier_getter, handler.request.headers,)
     )
+
     span = tracer.start_span(
         _get_operation_name(handler, handler.request),
         kind=trace.SpanKind.SERVER,
-        attributes=_get_attributes_from_request(handler.request),
         start_time=start_time,
     )
+    if span.is_recording():
+        attributes = _get_attributes_from_request(handler.request)
+        for key, value in attributes.items():
+            span.set_attribute(key, value)
 
     activation = tracer.use_span(span, end_on_exit=True)
     activation.__enter__()
@@ -248,15 +257,16 @@ def _finish_span(tracer, handler, error=None):
     if not ctx:
         return
 
-    if reason:
-        ctx.span.set_attribute("http.status_text", reason)
-    ctx.span.set_attribute("http.status_code", status_code)
-    ctx.span.set_status(
-        Status(
-            canonical_code=http_status_to_canonical_code(status_code),
-            description=reason,
+    if ctx.span.is_recording():
+        if reason:
+            ctx.span.set_attribute("http.status_text", reason)
+        ctx.span.set_attribute("http.status_code", status_code)
+        ctx.span.set_status(
+            Status(
+                status_code=http_status_to_status_code(status_code),
+                description=reason,
+            )
         )
-    )
 
     ctx.activation.__exit__(*finish_args)
     context.detach(ctx.token)

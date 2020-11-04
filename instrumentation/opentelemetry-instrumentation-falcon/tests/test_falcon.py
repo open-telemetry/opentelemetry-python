@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from falcon import testing
 
 from opentelemetry.instrumentation.falcon import FalconInstrumentor
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import ExcludeList
 
 from .app import make_app
@@ -64,7 +64,7 @@ class TestFalconInstrumentation(TestBase):
         self.assertEqual(
             span.name, "HelloWorldResource.on_{0}".format(method.lower())
         )
-        self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
+        self.assertEqual(span.status.status_code, StatusCode.UNSET)
         self.assert_span_has_attributes(
             span,
             {
@@ -91,9 +91,7 @@ class TestFalconInstrumentation(TestBase):
         self.assertEqual(len(spans), 1)
         span = spans[0]
         self.assertEqual(span.name, "HTTP GET")
-        self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.NOT_FOUND
-        )
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
         self.assert_span_has_attributes(
             span,
             {
@@ -122,9 +120,7 @@ class TestFalconInstrumentation(TestBase):
         span = spans[0]
         self.assertEqual(span.name, "ErrorResource.on_get")
         self.assertFalse(span.status.is_ok)
-        self.assertEqual(
-            span.status.canonical_code, StatusCanonicalCode.INTERNAL
-        )
+        self.assertEqual(span.status.status_code, StatusCode.ERROR)
         self.assertEqual(
             span.status.description,
             "NameError: name 'non_existent_var' is not defined",
@@ -171,3 +167,35 @@ class TestFalconInstrumentation(TestBase):
         self.client().simulate_get(path="/hello")
         span_list = self.memory_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
+
+    def test_traced_request_attributes(self):
+        self.client().simulate_get(path="/hello?q=abc")
+        span = self.memory_exporter.get_finished_spans()[0]
+        self.assertNotIn("query_string", span.attributes)
+        self.memory_exporter.clear()
+
+        middleware = self.app._middleware[0][  # pylint:disable=W0212
+            0
+        ].__self__
+        with patch.object(
+            middleware, "_traced_request_attrs", ["query_string"]
+        ):
+            self.client().simulate_get(path="/hello?q=abc")
+            span = self.memory_exporter.get_finished_spans()[0]
+            self.assertIn("query_string", span.attributes)
+            self.assertEqual(span.attributes["query_string"], "q=abc")
+
+    def test_traced_not_recording(self):
+        mock_tracer = Mock()
+        mock_span = Mock()
+        mock_span.is_recording.return_value = False
+        mock_tracer.start_span.return_value = mock_span
+        mock_tracer.use_span.return_value.__enter__ = mock_span
+        mock_tracer.use_span.return_value.__exit__ = mock_span
+        with patch("opentelemetry.trace.get_tracer") as tracer:
+            tracer.return_value = mock_tracer
+            self.client().simulate_get(path="/hello?q=abc")
+            self.assertFalse(mock_span.is_recording())
+            self.assertTrue(mock_span.is_recording.called)
+            self.assertFalse(mock_span.set_attribute.called)
+            self.assertFalse(mock_span.set_status.called)

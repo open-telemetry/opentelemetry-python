@@ -17,7 +17,6 @@ from re import compile as re_compile
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace import generate_span_id, generate_trace_id
 from opentelemetry.trace.propagation.textmap import (
     Getter,
     Setter,
@@ -44,7 +43,7 @@ class B3Format(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -54,7 +53,7 @@ class B3Format(TextMapPropagator):
         flags = None
 
         single_header = _extract_first_element(
-            get_from_carrier(carrier, self.SINGLE_HEADER_KEY)
+            getter.get(carrier, self.SINGLE_HEADER_KEY)
         )
         if single_header:
             # The b3 spec calls for the sampling state to be
@@ -75,27 +74,19 @@ class B3Format(TextMapPropagator):
                 return trace.set_span_in_context(trace.INVALID_SPAN)
         else:
             trace_id = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.TRACE_ID_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY))
                 or trace_id
             )
             span_id = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.SPAN_ID_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY))
                 or span_id
             )
             sampled = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.SAMPLED_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.SAMPLED_KEY))
                 or sampled
             )
             flags = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.FLAGS_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.FLAGS_KEY))
                 or flags
             )
 
@@ -103,8 +94,9 @@ class B3Format(TextMapPropagator):
             self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            trace_id = generate_trace_id()
-            span_id = generate_span_id()
+            ids_generator = trace.get_tracer_provider().ids_generator
+            trace_id = ids_generator.generate_trace_id()
+            span_id = ids_generator.generate_span_id()
             sampled = "0"
 
         else:
@@ -140,21 +132,23 @@ class B3Format(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        if span.get_context() == trace.INVALID_SPAN_CONTEXT:
+        span_context = span.get_span_context()
+        if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
-        sampled = (trace.TraceFlags.SAMPLED & span.context.trace_flags) != 0
+        sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, format_trace_id(span.context.trace_id),
+            carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, format_span_id(span.context.span_id)
+            carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
         )
-        if span.parent is not None:
+        span_parent = getattr(span, "parent", None)
+        if span_parent is not None:
             set_in_carrier(
                 carrier,
                 self.PARENT_SPAN_ID_KEY,
-                format_span_id(span.parent.span_id),
+                format_span_id(span_parent.span_id),
             )
         set_in_carrier(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
