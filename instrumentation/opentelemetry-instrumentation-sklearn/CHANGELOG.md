@@ -2,6 +2,4 @@
 
 ## Unreleased
 
-
-
 - Initial release
