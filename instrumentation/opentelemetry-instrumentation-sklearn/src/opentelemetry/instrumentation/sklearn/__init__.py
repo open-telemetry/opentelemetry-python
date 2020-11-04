@@ -73,18 +73,22 @@ from sklearn.utils.metaestimators import _IffHasAttrDescriptor
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.sklearn.version import __version__
 from opentelemetry.trace import get_tracer
+from opentelemetry.util.types import Attributes
 
 logger = logging.getLogger(__name__)
 
 
 def implement_spans(
-    func: Callable, estimator: Union[BaseEstimator, Type[BaseEstimator]]
+    func: Callable,
+    estimator: Union[BaseEstimator, Type[BaseEstimator]],
+    attributes: Attributes = None,
 ):
     """Wrap the method call with a span.
 
     Args:
         func: A callable to be wrapped in a span
-        estimator: An instance or class of an estimator.
+        estimator: An instance or class of an estimator
+        attributes: Attributes to apply to the span
 
     Returns:
         The passed function wrapped in a span.
@@ -98,7 +102,8 @@ def implement_spans(
     @wraps(func)
     def wrapper(*args, **kwargs):
         with get_tracer(__name__, __version__).start_as_current_span(
-            name="{cls}.{func}".format(cls=name, func=func.__name__)
+            name="{cls}.{func}".format(cls=name, func=func.__name__),
+            attributes=attributes,
         ):
             return func(*args, **kwargs)
 
@@ -369,12 +374,15 @@ class SklearnInstrumentor(BaseInstrumentor):
                         estimator=klass, method_name=method_name
                     )
 
-    def instrument_estimator(self, estimator: BaseEstimator):
+    def instrument_estimator(
+        self, estimator: BaseEstimator, attributes: Attributes = None
+    ):
         """Instrument a fitted estimator and its hierarchy where configured.
 
         Args:
             estimator (sklearn.base.BaseEstimator): A fitted ``sklearn``
               estimator, typically a ``Pipeline`` instance.
+            attributes (dict): Attributes to attach to the spans.
         """
         if isinstance(estimator, self.exclude_classes):
             logger.debug(
@@ -386,15 +394,21 @@ class SklearnInstrumentor(BaseInstrumentor):
         if isinstance(
             estimator, tuple(self.recurse_namedtuple_attribs.keys())
         ):
-            self._instrument_estimator_namedtuple(estimator=estimator)
+            self._instrument_estimator_namedtuple(
+                estimator=estimator, attributes=attributes
+            )
 
         if isinstance(estimator, tuple(self.recurse_attribs.keys())):
-            self._instrument_estimator_attribute(estimator=estimator)
+            self._instrument_estimator_attribute(
+                estimator=estimator, attributes=attributes
+            )
 
         for method_name in self.methods:
             if hasattr(estimator, method_name):
                 self._instrument_instance_method(
-                    estimator=estimator, method_name=method_name
+                    estimator=estimator,
+                    method_name=method_name,
+                    attributes=attributes,
                 )
 
     def uninstrument_estimator(self, estimator: BaseEstimator):
@@ -582,7 +596,10 @@ class SklearnInstrumentor(BaseInstrumentor):
         return function
 
     def _instrument_instance_method(
-        self, estimator: BaseEstimator, method_name: str
+        self,
+        estimator: BaseEstimator,
+        method_name: str,
+        attributes: Attributes = None,
     ):
         """Instrument an estimator instance method with a span.
 
@@ -594,6 +611,7 @@ class SklearnInstrumentor(BaseInstrumentor):
             estimator (BaseEstimator): A fitted ``sklearn`` estimator.
             method_name (str): The method name of the estimator on which to
               apply a span.
+            attributes (dict): Attributes to attach to the spans.
         """
         if self._check_instrumented(estimator, method_name):
             logger.debug(
@@ -616,10 +634,14 @@ class SklearnInstrumentor(BaseInstrumentor):
                 estimator, "_otel_original_" + method_name, (estimator, method)
             )
             setattr(
-                estimator, method_name, self.spanner(method, estimator),
+                estimator,
+                method_name,
+                self.spanner(method, estimator, attributes),
             )
 
-    def _instrument_estimator_attribute(self, estimator: BaseEstimator):
+    def _instrument_estimator_attribute(
+        self, estimator: BaseEstimator, attributes: Attributes = None
+    ):
         """Instrument instance attributes which also contain estimators.
 
         Handle instance attributes which are also estimators, are a list
@@ -634,20 +656,29 @@ class SklearnInstrumentor(BaseInstrumentor):
             estimator (BaseEstimator): A fitted ``sklearn`` estimator, with an
               attribute which also contains an estimator or collection of
               estimators.
+            attributes (dict): Attributes to attach to the spans.
         """
         attribs = self.recurse_attribs.get(estimator.__class__, [])
         for attrib in attribs:
             attrib_value = getattr(estimator, attrib)
             if isinstance(attrib_value, Sequence):
                 for value in attrib_value:
-                    self.instrument_estimator(estimator=value)
+                    self.instrument_estimator(
+                        estimator=value, attributes=attributes
+                    )
             elif isinstance(attrib_value, MutableMapping):
                 for value in attrib_value.values():
-                    self.instrument_estimator(estimator=value)
+                    self.instrument_estimator(
+                        estimator=value, attributes=attributes
+                    )
             else:
-                self.instrument_estimator(estimator=attrib_value)
+                self.instrument_estimator(
+                    estimator=attrib_value, attributes=attributes
+                )
 
-    def _instrument_estimator_namedtuple(self, estimator: BaseEstimator):
+    def _instrument_estimator_namedtuple(
+        self, estimator: BaseEstimator, attributes: Attributes = None
+    ):
         """Instrument attributes with (name, estimator) tupled components.
 
         Examples include Pipeline and FeatureUnion instances which
@@ -656,11 +687,12 @@ class SklearnInstrumentor(BaseInstrumentor):
         Args:
             estimator: A fitted sklearn estimator, with an attribute which also
               contains an estimator or collection of estimators.
+            attributes (dict): Attributes to attach to the spans.
         """
         attribs = self.recurse_namedtuple_attribs.get(estimator.__class__, [])
         for attrib in attribs:
             for _, est in getattr(estimator, attrib):
-                self.instrument_estimator(estimator=est)
+                self.instrument_estimator(estimator=est, attributes=attributes)
 
     def _uninstrument_estimator_attribute(self, estimator: BaseEstimator):
         """Uninstrument instance attributes which also contain estimators.
