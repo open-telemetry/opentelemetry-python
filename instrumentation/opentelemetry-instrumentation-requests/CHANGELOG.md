@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Released 2020-11-02
+
+- Add span name callback
+  ([#1358](https://github.com/open-telemetry/opentelemetry-python/pull/1358))
+
 ## Version 0.15b0
 
 Released 2020-11-02
