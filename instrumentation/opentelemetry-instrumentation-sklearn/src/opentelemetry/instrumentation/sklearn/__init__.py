@@ -30,7 +30,9 @@ Package instrumentation example:
     SklearnInstrumentor().instrument()
 
     # instrument sklearn and other libraries
-    SklearnInstrumentor(packages=["lightgbm", "xgboost"]).instrument()
+    SklearnInstrumentor(
+        packages=["sklearn", "lightgbm", "xgboost"]
+    ).instrument()
 
 
 Model intrumentation example:
@@ -99,37 +101,46 @@ def implement_spans(
         name = estimator.__class__.__name__
     logger.debug("Instrumenting: %s.%s", name, func.__name__)
 
+    attributes = attributes or {}
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         with get_tracer(__name__, __version__).start_as_current_span(
             name="{cls}.{func}".format(cls=name, func=func.__name__),
-            attributes=attributes,
         ) as span:
             if span.is_recording():
-                for k, v in attributes.items():
-                    span.set_attribute(k, v)
+                for key, val in attributes.items():
+                    span.set_attribute(key, val)
             return func(*args, **kwargs)
 
     return wrapper
 
 
-def implement_spans_delegator(obj: _IffHasAttrDescriptor):
+def implement_spans_delegator(
+    obj: _IffHasAttrDescriptor, attributes: Attributes = None
+):
     """Wrap the descriptor's fn with a span.
 
     Args:
         obj: An instance of _IffHasAttrDescriptor
+        attributes: Attributes to apply to the span
     """
     # Don't instrument inherited delegators
     if hasattr(obj, "_otel_original_fn"):
         logger.debug("Already instrumented: %s", obj.fn.__qualname__)
         return
 
-    def implement_spans_get(func: Callable):
+    attributes = attributes or {}
+
+    def implement_spans_fn(func: Callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
             with get_tracer(__name__, __version__).start_as_current_span(
                 name=func.__qualname__
-            ):
+            ) as span:
+                if span.is_recording():
+                    for key, val in attributes.items():
+                        span.set_attribute(key, val)
                 return func(*args, **kwargs)
 
         return wrapper
@@ -137,7 +148,7 @@ def implement_spans_delegator(obj: _IffHasAttrDescriptor):
     logger.debug("Instrumenting: %s", obj.fn.__qualname__)
 
     setattr(obj, "_otel_original_fn", getattr(obj, "fn"))
-    setattr(obj, "fn", implement_spans_get(obj.fn))
+    setattr(obj, "fn", implement_spans_fn(obj.fn))
 
 
 def get_delegator(
@@ -263,7 +274,7 @@ class SklearnInstrumentor(BaseInstrumentor):
         # instrument the sklearn library
         SklearnInstrumentor().instrument()
 
-        # instrument additional libraries
+        # instrument several sklearn-compatible libraries
         packages = ["sklearn", "lightgbm", "xgboost"]
         SklearnInstrumentor(packages=packages).instrument()
 
@@ -308,10 +319,7 @@ class SklearnInstrumentor(BaseInstrumentor):
           element is the estimator. Defaults include sklearn's ``Pipeline``
           and its attribute ``steps``, and the ``FeatureUnion`` and its
           attribute ``transformer_list``. Used in model instrumentation only.
-        spanner: A function with signature
-          (func, sklearn.base.BaseEstimator, Attributes) which
-          decorates instance methods with opentelemetry spans.
-        packages: A list of additional sklearn-compatible packages to
+        packages: A list of sklearn-compatible packages to
           instrument. Used with package instrumentation only.
         exclude_classes: A list of classes to exclude from instrumentation.
           Child classes are also excluded. Default is sklearn's
@@ -337,7 +345,6 @@ class SklearnInstrumentor(BaseInstrumentor):
         recurse_namedtuple_attribs: Dict[
             Type[BaseEstimator], List[str]
         ] = None,
-        spanner: Callable = implement_spans,
         packages: List[str] = None,
         exclude_classes: List[Type] = None,
     ):
@@ -346,7 +353,6 @@ class SklearnInstrumentor(BaseInstrumentor):
         self.recurse_namedtuple_attribs = (
             recurse_namedtuple_attribs or DEFAULT_NAMEDTUPLE_ATTRIBS
         )
-        self.spanner = spanner
         self.packages = packages or DEFAULT_PACKAGES
         if exclude_classes is None:
             self.exclude_classes = tuple(DEFAULT_EXCLUDE_CLASSES)
@@ -356,6 +362,7 @@ class SklearnInstrumentor(BaseInstrumentor):
     def _instrument(self, **kwargs):
         """Instrument the library, and any additional specified on init."""
         klasses = get_base_estimators(packages=self.packages)
+        attributes = kwargs.get("attributes")
         for _, klass in klasses.items():
             if issubclass(klass, self.exclude_classes):
                 logger.debug("Not instrumenting (excluded): %s", str(klass))
@@ -364,7 +371,9 @@ class SklearnInstrumentor(BaseInstrumentor):
                 for method_name in self.methods:
                     if hasattr(klass, method_name):
                         self._instrument_class_method(
-                            estimator=klass, method_name=method_name
+                            estimator=klass,
+                            method_name=method_name,
+                            attributes=attributes,
                         )
 
     def _uninstrument(self, **kwargs):
@@ -550,7 +559,10 @@ class SklearnInstrumentor(BaseInstrumentor):
             )
 
     def _instrument_class_method(
-        self, estimator: Type[BaseEstimator], method_name: str
+        self,
+        estimator: Type[BaseEstimator],
+        method_name: str,
+        attributes: Attributes = None,
     ):
         """Instrument an estimator method with a span.
 
@@ -565,6 +577,7 @@ class SklearnInstrumentor(BaseInstrumentor):
               class
             method_name (str): The method name of the estimator on which to
               apply a span.
+            attributes (dict): Attributes to attach to the spans.
         """
         if self._check_instrumented(estimator, method_name):
             logger.debug(
@@ -590,7 +603,9 @@ class SklearnInstrumentor(BaseInstrumentor):
                 (estimator, class_attr),
             )
             setattr(
-                estimator, method_name, self.spanner(class_attr, estimator),
+                estimator,
+                method_name,
+                implement_spans(class_attr, estimator, attributes),
             )
 
     def _unwrap_function(self, function):
@@ -640,7 +655,7 @@ class SklearnInstrumentor(BaseInstrumentor):
             setattr(
                 estimator,
                 method_name,
-                self.spanner(method, estimator, attributes),
+                implement_spans(method, estimator, attributes),
             )
 
     def _instrument_estimator_attribute(
