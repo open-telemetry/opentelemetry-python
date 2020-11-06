@@ -22,8 +22,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
     SPAN_KIND_MAP_JSON,
     SPAN_KIND_MAP_PROTOBUF,
-    TRANSPORT_FORMAT_JSON,
-    TRANSPORT_FORMAT_PROTOBUF,
+    TransportFormat,
     ZipkinSpanExporter,
     nsec_to_usec_round,
 )
@@ -68,7 +67,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = url
         os.environ[
             "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"
-        ] = TRANSPORT_FORMAT_PROTOBUF
+        ] = TransportFormat.V2_PROTOBUF.value
         service_name = "my-service-name"
         port = 9911
         exporter = ZipkinSpanExporter(service_name)
@@ -80,7 +79,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.ipv6, ipv6)
         self.assertEqual(exporter.url, url)
         self.assertEqual(exporter.port, port)
-        self.assertEqual(exporter.transport_format, TRANSPORT_FORMAT_PROTOBUF)
+        self.assertEqual(
+            exporter.transport_format, TransportFormat.V2_PROTOBUF
+        )
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
@@ -90,7 +91,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         ipv4 = None
         ipv6 = None
         url = "http://localhost:9411/api/v2/spans"
-        transport_format = TRANSPORT_FORMAT_JSON
+        transport_format = TransportFormat.V2_JSON
 
         self.assertEqual(exporter.service_name, service_name)
         self.assertEqual(exporter.port, port)
@@ -106,7 +107,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         ipv4 = "1.2.3.4"
         ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
         url = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
-        transport_format = TRANSPORT_FORMAT_PROTOBUF
+        transport_format = TransportFormat.V2_PROTOBUF
 
         exporter = ZipkinSpanExporter(
             service_name=service_name,
@@ -655,7 +656,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         exporter = ZipkinSpanExporter(
-            service_name, transport_format=TRANSPORT_FORMAT_PROTOBUF
+            service_name, transport_format=TransportFormat.V2_PROTOBUF
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
@@ -695,7 +696,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.end()
 
         exporter = ZipkinSpanExporter(
-            service_name, transport_format=TRANSPORT_FORMAT_PROTOBUF,
+            service_name, transport_format=TransportFormat.V2_PROTOBUF,
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
@@ -713,7 +714,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         exporter = ZipkinSpanExporter(
             service_name,
-            transport_format=TRANSPORT_FORMAT_PROTOBUF,
+            transport_format=TransportFormat.V2_PROTOBUF,
             max_tag_value_length=2,
         )
         mock_post = MagicMock()

@@ -71,6 +71,7 @@ API
 ---
 """
 
+from enum import Enum, auto
 import json
 import logging
 from typing import Optional, Sequence, Union
@@ -82,9 +83,6 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
-
-TRANSPORT_FORMAT_JSON = "json"
-TRANSPORT_FORMAT_PROTOBUF = "protobuf"
 
 DEFAULT_RETRY = False
 DEFAULT_URL = "http://localhost:9411/api/v2/spans"
@@ -111,6 +109,17 @@ SUCCESS_STATUS_CODES = (200, 202)
 logger = logging.getLogger(__name__)
 
 
+class TransportFormat(Enum):
+    """Enum of supported transport formats.
+
+    Values are human-readable strings so that the related OS environ var
+    OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT can be more easily used.
+    """
+    V1_JSON = "v1_json"
+    V2_JSON = "v2_json"
+    V2_PROTOBUF = "v2_protobuf"
+
+
 class ZipkinSpanExporter(SpanExporter):
     """Zipkin span exporter for OpenTelemetry.
 
@@ -132,9 +141,7 @@ class ZipkinSpanExporter(SpanExporter):
         ipv6: Optional[str] = None,
         retry: Optional[str] = DEFAULT_RETRY,
         max_tag_value_length: Optional[int] = DEFAULT_MAX_TAG_VALUE_LENGTH,
-        transport_format: Union[
-            TRANSPORT_FORMAT_JSON, TRANSPORT_FORMAT_PROTOBUF, None
-        ] = None,
+        transport_format: Optional[TransportFormat] = None,
     ):
         self.service_name = service_name
         if url is None:
@@ -150,17 +157,18 @@ class ZipkinSpanExporter(SpanExporter):
         self.max_tag_value_length = max_tag_value_length
 
         if transport_format is None:
-            self.transport_format = (
-                Configuration().EXPORTER_ZIPKIN_TRANSPORT_FORMAT
-                or TRANSPORT_FORMAT_JSON
-            )
+            env_transport = Configuration().EXPORTER_ZIPKIN_TRANSPORT_FORMAT
+            if env_transport is None:
+                self.transport_format = TransportFormat.V2_JSON
+            else:
+                self.transport_format = TransportFormat(env_transport)
         else:
             self.transport_format = transport_format
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
-        if self.transport_format == TRANSPORT_FORMAT_JSON:
+        if self.transport_format == TransportFormat.V2_JSON:
             content_type = "application/json"
-        elif self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
+        elif self.transport_format == TransportFormat.V2_PROTOBUF:
             content_type = "application/x-protobuf"
         else:
             logger.error("Invalid transport format %s", self.transport_format)
@@ -190,7 +198,7 @@ class ZipkinSpanExporter(SpanExporter):
     def _translate_to_transport_format(self, spans: Sequence[Span]):
         return (
             self._translate_to_json(spans)
-            if self.transport_format == TRANSPORT_FORMAT_JSON
+            if self.transport_format == TransportFormat.V2_JSON
             else self._translate_to_protobuf(spans)
         )
 
