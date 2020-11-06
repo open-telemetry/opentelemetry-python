@@ -39,7 +39,7 @@ class Span(abc.ABC):
 
         Sets a single Attribute with the key and value passed as arguments.
 
-        Attribute values of `None` are not valid and attempting to set a `None` value is undefined behavior.
+        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
         """
 
     @abc.abstractmethod
