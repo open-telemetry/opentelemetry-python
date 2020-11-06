@@ -21,7 +21,7 @@ Note that you need ``opentelemetry-instrumentation-grpc`` and ``protobuf`` to be
 to run these examples. To run this script in the context of the example app,
 install ``opentelemetry-example-app``::
 
-    pip install -e ext/opentelemetry-instrumentation-grpc/
+    pip install -e instrumentation/opentelemetry-instrumentation-grpc/
     pip install -e docs/examples/opentelemetry-example-app
 
 Then run the server in one shell::
@@ -43,7 +43,6 @@ import grpc
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.grpc import server_interceptor
-from opentelemetry.instrumentation.grpc.grpcext import intercept_server
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -73,8 +72,9 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
 
 def serve():
 
-    server = grpc.server(futures.ThreadPoolExecutor())
-    server = intercept_server(server, server_interceptor())
+    server = grpc.server(
+        futures.ThreadPoolExecutor(), interceptors=[server_interceptor()],
+    )
 
     helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port("[::]:50051")

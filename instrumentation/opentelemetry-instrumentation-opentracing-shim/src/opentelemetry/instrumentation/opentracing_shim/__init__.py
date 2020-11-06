@@ -112,6 +112,7 @@ from opentelemetry.trace import (
     get_current_span,
     set_span_in_context,
 )
+from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.util.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
@@ -378,7 +379,7 @@ class ScopeShim(Scope):
         """
 
         otel_span = span_cm.__enter__()
-        span_context = SpanContextShim(otel_span.get_context())
+        span_context = SpanContextShim(otel_span.get_span_context())
         span = SpanShim(manager.tracer, span_context, otel_span)
         return cls(manager, span, span_cm)
 
@@ -474,13 +475,13 @@ class ScopeManagerShim(ScopeManager):
         """
 
         span = get_current_span()
-        if span.get_context() == INVALID_SPAN_CONTEXT:
+        if span.get_span_context() == INVALID_SPAN_CONTEXT:
             return None
 
         try:
             return get_value("scope_shim")
         except KeyError:
-            span_context = SpanContextShim(span.get_context())
+            span_context = SpanContextShim(span.get_span_context())
             wrapped_span = SpanShim(self._tracer, span_context, span)
             return ScopeShim(self, span=wrapped_span)
 
@@ -495,7 +496,7 @@ class ScopeManagerShim(ScopeManager):
             span.
 
         Warning:
-            This property is *not* a part of the OpenTracing API. It used
+            This property is *not* a part of the OpenTracing API. It is used
             internally by the current implementation of the OpenTracing shim
             and will likely be removed in future versions.
         """
@@ -527,6 +528,7 @@ class TracerShim(Tracer):
             Format.TEXT_MAP,
             Format.HTTP_HEADERS,
         )
+        self._carrier_getter = DictGetter()
 
     def unwrap(self):
         """Returns the :class:`opentelemetry.trace.Tracer` object that is
@@ -630,6 +632,10 @@ class TracerShim(Tracer):
         # Use the specified parent or the active span if possible. Otherwise,
         # use a `None` parent, which triggers the creation of a new trace.
         parent = child_of.unwrap() if child_of else None
+        if isinstance(parent, OtelSpanContext):
+            parent = DefaultSpan(parent)
+
+        parent_span_context = set_span_in_context(parent)
 
         links = []
         if references:
@@ -645,13 +651,13 @@ class TracerShim(Tracer):
 
         span = self._otel_tracer.start_span(
             operation_name,
-            parent,
+            context=parent_span_context,
             links=links,
             attributes=tags,
             start_time=start_time_ns,
         )
 
-        context = SpanContextShim(span.get_context())
+        context = SpanContextShim(span.get_span_context())
         return SpanShim(self, context, span)
 
     def inject(self, span_context, format: object, carrier: object):
@@ -706,15 +712,11 @@ class TracerShim(Tracer):
         if format not in self._supported_formats:
             raise UnsupportedFormatException
 
-        def get_as_list(dict_object, key):
-            value = dict_object.get(key)
-            return [value] if value is not None else []
-
         propagator = propagators.get_global_textmap()
-        ctx = propagator.extract(get_as_list, carrier)
+        ctx = propagator.extract(self._carrier_getter, carrier)
         span = get_current_span(ctx)
         if span is not None:
-            otel_context = span.get_context()
+            otel_context = span.get_span_context()
         else:
             otel_context = INVALID_SPAN_CONTEXT
 

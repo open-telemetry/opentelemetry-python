@@ -14,24 +14,28 @@
 
 """OTLP Exporter"""
 
+import enum
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from time import sleep
 from typing import Any, Callable, Dict, Generic, List, Optional
 from typing import Sequence as TypingSequence
-from typing import Text, Tuple, TypeVar
+from typing import Text, TypeVar
 
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
     ChannelCredentials,
+    Compression,
     RpcError,
     StatusCode,
     insecure_channel,
     secure_channel,
+    ssl_channel_credentials,
 )
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -42,6 +46,10 @@ ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")
 ExportServiceRequestT = TypeVar("ExportServiceRequestT")
 ExportResultT = TypeVar("ExportResultT")
+
+
+class OTLPCompression(enum.Enum):
+    gzip = "gzip"
 
 
 def _translate_key_values(key: Text, value: Any) -> KeyValue:
@@ -113,6 +121,16 @@ def _get_resource_data(
     return resource_data
 
 
+def _load_credential_from_file(filepath) -> ChannelCredentials:
+    try:
+        with open(filepath, "rb") as f:
+            credential = f.read()
+            return ssl_channel_credentials(credential)
+    except FileNotFoundError:
+        logger.exception("Failed to read credential file")
+        return None
+
+
 # pylint: disable=no-member
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
@@ -121,25 +139,77 @@ class OTLPExporterMixin(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
         credentials: ChannelCredentials object for server authentication
-        metadata: Metadata to send when exporting
+        headers: Headers to send when exporting
+        compression: Compression algorithm to be used in channel
+        timeout: Backend request timeout in seconds
     """
 
     def __init__(
         self,
-        endpoint: str = "localhost:55680",
-        credentials: ChannelCredentials = None,
-        metadata: Optional[Tuple[Any]] = None,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
+        credentials: Optional[ChannelCredentials] = None,
+        headers: Optional[str] = None,
+        timeout: Optional[int] = None,
+        compression: str = None,
     ):
         super().__init__()
 
-        self._metadata = metadata
+        endpoint = (
+            endpoint
+            or Configuration().EXPORTER_OTLP_ENDPOINT
+            or "localhost:55680"
+        )
+
+        if insecure is None:
+            insecure = Configuration().EXPORTER_OTLP_INSECURE
+        if insecure is None:
+            insecure = False
+
+        self._headers = headers or Configuration().EXPORTER_OTLP_HEADERS
+        self._timeout = (
+            timeout
+            or Configuration().EXPORTER_OTLP_TIMEOUT
+            or 10  # default: 10 seconds
+        )
         self._collector_span_kwargs = None
 
-        if credentials is None:
-            self._client = self._stub(insecure_channel(endpoint))
+        if compression is None:
+            compression_algorithm = Compression.NoCompression
+        elif (
+            compression in OTLPCompression._value2member_map_
+            and OTLPCompression(compression) is OTLPCompression.gzip
+        ):
+            compression_algorithm = Compression.Gzip
         else:
-            self._client = self._stub(secure_channel(endpoint, credentials))
+            compression_str = Configuration().EXPORTER_OTLP_INSECURE or None
+            if compression_str is None:
+                compression_algorithm = Compression.NoCompression
+            elif (
+                compression_str in OTLPCompression._value2member_map_
+                and OTLPCompression(compression_str) is OTLPCompression.gzip
+            ):
+                compression_algorithm = Compression.Gzip
+            else:
+                raise ValueError(
+                    "OTEL_EXPORTER_OTLP_COMPRESSION environment variable does not match gzip."
+                )
+
+        if insecure:
+            self._client = self._stub(
+                insecure_channel(endpoint, compression=compression_algorithm)
+            )
+        else:
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_CERTIFICATE
+            )
+            self._client = self._stub(
+                secure_channel(
+                    endpoint, credentials, compression=compression_algorithm
+                )
+            )
 
     @abstractmethod
     def _translate_data(
@@ -164,7 +234,8 @@ class OTLPExporterMixin(
             try:
                 self._client.Export(
                     request=self._translate_data(data),
-                    metadata=self._metadata,
+                    metadata=self._headers,
+                    timeout=self._timeout,
                 )
 
                 return self._result.SUCCESS

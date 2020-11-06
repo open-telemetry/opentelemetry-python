@@ -18,7 +18,7 @@ import time
 from opentelemetry import metrics, trace
 from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
@@ -27,7 +27,7 @@ span_exporter = OTLPSpanExporter(
     # optional
     # endpoint:="myCollectorURL:55678",
     # credentials=ChannelCredentials(credentials),
-    # metadata=(("metadata", "metadata")),
+    # headers=(("metadata", "metadata")),
 )
 tracer_provider = TracerProvider()
 trace.set_tracer_provider(tracer_provider)
@@ -38,7 +38,7 @@ metric_exporter = OTLPMetricsExporter(
     # optional
     # endpoint:="myCollectorURL:55678",
     # credentials=ChannelCredentials(credentials),
-    # metadata=(("metadata", "metadata")),
+    # headers=(("metadata", "metadata")),
 )
 
 # Meter is responsible for creating and recording metrics
@@ -54,12 +54,11 @@ tracer = trace.get_tracer_provider().get_tracer(__name__)
 with tracer.start_as_current_span("foo"):
     print("Hello world!")
 
-requests_counter = meter.create_metric(
+requests_counter = meter.create_counter(
     name="requests",
     description="number of requests",
     unit="1",
     value_type=int,
-    metric_type=Counter,
     label_keys=("environment",),
 )
 # Labels are used to identify key-values that are associated with a specific

@@ -159,7 +159,7 @@ class ZipkinSpanExporter(SpanExporter):
 
         zipkin_spans = []
         for span in spans:
-            context = span.get_context()
+            context = span.get_span_context()
             trace_id = context.trace_id
             span_id = context.span_id
 
@@ -193,7 +193,7 @@ class ZipkinSpanExporter(SpanExporter):
 
             if span.status is not None:
                 zipkin_span["tags"]["otel.status_code"] = str(
-                    span.status.canonical_code.value
+                    span.status.status_code.value
                 )
                 if span.status.description is not None:
                     zipkin_span["tags"][
@@ -205,7 +205,7 @@ class ZipkinSpanExporter(SpanExporter):
 
             if isinstance(span.parent, Span):
                 zipkin_span["parentId"] = format(
-                    span.parent.get_context().span_id, "016x"
+                    span.parent.get_span_context().span_id, "016x"
                 )
             elif isinstance(span.parent, SpanContext):
                 zipkin_span["parentId"] = format(span.parent.span_id, "016x")

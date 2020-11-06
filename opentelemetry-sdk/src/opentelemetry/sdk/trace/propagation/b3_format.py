@@ -43,7 +43,7 @@ class B3Format(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -53,7 +53,7 @@ class B3Format(TextMapPropagator):
         flags = None
 
         single_header = _extract_first_element(
-            get_from_carrier(carrier, self.SINGLE_HEADER_KEY)
+            getter.get(carrier, self.SINGLE_HEADER_KEY)
         )
         if single_header:
             # The b3 spec calls for the sampling state to be
@@ -74,27 +74,19 @@ class B3Format(TextMapPropagator):
                 return trace.set_span_in_context(trace.INVALID_SPAN)
         else:
             trace_id = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.TRACE_ID_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY))
                 or trace_id
             )
             span_id = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.SPAN_ID_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY))
                 or span_id
             )
             sampled = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.SAMPLED_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.SAMPLED_KEY))
                 or sampled
             )
             flags = (
-                _extract_first_element(
-                    get_from_carrier(carrier, self.FLAGS_KEY)
-                )
+                _extract_first_element(getter.get(carrier, self.FLAGS_KEY))
                 or flags
             )
 
@@ -140,7 +132,7 @@ class B3Format(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
 
-        span_context = span.get_context()
+        span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 

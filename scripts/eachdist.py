@@ -309,6 +309,18 @@ def find_targets(mode, rootpath):
             return float("inf")
 
         targets.sort(key=keyfunc)
+    if "ignore" in mcfg:
+        ignore = getlistcfg(mcfg["ignore"])
+
+        def filter_func(path):
+            path = path.relative_to(rootpath)
+            for pattern in ignore:
+                if path.match(pattern):
+                    return False
+            return True
+
+        filtered = filter(filter_func, targets)
+        targets = list(filtered)
 
     subglobs = getlistcfg(mcfg.get("subglob", ""))
     if subglobs:

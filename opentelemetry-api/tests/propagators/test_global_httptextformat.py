@@ -18,13 +18,9 @@ import unittest
 from opentelemetry import baggage, trace
 from opentelemetry.propagators import extract, inject
 from opentelemetry.trace import get_current_span, set_span_in_context
+from opentelemetry.trace.propagation.textmap import DictGetter
 
-
-def get_as_list(
-    dict_object: typing.Dict[str, typing.List[str]], key: str
-) -> typing.List[str]:
-    value = dict_object.get(key)
-    return value if value is not None else []
+carrier_getter = DictGetter()
 
 
 class TestDefaultGlobalPropagator(unittest.TestCase):
@@ -44,11 +40,11 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
             "traceparent": [traceparent_value],
             "tracestate": [tracestate_value],
         }
-        ctx = extract(get_as_list, headers)
+        ctx = extract(carrier_getter, headers)
         baggage_entries = baggage.get_all(context=ctx)
         expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(baggage_entries, expected)
-        span_context = get_current_span(context=ctx).get_context()
+        span_context = get_current_span(context=ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)

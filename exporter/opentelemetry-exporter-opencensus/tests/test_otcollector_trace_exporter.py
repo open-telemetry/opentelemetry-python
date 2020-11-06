@@ -96,7 +96,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
             trace_state=trace_api.TraceState({"testKey": "testValue"}),
         )
-        parent_context = trace_api.SpanContext(
+        parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
         )
         other_context = trace_api.SpanContext(
@@ -118,19 +118,19 @@ class TestCollectorSpanExporter(unittest.TestCase):
             context=other_context, attributes=link_attributes
         )
         link_2 = trace_api.Link(
-            context=parent_context, attributes=link_attributes
+            context=parent_span_context, attributes=link_attributes
         )
         span_1 = trace._Span(
             name="test1",
             context=span_context,
-            parent=parent_context,
+            parent=parent_span_context,
             events=(event,),
             links=(link_1,),
             kind=trace_api.SpanKind.CLIENT,
         )
         span_2 = trace._Span(
             name="test2",
-            context=parent_context,
+            context=parent_span_context,
             parent=None,
             kind=trace_api.SpanKind.SERVER,
         )
@@ -138,7 +138,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             name="test3",
             context=other_context,
             links=(link_2,),
-            parent=span_2.get_context(),
+            parent=span_2.get_span_context(),
         )
         otel_spans = [span_1, span_2, span_3]
         otel_spans[0].start(start_time=start_times[0])
@@ -148,15 +148,14 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_int", 333)
         otel_spans[0].set_status(
             trace_api.Status(
-                trace_api.status.StatusCanonicalCode.INTERNAL,
-                "test description",
+                trace_api.status.StatusCode.OK, "test description",
             )
         )
         otel_spans[0].end(end_time=end_times[0])
         otel_spans[1].start(start_time=start_times[1])
         otel_spans[1].set_status(
             trace_api.Status(
-                trace_api.status.StatusCanonicalCode.INTERNAL, {"test", "val"},
+                trace_api.status.StatusCode.ERROR, {"test", "val"},
             )
         )
         otel_spans[1].end(end_time=end_times[1])
@@ -197,8 +196,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             output_spans[2].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
         )
         self.assertEqual(
-            output_spans[0].status.code,
-            trace_api.status.StatusCanonicalCode.INTERNAL.value,
+            output_spans[0].status.code, trace_api.status.StatusCode.OK.value,
         )
         self.assertEqual(output_spans[0].status.message, "test description")
         self.assertEqual(len(output_spans[0].tracestate.entries), 1)
@@ -270,7 +268,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             output_spans[1].status.code,
-            trace_api.status.StatusCanonicalCode.INTERNAL.value,
+            trace_api.status.StatusCode.ERROR.value,
         )
         self.assertEqual(
             output_spans[2].links.link[0].type,

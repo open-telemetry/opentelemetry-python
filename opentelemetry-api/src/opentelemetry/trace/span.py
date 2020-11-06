@@ -23,7 +23,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_context(self) -> "SpanContext":
+    def get_span_context(self) -> "SpanContext":
         """Gets the span's SpanContext.
 
         Get an immutable, serializable identifier for this span that can be
@@ -79,7 +79,12 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def record_exception(self, exception: Exception) -> None:
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         """Records an exception as a span event."""
 
     def __enter__(self) -> "Span":
@@ -237,7 +242,7 @@ class DefaultSpan(Span):
     def __init__(self, context: "SpanContext") -> None:
         self._context = context
 
-    def get_context(self) -> "SpanContext":
+    def get_span_context(self) -> "SpanContext":
         return self._context
 
     def is_recording(self) -> bool:
@@ -263,7 +268,12 @@ class DefaultSpan(Span):
     def set_status(self, status: Status) -> None:
         pass
 
-    def record_exception(self, exception: Exception) -> None:
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
         pass
 
 

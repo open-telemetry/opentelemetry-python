@@ -19,31 +19,30 @@ import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
+from opentelemetry.trace.propagation.textmap import DictGetter
 
 FORMAT = b3_format.B3Format()
 
 
-def get_as_list(dict_object, key):
-    value = dict_object.get(key)
-    return [value] if value is not None else []
+carrier_getter = DictGetter()
 
 
 def get_child_parent_new_carrier(old_carrier):
 
-    ctx = FORMAT.extract(get_as_list, old_carrier)
-    parent_context = trace_api.get_current_span(ctx).get_context()
+    ctx = FORMAT.extract(carrier_getter, old_carrier)
+    parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
-    parent = trace._Span("parent", parent_context)
+    parent = trace._Span("parent", parent_span_context)
     child = trace._Span(
         "child",
         trace_api.SpanContext(
-            parent_context.trace_id,
+            parent_span_context.trace_id,
             trace_api.RandomIdsGenerator().generate_span_id(),
             is_remote=False,
-            trace_flags=parent_context.trace_flags,
-            trace_state=parent_context.trace_state,
+            trace_flags=parent_span_context.trace_flags,
+            trace_state=parent_span_context.trace_state,
         ),
-        parent=parent.get_context(),
+        parent=parent.get_span_context(),
     )
 
     new_carrier = {}
@@ -231,8 +230,8 @@ class TestB3Format(unittest.TestCase):
         invalid SpanContext.
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        ctx = FORMAT.extract(carrier_getter, carrier)
+        span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
@@ -243,8 +242,8 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        ctx = FORMAT.extract(carrier_getter, carrier)
+        span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     @patch(
@@ -267,8 +266,8 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        ctx = FORMAT.extract(carrier_getter, carrier)
+        span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
@@ -293,8 +292,8 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        ctx = FORMAT.extract(carrier_getter, carrier)
+        span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
@@ -306,8 +305,8 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(get_as_list, carrier)
-        span_context = trace_api.get_current_span(ctx).get_context()
+        ctx = FORMAT.extract(carrier_getter, carrier)
+        span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
     @staticmethod
@@ -321,11 +320,12 @@ class TestB3Format(unittest.TestCase):
     def test_default_span():
         """Make sure propagator does not crash when working with DefaultSpan"""
 
-        def getter(carrier, key):
-            return carrier.get(key, None)
+        class CarrierGetter(DictGetter):
+            def get(self, carrier, key):
+                return carrier.get(key, None)
 
         def setter(carrier, key, value):
             carrier[key] = value
 
-        ctx = FORMAT.extract(getter, {})
+        ctx = FORMAT.extract(CarrierGetter(), {})
         FORMAT.inject(setter, {}, ctx)

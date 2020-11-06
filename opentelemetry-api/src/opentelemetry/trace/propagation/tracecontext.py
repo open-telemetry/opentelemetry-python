@@ -26,7 +26,6 @@ from opentelemetry.trace.propagation import textmap
 #    .. _W3C Trace Context - Tracestate:
 #        https://www.w3.org/TR/trace-context/#tracestate-field
 
-
 _KEY_WITHOUT_VENDOR_FORMAT = r"[a-z][_0-9a-z\-\*\/]{0,255}"
 _KEY_WITH_VENDOR_FORMAT = (
     r"[a-z0-9][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
@@ -60,7 +59,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -68,7 +67,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
         See `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
         """
-        header = get_from_carrier(carrier, self._TRACEPARENT_HEADER_NAME)
+        header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
@@ -91,9 +90,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         if version == "ff":
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        tracestate_headers = get_from_carrier(
-            carrier, self._TRACESTATE_HEADER_NAME
-        )
+        tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
         tracestate = _parse_tracestate(tracestate_headers)
 
         span_context = trace.SpanContext(
@@ -118,7 +115,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         See `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
         """
         span = trace.get_current_span(context)
-        span_context = span.get_context()
+        span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
         traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(

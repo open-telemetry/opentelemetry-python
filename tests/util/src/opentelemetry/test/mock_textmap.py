@@ -33,7 +33,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
@@ -56,12 +56,12 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        trace_id_list = get_from_carrier(carrier, self.TRACE_ID_KEY)
-        span_id_list = get_from_carrier(carrier, self.SPAN_ID_KEY)
+        trace_id_list = getter.get(carrier, self.TRACE_ID_KEY)
+        span_id_list = getter.get(carrier, self.SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
             return trace.set_span_in_context(trace.INVALID_SPAN)
@@ -84,8 +84,8 @@ class MockTextMapPropagator(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context)
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, str(span.get_context().trace_id)
+            carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
         )
         set_in_carrier(
-            carrier, self.SPAN_ID_KEY, str(span.get_context().span_id)
+            carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
         )
