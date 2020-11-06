@@ -65,13 +65,13 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     def convert_from_summary(self, summary_record: MetricRecord) -> TimeSeriesData:
         pass
 
-    def build_message(self) -> String:
+    def build_message(self, data: Sequence[TimeSeries]) -> str:
         pass
 
     def get_headers(self) -> dict:
         pass
 
-    def send_message(self, message: String) -> bool:
+    def send_message(self, message: str) -> int:
         pass
 
     def build_client(self) -> HTTPConnection:
@@ -80,7 +80,7 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     def build_tls_config(self) -> TLSConfig:
         pass
 
-    def sanitize_label(self, label: String) -> String:
+    def sanitize_label(self, label: str) -> str:
         pass
 
 
@@ -92,26 +92,12 @@ class Config():
         config_dict: dictionary containing all config properties
     """
 
-    def __init__(self):
+    def __init__(self, config_dict):
         pass
 
     def validate(self):
         pass
 
-
-class TLSConfig():
-    """
-    Configuration containing all necessary information to add TLS to HTTPConnection
-    
-    Args:
-        ca_file: dictionary containing all config properties
-    """
-
-    def __init__(self):
-        pass
-
-    def validate(self):
-        pass
 
 class TimeSeriesData:
     def __init__(self, labels, samples):
@@ -119,16 +105,7 @@ class TimeSeriesData:
         self.samples = samples
 
     def __eq__(self, other) -> bool:
-        if len(self.labels) != len(other.labels) or len(self.samples) != len(other.samples):
-            return False
-        for i in range(len(labels)):
-            if self.labels[i] != other.labels[i]:
-                return False
+        return self.labels == other.labels and self.samples == other.samples
 
-        for i in range(len(samples)):
-            if self.samples[i] != other.samples[i]:
-                return False
-        return True
-
-def parse_config(filepath: String) -> Config:
+def parse_config(filepath: str) -> Config:
     pass
