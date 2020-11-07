@@ -5,7 +5,7 @@ exclude = '''
   /(  # generated files
     docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/grpc/gen|
     exporter/opentelemetry-exporter-jaeger/src/opentelemetry/exporter/jaeger/gen|
-    exporter/opentelemetry-exporter-zipkin/src/opentelemetry/exporter/zipkin/gen|
+    exporter/opentelemetry-exporter-zipkin/src/opentelemetry/exporter/zipkin/transport_formatter/v2/protobuf/gen/|
     opentelemetry-proto/src/opentelemetry/proto/collector|
     opentelemetry-proto/src/opentelemetry/proto/common|
     opentelemetry-proto/src/opentelemetry/proto/metrics|

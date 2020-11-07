@@ -19,14 +19,15 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
-from opentelemetry.exporter.zipkin import (
-    SPAN_KIND_MAP_JSON,
-    SPAN_KIND_MAP_PROTOBUF,
-    TransportFormat,
-    ZipkinSpanExporter,
-    nsec_to_usec_round,
+from opentelemetry.exporter.zipkin import TransportFormat, ZipkinSpanExporter
+from opentelemetry.exporter.zipkin.endpoint import LocalEndpoint
+from opentelemetry.exporter.zipkin.transport_formatter import TransportFormatter
+import opentelemetry.exporter.zipkin.transport_formatter.v2.json as v2_json
+import opentelemetry.exporter.zipkin.transport_formatter.v2.protobuf as \
+    v2_protobuf
+from opentelemetry.exporter.zipkin.transport_formatter.v2.protobuf.gen import (
+    zipkin_pb2
 )
-from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
@@ -69,16 +70,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
             "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"
         ] = TransportFormat.V2_PROTOBUF.value
         service_name = "my-service-name"
-        port = 9911
-        exporter = ZipkinSpanExporter(service_name)
-        ipv4 = None
-        ipv6 = None
+        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
 
-        self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.ipv4, ipv4)
-        self.assertEqual(exporter.ipv6, ipv6)
-        self.assertEqual(exporter.url, url)
-        self.assertEqual(exporter.port, port)
+        self.assertEqual(exporter.local_endpoint.service_name, service_name)
+        self.assertEqual(exporter.local_endpoint.ipv4, None)
+        self.assertEqual(exporter.local_endpoint.ipv6, None)
+        self.assertEqual(exporter.local_endpoint.url, url)
+        self.assertEqual(exporter.local_endpoint.port, 9911)
         self.assertEqual(
             exporter.transport_format, TransportFormat.V2_PROTOBUF
         )
@@ -86,19 +84,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
         service_name = "my-service-name"
-        port = 9411
-        exporter = ZipkinSpanExporter(service_name)
-        ipv4 = None
-        ipv6 = None
-        url = "http://localhost:9411/api/v2/spans"
-        transport_format = TransportFormat.V2_JSON
+        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
 
-        self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.port, port)
-        self.assertEqual(exporter.ipv4, ipv4)
-        self.assertEqual(exporter.ipv6, ipv6)
-        self.assertEqual(exporter.url, url)
-        self.assertEqual(exporter.transport_format, transport_format)
+        self.assertEqual(exporter.local_endpoint.service_name, service_name)
+        self.assertEqual(exporter.local_endpoint.port, 9411)
+        self.assertEqual(exporter.local_endpoint.ipv4, None)
+        self.assertEqual(exporter.local_endpoint.ipv6, None)
+        self.assertEqual(exporter.local_endpoint.url, "http://localhost:9411/api/v2/spans")
+        self.assertEqual(exporter.transport_format, TransportFormat.V2_JSON)
 
     def test_constructor_explicit(self):
         """Test the constructor passing all the options."""
@@ -110,18 +103,20 @@ class TestZipkinSpanExporter(unittest.TestCase):
         transport_format = TransportFormat.V2_PROTOBUF
 
         exporter = ZipkinSpanExporter(
-            service_name=service_name,
-            url=url,
-            ipv4=ipv4,
-            ipv6=ipv6,
+            LocalEndpoint(
+                service_name=service_name,
+                url=url,
+                ipv4=ipv4,
+                ipv6=ipv6,
+            ),
             transport_format=transport_format,
         )
 
-        self.assertEqual(exporter.service_name, service_name)
-        self.assertEqual(exporter.port, port)
-        self.assertEqual(exporter.ipv4, ipv4)
-        self.assertEqual(exporter.ipv6, ipv6)
-        self.assertEqual(exporter.url, url)
+        self.assertEqual(exporter.local_endpoint.service_name, service_name)
+        self.assertEqual(exporter.local_endpoint.port, port)
+        self.assertEqual(exporter.local_endpoint.ipv4, ipv4)
+        self.assertEqual(exporter.local_endpoint.ipv6, ipv6)
+        self.assertEqual(exporter.local_endpoint.url, url)
         self.assertEqual(exporter.transport_format, transport_format)
 
     # pylint: disable=too-many-locals,too-many-statements
@@ -231,9 +226,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         service_name = "test-service"
         local_endpoint = {"serviceName": service_name, "port": 9411}
-        span_kind = SPAN_KIND_MAP_JSON[SpanKind.INTERNAL]
+        span_kind = v2_json.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
-        exporter = ZipkinSpanExporter(service_name)
+        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
         expected_spans = [
             {
                 "traceId": format(trace_id, "x"),
@@ -373,7 +368,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         service_name = "test-service"
         local_endpoint = {"serviceName": service_name, "port": 9411}
 
-        exporter = ZipkinSpanExporter(service_name)
+        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
         # Check traceId are properly lowercase 16 or 32 hex
         expected = [
             {
@@ -383,7 +378,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "timestamp": start_time // 10 ** 3,
                 "duration": duration // 10 ** 3,
                 "localEndpoint": local_endpoint,
-                "kind": SPAN_KIND_MAP_JSON[SpanKind.INTERNAL],
+                "kind": v2_json.SPAN_KIND_MAP[SpanKind.INTERNAL],
                 "tags": {"otel.status_code": "1"},
                 "annotations": None,
                 "debug": True,
@@ -407,7 +402,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []
-        exporter = ZipkinSpanExporter("test-service")
+        exporter = ZipkinSpanExporter(LocalEndpoint("test-service"))
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
 
@@ -431,7 +426,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.set_status(Status(StatusCode.ERROR, "Example description"))
         span.end()
 
-        exporter = ZipkinSpanExporter(service_name)
+        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)
@@ -444,7 +439,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(len(tags["k1"]), 128)
         self.assertEqual(len(tags["k2"]), 50)
 
-        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=2)
+        exporter = ZipkinSpanExporter(
+            LocalEndpoint(service_name),
+            max_tag_value_length=2,
+        )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)
@@ -565,7 +563,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         local_endpoint = zipkin_pb2.Endpoint(
             service_name=service_name, port=9411
         )
-        span_kind = SPAN_KIND_MAP_PROTOBUF[SpanKind.INTERNAL]
+        span_kind = v2_protobuf.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
         expected_spans = zipkin_pb2.ListOfSpans(
             spans=[
@@ -573,10 +571,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=ZipkinSpanExporter.format_pbuf_span_id(span_id),
+                    id=v2_protobuf.format_pbuf_span_id(span_id),
                     name=span_names[0],
-                    timestamp=nsec_to_usec_round(start_times[0]),
-                    duration=nsec_to_usec_round(durations[0]),
+                    timestamp=TransportFormatter.nsec_to_usec_round(
+                        start_times[0]
+                    ),
+                    duration=TransportFormatter.nsec_to_usec_round(
+                        durations[0]
+                    ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -587,12 +589,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "otel.status_description": "Example description",
                     },
                     debug=True,
-                    parent_id=ZipkinSpanExporter.format_pbuf_span_id(
+                    parent_id=v2_protobuf.format_pbuf_span_id(
                         parent_id
                     ),
                     annotations=[
                         zipkin_pb2.Annotation(
-                            timestamp=nsec_to_usec_round(event_timestamp),
+                            timestamp=TransportFormatter.nsec_to_usec_round(
+                                event_timestamp
+                            ),
                             value=json.dumps(
                                 {
                                     "event0": {
@@ -609,10 +613,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=ZipkinSpanExporter.format_pbuf_span_id(parent_id),
+                    id=v2_protobuf.format_pbuf_span_id(parent_id),
                     name=span_names[1],
-                    timestamp=nsec_to_usec_round(start_times[1]),
-                    duration=nsec_to_usec_round(durations[1]),
+                    timestamp=TransportFormatter.nsec_to_usec_round(
+                        start_times[1]
+                    ),
+                    duration=TransportFormatter.nsec_to_usec_round(
+                        durations[1]
+                    ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -624,10 +632,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=ZipkinSpanExporter.format_pbuf_span_id(other_id),
+                    id=v2_protobuf.format_pbuf_span_id(other_id),
                     name=span_names[2],
-                    timestamp=nsec_to_usec_round(start_times[2]),
-                    duration=nsec_to_usec_round(durations[2]),
+                    timestamp=TransportFormatter.nsec_to_usec_round(
+                        start_times[2]
+                    ),
+                    duration=TransportFormatter.nsec_to_usec_round(
+                        durations[2]
+                    ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -640,10 +652,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=ZipkinSpanExporter.format_pbuf_span_id(other_id),
+                    id=v2_protobuf.format_pbuf_span_id(other_id),
                     name=span_names[3],
-                    timestamp=nsec_to_usec_round(start_times[3]),
-                    duration=nsec_to_usec_round(durations[3]),
+                    timestamp=TransportFormatter.nsec_to_usec_round(
+                        start_times[3]
+                    ),
+                    duration=TransportFormatter.nsec_to_usec_round(
+                        durations[3]
+                    ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -656,7 +672,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         exporter = ZipkinSpanExporter(
-            service_name, transport_format=TransportFormat.V2_PROTOBUF
+            LocalEndpoint(service_name),
+            transport_format=TransportFormat.V2_PROTOBUF,
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
@@ -696,7 +713,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.end()
 
         exporter = ZipkinSpanExporter(
-            service_name, transport_format=TransportFormat.V2_PROTOBUF,
+            LocalEndpoint(service_name),
+            transport_format=TransportFormat.V2_PROTOBUF,
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
@@ -713,7 +731,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(len(span_tags["k2"]), 50)
 
         exporter = ZipkinSpanExporter(
-            service_name,
+            LocalEndpoint(service_name),
             transport_format=TransportFormat.V2_PROTOBUF,
             max_tag_value_length=2,
         )

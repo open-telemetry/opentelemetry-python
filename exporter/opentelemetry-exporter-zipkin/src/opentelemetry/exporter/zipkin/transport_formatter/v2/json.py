@@ -1,0 +1,123 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Zipkin Export Transport Formatter for v2 JSON API
+
+API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin2-api.yaml
+"""
+
+import json
+from typing import Sequence
+
+from opentelemetry.exporter.zipkin.transport_formatter import (
+    TransportFormatter,
+)
+from opentelemetry.trace import Span, SpanContext, SpanKind
+
+
+SPAN_KIND_MAP = {
+    SpanKind.INTERNAL: None,
+    SpanKind.SERVER: "SERVER",
+    SpanKind.CLIENT: "CLIENT",
+    SpanKind.PRODUCER: "PRODUCER",
+    SpanKind.CONSUMER: "CONSUMER",
+}
+
+
+class V2JsonTransportFormatter(TransportFormatter):
+    """Zipkin Export Transport Formatter for v2 JSON API
+
+    API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin2-api.yaml
+    """
+
+    @staticmethod
+    def http_content_type() -> str:
+        return "application/json"
+
+    def _format(self, spans: Sequence[Span]) -> str:
+
+        formatted_local_endpoint = self._format_local_endpoint()
+        zipkin_spans = []
+
+        for span in spans:
+            context = span.get_span_context()
+            trace_id = context.trace_id
+            span_id = context.span_id
+
+            # Timestamp in zipkin spans is int of microseconds.
+            # see: https://zipkin.io/pages/instrumenting.html
+            start_timestamp_mus = self.nsec_to_usec_round(span.start_time)
+            duration_mus = self.nsec_to_usec_round(
+                span.end_time - span.start_time
+            )
+
+            zipkin_span = {
+                # Ensure left-zero-padding of traceId, spanId, parentId
+                "traceId": format(trace_id, "032x"),
+                "id": format(span_id, "016x"),
+                "name": span.name,
+                "timestamp": start_timestamp_mus,
+                "duration": duration_mus,
+                "localEndpoint": formatted_local_endpoint,
+                "kind": SPAN_KIND_MAP[span.kind],
+                "tags": self._extract_tags_from_span(span),
+                "annotations": self._extract_annotations_from_events(
+                    span.events
+                ),
+            }
+
+            if span.instrumentation_info is not None:
+                zipkin_span["tags"][
+                    "otel.instrumentation_library.name"
+                ] = span.instrumentation_info.name
+                zipkin_span["tags"][
+                    "otel.instrumentation_library.version"
+                ] = span.instrumentation_info.version
+
+            if span.status is not None:
+                zipkin_span["tags"]["otel.status_code"] = str(
+                    span.status.status_code.value
+                )
+                if span.status.description is not None:
+                    zipkin_span["tags"][
+                        "otel.status_description"
+                    ] = span.status.description
+
+            if context.trace_flags.sampled:
+                zipkin_span["debug"] = True
+
+            if isinstance(span.parent, Span):
+                zipkin_span["parentId"] = format(
+                    span.parent.get_span_context().span_id, "016x"
+                )
+            elif isinstance(span.parent, SpanContext):
+                zipkin_span["parentId"] = format(span.parent.span_id, "016x")
+
+            zipkin_spans.append(zipkin_span)
+
+        return json.dumps(zipkin_spans)
+
+    def _format_local_endpoint(self):
+        formatted_local_endpoint = {
+            "serviceName": self.local_endpoint.service_name,
+            "port": self.local_endpoint.port,
+        }
+
+        if self.local_endpoint.ipv4 is not None:
+            formatted_local_endpoint["ipv4"] = self.local_endpoint.ipv4
+
+        if self.local_endpoint.ipv6 is not None:
+            formatted_local_endpoint["ipv6"] = self.local_endpoint.ipv6
+
+        return formatted_local_endpoint
