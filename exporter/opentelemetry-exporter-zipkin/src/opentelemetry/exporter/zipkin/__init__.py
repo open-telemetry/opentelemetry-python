@@ -163,7 +163,9 @@ class ZipkinSpanExporter(SpanExporter):
         result = requests.post(
             url=self.local_endpoint.url,
             data=self.transport_formatter.format(spans),
-            headers={"Content-Type": self.transport_formatter.http_content_type()},
+            headers={
+                "Content-Type": self.transport_formatter.http_content_type()
+            },
         )
 
         if result.status_code not in SUCCESS_STATUS_CODES:

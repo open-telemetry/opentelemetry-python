@@ -105,5 +105,9 @@ class TransportFormatter(abc.ABC):
 
     @staticmethod
     def nsec_to_usec_round(nsec):
-        """Round nanoseconds to microseconds"""
+        """Round nanoseconds to microseconds
+
+        Timestamp in zipkin spans is int of microseconds.
+        See: https://zipkin.io/pages/instrumenting.html
+        """
         return (nsec + 500) // 10 ** 3
