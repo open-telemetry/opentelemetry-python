@@ -18,7 +18,7 @@ exclude =
   __pycache__
   exporter/opentelemetry-exporter-jaeger/src/opentelemetry/exporter/jaeger/gen/
   exporter/opentelemetry-exporter-jaeger/build/*
-  exporter/opentelemetry-exporter-zipkin/src/opentelemetry/exporter/zipkin/transport_formatter/v2/protobuf/gen/
+  exporter/opentelemetry-exporter-zipkin/src/opentelemetry/exporter/zipkin/encoder/protobuf/gen/
   docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/grpc/gen/
   docs/examples/opentelemetry-example-app/build/*
   opentelemetry-proto/build/*

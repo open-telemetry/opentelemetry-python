@@ -15,39 +15,29 @@
 """Zipkin Exporter Endpoints"""
 
 from typing import Optional
-from urllib.parse import urlparse
-
-from opentelemetry.configuration import Configuration
-
-DEFAULT_URL = "http://localhost:9411/api/v2/spans"
 
 
-class LocalEndpoint:
-    """Local endpoint information
+class Endpoint:
+    """Endpoint definition
 
     Args:
-        service_name: Service that logged an annotation in a trace.Classifier
-            when query for spans.
-        url: The Zipkin endpoint URL
+        service_name: Lower-case label of this node in the service graph,
+          such as "favstar". None if unknown. This is a primary label for
+          trace lookup and aggregation, so it should be intuitive and
+          consistent. Many use a name from service discovery.
         ipv4: Primary IPv4 address associated with this connection.
         ipv6: Primary IPv6 address associated with this connection.
+        port: Depending on context, this could be a listen port or the
+          client-side of a socket. None if unknown.
     """
-
     def __init__(
         self,
         service_name: str,
-        url: str = None,
         ipv4: Optional[str] = None,
         ipv6: Optional[str] = None,
+        port: Optional[int] = None,
     ):
         self.service_name = service_name
-
-        if url is None:
-            self.url = Configuration().EXPORTER_ZIPKIN_ENDPOINT or DEFAULT_URL
-        else:
-            self.url = url
-
-        self.port = urlparse(self.url).port
-
         self.ipv4 = ipv4
         self.ipv6 = ipv6
+        self.port = port

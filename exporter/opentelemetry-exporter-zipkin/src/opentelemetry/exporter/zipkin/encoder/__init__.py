@@ -12,32 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Zipkin Exporter Transport Formatter
+"""Zipkin Exporter Transport Encoder
 
-Base module and abstract class for specific transport formatters to extend.
+Base module and abstract class for concrete transport encoders to extend.
 """
 
 import abc
+from enum import Enum
 import json
 from typing import Optional, Sequence
 
-from opentelemetry.exporter.zipkin.endpoint import LocalEndpoint
+from opentelemetry.exporter.zipkin.endpoint import Endpoint
 from opentelemetry.trace import Span
 
 DEFAULT_MAX_TAG_VALUE_LENGTH = 128
 
 
-class TransportFormatter(abc.ABC):
-    """Base class for transport formatters that are used by the exporter.
+class Encoding(Enum):
+    """Enum of supported encoding formats.
+
+    Values are human-readable strings so that the related OS environ var
+    OTEL_EXPORTER_ZIPKIN_ENCODING can be more easily used.
+    """
+    JSON_V1 = "json_v1"
+    JSON_V2 = "json_v2"
+    PROTOBUF = "protobuf"
+
+
+class Encoder(abc.ABC):
+    """Base class for encoders that are used by the exporter.
 
     Args:
-        local_endpoint: Zipkin endpoint where exports will be sent
-        max_tag_value_length: Length limit for exported tag values
+        TODO
     """
 
     def __init__(
         self,
-        local_endpoint: LocalEndpoint,
+        local_endpoint: Endpoint,
         max_tag_value_length: Optional[int] = None,
     ):
         self.local_endpoint = local_endpoint
@@ -47,16 +58,11 @@ class TransportFormatter(abc.ABC):
         else:
             self.max_tag_value_length = max_tag_value_length
 
-    def format(self, spans: Sequence[Span]) -> str:
-        return self._format(spans)
+    def encode(self, spans: Sequence[Span]) -> str:
+        return self._encode(spans)
 
     @abc.abstractmethod
-    def _format(self, spans: Sequence[Span]) -> str:
-        pass
-
-    @staticmethod
-    @abc.abstractmethod
-    def http_content_type() -> str:
+    def _encode(self, spans: Sequence[Span]) -> str:
         pass
 
     def _extract_tags_from_dict(self, tags_dict):

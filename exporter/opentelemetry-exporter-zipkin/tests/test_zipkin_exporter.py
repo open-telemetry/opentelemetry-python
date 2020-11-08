@@ -19,17 +19,16 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
-from opentelemetry.exporter.zipkin import TransportFormat, ZipkinSpanExporter
-from opentelemetry.exporter.zipkin.endpoint import LocalEndpoint
-from opentelemetry.exporter.zipkin.transport_formatter import (
-    TransportFormatter,
+from opentelemetry.exporter.zipkin import (
+    ZipkinSpanExporter, DEFAULT_ENDPOINT, DEFAULT_ENCODING
 )
-import opentelemetry.exporter.zipkin.transport_formatter.v1.json as v1_json
-import opentelemetry.exporter.zipkin.transport_formatter.v2.json as v2_json
-import opentelemetry.exporter.zipkin.transport_formatter.v2.protobuf as v2_protobuf
-from opentelemetry.exporter.zipkin.transport_formatter.v2.protobuf.gen import (
-    zipkin_pb2,
+from opentelemetry.exporter.zipkin.encoder import Encoding
+from opentelemetry.exporter.zipkin.encoder.json import (
+    JsonV1Encoder, JsonV2Encoder
 )
+from opentelemetry.exporter.zipkin.encoder.protobuf import ProtobufEncoder
+from opentelemetry.exporter.zipkin.encoder.protobuf.gen import zipkin_pb2
+from opentelemetry.exporter.zipkin.endpoint import Endpoint
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
@@ -60,71 +59,68 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def tearDown(self):
         if "OTEL_EXPORTER_ZIPKIN_ENDPOINT" in os.environ:
             del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
-        if "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT" in os.environ:
-            del os.environ["OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"]
+        if "OTEL_EXPORTER_ZIPKIN_ENCODING" in os.environ:
+            del os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"]
         Configuration()._reset()  # pylint: disable=protected-access
 
     def test_constructor_env_var(self):
         """Test the default values assigned by constructor."""
-        url = "https://foo:9911/path"
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = url
-        os.environ[
-            "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"
-        ] = TransportFormat.V2_PROTOBUF.value
         service_name = "my-service-name"
-        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
+        endpoint = "https://foo:9911/path"
+        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = endpoint
+        os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"] = Encoding.PROTOBUF.value
 
-        self.assertEqual(exporter.local_endpoint.service_name, service_name)
-        self.assertEqual(exporter.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.local_endpoint.ipv6, None)
-        self.assertEqual(exporter.local_endpoint.url, url)
-        self.assertEqual(exporter.local_endpoint.port, 9911)
+        exporter = ZipkinSpanExporter(service_name)
+
+        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
         self.assertEqual(
-            exporter.transport_format, TransportFormat.V2_PROTOBUF
+            exporter.encoder.local_endpoint.service_name, service_name
         )
+        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
+        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
+        self.assertEqual(exporter.encoder.local_endpoint.port, None)
+
+        self.assertEqual(exporter.sender.endpoint, endpoint)
+        self.assertEqual(exporter.sender.encoding, Encoding.PROTOBUF)
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
         service_name = "my-service-name"
-        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
+        exporter = ZipkinSpanExporter(service_name)
 
-        self.assertEqual(exporter.local_endpoint.service_name, service_name)
-        self.assertEqual(exporter.local_endpoint.port, 9411)
-        self.assertEqual(exporter.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.local_endpoint.ipv6, None)
+        self.assertIsInstance(exporter.encoder, JsonV2Encoder)
         self.assertEqual(
-            exporter.local_endpoint.url, "http://localhost:9411/api/v2/spans"
+            exporter.encoder.local_endpoint.service_name, service_name
         )
-        self.assertEqual(exporter.transport_format, TransportFormat.V2_JSON)
+        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
+        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
+        self.assertEqual(exporter.encoder.local_endpoint.port, None)
+        self.assertEqual(exporter.sender.endpoint, DEFAULT_ENDPOINT)
+        self.assertEqual(exporter.sender.encoding, DEFAULT_ENCODING)
 
     def test_constructor_explicit(self):
         """Test the constructor passing all the options."""
         service_name = "my-opentelemetry-zipkin"
-        port = 15875
-        ipv4 = "1.2.3.4"
-        ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-        url = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
-        transport_format = TransportFormat.V2_PROTOBUF
+        endpoint = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
+        encoding = Encoding.PROTOBUF
 
-        exporter = ZipkinSpanExporter(
-            LocalEndpoint(
-                service_name=service_name, url=url, ipv4=ipv4, ipv6=ipv6,
-            ),
-            transport_format=transport_format,
+        exporter = ZipkinSpanExporter(service_name, endpoint, encoding)
+
+        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        self.assertEqual(
+            exporter.encoder.local_endpoint.service_name, service_name
         )
-
-        self.assertEqual(exporter.local_endpoint.service_name, service_name)
-        self.assertEqual(exporter.local_endpoint.port, port)
-        self.assertEqual(exporter.local_endpoint.ipv4, ipv4)
-        self.assertEqual(exporter.local_endpoint.ipv6, ipv6)
-        self.assertEqual(exporter.local_endpoint.url, url)
-        self.assertEqual(exporter.transport_format, transport_format)
+        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
+        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
+        self.assertEqual(exporter.encoder.local_endpoint.port, None)
+        self.assertEqual(exporter.sender.endpoint, endpoint)
+        self.assertEqual(exporter.sender.encoding, encoding)
 
     @patch("requests.post")
     def test_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []
-        exporter = ZipkinSpanExporter(LocalEndpoint("test-service"))
+        exporter = ZipkinSpanExporter("test-service")
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
 
@@ -234,7 +230,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         service_name = "test-service"
-        local_endpoint = {"serviceName": service_name, "port": 9411}
+        local_endpoint = {"serviceName": service_name}
 
         expected_spans = [
             {
@@ -359,10 +355,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
         ]
 
         exporter = ZipkinSpanExporter(
-            LocalEndpoint(
-                service_name, url="http://localhost:9411/api/v1/spans",
-            ),
-            transport_format=TransportFormat.V1_JSON,
+            service_name,
+            "http://localhost:9411/api/v1/spans",
+            Encoding.JSON_V1,
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
@@ -374,10 +369,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         kwargs = mock_post.call_args[1]
 
         self.assertEqual(kwargs["url"], "http://localhost:9411/api/v1/spans")
-        self.assertEqual(
-            kwargs["headers"]["Content-Type"],
-            v1_json.V1JsonTransportFormatter.http_content_type(),
-        )
+        self.assertEqual(kwargs["headers"]["Content-Type"], "application/json")
         actual_spans = sorted(
             json.loads(kwargs["data"]), key=lambda span: span["timestamp"]
         )
@@ -389,17 +381,25 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 for annotation in actual_annotations:
                     annotation["value"] = json.loads(annotation["value"])
 
+            expected_binary_annotations = sorted(
+                expected.pop("binaryAnnotations", None),
+                key=lambda binary_annotation: binary_annotation["key"]
+            )
+
+            actual_binary_annotations = sorted(
+                actual.pop("binaryAnnotations", None),
+                key=lambda binary_annotation: binary_annotation["key"]
+            )
+
             self.assertEqual(expected, actual)
             self.assertEqual(expected_annotations, actual_annotations)
+            self.assertEqual(
+                expected_binary_annotations, actual_binary_annotations
+            )
 
-    # pylint: disable=too-many-locals
-    def test_export_v1_json_zero_padding(self):
-        """test that hex ids starting with 0
-        are properly padded to 16 or 32 hex chars
-        when exported
-        """
-
-        span_names = "testZeroes"
+    @staticmethod
+    def _json_zero_padding_get_common_objects():
+        span_name = "testZeroes"
         trace_id = 0x0E0C63257DE34C926F9EFCD03927272E
         span_id = 0x04BF92DEEFC58C92
         parent_id = 0x0AAAAAAAAAAAAAAA
@@ -419,7 +419,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         otel_span = trace._Span(
-            name=span_names[0],
+            name=span_name,
             context=span_context,
             parent=parent_span_context,
         )
@@ -428,105 +428,170 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_span.resource = Resource({})
         otel_span.end(end_time=end_time)
 
-        service_name = "test-service"
-        local_endpoint = {"serviceName": service_name, "port": 9411}
+        return {
+            "span_name": span_name,
+            "start_time": start_time,
+            "duration": duration,
+            "trace_id": trace_id,
+            "span_id": span_id,
+            "parent_id": parent_id,
+            "spans": [otel_span]
+        }
 
-        # Check traceId are properly lowercase 16 or 32 hex
+    def _mock_post_assert_export(
+            self,
+            service_name: str,
+            endpoint: str,
+            encoding: Encoding,
+            spans: list,
+            expected: list
+    ):
+        exporter = ZipkinSpanExporter(service_name, endpoint, encoding)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export(spans)
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        print("v2 start")
+        e_1 = json.dumps(expected)
+        a_1 = mock_post.call_args[1]["data"]
+        print(e_1)
+        print(a_1)
+        self.assertEqual(e_1, a_1)
+        print("v2 end")
+        # self.assertEqual(True, False)
+
+        mock_post.assert_called_with(
+            url=endpoint,
+            data=json.dumps(expected),
+            headers={"Content-Type": exporter.sender.content_type()},
+        )
+
+    # pylint: disable=too-many-locals
+    def test_export_v1_json_zero_padding(self):
+        """test that hex ids starting with 0 are properly padded to 16 or 32
+         hex chars when exported
+        """
+        common = self._json_zero_padding_get_common_objects()
+        service_name = "test-service"
         expected = [
             {
-                "traceId": "0e0c63257de34c926f9efcd03927272e",
-                "id": "04bf92deefc58c92",
-                "name": span_names[0],
-                "timestamp": start_time // 10 ** 3,
-                "duration": duration // 10 ** 3,
+                "traceId": format(common["trace_id"], 'x').zfill(32),
+                "id": format(common["span_id"], 'x').zfill(16),
+                "name": common["span_name"],
+                "timestamp": JsonV1Encoder.nsec_to_usec_round(
+                    common["start_time"]
+                ),
+                "duration": JsonV1Encoder.nsec_to_usec_round(common["duration"]),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
                         "key": "otel.status_code",
                         "value": "1",
-                        "endpoint": local_endpoint,
+                        "endpoint": {"serviceName": service_name},
                     },
                 ],
                 "debug": True,
-                "parentId": "0aaaaaaaaaaaaaaa",
+                "parentId": format(common["parent_id"], 'x').zfill(16),
             }
         ]
 
-        exporter = ZipkinSpanExporter(
-            LocalEndpoint(
-                service_name, url="http://localhost:9411/api/v1/spans",
-            ),
-            transport_format=TransportFormat.V1_JSON,
-        )
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export([otel_span])
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        mock_post.assert_called_with(
-            url="http://localhost:9411/api/v1/spans",
-            data=json.dumps(expected),
-            headers={
-                "Content-Type": v1_json.V1JsonTransportFormatter.http_content_type()
-            },
+        self._mock_post_assert_export(
+            service_name,
+            "http://localhost:9411/api/v1/spans",
+            Encoding.JSON_V1,
+            common["spans"],
+            expected
         )
 
-    def test_export_v1_json_max_tag_length(self):
+    # pylint: disable=too-many-locals
+    def test_export_v2_json_zero_padding(self):
+        """test that hex ids starting with 0 are properly padded to 16 or 32
+         hex chars when exported
+        """
+        common = self._json_zero_padding_get_common_objects()
         service_name = "test-service"
+        expected = [
+            {
+                "traceId": format(common["trace_id"], 'x').zfill(32),
+                "id": format(common["span_id"], 'x').zfill(16),
+                "name": common["span_name"],
+                "timestamp": JsonV2Encoder.nsec_to_usec_round(
+                    common["start_time"]
+                ),
+                "duration": JsonV2Encoder.nsec_to_usec_round(
+                    common["duration"]
+                ),
+                "localEndpoint": {"serviceName": service_name},
+                "kind": JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
+                "tags": {"otel.status_code": "1"},
+                "annotations": None,
+                "debug": True,
+                "parentId": format(common["parent_id"], 'x').zfill(16),
+            }
+        ]
 
-        span_context = trace_api.SpanContext(
-            0x0E0C63257DE34C926F9EFCD03927272E,
-            0x04BF92DEEFC58C92,
-            is_remote=False,
-            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        self._mock_post_assert_export(
+            service_name,
+            "http://localhost:9411/api/v2/spans",
+            Encoding.JSON_V2,
+            common["spans"],
+            expected
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
-
-        span.start()
-        span.resource = Resource({})
-        # added here to preserve order
-        span.set_attribute("k1", "v" * 500)
-        span.set_attribute("k2", "v" * 50)
-        span.set_status(Status(StatusCode.ERROR, "Example description"))
-        span.end()
-
-        exporter = ZipkinSpanExporter(
-            LocalEndpoint(
-                service_name, url="http://localhost:9411/api/v1/spans",
-            ),
-            transport_format=TransportFormat.V1_JSON,
-        )
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export([span])
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        _, kwargs = mock_post.call_args  # pylint: disable=E0633
-
-        binary_annotations = json.loads(kwargs["data"])[0]["binaryAnnotations"]
-        self.assertEqual(len(binary_annotations[0]["value"]), 128)
-        self.assertEqual(len(binary_annotations[1]["value"]), 50)
-
-        exporter = ZipkinSpanExporter(
-            LocalEndpoint(
-                service_name, url="http://localhost:9411/api/v1/spans",
-            ),
-            transport_format=TransportFormat.V1_JSON,
-            max_tag_value_length=2,
-        )
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export([span])
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        _, kwargs = mock_post.call_args  # pylint: disable=E0633
-        binary_annotations = json.loads(kwargs["data"])[0]["binaryAnnotations"]
-        self.assertEqual(len(binary_annotations[0]["value"]), 2)
-        self.assertEqual(len(binary_annotations[1]["value"]), 2)
+    # def test_export_v1_json_max_tag_length(self):
+    #     service_name = "test-service"
+    #     endpoint = "http://localhost:9411/api/v1/spans"
+    #
+    #     span_context = trace_api.SpanContext(
+    #         0x0E0C63257DE34C926F9EFCD03927272E,
+    #         0x04BF92DEEFC58C92,
+    #         is_remote=False,
+    #         trace_flags=TraceFlags(TraceFlags.SAMPLED),
+    #     )
+    #
+    #     span = trace._Span(name="test-span", context=span_context,)
+    #
+    #     span.start()
+    #     span.resource = Resource({})
+    #     # added here to preserve order
+    #     span.set_attribute("k1", "v" * 500)
+    #     span.set_attribute("k2", "v" * 50)
+    #     span.set_status(Status(StatusCode.ERROR, "Example description"))
+    #     span.end()
+    #
+    #     exporter = ZipkinSpanExporter(service_name, endpoint, Encoding.JSON_V1)
+    #     mock_post = MagicMock()
+    #     with patch("requests.post", mock_post):
+    #         mock_post.return_value = MockResponse(200)
+    #         status = exporter.export([span])
+    #         self.assertEqual(SpanExportResult.SUCCESS, status)
+    #
+    #     _, kwargs = mock_post.call_args  # pylint: disable=E0633
+    #
+    #     binary_annotations = json.loads(kwargs["data"])[0]["binaryAnnotations"]
+    #     self.assertEqual(len(binary_annotations[0]["value"]), 128)
+    #     self.assertEqual(len(binary_annotations[1]["value"]), 50)
+    #
+    #     exporter = ZipkinSpanExporter(
+    #         endpoint=endpoint,
+    #         encoding=Encoding.JSON_V1,
+    #         encoder=JsonV1Encoder(
+    #             Endpoint(service_name),
+    #             max_tag_value_length=2
+    #         ),
+    #     )
+    #     mock_post = MagicMock()
+    #     with patch("requests.post", mock_post):
+    #         mock_post.return_value = MockResponse(200)
+    #         status = exporter.export([span])
+    #         self.assertEqual(SpanExportResult.SUCCESS, status)
+    #
+    #     _, kwargs = mock_post.call_args  # pylint: disable=E0633
+    #     binary_annotations = json.loads(kwargs["data"])[0]["binaryAnnotations"]
+    #     self.assertEqual(len(binary_annotations[0]["value"]), 2)
+    #     self.assertEqual(len(binary_annotations[1]["value"]), 2)
 
     # pylint: disable=too-many-locals,too-many-statements
     def test_export_v2_json(self):
@@ -634,10 +699,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         service_name = "test-service"
-        local_endpoint = {"serviceName": service_name, "port": 9411}
-        span_kind = v2_json.SPAN_KIND_MAP[SpanKind.INTERNAL]
+        local_endpoint = {"serviceName": service_name}
+        span_kind = JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
-        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
         expected_spans = [
             {
                 "traceId": format(trace_id, "x"),
@@ -715,6 +779,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             },
         ]
 
+        exporter = ZipkinSpanExporter(service_name)
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)
@@ -738,75 +803,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
             self.assertEqual(expected, actual)
             self.assertEqual(expected_annotations, actual_annotations)
 
-    # pylint: disable=too-many-locals
-    def test_export_v2_json_zero_padding(self):
-        """test that hex ids starting with 0
-        are properly padded to 16 or 32 hex chars
-        when exported
-        """
-
-        span_names = "testZeroes"
-        trace_id = 0x0E0C63257DE34C926F9EFCD03927272E
-        span_id = 0x04BF92DEEFC58C92
-        parent_id = 0x0AAAAAAAAAAAAAAA
-
-        start_time = 683647322 * 10 ** 9  # in ns
-        duration = 50 * 10 ** 6
-        end_time = start_time + duration
-
-        span_context = trace_api.SpanContext(
-            trace_id,
-            span_id,
-            is_remote=False,
-            trace_flags=TraceFlags(TraceFlags.SAMPLED),
-        )
-        parent_span_context = trace_api.SpanContext(
-            trace_id, parent_id, is_remote=False
-        )
-
-        otel_span = trace._Span(
-            name=span_names[0],
-            context=span_context,
-            parent=parent_span_context,
-        )
-
-        otel_span.start(start_time=start_time)
-        otel_span.resource = Resource({})
-        otel_span.end(end_time=end_time)
-
-        service_name = "test-service"
-        local_endpoint = {"serviceName": service_name, "port": 9411}
-
-        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
-        # Check traceId are properly lowercase 16 or 32 hex
-        expected = [
-            {
-                "traceId": "0e0c63257de34c926f9efcd03927272e",
-                "id": "04bf92deefc58c92",
-                "name": span_names[0],
-                "timestamp": start_time // 10 ** 3,
-                "duration": duration // 10 ** 3,
-                "localEndpoint": local_endpoint,
-                "kind": v2_json.SPAN_KIND_MAP[SpanKind.INTERNAL],
-                "tags": {"otel.status_code": "1"},
-                "annotations": None,
-                "debug": True,
-                "parentId": "0aaaaaaaaaaaaaaa",
-            }
-        ]
-
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export([otel_span])
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        mock_post.assert_called_with(
-            url="http://localhost:9411/api/v2/spans",
-            data=json.dumps(expected),
-            headers={"Content-Type": "application/json"},
-        )
-
     def test_export_v2_json_max_tag_length(self):
         service_name = "test-service"
 
@@ -827,7 +823,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.set_status(Status(StatusCode.ERROR, "Example description"))
         span.end()
 
-        exporter = ZipkinSpanExporter(LocalEndpoint(service_name))
+        exporter = ZipkinSpanExporter(service_name)
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)
@@ -841,7 +837,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(len(tags["k2"]), 50)
 
         exporter = ZipkinSpanExporter(
-            LocalEndpoint(service_name), max_tag_value_length=2,
+            encoder=JsonV2Encoder(
+                Endpoint("my_service"),
+                max_tag_value_length=2
+            )
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
@@ -960,10 +959,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         service_name = "test-service"
-        local_endpoint = zipkin_pb2.Endpoint(
-            service_name=service_name, port=9411
-        )
-        span_kind = v2_protobuf.SPAN_KIND_MAP[SpanKind.INTERNAL]
+        local_endpoint = zipkin_pb2.Endpoint(service_name=service_name)
+        span_kind = ProtobufEncoder.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
         expected_spans = zipkin_pb2.ListOfSpans(
             spans=[
@@ -971,12 +968,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=v2_protobuf.format_pbuf_span_id(span_id),
+                    id=ProtobufEncoder.encode_pbuf_span_id(span_id),
                     name=span_names[0],
-                    timestamp=TransportFormatter.nsec_to_usec_round(
+                    timestamp=ProtobufEncoder.nsec_to_usec_round(
                         start_times[0]
                     ),
-                    duration=TransportFormatter.nsec_to_usec_round(
+                    duration=ProtobufEncoder.nsec_to_usec_round(
                         durations[0]
                     ),
                     local_endpoint=local_endpoint,
@@ -989,10 +986,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "otel.status_description": "Example description",
                     },
                     debug=True,
-                    parent_id=v2_protobuf.format_pbuf_span_id(parent_id),
+                    parent_id=ProtobufEncoder.encode_pbuf_span_id(parent_id),
                     annotations=[
                         zipkin_pb2.Annotation(
-                            timestamp=TransportFormatter.nsec_to_usec_round(
+                            timestamp=ProtobufEncoder.nsec_to_usec_round(
                                 event_timestamp
                             ),
                             value=json.dumps(
@@ -1011,14 +1008,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=v2_protobuf.format_pbuf_span_id(parent_id),
+                    id=ProtobufEncoder.encode_pbuf_span_id(parent_id),
                     name=span_names[1],
-                    timestamp=TransportFormatter.nsec_to_usec_round(
+                    timestamp=ProtobufEncoder.nsec_to_usec_round(
                         start_times[1]
                     ),
-                    duration=TransportFormatter.nsec_to_usec_round(
-                        durations[1]
-                    ),
+                    duration=ProtobufEncoder.nsec_to_usec_round(durations[1]),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -1030,12 +1025,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=v2_protobuf.format_pbuf_span_id(other_id),
+                    id=ProtobufEncoder.encode_pbuf_span_id(other_id),
                     name=span_names[2],
-                    timestamp=TransportFormatter.nsec_to_usec_round(
+                    timestamp=ProtobufEncoder.nsec_to_usec_round(
                         start_times[2]
                     ),
-                    duration=TransportFormatter.nsec_to_usec_round(
+                    duration=ProtobufEncoder.nsec_to_usec_round(
                         durations[2]
                     ),
                     local_endpoint=local_endpoint,
@@ -1050,12 +1045,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     trace_id=trace_id.to_bytes(
                         length=16, byteorder="big", signed=False
                     ),
-                    id=v2_protobuf.format_pbuf_span_id(other_id),
+                    id=ProtobufEncoder.encode_pbuf_span_id(other_id),
                     name=span_names[3],
-                    timestamp=TransportFormatter.nsec_to_usec_round(
+                    timestamp=ProtobufEncoder.nsec_to_usec_round(
                         start_times[3]
                     ),
-                    duration=TransportFormatter.nsec_to_usec_round(
+                    duration=ProtobufEncoder.nsec_to_usec_round(
                         durations[3]
                     ),
                     local_endpoint=local_endpoint,
@@ -1069,10 +1064,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             ],
         )
 
-        exporter = ZipkinSpanExporter(
-            LocalEndpoint(service_name),
-            transport_format=TransportFormat.V2_PROTOBUF,
-        )
+        exporter = ZipkinSpanExporter(service_name, encoding=Encoding.PROTOBUF)
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
             mock_post.return_value = MockResponse(200)
@@ -1111,8 +1103,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.end()
 
         exporter = ZipkinSpanExporter(
-            LocalEndpoint(service_name),
-            transport_format=TransportFormat.V2_PROTOBUF,
+            service_name,
+            encoding=Encoding.PROTOBUF,
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):
@@ -1129,9 +1121,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(len(span_tags["k2"]), 50)
 
         exporter = ZipkinSpanExporter(
-            LocalEndpoint(service_name),
-            transport_format=TransportFormat.V2_PROTOBUF,
-            max_tag_value_length=2,
+            encoding=Encoding.PROTOBUF,
+            encoder=ProtobufEncoder(
+                Endpoint(service_name),
+                max_tag_value_length=2,
+            )
         )
         mock_post = MagicMock()
         with patch("requests.post", mock_post):

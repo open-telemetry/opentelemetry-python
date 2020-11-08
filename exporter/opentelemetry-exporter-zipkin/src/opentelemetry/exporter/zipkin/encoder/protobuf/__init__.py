@@ -12,45 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Zipkin Export Transport Formatter for v2 Protobuf API
+"""Zipkin Export Encoder for Protobuf
 
 API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto
 """
 
 from typing import Sequence
 
-from opentelemetry.exporter.zipkin.transport_formatter.v2.protobuf.gen import (
-    zipkin_pb2,
-)
-from opentelemetry.exporter.zipkin.transport_formatter import (
-    TransportFormatter,
-)
-
+from opentelemetry.exporter.zipkin.encoder import Encoder
+from opentelemetry.exporter.zipkin.encoder.protobuf.gen import zipkin_pb2
 from opentelemetry.trace import Span, SpanContext, SpanKind
 
 
-SPAN_KIND_MAP = {
-    SpanKind.INTERNAL: zipkin_pb2.Span.Kind.SPAN_KIND_UNSPECIFIED,
-    SpanKind.SERVER: zipkin_pb2.Span.Kind.SERVER,
-    SpanKind.CLIENT: zipkin_pb2.Span.Kind.CLIENT,
-    SpanKind.PRODUCER: zipkin_pb2.Span.Kind.PRODUCER,
-    SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
-}
-
-
-class V2ProtobufTransportFormatter(TransportFormatter):
-    """Zipkin Export Transport Formatter for v2 Protobuf API
+class ProtobufEncoder(Encoder):
+    """Zipkin Export Encoder for Protobuf
 
     API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto
     """
 
-    @staticmethod
-    def http_content_type() -> str:
-        return "application/x-protobuf"
+    SPAN_KIND_MAP = {
+        SpanKind.INTERNAL: zipkin_pb2.Span.Kind.SPAN_KIND_UNSPECIFIED,
+        SpanKind.SERVER: zipkin_pb2.Span.Kind.SERVER,
+        SpanKind.CLIENT: zipkin_pb2.Span.Kind.CLIENT,
+        SpanKind.PRODUCER: zipkin_pb2.Span.Kind.PRODUCER,
+        SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
+    }
 
-    def _format(self, spans: Sequence[Span]) -> str:
+    def _encode(self, spans: Sequence[Span]) -> str:
 
-        pbuf_local_endpoint = self._format_local_endpoint()
+        pbuf_local_endpoint = self._encode_local_endpoint()
         pbuf_spans = zipkin_pb2.ListOfSpans()
 
         for span in spans:
@@ -58,7 +48,7 @@ class V2ProtobufTransportFormatter(TransportFormatter):
             trace_id = context.trace_id.to_bytes(
                 length=16, byteorder="big", signed=False,
             )
-            span_id = format_pbuf_span_id(context.span_id)
+            span_id = self.encode_pbuf_span_id(context.span_id)
 
             # Timestamp in zipkin spans is int of microseconds.
             # see: https://zipkin.io/pages/instrumenting.html
@@ -75,7 +65,7 @@ class V2ProtobufTransportFormatter(TransportFormatter):
                 timestamp=start_timestamp_mus,
                 duration=duration_mus,
                 local_endpoint=pbuf_local_endpoint,
-                kind=SPAN_KIND_MAP[span.kind],
+                kind=self.SPAN_KIND_MAP[span.kind],
                 tags=self._extract_tags_from_span(span),
             )
 
@@ -111,20 +101,21 @@ class V2ProtobufTransportFormatter(TransportFormatter):
                 pbuf_span.debug = True
 
             if isinstance(span.parent, Span):
-                pbuf_span.parent_id = format_pbuf_span_id(
+                pbuf_span.parent_id = self.encode_pbuf_span_id(
                     span.parent.get_span_context().span_id
                 )
             elif isinstance(span.parent, SpanContext):
-                pbuf_span.parent_id = format_pbuf_span_id(span.parent.span_id)
+                pbuf_span.parent_id = self.encode_pbuf_span_id(
+                    span.parent.span_id
+                )
 
             pbuf_spans.spans.append(pbuf_span)
 
         return pbuf_spans.SerializeToString()
 
-    def _format_local_endpoint(self) -> zipkin_pb2.Endpoint:
+    def _encode_local_endpoint(self) -> zipkin_pb2.Endpoint:
         pbuf_local_endpoint = zipkin_pb2.Endpoint(
             service_name=self.local_endpoint.service_name,
-            port=self.local_endpoint.port,
         )
 
         if self.local_endpoint.ipv4 is not None:
@@ -133,8 +124,11 @@ class V2ProtobufTransportFormatter(TransportFormatter):
         if self.local_endpoint.ipv6 is not None:
             pbuf_local_endpoint.ipv6 = self.local_endpoint.ipv6
 
+        if self.local_endpoint.port is not None:
+            pbuf_local_endpoint.port = self.local_endpoint.port
+
         return pbuf_local_endpoint
 
-
-def format_pbuf_span_id(span_id: int):
-    return span_id.to_bytes(length=8, byteorder="big", signed=False)
+    @staticmethod
+    def encode_pbuf_span_id(span_id: int):
+        return span_id.to_bytes(length=8, byteorder="big", signed=False)
