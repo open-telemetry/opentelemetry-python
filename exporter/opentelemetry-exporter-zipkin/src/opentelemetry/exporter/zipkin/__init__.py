@@ -171,8 +171,6 @@ class ZipkinSpanExporter(SpanExporter):
                 self.encoder = JsonV2Encoder(local_endpoint)
             elif encoding == Encoding.PROTOBUF:
                 self.encoder = ProtobufEncoder(local_endpoint)
-            else:
-                logger.error("Unrecognized encoding specified: %s", encoding)
 
         endpoint = Configuration().EXPORTER_ZIPKIN_ENDPOINT or endpoint
 
