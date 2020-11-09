@@ -669,7 +669,7 @@ class Span(trace_api.Span):
             # Record the exception as an event
             # pylint:disable=protected-access
             if self._record_exception:
-                span.record_exception(exception=exc_val, escaped=True)
+                self.record_exception(exception=exc_val, escaped=True)
             # Records status if span is used as context manager
             # i.e. with tracer.start_span() as span:
             if (
@@ -679,7 +679,9 @@ class Span(trace_api.Span):
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description="{}: {}".format(exc_type.__name__, exc_val),
+                        description="{}: {}".format(
+                            exc_type.__name__, exc_val
+                        ),
                     )
                 )
 
@@ -843,9 +845,7 @@ class Tracer(trace_api.Tracer):
 
     @contextmanager
     def use_span(
-        self,
-        span: trace_api.Span,
-        end_on_exit: bool = False,
+        self, span: trace_api.Span, end_on_exit: bool = False,
     ) -> Iterator[trace_api.Span]:
         try:
             token = context_api.attach(context_api.set_value(SPAN_KEY, span))
