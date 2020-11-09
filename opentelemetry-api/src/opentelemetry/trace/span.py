@@ -38,6 +38,8 @@ class Span(abc.ABC):
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
+
+        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
         """
 
     @abc.abstractmethod
