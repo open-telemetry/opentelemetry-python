@@ -707,7 +707,7 @@ class Span(trace_api.Span):
             "exception.type": exception.__class__.__name__,
             "exception.message": str(exception),
             "exception.stacktrace": stacktrace,
-            "exception.escaped": escaped,
+            "exception.escaped": str(escaped),
         }
         if attributes:
             _attributes.update(attributes)
