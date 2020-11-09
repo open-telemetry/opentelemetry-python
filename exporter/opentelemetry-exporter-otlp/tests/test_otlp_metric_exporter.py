@@ -91,6 +91,10 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
+    def test_no_credentials_error(self):
+        with self.assertRaises(ValueError):
+            OTLPMetricsExporter()
+
     @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_translate_metrics(self, mock_time_ns):
         # pylint: disable=no-member
