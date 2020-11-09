@@ -95,7 +95,6 @@ API
 ---
 """
 
-import logging
 from typing import Sequence
 
 from opentelemetry.configuration import Configuration
@@ -113,8 +112,6 @@ from opentelemetry.trace import Span
 DEFAULT_SERVICE_NAME = "unknown"
 DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans"
 DEFAULT_ENCODING = Encoding.JSON_V2
-
-logger = logging.getLogger(__name__)
 
 
 class ZipkinSpanExporter(SpanExporter):

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
 import json
-from logging import ERROR
 import os
 import unittest
 from typing import List
@@ -929,6 +929,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             status = exporter.export(otel_spans)
             self.assertEqual(SpanExportResult.SUCCESS, status)
 
+        # pylint: disable=unsubscriptable-object
         kwargs = mock_post.call_args[1]
 
         self.assertEqual(kwargs["url"], exporter.sender.endpoint)

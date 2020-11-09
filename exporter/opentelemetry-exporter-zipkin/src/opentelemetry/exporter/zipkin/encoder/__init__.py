@@ -20,12 +20,15 @@ Base module and abstract class for concrete transport encoders to extend.
 import abc
 from enum import Enum
 import json
+import logging
 from typing import Optional, Sequence
 
 from opentelemetry.exporter.zipkin.endpoint import Endpoint
 from opentelemetry.trace import Span
 
 DEFAULT_MAX_TAG_VALUE_LENGTH = 128
+
+logger = logging.getLogger(__name__)
 
 
 class Encoding(Enum):
