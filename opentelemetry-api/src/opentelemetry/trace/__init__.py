@@ -402,10 +402,7 @@ class DefaultTracer(Tracer):
 
     @contextmanager  # type: ignore
     def use_span(
-        self,
-        span: "Span",
-        end_on_exit: bool = False,
-        record_exception: bool = True,
+        self, span: "Span", end_on_exit: bool = False,
     ) -> typing.Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield
