@@ -34,6 +34,7 @@ class Encoding(Enum):
     Values are human-readable strings so that the related OS environ var
     OTEL_EXPORTER_ZIPKIN_ENCODING can be more easily used.
     """
+
     JSON_V1 = "json_v1"
     JSON_V2 = "json_v2"
     PROTOBUF = "protobuf"

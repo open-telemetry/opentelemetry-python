@@ -26,16 +26,15 @@ from opentelemetry.trace import Span, SpanContext, SpanKind
 
 
 class JsonEncoder(Encoder):
-
     def _encode(self, spans: Sequence[Span]) -> str:
 
         encoded_local_endpoint = self._encode_local_endpoint()
         zipkin_spans = []
 
         for span in spans:
-            zipkin_spans.append(self._encode_span(
-                span, encoded_local_endpoint
-            ))
+            zipkin_spans.append(
+                self._encode_span(span, encoded_local_endpoint)
+            )
 
         return dumps(zipkin_spans)
 
@@ -88,9 +87,7 @@ class JsonV2Encoder(JsonEncoder):
         span_id = context.span_id
 
         start_timestamp_mus = self.nsec_to_usec_round(span.start_time)
-        duration_mus = self.nsec_to_usec_round(
-            span.end_time - span.start_time
-        )
+        duration_mus = self.nsec_to_usec_round(span.end_time - span.start_time)
 
         zipkin_span = {
             "traceId": self.encode_trace_id(trace_id),
@@ -101,9 +98,7 @@ class JsonV2Encoder(JsonEncoder):
             "localEndpoint": encoded_local_endpoint,
             "kind": self.SPAN_KIND_MAP[span.kind],
             "tags": self._extract_tags_from_span(span),
-            "annotations": self._extract_annotations_from_events(
-                span.events
-            ),
+            "annotations": self._extract_annotations_from_events(span.events),
         }
 
         if span.instrumentation_info is not None:
@@ -148,9 +143,7 @@ class JsonV1Encoder(JsonEncoder):
         span_id = context.span_id
 
         start_timestamp_mus = self.nsec_to_usec_round(span.start_time)
-        duration_mus = self.nsec_to_usec_round(
-            span.end_time - span.start_time
-        )
+        duration_mus = self.nsec_to_usec_round(span.end_time - span.start_time)
 
         annotations = self._extract_annotations_from_events(span.events)
 
@@ -184,9 +177,7 @@ class JsonV1Encoder(JsonEncoder):
 
         return zipkin_span
 
-    def _extract_binary_annotations(
-        self, span: Span, encoded_local_endpoint
-    ):
+    def _extract_binary_annotations(self, span: Span, encoded_local_endpoint):
         binary_annotations = []
 
         for k, v in self._extract_tags_from_span(span).items():

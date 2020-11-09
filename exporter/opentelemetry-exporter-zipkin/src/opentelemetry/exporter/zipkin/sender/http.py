@@ -31,12 +31,11 @@ logger = logging.getLogger(__name__)
 
 
 class HttpSender(Sender):
-
     def __init__(
-            self,
-            endpoint: str,
-            encoding: Optional[Encoding] = DEFAULT_ENCODING,
-            retry: Optional[str] = DEFAULT_RETRY,
+        self,
+        endpoint: str,
+        encoding: Optional[Encoding] = DEFAULT_ENCODING,
+        retry: Optional[str] = DEFAULT_RETRY,
     ):
         super().__init__(endpoint, encoding)
         self.retry = retry
@@ -46,7 +45,7 @@ class HttpSender(Sender):
         result = requests.post(
             url=self.endpoint,
             data=encoded_spans,
-            headers={"Content-Type":  self.content_type()},
+            headers={"Content-Type": self.content_type()},
         )
 
         if result.status_code not in SUCCESS_STATUS_CODES:

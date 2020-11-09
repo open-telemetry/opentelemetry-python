@@ -103,9 +103,7 @@ class ProtobufEncoder(Encoder):
                     span.parent.get_span_context().span_id
                 )
             elif isinstance(span.parent, SpanContext):
-                pbuf_span.parent_id = self.encode_span_id(
-                    span.parent.span_id
-                )
+                pbuf_span.parent_id = self.encode_span_id(span.parent.span_id)
 
             pbuf_spans.spans.append(pbuf_span)
 

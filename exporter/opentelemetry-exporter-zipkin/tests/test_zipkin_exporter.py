@@ -29,7 +29,8 @@ from opentelemetry.exporter.zipkin import (
 )
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.exporter.zipkin.encoder.json import (
-    JsonV1Encoder, JsonV2Encoder
+    JsonV1Encoder,
+    JsonV2Encoder,
 )
 from opentelemetry.exporter.zipkin.encoder.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.encoder.protobuf.gen import zipkin_pb2
@@ -146,7 +147,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         encoding = Encoding.PROTOBUF
         exporter = ZipkinSpanExporter(
             encoder=ProtobufEncoder(Endpoint(service_name)),
-            sender=HttpSender(endpoint, encoding)
+            sender=HttpSender(endpoint, encoding),
         )
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
@@ -185,13 +186,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
             endpoint=exporter_param_endpoint,
             encoding=exporter_param_encoding,
             encoder=ProtobufEncoder(Endpoint(encoder_param_service_name)),
-            sender=HttpSender(sender_param_endpoint, sender_param_encoding)
+            sender=HttpSender(sender_param_endpoint, sender_param_encoding),
         )
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
         self.assertEqual(
             exporter.encoder.local_endpoint.service_name,
-            encoder_param_service_name
+            encoder_param_service_name,
         )
         self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
         self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
@@ -214,19 +215,24 @@ class TestZipkinSpanExporter(unittest.TestCase):
         local_endpoint = {"serviceName": service_name}
 
         otel_spans = self._get_exhaustive_otel_span_list()
-        trace_id = JsonV1Encoder.encode_trace_id(otel_spans[0].context.trace_id)
+        trace_id = JsonV1Encoder.encode_trace_id(
+            otel_spans[0].context.trace_id
+        )
 
         expected_encoded_output = [
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(otel_spans[0].context.span_id),
+                "id": JsonV1Encoder.encode_span_id(
+                    otel_spans[0].context.span_id
+                ),
                 "name": otel_spans[0].name,
                 "timestamp": otel_spans[0].start_time // 10 ** 3,
-                "duration": (otel_spans[0].end_time // 10 ** 3) - (otel_spans[
-                                                                  0].start_time // 10 ** 3),
+                "duration": (otel_spans[0].end_time // 10 ** 3)
+                - (otel_spans[0].start_time // 10 ** 3),
                 "annotations": [
                     {
-                        "timestamp": otel_spans[0].events[0].timestamp // 10 ** 3,
+                        "timestamp": otel_spans[0].events[0].timestamp
+                        // 10 ** 3,
                         "value": {
                             "event0": {
                                 "annotation_bool": True,
@@ -265,16 +271,19 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     },
                 ],
                 "debug": True,
-                "parentId": JsonV1Encoder.encode_span_id(otel_spans[0].parent.span_id),
+                "parentId": JsonV1Encoder.encode_span_id(
+                    otel_spans[0].parent.span_id
+                ),
             },
             {
                 "traceId": trace_id,
                 "id": JsonV1Encoder.encode_span_id(
-                    otel_spans[1].context.span_id),
+                    otel_spans[1].context.span_id
+                ),
                 "name": otel_spans[1].name,
                 "timestamp": otel_spans[1].start_time // 10 ** 3,
-                "duration": (otel_spans[1].end_time // 10 ** 3) - (otel_spans[
-                                                                       1].start_time // 10 ** 3),
+                "duration": (otel_spans[1].end_time // 10 ** 3)
+                - (otel_spans[1].start_time // 10 ** 3),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
@@ -292,11 +301,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
             {
                 "traceId": trace_id,
                 "id": JsonV1Encoder.encode_span_id(
-                    otel_spans[2].context.span_id),
+                    otel_spans[2].context.span_id
+                ),
                 "name": otel_spans[2].name,
                 "timestamp": otel_spans[2].start_time // 10 ** 3,
-                "duration": (otel_spans[2].end_time // 10 ** 3) - (otel_spans[
-                                                                       2].start_time // 10 ** 3),
+                "duration": (otel_spans[2].end_time // 10 ** 3)
+                - (otel_spans[2].start_time // 10 ** 3),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
@@ -319,11 +329,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
             {
                 "traceId": trace_id,
                 "id": JsonV1Encoder.encode_span_id(
-                    otel_spans[3].context.span_id),
+                    otel_spans[3].context.span_id
+                ),
                 "name": otel_spans[3].name,
                 "timestamp": otel_spans[3].start_time // 10 ** 3,
-                "duration": (otel_spans[3].end_time // 10 ** 3) - (otel_spans[
-                                                                       3].start_time // 10 ** 3),
+                "duration": (otel_spans[3].end_time // 10 ** 3)
+                - (otel_spans[3].start_time // 10 ** 3),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
@@ -390,14 +401,17 @@ class TestZipkinSpanExporter(unittest.TestCase):
         service_name = "test-service"
         expected_encoded_output = [
             {
-                "traceId": JsonV1Encoder.encode_trace_id(otel_span.context.trace_id),
+                "traceId": JsonV1Encoder.encode_trace_id(
+                    otel_span.context.trace_id
+                ),
                 "id": JsonV1Encoder.encode_span_id(otel_span.context.span_id),
                 "name": otel_span.name,
                 "timestamp": JsonV1Encoder.nsec_to_usec_round(
                     otel_span.start_time
                 ),
                 "duration": JsonV1Encoder.nsec_to_usec_round(
-                    otel_span.end_time - otel_span.start_time),
+                    otel_span.end_time - otel_span.start_time
+                ),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
@@ -407,7 +421,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     },
                 ],
                 "debug": True,
-                "parentId": JsonV1Encoder.encode_span_id(otel_span.parent.span_id),
+                "parentId": JsonV1Encoder.encode_span_id(
+                    otel_span.parent.span_id
+                ),
             }
         ]
 
@@ -418,7 +434,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 encoding=Encoding.JSON_V1,
             ),
             [otel_span],
-            expected_encoded_output
+            expected_encoded_output,
         )
 
     # pylint: disable=too-many-locals
@@ -431,21 +447,24 @@ class TestZipkinSpanExporter(unittest.TestCase):
         expected_encoded_output = [
             {
                 "traceId": JsonV2Encoder.encode_trace_id(
-                    otel_span.context.trace_id),
+                    otel_span.context.trace_id
+                ),
                 "id": JsonV2Encoder.encode_span_id(otel_span.context.span_id),
                 "name": otel_span.name,
                 "timestamp": JsonV1Encoder.nsec_to_usec_round(
                     otel_span.start_time
                 ),
                 "duration": JsonV1Encoder.nsec_to_usec_round(
-                    otel_span.end_time - otel_span.start_time),
+                    otel_span.end_time - otel_span.start_time
+                ),
                 "localEndpoint": {"serviceName": service_name},
                 "kind": JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
                 "tags": {"otel.status_code": "1"},
                 "annotations": None,
                 "debug": True,
                 "parentId": JsonV2Encoder.encode_span_id(
-                    otel_span.parent.span_id),
+                    otel_span.parent.span_id
+                ),
             }
         ]
 
@@ -472,7 +491,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 0x04BF92DEEFC58C92,
                 is_remote=False,
                 trace_flags=TraceFlags(TraceFlags.SAMPLED),
-            )
+            ),
         )
         otel_span.start(start_time=start_time)
         otel_span.resource = Resource({})
@@ -490,24 +509,30 @@ class TestZipkinSpanExporter(unittest.TestCase):
         expected_encoded_output = [
             {
                 "traceId": JsonV1Encoder.encode_trace_id(
-                    otel_span.context.trace_id),
+                    otel_span.context.trace_id
+                ),
                 "id": JsonV1Encoder.encode_span_id(otel_span.context.span_id),
                 "name": otel_span.name,
                 "timestamp": JsonV1Encoder.nsec_to_usec_round(
                     otel_span.start_time
                 ),
                 "duration": JsonV1Encoder.nsec_to_usec_round(
-                    otel_span.end_time - otel_span.start_time),
+                    otel_span.end_time - otel_span.start_time
+                ),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
                         "key": "k1",
-                        "value": otel_span.attributes["k1"][:max_tag_value_length],
+                        "value": otel_span.attributes["k1"][
+                            :max_tag_value_length
+                        ],
                         "endpoint": local_endpoint,
                     },
                     {
                         "key": "k2",
-                        "value": otel_span.attributes["k2"][:max_tag_value_length],
+                        "value": otel_span.attributes["k2"][
+                            :max_tag_value_length
+                        ],
                         "endpoint": local_endpoint,
                     },
                     {
@@ -526,8 +551,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 encoding=Encoding.JSON_V1,
                 encoder=JsonV1Encoder(
                     Endpoint(service_name),
-                    max_tag_value_length=max_tag_value_length
-                )
+                    max_tag_value_length=max_tag_value_length,
+                ),
             ),
             [otel_span],
             expected_encoded_output,
@@ -545,21 +570,22 @@ class TestZipkinSpanExporter(unittest.TestCase):
         expected_encoded_output = [
             {
                 "traceId": JsonV2Encoder.encode_trace_id(
-                    otel_span.context.trace_id),
-                "id": JsonV2Encoder.encode_span_id(
-                    otel_span.context.span_id),
+                    otel_span.context.trace_id
+                ),
+                "id": JsonV2Encoder.encode_span_id(otel_span.context.span_id),
                 "name": otel_span.name,
                 "timestamp": JsonV1Encoder.nsec_to_usec_round(
                     otel_span.start_time
                 ),
                 "duration": JsonV1Encoder.nsec_to_usec_round(
-                    otel_span.end_time - otel_span.start_time),
+                    otel_span.end_time - otel_span.start_time
+                ),
                 "localEndpoint": {"serviceName": service_name},
                 "kind": JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
                 "tags": {
                     "k1": otel_span.attributes["k1"][:max_tag_value_length],
                     "k2": otel_span.attributes["k2"][:max_tag_value_length],
-                    "otel.status_code": "1"
+                    "otel.status_code": "1",
                 },
                 "annotations": None,
                 "debug": True,
@@ -570,7 +596,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             ZipkinSpanExporter(
                 encoder=JsonV2Encoder(
                     Endpoint(service_name),
-                    max_tag_value_length=max_tag_value_length
+                    max_tag_value_length=max_tag_value_length,
                 )
             ),
             [otel_span],
@@ -589,21 +615,31 @@ class TestZipkinSpanExporter(unittest.TestCase):
         expected_encoded_output = zipkin_pb2.ListOfSpans(
             spans=[
                 zipkin_pb2.Span(
-                    trace_id=ProtobufEncoder.encode_trace_id(otel_span.context.trace_id),
-                    id=ProtobufEncoder.encode_span_id(otel_span.context.span_id),
+                    trace_id=ProtobufEncoder.encode_trace_id(
+                        otel_span.context.trace_id
+                    ),
+                    id=ProtobufEncoder.encode_span_id(
+                        otel_span.context.span_id
+                    ),
                     name=otel_span.name,
                     timestamp=ProtobufEncoder.nsec_to_usec_round(
-                        otel_span.start_time),
+                        otel_span.start_time
+                    ),
                     duration=JsonV2Encoder.nsec_to_usec_round(
-                        otel_span.end_time - otel_span.start_time),
+                        otel_span.end_time - otel_span.start_time
+                    ),
                     local_endpoint=zipkin_pb2.Endpoint(
                         service_name=service_name
                     ),
                     kind=ProtobufEncoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
                     tags={
-                        "k1": otel_span.attributes["k1"][:max_tag_value_length],
-                        "k2": otel_span.attributes["k2"][:max_tag_value_length],
-                        "otel.status_code": "1"
+                        "k1": otel_span.attributes["k1"][
+                            :max_tag_value_length
+                        ],
+                        "k2": otel_span.attributes["k2"][
+                            :max_tag_value_length
+                        ],
+                        "otel.status_code": "1",
                     },
                     annotations=None,
                     debug=True,
@@ -617,11 +653,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 encoding=Encoding.PROTOBUF,
                 encoder=ProtobufEncoder(
                     Endpoint(service_name),
-                    max_tag_value_length=max_tag_value_length
-                )
+                    max_tag_value_length=max_tag_value_length,
+                ),
             ),
             [otel_span],
-            expected_encoded_output
+            expected_encoded_output,
         )
 
     def test_export_protobuf_max_tag_length_128(self):
@@ -637,18 +673,20 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span_kind = JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
         otel_spans = self._get_exhaustive_otel_span_list()
-        trace_id = JsonV2Encoder.encode_trace_id(otel_spans[
-                                                    0].context.trace_id)
+        trace_id = JsonV2Encoder.encode_trace_id(
+            otel_spans[0].context.trace_id
+        )
 
         expected_encoded_output = [
             {
                 "traceId": trace_id,
-                "id": JsonV2Encoder.encode_span_id(otel_spans[
-                                                       0].context.span_id),
+                "id": JsonV2Encoder.encode_span_id(
+                    otel_spans[0].context.span_id
+                ),
                 "name": otel_spans[0].name,
                 "timestamp": otel_spans[0].start_time // 10 ** 3,
-                "duration":(otel_spans[0].end_time // 10 ** 3) - (otel_spans[
-                                                                  0].start_time // 10 ** 3),
+                "duration": (otel_spans[0].end_time // 10 ** 3)
+                - (otel_spans[0].start_time // 10 ** 3),
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
                 "tags": {
@@ -659,11 +697,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "otel.status_description": "Example description",
                 },
                 "debug": True,
-                "parentId": JsonV2Encoder.encode_span_id(otel_spans[
-                                                             0].parent.span_id),
+                "parentId": JsonV2Encoder.encode_span_id(
+                    otel_spans[0].parent.span_id
+                ),
                 "annotations": [
                     {
-                        "timestamp": otel_spans[0].events[0].timestamp // 10 ** 3,
+                        "timestamp": otel_spans[0].events[0].timestamp
+                        // 10 ** 3,
                         "value": {
                             "event0": {
                                 "annotation_bool": True,
@@ -676,10 +716,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(otel_spans[1].context.span_id),
+                "id": JsonV1Encoder.encode_span_id(
+                    otel_spans[1].context.span_id
+                ),
                 "name": otel_spans[1].name,
                 "timestamp": otel_spans[1].start_time // 10 ** 3,
-                "duration": (otel_spans[1].end_time // 10 ** 3) - (otel_spans[1].start_time // 10 ** 3),
+                "duration": (otel_spans[1].end_time // 10 ** 3)
+                - (otel_spans[1].start_time // 10 ** 3),
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
                 "tags": {
@@ -690,10 +733,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(otel_spans[2].context.span_id),
+                "id": JsonV1Encoder.encode_span_id(
+                    otel_spans[2].context.span_id
+                ),
                 "name": otel_spans[2].name,
                 "timestamp": otel_spans[2].start_time // 10 ** 3,
-                "duration": (otel_spans[2].end_time // 10 ** 3) - (otel_spans[2].start_time // 10 ** 3),
+                "duration": (otel_spans[2].end_time // 10 ** 3)
+                - (otel_spans[2].start_time // 10 ** 3),
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
                 "tags": {
@@ -705,10 +751,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(otel_spans[3].context.span_id),
+                "id": JsonV1Encoder.encode_span_id(
+                    otel_spans[3].context.span_id
+                ),
                 "name": otel_spans[3].name,
                 "timestamp": otel_spans[3].start_time // 10 ** 3,
-                "duration": (otel_spans[3].end_time // 10 ** 3) - (otel_spans[3].start_time // 10 ** 3),
+                "duration": (otel_spans[3].end_time // 10 ** 3)
+                - (otel_spans[3].start_time // 10 ** 3),
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
                 "tags": {
@@ -721,7 +770,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
         ]
 
         self._mock_post_assert_export(
-            ZipkinSpanExporter(service_name), otel_spans, expected_encoded_output
+            ZipkinSpanExporter(service_name),
+            otel_spans,
+            expected_encoded_output,
         )
 
     # pylint: disable=too-many-locals,too-many-statements
@@ -739,14 +790,17 @@ class TestZipkinSpanExporter(unittest.TestCase):
             spans=[
                 zipkin_pb2.Span(
                     trace_id=trace_id,
-                    id=ProtobufEncoder.encode_span_id(otel_spans[0].context.span_id),
+                    id=ProtobufEncoder.encode_span_id(
+                        otel_spans[0].context.span_id
+                    ),
                     name=otel_spans[0].name,
                     timestamp=ProtobufEncoder.nsec_to_usec_round(
                         otel_spans[0].start_time
                     ),
                     duration=(
-                        ProtobufEncoder.nsec_to_usec_round(otel_spans[0].end_time
-                                                           - otel_spans[0].start_time)
+                        ProtobufEncoder.nsec_to_usec_round(
+                            otel_spans[0].end_time - otel_spans[0].start_time
+                        )
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
@@ -758,7 +812,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "otel.status_description": "Example description",
                     },
                     debug=True,
-                    parent_id=ProtobufEncoder.encode_span_id(otel_spans[0].parent.span_id),
+                    parent_id=ProtobufEncoder.encode_span_id(
+                        otel_spans[0].parent.span_id
+                    ),
                     annotations=[
                         zipkin_pb2.Annotation(
                             timestamp=ProtobufEncoder.nsec_to_usec_round(
@@ -779,14 +835,16 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 zipkin_pb2.Span(
                     trace_id=trace_id,
                     id=ProtobufEncoder.encode_span_id(
-                        otel_spans[1].context.span_id),
+                        otel_spans[1].context.span_id
+                    ),
                     name=otel_spans[1].name,
                     timestamp=ProtobufEncoder.nsec_to_usec_round(
                         otel_spans[1].start_time
                     ),
                     duration=(
                         ProtobufEncoder.nsec_to_usec_round(
-                            otel_spans[1].end_time - otel_spans[1].start_time)
+                            otel_spans[1].end_time - otel_spans[1].start_time
+                        )
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
@@ -798,14 +856,16 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 zipkin_pb2.Span(
                     trace_id=trace_id,
                     id=ProtobufEncoder.encode_span_id(
-                        otel_spans[2].context.span_id),
+                        otel_spans[2].context.span_id
+                    ),
                     name=otel_spans[2].name,
                     timestamp=ProtobufEncoder.nsec_to_usec_round(
                         otel_spans[2].start_time
                     ),
                     duration=(
                         ProtobufEncoder.nsec_to_usec_round(
-                            otel_spans[2].end_time - otel_spans[2].start_time)
+                            otel_spans[2].end_time - otel_spans[2].start_time
+                        )
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
@@ -818,14 +878,16 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 zipkin_pb2.Span(
                     trace_id=trace_id,
                     id=ProtobufEncoder.encode_span_id(
-                        otel_spans[3].context.span_id),
+                        otel_spans[3].context.span_id
+                    ),
                     name=otel_spans[3].name,
                     timestamp=ProtobufEncoder.nsec_to_usec_round(
                         otel_spans[3].start_time
                     ),
                     duration=(
                         ProtobufEncoder.nsec_to_usec_round(
-                            otel_spans[3].end_time - otel_spans[3].start_time)
+                            otel_spans[3].end_time - otel_spans[3].start_time
+                        )
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
@@ -841,14 +903,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self._mock_post_assert_export(
             ZipkinSpanExporter(service_name, encoding=Encoding.PROTOBUF),
             otel_spans,
-            expected_encoded_output
+            expected_encoded_output,
         )
 
     def _mock_post_assert_export(
-            self,
-            exporter: ZipkinSpanExporter,
-            otel_spans: List[trace._Span],
-            expected_encoded_output: list
+        self,
+        exporter: ZipkinSpanExporter,
+        otel_spans: List[trace._Span],
+        expected_encoded_output: list,
     ):
         """
         Convenience function to perform a mock export for the provided exporter
@@ -882,7 +944,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
             actual_spans = sorted(
                 json.loads(kwargs["data"]), key=lambda span: span["timestamp"]
             )
-            for expected_span, actual_span in zip(expected_encoded_output, actual_spans):
+            for expected_span, actual_span in zip(
+                expected_encoded_output, actual_spans
+            ):
                 actual_annotations = self._pop_and_sort(
                     actual_span, "annotations", "timestamp"
                 )
@@ -892,9 +956,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 actual_binary_annotations = self._pop_and_sort(
                     actual_span, "binaryAnnotations", "key"
                 )
-                expected_annotations = self._pop_and_sort(expected_span,
-                                                          "annotations",
-                                                          "timestamp")
+                expected_annotations = self._pop_and_sort(
+                    expected_span, "annotations", "timestamp"
+                )
                 expected_binary_annotations = self._pop_and_sort(
                     expected_span, "binaryAnnotations", "key"
                 )
@@ -905,7 +969,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 )
         elif encoder_type is JsonV2Encoder:
             actual_spans = json.loads(kwargs["data"])
-            for expected_span, actual_span in zip(expected_encoded_output, actual_spans):
+            for expected_span, actual_span in zip(
+                expected_encoded_output, actual_spans
+            ):
                 actual_annotations = self._pop_and_sort(
                     actual_span, "annotations", "timestamp"
                 )
@@ -927,10 +993,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         """
         popped_item = source_list.pop(source_index, None)
         if popped_item is not None:
-            popped_item = sorted(
-                popped_item,
-                key=lambda x: x[sort_key]
-            )
+            popped_item = sorted(popped_item, key=lambda x: x[sort_key])
         return popped_item
 
     @staticmethod
@@ -991,18 +1054,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span1.set_attribute("key_bool", False)
         span1.set_attribute("key_string", "hello_world")
         span1.set_attribute("key_float", 111.22)
-        span1.set_status(
-            Status(StatusCode.ERROR, "Example description")
-        )
+        span1.set_status(Status(StatusCode.ERROR, "Example description"))
         span1.end(end_time=end_times[0])
 
         span2 = trace._Span(
             name="test-span-2", context=parent_span_context, parent=None
         )
         span2.start(start_time=start_times[1])
-        span2.resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
+        span2.resource = Resource(attributes={"key_resource": "some_resource"})
         span2.end(end_time=end_times[1])
 
         span3 = trace._Span(
@@ -1010,9 +1069,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
         span3.start(start_time=start_times[2])
         span3.set_attribute("key_string", "hello_world")
-        span3.resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
+        span3.resource = Resource(attributes={"key_resource": "some_resource"})
         span3.end(end_time=end_times[2])
 
         span4 = trace._Span(

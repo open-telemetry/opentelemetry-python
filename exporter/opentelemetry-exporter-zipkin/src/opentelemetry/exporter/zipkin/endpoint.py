@@ -30,6 +30,7 @@ class Endpoint:
         port: Depending on context, this could be a listen port or the
           client-side of a socket. None if unknown.
     """
+
     def __init__(
         self,
         service_name: str,
