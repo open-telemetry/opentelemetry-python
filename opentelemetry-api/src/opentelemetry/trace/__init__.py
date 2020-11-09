@@ -345,9 +345,7 @@ class Tracer(abc.ABC):
     @contextmanager  # type: ignore
     @abc.abstractmethod
     def use_span(
-        self,
-        span: "Span",
-        end_on_exit: bool = False,
+        self, span: "Span", end_on_exit: bool = False,
     ) -> typing.Iterator[None]:
         """Context manager for setting the passed span as the
         current span in the context, as well as resetting the
