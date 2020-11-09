@@ -65,6 +65,9 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     def convert_from_summary(self, summary_record: MetricRecord) -> TimeSeriesData:
         pass
 
+    def sanitize_label(self, label: str) -> str:
+        pass
+
     def build_message(self, data: Sequence[TimeSeries]) -> str:
         pass
 
@@ -80,8 +83,6 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     def build_tls_config(self) -> TLSConfig:
         pass
 
-    def sanitize_label(self, label: str) -> str:
-        pass
 
 
 class Config():
@@ -91,7 +92,6 @@ class Config():
     Args:
         config_dict: dictionary containing all config properties
     """
-
     def __init__(self, config_dict):
         pass
 
@@ -106,6 +106,7 @@ class TimeSeriesData:
 
     def __eq__(self, other) -> bool:
         return self.labels == other.labels and self.samples == other.samples
+
 
 def parse_config(filepath: str) -> Config:
     pass
