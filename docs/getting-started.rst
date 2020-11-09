@@ -219,7 +219,7 @@ The sleep functions will cause the script to take a while, but running it should
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
 
 Store Metrics in Prometheus
---------------------
+------------------------------
 
 It's valuable to have a data store for metrics so you can visualize and query the data. A common solution is
 `Prometheus <https://prometheus.io/>`_, which provides a server to scrape and store time series data.
