@@ -60,12 +60,12 @@ class JsonEncoder(Encoder):
         pass
 
     @staticmethod
-    def encode_trace_id(trace_id):
-        return format(trace_id, "032x")
-
-    @staticmethod
     def encode_span_id(span_id):
         return format(span_id, "016x")
+
+    @staticmethod
+    def encode_trace_id(trace_id):
+        return format(trace_id, "032x")
 
 
 class JsonV2Encoder(JsonEncoder):

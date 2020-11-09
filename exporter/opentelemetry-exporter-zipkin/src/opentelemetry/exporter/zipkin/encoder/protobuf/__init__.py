@@ -45,10 +45,8 @@ class ProtobufEncoder(Encoder):
 
         for span in spans:
             context = span.get_span_context()
-            trace_id = context.trace_id.to_bytes(
-                length=16, byteorder="big", signed=False,
-            )
-            span_id = self.encode_pbuf_span_id(context.span_id)
+            trace_id = self.encode_trace_id(context.trace_id)
+            span_id = self.encode_span_id(context.span_id)
 
             # Timestamp in zipkin spans is int of microseconds.
             # see: https://zipkin.io/pages/instrumenting.html
@@ -101,11 +99,11 @@ class ProtobufEncoder(Encoder):
                 pbuf_span.debug = True
 
             if isinstance(span.parent, Span):
-                pbuf_span.parent_id = self.encode_pbuf_span_id(
+                pbuf_span.parent_id = self.encode_span_id(
                     span.parent.get_span_context().span_id
                 )
             elif isinstance(span.parent, SpanContext):
-                pbuf_span.parent_id = self.encode_pbuf_span_id(
+                pbuf_span.parent_id = self.encode_span_id(
                     span.parent.span_id
                 )
 
@@ -130,5 +128,9 @@ class ProtobufEncoder(Encoder):
         return pbuf_local_endpoint
 
     @staticmethod
-    def encode_pbuf_span_id(span_id: int):
+    def encode_span_id(span_id: int):
         return span_id.to_bytes(length=8, byteorder="big", signed=False)
+
+    @staticmethod
+    def encode_trace_id(trace_id: int):
+        return trace_id.to_bytes(length=16, byteorder="big", signed=False)

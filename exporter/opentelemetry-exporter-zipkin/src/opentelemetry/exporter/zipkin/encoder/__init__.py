@@ -65,6 +65,16 @@ class Encoder(abc.ABC):
     def _encode(self, spans: Sequence[Span]) -> str:
         pass
 
+    @staticmethod
+    @abc.abstractmethod
+    def encode_span_id(span_id):
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def encode_trace_id(trace_id):
+        pass
+
     def _extract_tags_from_dict(self, tags_dict):
         tags = {}
         if not tags_dict:
