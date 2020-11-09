@@ -40,7 +40,7 @@ class Sender:
     """
 
     def __init__(self, endpoint: str, encoding: Encoding):
-        self.endpoint = Configuration().EXPORTER_ZIPKIN_ENDPOINT or endpoint
+        self.endpoint = endpoint
 
         if encoding not in self.supported_encodings():
             logger.error(

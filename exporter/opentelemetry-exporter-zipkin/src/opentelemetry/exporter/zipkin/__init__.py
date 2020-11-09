@@ -87,7 +87,7 @@ The exporter supports the following environment variables for configuration:
 :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: target to which the exporter will
 send data. This may include a path (e.g. http://example.com:9411/api/v2/spans).
 
-:envvar:`OTEL_EXPORTER_ZIPKIN_ENCODER`: transport interchange format
+:envvar:`OTEL_EXPORTER_ZIPKIN_ENCODING`: transport interchange format
 encoder to use when sending data. Currently only Zipkin's v2 json and protobuf
 formats are supported, with v2 json being the default.
 
