@@ -54,7 +54,7 @@ from opentelemetry.sdk.metrics import (
     ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import (
-    MetricRecord,
+    ExportRecord,
     MetricsExporter,
     MetricsExportResult,
 )
@@ -71,39 +71,37 @@ DataPointT = TypeVar("DataPointT", IntDataPoint, DoubleDataPoint)
 
 
 def _get_data_points(
-    sdk_metric_record: MetricRecord, data_point_class: Type[DataPointT]
+    export_record: ExportRecord, data_point_class: Type[DataPointT]
 ) -> List[DataPointT]:
 
-    if isinstance(sdk_metric_record.aggregator, SumAggregator):
-        value = sdk_metric_record.aggregator.checkpoint
+    if isinstance(export_record.aggregator, SumAggregator):
+        value = export_record.aggregator.checkpoint
 
-    elif isinstance(sdk_metric_record.aggregator, MinMaxSumCountAggregator):
+    elif isinstance(export_record.aggregator, MinMaxSumCountAggregator):
         # FIXME: How are values to be interpreted from this aggregator?
         raise Exception("MinMaxSumCount aggregator data not supported")
 
-    elif isinstance(sdk_metric_record.aggregator, HistogramAggregator):
+    elif isinstance(export_record.aggregator, HistogramAggregator):
         # FIXME: How are values to be interpreted from this aggregator?
         raise Exception("Histogram aggregator data not supported")
 
-    elif isinstance(sdk_metric_record.aggregator, LastValueAggregator):
-        value = sdk_metric_record.aggregator.checkpoint
+    elif isinstance(export_record.aggregator, LastValueAggregator):
+        value = export_record.aggregator.checkpoint
 
-    elif isinstance(sdk_metric_record.aggregator, ValueObserverAggregator):
-        value = sdk_metric_record.aggregator.checkpoint.last
+    elif isinstance(export_record.aggregator, ValueObserverAggregator):
+        value = export_record.aggregator.checkpoint.last
 
     return [
         data_point_class(
             labels=[
                 StringKeyValue(key=str(label_key), value=str(label_value))
-                for label_key, label_value in sdk_metric_record.labels
+                for label_key, label_value in export_record.labels
             ],
             value=value,
             start_time_unix_nano=(
-                sdk_metric_record.aggregator.initial_checkpoint_timestamp
+                export_record.aggregator.initial_checkpoint_timestamp
             ),
-            time_unix_nano=(
-                sdk_metric_record.aggregator.last_update_timestamp
-            ),
+            time_unix_nano=(export_record.aggregator.last_update_timestamp),
         )
     ]
 
@@ -111,7 +109,7 @@ def _get_data_points(
 class OTLPMetricsExporter(
     MetricsExporter,
     OTLPExporterMixin[
-        MetricRecord, ExportMetricsServiceRequest, MetricsExportResult
+        ExportRecord, ExportMetricsServiceRequest, MetricsExportResult
     ],
 ):
     # pylint: disable=unsubscriptable-object
@@ -162,14 +160,14 @@ class OTLPMetricsExporter(
 
     # pylint: disable=no-self-use
     def _translate_data(
-        self, data: Sequence[MetricRecord]
+        self, export_records: Sequence[ExportRecord]
     ) -> ExportMetricsServiceRequest:
         # pylint: disable=too-many-locals,no-member
         # pylint: disable=attribute-defined-outside-init
 
         sdk_resource_instrumentation_library_metrics = {}
 
-        # The criteria to decide how to translate data is based on this table
+        # The criteria to decide how to translate export_records is based on this table
         # taken directly from OpenTelemetry Proto v0.5.0:
 
         # TODO: Update table after the decision on:
@@ -185,13 +183,13 @@ class OTLPMetricsExporter(
         #   SumObserver        Sum(aggregation_temporality=cumulative;is_monotonic=true)
         #   UpDownSumObserver  Sum(aggregation_temporality=cumulative;is_monotonic=false)
         #   ValueObserver      Gauge()
-        for sdk_metric_record in data:
+        for export_record in export_records:
 
-            if sdk_metric_record.resource not in (
+            if export_record.resource not in (
                 sdk_resource_instrumentation_library_metrics.keys()
             ):
                 sdk_resource_instrumentation_library_metrics[
-                    sdk_metric_record.resource
+                    export_record.resource
                 ] = InstrumentationLibraryMetrics()
 
             type_class = {
@@ -210,16 +208,16 @@ class OTLPMetricsExporter(
                 },
             }
 
-            value_type = sdk_metric_record.instrument.value_type
+            value_type = export_record.instrument.value_type
 
             sum_class = type_class[value_type]["sum"]["class"]
             gauge_class = type_class[value_type]["gauge"]["class"]
             data_point_class = type_class[value_type]["data_point_class"]
 
-            if isinstance(sdk_metric_record.instrument, Counter):
+            if isinstance(export_record.instrument, Counter):
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        sdk_metric_record, data_point_class
+                        export_record, data_point_class
                     ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
@@ -228,10 +226,10 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric_record.instrument, UpDownCounter):
+            elif isinstance(export_record.instrument, UpDownCounter):
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        sdk_metric_record, data_point_class
+                        export_record, data_point_class
                     ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
@@ -240,14 +238,14 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric_record.instrument, (ValueRecorder)):
+            elif isinstance(export_record.instrument, (ValueRecorder)):
                 logger.warning("Skipping exporting of ValueRecorder metric")
                 continue
 
-            elif isinstance(sdk_metric_record.instrument, SumObserver):
+            elif isinstance(export_record.instrument, SumObserver):
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        sdk_metric_record, data_point_class
+                        export_record, data_point_class
                     ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
@@ -256,10 +254,10 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric_record.instrument, UpDownSumObserver):
+            elif isinstance(export_record.instrument, UpDownSumObserver):
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        sdk_metric_record, data_point_class
+                        export_record, data_point_class
                     ),
                     aggregation_temporality=(
                         AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
@@ -268,24 +266,22 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
-            elif isinstance(sdk_metric_record.instrument, (ValueObserver)):
+            elif isinstance(export_record.instrument, (ValueObserver)):
                 otlp_metric_data = gauge_class(
                     data_points=_get_data_points(
-                        sdk_metric_record, data_point_class
+                        export_record, data_point_class
                     )
                 )
                 argument = type_class[value_type]["gauge"]["argument"]
 
             sdk_resource_instrumentation_library_metrics[
-                sdk_metric_record.resource
+                export_record.resource
             ].metrics.append(
                 OTLPMetric(
                     **{
-                        "name": sdk_metric_record.instrument.name,
-                        "description": (
-                            sdk_metric_record.instrument.description
-                        ),
-                        "unit": sdk_metric_record.instrument.unit,
+                        "name": export_record.instrument.name,
+                        "description": (export_record.instrument.description),
+                        "unit": export_record.instrument.unit,
                         argument: otlp_metric_data,
                     }
                 )
@@ -299,6 +295,6 @@ class OTLPMetricsExporter(
             )
         )
 
-    def export(self, metrics: Sequence[MetricRecord]) -> MetricsExportResult:
+    def export(self, metrics: Sequence[ExportRecord]) -> MetricsExportResult:
         # pylint: disable=arguments-differ
         return self._export(metrics)

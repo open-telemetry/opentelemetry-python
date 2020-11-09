@@ -25,7 +25,7 @@ class MetricsExportResult(Enum):
     FAILURE = 1
 
 
-class MetricRecord:
+class ExportRecord:
     def __init__(
         self,
         instrument: metrics_api.InstrumentT,
@@ -47,12 +47,12 @@ class MetricsExporter:
     """
 
     def export(
-        self, metric_records: Sequence[MetricRecord]
+        self, export_records: Sequence[ExportRecord]
     ) -> "MetricsExportResult":
         """Exports a batch of telemetry data.
 
         Args:
-            metric_records: A sequence of `MetricRecord` s. A `MetricRecord`
+            export_records: A sequence of `ExportRecord` s. A `ExportRecord`
                 contains the metric to be exported, the labels associated
                 with that metric, as well as the aggregator used to export the
                 current checkpointed value.
@@ -76,16 +76,16 @@ class ConsoleMetricsExporter(MetricsExporter):
     """
 
     def export(
-        self, metric_records: Sequence[MetricRecord]
+        self, export_records: Sequence[ExportRecord]
     ) -> "MetricsExportResult":
-        for record in metric_records:
+        for export_record in export_records:
             print(
                 '{}(data="{}", labels="{}", value={}, resource={})'.format(
                     type(self).__name__,
-                    record.instrument,
-                    record.labels,
-                    record.aggregator.checkpoint,
-                    record.resource.attributes,
+                    export_record.instrument,
+                    export_record.labels,
+                    export_record.aggregator.checkpoint,
+                    export_record.resource.attributes,
                 )
             )
         return MetricsExportResult.SUCCESS

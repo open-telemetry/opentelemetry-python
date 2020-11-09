@@ -22,7 +22,7 @@ from opentelemetry.context import get_value
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricsExporter,
-    MetricRecord,
+    ExportRecord,
 )
 from opentelemetry.sdk.metrics.export.aggregate import (
     LastValueAggregator,
@@ -52,7 +52,7 @@ class TestConsoleMetricsExporter(unittest.TestCase):
         )
         labels = {"environment": "staging"}
         aggregator = SumAggregator()
-        record = MetricRecord(
+        record = ExportRecord(
             metric, labels, aggregator, meter_provider.resource
         )
         result = '{}(data="{}", labels="{}", value={}, resource={})'.format(
