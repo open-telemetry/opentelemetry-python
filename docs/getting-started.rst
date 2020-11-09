@@ -3,8 +3,6 @@ Getting Started with OpenTelemetry Python
 
 This guide walks you through instrumenting a Python application with ``opentelemetry-python``.
 
-For more elaborate examples, see `examples`.
-
 Hello world: emit a trace to your console
 ---------------------------------------------
 
