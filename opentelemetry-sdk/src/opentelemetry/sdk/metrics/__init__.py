@@ -145,7 +145,7 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
+        meter: "Accumulator",
         enabled: bool = True,
     ):
         self.name = name
@@ -339,7 +339,7 @@ class Record:
         self.aggregator = aggregator
 
 
-class Meter(metrics_api.Meter):
+class Accumulator(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`.
 
     Args:
@@ -556,12 +556,12 @@ class MeterProvider(metrics_api.MeterProvider):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
-    ) -> "metrics_api.Meter":
+    ) -> "metrics_api.Accumulator":
         """See `opentelemetry.metrics.MeterProvider`.get_meter."""
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = "ERROR:MISSING MODULE NAME"
             logger.error("get_meter called with missing module name.")
-        return Meter(
+        return Accumulator(
             self,
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
