@@ -13,16 +13,18 @@
 # limitations under the License.
 
 import typing
+import urllib.parse
 
 import opentelemetry.trace as trace
-from opentelemetry.context import Context
+from opentelemetry import baggage
+from opentelemetry.context import Context, get_current
 from opentelemetry.trace.propagation.textmap import (
     Getter,
     Setter,
     TextMapPropagator,
     TextMapPropagatorT,
 )
-from opentelemetry import baggage
+
 
 class JaegerFormat(TextMapPropagator):
     """Propagator for the Jaeger format.
@@ -30,7 +32,49 @@ class JaegerFormat(TextMapPropagator):
     See: https://www.jaegertracing.io/docs/1.19/client-libraries/#propagation-format
     """
 
-    TRACE_ID_KEY = 'uber-trace-id'
+    TRACE_ID_KEY = "uber-trace-id"
+    BAGGAGE_PREFIX = "uberctx-"
+
+    def extract(
+        self,
+        getter: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
+        context: typing.Optional[Context] = None,
+    ) -> Context:
+
+        if context is None:
+            context = get_current()
+        fields = _extract_first_element(
+            getter.get(carrier, self.TRACE_ID_KEY)
+        ).split(":")
+        if len(fields) == 4:
+            trace_id, span_id, _parent_id, flags = fields
+        else:
+            return trace.set_span_in_context(trace.INVALID_SPAN)
+        span = trace.DefaultSpan(
+            trace.SpanContext(
+                trace_id=int(trace_id, 16),
+                span_id=int(span_id, 16),
+                is_remote=True,
+                trace_flags=trace.TraceFlags(
+                    int(flags) & trace.TraceFlags.SAMPLED
+                ),
+            )
+        )
+        baggage_keys = [
+            key
+            for key in getter.keys(carrier)
+            if key.startswith(self.BAGGAGE_PREFIX)
+        ]
+        for key in baggage_keys:
+            value = _extract_first_element(getter.get(carrier, key))
+            context = baggage.set_baggage(
+                key.replace(self.BAGGAGE_PREFIX, ""),
+                urllib.parse.unquote_plus(value).strip(),
+                context=context,
+            )
+        return trace.set_span_in_context(span, context)
+
     def inject(
         self,
         set_in_carrier: Setter[TextMapPropagatorT],
@@ -38,31 +82,48 @@ class JaegerFormat(TextMapPropagator):
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context=context)
-        span_context = span.get_context()
+        span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
+        span_parent_id = span.parent.span_id if span.parent else 0
+        trace_flags = span_context.trace_flags
+        # set debug flag to True if sampled flag is set
+        if trace_flags.sampled:
+            trace_flags |= 0x02
+
         # set span identity
-        span_parent_id = getattr(span, "parent", 0)
         set_in_carrier(
-            carrier, self.TRACE_ID_KEY, _format_trace_id(span_context.trace_id, span_context.span_id, span_parent_id, span_context.trace_flags)
+            carrier,
+            self.TRACE_ID_KEY,
+            format_uber_trace_id(
+                span_context.trace_id,
+                span_context.span_id,
+                span_parent_id,
+                trace_flags,
+            ),
         )
 
         # set span baggage, if any
         baggage_entries = baggage.get_all(context=context)
         if not baggage_entries:
             return
-
         for key, value in baggage_entries.items():
-            baggage_key = 'uberctx-{}'.format(key)
+            baggage_key = self.BAGGAGE_PREFIX + key
             set_in_carrier(
-              carrier, baggage_key, value
+                carrier, baggage_key, urllib.parse.quote_plus(str(value))
             )
 
 
-def _format_trace_id(trace_id, span_id, parent_span_id, flags):
-    return '{:032x}:{:016x}:{:016x}:{:02x}'.format(trace_id, span_id, parent_span_id, flags)
+def format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
+    return "{:032x}:{:016x}:{:016x}:{:02x}".format(
+        trace_id, span_id, parent_span_id, flags
+    )
 
 
-
-
+def _extract_first_element(
+    items: typing.Iterable[TextMapPropagatorT],
+) -> typing.Optional[TextMapPropagatorT]:
+    if items is None:
+        return None
+    return next(iter(items), None)
