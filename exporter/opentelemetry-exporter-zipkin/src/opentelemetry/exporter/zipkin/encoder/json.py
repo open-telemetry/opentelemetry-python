@@ -190,6 +190,8 @@ class JsonV1Encoder(JsonEncoder):
         binary_annotations = []
 
         for k, v in self._extract_tags_from_span(span).items():
+            if isinstance(v, str) and self.max_tag_value_length > 0:
+                v = v[: self.max_tag_value_length]
             binary_annotations.append(
                 {"key": k, "value": v, "endpoint": encoded_local_endpoint}
             )

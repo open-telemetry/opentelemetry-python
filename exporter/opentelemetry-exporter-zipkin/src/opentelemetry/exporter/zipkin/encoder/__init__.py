@@ -97,7 +97,7 @@ class Encoder(abc.ABC):
         for event in events:
             attrs = {}
             for key, value in event.attributes.items():
-                if isinstance(value, str):
+                if isinstance(value, str) and self.max_tag_value_length > 0:
                     value = value[: self.max_tag_value_length]
                 attrs[key] = value
 

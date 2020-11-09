@@ -397,6 +397,60 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 expected_binary_annotations, actual_binary_annotations
             )
 
+    def _mock_post_assert_export(
+            self,
+            exporter: ZipkinSpanExporter,
+            input_spans: list,
+            expected_output_spans: list
+    ):
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export(input_spans)
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        kwargs = mock_post.call_args[1]
+
+        self.assertEqual(kwargs["url"], exporter.sender.endpoint)
+        self.assertEqual(
+            kwargs["headers"]["Content-Type"], exporter.sender.content_type()
+        )
+
+        # this logic is done to account for the non-deterministic ordering of
+        # dicts in python 3.5
+        encoder_type = type(exporter.encoder)
+
+        if encoder_type is JsonV1Encoder:
+            actual_spans = json.loads(kwargs["data"])
+            for expected_span, actual_span in zip(expected_output_spans, actual_spans):
+                actual_annotations = self._pop_and_sort(
+                    actual_span, "annotations", "key"
+                )
+                actual_binary_annotations = self._pop_and_sort(
+                    actual_span, "binaryAnnotations", "key"
+                )
+                expected_annotations = expected_span.pop("annotations", None)
+                expected_binary_annotations = expected_span.pop(
+                    "binaryAnnotations", None
+                )
+                self.assertEqual(actual_span, expected_span)
+                self.assertEqual(actual_annotations, expected_annotations)
+                self.assertEqual(
+                    actual_binary_annotations, expected_binary_annotations
+                )
+        elif encoder_type is JsonV2Encoder:
+            self.assertEqual(json.loads(kwargs["data"]), expected_output_spans)
+
+    @staticmethod
+    def _pop_and_sort(source_list, source_index, sort_key):
+        popped_item = source_list.pop(source_index, None)
+        if popped_item is not None:
+            popped_item = sorted(
+                popped_item,
+                key=lambda x: x[sort_key]
+            )
+        return popped_item
+
     @staticmethod
     def _json_zero_padding_get_common_objects():
         span_name = "testZeroes"
@@ -438,36 +492,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
             "spans": [otel_span]
         }
 
-    def _mock_post_assert_export(
-            self,
-            service_name: str,
-            endpoint: str,
-            encoding: Encoding,
-            spans: list,
-            expected: list
-    ):
-        exporter = ZipkinSpanExporter(service_name, endpoint, encoding)
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export(spans)
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        print("v2 start")
-        e_1 = json.dumps(expected)
-        a_1 = mock_post.call_args[1]["data"]
-        print(e_1)
-        print(a_1)
-        self.assertEqual(e_1, a_1)
-        print("v2 end")
-        # self.assertEqual(True, False)
-
-        mock_post.assert_called_with(
-            url=endpoint,
-            data=json.dumps(expected),
-            headers={"Content-Type": exporter.sender.content_type()},
-        )
-
     # pylint: disable=too-many-locals
     def test_export_v1_json_zero_padding(self):
         """test that hex ids starting with 0 are properly padded to 16 or 32
@@ -498,9 +522,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
         ]
 
         self._mock_post_assert_export(
-            service_name,
-            "http://localhost:9411/api/v1/spans",
-            Encoding.JSON_V1,
+            ZipkinSpanExporter(
+                service_name,
+                endpoint="http://localhost:9411/api/v1/spans",
+                encoding=Encoding.JSON_V1,
+            ),
             common["spans"],
             expected
         )
@@ -533,65 +559,155 @@ class TestZipkinSpanExporter(unittest.TestCase):
         ]
 
         self._mock_post_assert_export(
-            service_name,
-            "http://localhost:9411/api/v2/spans",
-            Encoding.JSON_V2,
+            ZipkinSpanExporter(
+                service_name,
+                endpoint="http://localhost:9411/api/v2/spans",
+                encoding=Encoding.JSON_V2,
+            ),
             common["spans"],
-            expected
+            expected,
         )
 
-    # def test_export_v1_json_max_tag_length(self):
-    #     service_name = "test-service"
-    #     endpoint = "http://localhost:9411/api/v1/spans"
-    #
-    #     span_context = trace_api.SpanContext(
-    #         0x0E0C63257DE34C926F9EFCD03927272E,
-    #         0x04BF92DEEFC58C92,
-    #         is_remote=False,
-    #         trace_flags=TraceFlags(TraceFlags.SAMPLED),
-    #     )
-    #
-    #     span = trace._Span(name="test-span", context=span_context,)
-    #
-    #     span.start()
-    #     span.resource = Resource({})
-    #     # added here to preserve order
-    #     span.set_attribute("k1", "v" * 500)
-    #     span.set_attribute("k2", "v" * 50)
-    #     span.set_status(Status(StatusCode.ERROR, "Example description"))
-    #     span.end()
-    #
-    #     exporter = ZipkinSpanExporter(service_name, endpoint, Encoding.JSON_V1)
-    #     mock_post = MagicMock()
-    #     with patch("requests.post", mock_post):
-    #         mock_post.return_value = MockResponse(200)
-    #         status = exporter.export([span])
-    #         self.assertEqual(SpanExportResult.SUCCESS, status)
-    #
-    #     _, kwargs = mock_post.call_args  # pylint: disable=E0633
-    #
-    #     binary_annotations = json.loads(kwargs["data"])[0]["binaryAnnotations"]
-    #     self.assertEqual(len(binary_annotations[0]["value"]), 128)
-    #     self.assertEqual(len(binary_annotations[1]["value"]), 50)
-    #
-    #     exporter = ZipkinSpanExporter(
-    #         endpoint=endpoint,
-    #         encoding=Encoding.JSON_V1,
-    #         encoder=JsonV1Encoder(
-    #             Endpoint(service_name),
-    #             max_tag_value_length=2
-    #         ),
-    #     )
-    #     mock_post = MagicMock()
-    #     with patch("requests.post", mock_post):
-    #         mock_post.return_value = MockResponse(200)
-    #         status = exporter.export([span])
-    #         self.assertEqual(SpanExportResult.SUCCESS, status)
-    #
-    #     _, kwargs = mock_post.call_args  # pylint: disable=E0633
-    #     binary_annotations = json.loads(kwargs["data"])[0]["binaryAnnotations"]
-    #     self.assertEqual(len(binary_annotations[0]["value"]), 2)
-    #     self.assertEqual(len(binary_annotations[1]["value"]), 2)
+    @staticmethod
+    def _test_export_json_max_tag_length_common_objects():
+        span_name = "test-span"
+        trace_id = 0x0E0C63257DE34C926F9EFCD03927272E
+        span_id = 0x04BF92DEEFC58C92
+
+        start_time = 683647322 * 10 ** 9  # in ns
+        duration = 50 * 10 ** 6
+        end_time = start_time + duration
+
+        span_context = trace_api.SpanContext(
+            trace_id,
+            span_id,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        )
+
+        span = trace._Span(name=span_name, context=span_context)
+
+        span.start(start_time=start_time)
+        span.resource = Resource({})
+        span.set_attribute("k1", "v" * 500)
+        span.set_attribute("k2", "v" * 50)
+        span.end(end_time=end_time)
+
+        return {
+            "span_name": span_name,
+            "start_time": start_time,
+            "duration": duration,
+            "trace_id": trace_id,
+            "span_id": span_id,
+            "spans": [span]
+        }
+
+    def test_export_v1_json_max_tag_length_128(self):
+        self._test_export_v1_json_max_tag_length(128)
+
+    def test_export_v1_json_max_tag_length_2(self):
+        self._test_export_v1_json_max_tag_length(2)
+
+    def _test_export_v1_json_max_tag_length(self, max_tag_value_length: int):
+        common = self._test_export_json_max_tag_length_common_objects()
+        service_name = "test-service"
+        endpoint = "http://localhost:9411/api/v1/spans"
+        local_endpoint = {"serviceName": service_name}
+
+        k1_attr_value = common["spans"][0].attributes["k1"]
+        k2_attr_value = common["spans"][0].attributes["k2"]
+
+        expected = [
+            {
+                "traceId": format(common["trace_id"], 'x').zfill(32),
+                "id": format(common["span_id"], 'x').zfill(16),
+                "name": common["span_name"],
+                "timestamp": JsonV1Encoder.nsec_to_usec_round(
+                    common["start_time"]
+                ),
+                "duration": JsonV1Encoder.nsec_to_usec_round(common["duration"]),
+                "annotations": None,
+                "binaryAnnotations": [
+                    {
+                        "key": "k1",
+                        "value": k1_attr_value[:max_tag_value_length],
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "k2",
+                        "value": k2_attr_value[:max_tag_value_length],
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "otel.status_code",
+                        "value": "1",
+                        "endpoint": local_endpoint,
+                    },
+                ],
+                "debug": True,
+            }
+        ]
+
+        self._mock_post_assert_export(
+            ZipkinSpanExporter(
+                endpoint=endpoint,
+                encoding=Encoding.JSON_V1,
+                encoder=JsonV1Encoder(
+                    Endpoint(service_name),
+                    max_tag_value_length=max_tag_value_length
+                )
+            ),
+            common["spans"],
+            expected,
+        )
+
+    def test_export_v2_json_max_tag_length_128(self):
+        self._test_export_v2_json_max_tag_length(128)
+
+    def test_export_v2_json_max_tag_length_2(self):
+        self._test_export_v2_json_max_tag_length(2)
+
+    def _test_export_v2_json_max_tag_length(self, max_tag_value_length: int):
+        common = self._test_export_json_max_tag_length_common_objects()
+        service_name = "test-service"
+        endpoint = "http://localhost:9411/api/v1/spans"
+
+        k1_attr_value = common["spans"][0].attributes["k1"]
+        k2_attr_value = common["spans"][0].attributes["k2"]
+
+        expected = [
+            {
+                "traceId": format(common["trace_id"], 'x').zfill(32),
+                "id": format(common["span_id"], 'x').zfill(16),
+                "name": common["span_name"],
+                "timestamp": JsonV2Encoder.nsec_to_usec_round(
+                    common["start_time"]
+                ),
+                "duration": JsonV2Encoder.nsec_to_usec_round(common[
+                                                                 "duration"]),
+                "localEndpoint": {"serviceName": service_name},
+                "kind": JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
+                "tags": {
+                    "k1": k1_attr_value[:max_tag_value_length],
+                    "k2": k2_attr_value[:max_tag_value_length],
+                    "otel.status_code": "1"
+                },
+                "annotations": None,
+                "debug": True,
+            }
+        ]
+
+        self._mock_post_assert_export(
+            ZipkinSpanExporter(
+                endpoint=endpoint,
+                encoder=JsonV2Encoder(
+                    Endpoint(service_name),
+                    max_tag_value_length=max_tag_value_length
+                )
+            ),
+            common["spans"],
+            expected,
+        )
 
     # pylint: disable=too-many-locals,too-many-statements
     def test_export_v2_json(self):
@@ -802,56 +918,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     annotation["value"] = json.loads(annotation["value"])
             self.assertEqual(expected, actual)
             self.assertEqual(expected_annotations, actual_annotations)
-
-    def test_export_v2_json_max_tag_length(self):
-        service_name = "test-service"
-
-        span_context = trace_api.SpanContext(
-            0x0E0C63257DE34C926F9EFCD03927272E,
-            0x04BF92DEEFC58C92,
-            is_remote=False,
-            trace_flags=TraceFlags(TraceFlags.SAMPLED),
-        )
-
-        span = trace._Span(name="test-span", context=span_context,)
-
-        span.start()
-        span.resource = Resource({})
-        # added here to preserve order
-        span.set_attribute("k1", "v" * 500)
-        span.set_attribute("k2", "v" * 50)
-        span.set_status(Status(StatusCode.ERROR, "Example description"))
-        span.end()
-
-        exporter = ZipkinSpanExporter(service_name)
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export([span])
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        _, kwargs = mock_post.call_args  # pylint: disable=E0633
-
-        tags = json.loads(kwargs["data"])[0]["tags"]
-        self.assertEqual(len(tags["k1"]), 128)
-        self.assertEqual(len(tags["k2"]), 50)
-
-        exporter = ZipkinSpanExporter(
-            encoder=JsonV2Encoder(
-                Endpoint("my_service"),
-                max_tag_value_length=2
-            )
-        )
-        mock_post = MagicMock()
-        with patch("requests.post", mock_post):
-            mock_post.return_value = MockResponse(200)
-            status = exporter.export([span])
-            self.assertEqual(SpanExportResult.SUCCESS, status)
-
-        _, kwargs = mock_post.call_args  # pylint: disable=E0633
-        tags = json.loads(kwargs["data"])[0]["tags"]
-        self.assertEqual(len(tags["k1"]), 2)
-        self.assertEqual(len(tags["k2"]), 2)
 
     # pylint: disable=too-many-locals,too-many-statements
     def test_export_v2_protobuf(self):
