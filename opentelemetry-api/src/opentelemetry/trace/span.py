@@ -86,6 +86,7 @@ class Span(abc.ABC):
         exception: Exception,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
+        escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
 

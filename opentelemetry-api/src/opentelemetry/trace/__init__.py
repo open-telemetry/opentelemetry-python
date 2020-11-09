@@ -374,6 +374,7 @@ class DefaultTracer(Tracer):
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
+        record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
         # pylint: disable=unused-argument,no-self-use
@@ -387,7 +388,9 @@ class DefaultTracer(Tracer):
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        start_time: Optional[int] = None,
         record_exception: bool = True,
+        set_status_on_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN

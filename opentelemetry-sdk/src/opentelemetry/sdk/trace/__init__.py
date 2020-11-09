@@ -412,6 +412,7 @@ class Span(trace_api.Span):
             raise TypeError("Span must be instantiated via a tracer.")
         return super().__new__(cls)
 
+    # pylint: disable=too-many-locals
     def __init__(
         self,
         name: str,
