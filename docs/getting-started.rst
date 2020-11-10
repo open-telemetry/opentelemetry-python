@@ -218,7 +218,7 @@ The sleep functions will cause the script to take a while, but running it should
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=25)
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
 
-Store Metrics in Prometheus
+<span class="x x-first x-last">Use metrics with</span> Prometheus
 ------------------------------
 
 It's valuable to have a data store for metrics so you can visualize and query the data. A common solution is
