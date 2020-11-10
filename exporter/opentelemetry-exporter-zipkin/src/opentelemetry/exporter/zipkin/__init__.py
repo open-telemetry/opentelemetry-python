@@ -26,6 +26,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 .. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
 
+.. envvar:: OTEL_EXPORTER_ZIPKIN_SERVICE_NAME
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENCODING
 
@@ -83,6 +84,12 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
         print("Hello world!")
 
 The exporter supports the following environment variables for configuration:
+
+:envvar:`OTEL_EXPORTER_ZIPKIN_SERVICE_NAME`: Label of the remote node in the
+service graph, such as "favstar". Avoid names with variables or unique
+identifiers embedded. Defaults to "unknown". This is a primary label for trace
+lookup and aggregation, so it should be intuitive and consistent. Many use a
+name from service discovery.
 
 :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: target to which the exporter will
 send data. This may include a path (e.g. http://example.com:9411/api/v2/spans).
@@ -162,6 +169,9 @@ class ZipkinSpanExporter(SpanExporter):
         if encoder is not None:
             self.encoder = encoder
         else:
+            service_name = (
+                Configuration().EXPORTER_ZIPKIN_SERVICE_NAME or service_name
+            )
             local_endpoint = Endpoint(service_name)
             if encoding == Encoding.JSON_V1:
                 self.encoder = JsonV1Encoder(local_endpoint)

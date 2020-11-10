@@ -85,24 +85,26 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.sender.encoding, DEFAULT_ENCODING)
 
     def test_constructor_env_vars(self):
-        endpoint = "https://foo:9911/path"
-        encoding = Encoding.PROTOBUF
+        os_service_name = "os-env-service-name"
+        os_endpoint = "https://foo:9911/path"
+        os_encoding = Encoding.PROTOBUF
 
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = endpoint
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"] = encoding.value
+        os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"] = os_service_name
+        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
+        os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"] = os_encoding.value
 
         exporter = ZipkinSpanExporter()
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
         self.assertEqual(
-            exporter.encoder.local_endpoint.service_name, DEFAULT_SERVICE_NAME
+            exporter.encoder.local_endpoint.service_name, os_service_name
         )
         self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
         self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
         self.assertEqual(exporter.encoder.local_endpoint.port, None)
         self.assertIsInstance(exporter.sender, HttpSender)
-        self.assertEqual(exporter.sender.endpoint, endpoint)
-        self.assertEqual(exporter.sender.encoding, encoding)
+        self.assertEqual(exporter.sender.endpoint, os_endpoint)
+        self.assertEqual(exporter.sender.encoding, os_encoding)
 
     def test_constructor_service(self):
         service_name = "my-service-name"
