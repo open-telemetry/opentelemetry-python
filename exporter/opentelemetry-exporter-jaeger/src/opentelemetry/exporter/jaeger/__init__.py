@@ -70,12 +70,21 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
+from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCode
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
 
 UDP_PACKET_MAX_LENGTH = 65000
+
+OTLP_JAEGER_SPAN_KIND = {
+    SpanKind.CLIENT: "client",
+    SpanKind.SERVER: "server",
+    SpanKind.CONSUMER: "consumer",
+    SpanKind.PRODUCER: "producer",
+    SpanKind.INTERNAL: "internal",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +235,7 @@ def _translate_to_jaeger(spans: Span):
             [
                 _get_long_tag("status.code", status.status_code.value),
                 _get_string_tag("status.message", status.description),
-                _get_string_tag("span.kind", span.kind.name),
+                _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind]),
             ]
         )
 
