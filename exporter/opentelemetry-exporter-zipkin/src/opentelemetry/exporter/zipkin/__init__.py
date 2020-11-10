@@ -43,7 +43,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     # create an exporter with defaults
     zipkin_exporter = zipkin.ZipkinSpanExporter("my-helloworld-service")
 
-    # create an exporter with explicit endpoint and encoding
+    # create an exporter with explicit endpoint and encoding.
     # additional import needed:
     #     from opentelemetry.exporter.zipkin.encoder import Encoding
     #
@@ -53,7 +53,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
         encoding=Encoding.PROTOBUF
     )
 
-    # create an advanced exporter with explicit encoder and sender
+    # create an advanced exporter with explicit encoder and sender.
     # additional imports needed:
     #     from opentelemetry.exporter.zipkin.encoder import Encoding
     #     from opentelemetry.exporter.zipkin.encoder.protobuf import (
