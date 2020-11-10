@@ -70,7 +70,6 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
         sender=HttpSender(
             endpoint="http://remote.endpoint.com:9411/api/v2/spans",
             encoding=Encoding.PROTOBUF,
-            retry=True
         ),
     )
 

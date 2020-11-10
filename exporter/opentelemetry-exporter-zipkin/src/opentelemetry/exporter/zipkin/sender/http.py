@@ -24,7 +24,6 @@ from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import Span
 
 DEFAULT_ENCODING = Encoding.JSON_V2
-DEFAULT_RETRY = False
 SUCCESS_STATUS_CODES = (200, 202)
 
 logger = logging.getLogger(__name__)
@@ -35,10 +34,8 @@ class HttpSender(Sender):
         self,
         endpoint: str,
         encoding: Optional[Encoding] = DEFAULT_ENCODING,
-        retry: Optional[str] = DEFAULT_RETRY,
     ):
         super().__init__(endpoint, encoding)
-        self.retry = retry
 
     def send(self, encoded_spans: Sequence[Span]) -> SpanExportResult:
 
@@ -55,8 +52,6 @@ class HttpSender(Sender):
                 result.text,
             )
 
-            if self.retry:
-                return SpanExportResult.FAILURE
             return SpanExportResult.FAILURE
         return SpanExportResult.SUCCESS
 
