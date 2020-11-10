@@ -145,7 +145,7 @@ While the example in the previous section is great, it's very manual. The follow
 * HTTP requests from clients
 * Database calls
 
-To help instrument common scenarios, OpenTelemetry also has the concept of instrumentations. Instrumentations are packages designed to interface
+To track these common actions, OpenTelemetry has the concept of instrumentations. Instrumentations are packages designed to interface
 with a specific framework or library, such as Flask and psycopg2. You can find a list of the currently curated extension packages `at the Contrib repo <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_.
 
 We'll now instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
