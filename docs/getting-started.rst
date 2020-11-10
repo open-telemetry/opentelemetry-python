@@ -198,7 +198,7 @@ Add Metrics
 
 Spans are a great way to get detailed information about what your application is doing, but
 what about a more aggregated perspective? OpenTelemetry provides support for metrics. Metrics are a time series
-of numbers that might express things such as CPU utilization, request count for an HTTP server, or a
+of values that might express things such as CPU utilization, request count for an HTTP server, or a
 business metric such as transactions.
 
 You can annotate all metrics with labels. Labels are additional qualifiers that describe what
