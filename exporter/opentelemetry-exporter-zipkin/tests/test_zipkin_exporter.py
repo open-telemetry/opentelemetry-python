@@ -64,6 +64,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self._test_span.end()
 
     def tearDown(self):
+        if "OTEL_EXPORTER_ZIPKIN_SERVICE_NAME" in os.environ:
+            del os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"]
         if "OTEL_EXPORTER_ZIPKIN_ENDPOINT" in os.environ:
             del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
         if "OTEL_EXPORTER_ZIPKIN_ENCODING" in os.environ:
