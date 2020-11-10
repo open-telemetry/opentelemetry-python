@@ -156,7 +156,7 @@ We'll now instrument a basic Flask application that uses the requests library to
     pip install opentelemetry-instrumentation-requests
 
 
-Let's write a small Flask application that sends an HTTP request, activating each instrumentation during the initialization:
+The following is a small Flask application that sends an HTTP request and also activates each instrumentation during it's initialization:
 
 .. literalinclude:: getting_started/flask_example.py
     :language: python
