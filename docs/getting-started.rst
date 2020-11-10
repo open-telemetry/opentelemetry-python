@@ -136,7 +136,7 @@ You can then visit the Jaegar UI, see you service under "services", and find you
 
 .. image:: images/jaeger_trace.png
 
-Integrations example with Flask
+Instrumentation example with Flask
 -------------------------------
 
 While the example in the previous section is great, it's very manual. The folowing are common actions you might want to instrument within the telemetry space:
