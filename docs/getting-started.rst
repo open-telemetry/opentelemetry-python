@@ -111,7 +111,7 @@ it up now:
 
     docker run -p 16686:16686 -p 6831:6831/udp jaegertracing/all-in-one
 
-This command starts Jaeger locally on port 16686 and exposes Jaeger thrift agent on port 6831. You can visit Jaeger at http://localhost:16686.
+This command starts Jaeger locally on port 16686 and exposes the Jaeger thrift agent on port 6831. You can visit Jaeger at http://localhost:16686.
 
 After you spin up the backend, your application needs to export traces to this system. Although ``opentelemetry-sdk`` doesn't provide an exporter
 for Jaeger, you can install it as a separate package with the following command:
