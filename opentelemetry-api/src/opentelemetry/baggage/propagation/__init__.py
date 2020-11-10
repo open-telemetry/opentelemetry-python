@@ -87,6 +87,15 @@ class BaggagePropagator(textmap.TextMapPropagator):
         baggage_string = _format_baggage(baggage_entries)
         set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
+    @property
+    def fields(self) -> typing.Set[str]:
+        """Returns a set with the fields set in `inject`.
+
+        See
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.fields`
+        """
+        return {self._BAGGAGE_HEADER_NAME}
+
 
 def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
     return ",".join(

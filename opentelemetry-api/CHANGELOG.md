@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `fields` to propagators ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
+
 ## Version 0.16b0
 
 Released 2020-11-25
