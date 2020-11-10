@@ -171,7 +171,7 @@ Now run the script, hit the root URL (http://localhost:5000/) a few times, and w
    python flask_example.py
 
 
-Configure Your HTTP Propagator (b3, Baggage)
+Configure Your HTTP propagator (b3, Baggage)
 -------------------------------------------------------
 
 A major feature of distributed tracing is the ability to correlate a trace across
