@@ -139,7 +139,7 @@ You can then visit the Jaegar UI, see you service under "services", and find you
 Instrumentation example with Flask
 -------------------------------
 
-While the example in the previous section is great, it's very manual. The folowing are common actions you might want to instrument within the telemetry space:
+While the example in the previous section is great, it's very manual. The following are common actions you might want to track and include as part of your distributed tracing.
 
 * HTTP responses from web services
 * HTTP requests from clients
