@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Zipkin Export Encoder for v2 JSON API
-
-API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin2-api.yaml
+"""Zipkin Export Encoders for JSON formats
 """
 
 import abc
@@ -68,7 +66,7 @@ class JsonEncoder(Encoder):
 
 
 class JsonV2Encoder(JsonEncoder):
-    """Zipkin Export Encoder for v2 JSON API
+    """Zipkin Export Encoder for JSON v2 API
 
     API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin2-api.yaml
     """
