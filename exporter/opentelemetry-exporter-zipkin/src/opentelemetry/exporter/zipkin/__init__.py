@@ -50,7 +50,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     zipkin_exporter = zipkin.ZipkinSpanExporter(
         "my-helloworld-service",
         endpoint="http://localhost:9411/api/v2/spans",
-        encoding=Encoding.Protobuf
+        encoding=Encoding.PROTOBUF
     )
 
     # create an advanced exporter with explicit encoder and sender
