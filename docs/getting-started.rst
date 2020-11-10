@@ -30,7 +30,7 @@ The following example script emits a trace containing three named spans: "foo", 
     :language: python
     :lines: 15-
 
-When you run it you can see the traces printed to your console:
+When you run the script you can see the traces printed to your console:
 
 .. code-block:: sh
 
@@ -104,8 +104,9 @@ The previous example does emit information about all spans, but the output is a 
 In most cases, you can instead *export* this data to an application performance monitoring backend to be visualized and queried.
 It's also common to aggregate span and trace information from multiple services into a single database, so that actions requiring multiple services can still all be visualized together.
 
-This concept of aggregating span and trace information is known as distributed tracing. One such distributed tracing backend is known as Jaeger. The Jaeger project provides an all-in-one Docker container with a UI, database, and consumer. Let's bring
-it up now:
+This concept of aggregating span and trace information is known as distributed tracing. One such distributed tracing backend is known as Jaeger. The Jaeger project provides an all-in-one Docker container with a UI, database, and consumer. 
+
+Run the following command to start Jaeger:
 
 .. code-block:: sh
 
@@ -137,7 +138,7 @@ You can then visit the Jaegar UI, see you service under "services", and find you
 .. image:: images/jaeger_trace.png
 
 Instrumentation example with Flask
--------------------------------
+------------------------------------
 
 While the example in the previous section is great, it's very manual. The following are common actions you might want to track and include as part of your distributed tracing.
 
@@ -148,7 +149,7 @@ While the example in the previous section is great, it's very manual. The follow
 To track these common actions, OpenTelemetry has the concept of instrumentations. Instrumentations are packages designed to interface
 with a specific framework or library, such as Flask and psycopg2. You can find a list of the currently curated extension packages `at the Contrib repo <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_.
 
-We'll now instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
+Instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
 
 .. code-block:: sh
 
@@ -156,7 +157,7 @@ We'll now instrument a basic Flask application that uses the requests library to
     pip install opentelemetry-instrumentation-requests
 
 
-The following is a small Flask application that sends an HTTP request and also activates each instrumentation during it's initialization:
+The following small Flask application sends an HTTP request and also activates each instrumentation during its initialization:
 
 .. literalinclude:: getting_started/flask_example.py
     :language: python
@@ -178,10 +179,9 @@ multiple services. However, those services need to propagate information about a
 trace from one service to the other.
 
 To enable this propagation, OpenTelemetry has the concept of `propagators <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md>`_,
-which provide a common method to encode and decode span information from a request and response,
-respectively.
+which provide a common method to encode and decode span information from a request and response, respectively.
 
-By default, opentelemetry-python is configured to use the `W3C Trace Context <https://www.w3.org/TR/trace-context/>`_
+By default, ``opentelemetry-python`` is configured to use the `W3C Trace Context <https://www.w3.org/TR/trace-context/>`_
 HTTP headers for HTTP requests, but you can configure it to leverage different propagators. Here's
 an example using Zipkin's `b3 propagation <https://github.com/openzipkin/b3-propagation>`_:
 
@@ -198,19 +198,19 @@ Add metrics
 
 Spans are a great way to get detailed information about what your application is doing, but
 what about a more aggregated perspective? OpenTelemetry provides support for metrics. Metrics are a time series
-of values that might express things such as CPU utilization, request count for an HTTP server, or a
+of values that express things such as CPU utilization, request count for an HTTP server, or a
 business metric such as transactions.
 
 You can annotate all metrics with labels. Labels are additional qualifiers that describe what
 subdivision of the measurements the metric represents.
 
-The following example emits metrics to console, similar to the trace example:
+The following example emits metrics to your console, similar to the trace example:
 
 .. literalinclude:: getting_started/metrics_example.py
     :language: python
     :lines: 15-
 
-The sleep functions will cause the script to take a while, but running it should yield the following output:
+The sleep functions cause the script to take a while, but it eventually yields the following output:
 
 .. code-block:: sh
 
@@ -218,13 +218,13 @@ The sleep functions will cause the script to take a while, but running it should
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=25)
     ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
 
-<span class="x x-first x-last">Use metrics with</span> Prometheus
+Use metrics with Prometheus
 ------------------------------
 
 It's valuable to have a data store for metrics so you can visualize and query the data. A common solution is
 `Prometheus <https://prometheus.io/>`_, which provides a server to scrape and store time series data.
 
-Let's start by bringing up a Prometheus instance ourselves, to scrape our application. Write the following configuration:
+Start by bringing up a Prometheus instance to scrape your application. Write the following configuration:
 
 .. code-block:: yaml
 
@@ -235,7 +235,7 @@ Let's start by bringing up a Prometheus instance ourselves, to scrape our applic
       static_configs:
       - targets: ['localhost:8000']
 
-Then start a Docker container for it:
+Then start a Docker container for the instance:
 
 .. code-block:: sh
 
@@ -243,14 +243,14 @@ Then start a Docker container for it:
     docker run --net=host -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus \
         --log.level=debug --config.file=/etc/prometheus/prometheus.yml
 
-For your Python application, install an exporter specific to Prometheus:
+Install an exporter specific to Prometheus for your Python application: 
 
 .. code-block:: sh
 
     pip install opentelemetry-exporter-prometheus
 
 
-And use that instead of the `ConsoleMetricsExporter`:
+Use that exporter instead of the `ConsoleMetricsExporter`:
 
 .. literalinclude:: getting_started/prometheus_example.py
     :language: python
@@ -271,7 +271,7 @@ Although it's possible to directly export your telemetry data to specific backen
 To enable a broad range of aggregation strategies, OpenTelemetry provides the `opentelemetry-collector <https://github.com/open-telemetry/opentelemetry-collector>`_.
 The Collector is a flexible application that can consume trace and metric data and export to multiple other backends, including to another instance of the Collector.
 
-To see how the Collector works in practice, let's start it locally. Write the following file:
+Start the Collector locally to see how the Collector works in practice. Write the following file:
 
 .. code-block:: yaml
 
