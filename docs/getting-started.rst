@@ -3,6 +3,8 @@ Getting Started with OpenTelemetry Python
 
 This guide walks you through instrumenting a Python application with ``opentelemetry-python``.
 
+For more elaborate examples, see `examples <https://github.com/open-telemetry/opentelemetry-python/tree/master/docs/examples/>`_. 
+
 Hello world: emit a trace to your console
 ---------------------------------------------
 
@@ -147,7 +149,7 @@ While the example in the previous section is great, it's very manual. The follow
 * Database calls
 
 To track these common actions, OpenTelemetry has the concept of instrumentations. Instrumentations are packages designed to interface
-with a specific framework or library, such as Flask and psycopg2. You can find a list of the currently curated extension packages `at the Contrib repo <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_.
+with a specific framework or library, such as Flask and psycopg2. You can find a list of the currently curated extension packages in the `Contrib repository <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_.
 
 Instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
 
