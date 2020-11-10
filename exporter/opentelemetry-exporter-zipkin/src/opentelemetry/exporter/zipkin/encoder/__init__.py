@@ -21,7 +21,7 @@ import abc
 from enum import Enum
 import json
 import logging
-from typing import Optional, Sequence
+from typing import Sequence
 
 from opentelemetry.exporter.zipkin.endpoint import Endpoint
 from opentelemetry.trace import Span
@@ -53,14 +53,12 @@ class Encoder(abc.ABC):
     def __init__(
         self,
         local_endpoint: Endpoint,
-        max_tag_value_length: Optional[int] = None,
+        max_tag_value_length: int = None,
     ):
         self.local_endpoint = local_endpoint
-
-        if max_tag_value_length is None:
-            self.max_tag_value_length = DEFAULT_MAX_TAG_VALUE_LENGTH
-        else:
-            self.max_tag_value_length = max_tag_value_length
+        self.max_tag_value_length = (
+            max_tag_value_length or DEFAULT_MAX_TAG_VALUE_LENGTH
+        )
 
     def encode(self, spans: Sequence[Span]) -> str:
         return self._encode(spans)
