@@ -18,7 +18,6 @@ import abc
 import logging
 from typing import List, Sequence
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import Span
