@@ -182,7 +182,7 @@ which provide a common method to encode and decode span information from a reque
 respectively.
 
 By default, opentelemetry-python is configured to use the `W3C Trace Context <https://www.w3.org/TR/trace-context/>`_
-HTTP headers for HTTP requests, but you can configure itto leverage different propagators. Here's
+HTTP headers for HTTP requests, but you can configure it to leverage different propagators. Here's
 an example using Zipkin's `b3 propagation <https://github.com/openzipkin/b3-propagation>`_:
 
 .. code-block:: python
