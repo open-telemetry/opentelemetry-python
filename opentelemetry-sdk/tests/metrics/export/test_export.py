@@ -139,8 +139,8 @@ class TestProcessor(unittest.TestCase):
         _batch_map[batch_key] = aggregator
         aggregator2.update(1.0)
         processor._batch_map = _batch_map
-        record = metrics.Record(metric, labels, aggregator2)
-        processor.process(record)
+        accumulation = metrics.Accumulation(metric, labels, aggregator2)
+        processor.process(accumulation)
         self.assertEqual(len(processor._batch_map), 1)
         self.assertIsNotNone(processor._batch_map.get(batch_key))
         self.assertEqual(processor._batch_map.get(batch_key).current, 0)
@@ -159,8 +159,8 @@ class TestProcessor(unittest.TestCase):
         batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
         processor._batch_map = _batch_map
-        record = metrics.Record(metric, labels, aggregator)
-        processor.process(record)
+        accumulation = metrics.Accumulation(metric, labels, aggregator)
+        processor.process(accumulation)
         self.assertEqual(len(processor._batch_map), 1)
         self.assertIsNotNone(processor._batch_map.get(batch_key))
         self.assertEqual(processor._batch_map.get(batch_key).current, 0)
@@ -182,8 +182,8 @@ class TestProcessor(unittest.TestCase):
         batch_key = (metric, SumAggregator, tuple(), labels)
         aggregator.update(1.0)
         processor._batch_map = _batch_map
-        record = metrics.Record(metric, labels, aggregator)
-        processor.process(record)
+        accumulation = metrics.Accumulation(metric, labels, aggregator)
+        processor.process(accumulation)
         self.assertEqual(len(processor._batch_map), 1)
         self.assertIsNotNone(processor._batch_map.get(batch_key))
         self.assertEqual(processor._batch_map.get(batch_key).current, 0)
