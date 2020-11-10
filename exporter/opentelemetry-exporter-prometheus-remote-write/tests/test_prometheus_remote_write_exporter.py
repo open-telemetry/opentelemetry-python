@@ -253,7 +253,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         valid_yml = [
             {"url": ["https://testurl.com"]},
             {"name": ["test_name"]},
-            {"remote_timeout": ["30s"]}
+            {"remote_timeout": ["30s"]},
         ]
         filepath = "./test.yml"
         with open(filepath, 'w') as file:
@@ -281,5 +281,177 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
                 config.validate()
             except as exception:
                 self.fail("valid config failed config.validate() with error:" + exception)
+        
+        def test_valid_basic_auth_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "basic_auth": {
+                    "username": "test_username",
+                    "password": "test_password",
+                }
+            })
+            try:
+                config.validate()
+            except as exception:
+                self.fail("valid config failed config.validate() with error:" + exception)
+        
+        def test_valid_bearer_token_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "bearer_token": "test_token",
+            })
+            try:
+                config.validate()
+            except as exception:
+                self.fail("valid config failed config.validate() with error:" + exception)
+        
+        def test_valid_quantiles_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "quantiles": [0.25, 0.5, 0.75],
+            })
+            try:
+                config.validate()
+            except as exception:
+                self.fail("valid config failed config.validate() with error:" + exception)
 
-        # TODO: Add other config validity test cases
+        def test_valid_histogram_boundaries_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "histogram_boundaries": [0, 5, 10],
+            })
+            try:
+                config.validate()
+            except as exception:
+                self.fail("valid config failed config.validate() with error:" + exception)
+        
+        def test_valid_tls_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "tls_config": {
+                    "ca_file": "test_ca_file",
+                    "cert_file": "test_cert_file",
+                    "key_file": "test_key_file",
+                }
+            })
+            try:
+                config.validate()
+            except as exception:
+                self.fail("valid config failed config.validate() with error:" + exception)
+        
+        def test_invalid_no_url_config(self):
+            config = Config({
+                "name": "test_name",
+                "remote_timeout": "30s",
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+        
+        def test_invalid_no_name_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "remote_timeout": "30s",
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+        
+        def test_invalid_no_remote_timeout_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+        
+        def test_invalid_no_username_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "basic_auth": {
+                    "password": "test_password",
+                }
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+
+        def test_invalid_no_password_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "basic_auth": {
+                    "username": "test_username",
+                }
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+
+        def test_invalid_conflicting_passwords_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "basic_auth": {
+                    "username": "test_username",
+                    "password": "test_password",
+                    "password_file": "test_password_file",
+                }
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+        
+        def test_invalid_conflicting_bearer_tokens_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "bearer_token": "test_token",
+                "bearer_token_file": "test_token_file",
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+
+        def test_invalid_conflicting_auth_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "basic_auth": {
+                    "username": "test_username",
+                    "password": "test_password",
+                }
+                "bearer_token": "test_token",
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+        
+        def test_invalid_quantiles_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "quantiles": "0.25, 0.5, 0.75",
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
+
+        def test_invalid_histogram_boundaries_config(self):
+            config = Config({
+                "url": "https://testurl.com",
+                "name": "test_name",
+                "remote_timeout": "30s",
+                "histogram_boundaries": "0, 5, 10",
+            })
+            with self.assertRaises(ValueError):
+                config.validate()
