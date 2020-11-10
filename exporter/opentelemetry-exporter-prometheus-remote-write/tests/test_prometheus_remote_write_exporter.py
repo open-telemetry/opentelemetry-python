@@ -37,6 +37,7 @@ from opentelemetry.sdk.util import get_dict_as_key
 from http.client import HTTPSConnection
 
 class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
+    # Initializes test data that is reused across tests
     def setUp(self):
         set_meter_provider(metrics.MeterProvider())
         self._test_config = Config({
@@ -51,7 +52,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         labels = {"environment": "staging"}
         self._labels_key = get_dict_as_key(labels)
 
-    # TODO: Add documentation before each test
+    # Ensures export is successful with valid metric_records and config
     def test_export(self):
         record = MetricRecord(
             self._test_metric,
@@ -63,6 +64,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         result = exporter.export([record])
         self.assertIs(result, MetricsExportResult.SUCCESS)
     
+    # Ensures sum aggregator is correctly converted to timeseries
     def test_convert_from_sum(self):
         sum_record = MetricRecord(
             self._test_metric,
@@ -76,6 +78,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         timeseries = exporter.convert_from_sum(sum_record)
         self.assertEqual(timeseries, expected_timeseries)
     
+    # Ensures sum min_max_count aggregator is correctly converted to timeseries
     def test_convert_from_min_max_sum_count(self):
         min_max_sum_count_record = MetricRecord(
             self._test_metric,
@@ -96,6 +99,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         timeseries = exporter.convert_from_min_max_sum_count(min_max_sum_count_record)
         self.assertEqual(timeseries, expected_timeseries)
     
+    # Ensures histogram aggregator is correctly converted to timeseries
     def test_convert_from_histogram(self):
         histogram_record = MetricRecord(
             self._test_metric,
@@ -116,6 +120,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         timeseries = exporter.convert_from_histogram(histogram_record)
         self.assertEqual(timeseries, expected_timeseries)
 
+    # Ensures last value aggregator is correctly converted to timeseries
     def test_convert_from_last_value(self):
         last_value_record = MetricRecord(
             self._test_metric,
@@ -129,6 +134,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         timeseries = exporter.convert_from_last_value(last_value_record)
         self.assertEqual(timeseries, expected_timeseries)
 
+    # Ensures value observer aggregator is correctly converted to timeseries
     def test_convert_from_value_observer(self):
         value_observer_record = MetricRecord(
             self._test_metric,
@@ -150,6 +156,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         timeseries = exporter.convert_from_value_observer(value_observer_record)
         self.assertEqual(timeseries, expected_timeseries)
 
+    # Ensures conversion to timeseries function as expected for different aggregation types
     def test_convert_to_timeseries(self):
         empty_timeseries = TimeSeriesData([],[])
         timeseries_mock_method = Mock(return_value=empty_timeseries)
@@ -213,6 +220,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         with self.assertRaises(ValueError):
             exporter.convert_to_timeseries(no_label_records)
 
+    # Verifies that build_message calls snappy.compress and returns SerializedString
     @mock.patch('snappy.compress', return_value=1)
     def test_build_message(self, mock_compress):
         data = [
@@ -224,6 +232,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         self.assertEqual(mock_compress.call_count, 1)
         self.assertIsInstance(message, str)
 
+    # Ensure correct headers are added when valid config is provided
     def test_get_headers(self):
         test_config = self._test_config
         test_config["headers"] = {
@@ -240,15 +249,19 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
 
     def test_send_request(self):
         # TODO: Iron out details of test after implementation
+        pass
     
     def test_build_client(self):
         # TODO: Iron out details of test after implementation
+        pass
 
+    # Ensures non alphanumberic label characters gets replaced with underscore
     def test_sanitize_label(self):
         unsanitized_string = "key/metric@data"
         sanitized_string = sanitize_label(unsanitized_string)
         self.assertEqual(valid_string, "key_metric_data")
 
+    # Verifies that valid yaml file is parsed correctly
     def test_valid_yaml_file(self):
         valid_yml = [
             {"url": ["https://testurl.com"]},
@@ -264,12 +277,13 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         self.assertEqual(config["name"], "test_name")
         self.assertEqual(config["remote_timeout"], "30s")
 
+    # Ensures invalid filepath raises error when parsing
     def test_invalid_yaml_file(self):
         filepath = "invalid filepath"
         with self.assertRaises(ValueError):
             parse_config(filepath)
 
-
+    # Series of test cases to ensure config validation works as intended
     class TestConfig(unittest.TestCase):
         def test_valid_standard_config(self):
             config = Config({
