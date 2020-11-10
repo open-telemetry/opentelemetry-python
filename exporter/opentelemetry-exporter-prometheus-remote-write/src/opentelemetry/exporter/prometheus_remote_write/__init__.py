@@ -13,19 +13,32 @@
 # limitations under the License.
 
 
+from typing import Dict, Sequence
+
+from http.client import HTTPSConnection
+
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
     MetricsExportResult,
 )
-
 from opentelemetry.sdk.metrics.export.aggregate import (
-    ValueObserverAggregator,
-    LastValueAggregator,
     HistogramAggregator,
+    LastValueAggregator,
     MinMaxSumCountAggregator,
     SumAggregator,
+    ValueObserverAggregator,
 )
+
+
+class TimeSeriesData:
+    def __init__(self, labels, samples):
+        self.labels = labels
+        self.samples = samples
+
+    def __eq__(self, other) -> bool:
+        return self.labels == other.labels and self.samples == other.samples
+
 
 class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     """
@@ -43,10 +56,10 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
 
     def shutdown(self) -> None:
         pass
-    
+
     def convert_to_timeseries(self, metric_records: Sequence[MetricRecord]) -> Sequence[TimeSeriesData]:
         pass
-    
+
     def convert_from_sum(self, sum_record: MetricRecord) -> TimeSeriesData:
         pass
 
@@ -68,27 +81,26 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     def sanitize_label(self, label: str) -> str:
         pass
 
-    def build_message(self, data: Sequence[TimeSeries]) -> str:
+    def build_message(self, data: Sequence[TimeSeriesData]) -> str:
         pass
 
-    def get_headers(self) -> dict:
+    def get_headers(self) -> Dict:
         pass
 
     def send_message(self, message: str) -> int:
         pass
 
-    def build_client(self) -> HTTPConnection:
+    def build_client(self) -> HTTPSConnection:
         pass
 
-    def build_tls_config(self) -> TLSConfig:
+    def build_tls_config(self) -> Dict:
         pass
-
 
 
 class Config():
     """
     Configuration containing all necessary information to make remote write requests
-    
+
     Args:
         config_dict: dictionary containing all config properties
     """
@@ -97,15 +109,6 @@ class Config():
 
     def validate(self):
         pass
-
-
-class TimeSeriesData:
-    def __init__(self, labels, samples):
-        self.labels = labels
-        self.samples = samples
-
-    def __eq__(self, other) -> bool:
-        return self.labels == other.labels and self.samples == other.samples
 
 
 def parse_config(filepath: str) -> Config:

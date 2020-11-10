@@ -12,29 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 from unittest import mock
-import os
+
+import yaml
 
 from opentelemetry.exporter.prometheus_remote_write import (
-    sanitize_label,
-    parse_config,
-    TLSConfig,
-    TimeSeriesData,
     Config,
     PrometheusRemoteWriteMetricsExporter,
+    TimeSeriesData,
+    parse_config,
+    sanitize_label,
 )
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
+from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
-    ValueObserverAggregator,
-    LastValueAggregator,
     HistogramAggregator,
+    LastValueAggregator,
     MinMaxSumCountAggregator,
     SumAggregator,
+    ValueObserverAggregator,
 )
 from opentelemetry.sdk.util import get_dict_as_key
-from http.client import HTTPSConnection
+
 
 class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
     # Initializes test data that is reused across tests
@@ -63,7 +65,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         exporter = PrometheusRemoteWriteMetricsExporter(self._test_config)
         result = exporter.export([record])
         self.assertIs(result, MetricsExportResult.SUCCESS)
-    
+
     # Ensures sum aggregator is correctly converted to timeseries
     def test_convert_from_sum(self):
         sum_record = MetricRecord(
@@ -77,7 +79,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
         exporter = PrometheusRemoteWriteMetricsExporter(self._test_config)
         timeseries = exporter.convert_from_sum(sum_record)
         self.assertEqual(timeseries, expected_timeseries)
-    
+
     # Ensures sum min_max_count aggregator is correctly converted to timeseries
     def test_convert_from_min_max_sum_count(self):
         min_max_sum_count_record = MetricRecord(
@@ -93,12 +95,12 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
                 "testname_max",
                 "testname_sum",
                 "testname_count"
-            ], [5,5,5,1]
+            ], [5, 5, 5, 1]
         )
         exporter = PrometheusRemoteWriteMetricsExporter(self._test_config)
         timeseries = exporter.convert_from_min_max_sum_count(min_max_sum_count_record)
         self.assertEqual(timeseries, expected_timeseries)
-    
+
     # Ensures histogram aggregator is correctly converted to timeseries
     def test_convert_from_histogram(self):
         histogram_record = MetricRecord(
@@ -114,7 +116,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
                 "testname_sum",
                 "testname_{le=\"0\"}",
                 "testname_{le=\"+Inf\"}"
-            ], [1,5,0,1]
+            ], [1, 5, 0, 1]
         )
         exporter = PrometheusRemoteWriteMetricsExporter(self._test_config)
         timeseries = exporter.convert_from_histogram(histogram_record)
@@ -150,7 +152,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
                 "testname_sum",
                 "testname_count",
                 "testname_last_value",
-            ], [5,5,5,1,5]
+            ], [5, 5, 5, 1, 5]
         )
         exporter = PrometheusRemoteWriteMetricsExporter(self._test_config)
         timeseries = exporter.convert_from_value_observer(value_observer_record)
@@ -158,8 +160,8 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
 
     # Ensures conversion to timeseries function as expected for different aggregation types
     def test_convert_to_timeseries(self):
-        empty_timeseries = TimeSeriesData([],[])
-        timeseries_mock_method = Mock(return_value=empty_timeseries)
+        empty_timeseries = TimeSeriesData([], [])
+        timeseries_mock_method = mock.Mock(return_value=empty_timeseries)
         exporter = PrometheusRemoteWriteMetricsExporter(self._test_config)
         exporter.convert_from_sum = timeseries_mock_method
         exporter.convert_from_min_max_sum_count = timeseries_mock_method
@@ -224,10 +226,10 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
     @mock.patch('snappy.compress', return_value=1)
     def test_build_message(self, mock_compress):
         data = [
-            TimeSeries(["test_label0"], [0]),
-            TimeSeries(["test_label1"], [1]),
+            TimeSeriesData(["test_label0"], [0]),
+            TimeSeriesData(["test_label1"], [1]),
         ]
-        exporter = PrometheusRemoteWriteExporter(self._test_config)
+        exporter = PrometheusRemoteWriteMetricsExporter(self._test_config)
         message = exporter.build_message(data)
         self.assertEqual(mock_compress.call_count, 1)
         self.assertIsInstance(message, str)
@@ -250,7 +252,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
     def test_send_request(self):
         # TODO: Iron out details of test after implementation
         pass
-    
+
     def test_build_client(self):
         # TODO: Iron out details of test after implementation
         pass
@@ -259,18 +261,18 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
     def test_sanitize_label(self):
         unsanitized_string = "key/metric@data"
         sanitized_string = sanitize_label(unsanitized_string)
-        self.assertEqual(valid_string, "key_metric_data")
+        self.assertEqual(sanitized_string, "key_metric_data")
 
     # Verifies that valid yaml file is parsed correctly
     def test_valid_yaml_file(self):
-        valid_yml = [
+        yml_dict = [
             {"url": ["https://testurl.com"]},
             {"name": ["test_name"]},
             {"remote_timeout": ["30s"]},
         ]
         filepath = "./test.yml"
         with open(filepath, 'w') as file:
-            yaml.dump(dict_file, file)
+            yaml.dump(yml_dict, file)
         config = parse_config(filepath)
         os.remove(filepath)
         self.assertEqual(config["url"], "https://testurl.com")
@@ -293,9 +295,9 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             try:
                 config.validate()
-            except as exception:
-                self.fail("valid config failed config.validate() with error:" + exception)
-        
+            except ValueError:
+                self.fail("valid config failed config.validate()")
+
         def test_valid_basic_auth_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -308,9 +310,9 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             try:
                 config.validate()
-            except as exception:
-                self.fail("valid config failed config.validate() with error:" + exception)
-        
+            except ValueError:
+                self.fail("valid config failed config.validate()")
+
         def test_valid_bearer_token_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -320,9 +322,9 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             try:
                 config.validate()
-            except as exception:
-                self.fail("valid config failed config.validate() with error:" + exception)
-        
+            except ValueError:
+                self.fail("valid config failed config.validate()")
+
         def test_valid_quantiles_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -332,8 +334,8 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             try:
                 config.validate()
-            except as exception:
-                self.fail("valid config failed config.validate() with error:" + exception)
+            except ValueError:
+                self.fail("valid config failed config.validate()")
 
         def test_valid_histogram_boundaries_config(self):
             config = Config({
@@ -344,9 +346,9 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             try:
                 config.validate()
-            except as exception:
-                self.fail("valid config failed config.validate() with error:" + exception)
-        
+            except ValueError:
+                self.fail("valid config failed config.validate()")
+
         def test_valid_tls_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -360,9 +362,9 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             try:
                 config.validate()
-            except as exception:
-                self.fail("valid config failed config.validate() with error:" + exception)
-        
+            except ValueError:
+                self.fail("valid config failed config.validate()")
+
         def test_invalid_no_url_config(self):
             config = Config({
                 "name": "test_name",
@@ -370,7 +372,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             with self.assertRaises(ValueError):
                 config.validate()
-        
+
         def test_invalid_no_name_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -378,7 +380,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             with self.assertRaises(ValueError):
                 config.validate()
-        
+
         def test_invalid_no_remote_timeout_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -386,7 +388,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             with self.assertRaises(ValueError):
                 config.validate()
-        
+
         def test_invalid_no_username_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -424,7 +426,7 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
             })
             with self.assertRaises(ValueError):
                 config.validate()
-        
+
         def test_invalid_conflicting_bearer_tokens_config(self):
             config = Config({
                 "url": "https://testurl.com",
@@ -444,12 +446,12 @@ class TestPrometheusRemoteWriteMetricExporter(unittest.TestCase):
                 "basic_auth": {
                     "username": "test_username",
                     "password": "test_password",
-                }
+                },
                 "bearer_token": "test_token",
             })
             with self.assertRaises(ValueError):
                 config.validate()
-        
+
         def test_invalid_quantiles_config(self):
             config = Config({
                 "url": "https://testurl.com",
