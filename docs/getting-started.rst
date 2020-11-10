@@ -193,7 +193,7 @@ an example using Zipkin's `b3 propagation <https://github.com/openzipkin/b3-prop
     propagators.set_global_textmap(B3Format())
 
 
-Add Metrics
+Add metrics
 --------------
 
 Spans are a great way to get detailed information about what your application is doing, but
