@@ -89,11 +89,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
 
     @property
     def fields(self) -> typing.Set[str]:
-        """Returns a set with the fields set in `inject`.
-
-        See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.fields`
-        """
+        """Returns a set with the fields set in `inject`."""
         return {self._BAGGAGE_HEADER_NAME}
 
 
