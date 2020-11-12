@@ -329,6 +329,7 @@ class Tracer(abc.ABC):
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
+            links: Links span to other spans
             start_time: Sets the start time of a span
             record_exception: Whether to record any exceptions raised within the
                 context as error event on the span.
