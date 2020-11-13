@@ -112,6 +112,7 @@ from opentelemetry.trace import (
     get_current_span,
     set_span_in_context,
 )
+from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.util.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
@@ -495,7 +496,7 @@ class ScopeManagerShim(ScopeManager):
             span.
 
         Warning:
-            This property is *not* a part of the OpenTracing API. It used
+            This property is *not* a part of the OpenTracing API. It is used
             internally by the current implementation of the OpenTracing shim
             and will likely be removed in future versions.
         """
@@ -527,6 +528,7 @@ class TracerShim(Tracer):
             Format.TEXT_MAP,
             Format.HTTP_HEADERS,
         )
+        self._carrier_getter = DictGetter()
 
     def unwrap(self):
         """Returns the :class:`opentelemetry.trace.Tracer` object that is
@@ -710,12 +712,8 @@ class TracerShim(Tracer):
         if format not in self._supported_formats:
             raise UnsupportedFormatException
 
-        def get_as_list(dict_object, key):
-            value = dict_object.get(key)
-            return [value] if value is not None else []
-
         propagator = propagators.get_global_textmap()
-        ctx = propagator.extract(get_as_list, carrier)
+        ctx = propagator.extract(self._carrier_getter, carrier)
         span = get_current_span(ctx)
         if span is not None:
             otel_context = span.get_span_context()

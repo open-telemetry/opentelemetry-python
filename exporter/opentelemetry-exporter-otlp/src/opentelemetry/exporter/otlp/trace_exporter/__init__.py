@@ -14,11 +14,16 @@
 """OTLP Span Exporter"""
 
 import logging
-from typing import Sequence
+import os
+from typing import Optional, Sequence
 
+from grpc import ChannelCredentials
+
+from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
+    _load_credential_from_file,
     _translate_key_values,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -36,6 +41,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.trace.status import StatusCode
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +56,46 @@ class OTLPSpanExporter(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
         credentials: Credentials object for server authentication
-        metadata: Metadata to send when exporting
+        headers: Headers to send when exporting
+        timeout: Backend request timeout in seconds
     """
 
     _result = SpanExportResult
     _stub = TraceServiceStub
+
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
+        credentials: Optional[ChannelCredentials] = None,
+        headers: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ):
+        if insecure is None:
+            insecure = Configuration().EXPORTER_OTLP_SPAN_INSECURE
+
+        if (
+            not insecure
+            and Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE is not None
+        ):
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_SPAN_CERTIFICATE
+            )
+
+        super().__init__(
+            **{
+                "endpoint": endpoint
+                or Configuration().EXPORTER_OTLP_SPAN_ENDPOINT,
+                "insecure": insecure,
+                "credentials": credentials,
+                "headers": headers
+                or Configuration().EXPORTER_OTLP_SPAN_HEADERS,
+                "timeout": timeout
+                or Configuration().EXPORTER_OTLP_SPAN_TIMEOUT,
+            }
+        )
 
     def _translate_name(self, sdk_span: SDKSpan) -> None:
         self._collector_span_kwargs["name"] = sdk_span.name
@@ -159,9 +199,12 @@ class OTLPSpanExporter(
 
     def _translate_status(self, sdk_span: SDKSpan) -> None:
         if sdk_span.status is not None:
+            # TODO: Update this when the proto definitions are updated to include UNSET and ERROR
+            proto_status_code = Status.STATUS_CODE_OK
+            if sdk_span.status.status_code is StatusCode.ERROR:
+                proto_status_code = Status.STATUS_CODE_UNKNOWN_ERROR
             self._collector_span_kwargs["status"] = Status(
-                code=sdk_span.status.canonical_code.value,
-                message=sdk_span.status.description,
+                code=proto_status_code, message=sdk_span.status.description,
             )
 
     def _translate_data(

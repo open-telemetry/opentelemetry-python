@@ -18,9 +18,54 @@ import typing
 from opentelemetry.context.context import Context
 
 TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
+CarrierValT = typing.Union[typing.List[str], str]
 
 Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
-Getter = typing.Callable[[TextMapPropagatorT, str], typing.List[str]]
+
+
+class Getter(typing.Generic[TextMapPropagatorT]):
+    """This class implements a Getter that enables extracting propagated
+    fields from a carrier
+
+    """
+
+    def get(self, carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
+        """Function that can retrieve zero
+        or more values from the carrier. In the case that
+        the value does not exist, returns an empty list.
+
+        Args:
+            carrier: An object which contains values that are used to
+                    construct a Context.
+            key: key of a field in carrier.
+        Returns: first value of the propagation key or an empty list if the
+                key doesn't exist.
+        """
+        raise NotImplementedError()
+
+    def keys(self, carrier: TextMapPropagatorT) -> typing.List[str]:
+        """Function that can retrieve all the keys in a carrier object.
+
+        Args:
+            carrier: An object which contains values that are
+                used to construct a Context.
+        Returns:
+            list of keys from the carrier.
+        """
+        raise NotImplementedError()
+
+
+class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
+    def get(
+        self, carrier: typing.Dict[str, CarrierValT], key: str
+    ) -> typing.List[str]:
+        val = carrier.get(key, [])
+        if isinstance(val, typing.Iterable) and not isinstance(val, str):
+            return list(val)
+        return [val]
+
+    def keys(self, carrier: typing.Dict[str, CarrierValT]) -> typing.List[str]:
+        return list(carrier.keys())
 
 
 class TextMapPropagator(abc.ABC):
@@ -35,23 +80,23 @@ class TextMapPropagator(abc.ABC):
     @abc.abstractmethod
     def extract(
         self,
-        get_from_carrier: Getter[TextMapPropagatorT],
+        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Create a Context from values in the carrier.
 
         The extract function should retrieve values from the carrier
-        object using get_from_carrier, and use values to populate a
+        object using getter, and use values to populate a
         Context value and return it.
 
         Args:
-            get_from_carrier: a function that can retrieve zero
+            getter: a function that can retrieve zero
                 or more values from the carrier. In the case that
                 the value does not exist, return an empty list.
             carrier: and object which contains values that are
                 used to construct a Context. This object
-                must be paired with an appropriate get_from_carrier
+                must be paired with an appropriate getter
                 which understands how to extract a value from it.
             context: an optional Context to use. Defaults to current
                 context if not set.

@@ -193,7 +193,7 @@ class ZipkinSpanExporter(SpanExporter):
 
             if span.status is not None:
                 zipkin_span["tags"]["otel.status_code"] = str(
-                    span.status.canonical_code.value
+                    span.status.status_code.value
                 )
                 if span.status.description is not None:
                     zipkin_span["tags"][

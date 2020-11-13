@@ -38,6 +38,8 @@ class Span(abc.ABC):
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
+
+        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
         """
 
     @abc.abstractmethod
@@ -79,7 +81,13 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def record_exception(self, exception: Exception) -> None:
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+        escaped: bool = False,
+    ) -> None:
         """Records an exception as a span event."""
 
     def __enter__(self) -> "Span":
@@ -263,7 +271,13 @@ class DefaultSpan(Span):
     def set_status(self, status: Status) -> None:
         pass
 
-    def record_exception(self, exception: Exception) -> None:
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+        escaped: bool = False,
+    ) -> None:
         pass
 
 

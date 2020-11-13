@@ -234,6 +234,7 @@ class Tracer(abc.ABC):
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
+        record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
         """Starts a span.
@@ -266,11 +267,13 @@ class Tracer(abc.ABC):
             attributes: The span's attributes.
             links: Links span to other spans
             start_time: Sets the start time of a span
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
             set_status_on_exception: Only relevant if the returned span is used
                 in a with/context manager. Defines wether the span status will
-                be automatically set to UNKNOWN when an uncaught exception is
+                be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
-                this mechanism if it was previousy set manually.
+                this mechanism if it was previously set manually.
 
         Returns:
             The newly-created span.
@@ -285,7 +288,9 @@ class Tracer(abc.ABC):
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
         record_exception: bool = True,
+        set_status_on_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -325,8 +330,14 @@ class Tracer(abc.ABC):
                 meaningful even if there is no parent.
             attributes: The span's attributes.
             links: Links span to other spans
+            start_time: Sets the start time of a span
             record_exception: Whether to record any exceptions raised within the
                 context as error event on the span.
+            set_status_on_exception: Only relevant if the returned span is used
+                in a with/context manager. Defines wether the span status will
+                be automatically set to ERROR when an uncaught exception is
+                raised in the span with block. The span status won't be set by
+                this mechanism if it was previously set manually.
 
         Yields:
             The newly-created span.
@@ -335,10 +346,7 @@ class Tracer(abc.ABC):
     @contextmanager  # type: ignore
     @abc.abstractmethod
     def use_span(
-        self,
-        span: "Span",
-        end_on_exit: bool = False,
-        record_exception: bool = True,
+        self, span: "Span", end_on_exit: bool = False,
     ) -> typing.Iterator[None]:
         """Context manager for setting the passed span as the
         current span in the context, as well as resetting the
@@ -355,8 +363,6 @@ class Tracer(abc.ABC):
             span: The span to start and make current.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
-            record_exception: Whether to record any exceptions raised within the
-                context as error event on the span.
         """
 
 
@@ -374,6 +380,7 @@ class DefaultTracer(Tracer):
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
         start_time: typing.Optional[int] = None,
+        record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
         # pylint: disable=unused-argument,no-self-use
@@ -387,17 +394,16 @@ class DefaultTracer(Tracer):
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
         record_exception: bool = True,
+        set_status_on_exception: bool = True,
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(
-        self,
-        span: "Span",
-        end_on_exit: bool = False,
-        record_exception: bool = True,
+        self, span: "Span", end_on_exit: bool = False,
     ) -> typing.Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield

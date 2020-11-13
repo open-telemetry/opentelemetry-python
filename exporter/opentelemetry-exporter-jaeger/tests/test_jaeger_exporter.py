@@ -25,7 +25,8 @@ from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace.status import Status, StatusCanonicalCode
+from opentelemetry.trace import SpanKind
+from opentelemetry.trace.status import Status, StatusCode
 
 
 class TestJaegerSpanExporter(unittest.TestCase):
@@ -151,6 +152,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(nsec_to_usec_round(5499), 5)
         self.assertEqual(nsec_to_usec_round(5500), 6)
 
+    def test_all_otlp_span_kinds_are_mapped(self):
+        for kind in SpanKind:
+            self.assertIn(kind, jaeger_exporter.OTLP_JAEGER_SPAN_KIND)
+
     # pylint: disable=too-many-locals
     def test_translate_to_jaeger(self):
         # pylint: disable=invalid-name
@@ -210,15 +215,13 @@ class TestJaegerSpanExporter(unittest.TestCase):
             jaeger.Tag(
                 key="status.code",
                 vType=jaeger.TagType.LONG,
-                vLong=StatusCanonicalCode.OK.value,
+                vLong=StatusCode.UNSET.value,
             ),
             jaeger.Tag(
                 key="status.message", vType=jaeger.TagType.STRING, vStr=None
             ),
             jaeger.Tag(
-                key="span.kind",
-                vType=jaeger.TagType.STRING,
-                vStr=trace_api.SpanKind.INTERNAL.name,
+                key="span.kind", vType=jaeger.TagType.STRING, vStr="internal",
             ),
         ]
 
@@ -249,7 +252,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             attributes={"key_resource": "some_resource"}
         )
         otel_spans[0].set_status(
-            Status(StatusCanonicalCode.UNKNOWN, "Example description")
+            Status(StatusCode.ERROR, "Example description")
         )
         otel_spans[0].end(end_time=end_times[0])
 
@@ -259,6 +262,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].resource = Resource({})
+        otel_spans[2].set_status(Status(StatusCode.OK, "Example description"))
         otel_spans[2].end(end_time=end_times[2])
         otel_spans[2].instrumentation_info = InstrumentationInfo(
             name="name", version="version"
@@ -304,7 +308,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="status.code",
                         vType=jaeger.TagType.LONG,
-                        vLong=StatusCanonicalCode.UNKNOWN.value,
+                        vLong=StatusCode.ERROR.value,
                     ),
                     jaeger.Tag(
                         key="status.message",
@@ -314,7 +318,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="span.kind",
                         vType=jaeger.TagType.STRING,
-                        vStr=trace_api.SpanKind.CLIENT.name,
+                        vStr="client",
                     ),
                     jaeger.Tag(
                         key="error", vType=jaeger.TagType.BOOL, vBool=True
@@ -380,17 +384,17 @@ class TestJaegerSpanExporter(unittest.TestCase):
                     jaeger.Tag(
                         key="status.code",
                         vType=jaeger.TagType.LONG,
-                        vLong=StatusCanonicalCode.OK.value,
+                        vLong=StatusCode.OK.value,
                     ),
                     jaeger.Tag(
                         key="status.message",
                         vType=jaeger.TagType.STRING,
-                        vStr=None,
+                        vStr="Example description",
                     ),
                     jaeger.Tag(
                         key="span.kind",
                         vType=jaeger.TagType.STRING,
-                        vStr=trace_api.SpanKind.INTERNAL.name,
+                        vStr="internal",
                     ),
                     jaeger.Tag(
                         key="otel.instrumentation_library.name",

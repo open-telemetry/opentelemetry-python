@@ -77,7 +77,7 @@ output similar to this one:
         "start_time": "2020-04-26T01:49:57.205833Z",
         "end_time": "2020-04-26T01:49:57.206214Z",
         "status": {
-            "canonical_code": "OK"
+            "status_code": "OK"
         },
         "attributes": {
             "component": "http",
@@ -111,4 +111,4 @@ References
 
 * `Django <https://djangoproject.com/>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python/tree/master/instrumentation/opentelemetry-instrumentation-django>`_
+* `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python-contib/tree/master/instrumentation/opentelemetry-instrumentation-django>`_
