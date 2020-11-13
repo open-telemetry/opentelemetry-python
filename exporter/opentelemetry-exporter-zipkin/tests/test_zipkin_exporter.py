@@ -415,9 +415,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.set_attribute("range1", range(0, 25))
         span.set_attribute("range2", range(0, 10))
 
-        span.set_status(
-            Status(StatusCode.ERROR, "Example description")
-        )
+        span.set_status(Status(StatusCode.ERROR, "Example description"))
         span.end()
 
         exporter = ZipkinSpanExporter(service_name)
