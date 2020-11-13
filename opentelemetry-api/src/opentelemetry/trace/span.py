@@ -199,7 +199,7 @@ class SpanContext(
             self.trace_flags,
             self.trace_state,
         )
-        
+
     @property
     def trace_id(self) -> int:
         return self[0]  # pylint: disable=unsubscriptable-object
