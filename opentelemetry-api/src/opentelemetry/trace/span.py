@@ -203,16 +203,16 @@ class SpanContext(
     def __reduce__(
         self,
     ) -> typing.Tuple[
-        typing.Type.SpanContext, typing.Tuple[int,
-                                              int, bool, "TraceFlags", "TraceState"]
+        typing.Type.SpanContext, 
+        typing.Tuple[int, int, bool, "TraceFlags", "TraceState"],
     ]:
         return (
             SpanContext, 
             (
-                self.trace_id, 
-                self.span_id, 
-                self.is_remote, 
-                self.trace_flags, 
+                self.trace_id,
+                self.span_id,
+                self.is_remote,
+                self.trace_flags,
                 self.trace_state,
             ),
         )
