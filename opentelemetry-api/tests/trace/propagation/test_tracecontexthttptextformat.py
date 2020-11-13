@@ -263,7 +263,7 @@ class TestTraceContextFormat(unittest.TestCase):
                             "trace_id": 1,
                             "span_id": 2,
                             "trace_flags": 3,
-                            "trace_state": {"a": "b"}
+                            "trace_state": {"a": "b"},
                         }
                     )
                 }
