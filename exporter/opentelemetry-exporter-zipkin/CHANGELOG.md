@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add support for array attributes in Span and Resource exports ([#1110](https://github.com/open-telemetry/opentelemetry-python/pull/1110))
+- Add support for array attributes in Span and Resource exports ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 
 ## Version 0.14b0
 
