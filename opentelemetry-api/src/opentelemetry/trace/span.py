@@ -189,11 +189,26 @@ class SpanContext(
             (trace_id, span_id, is_remote, trace_flags, trace_state, is_valid),
         )
 
-    def __getnewargs__(self):
-        return self.trace_id, self.span_id, self.is_remote, self.trace_flags, self.trace_state
+    def __getnewargs__(self) -> typing.Tuple[int, int, bool, "TraceFlags", "TraceState"]:
+        return (
+            self.trace_id, 
+            self.span_id, 
+            self.is_remote, 
+            self.trace_flags, 
+            self.trace_state,
+        )
 
-    def __reduce__(self):
-        return (SpanContext, (self.trace_id, self.span_id, self.is_remote, self.trace_flags, self.trace_state))        
+    def __reduce__(self) -> "SpanContext":
+        return (
+            SpanContext, 
+            (
+                self.trace_id, 
+                self.span_id, 
+                self.is_remote, 
+                self.trace_flags, 
+                self.trace_state,
+            ),
+        )        
 
     @property
     def trace_id(self) -> int:
