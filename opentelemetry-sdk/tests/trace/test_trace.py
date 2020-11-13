@@ -889,6 +889,9 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(
             "RuntimeError", exception_event.attributes["exception.type"]
         )
+        self.assertEqual(
+            "False", exception_event.attributes["exception.escaped"]
+        )
         self.assertIn(
             "RuntimeError: error",
             exception_event.attributes["exception.stacktrace"],
@@ -898,6 +901,28 @@ class TestSpan(unittest.TestCase):
         )
         self.assertEqual(
             True, exception_event.attributes["has_additional_attributes"],
+        )
+
+    def test_record_exception_escaped(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        try:
+            raise RuntimeError("error")
+        except RuntimeError as err:
+            span.record_exception(exception=err, escaped=True)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "error", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "RuntimeError", exception_event.attributes["exception.type"]
+        )
+        self.assertIn(
+            "RuntimeError: error",
+            exception_event.attributes["exception.stacktrace"],
+        )
+        self.assertEqual(
+            "True", exception_event.attributes["exception.escaped"]
         )
 
     def test_record_exception_with_timestamp(self):
