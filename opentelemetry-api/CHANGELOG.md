@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add optional parameter to `record_exception` method ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
+- Add pickle support to SpanContext class ([#1379](https://github.com/open-telemetry/opentelemetry-python/pull/1379))
 
 ## Version 0.15b0
 
