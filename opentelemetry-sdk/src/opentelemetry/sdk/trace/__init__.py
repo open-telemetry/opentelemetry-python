@@ -412,6 +412,7 @@ class Span(trace_api.Span):
             raise TypeError("Span must be instantiated via a tracer.")
         return super().__new__(cls)
 
+    # pylint: disable=too-many-locals
     def __init__(
         self,
         name: str,
@@ -426,6 +427,7 @@ class Span(trace_api.Span):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
         instrumentation_info: InstrumentationInfo = None,
+        record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> None:
 
@@ -436,6 +438,7 @@ class Span(trace_api.Span):
         self.trace_config = trace_config
         self.resource = resource
         self.kind = kind
+        self._record_exception = record_exception
         self._set_status_on_exception = set_status_on_exception
 
         self.span_processor = span_processor
@@ -663,20 +666,25 @@ class Span(trace_api.Span):
         exc_tb: Optional[TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
-        # Records status if span is used as context manager
-        # i.e. with tracer.start_span() as span:
-        # TODO: Record exception
-        if (
-            self.status.status_code is StatusCode.UNSET
-            and self._set_status_on_exception
-            and exc_val is not None
-        ):
-            self.set_status(
-                Status(
-                    status_code=StatusCode.ERROR,
-                    description="{}: {}".format(exc_type.__name__, exc_val),
+        if exc_val is not None:
+            # Record the exception as an event
+            # pylint:disable=protected-access
+            if self._record_exception:
+                self.record_exception(exception=exc_val, escaped=True)
+            # Records status if span is used as context manager
+            # i.e. with tracer.start_span() as span:
+            if (
+                self.status.status_code is StatusCode.UNSET
+                and self._set_status_on_exception
+            ):
+                self.set_status(
+                    Status(
+                        status_code=StatusCode.ERROR,
+                        description="{}: {}".format(
+                            exc_type.__name__, exc_val
+                        ),
+                    )
                 )
-            )
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
@@ -685,6 +693,7 @@ class Span(trace_api.Span):
         exception: Exception,
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
+        escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
         try:
@@ -698,6 +707,7 @@ class Span(trace_api.Span):
             "exception.type": exception.__class__.__name__,
             "exception.message": str(exception),
             "exception.stacktrace": stacktrace,
+            "exception.escaped": str(escaped),
         }
         if attributes:
             _attributes.update(attributes)
@@ -740,12 +750,21 @@ class Tracer(trace_api.Tracer):
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
+        start_time: Optional[int] = None,
         record_exception: bool = True,
+        set_status_on_exception: bool = True,
     ) -> Iterator[trace_api.Span]:
-        span = self.start_span(name, context, kind, attributes, links)
-        return self.use_span(
-            span, end_on_exit=True, record_exception=record_exception
+        span = self.start_span(
+            name=name,
+            context=context,
+            kind=kind,
+            attributes=attributes,
+            links=links,
+            start_time=start_time,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
         )
+        return self.use_span(span, end_on_exit=True)
 
     def start_span(  # pylint: disable=too-many-locals
         self,
@@ -755,6 +774,7 @@ class Tracer(trace_api.Tracer):
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
+        record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
 
@@ -816,6 +836,7 @@ class Tracer(trace_api.Tracer):
                 kind=kind,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
+                record_exception=record_exception,
                 set_status_on_exception=set_status_on_exception,
             )
             span.start(start_time=start_time, parent_context=context)
@@ -825,10 +846,7 @@ class Tracer(trace_api.Tracer):
 
     @contextmanager
     def use_span(
-        self,
-        span: trace_api.Span,
-        end_on_exit: bool = False,
-        record_exception: bool = True,
+        self, span: trace_api.Span, end_on_exit: bool = False,
     ) -> Iterator[trace_api.Span]:
         try:
             token = context_api.attach(context_api.set_value(SPAN_KEY, span))
@@ -837,11 +855,12 @@ class Tracer(trace_api.Tracer):
             finally:
                 context_api.detach(token)
 
-        except Exception as error:  # pylint: disable=broad-except
-            # pylint:disable=protected-access
+        except Exception as exc:  # pylint: disable=broad-except
+            # Record the exception as an event
             if isinstance(span, Span):
-                if record_exception:
-                    span.record_exception(error)
+                # pylint:disable=protected-access
+                if span._record_exception:
+                    span.record_exception(exc)
 
                 # Records status if use_span is used
                 # i.e. with tracer.start_as_current_span() as span:
@@ -851,13 +870,9 @@ class Tracer(trace_api.Tracer):
                 ):
                     span.set_status(
                         Status(
-                            status_code=getattr(
-                                error,
-                                EXCEPTION_STATUS_FIELD,
-                                StatusCode.ERROR,
-                            ),
+                            status_code=StatusCode.ERROR,
                             description="{}: {}".format(
-                                type(error).__name__, error
+                                type(exc).__name__, exc
                             ),
                         )
                     )

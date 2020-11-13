@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Add optional parameter to `record_exception` method ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
+- Update exception handling optional parameters, add escaped attribute to record_exception
+  ([#1365](https://github.com/open-telemetry/opentelemetry-python/pull/1365))
 
 ## Version 0.15b0
 
