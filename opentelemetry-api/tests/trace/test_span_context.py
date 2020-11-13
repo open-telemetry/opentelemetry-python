@@ -30,3 +30,4 @@ class TestSpanContext(unittest.TestCase):
         pickle_sc = pickle.loads(pickle.dumps(sc))
         self.assertEqual(sc.trace_id, pickle_sc.trace_id)
         self.assertEqual(sc.span_id, pickle_sc.span_id)
+  
