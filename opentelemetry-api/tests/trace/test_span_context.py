@@ -17,9 +17,9 @@ import pickle
 
 from opentelemetry import trace
 
+
 class TestSpanContext(unittest.TestCase):
     def test_span_context_pickle(self):
-
         sc = trace.SpanContext(
             1,
             2,
@@ -27,8 +27,6 @@ class TestSpanContext(unittest.TestCase):
             trace_flags=trace.DEFAULT_TRACE_OPTIONS,
             trace_state=trace.DEFAULT_TRACE_STATE,
         )
-
         pickle_sc = pickle.loads(pickle.dumps(sc))
-
         self.assertEqual(sc.trace_id, pickle_sc.trace_id)
         self.assertEqual(sc.span_id, pickle_sc.span_id)
