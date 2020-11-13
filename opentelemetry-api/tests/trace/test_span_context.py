@@ -20,6 +20,10 @@ from opentelemetry import trace
 
 class TestSpanContext(unittest.TestCase):
     def test_span_context_pickle(self):
+        """
+        SpanContext needs to be pickleable to support multiprocessing
+        so span can start as parent from the new spawned process
+        """
         sc = trace.SpanContext(
             1,
             2,
