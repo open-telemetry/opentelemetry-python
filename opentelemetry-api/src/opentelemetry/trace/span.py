@@ -200,23 +200,6 @@ class SpanContext(
             self.trace_state,
         )
 
-    def __reduce__(
-        self,
-    ) -> typing.Tuple[
-        typing.Type.SpanContext, 
-        typing.Tuple[int, int, bool, "TraceFlags", "TraceState"],
-    ]:
-        return (
-            SpanContext, 
-            (
-                self.trace_id,
-                self.span_id,
-                self.is_remote,
-                self.trace_flags,
-                self.trace_state,
-            ),
-        )
-
     @property
     def trace_id(self) -> int:
         return self[0]  # pylint: disable=unsubscriptable-object
