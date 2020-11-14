@@ -28,12 +28,10 @@ from opentelemetry.exporter.zipkin import (
     DEFAULT_SERVICE_NAME,
 )
 from opentelemetry.exporter.zipkin.encoder import Encoding
-from opentelemetry.exporter.zipkin.encoder.json import (
-    JsonV1Encoder,
-    JsonV2Encoder,
-)
-from opentelemetry.exporter.zipkin.encoder.protobuf import ProtobufEncoder
-from opentelemetry.exporter.zipkin.encoder.protobuf.gen import zipkin_pb2
+from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
+from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
+from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
+from opentelemetry.exporter.zipkin.encoder.v2.protobuf.gen import zipkin_pb2
 from opentelemetry.exporter.zipkin.endpoint import Endpoint
 from opentelemetry.exporter.zipkin.sender.http import HttpSender
 from opentelemetry.sdk import trace
@@ -301,6 +299,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "endpoint": local_endpoint,
                     },
                 ],
+                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -329,6 +328,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "endpoint": local_endpoint,
                     },
                 ],
+                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -357,6 +357,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "endpoint": local_endpoint,
                     },
                 ],
+                "debug": False,
             },
         ]
 
@@ -734,6 +735,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "otel.status_code": "1",
                 },
                 "annotations": None,
+                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -752,6 +754,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "otel.status_code": "1",
                 },
                 "annotations": None,
+                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -770,6 +773,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     "otel.status_code": "1",
                 },
                 "annotations": None,
+                "debug": False,
             },
         ]
 
@@ -856,6 +860,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "key_resource": "some_resource",
                         "otel.status_code": "1",
                     },
+                    debug=False,
                 ),
                 zipkin_pb2.Span(
                     trace_id=trace_id,
@@ -878,6 +883,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "key_resource": "some_resource",
                         "otel.status_code": "1",
                     },
+                    debug=False,
                 ),
                 zipkin_pb2.Span(
                     trace_id=trace_id,
@@ -900,6 +906,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                         "otel.instrumentation_library.version": "version",
                         "otel.status_code": "1",
                     },
+                    debug=False,
                 ),
             ],
         )

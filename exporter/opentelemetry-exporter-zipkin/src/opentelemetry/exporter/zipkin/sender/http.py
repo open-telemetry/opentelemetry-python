@@ -31,9 +31,7 @@ logger = logging.getLogger(__name__)
 
 class HttpSender(Sender):
     def __init__(
-        self,
-        endpoint: str,
-        encoding: Optional[Encoding] = DEFAULT_ENCODING,
+        self, endpoint: str, encoding: Optional[Encoding] = DEFAULT_ENCODING,
     ):
         super().__init__(endpoint, encoding)
 

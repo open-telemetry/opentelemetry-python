@@ -105,11 +105,9 @@ from typing import Sequence
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.encoder import Encoder, Encoding
-from opentelemetry.exporter.zipkin.encoder.json import (
-    JsonV1Encoder,
-    JsonV2Encoder,
-)
-from opentelemetry.exporter.zipkin.encoder.protobuf import ProtobufEncoder
+from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
+from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
+from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.endpoint import Endpoint
 from opentelemetry.exporter.zipkin.sender.http import Sender, HttpSender
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
