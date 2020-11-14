@@ -100,6 +100,21 @@ $ git push fork feature
 
 Open a pull request against the main `opentelemetry-python` repo.
 
+Pull requests are also tested for their compatibility with packages distributed 
+by OpenTelemetry in the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git).
+
+If a pull request introduces a change that would break the compatibility of
+these packages with the Core packages in this repo, a separate PR should be
+opened in the Contrib repo with changes to make the packages compatible.
+
+Once the pull request in the Contrib repo is open, take note of the commit SHA
+and edit the `CONTRIB_SHA` variable found in `.github/workflows/test.yml` to
+pass even the Contrib repo tests and so get the Core repo PR green and ready to
+merge.
+
+**NOTE:** That Contrib pull request will also have to reference the commit SHA
+of this Core pull request to pass its own tests.
+
 ### How to Receive Comments
 
 * If the PR is not ready for review, please put `[WIP]` in the title, tag it
@@ -113,6 +128,8 @@ A PR is considered to be **ready to merge** when:
   / [Maintainers](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer)
   (at different companies).
 * Major feedbacks are resolved.
+* All tests are passing, including Contrib Repo tests which may require
+updating the GitHub workflow to reference a PR in the Contrib repo
 * It has been open for review for at least one working day. This gives people
   reasonable time to review.
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
