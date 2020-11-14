@@ -15,10 +15,10 @@
 
 from typing import Dict, Sequence
 
-from http.client import HTTPSConnection
+import yaml
 
 from opentelemetry.sdk.metrics.export import (
-    ExportRecord,
+    MetricRecord,
     MetricsExporter,
     MetricsExportResult,
 )
@@ -51,31 +51,45 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     def __init__(self, prefix: str = ""):
         pass
 
-    def export(self, export_records: Sequence[ExportRecord]) -> MetricsExportResult:
+    def export(
+        self, metric_records: Sequence[MetricRecord]
+    ) -> MetricsExportResult:
         pass
 
     def shutdown(self) -> None:
         pass
 
-    def convert_to_timeseries(self, export_records: Sequence[ExportRecord]) -> Sequence[TimeSeriesData]:
+    def convert_to_timeseries(
+        self, metric_records: Sequence[MetricRecord]
+    ) -> Sequence[TimeSeriesData]:
         pass
 
-    def convert_from_sum(self, sum_record: ExportRecord) -> TimeSeriesData:
+    def convert_from_sum(self, sum_record: MetricRecord) -> TimeSeriesData:
         pass
 
-    def convert_from_min_max_sum_count(self, min_max_sum_count_record: ExportRecord) -> TimeSeriesData:
+    def convert_from_min_max_sum_count(
+        self, min_max_sum_count_record: MetricRecord
+    ) -> TimeSeriesData:
         pass
 
-    def convert_from_histogram(self, histogram_record: ExportRecord) -> TimeSeriesData:
+    def convert_from_histogram(
+        self, histogram_record: MetricRecord
+    ) -> TimeSeriesData:
         pass
 
-    def convert_from_last_value(self, last_value_record: ExportRecord) -> TimeSeriesData:
+    def convert_from_last_value(
+        self, last_value_record: MetricRecord
+    ) -> TimeSeriesData:
         pass
 
-    def convert_from_value_observer(self, value_observer_record: ExportRecord) -> TimeSeriesData:
+    def convert_from_value_observer(
+        self, value_observer_record: MetricRecord
+    ) -> TimeSeriesData:
         pass
 
-    def convert_from_summary(self, summary_record: ExportRecord) -> TimeSeriesData:
+    def convert_from_summary(
+        self, summary_record: MetricRecord
+    ) -> TimeSeriesData:
         pass
 
     def sanitize_label(self, label: str) -> str:
@@ -90,33 +104,72 @@ class PrometheusRemoteWriteMetricsExporter(MetricsExporter):
     def send_message(self, message: str) -> int:
         pass
 
-    def build_client(self) -> HTTPSConnection:
-        pass
 
-    def build_tls_config(self) -> Dict:
-        pass
-
-
-class Config():
+class Config:
     """
     Configuration containing all necessary information to make remote write requests
 
     Args:
         config_dict: dictionary containing all config properties
     """
-    def __init__(self, config_dict):
-        for key, value in config_dict:
-            self.key = value
+
+    def __init__(
+        self,
+        endpoint: str = "",
+        basic_auth: Dict = None,
+        bearer_token: str = "",
+        bearer_token_file: str = "",
+        headers: Dict = None,
+    ):
+        self.endpoint = endpoint
+        self.basic_auth = basic_auth
+        self.bearer_token = bearer_token
+        self.bearer_token_file = bearer_token_file
+        self.headers = headers
+        self.validate()
 
     def validate(self):
-        if not hasattr(self, "endpoint"):
-            raise ValueError("endpoint missing from config")
-        if not isinstance(self.url, str)
-        if not hasattr(self, "name"):
-            raise ValueError("name missing from config")
-        if not hasattr(self, "remote_timeout"):
-            raise ValueError("remote_timeout url missing from config")
+        if self.endpoint == "":
+            raise ValueError("endpoint required in config")
+
+        if self.basic_auth:
+            if self.bearer_token or self.bearer_token_file:
+                raise ValueError(
+                    "config cannot contain basic_auth and bearer_token"
+                )
+            if "username" not in self.basic_auth:
+                raise ValueError("username required in basic_auth")
+            if (
+                "password" not in self.basic_auth
+                and "password_file" not in self.basic_auth
+            ):
+                raise ValueError("password required in basic_auth")
+            if (
+                "password" in self.basic_auth
+                and "password_file" in self.basic_auth
+            ):
+                raise ValueError(
+                    "basic_auth cannot contain password and password_file"
+                )
+        if self.bearer_token != "" and self.bearer_token_file != "":
+            raise ValueError(
+                "config cannot contain bearer_token and bearer_token_file"
+            )
 
 
 def parse_config(filepath: str) -> Config:
-    pass
+    if not filepath.endswith(".yml"):
+        raise ValueError("filepath must point to a .yml file")
+    yaml_dict = {}
+    with open(filepath, "r") as file:
+        yaml_dict = yaml.load(file, Loader=yaml.FullLoader)
+
+    endpoint = yaml_dict[0].get("endpoint", [""])[0]
+    basic_auth = yaml_dict[0].get("basic_auth", [{}])[0]
+    bearer_token = yaml_dict[0].get("bearer_token", [""])[0]
+    bearer_token_file = yaml_dict[0].get("bearer_token_file", [""])[0]
+    headers = yaml_dict[0].get("headers", [{}])[0]
+
+    return Config(
+        endpoint, basic_auth, bearer_token, bearer_token_file, headers
+    )
