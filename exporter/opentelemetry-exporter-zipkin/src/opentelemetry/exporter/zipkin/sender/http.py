@@ -16,12 +16,11 @@
 
 import logging
 import requests
-from typing import List, Optional, Sequence
+from typing import List, Optional
 
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.exporter.zipkin.sender import Sender
 from opentelemetry.sdk.trace.export import SpanExportResult
-from opentelemetry.trace import Span
 
 DEFAULT_ENCODING = Encoding.JSON_V2
 SUCCESS_STATUS_CODES = (200, 202)
@@ -35,7 +34,7 @@ class HttpSender(Sender):
     ):
         super().__init__(endpoint, encoding)
 
-    def send(self, encoded_spans: Sequence[Span]) -> SpanExportResult:
+    def send(self, encoded_spans) -> SpanExportResult:
 
         result = requests.post(
             url=self.endpoint,

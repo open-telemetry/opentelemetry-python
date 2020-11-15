@@ -16,6 +16,7 @@
 
 API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto
 """
+import ipaddress
 from typing import Sequence
 
 from opentelemetry.exporter.zipkin.encoder import Encoder
@@ -90,10 +91,14 @@ class ProtobufEncoder(Encoder):
         )
 
         if self.local_endpoint.ipv4 is not None:
-            encoded_local_endpoint.ipv4 = self.local_endpoint.ipv4
+            encoded_local_endpoint.ipv4 = ipaddress.ip_address(
+                self.local_endpoint.ipv4
+            ).packed
 
         if self.local_endpoint.ipv6 is not None:
-            encoded_local_endpoint.ipv6 = self.local_endpoint.ipv6
+            encoded_local_endpoint.ipv6 = ipaddress.ip_address(
+                self.local_endpoint.ipv6
+            ).packed
 
         if self.local_endpoint.port is not None:
             encoded_local_endpoint.port = self.local_endpoint.port

@@ -91,7 +91,7 @@ class Encoder(abc.ABC):
     @staticmethod
     def _get_parent_id(span_context):
         if isinstance(span_context, Span):
-            parent_id = span_context.parent.get_span_context().span_id
+            parent_id = span_context.parent.span_id
         elif isinstance(span_context, SpanContext):
             parent_id = span_context.span_id
         else:
