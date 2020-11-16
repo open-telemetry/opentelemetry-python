@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Support for v1 API json format (TBD)
+
 ## Version 0.14b0
 
 Released 2020-10-13
