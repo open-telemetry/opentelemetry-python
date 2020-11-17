@@ -16,7 +16,7 @@ import threading
 from typing import Sequence
 
 from opentelemetry.sdk.metrics.export import (
-    MetricRecord,
+    ExportRecord,
     MetricsExporter,
     MetricsExportResult,
 )
@@ -41,13 +41,13 @@ class InMemoryMetricsExporter(MetricsExporter):
             self._exported_metrics.clear()
 
     def export(
-        self, metric_records: Sequence[MetricRecord]
+        self, export_records: Sequence[ExportRecord]
     ) -> MetricsExportResult:
         if self._stopped:
             return MetricsExportResult.FAILURE
 
         with self._lock:
-            self._exported_metrics.extend(metric_records)
+            self._exported_metrics.extend(export_records)
         return MetricsExportResult.SUCCESS
 
     def get_exported_metrics(self):

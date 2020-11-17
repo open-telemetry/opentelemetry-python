@@ -145,7 +145,7 @@ class Metric(metrics_api.Metric):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
-        meter: "Meter",
+        meter: "Accumulator",
         enabled: bool = True,
     ):
         self.name = name
@@ -325,7 +325,7 @@ class ValueObserver(Observer, metrics_api.ValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
 
 
-class Record:
+class Accumulation:
     """Container class used for processing in the `Processor`"""
 
     def __init__(
@@ -339,7 +339,7 @@ class Record:
         self.aggregator = aggregator
 
 
-class Meter(metrics_api.Meter):
+class Accumulator(metrics_api.Meter):
     """See `opentelemetry.metrics.Meter`.
 
     Args:
@@ -382,10 +382,10 @@ class Meter(metrics_api.Meter):
                     bound_instrument,
                 ) in metric.bound_instruments.items():
                     for view_data in bound_instrument.view_datas:
-                        record = Record(
+                        accumulation = Accumulation(
                             metric, view_data.labels, view_data.aggregator
                         )
-                        self.processor.process(record)
+                        self.processor.process(accumulation)
 
                     if bound_instrument.ref_count() == 0:
                         to_remove.append(labels)
@@ -404,8 +404,8 @@ class Meter(metrics_api.Meter):
                     continue
 
                 for labels, aggregator in observer.aggregators.items():
-                    record = Record(observer, labels, aggregator)
-                    self.processor.process(record)
+                    accumulation = Accumulation(observer, labels, aggregator)
+                    self.processor.process(accumulation)
 
     def record_batch(
         self,
@@ -561,7 +561,7 @@ class MeterProvider(metrics_api.MeterProvider):
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = "ERROR:MISSING MODULE NAME"
             logger.error("get_meter called with missing module name.")
-        return Meter(
+        return Accumulator(
             self,
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
