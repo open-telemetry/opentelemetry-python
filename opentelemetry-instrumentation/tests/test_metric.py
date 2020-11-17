@@ -41,7 +41,7 @@ class TestMetricMixin(TestCase):
         mixin = MetricMixin()
         mixin.init_metrics("test", 1.0)
         meter = mixin.meter
-        self.assertTrue(isinstance(meter, metrics.Meter))
+        self.assertTrue(isinstance(meter, metrics.Accumulator))
         self.assertEqual(meter.instrumentation_info.name, "test")
         self.assertEqual(meter.instrumentation_info.version, 1.0)
 
