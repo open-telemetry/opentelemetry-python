@@ -103,17 +103,20 @@ Open a pull request against the main `opentelemetry-python` repo.
 Pull requests are also tested for their compatibility with packages distributed 
 by OpenTelemetry in the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git).
 
-If a pull request introduces a change that would break the compatibility of
+If a pull request (PR) introduces a change that would break the compatibility of
 these packages with the Core packages in this repo, a separate PR should be
 opened in the Contrib repo with changes to make the packages compatible.
 
-Once the pull request in the Contrib repo is open, take note of the commit SHA
-and edit the `CONTRIB_SHA` variable found in `.github/workflows/test.yml` to
-pass even the Contrib repo tests and so get the Core repo PR green and ready to
-merge.
-
-**NOTE:** That Contrib pull request will also have to reference the commit SHA
-of this Core pull request to pass its own tests.
+Follow these steps:
+1. Open Core repo PR (Contrib Tests will fail)
+2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test.yml`
+to equal the commit SHA of the Core repo PR to pass tests
+3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test.yml` to
+equal the commit SHA of the Contrib repo PR to pass Contrib repo tests (a sanity
+check for the Maintainers & Approvers)
+4. Merge the Contrib repo
+5. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `master`
+6. Merge the Core repo PR
 
 ### How to Receive Comments
 
