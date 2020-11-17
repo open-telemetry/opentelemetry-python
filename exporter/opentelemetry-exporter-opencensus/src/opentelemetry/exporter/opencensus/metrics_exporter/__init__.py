@@ -29,7 +29,7 @@ from opencensus.proto.resource.v1 import resource_pb2
 import opentelemetry.exporter.opencensus.util as utils
 from opentelemetry.sdk.metrics import Counter, Metric
 from opentelemetry.sdk.metrics.export import (
-    MetricRecord,
+    ExportRecord,
     MetricsExporter,
     MetricsExportResult,
 )
@@ -79,11 +79,11 @@ class OpenCensusMetricsExporter(MetricsExporter):
         self.exporter_start_timestamp.GetCurrentTime()
 
     def export(
-        self, metric_records: Sequence[MetricRecord]
+        self, export_records: Sequence[ExportRecord]
     ) -> MetricsExportResult:
         try:
             responses = self.client.Export(
-                self.generate_metrics_requests(metric_records)
+                self.generate_metrics_requests(export_records)
             )
 
             # Read response
@@ -99,7 +99,7 @@ class OpenCensusMetricsExporter(MetricsExporter):
         pass
 
     def generate_metrics_requests(
-        self, metrics: Sequence[MetricRecord]
+        self, metrics: Sequence[ExportRecord]
     ) -> metrics_service_pb2.ExportMetricsServiceRequest:
         collector_metrics = translate_to_collector(
             metrics, self.exporter_start_timestamp
@@ -112,15 +112,15 @@ class OpenCensusMetricsExporter(MetricsExporter):
 
 # pylint: disable=too-many-branches
 def translate_to_collector(
-    metric_records: Sequence[MetricRecord],
+    export_records: Sequence[ExportRecord],
     exporter_start_timestamp: Timestamp,
 ) -> Sequence[metrics_pb2.Metric]:
     collector_metrics = []
-    for metric_record in metric_records:
+    for export_record in export_records:
 
         label_values = []
         label_keys = []
-        for label_tuple in metric_record.labels:
+        for label_tuple in export_record.labels:
             label_keys.append(metrics_pb2.LabelKey(key=label_tuple[0]))
             label_values.append(
                 metrics_pb2.LabelValue(
@@ -130,30 +130,30 @@ def translate_to_collector(
             )
 
         metric_descriptor = metrics_pb2.MetricDescriptor(
-            name=metric_record.instrument.name,
-            description=metric_record.instrument.description,
-            unit=metric_record.instrument.unit,
-            type=get_collector_metric_type(metric_record.instrument),
+            name=export_record.instrument.name,
+            description=export_record.instrument.description,
+            unit=export_record.instrument.unit,
+            type=get_collector_metric_type(export_record.instrument),
             label_keys=label_keys,
         )
 
         # If cumulative and stateful, explicitly set the start_timestamp to
         # exporter start time.
-        if metric_record.instrument.meter.processor.stateful:
+        if export_record.instrument.meter.processor.stateful:
             start_timestamp = exporter_start_timestamp
         else:
             start_timestamp = None
 
         timeseries = metrics_pb2.TimeSeries(
             label_values=label_values,
-            points=[get_collector_point(metric_record)],
+            points=[get_collector_point(export_record)],
             start_timestamp=start_timestamp,
         )
         collector_metrics.append(
             metrics_pb2.Metric(
                 metric_descriptor=metric_descriptor,
                 timeseries=[timeseries],
-                resource=get_resource(metric_record),
+                resource=get_resource(export_record),
             )
         )
     return collector_metrics
@@ -169,29 +169,29 @@ def get_collector_metric_type(metric: Metric) -> metrics_pb2.MetricDescriptor:
     return metrics_pb2.MetricDescriptor.UNSPECIFIED
 
 
-def get_collector_point(metric_record: MetricRecord) -> metrics_pb2.Point:
+def get_collector_point(export_record: ExportRecord) -> metrics_pb2.Point:
     # TODO: horrible hack to get original list of keys to then get the bound
     # instrument
     point = metrics_pb2.Point(
         timestamp=utils.proto_timestamp_from_time_ns(
-            metric_record.aggregator.last_update_timestamp
+            export_record.aggregator.last_update_timestamp
         )
     )
-    if metric_record.instrument.value_type == int:
-        point.int64_value = metric_record.aggregator.checkpoint
-    elif metric_record.instrument.value_type == float:
-        point.double_value = metric_record.aggregator.checkpoint
+    if export_record.instrument.value_type == int:
+        point.int64_value = export_record.aggregator.checkpoint
+    elif export_record.instrument.value_type == float:
+        point.double_value = export_record.aggregator.checkpoint
     else:
         raise TypeError(
             "Unsupported metric type: {}".format(
-                metric_record.instrument.value_type
+                export_record.instrument.value_type
             )
         )
     return point
 
 
-def get_resource(metric_record: MetricRecord) -> resource_pb2.Resource:
-    resource_attributes = metric_record.resource.attributes
+def get_resource(export_record: ExportRecord) -> resource_pb2.Resource:
+    resource_attributes = export_record.resource.attributes
     return resource_pb2.Resource(
         type=infer_oc_resource_type(resource_attributes),
         labels={k: str(v) for k, v in resource_attributes.items()},

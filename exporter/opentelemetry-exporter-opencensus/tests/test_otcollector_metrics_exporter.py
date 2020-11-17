@@ -28,7 +28,7 @@ from opentelemetry.sdk.metrics import (
     get_dict_as_key,
 )
 from opentelemetry.sdk.metrics.export import (
-    MetricRecord,
+    ExportRecord,
     MetricsExportResult,
     aggregate,
 )
@@ -100,7 +100,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             "testName", "testDescription", "unit", float,
         )
         result = metrics_exporter.get_collector_point(
-            MetricRecord(
+            ExportRecord(
                 int_counter,
                 self._key_labels,
                 aggregator,
@@ -113,7 +113,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator.update(123.5)
         aggregator.take_checkpoint()
         result = metrics_exporter.get_collector_point(
-            MetricRecord(
+            ExportRecord(
                 float_counter,
                 self._key_labels,
                 aggregator,
@@ -124,7 +124,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         self.assertRaises(
             TypeError,
             metrics_exporter.get_collector_point(
-                MetricRecord(
+                ExportRecord(
                     valuerecorder,
                     self._key_labels,
                     aggregator,
@@ -144,7 +144,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         test_metric = self._meter.create_counter(
             "testname", "testdesc", "unit", int, self._labels.keys(),
         )
-        record = MetricRecord(
+        record = ExportRecord(
             test_metric,
             self._key_labels,
             aggregate.SumAggregator(),
@@ -173,7 +173,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(
+        record = ExportRecord(
             test_metric,
             self._key_labels,
             aggregator,
