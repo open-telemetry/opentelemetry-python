@@ -8,6 +8,7 @@
   ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
 - Update exception handling optional parameters, add escaped attribute to record_exception
   ([#1365](https://github.com/open-telemetry/opentelemetry-python/pull/1365))
+- Rename Record in Metrics SDK to Accumulation ([#1373](https://github.com/open-telemetry/opentelemetry-python/pull/1373))
 
 ## Version 0.15b0
 

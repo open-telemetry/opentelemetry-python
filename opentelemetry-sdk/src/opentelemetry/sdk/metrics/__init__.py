@@ -325,7 +325,7 @@ class ValueObserver(Observer, metrics_api.ValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
 
 
-class Record:
+class Accumulation:
     """Container class used for processing in the `Processor`"""
 
     def __init__(
@@ -382,10 +382,10 @@ class Meter(metrics_api.Meter):
                     bound_instrument,
                 ) in metric.bound_instruments.items():
                     for view_data in bound_instrument.view_datas:
-                        record = Record(
+                        accumulation = Accumulation(
                             metric, view_data.labels, view_data.aggregator
                         )
-                        self.processor.process(record)
+                        self.processor.process(accumulation)
 
                     if bound_instrument.ref_count() == 0:
                         to_remove.append(labels)
@@ -404,8 +404,8 @@ class Meter(metrics_api.Meter):
                     continue
 
                 for labels, aggregator in observer.aggregators.items():
-                    record = Record(observer, labels, aggregator)
-                    self.processor.process(record)
+                    accumulation = Accumulation(observer, labels, aggregator)
+                    self.processor.process(accumulation)
 
     def record_batch(
         self,
