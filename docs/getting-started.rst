@@ -135,7 +135,7 @@ Finally, run the Python script:
 
     python jaeger_example.py
 
-You can then visit the Jaegar UI, see you service under "services", and find your traces!
+You can then visit the Jaeger UI, see your service under "services", and find your traces!
 
 .. image:: images/jaeger_trace.png
 
