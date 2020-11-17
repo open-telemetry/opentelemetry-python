@@ -77,7 +77,7 @@ from prometheus_client.core import (
 
 from opentelemetry.metrics import Counter, ValueRecorder
 from opentelemetry.sdk.metrics.export import (
-    MetricRecord,
+    ExportRecord,
     MetricsExporter,
     MetricsExportResult,
 )
@@ -99,9 +99,9 @@ class PrometheusMetricsExporter(MetricsExporter):
         REGISTRY.register(self._collector)
 
     def export(
-        self, metric_records: Sequence[MetricRecord]
+        self, export_records: Sequence[ExportRecord]
     ) -> MetricsExportResult:
-        self._collector.add_metrics_data(metric_records)
+        self._collector.add_metrics_data(export_records)
         return MetricsExportResult.SUCCESS
 
     def shutdown(self) -> None:
@@ -120,8 +120,8 @@ class CustomCollector:
             r"[^\w]", re.UNICODE | re.IGNORECASE
         )
 
-    def add_metrics_data(self, metric_records: Sequence[MetricRecord]) -> None:
-        self._metrics_to_export.append(metric_records)
+    def add_metrics_data(self, export_records: Sequence[ExportRecord]) -> None:
+        self._metrics_to_export.append(export_records)
 
     def collect(self):
         """Collect fetches the metrics from OpenTelemetry
@@ -131,38 +131,38 @@ class CustomCollector:
         """
 
         while self._metrics_to_export:
-            for metric_record in self._metrics_to_export.popleft():
+            for export_record in self._metrics_to_export.popleft():
                 prometheus_metric = self._translate_to_prometheus(
-                    metric_record
+                    export_record
                 )
                 if prometheus_metric is not None:
                     yield prometheus_metric
 
-    def _translate_to_prometheus(self, metric_record: MetricRecord):
+    def _translate_to_prometheus(self, export_record: ExportRecord):
         prometheus_metric = None
         label_values = []
         label_keys = []
-        for label_tuple in metric_record.labels:
+        for label_tuple in export_record.labels:
             label_keys.append(self._sanitize(label_tuple[0]))
             label_values.append(label_tuple[1])
 
         metric_name = ""
         if self._prefix != "":
             metric_name = self._prefix + "_"
-        metric_name += self._sanitize(metric_record.instrument.name)
+        metric_name += self._sanitize(export_record.instrument.name)
 
-        description = getattr(metric_record.instrument, "description", "")
-        if isinstance(metric_record.instrument, Counter):
+        description = getattr(export_record.instrument, "description", "")
+        if isinstance(export_record.instrument, Counter):
             prometheus_metric = CounterMetricFamily(
                 name=metric_name, documentation=description, labels=label_keys
             )
             prometheus_metric.add_metric(
-                labels=label_values, value=metric_record.aggregator.checkpoint
+                labels=label_values, value=export_record.aggregator.checkpoint
             )
         # TODO: Add support for histograms when supported in OT
-        elif isinstance(metric_record.instrument, ValueRecorder):
-            value = metric_record.aggregator.checkpoint
-            if isinstance(metric_record.aggregator, MinMaxSumCountAggregator):
+        elif isinstance(export_record.instrument, ValueRecorder):
+            value = export_record.aggregator.checkpoint
+            if isinstance(export_record.aggregator, MinMaxSumCountAggregator):
                 prometheus_metric = SummaryMetricFamily(
                     name=metric_name,
                     documentation=description,
@@ -183,7 +183,7 @@ class CustomCollector:
 
         else:
             logger.warning(
-                "Unsupported metric type. %s", type(metric_record.instrument)
+                "Unsupported metric type. %s", type(export_record.instrument)
             )
         return prometheus_metric
 
