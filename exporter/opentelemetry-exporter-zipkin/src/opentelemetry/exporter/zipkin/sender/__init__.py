@@ -16,7 +16,7 @@
 
 import abc
 import logging
-from typing import List, Sequence
+from typing import Sequence, Tuple
 
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.sdk.trace.export import SpanExportResult
@@ -54,5 +54,5 @@ class Sender:
 
     @staticmethod
     @abc.abstractmethod
-    def supported_encodings() -> List[Encoding]:
+    def supported_encodings() -> Tuple[Encoding, ...]:
         pass

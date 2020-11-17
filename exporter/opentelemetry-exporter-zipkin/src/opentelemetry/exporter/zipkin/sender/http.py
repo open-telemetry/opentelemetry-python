@@ -16,11 +16,12 @@
 
 import logging
 import requests
-from typing import List, Optional
+from typing import Optional, Sequence, Tuple
 
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.exporter.zipkin.sender import Sender
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.trace import Span
 
 DEFAULT_ENCODING = Encoding.JSON_V2
 SUCCESS_STATUS_CODES = (200, 202)
@@ -30,11 +31,11 @@ logger = logging.getLogger(__name__)
 
 class HttpSender(Sender):
     def __init__(
-        self, endpoint: str, encoding: Optional[Encoding] = DEFAULT_ENCODING,
+        self, endpoint: str, encoding: Encoding = DEFAULT_ENCODING,
     ):
         super().__init__(endpoint, encoding)
 
-    def send(self, encoded_spans) -> SpanExportResult:
+    def send(self, encoded_spans: Sequence[Span]) -> SpanExportResult:
 
         result = requests.post(
             url=self.endpoint,
@@ -53,10 +54,10 @@ class HttpSender(Sender):
         return SpanExportResult.SUCCESS
 
     @staticmethod
-    def supported_encodings() -> List[Encoding]:
-        return [Encoding.JSON_V1, Encoding.JSON_V2, Encoding.PROTOBUF]
+    def supported_encodings() -> Tuple[Encoding, ...]:
+        return Encoding.JSON_V1, Encoding.JSON_V2, Encoding.PROTOBUF
 
-    def content_type(self):
+    def content_type(self) -> str:
         if self.encoding == Encoding.PROTOBUF:
             content_type = "application/x-protobuf"
         else:
