@@ -183,10 +183,10 @@ class JsonEncoder(Encoder, abc.ABC):
         }
 
         if self.local_endpoint.ipv4 is not None:
-            encoded_local_endpoint["ipv4"] = self.local_endpoint.ipv4
+            encoded_local_endpoint["ipv4"] = str(self.local_endpoint.ipv4)
 
         if self.local_endpoint.ipv6 is not None:
-            encoded_local_endpoint["ipv6"] = self.local_endpoint.ipv6
+            encoded_local_endpoint["ipv6"] = str(self.local_endpoint.ipv6)
 
         if self.local_endpoint.port is not None:
             encoded_local_endpoint["port"] = self.local_endpoint.port

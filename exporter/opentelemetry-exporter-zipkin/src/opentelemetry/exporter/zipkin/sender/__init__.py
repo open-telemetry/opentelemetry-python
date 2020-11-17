@@ -42,7 +42,7 @@ class Sender:
         self.endpoint = endpoint
 
         if encoding not in self.supported_encodings():
-            logger.error(
+            raise ValueError(
                 "Encoding type %s is not supported by this sender", encoding
             )
 
