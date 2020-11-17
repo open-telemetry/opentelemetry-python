@@ -23,7 +23,7 @@ class Processor:
     """Base class for all processor types.
 
     The processor is responsible for storing the aggregators and aggregated
-    values received from updates from metrics in the meter. The stored values
+    values received from updates from metrics in the accumulator. The stored values
     will be sent to an exporter for exporting.
     """
 
