@@ -65,7 +65,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_constructor_env_vars(self):
         os_service_name = "os-env-service-name"
         os_endpoint = "https://foo:9911/path"
-        os_encoding = Encoding.PROTOBUF
+        os_encoding = Encoding.V2_PROTOBUF
 
         os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"] = os_service_name
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
@@ -104,7 +104,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         service_name, endpoint and encoding arguments."""
         service_name = "my-opentelemetry-zipkin"
         endpoint = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
-        encoding = Encoding.PROTOBUF
+        encoding = Encoding.V2_PROTOBUF
 
         exporter = ZipkinSpanExporter(service_name, endpoint, encoding)
 
@@ -124,7 +124,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         a sender and encoder."""
         service_name = "my-test-service"
         endpoint = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
-        encoding = Encoding.PROTOBUF
+        encoding = Encoding.V2_PROTOBUF
         exporter = ZipkinSpanExporter(
             encoder=ProtobufEncoder(Endpoint(service_name)),
             sender=HttpSender(endpoint, encoding),
@@ -149,16 +149,16 @@ class TestZipkinSpanExporter(unittest.TestCase):
         superseded by the explicit sender and encoder provided.
         """
         os_endpoint = "https://os.env.param:9911/path"
-        os_encoding = Encoding.JSON_V1
+        os_encoding = Encoding.V1_JSON
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
         os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"] = os_encoding.value
 
         exporter_param_service_name = "exporter-param-service-name"
         exporter_param_endpoint = "https://constructor.param:9911/path"
-        exporter_param_encoding = Encoding.JSON_V1
+        exporter_param_encoding = Encoding.V1_JSON
 
         encoder_param_service_name = "encoder-param-service-name"
-        sender_param_encoding = Encoding.PROTOBUF
+        sender_param_encoding = Encoding.V2_PROTOBUF
         sender_param_endpoint = "https://sender.param:9911/path"
 
         exporter = ZipkinSpanExporter(

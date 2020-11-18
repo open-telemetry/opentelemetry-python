@@ -41,9 +41,9 @@ class Encoding(Enum):
     OS environ var OTEL_EXPORTER_ZIPKIN_ENCODING.
     """
 
-    JSON_V1 = "json_v1"
-    JSON_V2 = "json_v2"
-    PROTOBUF = "protobuf"
+    V1_JSON = "v1_json"
+    V2_JSON = "v2_json"
+    V2_PROTOBUF = "v2_protobuf"
 
 
 # pylint: disable=W0223

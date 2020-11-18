@@ -115,7 +115,7 @@ from opentelemetry.trace import Span
 
 DEFAULT_SERVICE_NAME = "unknown"
 DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans"
-DEFAULT_ENCODING = Encoding.JSON_V2
+DEFAULT_ENCODING = Encoding.V2_JSON
 
 
 class ZipkinSpanExporter(SpanExporter):
@@ -172,11 +172,11 @@ class ZipkinSpanExporter(SpanExporter):
             # TODO: add logic to determine primary ipv4 and ipv6 addresses to
             #  pass into Endpoint constructor.
             local_endpoint = Endpoint(service_name)
-            if encoding == Encoding.JSON_V1:
+            if encoding == Encoding.V1_JSON:
                 self.encoder = JsonV1Encoder(local_endpoint)
-            elif encoding == Encoding.JSON_V2:
+            elif encoding == Encoding.V2_JSON:
                 self.encoder = JsonV2Encoder(local_endpoint)
-            elif encoding == Encoding.PROTOBUF:
+            elif encoding == Encoding.V2_PROTOBUF:
                 self.encoder = ProtobufEncoder(local_endpoint)
 
         endpoint = Configuration().EXPORTER_ZIPKIN_ENDPOINT or endpoint
