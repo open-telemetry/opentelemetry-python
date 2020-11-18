@@ -40,7 +40,7 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export import MetricRecord
+from opentelemetry.sdk.metrics.export import ExportRecord
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.resources import Resource as SDKResource
 
@@ -50,7 +50,7 @@ class TestOTLPMetricExporter(TestCase):
         self.exporter = OTLPMetricsExporter(insecure=True)
         resource = SDKResource(OrderedDict([("a", 1), ("b", False)]))
 
-        self.counter_metric_record = MetricRecord(
+        self.counter_export_record = ExportRecord(
             Counter(
                 "c",
                 "d",
@@ -91,15 +91,19 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
+    def test_no_credentials_error(self):
+        with self.assertRaises(ValueError):
+            OTLPMetricsExporter()
+
     @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_translate_metrics(self, mock_time_ns):
         # pylint: disable=no-member
 
         mock_time_ns.configure_mock(**{"return_value": 1})
 
-        self.counter_metric_record.aggregator.checkpoint = 1
-        self.counter_metric_record.aggregator.initial_checkpoint_timestamp = 1
-        self.counter_metric_record.aggregator.last_update_timestamp = 1
+        self.counter_export_record.aggregator.checkpoint = 1
+        self.counter_export_record.aggregator.initial_checkpoint_timestamp = 1
+        self.counter_export_record.aggregator.last_update_timestamp = 1
 
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
@@ -146,6 +150,6 @@ class TestOTLPMetricExporter(TestCase):
         )
 
         # pylint: disable=protected-access
-        actual = self.exporter._translate_data([self.counter_metric_record])
+        actual = self.exporter._translate_data([self.counter_export_record])
 
         self.assertEqual(expected, actual)
