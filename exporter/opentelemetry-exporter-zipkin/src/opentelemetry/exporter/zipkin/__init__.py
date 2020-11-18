@@ -169,6 +169,8 @@ class ZipkinSpanExporter(SpanExporter):
             service_name = (
                 Configuration().EXPORTER_ZIPKIN_SERVICE_NAME or service_name
             )
+            # TODO: add logic to determine primary ipv4 and ipv6 addresses to
+            #  pass into Endpoint constructor.
             local_endpoint = Endpoint(service_name)
             if encoding == Encoding.JSON_V1:
                 self.encoder = JsonV1Encoder(local_endpoint)
