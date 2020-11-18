@@ -43,7 +43,7 @@ class Sender:
 
         if encoding not in self.supported_encodings():
             raise ValueError(
-                "Encoding type %s is not supported by this sender", encoding
+                "Encoding type %r is not supported by this sender" % encoding
             )
 
         self.encoding = encoding
