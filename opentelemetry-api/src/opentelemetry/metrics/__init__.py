@@ -47,24 +47,127 @@ logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
-class BoundInstrument(ABC):
+class Instrument(ABC):
+    """
+                            Adding                              Grouping
+                            Monotonic       Non Monotonic
+    Synchronous     Bound   BoundCounter    BoundUpDownCounter  BoundValueRecorder
+                    Unbound Counter         UpDownCounter       ValueRecorder
+    Asynchronous            SumObserver     UpDownSumObserver   ValueObserver
+    """
 
+
+class Synchronous(Instrument):
+    pass
+
+
+class Bound(Synchronous):
     @abstractmethod
     def unbind(self):
         pass
 
 
-class SynchronousInstrument(ABC):
+class Unbound(Synchronous):
 
     @abstractmethod
-    def bind(self, labels: Dict[str, str]) -> BoundInstrument:
+    def bind(self, labels: Dict[str, str]) -> Bound:
+        """Gets a bound metric instrument.
+
+        Bound metric instruments are useful to reduce the cost of repeatedly
+        recording a metric with a pre-defined set of labels.
+
+        Args:
+            labels: Labels that the bound instrument will use when its ``add``
+                    or ``record`` method will be called.
+        """
+
+
+class Asynchronous(Instrument):
+
+    @abstractmethod
+    def observe(self, value: ValueT) -> None:
         pass
 
 
-class SynchronousAddingInstrument(SynchronousInstrument):
+class Adding(Instrument):
+    pass
+
+
+class Grouping(Instrument):
+    pass
+
+
+class Monotonic(Adding):
+
+    def _check_value(self, value):
+        """
+        Checks that the value does not decrease
+        """
+
+        if value < 0:
+            raise Exception("negative value found {}".format(value))
+
+
+class NonMonotonic(Adding):
+    pass
+
+
+class Counter(Unbound, Monotonic):
 
     @abstractmethod
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Increases the value of the bound counter by ``value``.
+
+        Args:
+            value: The value to add to the instrument. Must be positive.
+        """
+        self._check_value(value)
+
+
+class BoundCounter(Bound, Monotonic):
+    @abstractmethod
     def add(self, value: ValueT) -> None:
+        """Increases the value of the counter by ``value``.
+
+        Args:
+            value: The value to add to the counter metric. Should be positive
+                or zero. For a Counter that can decrease, use
+                `UpDownCounter`.
+        """
+        self._check_value(value)
+
+
+class UpDownCounter(Unbound, NonMonotonic):
+
+    @abstractmethod
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        """Increases the value of the bound counter by ``value``.
+
+        Args:
+            value: The value to add to the instrument.
+        """
+
+
+class BoundUpDownCounter(Bound, NonMonotonic):
+    @abstractmethod
+    def add(self, value: ValueT) -> None:
+        """Increases the value of the counter by ``value``.
+
+        Args:
+            value: The value to add to the counter instrument
+        """
+
+
+class ValueRecorder(Unbound, Grouping):
+
+    @abstractmethod
+    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
+
+
+class BoundValueRecorder(Bound, Grouping):
+    @abstractmethod
+    def record(self, value: ValueT) -> None:
         """Increases the value of the bound counter by ``value``.
 
         Args:
@@ -72,68 +175,66 @@ class SynchronousAddingInstrument(SynchronousInstrument):
         """
 
 
-class SynchronousGroupingInstrument(SynchronousInstrument):
-
+class SumObserver(Asynchronous, Monotonic):
     @abstractmethod
-    def record(self, value: ValueT) -> None:
+    def observe(self, value: ValueT) -> None:
+        self._check_value(value)
+
+
+class UpDownSumObserver(Asynchronous, NonMonotonic):
+    @abstractmethod
+    def observe(self, value: ValueT) -> None:
         pass
 
 
-class BoundInstrument(ABC):
-
+class ValueObserver(Asynchronous, Grouping):
     @abstractmethod
+    def observe(self, value: ValueT) -> None:
+        pass
+
+
+class DefaultBound(Bound):
     def unbind(self):
         pass
 
 
-class BoundAddingInstrument(BoundInstrument):
-    @abstractmethod
-    def add(self, value: ValueT) -> None:
-        """Increases the value of the bound counter by ``value``.
-
-        Args:
-            value: The value to add to the bound counter. Must be positive.
-        """
-
-
-class BoundGroupingInstrument(BoundInstrument):
-    @abstractmethod
-    def record(self, value: ValueT) -> None:
-        """Increases the value of the bound counter by ``value``.
-
-        Args:
-            value: The value to add to the bound counter. Must be positive.
-        """
-
-
-class BoundCounter():
-    @abstractmethod
-    def add(self, value: ValueT) -> None:
-        pass
-
-
-class DefaultBoundCounter(BoundCounter):
+class DefaultCounter(Counter):
     """The default bound counter instrument.
 
     Used when no bound counter implementation is available.
     """
 
     def add(self, value: ValueT) -> None:
+        super().add(value)
+
+    def bind(self, labels: Dict[str, str]) -> Bound:
+        return DefaultBoundCounter()
+
+
+class DefaultBoundCounter(BoundCounter, DefaultBound):
+    """The default bound counter instrument.
+
+    Used when no bound counter implementation is available.
+    """
+
+    def add(self, value: ValueT) -> None:
+        super().add(value)
+
+
+class DefaultUpDownCounter(UpDownCounter):
+    """The default bound updowncounter instrument.
+
+    Used when no bound updowncounter implementation is available.
+    """
+
+    def add(self, value: ValueT) -> None:
         pass
 
-
-class BoundUpDownCounter(ABC):
-    @abstractmethod
-    def add(self, value: ValueT) -> None:
-        """Increases the value of the bound updowncounter by ``value``.
-
-        Args:
-            value: The value to add to the bound updowncounter. Can be positive
-                or negative.
-        """
+    def bind(self, labels: Dict[str, str]) -> BoundInstrument:
+        return DefaultBoundUpDownCounter()
 
 
-class DefaultBoundUpDownCounter(BoundUpDownCounter):
+class DefaultBoundUpDownCounter(BoundUpDownCounter, DefaultBoundInstrument):
     """The default bound updowncounter instrument.
 
     Used when no bound updowncounter implementation is available.
@@ -143,17 +244,15 @@ class DefaultBoundUpDownCounter(BoundUpDownCounter):
         pass
 
 
-class BoundValueRecorder(ABC):
-    @abstractmethod
+class DefaultValueRecorder(ValueRecorder, DefaultBoundInstrument):
     def record(self, value: ValueT) -> None:
-        """Records the given ``value`` to this bound valuerecorder.
+        pass
 
-        Args:
-            value: The value to record to the bound valuerecorder.
-        """
+    def bind(self, labels: Dict[str, str]) -> BoundInstrument:
+        return DefaultBoundValueRecorder()
 
 
-class DefaultBoundValueRecorder(BoundValueRecorder):
+class DefaultBoundValueRecorder(BoundValueRecorder, DefaultBoundInstrument):
     """The default bound valuerecorder instrument.
 
     Used when no bound valuerecorder implementation is available.
@@ -163,130 +262,24 @@ class DefaultBoundValueRecorder(BoundValueRecorder):
         pass
 
 
-class Metric(ABC):
-    """Base class for various types of metrics.
-
-    Metric class that inherit from this class are specialized with the type of
-    bound metric instrument that the metric holds.
-    """
-
-    @abstractmethod
-    def bind(self, labels: Dict[str, str]) -> "object":
-        """Gets a bound metric instrument.
-
-        Bound metric instruments are useful to reduce the cost of repeatedly
-        recording a metric with a pre-defined set of label values.
-
-        Args:
-            labels: Labels to associate with the bound instrument.
-        """
-
-
-class Counter(Metric):
-    """A counter type metric that expresses the computation of a sum."""
-
-    @abstractmethod
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Increases the value of the counter by ``value``.
-
-        Args:
-            value: The value to add to the counter metric. Should be positive
-                or zero. For a Counter that can decrease, use
-                `UpDownCounter`.
-            labels: Labels to associate with the bound instrument.
-        """
-
-
-class DefaultCounter(Counter):
-    """The default counter instrument.
-
-    Used when no `Counter` implementation is available.
-    """
-
-    def bind(self, labels: Dict[str, str]) -> "DefaultBoundCounter":
-        return DefaultBoundCounter()
-
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
-        pass
-
-
-class UpDownCounter(Metric):
-    """A counter type metric that expresses the computation of a sum,
-    allowing negative increments."""
-
-    @abstractmethod
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Increases the value of the counter by ``value``.
-
-        Args:
-            value: The value to add to the counter metric. Can be positive or
-                negative. For a Counter that is never decreasing, use
-                `Counter`.
-            labels: Labels to associate with the bound instrument.
-        """
-
-
-class DefaultUpDownCounter(UpDownCounter):
-    """The default updowncounter instrument.
-
-    Used when no `UpDownCounter` implementation is available.
-    """
-
-    def bind(self, labels: Dict[str, str]) -> "DefaultBoundUpDownCounter":
-        return DefaultBoundUpDownCounter()
-
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
-        pass
-
-
-class ValueRecorder(Metric):
-    """A valuerecorder type metric that represent raw stats."""
-
-    @abstractmethod
-    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Records the ``value`` to the valuerecorder.
-
-        Args:
-            value: The value to record to this valuerecorder metric.
-            labels: Labels to associate with the bound instrument.
-        """
-
-
-class DefaultValueRecorder(ValueRecorder):
-    """The default valuerecorder instrument.
-
-    Used when no `ValueRecorder` implementation is available.
-    """
-
-    def bind(self, labels: Dict[str, str]) -> "DefaultBoundValueRecorder":
-        return DefaultBoundValueRecorder()
-
-    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
-        pass
-
-
-class Observer(ABC):
-    """An observer type metric instrument used to capture a current set of
-    values.
-
-    Observer instruments are asynchronous, a callback is invoked with the
-    observer instrument as argument allowing the user to capture multiple
-    values per collection interval.
-    """
+class SumObserver(ABC, MonotonicInstrument):
+    """Asynchronous instrument used to capture a monotonic sum."""
 
     @abstractmethod
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        """Captures ``value`` to the observer.
-
-        Args:
-            value: The value to capture to this observer metric.
-            labels: Labels associated to ``value``.
-        """
+        self._check_value(value)
 
 
-# pylint: disable=W0223
-class SumObserver(Observer):
-    """Asynchronous instrument used to capture a monotonic sum."""
+class UpDownSumObserver(ABC):
+    @abstractmethod
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
+
+
+class ValueObserver(ABC):
+    @abstractmethod
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+        pass
 
 
 class DefaultSumObserver(SumObserver):
