@@ -14,6 +14,8 @@
 
 """Zipkin Export Encoders for JSON formats
 """
+from typing import Dict
+
 from opentelemetry.exporter.zipkin.encoder import JsonEncoder
 from opentelemetry.exporter.zipkin.encoder.v1 import V1Encoder
 from opentelemetry.trace import Span
@@ -25,7 +27,7 @@ class JsonV1Encoder(JsonEncoder, V1Encoder):
     API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin-api.yaml
     """
 
-    def _encode_span(self, span: Span, encoded_local_endpoint):
+    def _encode_span(self, span: Span, encoded_local_endpoint: Dict) -> Dict:
         context = span.get_span_context()
 
         encoded_annotations = self._extract_annotations_from_events(

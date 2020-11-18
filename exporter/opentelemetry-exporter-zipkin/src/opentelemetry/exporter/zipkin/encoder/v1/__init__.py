@@ -16,6 +16,7 @@
 """
 
 import abc
+from typing import Dict, List
 
 from opentelemetry.exporter.zipkin.encoder import Encoder
 from opentelemetry.trace import Span, SpanContext, SpanKind
@@ -23,7 +24,9 @@ from opentelemetry.trace import Span, SpanContext, SpanKind
 
 # pylint: disable=W0223
 class V1Encoder(Encoder, abc.ABC):
-    def _extract_binary_annotations(self, span: Span, encoded_local_endpoint):
+    def _extract_binary_annotations(
+        self, span: Span, encoded_local_endpoint: Dict
+    ) -> List[Dict]:
         binary_annotations = []
         for tag_key, tag_value in self._extract_tags_from_span(span).items():
             if isinstance(tag_value, str) and self.max_tag_value_length > 0:
