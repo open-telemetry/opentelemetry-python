@@ -100,6 +100,24 @@ $ git push fork feature
 
 Open a pull request against the main `opentelemetry-python` repo.
 
+Pull requests are also tested for their compatibility with packages distributed 
+by OpenTelemetry in the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git).
+
+If a pull request (PR) introduces a change that would break the compatibility of
+these packages with the Core packages in this repo, a separate PR should be
+opened in the Contrib repo with changes to make the packages compatible.
+
+Follow these steps:
+1. Open Core repo PR (Contrib Tests will fail)
+2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test.yml`
+to equal the commit SHA of the Core repo PR to pass tests
+3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test.yml` to
+equal the commit SHA of the Contrib repo PR to pass Contrib repo tests (a sanity
+check for the Maintainers & Approvers)
+4. Merge the Contrib repo
+5. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `master`
+6. Merge the Core repo PR
+
 ### How to Receive Comments
 
 * If the PR is not ready for review, please put `[WIP]` in the title, tag it
@@ -113,6 +131,8 @@ A PR is considered to be **ready to merge** when:
   / [Maintainers](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer)
   (at different companies).
 * Major feedbacks are resolved.
+* All tests are passing, including Contrib Repo tests which may require
+updating the GitHub workflow to reference a PR in the Contrib repo
 * It has been open for review for at least one working day. This gives people
   reasonable time to review.
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
