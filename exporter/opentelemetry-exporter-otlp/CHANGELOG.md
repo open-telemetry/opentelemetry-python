@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Change temporality for Counter and UpDownCounter
+  ([#1384](https://github.com/open-telemetry/opentelemetry-python/pull/1384))
 - Add Gzip compression for exporter
   ([#1141](https://github.com/open-telemetry/opentelemetry-python/pull/1141))
 - OTLP exporter: Handle error case when no credentials supplied
