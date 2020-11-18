@@ -27,7 +27,8 @@ See the `metrics api`_ spec for terminology and context clarification.
 .. _metrics api:
     https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/metrics/api.md
 """
-import abc
+
+from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import (
     Callable,
@@ -46,14 +47,69 @@ logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
 
 
-class BoundCounter(abc.ABC):
-    @abc.abstractmethod
+class BoundInstrument(ABC):
+
+    @abstractmethod
+    def unbind(self):
+        pass
+
+
+class SynchronousInstrument(ABC):
+
+    @abstractmethod
+    def bind(self, labels: Dict[str, str]) -> BoundInstrument:
+        pass
+
+
+class SynchronousAddingInstrument(SynchronousInstrument):
+
+    @abstractmethod
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound counter by ``value``.
 
         Args:
             value: The value to add to the bound counter. Must be positive.
         """
+
+
+class SynchronousGroupingInstrument(SynchronousInstrument):
+
+    @abstractmethod
+    def record(self, value: ValueT) -> None:
+        pass
+
+
+class BoundInstrument(ABC):
+
+    @abstractmethod
+    def unbind(self):
+        pass
+
+
+class BoundAddingInstrument(BoundInstrument):
+    @abstractmethod
+    def add(self, value: ValueT) -> None:
+        """Increases the value of the bound counter by ``value``.
+
+        Args:
+            value: The value to add to the bound counter. Must be positive.
+        """
+
+
+class BoundGroupingInstrument(BoundInstrument):
+    @abstractmethod
+    def record(self, value: ValueT) -> None:
+        """Increases the value of the bound counter by ``value``.
+
+        Args:
+            value: The value to add to the bound counter. Must be positive.
+        """
+
+
+class BoundCounter():
+    @abstractmethod
+    def add(self, value: ValueT) -> None:
+        pass
 
 
 class DefaultBoundCounter(BoundCounter):
@@ -66,8 +122,8 @@ class DefaultBoundCounter(BoundCounter):
         pass
 
 
-class BoundUpDownCounter(abc.ABC):
-    @abc.abstractmethod
+class BoundUpDownCounter(ABC):
+    @abstractmethod
     def add(self, value: ValueT) -> None:
         """Increases the value of the bound updowncounter by ``value``.
 
@@ -87,8 +143,8 @@ class DefaultBoundUpDownCounter(BoundUpDownCounter):
         pass
 
 
-class BoundValueRecorder(abc.ABC):
-    @abc.abstractmethod
+class BoundValueRecorder(ABC):
+    @abstractmethod
     def record(self, value: ValueT) -> None:
         """Records the given ``value`` to this bound valuerecorder.
 
@@ -107,14 +163,14 @@ class DefaultBoundValueRecorder(BoundValueRecorder):
         pass
 
 
-class Metric(abc.ABC):
+class Metric(ABC):
     """Base class for various types of metrics.
 
     Metric class that inherit from this class are specialized with the type of
     bound metric instrument that the metric holds.
     """
 
-    @abc.abstractmethod
+    @abstractmethod
     def bind(self, labels: Dict[str, str]) -> "object":
         """Gets a bound metric instrument.
 
@@ -129,7 +185,7 @@ class Metric(abc.ABC):
 class Counter(Metric):
     """A counter type metric that expresses the computation of a sum."""
 
-    @abc.abstractmethod
+    @abstractmethod
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
@@ -158,7 +214,7 @@ class UpDownCounter(Metric):
     """A counter type metric that expresses the computation of a sum,
     allowing negative increments."""
 
-    @abc.abstractmethod
+    @abstractmethod
     def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Increases the value of the counter by ``value``.
 
@@ -186,7 +242,7 @@ class DefaultUpDownCounter(UpDownCounter):
 class ValueRecorder(Metric):
     """A valuerecorder type metric that represent raw stats."""
 
-    @abc.abstractmethod
+    @abstractmethod
     def record(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Records the ``value`` to the valuerecorder.
 
@@ -209,7 +265,7 @@ class DefaultValueRecorder(ValueRecorder):
         pass
 
 
-class Observer(abc.ABC):
+class Observer(ABC):
     """An observer type metric instrument used to capture a current set of
     values.
 
@@ -218,7 +274,7 @@ class Observer(abc.ABC):
     values per collection interval.
     """
 
-    @abc.abstractmethod
+    @abstractmethod
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         """Captures ``value`` to the observer.
 
@@ -264,8 +320,8 @@ class DefaultValueObserver(ValueObserver):
         pass
 
 
-class MeterProvider(abc.ABC):
-    @abc.abstractmethod
+class MeterProvider(ABC):
+    @abstractmethod
     def get_meter(
         self,
         instrumenting_module_name: str,
@@ -311,7 +367,7 @@ ObserverCallbackT = Callable[[Observer], None]
 
 
 # pylint: disable=unused-argument
-class Meter(abc.ABC):
+class Meter(ABC):
     """An interface to allow the recording of metrics.
 
     `Metric` s or metric instruments, are devices used for capturing raw
@@ -319,7 +375,7 @@ class Meter(abc.ABC):
     fixed interpretation to capture measurements.
     """
 
-    @abc.abstractmethod
+    @abstractmethod
     def record_batch(
         self,
         labels: Dict[str, str],
@@ -338,7 +394,7 @@ class Meter(abc.ABC):
                 corresponding value to record for that metric.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def create_counter(
         self,
         name: str,
@@ -358,7 +414,7 @@ class Meter(abc.ABC):
             enabled: Whether to report the metric by default.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def create_updowncounter(
         self,
         name: str,
@@ -378,7 +434,7 @@ class Meter(abc.ABC):
             enabled: Whether to report the metric by default.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def create_valuerecorder(
         self,
         name: str,
@@ -398,7 +454,7 @@ class Meter(abc.ABC):
             enabled: Whether to report the metric by default.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def register_sumobserver(
         self,
         callback: ObserverCallbackT,
@@ -424,7 +480,7 @@ class Meter(abc.ABC):
         Returns: A new ``SumObserver`` metric instrument.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def register_updownsumobserver(
         self,
         callback: ObserverCallbackT,
@@ -450,7 +506,7 @@ class Meter(abc.ABC):
         Returns: A new ``UpDownSumObserver`` metric instrument.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def register_valueobserver(
         self,
         callback: ObserverCallbackT,
@@ -476,7 +532,7 @@ class Meter(abc.ABC):
         Returns: A new ``ValueObserver`` metric instrument.
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def unregister_observer(self, observer: "Observer") -> None:
         """Unregisters an ``Observer`` metric instrument.
 

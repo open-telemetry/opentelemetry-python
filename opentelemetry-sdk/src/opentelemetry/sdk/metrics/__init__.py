@@ -16,7 +16,9 @@ import atexit
 import logging
 import threading
 from typing import Dict, Sequence, Tuple, Type, TypeVar
+from abc import abstractmethod
 
+from opentelemetry.metrics import Metric
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricsExporter,
@@ -26,7 +28,6 @@ from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.export.processor import Processor
 from opentelemetry.sdk.metrics.view import (
-    ViewData,
     ViewManager,
     get_default_aggregator,
 )
@@ -124,7 +125,7 @@ class BoundValueRecorder(metrics_api.BoundValueRecorder, BaseBoundInstrument):
             self.update(value)
 
 
-class Metric(metrics_api.Metric):
+class SynchronousMetric(Metric):
     """Base class for all synchronous metric types.
 
     This is the class that is used to represent a metric that is to be
@@ -173,10 +174,16 @@ class Metric(metrics_api.Metric):
             type(self).__name__, self.name, self.description
         )
 
-    UPDATE_FUNCTION = lambda x, y: None  # noqa: E731
+    @abstractmethod
+    def _update(
+        self, value: metrics_api.ValueT, labels: Dict[str, str]
+    ) -> None:
+        """
+        This function is called by record_batch
+        """
 
 
-class Counter(Metric, metrics_api.Counter):
+class Counter(SynchronousMetric, metrics_api.Counter):
     """See `opentelemetry.metrics.Counter`.
     """
 
@@ -188,10 +195,8 @@ class Counter(Metric, metrics_api.Counter):
         bound_intrument.add(value)
         bound_intrument.release()
 
-    UPDATE_FUNCTION = add
 
-
-class UpDownCounter(Metric, metrics_api.UpDownCounter):
+class UpDownCounter(SynchronousMetric, metrics_api.UpDownCounter):
     """See `opentelemetry.metrics.UpDownCounter`.
     """
 
@@ -203,10 +208,8 @@ class UpDownCounter(Metric, metrics_api.UpDownCounter):
         bound_intrument.add(value)
         bound_intrument.release()
 
-    UPDATE_FUNCTION = add
 
-
-class ValueRecorder(Metric, metrics_api.ValueRecorder):
+class ValueRecorder(SynchronousMetric, metrics_api.ValueRecorder):
     """See `opentelemetry.metrics.ValueRecorder`."""
 
     BOUND_INSTR_TYPE = BoundValueRecorder
@@ -218,8 +221,6 @@ class ValueRecorder(Metric, metrics_api.ValueRecorder):
         bound_intrument = self.bind(labels)
         bound_intrument.record(value)
         bound_intrument.release()
-
-    UPDATE_FUNCTION = record
 
 
 MetricT = TypeVar("MetricT", Counter, UpDownCounter, ValueRecorder)
@@ -416,7 +417,10 @@ class Accumulator(metrics_api.Meter):
         # TODO: Avoid enconding the labels for each instrument, encode once
         # and reuse.
         for metric, value in record_tuples:
-            metric.UPDATE_FUNCTION(value, labels)
+            if isinstance(metric, Counter):
+                metric.add(value, labels)
+            elif isinstance(metric, ValueRecorder):
+                metric.record(value, labels)
 
     def create_counter(
         self,
