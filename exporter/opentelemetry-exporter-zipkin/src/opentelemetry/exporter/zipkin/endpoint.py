@@ -51,7 +51,7 @@ class Endpoint:
         return self._ipv4
 
     @ipv4.setter
-    def ipv4(self, address: IpInput):
+    def ipv4(self, address: IpInput) -> None:
         if address is None:
             self._ipv4 = None
         else:
@@ -67,7 +67,7 @@ class Endpoint:
         return self._ipv6
 
     @ipv6.setter
-    def ipv6(self, address: IpInput):
+    def ipv6(self, address: IpInput) -> None:
         if address is None:
             self._ipv6 = None
         else:
