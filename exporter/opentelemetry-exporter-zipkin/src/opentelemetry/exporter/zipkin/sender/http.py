@@ -16,7 +16,7 @@
 
 import logging
 import requests
-from typing import Optional, Sequence, Tuple
+from typing import Sequence, Tuple
 
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.exporter.zipkin.sender import Sender

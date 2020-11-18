@@ -177,7 +177,6 @@ class Encoder(abc.ABC):
 
 
 class JsonEncoder(Encoder, abc.ABC):
-
     def _encode_spans(self, spans: Sequence[Span]) -> str:
         encoded_local_endpoint = self._encode_local_endpoint()
         encoded_spans = []
