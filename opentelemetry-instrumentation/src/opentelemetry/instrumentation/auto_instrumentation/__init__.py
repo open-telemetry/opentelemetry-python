@@ -48,6 +48,19 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-g",
+        "--ids-generator",
+        required=False,
+        help="""
+        The IDs Generator to be used with the Tracer Provider.
+
+        Examples:
+
+            -g=random
+        """,
+    )
+
+    parser.add_argument(
         "-s",
         "--service-name",
         required=False,
@@ -70,6 +83,8 @@ def load_config_from_cli_args(args):
         environ["OTEL_EXPORTER"] = args.exporter
     if args.service_name:
         environ["OTEL_SERVICE_NAME"] = args.service_name
+    if args.ids_generator:
+        environ["OTEL_IDS_GENERATOR"] = args.ids_generator
 
 
 def run() -> None:

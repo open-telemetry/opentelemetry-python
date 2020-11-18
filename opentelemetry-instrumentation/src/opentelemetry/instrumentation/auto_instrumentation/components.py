@@ -34,6 +34,13 @@ EXPORTER_OTLP_SPAN = "otlp_span"
 EXPORTER_OTLP_METRIC = "otlp_metric"
 _DEFAULT_EXPORTER = EXPORTER_OTLP
 
+RANDOM_IDS_GENERATOR = "random"
+_DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
+
+
+def get_ids_generator() -> str:
+    return Configuration().IDS_GENERATOR or _DEFAULT_IDS_GENERATOR
+
 
 def get_service_name() -> str:
     return Configuration().SERVICE_NAME or ""
@@ -55,10 +62,13 @@ def get_exporter_names() -> Sequence[str]:
     return names
 
 
-def init_tracing(exporters: Sequence[SpanExporter]):
+def init_tracing(
+    exporters: Sequence[SpanExporter], ids_generator: trace.IdsGenerator
+):
     service_name = get_service_name()
     provider = TracerProvider(
         resource=Resource.create({"service.name": service_name}),
+        ids_generator=ids_generator(),
     )
     trace.set_tracer_provider(provider)
 
@@ -110,10 +120,30 @@ def import_exporters(
     return trace_exporters, metric_exporters
 
 
+def import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
+    ids_generator_impl = None
+
+    for id_generator in iter_entry_points("opentelemetry_ids_generator"):
+        if id_generator.name == ids_generator_name.strip():
+            ids_generator_impl = id_generator.load()
+            break
+    else:
+        raise RuntimeError(
+            "Requested IDs Generator not found: {0}".format(ids_generator_name)
+        )
+
+    if issubclass(ids_generator_impl, trace.IdsGenerator):
+        return ids_generator_impl
+
+    raise RuntimeError("{0} is not an IdsGenerator".format(ids_generator_name))
+
+
 def initialize_components():
     exporter_names = get_exporter_names()
     trace_exporters, metric_exporters = import_exporters(exporter_names)
-    init_tracing(trace_exporters)
+    ids_generator_name = get_ids_generator()
+    ids_generator = import_ids_generator(ids_generator_name)
+    init_tracing(trace_exporters, ids_generator)
 
     # We don't support automatic initialization for metric yet but have added
     # some boilerplate in order to make sure current implementation does not
