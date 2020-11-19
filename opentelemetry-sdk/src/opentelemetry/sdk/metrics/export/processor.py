@@ -14,7 +14,7 @@
 
 from typing import Sequence
 
-from opentelemetry.sdk.metrics.export import MetricRecord
+from opentelemetry.sdk.metrics.export import ExportRecord
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import get_dict_as_key
 
@@ -23,7 +23,7 @@ class Processor:
     """Base class for all processor types.
 
     The processor is responsible for storing the aggregators and aggregated
-    values received from updates from metrics in the meter. The stored values
+    values received from updates from metrics in the accumulator. The stored values
     will be sent to an exporter for exporting.
     """
 
@@ -36,22 +36,22 @@ class Processor:
         self.stateful = stateful
         self._resource = resource
 
-    def checkpoint_set(self) -> Sequence[MetricRecord]:
-        """Returns a list of MetricRecords used for exporting.
+    def checkpoint_set(self) -> Sequence[ExportRecord]:
+        """Returns a list of ExportRecords used for exporting.
 
-        The list of MetricRecords is a snapshot created from the current
+        The list of ExportRecords is a snapshot created from the current
         data in all of the aggregators in this processor.
         """
-        metric_records = []
+        export_records = []
         # pylint: disable=W0612
         for (
             (instrument, aggregator_type, _, labels),
             aggregator,
         ) in self._batch_map.items():
-            metric_records.append(
-                MetricRecord(instrument, labels, aggregator, self._resource)
+            export_records.append(
+                ExportRecord(instrument, labels, aggregator, self._resource)
             )
-        return metric_records
+        return export_records
 
     def finished_collection(self):
         """Performs certain post-export logic.

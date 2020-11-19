@@ -26,7 +26,7 @@ class PushController(threading.Thread):
     exports them and performs some post-processing.
 
     Args:
-        meter: The meter used to collect metrics.
+        accumulator: The meter used to collect metrics.
         exporter: The exporter used to export metrics.
         interval: The collect/export interval in seconds.
     """
@@ -34,10 +34,10 @@ class PushController(threading.Thread):
     daemon = True
 
     def __init__(
-        self, meter: Meter, exporter: MetricsExporter, interval: float
+        self, accumulator: Meter, exporter: MetricsExporter, interval: float
     ):
         super().__init__()
-        self.meter = meter
+        self.accumulator = accumulator
         self.exporter = exporter
         self.interval = interval
         self.finished = threading.Event()
@@ -54,10 +54,10 @@ class PushController(threading.Thread):
 
     def tick(self):
         # Collect all of the meter's metrics to be exported
-        self.meter.collect()
+        self.accumulator.collect()
         # Export the collected metrics
         token = attach(set_value("suppress_instrumentation", True))
-        self.exporter.export(self.meter.processor.checkpoint_set())
+        self.exporter.export(self.accumulator.processor.checkpoint_set())
         detach(token)
         # Perform post-exporting logic
-        self.meter.processor.finished_collection()
+        self.accumulator.processor.finished_collection()

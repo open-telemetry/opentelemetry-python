@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add optional parameter to `record_exception` method ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
+- Add pickle support to SpanContext class ([#1380](https://github.com/open-telemetry/opentelemetry-python/pull/1380))
 
 ## Version 0.15b0
 
@@ -146,7 +147,7 @@ Released 2020-03-16
   ([#431](https://github.com/open-telemetry/opentelemetry-python/pull/431))
 - Renaming TraceOptions to TraceFlags
   ([#450](https://github.com/open-telemetry/opentelemetry-python/pull/450))
-- Renaming TracerSource to TraceProvider
+- Renaming TracerSource to TracerProvider
   ([#441](https://github.com/open-telemetry/opentelemetry-python/pull/441))
 - Adding attach/detach methods as per spec
   ([#429](https://github.com/open-telemetry/opentelemetry-python/pull/450)
