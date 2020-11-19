@@ -38,7 +38,6 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
-    Union,
 )
 
 from opentelemetry.util import _load_meter_provider
@@ -177,19 +176,19 @@ class BoundValueRecorder(Bound, Grouping):
 
 class SumObserver(Asynchronous, Monotonic):
     @abstractmethod
-    def observe(self, value: ValueT) -> None:
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         self._check_value(value)
 
 
 class UpDownSumObserver(Asynchronous, NonMonotonic):
     @abstractmethod
-    def observe(self, value: ValueT) -> None:
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
 
 
 class ValueObserver(Asynchronous, Grouping):
     @abstractmethod
-    def observe(self, value: ValueT) -> None:
+    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
 
 
@@ -204,8 +203,8 @@ class DefaultCounter(Counter):
     Used when no bound counter implementation is available.
     """
 
-    def add(self, value: ValueT) -> None:
-        super().add(value)
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+        super().add(value, labels)
 
     def bind(self, labels: Dict[str, str]) -> Bound:
         return DefaultBoundCounter()
@@ -227,14 +226,14 @@ class DefaultUpDownCounter(UpDownCounter):
     Used when no bound updowncounter implementation is available.
     """
 
-    def add(self, value: ValueT) -> None:
+    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
 
-    def bind(self, labels: Dict[str, str]) -> BoundInstrument:
+    def bind(self, labels: Dict[str, str]) -> Bound:
         return DefaultBoundUpDownCounter()
 
 
-class DefaultBoundUpDownCounter(BoundUpDownCounter, DefaultBoundInstrument):
+class DefaultBoundUpDownCounter(BoundUpDownCounter, DefaultBound):
     """The default bound updowncounter instrument.
 
     Used when no bound updowncounter implementation is available.
@@ -244,41 +243,21 @@ class DefaultBoundUpDownCounter(BoundUpDownCounter, DefaultBoundInstrument):
         pass
 
 
-class DefaultValueRecorder(ValueRecorder, DefaultBoundInstrument):
-    def record(self, value: ValueT) -> None:
+class DefaultValueRecorder(ValueRecorder, DefaultBound):
+    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
 
-    def bind(self, labels: Dict[str, str]) -> BoundInstrument:
+    def bind(self, labels: Dict[str, str]) -> Bound:
         return DefaultBoundValueRecorder()
 
 
-class DefaultBoundValueRecorder(BoundValueRecorder, DefaultBoundInstrument):
+class DefaultBoundValueRecorder(BoundValueRecorder, DefaultBound):
     """The default bound valuerecorder instrument.
 
     Used when no bound valuerecorder implementation is available.
     """
 
     def record(self, value: ValueT) -> None:
-        pass
-
-
-class SumObserver(ABC, MonotonicInstrument):
-    """Asynchronous instrument used to capture a monotonic sum."""
-
-    @abstractmethod
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        self._check_value(value)
-
-
-class UpDownSumObserver(ABC):
-    @abstractmethod
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
-        pass
-
-
-class ValueObserver(ABC):
-    @abstractmethod
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
 
 
@@ -289,25 +268,15 @@ class DefaultSumObserver(SumObserver):
         pass
 
 
-# pylint: disable=W0223
-class UpDownSumObserver(Observer):
-    """Asynchronous instrument used to capture a non-monotonic count."""
-
-
 class DefaultUpDownSumObserver(UpDownSumObserver):
-    """No-op implementation of ``UpDownSumObserver``."""
+    """No-op implementation of ``SumObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
 
 
-# pylint: disable=W0223
-class ValueObserver(Observer):
-    """Asynchronous instrument used to capture grouping measurements."""
-
-
 class DefaultValueObserver(ValueObserver):
-    """No-op implementation of ``ValueObserver``."""
+    """No-op implementation of ``SumObserver``."""
 
     def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
         pass
@@ -355,8 +324,7 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-InstrumentT = TypeVar("InstrumentT", bound=Union[Metric, Observer])
-ObserverCallbackT = Callable[[Observer], None]
+ObserverCallbackT = Callable[[Asynchronous], None]
 
 
 # pylint: disable=unused-argument
@@ -526,7 +494,7 @@ class Meter(ABC):
         """
 
     @abstractmethod
-    def unregister_observer(self, observer: "Observer") -> None:
+    def unregister_observer(self, observer: Asynchronous) -> None:
         """Unregisters an ``Observer`` metric instrument.
 
         Args:
@@ -613,7 +581,7 @@ class DefaultMeter(Meter):
     ) -> "DefaultValueObserver":
         return DefaultValueObserver()
 
-    def unregister_observer(self, observer: "Observer") -> None:
+    def unregister_observer(self, observer: Asynchronous) -> None:
         pass
 
 
