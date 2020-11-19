@@ -6,6 +6,13 @@ sphinx-autodoc-typehints~=1.10.2
 # doesn't work for pkg_resources.
 ./opentelemetry-api
 ./opentelemetry-sdk
+./opentelemetry-python-contrib/exporter/opentelemetry-exporter-datadog
+./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-grpc
+./opentelemetry-instrumentation
+./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
+./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
+./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-django
+./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
 
 # Required by ext packages
 asgiref~=3.0
