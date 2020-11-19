@@ -151,7 +151,7 @@ class StaticSampler(Sampler):
         trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
-            return SamplingResult(self._decision)
+            attributes = None
         return SamplingResult(self._decision, attributes, trace_state)
 
     def get_description(self) -> str:
@@ -209,8 +209,8 @@ class TraceIdRatioBased(Sampler):
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
             decision = Decision.RECORD_AND_SAMPLE
         if decision is Decision.DROP:
-            return SamplingResult(decision)
-        return SamplingResult(decision, attributes)
+            attributes = None
+        return SamplingResult(decision, attributes, trace_state)
 
     def get_description(self) -> str:
         return "TraceIdRatioBased{{{}}}".format(self._rate)
@@ -243,9 +243,11 @@ class ParentBased(Sampler):
         ).get_span_context()
         # respect the sampling flag of the parent if present
         if parent_span_context is not None and parent_span_context.is_valid:
+            decision = Decision.RECORD_AND_SAMPLE
             if not parent_span_context.trace_flags.sampled:
-                return SamplingResult(Decision.DROP)
-            return SamplingResult(Decision.RECORD_AND_SAMPLE, attributes)
+                decision = Decision.DROP
+                attributes = None
+            return SamplingResult(decision, attributes, trace_state)
 
         return self._delegate.should_sample(
             parent_context=parent_context,
