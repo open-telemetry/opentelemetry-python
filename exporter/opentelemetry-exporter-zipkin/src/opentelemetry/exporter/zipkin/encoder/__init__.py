@@ -55,9 +55,11 @@ class Encoder(abc.ABC):
     """
 
     def __init__(
-        self, max_tag_value_length: int = DEFAULT_MAX_TAG_VALUE_LENGTH,
+        self, max_tag_value_length: Optional[int] = None
     ):
-        self.max_tag_value_length = max_tag_value_length
+        self.max_tag_value_length = (
+            max_tag_value_length or DEFAULT_MAX_TAG_VALUE_LENGTH
+        )
 
     @staticmethod
     @abc.abstractmethod
