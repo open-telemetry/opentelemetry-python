@@ -147,7 +147,7 @@ Released 2020-03-16
   ([#431](https://github.com/open-telemetry/opentelemetry-python/pull/431))
 - Renaming TraceOptions to TraceFlags
   ([#450](https://github.com/open-telemetry/opentelemetry-python/pull/450))
-- Renaming TracerSource to TraceProvider
+- Renaming TracerSource to TracerProvider
   ([#441](https://github.com/open-telemetry/opentelemetry-python/pull/441))
 - Adding attach/detach methods as per spec
   ([#429](https://github.com/open-telemetry/opentelemetry-python/pull/450)
