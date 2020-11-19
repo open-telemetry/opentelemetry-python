@@ -46,7 +46,9 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 
 
 class TestOTLPMetricExporter(TestCase):
-    def setUp(self):
+    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def setUp(self, mock_time_ns):  # pylint: disable=arguments-differ
+        mock_time_ns.configure_mock(**{"return_value": 1})
         self.exporter = OTLPMetricsExporter(insecure=True)
         resource = SDKResource(OrderedDict([("a", 1), ("b", False)]))
 
@@ -95,11 +97,8 @@ class TestOTLPMetricExporter(TestCase):
         with self.assertRaises(ValueError):
             OTLPMetricsExporter()
 
-    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
-    def test_translate_metrics(self, mock_time_ns):
+    def test_translate_metrics(self):
         # pylint: disable=no-member
-
-        mock_time_ns.configure_mock(**{"return_value": 1})
 
         self.counter_export_record.aggregator.checkpoint = 1
         self.counter_export_record.aggregator.initial_checkpoint_timestamp = 1
@@ -137,7 +136,7 @@ class TestOTLPMetricExporter(TestCase):
                                             )
                                         ],
                                         aggregation_temporality=(
-                                            AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
+                                            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                                         ),
                                         is_monotonic=True,
                                     ),
