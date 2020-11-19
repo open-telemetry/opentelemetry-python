@@ -17,24 +17,24 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+      - uses: actions/checkout@v2
+      - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2
         with:
           repository: open-telemetry/opentelemetry-python-contrib
           ref: ${{ env.CONTRIB_REPO_SHA }}
           path: opentelemetry-python-contrib
-    - name: Set up Python py38
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-    - name: Build docs
-      run: |
-        pip install --upgrade tox
-        tox -e docs
-    - name: Publish to gh-pages
-      uses: JamesIves/github-pages-deploy-action@2.0.2
-      env:
-        ACCESS_TOKEN: ${{ secrets.DocsPushToken }}
-        BRANCH: gh-pages
-        FOLDER: docs/_build/html/
+      - name: Set up Python py38
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Build docs
+        run: |
+          pip install --upgrade tox
+          tox -e docs
+      - name: Publish to gh-pages
+        uses: JamesIves/github-pages-deploy-action@2.0.2
+        env:
+          ACCESS_TOKEN: ${{ secrets.DocsPushToken }}
+          BRANCH: gh-pages
+          FOLDER: docs/_build/html/
