@@ -43,7 +43,7 @@ from typing import (
 from opentelemetry.util import _load_meter_provider
 
 logger = getLogger(__name__)
-ValueT = TypeVar("ValueT", int, float)
+IntFloatT = TypeVar("IntFloatT", int, float)
 
 
 class Instrument(ABC):
@@ -84,7 +84,7 @@ class Unbound(Synchronous):
 class Asynchronous(Instrument):
 
     @abstractmethod
-    def observe(self, value: ValueT) -> None:
+    def observe(self, value: IntFloatT) -> None:
         pass
 
 
@@ -114,7 +114,7 @@ class NonMonotonic(Adding):
 class Counter(Unbound, Monotonic):
 
     @abstractmethod
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def add(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         """Increases the value of the bound counter by ``value``.
 
         Args:
@@ -125,7 +125,7 @@ class Counter(Unbound, Monotonic):
 
 class BoundCounter(Bound, Monotonic):
     @abstractmethod
-    def add(self, value: ValueT) -> None:
+    def add(self, value: IntFloatT) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
@@ -139,7 +139,7 @@ class BoundCounter(Bound, Monotonic):
 class UpDownCounter(Unbound, NonMonotonic):
 
     @abstractmethod
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def add(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         """Increases the value of the bound counter by ``value``.
 
         Args:
@@ -149,7 +149,7 @@ class UpDownCounter(Unbound, NonMonotonic):
 
 class BoundUpDownCounter(Bound, NonMonotonic):
     @abstractmethod
-    def add(self, value: ValueT) -> None:
+    def add(self, value: IntFloatT) -> None:
         """Increases the value of the counter by ``value``.
 
         Args:
@@ -160,13 +160,13 @@ class BoundUpDownCounter(Bound, NonMonotonic):
 class ValueRecorder(Unbound, Grouping):
 
     @abstractmethod
-    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def record(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
 
 class BoundValueRecorder(Bound, Grouping):
     @abstractmethod
-    def record(self, value: ValueT) -> None:
+    def record(self, value: IntFloatT) -> None:
         """Increases the value of the bound counter by ``value``.
 
         Args:
@@ -176,19 +176,19 @@ class BoundValueRecorder(Bound, Grouping):
 
 class SumObserver(Asynchronous, Monotonic):
     @abstractmethod
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def observe(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         self._check_value(value)
 
 
 class UpDownSumObserver(Asynchronous, NonMonotonic):
     @abstractmethod
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def observe(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
 
 class ValueObserver(Asynchronous, Grouping):
     @abstractmethod
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def observe(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
 
@@ -203,7 +203,7 @@ class DefaultCounter(Counter):
     Used when no bound counter implementation is available.
     """
 
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def add(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         super().add(value, labels)
 
     def bind(self, labels: Dict[str, str]) -> Bound:
@@ -216,7 +216,7 @@ class DefaultBoundCounter(BoundCounter, DefaultBound):
     Used when no bound counter implementation is available.
     """
 
-    def add(self, value: ValueT) -> None:
+    def add(self, value: IntFloatT) -> None:
         super().add(value)
 
 
@@ -226,7 +226,7 @@ class DefaultUpDownCounter(UpDownCounter):
     Used when no bound updowncounter implementation is available.
     """
 
-    def add(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def add(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
     def bind(self, labels: Dict[str, str]) -> Bound:
@@ -239,12 +239,12 @@ class DefaultBoundUpDownCounter(BoundUpDownCounter, DefaultBound):
     Used when no bound updowncounter implementation is available.
     """
 
-    def add(self, value: ValueT) -> None:
+    def add(self, value: IntFloatT) -> None:
         pass
 
 
 class DefaultValueRecorder(ValueRecorder, DefaultBound):
-    def record(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def record(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
     def bind(self, labels: Dict[str, str]) -> Bound:
@@ -257,28 +257,28 @@ class DefaultBoundValueRecorder(BoundValueRecorder, DefaultBound):
     Used when no bound valuerecorder implementation is available.
     """
 
-    def record(self, value: ValueT) -> None:
+    def record(self, value: IntFloatT) -> None:
         pass
 
 
 class DefaultSumObserver(SumObserver):
     """No-op implementation of ``SumObserver``."""
 
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def observe(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
 
 class DefaultUpDownSumObserver(UpDownSumObserver):
     """No-op implementation of ``SumObserver``."""
 
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def observe(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
 
 class DefaultValueObserver(ValueObserver):
     """No-op implementation of ``SumObserver``."""
 
-    def observe(self, value: ValueT, labels: Dict[str, str]) -> None:
+    def observe(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         pass
 
 
@@ -324,7 +324,7 @@ class DefaultMeterProvider(MeterProvider):
         return DefaultMeter()
 
 
-ObserverCallbackT = Callable[[Asynchronous], None]
+AsynchronousCallbackT = Callable[[Asynchronous], None]
 
 
 # pylint: disable=unused-argument
@@ -340,7 +340,7 @@ class Meter(ABC):
     def record_batch(
         self,
         labels: Dict[str, str],
-        record_tuples: Sequence[Tuple["Metric", ValueT]],
+        record_tuples: Sequence[Tuple["Metric", IntFloatT]],
     ) -> None:
         """Atomically records a batch of `Metric` and value pairs.
 
@@ -361,7 +361,7 @@ class Meter(ABC):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
     ) -> "Counter":
         """Creates a `Counter` metric with type ``value_type``.
@@ -381,7 +381,7 @@ class Meter(ABC):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
     ) -> "UpDownCounter":
         """Creates a `UpDownCounter` metric with type ``value_type``.
@@ -401,7 +401,7 @@ class Meter(ABC):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
     ) -> "ValueRecorder":
         """Creates a `ValueRecorder` metric with type ``value_type``.
@@ -418,11 +418,11 @@ class Meter(ABC):
     @abstractmethod
     def register_sumobserver(
         self,
-        callback: ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "SumObserver":
@@ -444,11 +444,11 @@ class Meter(ABC):
     @abstractmethod
     def register_updownsumobserver(
         self,
-        callback: ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "UpDownSumObserver":
@@ -470,11 +470,11 @@ class Meter(ABC):
     @abstractmethod
     def register_valueobserver(
         self,
-        callback: ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "ValueObserver":
@@ -508,7 +508,7 @@ class DefaultMeter(Meter):
     def record_batch(
         self,
         labels: Dict[str, str],
-        record_tuples: Sequence[Tuple["Metric", ValueT]],
+        record_tuples: Sequence[Tuple["Metric", IntFloatT]],
     ) -> None:
         pass
 
@@ -517,7 +517,7 @@ class DefaultMeter(Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
     ) -> "Counter":
         # pylint: disable=no-self-use
@@ -528,7 +528,7 @@ class DefaultMeter(Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
     ) -> "UpDownCounter":
         # pylint: disable=no-self-use
@@ -539,7 +539,7 @@ class DefaultMeter(Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
     ) -> "ValueRecorder":
         # pylint: disable=no-self-use
@@ -547,11 +547,11 @@ class DefaultMeter(Meter):
 
     def register_sumobserver(
         self,
-        callback: ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "DefaultSumObserver":
@@ -559,11 +559,11 @@ class DefaultMeter(Meter):
 
     def register_updownsumobserver(
         self,
-        callback: ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "DefaultUpDownSumObserver":
@@ -571,11 +571,11 @@ class DefaultMeter(Meter):
 
     def register_valueobserver(
         self,
-        callback: ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> "DefaultValueObserver":

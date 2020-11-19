@@ -18,8 +18,26 @@ import threading
 from typing import Dict, Sequence, Tuple, Type, TypeVar
 from abc import abstractmethod
 
-from opentelemetry.metrics import Metric
-from opentelemetry import metrics as metrics_api
+from opentelemetry.metrics import (
+    Instrument,
+    IntFloatT,
+    Meter,
+    Synchronous as APISynchronous,
+    Asynchronous as APIAsynchronous,
+    Bound as APIBound,
+    Unbound as APIUnbound,
+    Counter as APICounter,
+    UpDownCounter as APIUpDownCounter,
+    BoundCounter as APIBoundCounter,
+    UpDownBoundCounter as APIBoundUpDownCounter,
+    BoundValueRecorder as APIBoundValueRecorder,
+    SumObserver as APISumObserver,
+    ValueRecorder as APIValueRecorder,
+    ValueObserver as APIValueObserver,
+    UpDownSumObserver as APIUpDownSumObserver,
+    AsynchronousCallbackT,
+    MeterProvider as APIMeterProvider
+)
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricsExporter,
     MetricsExporter,
@@ -38,67 +56,70 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 logger = logging.getLogger(__name__)
 
 
-class BaseBoundInstrument:
-    """Class containing common behavior for all bound metric instruments.
+class Bound(APIBound):
+    """Class containing common behavior for all bound instruments.
 
-    Bound metric instruments are responsible for operating on data for metric
+    Bound instruments are responsible for operating on data for
     instruments for a specific set of labels.
 
     Args:
         labels: A set of labels as keys that bind this metric instrument.
-        metric: The metric that created this bound instrument.
+        instrument: The instrument that created this bound instrument.
     """
 
-    def __init__(self, labels: Tuple[Tuple[str, str]], metric: "MetricT"):
+    def __init__(
+        self, labels: Tuple[Tuple[str, str]], instrument: APIUnbound
+    ):
         self._labels = labels
-        self._metric = metric
-        self.view_datas = metric.meter.view_manager.get_view_datas(
-            metric, labels
+        self._instrument = instrument
+        self.view_datas = instrument.meter.view_manager.get_view_datas(
+            instrument, labels
         )
         self._view_datas_lock = threading.Lock()
         self._ref_count = 0
         self._ref_count_lock = threading.Lock()
 
-    def _validate_update(self, value: metrics_api.ValueT) -> bool:
-        if not self._metric.enabled:
+    def _validate_update(self, value: IntFloatT) -> bool:
+        if not self._instrument.enabled:
             return False
-        if not isinstance(value, self._metric.value_type):
+        if not isinstance(value, self._instrument.value_type):
             logger.warning(
                 "Invalid value passed for %s.",
-                self._metric.value_type.__name__,
+                self._instrument.value_type.__name__,
             )
             return False
         return True
 
-    def update(self, value: metrics_api.ValueT):
+    def update(self, value: IntFloatT):
         with self._view_datas_lock:
             # record the value for each view_data belonging to this aggregator
             for view_data in self.view_datas:
                 view_data.record(value)
 
-    def release(self):
+    def unbind(self):
         self.decrease_ref_count()
 
-    def decrease_ref_count(self):
+    def _decrease_ref_count(self):
         with self._ref_count_lock:
             self._ref_count -= 1
 
-    def increase_ref_count(self):
+    def _increase_ref_count(self):
         with self._ref_count_lock:
             self._ref_count += 1
 
+    @property
     def ref_count(self):
         with self._ref_count_lock:
             return self._ref_count
 
 
-class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
-    def add(self, value: metrics_api.ValueT) -> None:
+class BoundCounter(Bound, APIBoundCounter):
+    def add(self, value: IntFloatT) -> None:
         """See `opentelemetry.metrics.BoundCounter.add`."""
         if self._validate_update(value):
             self.update(value)
 
-    def _validate_update(self, value: metrics_api.ValueT) -> bool:
+    def _validate_update(self, value: IntFloatT) -> bool:
         if not super()._validate_update(value):
             return False
         if value < 0:
@@ -111,21 +132,21 @@ class BoundCounter(metrics_api.BoundCounter, BaseBoundInstrument):
         return True
 
 
-class BoundUpDownCounter(metrics_api.BoundUpDownCounter, BaseBoundInstrument):
-    def add(self, value: metrics_api.ValueT) -> None:
+class BoundUpDownCounter(APIBoundUpDownCounter, Bound):
+    def add(self, value: IntFloatT) -> None:
         """See `opentelemetry.metrics.BoundUpDownCounter.add`."""
         if self._validate_update(value):
             self.update(value)
 
 
-class BoundValueRecorder(metrics_api.BoundValueRecorder, BaseBoundInstrument):
-    def record(self, value: metrics_api.ValueT) -> None:
+class BoundValueRecorder(Bound, APIBoundValueRecorder):
+    def record(self, value: IntFloatT) -> None:
         """See `opentelemetry.metrics.BoundValueRecorder.record`."""
         if self._validate_update(value):
             self.update(value)
 
 
-class SynchronousMetric(Metric):
+class Synchronous(APISynchronous):
     """Base class for all synchronous metric types.
 
     This is the class that is used to represent a metric that is to be
@@ -138,14 +159,12 @@ class SynchronousMetric(Metric):
     See `BaseBoundInstrument` for information on bound metric instruments.
     """
 
-    BOUND_INSTR_TYPE = BaseBoundInstrument
-
     def __init__(
         self,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         meter: "Accumulator",
         enabled: bool = True,
     ):
@@ -158,7 +177,7 @@ class SynchronousMetric(Metric):
         self.bound_instruments = {}
         self.bound_instruments_lock = threading.Lock()
 
-    def bind(self, labels: Dict[str, str]) -> BaseBoundInstrument:
+    def bind(self, labels: Dict[str, str]) -> Bound:
         """See `opentelemetry.metrics.Metric.bind`."""
         key = get_dict_as_key(labels)
         with self.bound_instruments_lock:
@@ -176,46 +195,46 @@ class SynchronousMetric(Metric):
 
     @abstractmethod
     def _update(
-        self, value: metrics_api.ValueT, labels: Dict[str, str]
+        self, value: IntFloatT, labels: Dict[str, str]
     ) -> None:
         """
         This function is called by record_batch
         """
 
 
-class Counter(SynchronousMetric, metrics_api.Counter):
+class Counter(APICounter):
     """See `opentelemetry.metrics.Counter`.
     """
 
     BOUND_INSTR_TYPE = BoundCounter
 
-    def add(self, value: metrics_api.ValueT, labels: Dict[str, str]) -> None:
+    def add(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         """See `opentelemetry.metrics.Counter.add`."""
         bound_intrument = self.bind(labels)
         bound_intrument.add(value)
         bound_intrument.release()
 
 
-class UpDownCounter(SynchronousMetric, metrics_api.UpDownCounter):
+class UpDownCounter(APIUpDownCounter):
     """See `opentelemetry.metrics.UpDownCounter`.
     """
 
     BOUND_INSTR_TYPE = BoundUpDownCounter
 
-    def add(self, value: metrics_api.ValueT, labels: Dict[str, str]) -> None:
+    def add(self, value: IntFloatT, labels: Dict[str, str]) -> None:
         """See `opentelemetry.metrics.UpDownCounter.add`."""
         bound_intrument = self.bind(labels)
         bound_intrument.add(value)
         bound_intrument.release()
 
 
-class ValueRecorder(SynchronousMetric, metrics_api.ValueRecorder):
+class ValueRecorder(APIValueRecorder):
     """See `opentelemetry.metrics.ValueRecorder`."""
 
     BOUND_INSTR_TYPE = BoundValueRecorder
 
     def record(
-        self, value: metrics_api.ValueT, labels: Dict[str, str]
+        self, value: IntFloatT, labels: Dict[str, str]
     ) -> None:
         """See `opentelemetry.metrics.ValueRecorder.record`."""
         bound_intrument = self.bind(labels)
@@ -226,7 +245,7 @@ class ValueRecorder(SynchronousMetric, metrics_api.ValueRecorder):
 MetricT = TypeVar("MetricT", Counter, UpDownCounter, ValueRecorder)
 
 
-class Observer(metrics_api.Observer):
+class Asynchronous(APIAsynchronous):
     """Base class for all asynchronous metric types.
 
     Also known as Observers, observer metric instruments are asynchronous in
@@ -237,11 +256,11 @@ class Observer(metrics_api.Observer):
 
     def __init__(
         self,
-        callback: metrics_api.ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
@@ -256,7 +275,7 @@ class Observer(metrics_api.Observer):
         self.aggregators = {}
 
     def observe(
-        self, value: metrics_api.ValueT, labels: Dict[str, str]
+        self, value: IntFloatT, labels: Dict[str, str]
     ) -> None:
         key = get_dict_as_key(labels)
         if not self._validate_observe(value, key):
@@ -270,7 +289,7 @@ class Observer(metrics_api.Observer):
 
     # pylint: disable=W0613
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]]
+        self, value: IntFloatT, key: Tuple[Tuple[str, str]]
     ) -> bool:
         if not self.enabled:
             return False
@@ -299,11 +318,11 @@ class Observer(metrics_api.Observer):
         )
 
 
-class SumObserver(Observer, metrics_api.SumObserver):
+class SumObserver(APISumObserver):
     """See `opentelemetry.metrics.SumObserver`."""
 
     def _validate_observe(
-        self, value: metrics_api.ValueT, key: Tuple[Tuple[str, str]]
+        self, value: IntFloatT, key: Tuple[Tuple[str, str]]
     ) -> bool:
         if not super()._validate_observe(value, key):
             return False
@@ -318,11 +337,11 @@ class SumObserver(Observer, metrics_api.SumObserver):
         return True
 
 
-class UpDownSumObserver(Observer, metrics_api.UpDownSumObserver):
+class UpDownSumObserver(APIUpDownSumObserver):
     """See `opentelemetry.metrics.UpDownSumObserver`."""
 
 
-class ValueObserver(Observer, metrics_api.ValueObserver):
+class ValueObserver(APIValueObserver):
     """See `opentelemetry.metrics.ValueObserver`."""
 
 
@@ -331,7 +350,7 @@ class Accumulation:
 
     def __init__(
         self,
-        instrument: metrics_api.InstrumentT,
+        instrument: Instrument,
         labels: Tuple[Tuple[str, str]],
         aggregator: Aggregator,
     ):
@@ -340,7 +359,7 @@ class Accumulation:
         self.aggregator = aggregator
 
 
-class Accumulator(metrics_api.Meter):
+class Accumulator(Meter):
     """See `opentelemetry.metrics.Meter`.
 
     Args:
@@ -411,7 +430,7 @@ class Accumulator(metrics_api.Meter):
     def record_batch(
         self,
         labels: Dict[str, str],
-        record_tuples: Sequence[Tuple[metrics_api.Metric, metrics_api.ValueT]],
+        record_tuples: Sequence[Tuple[Instrument, IntFloatT]],
     ) -> None:
         """See `opentelemetry.metrics.Meter.record_batch`."""
         # TODO: Avoid enconding the labels for each instrument, encode once
@@ -427,9 +446,9 @@ class Accumulator(metrics_api.Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
-    ) -> metrics_api.Counter:
+    ) -> Counter:
         """See `opentelemetry.metrics.Meter.create_counter`."""
         counter = Counter(
             name, description, unit, value_type, self, enabled=enabled
@@ -443,9 +462,9 @@ class Accumulator(metrics_api.Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
-    ) -> metrics_api.UpDownCounter:
+    ) -> UpDownCounter:
         """See `opentelemetry.metrics.Meter.create_updowncounter`."""
         counter = UpDownCounter(
             name, description, unit, value_type, self, enabled=enabled
@@ -459,9 +478,9 @@ class Accumulator(metrics_api.Meter):
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         enabled: bool = True,
-    ) -> metrics_api.ValueRecorder:
+    ) -> ValueRecorder:
         """See `opentelemetry.metrics.Meter.create_valuerecorder`."""
         recorder = ValueRecorder(
             name, description, unit, value_type, self, enabled=enabled
@@ -472,14 +491,14 @@ class Accumulator(metrics_api.Meter):
 
     def register_sumobserver(
         self,
-        callback: metrics_api.ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> metrics_api.SumObserver:
+    ) -> SumObserver:
         ob = SumObserver(
             callback, name, description, unit, value_type, label_keys, enabled
         )
@@ -489,14 +508,14 @@ class Accumulator(metrics_api.Meter):
 
     def register_updownsumobserver(
         self,
-        callback: metrics_api.ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> metrics_api.UpDownSumObserver:
+    ) -> UpDownSumObserver:
         ob = UpDownSumObserver(
             callback, name, description, unit, value_type, label_keys, enabled
         )
@@ -506,14 +525,14 @@ class Accumulator(metrics_api.Meter):
 
     def register_valueobserver(
         self,
-        callback: metrics_api.ObserverCallbackT,
+        callback: AsynchronousCallbackT,
         name: str,
         description: str,
         unit: str,
-        value_type: Type[metrics_api.ValueT],
+        value_type: Type[IntFloatT],
         label_keys: Sequence[str] = (),
         enabled: bool = True,
-    ) -> metrics_api.ValueObserver:
+    ) -> ValueObserver:
         ob = ValueObserver(
             callback, name, description, unit, value_type, label_keys, enabled
         )
@@ -521,7 +540,7 @@ class Accumulator(metrics_api.Meter):
             self.observers.add(ob)
         return ob
 
-    def unregister_observer(self, observer: metrics_api.Observer) -> None:
+    def unregister_asynchronous(self, observer: Asynchronous) -> None:
         with self.observers_lock:
             self.observers.remove(observer)
 
@@ -532,7 +551,7 @@ class Accumulator(metrics_api.Meter):
         self.view_manager.unregister_view(view)
 
 
-class MeterProvider(metrics_api.MeterProvider):
+class MeterProvider(APIMeterProvider):
     """See `opentelemetry.metrics.MeterProvider`.
 
     Args:
@@ -560,7 +579,7 @@ class MeterProvider(metrics_api.MeterProvider):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
-    ) -> "metrics_api.Meter":
+    ) -> "Meter":
         """See `opentelemetry.metrics.MeterProvider`.get_meter."""
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = "ERROR:MISSING MODULE NAME"
@@ -574,7 +593,7 @@ class MeterProvider(metrics_api.MeterProvider):
 
     def start_pipeline(
         self,
-        meter: metrics_api.Meter,
+        meter: Meter,
         exporter: MetricsExporter = None,
         interval: float = 15.0,
     ) -> None:
