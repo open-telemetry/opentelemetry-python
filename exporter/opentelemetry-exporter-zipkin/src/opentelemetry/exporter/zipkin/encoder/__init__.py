@@ -79,7 +79,7 @@ class Encoder(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def _encode_local_endpoint(
-        local_endpoint: NodeEndpoint
+        local_endpoint: NodeEndpoint,
     ) -> EncodedLocalEndpointT:
         pass
 

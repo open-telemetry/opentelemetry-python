@@ -98,7 +98,7 @@ class ProtobufEncoder(Encoder):
 
     @staticmethod
     def _encode_local_endpoint(
-        local_endpoint: NodeEndpoint
+        local_endpoint: NodeEndpoint,
     ) -> zipkin_pb2.Endpoint:
         encoded_local_endpoint = zipkin_pb2.Endpoint(
             service_name=local_endpoint.service_name,
