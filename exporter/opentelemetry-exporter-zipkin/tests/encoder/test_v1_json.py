@@ -16,13 +16,12 @@ import json
 from .common_tests import CommonEncoderTestCases
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
-from opentelemetry.exporter.zipkin.endpoint import Endpoint
+from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
 from opentelemetry.trace import TraceFlags
 
 
 class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
-
     @staticmethod
     def get_encoder(*args, **kwargs) -> JsonV1Encoder:
         return JsonV1Encoder(*args, **kwargs)
@@ -33,14 +32,14 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         local_endpoint = {"serviceName": service_name}
 
         otel_spans = self.get_exhaustive_otel_span_list()
-        trace_id = JsonV1Encoder.encode_trace_id(
+        trace_id = JsonV1Encoder._encode_trace_id(
             otel_spans[0].context.trace_id
         )
 
         expected_output = [
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[0].context.span_id
                 ),
                 "name": otel_spans[0].name,
@@ -51,13 +50,15 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     {
                         "timestamp": otel_spans[0].events[0].timestamp
                         // 10 ** 3,
-                        "value": json.dumps({
-                            "event0": {
-                                "annotation_bool": True,
-                                "annotation_string": "annotation_test",
-                                "key_float": 0.3,
+                        "value": json.dumps(
+                            {
+                                "event0": {
+                                    "annotation_bool": True,
+                                    "annotation_string": "annotation_test",
+                                    "key_float": 0.3,
+                                }
                             }
-                        }),
+                        ),
                         "endpoint": local_endpoint,
                     }
                 ],
@@ -89,13 +90,13 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     },
                 ],
                 "debug": True,
-                "parentId": JsonV1Encoder.encode_span_id(
+                "parentId": JsonV1Encoder._encode_span_id(
                     otel_spans[0].parent.span_id
                 ),
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[1].context.span_id
                 ),
                 "name": otel_spans[1].name,
@@ -119,7 +120,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[2].context.span_id
                 ),
                 "name": otel_spans[2].name,
@@ -148,7 +149,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder.encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[3].context.span_id
                 ),
                 "name": otel_spans[3].name,
@@ -179,7 +180,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         self.assertEqual_encoded_spans(
             json.dumps(expected_output),
-            JsonV1Encoder(Endpoint(service_name)).encode(otel_spans),
+            JsonV1Encoder().serialize(otel_spans, NodeEndpoint(service_name)),
         )
 
     def test_encode_id_zero_padding(self):
@@ -210,8 +211,8 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "traceId": format(trace_id, "032x"),
                 "id": format(span_id, "016x"),
                 "name": service_name,
-                "timestamp": JsonV1Encoder.nsec_to_usec_round(start_time),
-                "duration": JsonV1Encoder.nsec_to_usec_round(duration),
+                "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
+                "duration": JsonV1Encoder._nsec_to_usec_round(duration),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
@@ -227,7 +228,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         self.assertEqual(
             json.dumps(expected_output),
-            JsonV1Encoder(Endpoint(service_name)).encode([otel_span]),
+            JsonV1Encoder().serialize([otel_span], NodeEndpoint(service_name)),
         )
 
     def _test_encode_max_tag_length(self, max_tag_value_length: int):
@@ -258,11 +259,11 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         local_endpoint = {"serviceName": service_name}
         expected_output = [
             {
-                "traceId": JsonV1Encoder.encode_trace_id(trace_id),
-                "id": JsonV1Encoder.encode_span_id(span_id),
+                "traceId": JsonV1Encoder._encode_trace_id(trace_id),
+                "id": JsonV1Encoder._encode_span_id(span_id),
                 "name": service_name,
-                "timestamp": JsonV1Encoder.nsec_to_usec_round(start_time),
-                "duration": JsonV1Encoder.nsec_to_usec_round(duration),
+                "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
+                "duration": JsonV1Encoder._nsec_to_usec_round(duration),
                 "annotations": None,
                 "binaryAnnotations": [
                     {
@@ -287,7 +288,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         self.assertEqual_encoded_spans(
             json.dumps(expected_output),
-            JsonV1Encoder(
-                Endpoint(service_name), max_tag_value_length
-            ).encode([otel_span]),
+            JsonV1Encoder(max_tag_value_length).serialize(
+                [otel_span], NodeEndpoint(service_name)
+            ),
         )

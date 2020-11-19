@@ -20,6 +20,7 @@ from typing import List, Optional, Sequence
 
 from opentelemetry.exporter.zipkin.encoder import Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf.gen import zipkin_pb2
+from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace import Event
 from opentelemetry.trace import Span, SpanContext, SpanKind
 
@@ -38,8 +39,14 @@ class ProtobufEncoder(Encoder):
         SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
     }
 
-    def _encode_spans(self, spans: Sequence[Span]) -> str:
-        encoded_local_endpoint = self._encode_local_endpoint()
+    @staticmethod
+    def content_type():
+        return "application/x-protobuf"
+
+    def serialize(
+        self, spans: Sequence[Span], local_endpoint: NodeEndpoint
+    ) -> str:
+        encoded_local_endpoint = self._encode_local_endpoint(local_endpoint)
         # pylint: disable=no-member
         encoded_spans = zipkin_pb2.ListOfSpans()
         for span in spans:
@@ -54,11 +61,11 @@ class ProtobufEncoder(Encoder):
         context = span.get_span_context()
         # pylint: disable=no-member
         encoded_span = zipkin_pb2.Span(
-            trace_id=self.encode_trace_id(context.trace_id),
-            id=self.encode_span_id(context.span_id),
+            trace_id=self._encode_trace_id(context.trace_id),
+            id=self._encode_span_id(context.span_id),
             name=span.name,
-            timestamp=self.nsec_to_usec_round(span.start_time),
-            duration=self.nsec_to_usec_round(span.end_time - span.start_time),
+            timestamp=self._nsec_to_usec_round(span.start_time),
+            duration=self._nsec_to_usec_round(span.end_time - span.start_time),
             local_endpoint=encoded_local_endpoint,
             kind=self.SPAN_KIND_MAP[span.kind],
             tags=self._extract_tags_from_span(span),
@@ -68,7 +75,7 @@ class ProtobufEncoder(Encoder):
 
         parent_id = self._get_parent_id(span.parent)
         if parent_id is not None:
-            encoded_span.parent_id = self.encode_span_id(parent_id)
+            encoded_span.parent_id = self._encode_span_id(parent_id)
 
         return encoded_span
 
@@ -89,26 +96,25 @@ class ProtobufEncoder(Encoder):
                 )
         return encoded_annotations
 
-    def _encode_local_endpoint(self) -> zipkin_pb2.Endpoint:
+    @staticmethod
+    def _encode_local_endpoint(
+        local_endpoint: NodeEndpoint
+    ) -> zipkin_pb2.Endpoint:
         encoded_local_endpoint = zipkin_pb2.Endpoint(
-            service_name=self.local_endpoint.service_name,
+            service_name=local_endpoint.service_name,
         )
-
-        if self.local_endpoint.ipv4 is not None:
-            encoded_local_endpoint.ipv4 = self.local_endpoint.ipv4.packed
-
-        if self.local_endpoint.ipv6 is not None:
-            encoded_local_endpoint.ipv6 = self.local_endpoint.ipv6.packed
-
-        if self.local_endpoint.port is not None:
-            encoded_local_endpoint.port = self.local_endpoint.port
-
+        if local_endpoint.ipv4 is not None:
+            encoded_local_endpoint.ipv4 = local_endpoint.ipv4.packed
+        if local_endpoint.ipv6 is not None:
+            encoded_local_endpoint.ipv6 = local_endpoint.ipv6.packed
+        if local_endpoint.port is not None:
+            encoded_local_endpoint.port = local_endpoint.port
         return encoded_local_endpoint
 
     @staticmethod
-    def encode_span_id(span_id: int) -> bytes:
+    def _encode_span_id(span_id: int) -> bytes:
         return span_id.to_bytes(length=8, byteorder="big", signed=False)
 
     @staticmethod
-    def encode_trace_id(trace_id: int) -> bytes:
+    def _encode_trace_id(trace_id: int) -> bytes:
         return trace_id.to_bytes(length=16, byteorder="big", signed=False)

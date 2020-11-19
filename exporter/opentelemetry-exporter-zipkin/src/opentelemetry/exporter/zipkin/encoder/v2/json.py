@@ -37,11 +37,11 @@ class JsonV2Encoder(JsonEncoder):
     def _encode_span(self, span: Span, encoded_local_endpoint: Dict) -> Dict:
         context = span.get_span_context()
         encoded_span = {
-            "traceId": self.encode_trace_id(context.trace_id),
-            "id": self.encode_span_id(context.span_id),
+            "traceId": self._encode_trace_id(context.trace_id),
+            "id": self._encode_span_id(context.span_id),
             "name": span.name,
-            "timestamp": self.nsec_to_usec_round(span.start_time),
-            "duration": self.nsec_to_usec_round(
+            "timestamp": self._nsec_to_usec_round(span.start_time),
+            "duration": self._nsec_to_usec_round(
                 span.end_time - span.start_time
             ),
             "localEndpoint": encoded_local_endpoint,
@@ -53,6 +53,6 @@ class JsonV2Encoder(JsonEncoder):
 
         parent_id = self._get_parent_id(span.parent)
         if parent_id is not None:
-            encoded_span["parentId"] = self.encode_span_id(parent_id)
+            encoded_span["parentId"] = self._encode_span_id(parent_id)
 
         return encoded_span

@@ -20,9 +20,9 @@ import sys
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
     DEFAULT_MAX_TAG_VALUE_LENGTH,
-    Encoder
+    Encoder,
 )
-from opentelemetry.exporter.zipkin.endpoint import Endpoint
+from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import TraceFlags
@@ -31,7 +31,6 @@ from opentelemetry.trace.status import Status, StatusCode
 
 class CommonEncoderTestCases:
     class CommonEncoderTest(unittest.TestCase):
-
         @staticmethod
         @abc.abstractmethod
         def get_encoder(*args, **kwargs) -> Encoder:
@@ -39,7 +38,7 @@ class CommonEncoderTestCases:
 
         @classmethod
         def get_encoder_default(cls) -> Encoder:
-            return cls.get_encoder(Endpoint("test-service"))
+            return cls.get_encoder()
 
         @abc.abstractmethod
         def test_encode_trace_id(self):
@@ -68,21 +67,18 @@ class CommonEncoderTestCases:
             self._test_encode_max_tag_length(2)
 
         def test_constructor_default(self):
-            endpoint = Endpoint("test-constructor-service")
-            encoder = self.get_encoder(endpoint)
+            encoder = self.get_encoder()
 
             self.assertEqual(
                 DEFAULT_MAX_TAG_VALUE_LENGTH, encoder.max_tag_value_length
             )
-            self.assertEqual(endpoint, encoder.local_endpoint)
 
         def test_constructor_max_tag_value_length(self):
-            endpoint = Endpoint("test-constructor-service")
             max_tag_value_length = 123456
-            encoder = self.get_encoder(endpoint, max_tag_value_length)
-
-            self.assertEqual(max_tag_value_length, encoder.max_tag_value_length)
-            self.assertEqual(endpoint, encoder.local_endpoint)
+            encoder = self.get_encoder(max_tag_value_length)
+            self.assertEqual(
+                max_tag_value_length, encoder.max_tag_value_length
+            )
 
         def test_nsec_to_usec_round(self):
             base_time_nsec = 683647322 * 10 ** 9
@@ -94,7 +90,7 @@ class CommonEncoderTestCases:
             ):
                 self.assertEqual(
                     (nsec + 500) // 10 ** 3,
-                    self.get_encoder_default().nsec_to_usec_round(nsec),
+                    self.get_encoder_default()._nsec_to_usec_round(nsec),
                 )
 
         def test_encode_debug(self):
@@ -137,7 +133,7 @@ class CommonEncoderTestCases:
                             is_remote=False,
                         ),
                     )
-                )
+                ),
             )
 
         def test_get_parent_id_from_span_context(self):
@@ -219,7 +215,8 @@ class CommonEncoderTestCases:
             )
             span2.start(start_time=start_times[1])
             span2.resource = trace.Resource(
-                attributes={"key_resource": "some_resource"})
+                attributes={"key_resource": "some_resource"}
+            )
             span2.end(end_time=end_times[1])
 
             span3 = trace._Span(
@@ -228,7 +225,8 @@ class CommonEncoderTestCases:
             span3.start(start_time=start_times[2])
             span3.set_attribute("key_string", "hello_world")
             span3.resource = trace.Resource(
-                attributes={"key_resource": "some_resource"})
+                attributes={"key_resource": "some_resource"}
+            )
             span3.end(end_time=end_times[2])
 
             span4 = trace._Span(
@@ -244,27 +242,27 @@ class CommonEncoderTestCases:
             return [span1, span2, span3, span4]
 
     class CommonJsonEncoderTest(CommonEncoderTest, abc.ABC):
-
         def test_encode_trace_id(self):
-            for trace_id in (1, 1024, 2**32, 2**64, 2**65):
+            for trace_id in (1, 1024, 2 ** 32, 2 ** 64, 2 ** 65):
                 self.assertEqual(
                     format(trace_id, "032x"),
-                    self.get_encoder_default().encode_trace_id(trace_id),
+                    self.get_encoder_default()._encode_trace_id(trace_id),
                 )
 
         def test_encode_span_id(self):
-            for span_id in (1, 1024, 2**8, 2**16, 2**32, 2**64):
+            for span_id in (1, 1024, 2 ** 8, 2 ** 16, 2 ** 32, 2 ** 64):
                 self.assertEqual(
                     format(span_id, "016x"),
-                    self.get_encoder_default().encode_span_id(span_id),
+                    self.get_encoder_default()._encode_span_id(span_id),
                 )
 
         def test_encode_local_endpoint_default(self):
             service_name = "test-service-name"
-            encoder = self.get_encoder(Endpoint(service_name))
             self.assertEqual(
+                self.get_encoder_default()._encode_local_endpoint(
+                    NodeEndpoint(service_name)
+                ),
                 {"serviceName": service_name},
-                encoder._encode_local_endpoint(),
             )
 
         def test_encode_local_endpoint_explicits(self):
@@ -272,15 +270,16 @@ class CommonEncoderTestCases:
             ipv4 = "192.168.0.1"
             ipv6 = "2001:db8::c001"
             port = 414120
-            encoder = self.get_encoder(Endpoint(service_name, ipv4, ipv6, port))
             self.assertEqual(
+                self.get_encoder_default()._encode_local_endpoint(
+                    NodeEndpoint(service_name, ipv4, ipv6, port)
+                ),
                 {
                     "serviceName": service_name,
                     "ipv4": ipv4,
                     "ipv6": ipv6,
-                    "port": port
+                    "port": port,
                 },
-                encoder._encode_local_endpoint(),
             )
 
         @staticmethod
@@ -298,8 +297,9 @@ class CommonEncoderTestCases:
             if sys.version_info.major == 3 and sys.version_info.minor <= 5:
                 expected_spans = json.loads(expected_spans)
                 actual_spans = json.loads(actual_spans)
-                for expected_span, actual_span in zip(expected_spans,
-                                                      actual_spans):
+                for expected_span, actual_span in zip(
+                    expected_spans, actual_spans
+                ):
                     actual_annotations = self.pop_and_sort(
                         actual_span, "annotations", "timestamp"
                     )

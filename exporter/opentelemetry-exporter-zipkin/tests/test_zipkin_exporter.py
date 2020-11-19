@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=too-many-lines
+import ipaddress
 import os
 import unittest
 from unittest.mock import patch
@@ -21,14 +22,12 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
     ZipkinSpanExporter,
     DEFAULT_ENDPOINT,
-    DEFAULT_ENCODING,
     DEFAULT_SERVICE_NAME,
 )
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
-from opentelemetry.exporter.zipkin.endpoint import Endpoint
-from opentelemetry.exporter.zipkin.sender.http import HttpSender
+from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace.export import SpanExportResult
 
 
@@ -39,7 +38,6 @@ class MockResponse:
 
 
 class TestZipkinSpanExporter(unittest.TestCase):
-
     def tearDown(self):
         if "OTEL_EXPORTER_ZIPKIN_SERVICE_NAME" in os.environ:
             del os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"]
@@ -52,15 +50,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_constructor_default(self):
         exporter = ZipkinSpanExporter()
         self.assertIsInstance(exporter.encoder, JsonV2Encoder)
+        self.assertEqual(exporter.endpoint, DEFAULT_ENDPOINT)
         self.assertEqual(
-            exporter.encoder.local_endpoint.service_name, DEFAULT_SERVICE_NAME
+            exporter.local_node.service_name, DEFAULT_SERVICE_NAME
         )
-        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
-        self.assertEqual(exporter.encoder.local_endpoint.port, None)
-        self.assertIsInstance(exporter.sender, HttpSender)
-        self.assertEqual(exporter.sender.endpoint, DEFAULT_ENDPOINT)
-        self.assertEqual(exporter.sender.encoding, DEFAULT_ENCODING)
+        self.assertEqual(exporter.local_node.ipv4, None)
+        self.assertEqual(exporter.local_node.ipv6, None)
+        self.assertEqual(exporter.local_node.port, None)
 
     def test_constructor_env_vars(self):
         os_service_name = "os-env-service-name"
@@ -74,30 +70,22 @@ class TestZipkinSpanExporter(unittest.TestCase):
         exporter = ZipkinSpanExporter()
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
-        self.assertEqual(
-            exporter.encoder.local_endpoint.service_name, os_service_name
-        )
-        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
-        self.assertEqual(exporter.encoder.local_endpoint.port, None)
-        self.assertIsInstance(exporter.sender, HttpSender)
-        self.assertEqual(exporter.sender.endpoint, os_endpoint)
-        self.assertEqual(exporter.sender.encoding, os_encoding)
+        self.assertEqual(exporter.endpoint, os_endpoint)
+        self.assertEqual(exporter.local_node.service_name, os_service_name)
+        self.assertEqual(exporter.local_node.ipv4, None)
+        self.assertEqual(exporter.local_node.ipv6, None)
+        self.assertEqual(exporter.local_node.port, None)
 
     def test_constructor_service(self):
         service_name = "my-service-name"
         exporter = ZipkinSpanExporter(service_name)
 
         self.assertIsInstance(exporter.encoder, JsonV2Encoder)
-        self.assertEqual(
-            exporter.encoder.local_endpoint.service_name, service_name
-        )
-        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
-        self.assertEqual(exporter.encoder.local_endpoint.port, None)
-        self.assertIsInstance(exporter.sender, HttpSender)
-        self.assertEqual(exporter.sender.endpoint, DEFAULT_ENDPOINT)
-        self.assertEqual(exporter.sender.encoding, DEFAULT_ENCODING)
+        self.assertEqual(exporter.endpoint, DEFAULT_ENDPOINT)
+        self.assertEqual(exporter.local_node.service_name, service_name)
+        self.assertEqual(exporter.local_node.ipv4, None)
+        self.assertEqual(exporter.local_node.ipv6, None)
+        self.assertEqual(exporter.local_node.port, None)
 
     def test_constructor_service_endpoint_encoding(self):
         """Test the constructor for the common usage of providing the
@@ -109,77 +97,53 @@ class TestZipkinSpanExporter(unittest.TestCase):
         exporter = ZipkinSpanExporter(service_name, endpoint, encoding)
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
-        self.assertEqual(
-            exporter.encoder.local_endpoint.service_name, service_name
-        )
-        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
-        self.assertEqual(exporter.encoder.local_endpoint.port, None)
-        self.assertIsInstance(exporter.sender, HttpSender)
-        self.assertEqual(exporter.sender.endpoint, endpoint)
-        self.assertEqual(exporter.sender.encoding, encoding)
-
-    def test_constructor_sender_encoder(self):
-        """Test the constructor for the more advanced use case of providing
-        a sender and encoder."""
-        service_name = "my-test-service"
-        endpoint = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
-        encoding = Encoding.V2_PROTOBUF
-        exporter = ZipkinSpanExporter(
-            encoder=ProtobufEncoder(Endpoint(service_name)),
-            sender=HttpSender(endpoint, encoding),
-        )
-
-        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
-        self.assertEqual(
-            exporter.encoder.local_endpoint.service_name, service_name
-        )
-        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
-        self.assertEqual(exporter.encoder.local_endpoint.port, None)
-        self.assertIsInstance(exporter.sender, HttpSender)
-        self.assertEqual(exporter.sender.endpoint, endpoint)
-        self.assertEqual(exporter.sender.encoding, encoding)
+        self.assertEqual(exporter.endpoint, endpoint)
+        self.assertEqual(exporter.local_node.service_name, service_name)
+        self.assertEqual(exporter.local_node.ipv4, None)
+        self.assertEqual(exporter.local_node.ipv6, None)
+        self.assertEqual(exporter.local_node.port, None)
 
     def test_constructor_all_params_and_env_vars(self):
         """Test the scenario where all params are provided and all OS env
-        vars are set.
-
-        The result should be that the OS env vars and class defaults are
-        superseded by the explicit sender and encoder provided.
+        vars are set. Explicit params should take precedence.
         """
+        os_service_name = "os-env-service-name"
         os_endpoint = "https://os.env.param:9911/path"
         os_encoding = Encoding.V1_JSON
+        os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"] = os_service_name
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
         os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"] = os_encoding.value
 
-        exporter_param_service_name = "exporter-param-service-name"
-        exporter_param_endpoint = "https://constructor.param:9911/path"
-        exporter_param_encoding = Encoding.V1_JSON
-
-        encoder_param_service_name = "encoder-param-service-name"
-        sender_param_encoding = Encoding.V2_PROTOBUF
-        sender_param_endpoint = "https://sender.param:9911/path"
+        constructor_param_service_name = "exporter-param-service-name"
+        constructor_param_endpoint = "https://constructor.param:9911/path"
+        constructor_param_encoding = Encoding.V2_PROTOBUF
+        local_node_ipv4 = "192.168.0.1"
+        local_node_ipv6 = "2001:db8::1000"
+        local_node_port = 30301
+        max_tag_value_length = 56
 
         exporter = ZipkinSpanExporter(
-            service_name=exporter_param_service_name,
-            endpoint=exporter_param_endpoint,
-            encoding=exporter_param_encoding,
-            encoder=ProtobufEncoder(Endpoint(encoder_param_service_name)),
-            sender=HttpSender(sender_param_endpoint, sender_param_encoding),
+            constructor_param_service_name,
+            constructor_param_endpoint,
+            constructor_param_encoding,
+            local_node_ipv4,
+            local_node_ipv6,
+            local_node_port,
+            max_tag_value_length,
         )
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        self.assertEqual(exporter.endpoint, constructor_param_endpoint)
         self.assertEqual(
-            exporter.encoder.local_endpoint.service_name,
-            encoder_param_service_name,
+            exporter.local_node.service_name, constructor_param_service_name,
         )
-        self.assertEqual(exporter.encoder.local_endpoint.ipv4, None)
-        self.assertEqual(exporter.encoder.local_endpoint.ipv6, None)
-        self.assertEqual(exporter.encoder.local_endpoint.port, None)
-        self.assertIsInstance(exporter.sender, HttpSender)
-        self.assertEqual(exporter.sender.endpoint, sender_param_endpoint)
-        self.assertEqual(exporter.sender.encoding, sender_param_encoding)
+        self.assertEqual(
+            exporter.local_node.ipv4, ipaddress.IPv4Address(local_node_ipv4)
+        )
+        self.assertEqual(
+            exporter.local_node.ipv6, ipaddress.IPv6Address(local_node_ipv6)
+        )
+        self.assertEqual(exporter.local_node.port, local_node_port)
 
     @patch("requests.post")
     def test_invalid_response(self, mock_post):
@@ -188,3 +152,40 @@ class TestZipkinSpanExporter(unittest.TestCase):
         exporter = ZipkinSpanExporter("test-service")
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
+
+
+class TestZipkinNodeEndpoint(unittest.TestCase):
+    def test_constructor_default(self):
+        service_name = "test-service-name"
+        node_endpoint = NodeEndpoint(service_name)
+        self.assertEqual(node_endpoint.service_name, service_name)
+        self.assertEqual(node_endpoint.ipv4, None)
+        self.assertEqual(node_endpoint.ipv6, None)
+        self.assertEqual(node_endpoint.port, None)
+
+    def test_constructor_explicits(self):
+        service_name = "test-service-name"
+        ipv4 = "192.168.0.1"
+        ipv6 = "2001:db8::c001"
+        port = 414120
+        node_endpoint = NodeEndpoint(service_name, ipv4, ipv6, port)
+        self.assertEqual(node_endpoint.service_name, service_name)
+        self.assertEqual(node_endpoint.ipv4, ipaddress.IPv4Address(ipv4))
+        self.assertEqual(node_endpoint.ipv6, ipaddress.IPv6Address(ipv6))
+        self.assertEqual(node_endpoint.port, port)
+
+    def test_ipv4_invalid_raises_error(self):
+        with self.assertRaises(ValueError):
+            NodeEndpoint("service-name", ipv4="invalid-ipv4-address")
+
+    def test_ipv4_passed_ipv6_raises_error(self):
+        with self.assertRaises(ValueError):
+            NodeEndpoint("service-name", ipv4="2001:db8::c001")
+
+    def test_ipv6_invalid_raises_error(self):
+        with self.assertRaises(ValueError):
+            NodeEndpoint("service-name", ipv6="invalid-ipv6-address")
+
+    def test_ipv6_passed_ipv4_raises_error(self):
+        with self.assertRaises(ValueError):
+            NodeEndpoint("service-name", ipv6="192.168.0.1")

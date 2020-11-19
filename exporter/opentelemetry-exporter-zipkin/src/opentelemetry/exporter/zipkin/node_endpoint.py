@@ -20,8 +20,8 @@ from typing import Optional, Union
 IpInput = Union[str, int, None]
 
 
-class Endpoint:
-    """Endpoint definition
+class NodeEndpoint:
+    """The network context of a node in the service graph.
 
     Args:
         service_name: Lower-case label of this node in the service graph,
@@ -36,7 +36,7 @@ class Endpoint:
 
     def __init__(
         self,
-        service_name: str,
+        service_name: str,  # technically optional but enforcing best practice
         ipv4: IpInput = None,
         ipv6: IpInput = None,
         port: Optional[int] = None,

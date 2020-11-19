@@ -18,9 +18,10 @@ This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
 Usage
 -----
 
-The **OpenTelemetry Zipkin Exporter** allows to export `OpenTelemetry`_ traces to `Zipkin`_.
-This exporter always send traces to the configured Zipkin collector using HTTP.
-
+The **OpenTelemetry Zipkin Exporter** allows exporting of `OpenTelemetry`_
+traces to `Zipkin`_. This exporter sends traces to the configured Zipkin
+collector endpoint using HTTP and supports multiple encodings (v1 json,
+v2 json, v2 protobuf).
 
 .. _Zipkin: https://zipkin.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
@@ -40,37 +41,16 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
 
-    # create an exporter with defaults
-    zipkin_exporter = zipkin.ZipkinSpanExporter("my-helloworld-service")
-
-    # create an exporter with explicit endpoint and encoding.
-    # additional import needed:
-    #     from opentelemetry.exporter.zipkin.encoder import Encoding
-    #
+    # create an exporter
     zipkin_exporter = zipkin.ZipkinSpanExporter(
-        "my-helloworld-service",
-        endpoint="http://localhost:9411/api/v2/spans",
-        encoding=Encoding.PROTOBUF
-    )
-
-    # create an advanced exporter with explicit encoder and sender.
-    # additional imports needed:
-    #     from opentelemetry.exporter.zipkin.encoder import Encoding
-    #     from opentelemetry.exporter.zipkin.encoder.protobuf import (
-    #         ProtobufEncoder
-    #     )
-    #     from opentelemetry.exporter.zipkin.endpoint import Endpoint
-    #     from opentelemetry.exporter.zipkin.sender.http import HttpSender
-    #
-    zipkin_exporter = zipkin.ZipkinSpanExporter(
-        encoder=ProtobufEncoder(
-            Endpoint("my_service"),
-            max_tag_value_length=256
-        ),
-        sender=HttpSender(
-            endpoint="http://remote.endpoint.com:9411/api/v2/spans",
-            encoding=Encoding.PROTOBUF,
-        ),
+        "my-helloworld-service"
+        # optional:
+        # endpoint="http://localhost:9411/api/v2/spans",
+        # encoding=Encoding.PROTOBUF,
+        # local_node_ipv4="192.168.0.1",
+        # local_node_ipv6="2001:db8::c001",
+        # local_node_port=31313,
+        # max_tag_value_length=256
     )
 
     # Create a BatchExportSpanProcessor and add the exporter to it
@@ -84,81 +64,71 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 
 The exporter supports the following environment variables for configuration:
 
-:envvar:`OTEL_EXPORTER_ZIPKIN_SERVICE_NAME`: Label of the remote node in the
+:envvar:`OTEL_EXPORTER_ZIPKIN_SERVICE_NAME`: Label of the local node in the
 service graph, such as "favstar". Avoid names with variables or unique
 identifiers embedded. Defaults to "unknown". This is a primary label for trace
 lookup and aggregation, so it should be intuitive and consistent. Many use a
 name from service discovery.
 
-:envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: target to which the exporter will
-send data. This may include a path (e.g. http://example.com:9411/api/v2/spans).
+:envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: zipkin collector endpoint to which the
+exporter will send data. This may include a path (e.g.
+http://example.com:9411/api/v2/spans).
 
 :envvar:`OTEL_EXPORTER_ZIPKIN_ENCODING`: transport interchange format
-encoder to use when sending data. Currently only Zipkin's v2 json and protobuf
-formats are supported, with v2 json being the default.
+encoder to use when sending data. Refer to
+opentelemetry.exporter.zipkin.encoder.Encoding for supported options.
 
 API
 ---
 """
 
-from typing import Sequence
+import logging
+import requests
+from typing import Optional, Sequence
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.encoder import Encoder, Encoding
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
-from opentelemetry.exporter.zipkin.endpoint import Endpoint
-from opentelemetry.exporter.zipkin.sender.http import Sender, HttpSender
+from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint, IpInput
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span
 
 DEFAULT_SERVICE_NAME = "unknown"
 DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans"
 DEFAULT_ENCODING = Encoding.V2_JSON
+REQUESTS_SUCCESS_STATUS_CODES = (200, 202)
+
+logger = logging.getLogger(__name__)
 
 
 class ZipkinSpanExporter(SpanExporter):
-    """Zipkin span exporter for OpenTelemetry.
-
-    Attributes:
-        encoder: handles conversion of span data into a specified
-          transport format (e.g. protobuf)
-        sender: handles transport of encoded spans over a given
-          protocol (e.g. http)
-    """
-
     def __init__(
         self,
-        service_name: str = None,
-        endpoint: str = None,
-        encoding: Encoding = None,
-        encoder: Encoder = None,
-        sender: Sender = None,
+        service_name: Optional[str] = None,
+        endpoint: Optional[str] = None,
+        encoding: Optional[Encoding] = None,
+        local_node_ipv4: IpInput = None,
+        local_node_ipv6: IpInput = None,
+        local_node_port: Optional[int] = None,
+        max_tag_value_length: Optional[int] = None,
     ):
-        """Instantiates a ZipkinSpanExporter.
+        if service_name is None:
+            service_name = (
+                Configuration().EXPORTER_ZIPKIN_SERVICE_NAME
+                or DEFAULT_SERVICE_NAME
+            )
+        self.local_node = NodeEndpoint(
+            service_name, local_node_ipv4, local_node_ipv6, local_node_port
+        )
 
-        :param service_name: Lowercase label of this node in the service
-        graph, such as "favstar". This is a primary label for trace lookup
-        and aggregation, so it should be intuitive and consistent. Many
-        use a name from service discovery.
-        :param endpoint: the zipkin endpoint where data will be exported (ex:
-        "http://localhost:9411/api/v2/spans"). This param is ignored if
-        the sender param is also provided since the sender will already
-        have an endpoint defined.
-        :param encoding: defines the encoding to use for both the encoder and
-        sender. This param will be ignored by an encoder or sender also
-        provided as a param since they will have already defined their
-        encoding.
-        :param encoder: handles conversion of span data into a specified
-        transport format (e.g. protobuf). If provided along with the
-        'encoding' param, the encoder will take precedence and ignore the
-        'encoding' param.
-        :param sender: handles transport of encoded spans over a given
-        protocol (e.g. http). If provided along with the 'encoding' and/or
-        'endpoint' params, the sender will take precedence and ignore those
-        params.
-        """
+        if endpoint is None:
+            endpoint = (
+                Configuration().EXPORTER_ZIPKIN_ENDPOINT or DEFAULT_ENDPOINT
+            )
+        self.endpoint = endpoint
+
         if encoding is None:
             env_encoding = Configuration().EXPORTER_ZIPKIN_ENCODING
             if env_encoding is not None:
@@ -166,36 +136,28 @@ class ZipkinSpanExporter(SpanExporter):
             else:
                 encoding = DEFAULT_ENCODING
 
-        if encoder is not None:
-            self.encoder = encoder
-        else:
-            if service_name is None:
-                service_name = (
-                    Configuration().EXPORTER_ZIPKIN_SERVICE_NAME
-                    or DEFAULT_SERVICE_NAME
-                )
-            # TODO: add logic to determine primary ipv4 and ipv6 addresses to
-            #  pass into Endpoint constructor.
-            local_endpoint = Endpoint(service_name)
-            if encoding == Encoding.V1_JSON:
-                self.encoder = JsonV1Encoder(local_endpoint)
-            elif encoding == Encoding.V2_JSON:
-                self.encoder = JsonV2Encoder(local_endpoint)
-            elif encoding == Encoding.V2_PROTOBUF:
-                self.encoder = ProtobufEncoder(local_endpoint)
-
-        if sender is not None:
-            self.sender = sender
-        else:
-            if endpoint is None:
-                endpoint = (
-                    Configuration().EXPORTER_ZIPKIN_ENDPOINT
-                    or DEFAULT_ENDPOINT
-                )
-            self.sender = HttpSender(endpoint, encoding)
+        if encoding == Encoding.V1_JSON:
+            self.encoder = JsonV1Encoder(max_tag_value_length)
+        elif encoding == Encoding.V2_JSON:
+            self.encoder = JsonV2Encoder(max_tag_value_length)
+        elif encoding == Encoding.V2_PROTOBUF:
+            self.encoder = ProtobufEncoder(max_tag_value_length)
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
-        return self.sender.send(self.encoder.encode(spans))
+        result = requests.post(
+            url=self.endpoint,
+            data=self.encoder.serialize(spans, self.local_node),
+            headers={"Content-Type": self.encoder.content_type()},
+        )
+
+        if result.status_code not in REQUESTS_SUCCESS_STATUS_CODES:
+            logger.error(
+                "Traces cannot be uploaded; status code: %s, message %s",
+                result.status_code,
+                result.text,
+            )
+            return SpanExportResult.FAILURE
+        return SpanExportResult.SUCCESS
 
     def shutdown(self) -> None:
         pass
