@@ -68,10 +68,19 @@ class ProtobufEncoder(Encoder):
             duration=self._nsec_to_usec_round(span.end_time - span.start_time),
             local_endpoint=encoded_local_endpoint,
             kind=self.SPAN_KIND_MAP[span.kind],
-            tags=self._extract_tags_from_span(span),
-            annotations=self._encode_annotations(span.events),
-            debug=self._encode_debug(context),
         )
+
+        tags = self._extract_tags_from_span(span)
+        if tags:
+            encoded_span.tags.update(tags)
+
+        annotations = self._encode_annotations(span.events)
+        if annotations:
+            encoded_span.annotations.extend(annotations)
+
+        debug = self._encode_debug(context)
+        if debug:
+            encoded_span.debug = debug
 
         parent_id = self._get_parent_id(span.parent)
         if parent_id is not None:

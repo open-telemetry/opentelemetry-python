@@ -74,6 +74,12 @@ class Encoder(abc.ABC):
     def _encode_span(
         self, span: Span, encoded_local_endpoint: EncodedLocalEndpointT
     ) -> Any:
+        """
+        Per spec Zipkin fields that can be absent SHOULD be omitted from the
+        payload when they are empty in the OpenTelemetry Span.
+
+        https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk_exporters/zipkin.md#request-payload
+        """
         pass
 
     @staticmethod

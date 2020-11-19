@@ -103,7 +103,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "timestamp": otel_spans[1].start_time // 10 ** 3,
                 "duration": (otel_spans[1].end_time // 10 ** 3)
                 - (otel_spans[1].start_time // 10 ** 3),
-                "annotations": None,
                 "binaryAnnotations": [
                     {
                         "key": "key_resource",
@@ -116,7 +115,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                         "endpoint": local_endpoint,
                     },
                 ],
-                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -127,7 +125,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "timestamp": otel_spans[2].start_time // 10 ** 3,
                 "duration": (otel_spans[2].end_time // 10 ** 3)
                 - (otel_spans[2].start_time // 10 ** 3),
-                "annotations": None,
                 "binaryAnnotations": [
                     {
                         "key": "key_string",
@@ -145,7 +142,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                         "endpoint": local_endpoint,
                     },
                 ],
-                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -156,7 +152,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "timestamp": otel_spans[3].start_time // 10 ** 3,
                 "duration": (otel_spans[3].end_time // 10 ** 3)
                 - (otel_spans[3].start_time // 10 ** 3),
-                "annotations": None,
                 "binaryAnnotations": [
                     {
                         "key": "otel.instrumentation_library.name",
@@ -174,7 +169,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                         "endpoint": local_endpoint,
                     },
                 ],
-                "debug": False,
             },
         ]
 
@@ -213,7 +207,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "name": service_name,
                 "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
                 "duration": JsonV1Encoder._nsec_to_usec_round(duration),
-                "annotations": None,
                 "binaryAnnotations": [
                     {
                         "key": "otel.status_code",
@@ -264,7 +257,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "name": service_name,
                 "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
                 "duration": JsonV1Encoder._nsec_to_usec_round(duration),
-                "annotations": None,
                 "binaryAnnotations": [
                     {
                         "key": "k1",

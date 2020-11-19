@@ -90,8 +90,6 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     "key_resource": "some_resource",
                     "otel.status_code": "1",
                 },
-                "annotations": None,
-                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -109,8 +107,6 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     "key_resource": "some_resource",
                     "otel.status_code": "1",
                 },
-                "annotations": None,
-                "debug": False,
             },
             {
                 "traceId": trace_id,
@@ -128,8 +124,6 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     "otel.instrumentation_library.version": "version",
                     "otel.status_code": "1",
                 },
-                "annotations": None,
-                "debug": False,
             },
         ]
 
@@ -171,7 +165,6 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "localEndpoint": {"serviceName": service_name},
                 "kind": JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
                 "tags": {"otel.status_code": "1"},
-                "annotations": None,
                 "debug": True,
                 "parentId": format(parent_id, "016x"),
             }
@@ -221,7 +214,6 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     "k2": tag2_value[:max_tag_value_length],
                     "otel.status_code": "1",
                 },
-                "annotations": None,
                 "debug": True,
             }
         ]

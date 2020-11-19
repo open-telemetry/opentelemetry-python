@@ -30,13 +30,6 @@ class JsonV1Encoder(JsonEncoder, V1Encoder):
     def _encode_span(self, span: Span, encoded_local_endpoint: Dict) -> Dict:
         context = span.get_span_context()
 
-        encoded_annotations = self._extract_annotations_from_events(
-            span.events
-        )
-        if encoded_annotations is not None:
-            for annotation in encoded_annotations:
-                annotation["endpoint"] = encoded_local_endpoint
-
         encoded_span = {
             "traceId": self._encode_trace_id(context.trace_id),
             "id": self._encode_span_id(context.span_id),
@@ -45,12 +38,25 @@ class JsonV1Encoder(JsonEncoder, V1Encoder):
             "duration": self._nsec_to_usec_round(
                 span.end_time - span.start_time
             ),
-            "annotations": encoded_annotations,
-            "binaryAnnotations": self._extract_binary_annotations(
-                span, encoded_local_endpoint
-            ),
-            "debug": self._encode_debug(context),
         }
+
+        encoded_annotations = self._extract_annotations_from_events(
+            span.events
+        )
+        if encoded_annotations is not None:
+            for annotation in encoded_annotations:
+                annotation["endpoint"] = encoded_local_endpoint
+            encoded_span["annotations"] = encoded_annotations
+
+        binary_annotations = self._extract_binary_annotations(
+                span, encoded_local_endpoint
+        )
+        if binary_annotations:
+            encoded_span["binaryAnnotations"] = binary_annotations
+
+        debug = self._encode_debug(context)
+        if debug:
+            encoded_span["debug"] = debug
 
         parent_id = self._get_parent_id(span.parent)
         if parent_id is not None:
