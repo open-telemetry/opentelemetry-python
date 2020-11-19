@@ -201,15 +201,23 @@ class OTLPExporterMixin(
             self._client = self._stub(
                 insecure_channel(endpoint, compression=compression_algorithm)
             )
-        else:
-            credentials = credentials or _load_credential_from_file(
-                Configuration().EXPORTER_OTLP_CERTIFICATE
+            return
+
+        # secure mode
+        if (
+            credentials is None
+            and Configuration().EXPORTER_OTLP_CERTIFICATE is None
+        ):
+            raise ValueError("No credentials set in secure mode.")
+
+        credentials = credentials or _load_credential_from_file(
+            Configuration().EXPORTER_OTLP_CERTIFICATE
+        )
+        self._client = self._stub(
+            secure_channel(
+                endpoint, credentials, compression=compression_algorithm
             )
-            self._client = self._stub(
-                secure_channel(
-                    endpoint, credentials, compression=compression_algorithm
-                )
-            )
+        )
 
     @abstractmethod
     def _translate_data(
