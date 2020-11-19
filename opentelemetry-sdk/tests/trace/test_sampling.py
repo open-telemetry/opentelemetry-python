@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import contextlib
 import sys
 import unittest
 
+from opentelemetry import context as context_api
 from opentelemetry import trace
 from opentelemetry.sdk.trace import sampling
 
@@ -297,9 +299,9 @@ class TestSampler(unittest.TestCase):
             almost_almost_always_on.bound, 0xFFFFFFFFFFFFFFFF,
         )
 
-    def test_parent_based(self):
+    def exec_parent_based(self, parent_sampling_context):
         sampler = sampling.ParentBased(sampling.ALWAYS_ON)
-        context = trace.set_span_in_context(
+        with parent_sampling_context(
             trace.DefaultSpan(
                 trace.SpanContext(
                     0xDEADBEF0,
@@ -308,15 +310,15 @@ class TestSampler(unittest.TestCase):
                     trace_flags=TO_DEFAULT,
                 )
             )
-        )
-        # Check that the sampling decision matches the parent context if given
-        self.assertFalse(
-            sampler.should_sample(
-                context, 0x7FFFFFFFFFFFFFFF, 0xDEADBEEF, "span name",
-            ).decision.is_sampled()
-        )
+        ) as context:
+            # Check that the sampling decision matches the parent context if given
+            self.assertFalse(
+                sampler.should_sample(
+                    context, 0x7FFFFFFFFFFFFFFF, 0xDEADBEEF, "span name",
+                ).decision.is_sampled()
+            )
 
-        context = trace.set_span_in_context(
+        with parent_sampling_context(
             trace.DefaultSpan(
                 trace.SpanContext(
                     0xDEADBEF0,
@@ -325,19 +327,43 @@ class TestSampler(unittest.TestCase):
                     trace_flags=TO_SAMPLED,
                 )
             )
-        )
-        sampler2 = sampling.ParentBased(sampling.ALWAYS_OFF)
-        self.assertTrue(
-            sampler2.should_sample(
-                context, 0x8000000000000000, 0xDEADBEEF, "span name",
-            ).decision.is_sampled()
-        )
+        ) as context:
+            sampler2 = sampling.ParentBased(sampling.ALWAYS_OFF)
+            self.assertTrue(
+                sampler2.should_sample(
+                    context, 0x8000000000000000, 0xDEADBEEF, "span name",
+                ).decision.is_sampled()
+            )
 
-        # root span always sampled for parentbased
-        context = trace.set_span_in_context(trace.INVALID_SPAN)
-        sampler3 = sampling.ParentBased(sampling.ALWAYS_OFF)
-        self.assertTrue(
-            sampler3.should_sample(
-                context, 0x8000000000000000, 0xDEADBEEF, "span name",
-            ).decision.is_sampled()
-        )
+        # for root span follow decision of delegate sampler
+        with parent_sampling_context(trace.INVALID_SPAN) as context:
+            sampler3 = sampling.ParentBased(sampling.ALWAYS_OFF)
+            self.assertFalse(
+                sampler3.should_sample(
+                    context, 0x8000000000000000, 0xDEADBEEF, "span name",
+                ).decision.is_sampled()
+            )
+
+        with parent_sampling_context(trace.INVALID_SPAN) as context:
+            sampler4 = sampling.ParentBased(sampling.ALWAYS_ON)
+            self.assertTrue(
+                sampler4.should_sample(
+                    context, 0x8000000000000000, 0xDEADBEEF, "span name",
+                ).decision.is_sampled()
+            )
+
+    def test_parent_based_explicit_parent_context(self):
+        @contextlib.contextmanager
+        def explicit_parent_context(span: trace.Span):
+            yield trace.set_span_in_context(span)
+
+        self.exec_parent_based(explicit_parent_context)
+
+    def test_parent_based_implicit_parent_context(self):
+        @contextlib.contextmanager
+        def implicit_parent_context(span: trace.Span):
+            token = context_api.attach(trace.set_span_in_context(span))
+            yield None
+            context_api.detach(token)
+
+        self.exec_parent_based(implicit_parent_context)

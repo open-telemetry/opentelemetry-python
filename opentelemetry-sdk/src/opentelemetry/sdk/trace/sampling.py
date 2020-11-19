@@ -238,16 +238,12 @@ class ParentBased(Sampler):
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
     ) -> "SamplingResult":
-        if parent_context is not None:
-            parent_span_context = get_current_span(
-                parent_context
-            ).get_span_context()
-            # only drop if parent exists and is not a root span
-            if (
-                parent_span_context is not None
-                and parent_span_context.is_valid
-                and not parent_span_context.trace_flags.sampled
-            ):
+        parent_span_context = get_current_span(
+            parent_context
+        ).get_span_context()
+        # respect the sampling flag of the parent if present
+        if parent_span_context is not None and parent_span_context.is_valid:
+            if not parent_span_context.trace_flags.sampled:
                 return SamplingResult(Decision.DROP)
             return SamplingResult(Decision.RECORD_AND_SAMPLE, attributes)
 
