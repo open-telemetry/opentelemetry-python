@@ -14,16 +14,67 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 from logging import getLogger
 from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
 from shutil import which
-from sys import argv
 
 logger = getLogger(__file__)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="""
+        opentelemetry-instrument automatically instruments a Python
+        program and it's dependencies and then runs the program.
+        """
+    )
+
+    parser.add_argument(
+        "-e",
+        "--exporter",
+        required=False,
+        help="""
+        Uses the specified exporter to export spans or metrics.
+        Accepts multiple exporters as comma separated values.
+
+        Examples:
+
+            -e=otlp
+            -e=otlp_span,prometheus
+            -e=jaeger,otlp_metric
+        """,
+    )
+
+    parser.add_argument(
+        "-s",
+        "--service-name",
+        required=False,
+        help="""
+        The service name that should be passed to a trace exporter.
+        """,
+    )
+
+    parser.add_argument("command", help="Your Python application.")
+    parser.add_argument(
+        "command_args",
+        help="Arguments for your application.",
+        nargs=argparse.REMAINDER,
+    )
+    return parser.parse_args()
+
+
+def load_config_from_cli_args(args):
+    if args.exporter:
+        environ["OTEL_EXPORTER"] = args.exporter
+    if args.service_name:
+        environ["OTEL_SERVICE_NAME"] = args.service_name
+
+
 def run() -> None:
+    args = parse_args()
+    load_config_from_cli_args(args)
 
     python_path = environ.get("PYTHONPATH")
 
@@ -49,6 +100,5 @@ def run() -> None:
 
     environ["PYTHONPATH"] = pathsep.join(python_path)
 
-    executable = which(argv[1])
-
-    execl(executable, executable, *argv[2:])
+    executable = which(args.command)
+    execl(executable, executable, *args.command_args)
