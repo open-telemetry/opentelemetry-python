@@ -109,8 +109,10 @@ class TestTraceInit(TestCase):
         )
         del environ["OTEL_SERVICE_NAME"]
 
+    @patch.dict(
+        environ, {"OTEL_SERVICE_NAME": "my-random-ids-generator-test-service"}
+    )
     def test_trace_init_default_random_ids_generator(self):
-        environ["OTEL_SERVICE_NAME"] = "my-random-ids-generator-test-service"
         Configuration._reset()
         ids_generator_name = components.get_ids_generator()
         ids_generator = components.import_ids_generator(ids_generator_name)
@@ -127,4 +129,3 @@ class TestTraceInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "my-random-ids-generator-test-service",
         )
-        del environ["OTEL_SERVICE_NAME"]
