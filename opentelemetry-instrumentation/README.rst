@@ -16,17 +16,6 @@ Installation
 
 This package provides a couple of commands that help automatically instruments a program:
 
-opentelemetry-instrument
-------------------------
-
-::
-
-    opentelemetry-instrument python program.py
-
-The code in ``program.py`` needs to use one of the packages for which there is
-an OpenTelemetry integration. For a list of the available integrations please
-check `here <https://opentelemetry-python.readthedocs.io/en/stable/index.html#integrations>`_
-
 
 opentelemetry-bootstrap
 -----------------------
@@ -40,6 +29,69 @@ instrumentation packages the user might want to install. By default it prints ou
 a list of the suggested instrumentation packages which can be added to a requirements.txt
 file. It also supports installing the suggested packages when run with :code:`--action=install`
 flag.
+
+
+opentelemetry-instrument
+------------------------
+
+::
+
+    opentelemetry-instrument python program.py
+
+The instrument command will try to automatically detect packages used by your python program
+and when possible, apply automatic tracing instrumentation on them. This means your program
+will get automatic distributed tracing for free without having to make any code changes
+at all. This will also configure a global tracer and tracing exporter without you having to
+make any code changes. By default, the instrument command will use the OTLP exporter but
+this can be overriden when needed.
+
+The command supports the following configuration options as CLI arguments and environment vars:
+
+
+* ``--exporter`` or ``OTEL_EXPORTER``
+
+Used to specify which trace exporter to use. Can be set to one or more
+of the well-known exporter names (see below).
+
+    - Defaults to `otlp`.
+    - Can be set to `none` to disable automatic tracer initialization. 
+
+You can pass multiple values to configure multiple exporters e.g, ``zipkin,prometheus`` 
+
+Well known trace exporter names:
+
+    - jaeger
+    - opencensus
+    - otlp
+    - otlp_span
+    - otlp_metric
+    - zipkin
+
+``otlp`` is an alias for ``otlp_span,otlp_metric``.
+
+* ``--service-name`` or ``OTEL_SERVICE_NAME``
+
+When present the value is passed on to the relevant exporter initializer as ``service_name`` argument.
+
+The code in ``program.py`` needs to use one of the packages for which there is
+an OpenTelemetry integration. For a list of the available integrations please
+check `here <https://opentelemetry-python.readthedocs.io/en/stable/index.html#integrations>`_
+
+Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
+    opentelemetry-instrument -e otlp flask run --port=3000
+
+The above command will pass ``-e otlp`` to the instrument command and ``--port=3000`` to ``flask run``.
+
+::
+
+    opentelemetry-instrument -e zipkin,otlp celery -A tasks worker --loglevel=info
+
+The above command will configure global trace provider, attach zipkin and otlp exporters to it and then
+start celery with the rest of the arguments. 
 
 References
 ----------
