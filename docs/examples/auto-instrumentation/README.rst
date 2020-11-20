@@ -1,10 +1,10 @@
 Auto-instrumentation
-===================
+====================
 
 One of the best ways to instrument Python applications is to use OpenTelemetry automatic instrumentation (auto-instrumentation). This approach is simple, easy, and doesn't require many code changes. You only need to install a few Python packages to successfully instrument your application's code.
 
 Overview
---------
+---------
 
 This example demonstrates how to use auto-instrumentation in OpenTelemetry.
 The example is based on a previous OpenTracing example that
