@@ -1,29 +1,30 @@
-Autoinstrumentation
+Auto-instrumentation
 ===================
+
+One of the best ways to instrument Python applications is to use OpenTelemetry automatic instrumentation (auto-instrumentation). This approach is simple, easy, and doesn't require many code changes. You only need to install a few Python packages to successfully instrument your application's code.
 
 Overview
 --------
 
-This example shows how to use auto-instrumentation in OpenTelemetry.
-This example is also based on a previous example for OpenTracing that
-can be found
+This example demonstrates how to use auto-instrumentation in OpenTelemetry.
+The example is based on a previous OpenTracing example that
+you can find
 `here <https://github.com/yurishkuro/opentracing-tutorial/tree/master/python>`__.
 
-The source files of these examples are available :scm_web:`here <docs/examples/auto-instrumentation/>`.
+The source files for these examples are available :scm_web:`here <docs/examples/auto-instrumentation/>`.
 
-This example uses 2 scripts whose main difference is they being
-instrumented manually or not:
+This example uses two different scripts. The main difference between them is
+whether or not they're instrumented manually:
 
-1. ``server_instrumented.py`` which has been instrumented manually
-2. ``server_uninstrumented.py`` which has not been instrumented manually
+1. ``server_instrumented.py`` - instrumented manually
+2. ``server_uninstrumented.py`` - not instrumented manually
 
-The former will be run without the automatic instrumentation agent and
-the latter with the automatic instrumentation agent. They should produce
-the same result, showing that the automatic instrumentation agent does
-the equivalent of what manual instrumentation does.
+Run the first script without the automatic instrumentation agent and
+the second with the agent. They should both produce the same results, 
+demonstrating that the automatic instrumentation agent does
+exactly the same thing as manual instrumentation.
 
-In order to understand this better, here is the relevant part of both
-scripts:
+To better understand auto-instrumentation, see the relevant part of both scripts:
 
 Manually instrumented server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +44,7 @@ Manually instrumented server
             print(request.args.get("param"))
             return "served"
 
-Publisher not instrumented manually
+Server not instrumented manually
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``server_uninstrumented.py``
@@ -55,10 +56,11 @@ Publisher not instrumented manually
         print(request.args.get("param"))
         return "served"
 
-Preparation
+Prepare
 -----------
 
-This example will be executed in a separate virtual environment:
+Execute the following example in a separate virtual environment.
+Run the following commands to prepare for auto-instrumentation:
 
 .. code:: sh
 
@@ -66,8 +68,12 @@ This example will be executed in a separate virtual environment:
     $ virtualenv auto_instrumentation
     $ source auto_instrumentation/bin/activate
 
-Installation
+Install
 ------------
+
+Run the following commands to install the appropriate packages. The
+``opentelemetry-instrumentation`` package provides several 
+commands that help automatically instruments a program.
 
 .. code:: sh
 
@@ -76,14 +82,18 @@ Installation
     $ pip install opentelemetry-instrumentation-flask
     $ pip install requests
 
-Execution
+Execute
 ---------
 
-Execution of the manually instrumented server
+This section guides you through the manual process of instrumenting
+a server as well as the process of executing an automatically 
+instrumented server.
+
+Execute a manually instrumented server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is done in 2 separate consoles, one to run each of the scripts that
-make up this example:
+Execute the server in two separate consoles, one to run each of the 
+scripts that make up this example:
 
 .. code:: sh
 
@@ -95,8 +105,8 @@ make up this example:
     $ source auto_instrumentation/bin/activate
     $ python client.py testing
 
-The execution of ``server_instrumented.py`` should return an output
-similar to:
+When you execute ``server_instrumented.py`` it returns a JSON response
+similar to the following example:
 
 .. code:: sh
 
@@ -130,25 +140,25 @@ similar to:
         "links": []
     }
 
-Execution of an automatically instrumented server
+Execute an automatically instrumented server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now, kill the execution of ``server_instrumented.py`` with ``ctrl + c``
-and run this instead:
+Stop the execution of ``server_instrumented.py`` with ``ctrl + c``
+and run the following command instead:
 
 .. code:: sh
 
     $ opentelemetry-instrument python server_uninstrumented.py
 
-In the console where you previously executed ``client.py``, run again
-this again:
+In the console where you previously executed ``client.py``, run the following
+command again:
 
 .. code:: sh
 
     $ python client.py testing
 
-The execution of ``server_uninstrumented.py`` should return an output
-similar to:
+When you execute ``server_uninstrumented.py`` it returns a JSON response
+similar to the following example:
 
 .. code:: sh
 
@@ -185,5 +195,5 @@ similar to:
         "links": []
     }
 
-Both outputs are equivalent since the automatic instrumentation does
-what the manual instrumentation does too.
+You can see that both outputs are the same because automatic instrumentation does
+exactly what manual instrumentation does.
