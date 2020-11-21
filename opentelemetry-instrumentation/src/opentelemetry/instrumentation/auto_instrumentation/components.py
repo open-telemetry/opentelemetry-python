@@ -90,23 +90,39 @@ def init_metrics(exporters: Sequence[MetricsExporter]):
         logger.warning("automatic metric initialization is not supported yet.")
 
 
+def import_tracer_provider_config_components(
+    selected_components, entry_point_name
+) -> Sequence[Tuple[str, object]]:
+    component_entry_points = {
+        ep.name: ep for ep in iter_entry_points(entry_point_name)
+    }
+    component_impls = []
+    for selected_component in selected_components:
+        entry_point = component_entry_points.get(selected_component, None)
+        if not entry_point:
+            raise RuntimeError(
+                "Requested component '{}' not found in entry points for '{}'".format(
+                    selected_component, entry_point_name
+                )
+            )
+
+        component_impl = entry_point.load()
+        component_impls.append((selected_component, component_impl))
+
+    return component_impls
+
+
 def import_exporters(
     exporter_names: Sequence[str],
 ) -> Tuple[Sequence[SpanExporter], Sequence[MetricsExporter]]:
     trace_exporters, metric_exporters = {}, {}
 
-    exporters = {
-        ep.name: ep for ep in iter_entry_points("opentelemetry_exporter")
-    }
-
-    for exporter_name in exporter_names:
-        entry_point = exporters.get(exporter_name, None)
-        if not entry_point:
-            raise RuntimeError(
-                "Requested exporter not found: {0}".format(exporter_name)
-            )
-
-        exporter_impl = entry_point.load()
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in import_tracer_provider_config_components(
+        exporter_names, "opentelemetry_exporter"
+    ):
         if issubclass(exporter_impl, SpanExporter):
             trace_exporters[exporter_name] = exporter_impl
         elif issubclass(exporter_impl, MetricsExporter):
@@ -121,16 +137,12 @@ def import_exporters(
 
 
 def import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
-    ids_generator_impl = None
-
-    for id_generator in iter_entry_points("opentelemetry_ids_generator"):
-        if id_generator.name == ids_generator_name.strip():
-            ids_generator_impl = id_generator.load()
-            break
-    else:
-        raise RuntimeError(
-            "Requested IDs Generator not found: {0}".format(ids_generator_name)
-        )
+    # pylint: disable=unbalanced-tuple-unpacking
+    [
+        (ids_generator_name, ids_generator_impl)
+    ] = import_tracer_provider_config_components(
+        [ids_generator_name.strip()], "opentelemetry_ids_generator"
+    )
 
     if issubclass(ids_generator_impl, trace.IdsGenerator):
         return ids_generator_impl
