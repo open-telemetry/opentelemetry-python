@@ -48,7 +48,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-g",
         "--ids-generator",
         required=False,
         help="""
@@ -56,7 +55,7 @@ def parse_args():
 
         Examples:
 
-            -g=random
+            --ids-generator=random
         """,
     )
 

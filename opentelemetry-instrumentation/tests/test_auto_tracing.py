@@ -50,6 +50,23 @@ class OTLPExporter:
     pass
 
 
+class IdsGenerator:
+    pass
+
+
+class CustomIdsGenerator(IdsGenerator):
+    pass
+
+
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
+
+    def load(self):
+        return self.class_type
+
+
 class TestTraceInit(TestCase):
     def setUp(self):
         super()
@@ -109,23 +126,23 @@ class TestTraceInit(TestCase):
         )
         del environ["OTEL_SERVICE_NAME"]
 
-    @patch.dict(
-        environ, {"OTEL_SERVICE_NAME": "my-random-ids-generator-test-service"}
+    @patch.dict(environ, {"OTEL_IDS_GENERATOR": "custom_ids_generator"})
+    @patch(
+        "opentelemetry.instrumentation.auto_instrumentation.components.trace.IdsGenerator",
+        new=IdsGenerator,
     )
-    def test_trace_init_default_random_ids_generator(self):
+    @patch(
+        "opentelemetry.instrumentation.auto_instrumentation.components.iter_entry_points"
+    )
+    def test_trace_init_custom_ids_generator(self, mock_iter_entry_points):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint("custom_ids_generator", CustomIdsGenerator)
+            ]
+        )
         Configuration._reset()
         ids_generator_name = components.get_ids_generator()
         ids_generator = components.import_ids_generator(ids_generator_name)
-        components.init_tracing({"otlp": OTLPExporter}, ids_generator)
-
-        self.assertEqual(self.set_provider_mock.call_count, 1)
+        components.init_tracing({}, ids_generator)
         provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, Provider)
-        self.assertIsInstance(provider.ids_generator, RandomIdsGenerator)
-        self.assertIsInstance(provider.processor, Processor)
-        self.assertIsInstance(provider.processor.exporter, OTLPExporter)
-        self.assertIsInstance(provider.resource, Resource)
-        self.assertEqual(
-            provider.resource.attributes.get("service.name"),
-            "my-random-ids-generator-test-service",
-        )
+        self.assertIsInstance(provider.ids_generator, CustomIdsGenerator)

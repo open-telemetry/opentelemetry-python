@@ -100,7 +100,7 @@ start celery with the rest of the arguments.
 
 ::
 
-    opentelemetry-instrument -g random flask run --port=3000
+    opentelemetry-instrument --ids-generator random flask run --port=3000
 
 The above command will configure the global trace provider to use the Random IDs Generator, and then
 pass ``--port=3000`` to ``flask run``.
