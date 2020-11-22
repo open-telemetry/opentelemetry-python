@@ -15,12 +15,12 @@
 import unittest
 
 import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.propagation.jaeger_format as jaeger_format
+import opentelemetry.sdk.trace.propagation.jaeger_propagator as jaeger
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
 from opentelemetry.trace.propagation.textmap import DictGetter
 
-FORMAT = jaeger_format.JaegerFormat()
+FORMAT = jaeger.JaegerPropagator()
 
 
 carrier_getter = DictGetter()
@@ -55,14 +55,14 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
     return ctx, new_carrier
 
 
-class TestJaegerFormat(unittest.TestCase):
+class TestJaegerPropagator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         ids_generator = trace_api.RandomIdsGenerator()
         cls.trace_id = ids_generator.generate_trace_id()
         cls.span_id = ids_generator.generate_span_id()
         cls.parent_span_id = ids_generator.generate_span_id()
-        cls.serialized_uber_trace_id = jaeger_format.format_uber_trace_id(
+        cls.serialized_uber_trace_id = "{:032x}:{:016x}:{:016x}:{:02x}".format(
             cls.trace_id, cls.span_id, cls.parent_span_id, 1
         )
 
@@ -112,9 +112,34 @@ class TestJaegerFormat(unittest.TestCase):
         self.assertDictEqual(formatted_baggage, ctx["baggage"])
 
     def test_extract_invalid_uber_trace_id(self):
-        carrier = {
-            "uber-trace-id": "000000000000000000000000deadbeef:00000000deadbef0:00"
+        old_carrier = {
+            "uber-trace-id": "000000000000000000000000deadbeef:00000000deadbef0:00",
+            "uberctx-key1": "value1",
         }
-        context = FORMAT.extract(carrier_getter, carrier)
+        formatted_baggage = {"key1": "value1"}
+        context = FORMAT.extract(carrier_getter, old_carrier)
         span_context = trace_api.get_current_span(context).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        self.assertDictEqual(formatted_baggage, context["baggage"])
+
+    def test_extract_invalid_trace_id(self):
+        old_carrier = {
+            "uber-trace-id": "00000000000000000000000000000000:00000000deadbef0:00:00",
+            "uberctx-key1": "value1",
+        }
+        formatted_baggage = {"key1": "value1"}
+        context = FORMAT.extract(carrier_getter, old_carrier)
+        span_context = trace_api.get_current_span(context).get_span_context()
+        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        self.assertDictEqual(formatted_baggage, context["baggage"])
+
+    def test_extract_invalid_span_id(self):
+        old_carrier = {
+            "uber-trace-id": "000000000000000000000000deadbeef:0000000000000000:00:00",
+            "uberctx-key1": "value1",
+        }
+        formatted_baggage = {"key1": "value1"}
+        context = FORMAT.extract(carrier_getter, old_carrier)
+        span_context = trace_api.get_current_span(context).get_span_context()
+        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        self.assertDictEqual(formatted_baggage, context["baggage"])
