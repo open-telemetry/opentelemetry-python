@@ -183,6 +183,10 @@ class TestOTLPSpanExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
+    def test_no_credentials_error(self):
+        with self.assertRaises(ValueError):
+            OTLPSpanExporter()
+
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
