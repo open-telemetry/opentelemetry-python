@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b0
+
+Released 2020-11-23
+
 - Added support for `OTEL_EXPORTER` to the `opentelemetry-instrument` command ([#1036](https://github.com/open-telemetry/opentelemetry-python/pull/1036))
 
 ## Version 0.14b0
