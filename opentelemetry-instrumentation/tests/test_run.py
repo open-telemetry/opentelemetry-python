@@ -26,9 +26,6 @@ class TestRun(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.argv_patcher = patch(
-            "opentelemetry.instrumentation.auto_instrumentation.argv"
-        )
         cls.execl_patcher = patch(
             "opentelemetry.instrumentation.auto_instrumentation.execl"
         )
@@ -36,16 +33,15 @@ class TestRun(TestCase):
             "opentelemetry.instrumentation.auto_instrumentation.which"
         )
 
-        cls.argv_patcher.start()
         cls.execl_patcher.start()
         cls.which_patcher.start()
 
     @classmethod
     def tearDownClass(cls):
-        cls.argv_patcher.stop()
         cls.execl_patcher.stop()
         cls.which_patcher.stop()
 
+    @patch("sys.argv", ["instrument", ""])
     @patch.dict("os.environ", {"PYTHONPATH": ""})
     def test_empty(self):
         auto_instrumentation.run()
@@ -54,6 +50,7 @@ class TestRun(TestCase):
             pathsep.join([self.auto_instrumentation_path, getcwd()]),
         )
 
+    @patch("sys.argv", ["instrument", ""])
     @patch.dict("os.environ", {"PYTHONPATH": "abc"})
     def test_non_empty(self):
         auto_instrumentation.run()
@@ -62,6 +59,7 @@ class TestRun(TestCase):
             pathsep.join([self.auto_instrumentation_path, getcwd(), "abc"]),
         )
 
+    @patch("sys.argv", ["instrument", ""])
     @patch.dict(
         "os.environ",
         {"PYTHONPATH": pathsep.join(["abc", auto_instrumentation_path])},
@@ -73,6 +71,7 @@ class TestRun(TestCase):
             pathsep.join([self.auto_instrumentation_path, getcwd(), "abc"]),
         )
 
+    @patch("sys.argv", ["instrument", ""])
     @patch.dict(
         "os.environ",
         {
@@ -90,10 +89,7 @@ class TestRun(TestCase):
 
 
 class TestExecl(TestCase):
-    @patch(
-        "opentelemetry.instrumentation.auto_instrumentation.argv",
-        new=[1, 2, 3],
-    )
+    @patch("sys.argv", ["1", "2", "3"])
     @patch("opentelemetry.instrumentation.auto_instrumentation.which")
     @patch("opentelemetry.instrumentation.auto_instrumentation.execl")
     def test_execl(
@@ -103,4 +99,26 @@ class TestExecl(TestCase):
 
         auto_instrumentation.run()
 
-        mock_execl.assert_called_with("python", "python", 3)
+        mock_execl.assert_called_with("python", "python", "3")
+
+
+class TestArgs(TestCase):
+    @patch("opentelemetry.instrumentation.auto_instrumentation.execl")
+    def test_exporter(self, _):  # pylint: disable=no-self-use
+        with patch("sys.argv", ["instrument", "2"]):
+            auto_instrumentation.run()
+            self.assertIsNone(environ.get("OTEL_EXPORTER"))
+
+        with patch("sys.argv", ["instrument", "-e", "zipkin", "1", "2"]):
+            auto_instrumentation.run()
+            self.assertEqual(environ.get("OTEL_EXPORTER"), "zipkin")
+
+    @patch("opentelemetry.instrumentation.auto_instrumentation.execl")
+    def test_service_name(self, _):  # pylint: disable=no-self-use
+        with patch("sys.argv", ["instrument", "2"]):
+            auto_instrumentation.run()
+            self.assertIsNone(environ.get("OTEL_SERVICE_NAME"))
+
+        with patch("sys.argv", ["instrument", "-s", "my-service", "1", "2"]):
+            auto_instrumentation.run()
+            self.assertEqual(environ.get("OTEL_SERVICE_NAME"), "my-service")
