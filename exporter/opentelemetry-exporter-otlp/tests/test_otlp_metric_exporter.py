@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from collections import OrderedDict
 from unittest import TestCase
 from unittest.mock import patch
@@ -44,6 +45,8 @@ from opentelemetry.sdk.metrics.export import ExportRecord
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.resources import Resource as SDKResource
 
+THIS_DIR = os.path.dirname(__file__)
+
 
 class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
@@ -75,7 +78,8 @@ class TestOTLPMetricExporter(TestCase):
         "os.environ",
         {
             "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
-            "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": "fixtures/test.cert",
+            "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": THIS_DIR
+            + "/fixtures/test.cert",
             "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
             "OTEL_EXPORTER_OTLP_METRIC_TIMEOUT": "10",
         },
