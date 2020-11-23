@@ -6,12 +6,14 @@
 
 Released 2020-11-23
 
-- Rename `MetricRecord` class to `ExportRecord`
-  ([#1367](https://github.com/open-telemetry/opentelemetry-python/pull/1367))
 - Add optional parameter to `record_exception` method
   ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
+- Allow samplers to modify tracestate
+  ([#1319](https://github.com/open-telemetry/opentelemetry-python/pull/1319))
 - Update exception handling optional parameters, add escaped attribute to record_exception
   ([#1365](https://github.com/open-telemetry/opentelemetry-python/pull/1365))
+- Rename `MetricRecord` class to `ExportRecord`
+  ([#1367](https://github.com/open-telemetry/opentelemetry-python/pull/1367))
 - Rename Record in Metrics SDK to Accumulation
   ([#1373](https://github.com/open-telemetry/opentelemetry-python/pull/1373))
 - Rename Meter class to Accumulator in Metrics SDK
@@ -35,8 +37,6 @@ Released 2020-11-02
   ([#1289](https://github.com/open-telemetry/opentelemetry-python/pull/1289))
 - Set initial checkpoint timestamp in aggregators
   ([#1237](https://github.com/open-telemetry/opentelemetry-python/pull/1237))
-- Allow samplers to modify tracestate
-  ([#1319](https://github.com/open-telemetry/opentelemetry-python/pull/1319))
 - Remove TracerProvider coupling from Tracer init
   ([#1295](https://github.com/open-telemetry/opentelemetry-python/pull/1295))
 
