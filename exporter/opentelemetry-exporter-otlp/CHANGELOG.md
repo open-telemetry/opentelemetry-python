@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b0
+
+Released 2020-11-23
+
 - Change temporality for Counter and UpDownCounter
   ([#1384](https://github.com/open-telemetry/opentelemetry-python/pull/1384))
 - Add Gzip compression for exporter
