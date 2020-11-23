@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b0
+
+Released 2020-11-23
+
 - Rename `MetricRecord` class to `ExportRecord`
   ([#1367](https://github.com/open-telemetry/opentelemetry-python/pull/1367))
 - Add optional parameter to `record_exception` method
