@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Support for v2 api protobuf format ([#1318](https://github.com/open-telemetry/opentelemetry-python/pull/1318))
-- Support for v1 api json format (TBD)
+- Support for v1 api json format ([#1411](https://github.com/open-telemetry/opentelemetry-python/pull/1411))
 
 ## Version 0.14b0
 
