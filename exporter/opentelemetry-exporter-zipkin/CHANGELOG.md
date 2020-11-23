@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Support for v2 api protobuf format ([#1318](https://github.com/open-telemetry/opentelemetry-python/pull/1318))
 - Add support for array attributes in Span and Resource exports ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 
 ## Version 0.14b0

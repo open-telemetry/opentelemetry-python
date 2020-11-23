@@ -42,6 +42,10 @@ To quickly get up and running, you can use the `scripts/eachdist.py` tool that
 ships with this project. First create a virtualenv and activate it.
 Then run `python scripts/eachdist.py develop` to install all required packages
 as well as the project's packages themselves (in `--editable` mode).
+
+Further, you'll want to clone the Contrib repo locally to resolve paths needed
+to run tests. `git clone git@github.com:open-telemetry/opentelemetry-python-contrib.git opentelemetry-python-contrib`.
+
 You can then run `scripts/eachdist.py test` to test everything or
 `scripts/eachdist.py lint` to lint everything (fixing anything that is auto-fixable).
 
